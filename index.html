@@ -48,6 +48,7 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 #toasts{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 240px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:min(92vw,420px)}
 .toast{background:rgba(27,20,38,.92);border:2px solid var(--amber-d);border-radius:999px;padding:7px 16px;font-size:15px;text-align:center;animation:tin .25s ease-out;text-wrap:balance}
 .toast.good{border-color:var(--mint)}
+.toast.warn{border-color:#ff8a96;background:#4a1f2e;color:#ffe0e5}
 .toast.out{opacity:0;transform:translateY(6px);transition:all .3s}
 @media (pointer:fine){#toasts{bottom:calc(var(--slotS) + 60px)}}
 @keyframes tin{from{opacity:0;transform:translateY(8px) scale(.96)}}
@@ -162,6 +163,10 @@ body.touch #pcHint{display:none}
 .devbox{border:2px dashed #ff8fa3;border-radius:18px;padding:12px;margin-top:16px}
 .markrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 2px;font-size:15px;border-bottom:1px solid var(--line)}
 .markrow .btn{min-height:40px;padding:0 12px;font-size:14px}
+#saveWarn{font-size:14px;line-height:1.5;color:#ffb4c0;background:rgba(60,20,34,.85);border:2px solid #ff8a96;border-radius:14px;padding:10px}
+#bkList{width:min(340px,100%);background:rgba(27,20,38,.95);border:2px solid var(--line);border-radius:18px;padding:12px;display:grid;gap:8px;text-align:left}
+#bkList .bk{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
+#bkList .bk .btn{min-height:42px;font-size:15px;padding:0 12px}
 #impAsk{width:min(320px,100%);background:rgba(27,20,38,.92);border:2px solid var(--amber);border-radius:18px;padding:14px;text-align:center}
 #impAsk p{margin:0 0 12px;font-size:16px;line-height:1.5}
 .menu-list .btn{width:100%}
@@ -229,8 +234,11 @@ body.touch #pcHint{display:none}
       <button class="btn" id="btnContinue" type="button" hidden>이어하기</button>
       <button class="btn" id="btnNew" type="button">새 모험 시작</button>
       <button class="btn ghost" id="btnImport" type="button" style="min-height:48px;font-size:17px">세이브 파일 불러오기</button>
+      <button class="btn ghost" id="btnBackups" type="button" style="min-height:44px;font-size:15px" hidden>백업에서 되돌리기</button>
+      <div id="saveWarn" hidden></div>
     </div>
     <div id="impAsk" hidden></div>
+    <div id="bkList" hidden></div>
     <div id="charPick" hidden><div class="cp-h">누구와 모험할까요?</div><div class="cp-grid" id="cpGrid"></div><div class="cp-desc" id="cpDesc"></div><div class="menu-two"><button class="btn ghost" id="charBack" type="button">뒤로</button><button class="btn" id="charGo" type="button">이 친구로 시작</button></div></div>
     <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 오른쪽 큰 버튼으로 캐기·공격·놓기</div>
   </div>
@@ -1257,7 +1265,19 @@ function deserialize(s) {
   G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []); roofVer++; G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
-function saveLocal(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); if (!silent) toast('저장했어요', 'good'); return true; } catch (e) { if (!silent) toast('이 브라우저에서는 저장할 수 없어요'); return false; } }
+let saveFailWarned = false;
+function saveLocal(silent) {
+  try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
+  catch (e) { if (!silent || !saveFailWarned) { saveFailWarned = true; toast('이 화면에서는 저장이 되지 않아요! 메뉴 → 세이브 파일로 내보내기로 꼭 백업해 주세요', 'warn', 'savefail'); } return false; }
+}
+// keeps the last 3 saves that were about to be replaced (new game, import, and a snapshot every 20 minutes of play)
+const BACKUP_KEY = 'lantern-tree-backups';
+function loadBackups() { try { const b = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]'); return Array.isArray(b) ? b.filter(x => x && x.data) : []; } catch (e) { return []; } }
+function pushBackup(reason, dataStr) {
+  try { const data = dataStr || localStorage.getItem(SAVE_KEY); if (!data) return; const b = loadBackups(); if (b.length && b[0].data === data) return;
+    b.unshift({ at: Date.now(), reason, data }); while (b.length > 3) b.pop(); localStorage.setItem(BACKUP_KEY, JSON.stringify(b)); } catch (e) { }
+}
+function storageWorks() { try { localStorage.setItem('lantern-tree-probe', '1'); const ok = localStorage.getItem('lantern-tree-probe') === '1'; localStorage.removeItem('lantern-tree-probe'); return ok; } catch (e) { return false; } }
 // ---- save files: export / import ----
 let DL = null; try { if (window.claude?.use) window.claude.use('downloads').then(d => { DL = d; }).catch(() => { }); } catch (e) { }
 const pad2 = n => String(n).padStart(2, '0');
@@ -1293,7 +1313,7 @@ function escHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;',
 function applyImport() {
   if (!pendingImp) return; const sv = pendingImp.save; pendingImp = null; $('#impAsk').hidden = true;
   const prev = G ? serialize() : null;
-  try { if (prev) localStorage.setItem(SAVE_KEY + '-backup', JSON.stringify(prev)); } catch (e) { }
+  if (prev) pushBackup('세이브 파일 불러오기 전', JSON.stringify(prev));
   try { deserialize(sv); } catch (e) { if (prev) deserialize(prev); toast('파일을 불러오지 못했어요'); if (panel) renderPanel(); return; }
   if (panel) closePanel(); beginPlay(); toast('세이브를 불러왔어요', 'good');
 }
@@ -1424,7 +1444,7 @@ function toast(msg, cls, key) {
   const now = performance.now(); if (key) { if (toastKeys[key] && now - toastKeys[key] < 2200) return; toastKeys[key] = now; }
   const box = $('#toasts'); const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : ''); el.textContent = msg; box.appendChild(el);
   while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 2300);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, cls === 'warn' ? 6500 : 2300);
 }
 function spawnDrop(id, c, x, y) { const a = Math.random() * 6.283; G.drops.push({ id, c, x, y, vx: Math.cos(a) * 1.4, vy: Math.sin(a) * 1.1, z: 0.3, vz: 2.6, t: 0, hold: 0 }); }
 function rollDrops(list, x, y) { for (const [id, a, b, ch] of list) if (Math.random() < ch) { const c = rint(a, b); if (c > 0) spawnDrop(id, c, x, y); } }
@@ -1694,7 +1714,7 @@ function respawn() {
 }
 
 // ================= update =================
-let regrowT = 0;
+let regrowT = 0, snapT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
@@ -1740,6 +1760,7 @@ function update(dt) {
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
   saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
+  snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
   // crops & bush stage only visual
   const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
   shake = Math.max(0, shake - dt);
@@ -2321,7 +2342,7 @@ function renderPanel() {
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
-      <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
+      <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
     const tabs = [['hair', '머리 모양'], ['hc', '머리 색'], ['eye', '눈 색'], ['outfit', '옷'], ['oc', '옷 색'], ['hat', '모자·소품']];
@@ -2410,7 +2431,7 @@ function onSheetClick(e) {
   if (a === 'markDel' && canDev()) { G.marks.splice(i, 1); saveLocal(true); renderPanel(); return; }
   if (a === 'zoom') { zoomPref = i; try { localStorage.setItem('lantern-tree-zoom', i); } catch (e) { } resize(); renderPanel(); return; }
   if (a === 'sound') { soundOn = !soundOn; try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
-  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } { const keepC = G.char; newGame((Math.random() * 1e9) | 0); G.char = keepC; buildPlayer(0); } started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
+  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } saveLocal(true); pushBackup('처음부터 다시 하기 전'); { const keepC = G.char; newGame((Math.random() * 1e9) | 0); G.char = keepC; buildPlayer(0); } started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
 }
 function hotClick(i) {
   ensureAudio();
@@ -2468,7 +2489,18 @@ function setupInput() {
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
   $('#goal').addEventListener('click', () => { const g = GUIDE[G.guide]; if (g) toast(g.h); });
-  $('#btnNew').addEventListener('click', () => { ensureAudio(); showPicker(); });
+  let newAsk = false;
+  $('#btnNew').addEventListener('click', () => { ensureAudio();
+    if (loadLocal() && !newAsk) { newAsk = true; $('#btnNew').textContent = '정말 새로 시작할까요? (지금 세이브는 백업돼요)'; $('#btnNew').classList.add('warn'); return; }
+    if (newAsk) pushBackup('새 모험 시작 전'); newAsk = false; $('#btnNew').textContent = '새 모험 시작'; $('#btnNew').classList.remove('warn'); showPicker(); });
+  $('#btnBackups').addEventListener('click', () => { const el = $('#bkList'); if (!el.hidden) { el.hidden = true; return; } const b = loadBackups();
+    const fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    el.innerHTML = `<div style="color:var(--muted);font-size:14px">되돌리면 지금 세이브도 백업해 둬요.</div>` + b.map((x, k) => `<div class="bk"><span>${fmt(x.at)}<br><small style="color:var(--muted)">${escHTML(x.reason || '')}</small></span><button class="btn ghost" type="button" data-bk="${k}">되돌리기</button></div>`).join(''); el.hidden = false; });
+  $('#bkList').addEventListener('click', e => { const bt = e.target.closest('[data-bk]'); if (!bt) return; const x = loadBackups()[+bt.dataset.bk]; if (!x) return;
+    let sv; try { sv = JSON.parse(x.data); } catch (err) { toast('백업을 읽지 못했어요'); return; }
+    const cur = (() => { try { return localStorage.getItem(SAVE_KEY); } catch (err) { return null; } })();
+    try { deserialize(sv); } catch (err) { toast('백업을 불러오지 못했어요'); return; }
+    if (cur) pushBackup('백업 되돌리기 전', cur); $('#bkList').hidden = true; beginPlay(); toast('백업에서 되돌렸어요', 'good'); });
   $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
   $('#charBack').addEventListener('click', () => hidePicker());
   $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
@@ -2510,7 +2542,9 @@ function start(data) {
   setupInput(); resize(); placeJoyIdle();
   try { navigator.storage?.persist?.().catch(() => { }); } catch (e) { }
   const saved = (data && data.save) || loadLocal();
-  if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { newGame(20261008); } } else newGame(20261008);
+  if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { pushBackup('불러오기 실패한 세이브'); newGame(20261008); } } else newGame(20261008);
+  if (loadBackups().length) $('#btnBackups').hidden = false;
+  if (!storageWorks()) { const w = $('#saveWarn'); w.hidden = false; w.textContent = '⚠ 이 화면에서는 진행 상황이 저장되지 않아요. 홈 화면 앱이나 브라우저에서 열거나, 플레이 중 메뉴 → 세이브 파일로 내보내기로 백업해 주세요.'; }
   cam.x = G.p.x; cam.y = G.p.y - .3; computeLight();
   if (data && data.save && data.playing) beginPlay();
   requestAnimationFrame(loop);
