@@ -722,6 +722,8 @@ function buildSprites() {
   SPR.item = {}; for (const k in ICON) SPR.item[k] = mk(16, 16, ICON[k]);
   SPR.ui = {}; for (const k in UICON) SPR.ui[k] = mk(16, 16, UICON[k]);
   SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
+  for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
+  SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp']) SPR.objOff[k] = dimmed(SPR.obj[k]);
   SPR.crop = { berry: [0, 1, 2, 3].map(s => cropSpr('berry', s)), shroom: [0, 1, 2, 3].map(s => cropSpr('shroom', s)) };
@@ -931,6 +933,93 @@ const RECIPES = [
   Rc('pie', 1, [['berry', 3], ['mushroom', 1]], 'pot', 'food'),
   Rc('stew', 1, [['mushroom', 3], ['glowcap', 1]], 'pot', 'food'),
 ];
+// ---- building pieces: thin walls, half walls, window walls, window frames, fences, doors, pillars (auto-connecting) and roofs ----
+const BMAT = { wood: { n: '나무', res: 'wood', f: '#b0743f', fd: '#7d4d2a', fl: '#d9a066', c: '#e0b07a', cd: '#8a5a33', door: '#8f5a32', roof: ['#b5583f', '#8a3f2e', '#d97a5a'] },
+  stone: { n: '돌', res: 'stone', f: '#8f8aa3', fd: '#625d78', fl: '#b9b4cc', c: '#d3cee3', cd: '#6d6884', door: '#6d6884', roof: ['#5f6f9a', '#45507a', '#8394c4'] } };
+const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft
+  thin: { n: '얇은 벽', h: 18, cnt: 2, cost: 2, d: '얇고 아늑한 실내 벽. 옆 칸과 자동으로 이어져요.' },
+  half: { n: '반벽', h: 9, cnt: 2, cost: 1, d: '허리 높이의 낮은 벽. 옆 칸과 자동으로 이어져요.' },
+  win: { n: '창문벽', h: 18, cnt: 2, cost: 3, d: '작은 창이 난 얇은 벽.' },
+  frame: { n: '창문 틀', h: 18, cnt: 1, cost: 2, d: '벽 대신 세우는 큰 유리창.' },
+  fence: { n: '울타리', h: 10, cnt: 2, cost: 1, d: '마당을 두르는 울타리. 울타리·기둥·문과 이어져요.' },
+  door: { n: '문', h: 18, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 열려 있으면 지나갈 수 있어요.' },
+  pillar: { n: '기둥', h: 22, cnt: 2, cost: 1, d: '가느다란 기둥. 벽과 울타리가 이어져요.' },
+};
+const BCAP = s => s[0].toUpperCase() + s.slice(1);
+const bId = (type, mat) => 'b' + BCAP(type) + BCAP(mat); // e.g. bThinWood
+const ROOF_ITEM = { wood: 'roofWood', stone: 'roofStone' };
+function addBuildPieces() {
+  for (const mat in BMAT) {
+    const M = BMAT[mat];
+    for (const type in BTYPE) { const T = BTYPE[type], id = bId(type, mat);
+      OBJ[id] = { n: `${M.n} ${T.n}`, solid: 1, item: id, tw: { type, mat }, door: type === 'door' ? 1 : 0 };
+      ITEMS[id] = { n: `${M.n} ${T.n}`, kind: 'place', obj: id, d: T.d };
+      if (type === 'door') USE[id] = 'door';
+      RECIPES.push(Rc(id, T.cnt, [[M.res, T.cost]], 'bench', 'build')); }
+    ITEMS[ROOF_ITEM[mat]] = { n: `${M.n} 지붕`, kind: 'roof', roof: mat, d: '머리 위에 지붕을 얹어요. 지붕 아래로 들어가면 지붕이 투명해져요. 지붕을 들고 지붕 칸을 누르면 걷어요.' };
+    RECIPES.push(Rc(ROOF_ITEM[mat], 4, [[M.res, 2]], 'bench', 'build'));
+  }
+}
+const twType = o => o && OBJ[o.t] && OBJ[o.t].tw ? OBJ[o.t].tw.type : null;
+function twLinks(type, x, y) {
+  if (!inB(x, y)) return false; const i = idx(x, y);
+  if (G.wall[i]) return type !== 'fence';
+  const o = G.objs.get(i), t = twType(o); if (!t) return false;
+  if (type === 'fence') return t === 'fence' || t === 'pillar' || t === 'door';
+  return t !== 'fence' || type === 'door' || type === 'pillar';
+}
+function twMask(x, y, type) { if (type === 'pillar') return 0; return (twLinks(type, x, y - 1) ? 1 : 0) | (twLinks(type, x + 1, y) ? 2 : 0) | (twLinks(type, x, y + 1) ? 4 : 0) | (twLinks(type, x - 1, y) ? 8 : 0); }
+// draws one piece in tile coordinates (tile top at y0); the piece rises h px above its footprint line at y=12
+function twDraw(A, type, mat, mask, open, h, y0) {
+  const M = BMAT[mat], R = (x, y, w, hh, c) => { if (w > 0 && hh > 0) A.r(x, y0 + y, w, hh, c); }, P = (x, y, c) => A.p(x, y0 + y, c);
+  const N = mask & 1, E = mask & 2, S = mask & 4, Wm = mask & 8, ew = E || Wm || !(N || S), x0 = Wm ? 0 : 6, x1 = E ? 16 : 10;
+  const face = (a, b) => { R(a, 12 - h, b - a, h, M.f); R(a, 11, b - a, 1, M.fd);
+    if (mat === 'wood') { for (let x = a; x < b; x++) if (x % 4 === 0) R(x, 12 - h, 1, h - 1, M.fd); }
+    else for (let r = 0, y = 12 - h + 3; y < 11; y += 4, r++) { R(a, y, b - a, 1, M.fd); for (let x = a + (r % 2 ? 2 : 0); x < b; x += 5) R(x, y - 3, 1, 3, M.fd); } };
+  const cap = (a, b, ya, yb, col) => { R(a, ya - h, b - a, yb - ya, col || M.c); };
+  if (type === 'pillar') { R(6, 12 - h, 4, h, M.f); R(6, 12 - h, 1, h, M.fl); R(9, 12 - h, 1, h, M.fd); R(5, 8 - h, 6, 4, M.c); R(5, 11 - h, 6, 1, M.cd); R(5, 10, 6, 2, M.fd); return; }
+  if (type === 'fence') { const rail = (a, b) => { R(a, 12 - h + 2, b - a, 2, M.fl); R(a, 12 - h + 4, b - a, 1, M.fd); R(a, 12 - h + 6, b - a, 2, M.fl); R(a, 12 - h + 8, b - a, 1, M.fd); };
+    if (N) R(7, 0 - h + 3, 2, 12, M.fl); if (S) R(7, 12 - h + 3, 2, 4, M.fl); if (ew) rail(x0, x1); R(7, 12 - h, 2, h, M.f); R(7, 12 - h - 1, 2, 1, M.c); return; }
+  if (type === 'door' && open) {
+    if (ew) { face(x0, 3); face(13, x1); cap(x0, x1, 8, 12); R(3, 12 - h, 1, h, M.fd); R(4, 12 - h + 1, 2, h - 1, M.door); R(4, 12 - h + 1, 1, h - 1, M.fl); }
+    else { cap(6, 10, 0, 2); cap(6, 10, 14, 16); R(10, 2 - h + 2, 1, 10, M.door); }
+    return; }
+  if (N) cap(6, 10, 0, 8);
+  if (ew) { face(x0, x1); cap(x0, x1, 8, 12); R(x0, 12 - h, x1 - x0, 1, M.cd);
+    if (type === 'win') { const a = Math.max(x0, 4), b = Math.min(x1, 12); if (b - a >= 4) { R(a, 12 - h + 3, b - a, 8, M.fl); R(a + 1, 12 - h + 4, b - a - 2, 6, '#a8dcf5'); P(a + 2, 12 - h + 5, '#eaf8ff'); P(a + 3, 12 - h + 6, '#eaf8ff'); R((a + b) >> 1, 12 - h + 4, 1, 6, M.fl); } }
+    if (type === 'frame') { R(x0 + (Wm ? 0 : 1), 12 - h + 1, x1 - x0 - (Wm ? 0 : 1) - (E ? 0 : 1), h - 3, '#a8dcf5'); R(x0, 12 - h + Math.round(h / 2), x1 - x0, 1, M.fl); if (x1 - x0 >= 8) R(8, 12 - h + 1, 1, h - 3, M.fl); P(x0 + 2, 12 - h + 3, '#eaf8ff'); P(x0 + 3, 12 - h + 4, '#eaf8ff'); }
+    if (type === 'door') { R(3, 12 - h + 1, 10, h - 2, M.door); R(3, 12 - h + 1, 10, 1, M.fl); R(8, 12 - h + 1, 1, h - 2, M.fd); P(10, 12 - h + 10, '#ffc861'); P(6, 12 - h + 10, '#ffc861'); }
+  } else { cap(6, 10, 8, 12); if (!S) { face(6, 10); if (type === 'win' || type === 'frame') R(7, 12 - h + 3, 2, 8, '#a8dcf5'); if (type === 'door') R(7, 12 - h + 1, 2, h - 2, M.door); } }
+  if (S) cap(6, 10, 12, 16);
+  if (!ew) { if (type === 'win' || type === 'frame') R(7, (N ? 0 : 8) - h + 1, 2, (S ? 16 : 12) - (N ? 0 : 8) - 2, '#a8dcf5'); if (type === 'door') R(7, (N ? 0 : 8) - h, 2, (S ? 16 : 12) - (N ? 0 : 8), M.door); }
+}
+const TWC = {}, TW_Y0 = 26;
+function twSprite(id, mask, open) { const k = id + '|' + mask + '|' + (open ? 1 : 0); if (TWC[k]) return TWC[k]; const { type, mat } = OBJ[id].tw;
+  return TWC[k] = mk(16, TW_Y0 + 16, A => twDraw(A, type, mat, mask, open, BTYPE[type].h, TW_Y0), 'sel'); }
+function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.round(BTYPE[type].h * .5) + 2); return mk(16, 16, A => twDraw(A, type, mat, type === 'pillar' ? 0 : 10, false, h, 3), 'sel'); }
+function roofTile(mat, v) { const [r0, r1, r2] = BMAT[mat].roof; return mk(16, 16, A => { A.r(0, 0, 16, 16, r0); for (let y = 0; y < 16; y += 4) { A.r(0, y + 3, 16, 1, r1); for (let x = (y / 4 + v) % 2 ? 0 : 4; x < 16; x += 8) { A.r(x, y, 1, 3, r1); A.r(x + 1, y, 3, 1, r2); } } }, null); }
+function roofIcon(mat) { const [r0, r1, r2] = BMAT[mat].roof; return mk(16, 16, A => { A.poly([[1, 9], [8, 2], [15, 9]], r0); A.r(2, 9, 12, 5, BMAT[mat].f); A.r(6, 10, 4, 4, BMAT[mat].door); A.line(1, 9, 8, 2, r2); A.line(8, 2, 15, 9, r1); A.r(1, 9, 14, 1, r1); }); }
+let roofVer = 0, roofHideKey = '', roofHide = new Set();
+function roofHidden() {
+  const p = G.p, tx = Math.floor(p.x), ty = Math.floor(p.y), k = tx + ',' + ty + ',' + roofVer; if (k === roofHideKey) return roofHide; roofHideKey = k; roofHide = new Set();
+  const st = inB(tx, ty) ? idx(tx, ty) : -1; if (st < 0 || !G.roof.has(st)) return roofHide;
+  const q = [st]; roofHide.add(st); while (q.length && roofHide.size < 900) { const i = q.pop(), x = i % W, y = (i / W) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (G.roof.has(j) && !roofHide.has(j)) { roofHide.add(j); q.push(j); } } }
+  return roofHide;
+}
+const ROOF_LIFT = 22;
+function drawRoofs(x0, x1, y0, y1, camX, camY) {
+  if (!G.roof.size) return; const hide = roofHidden(), T = TP;
+  for (let y = y0; y <= y1 + 2; y++) for (let x = x0; x <= x1; x++) { if (!inB(x, y)) continue; const i = idx(x, y), m = G.roof.get(i); if (!m) continue;
+    const sx = x * T - camX, sy = y * T - camY - ROOF_LIFT, R = BMAT[m].roof; ctx.globalAlpha = hide.has(i) ? 0.16 : 1;
+    ctx.drawImage(SPR.roof[m][(x + y) & 1], sx, sy);
+    const has = (dx, dy) => inB(x + dx, y + dy) && G.roof.has(idx(x + dx, y + dy));
+    ctx.fillStyle = R[2]; if (!has(0, -1)) ctx.fillRect(sx, sy, 16, 1);
+    ctx.fillStyle = R[1]; if (!has(-1, 0)) ctx.fillRect(sx, sy, 1, 16); if (!has(1, 0)) ctx.fillRect(sx + 15, sy, 1, 16);
+    if (!has(0, 1)) { ctx.fillStyle = R[1]; ctx.fillRect(sx, sy + 16, 16, 4); ctx.fillStyle = 'rgba(20,10,30,0.55)'; ctx.fillRect(sx, sy + 19, 16, 1); ctx.fillStyle = 'rgba(14,8,22,0.25)'; ctx.fillRect(sx, sy + 20, 16, 3); } }
+  ctx.globalAlpha = 1;
+}
+addBuildPieces();
+
 RECIPES.push(
   Rc('rod', 1, [['wood', 3], ['fiber', 2]], null, 'tool'),
   Rc('shovel', 1, [['copperBar', 2], ['wood', 3]], 'bench', 'tool'),
@@ -1068,7 +1157,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.marks = []; G.under = new Map(); G.terrain = {}; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -1076,7 +1165,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout',
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [], under: [...G.under], terrain: G.terrain || {} };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
 }
 function deserialize(s) {
   const N = W * H;
@@ -1091,7 +1180,7 @@ function deserialize(s) {
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
-  G.under = new Map(Array.isArray(s.under) ? s.under : []); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
+  G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []); roofVer++; G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 function saveLocal(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); if (!silent) toast('저장했어요', 'good'); return true; } catch (e) { if (!silent) toast('이 브라우저에서는 저장할 수 없어요'); return false; } }
@@ -1146,7 +1235,7 @@ let invDirty = true;
 function addItem(id, c, count = true) {
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
-  const useful = ['place', 'wall', 'floor', 'ground', 'shovel', 'seed', 'food', 'key'].includes(ITEMS[id].kind);
+  const useful = ['place', 'wall', 'floor', 'ground', 'roof', 'shovel', 'seed', 'food', 'key'].includes(ITEMS[id].kind);
   const order = useful ? [...Array(30).keys()] : [...Array(24).keys()].map(k => k + 6).concat([0, 1, 2, 3, 4, 5]);
   for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; } }
   const got = c - left;
@@ -1180,7 +1269,7 @@ const selItem = () => G.inv[G.sel];
 
 // ================= world helpers =================
 const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
-function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER) return true; const o = G.objs.get(i); return !!(o && OBJ[o.t].solid); }
+function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER) return true; const o = G.objs.get(i); return !!(o && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
 function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
 function moveEnt(e, dx, dy, r) {
   const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.15)); let bx = false, by = false;
@@ -1224,7 +1313,7 @@ function digGround(t) {
   mapPixel(t.x, t.y); invDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
 function canPlace(tx, ty, it) {
-  if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
+  if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (it.kind === 'roof') return !G.roof.has(i); if (G.wall[i]) return false; const o = G.objs.get(i);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
   if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
   if (o) return false;
@@ -1284,7 +1373,7 @@ function mouseTile() {
 }
 
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place', dig: 'dig' };
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place', dig: 'dig', unroof: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   if (aimMouse()) {
@@ -1318,6 +1407,7 @@ function decide() {
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
   // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
   if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
+  if (it && it.kind === 'roof' && i >= 0 && G.roof.has(i)) return { k: 'unroof', lbl: '지붕 걷기', icon: s.id, t };
   if (o) {
     const d = OBJ[o.t];
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
@@ -1328,7 +1418,8 @@ function decide() {
       return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
     if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
     if (d.item && !(it && it.kind === 'floor')) {
-      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : USE_LBL[u], icon: 'hand', t, o, sub: true };
+      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (o.open ? '닫기' : '열기') : USE_LBL[u], icon: 'hand', t, o, sub: true };
+      if (it && ['place', 'wall', 'roof'].includes(it.kind)) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: true };
       return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
     }
   }
@@ -1344,8 +1435,8 @@ function decide() {
   if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
   return { k: 'swing', lbl: '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
 }
-const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed'];
-const placeLbl = it => it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
+const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'roof', 'seed'];
+const placeLbl = it => it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : it.kind === 'roof' ? '지붕 얹기' : '놓기';
 const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
@@ -1374,6 +1465,7 @@ function perform(a) {
     case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
     case 'place': placeItem(a.t); actCd = 0.14; break;
     case 'dig': digGround(a.t); actCd = 0.22; break;
+    case 'unroof': { const i = idx(a.t.x, a.t.y), m = G.roof.get(i); if (m) { G.roof.delete(i); roofVer++; const l = addItem(ROOF_ITEM[m], 1, false); if (l) spawnDrop(ROOF_ITEM[m], 1, a.t.x + .5, a.t.y + .5); SFX.pick(); } actCd = 0.18; break; }
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
     case 'eat': eat(G.sel); actCd = 0.4; break;
@@ -1422,6 +1514,7 @@ function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k
 function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
+    case 'door': if (o.open && occupied(t.x, t.y)) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; } o.open = !o.open; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break;
     case 'sit': p.sit = { x: t.x, y: t.y, px: p.x, py: p.y }; p.x = x; p.y = t.y + .62; p.face = { x: 0, y: 1 }; p.dir = 'down'; p.flip = false; G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
     case 'pet': hearts(x, t.y, 5); SFX.purr(); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(100, p.hp + 5); ftext(p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } toast(pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
@@ -1486,6 +1579,7 @@ function placeItem(t) {
   if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.under.get(i) === WATER) G.under.set(i, 2); }
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
   else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
+  else if (it.kind === 'roof') { G.roof.set(i, it.roof); roofVer++; }
   else if (it.kind === 'seed') G.objs.set(i, { t: it.crop, p: G.time });
   else { const o = { t: it.obj }; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
@@ -1864,7 +1958,7 @@ function renderWorld(cw, ch) {
   const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
   const push = (y, item) => { const r = Math.floor(y) - y0; if (r >= 0 && r < rows.length) rows[r].push(item); };
   visibleShakers.clear();
-  for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
+  for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
   push(CY, { k: 'tree', s: CY + 1 });
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
@@ -1887,6 +1981,7 @@ function renderWorld(cw, ch) {
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
     for (const it of list) drawEntity(it, t);
   }
+  drawRoofs(x0, x1, y0, y1, camX, camY);
   // swing arc
   if (G.swing) {
     const s = G.swing, pr = 1 - s.t / s.max, a = s.ang - 1.2 + pr * 2.4, hx = p.x, hy = p.y - .45;
@@ -1978,7 +2073,8 @@ function renderOverlay(cw, ch) {
 function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
-    const o = it.o, d = OBJ[o.t]; let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const wx = it.x + .5, wy = it.y + 1 - 1 / 16;
+    const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), !!o.open), it.x + .5, it.y + 1); return; }
+    let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const wx = it.x + .5, wy = it.y + 1 - 1 / 16;
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
@@ -2189,7 +2285,7 @@ function onSheetClick(e) {
     const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, maxCraft(r))) : 1, total = r.n * q;
     for (const [id, c] of r.req) removeItem(id, c * q); const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
     SFX.craft(); toast(`${ITEMS[r.out].n}${total > 1 ? ' ×' + total : ''} 완성!`, 'good');
-    if (['place', 'wall', 'floor', 'ground', 'shovel', 'food'].includes(ITEMS[r.out].kind)) { let slot = G.inv.findIndex(s => s && s.id === r.out);
+    if (['place', 'wall', 'floor', 'ground', 'roof', 'shovel', 'food'].includes(ITEMS[r.out].kind)) { let slot = G.inv.findIndex(s => s && s.id === r.out);
       if (slot >= 6) { let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[slot]; G.inv[slot] = tmp; slot = to; }
       if (slot >= 0 && slot < 6) G.sel = slot; }
     invDirty = true; checkGuide(); renderPanel(); return;
