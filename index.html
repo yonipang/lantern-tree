@@ -1285,7 +1285,7 @@ function pushBackup(reason, dataStr) {
 function storageWorks() { try { localStorage.setItem('lantern-tree-probe', '1'); const ok = localStorage.getItem('lantern-tree-probe') === '1'; localStorage.removeItem('lantern-tree-probe'); return ok; } catch (e) { return false; } }
 
 // ---- cloud save (Firebase). Works on the website / home-screen app; the Claude preview cannot reach outside servers ----
-const FB_CONFIG = { apiKey: 'AIzaSyCsGbKTF6oQiS9_Ow_sAZJBH2XfDfjABYw', authDomain: 'lamp-tree.firebaseapp.com', projectId: 'lamp-tree', storageBucket: 'lamp-tree.firebasestorage.app', messagingSenderId: '614596289531', appId: '1:614596289531:web:cd9621a19cbb4c253ce15e' };
+const FB_CONFIG = { apiKey: 'AIzaSyCsGbKTF6oQiS9_Ow_sAZJBH2XfDfjABYw', authDomain: 'lamp-tree.firebaseapp.com', projectId: 'lamp-tree', storageBucket: 'lamp-tree.firebasestorage.app', messagingSenderId: '614596289531', appId: '1:614596289531:web:161d6a23c5eeb9da3ce15e' };
 const CLOUD = { st: 'off', user: null, api: null, lastUp: 0, busy: false, err: '', pending: null };
 const FB_ERR = { 'auth/popup-closed-by-user': '로그인 창이 닫혔어요', 'auth/cancelled-popup-request': '로그인 창이 닫혔어요', 'auth/popup-blocked': '로그인 창이 막혔어요. 이메일 로그인을 써 보세요',
   'auth/invalid-credential': '이메일이나 비밀번호가 맞지 않아요', 'auth/wrong-password': '비밀번호가 맞지 않아요', 'auth/user-not-found': '가입된 이메일이 아니에요. 새로 가입을 눌러 주세요', 'auth/invalid-email': '이메일 주소를 다시 확인해 주세요',
