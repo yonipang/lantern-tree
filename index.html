@@ -118,6 +118,11 @@ body.touch #pcHint{display:none}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:4px 10px;border-radius:999px;background:#1f182c;color:var(--muted)}
 .chip.on{background:#2f4a3f;color:#c9f5df}
 .list{display:grid;gap:8px}
+.qty{grid-column:2/-1;display:flex;align-items:center;gap:8px;margin-top:-2px}
+.qty button{min-width:40px;height:38px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:20px;line-height:1;padding:0 8px}
+.qty button.qmax{font-size:14px;min-width:52px}
+.qty button:disabled{opacity:.35}
+.qty b{font-weight:400;min-width:44px;text-align:center;font-size:16px;color:var(--amber)}
 .rc{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px;background:var(--panel2);border-radius:18px;border:2px solid transparent}
 .rc.ok{border-color:#6a557f}
 .rc.no .ri,.rc.no .rn{opacity:.55}
@@ -781,6 +786,9 @@ OBJ.bigShroom.drops.push(['shroomCap', 1, 2, 1]);
 const SETN = { moss: '이끼 세트', shroom: '버섯 세트', crystal: '수정 세트' };
 const STN = { bench: '작업대', furnace: '화로', pot: '요리솥' };
 const Rc = (out, n, req, at, cat) => ({ out, n, req, at, cat });
+// recipes people usually make many of at once get a quantity picker
+const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat'].includes(ITEMS[r.out].kind);
+function maxCraft(r) { let m = 99; for (const [id, c] of r.req) m = Math.min(m, Math.floor(countItem(id) / c)); return Math.max(0, m); }
 const RECIPES = [
   Rc('bench', 1, [['wood', 6]], null, 'furn'),
   Rc('torch', 2, [['wood', 1]], null, 'build'),
@@ -1072,11 +1080,11 @@ const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terr
 function checkUnlocks() {
   if (!G.terrain) G.terrain = {};
   for (const f in TERRAIN) { const T = TERRAIN[f]; if (T.base || G.terrain[f] || !T.when()) continue; G.terrain[f] = 1;
-    if (started) { toast(`새 지형을 배웠어요: ${T.n}! 삽으로 떠서 다른 곳에 옮길 수 있어요${hasItem('shovel') ? '' : ' (삽은 작업대에서 만들어요)'}`, 'good', 'terrain' + f); SFX.craft(); } }
+    if (started) { toast(`새 지형을 배웠어요: ${T.n}! 삽을 들고 떠서 다른 곳에 옮길 수 있어요${hasItem('shovel') ? '' : ' (삽은 작업대에서 만들어요)'}`, 'good', 'terrain' + f); SFX.craft(); } }
 }
 function shovelDesc() {
   const ks = Object.keys(TERRAIN).map(Number), ok = ks.filter(terrainOk).map(f => TERRAIN[f].n), no = ks.filter(f => !terrainOk(f));
-  return `바닥 앞에서 [걷기]로 깔아 둔 바닥을 걷어요. 단축칸에서 들고 땅을 바라보며 누르면, 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
+  return `단축칸에서 삽을 들고 바닥을 바라보며 누르면 깔아 둔 바닥을 걷고, 땅을 누르면 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
 }
 function digGround(t) {
   const i = idx(t.x, t.y), f = G.floor[i]; if (G.wall[i] || G.objs.get(i)) return;
@@ -1203,8 +1211,7 @@ function decide() {
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
   if (it && it.kind === 'food') return { k: 'eat', lbl: '먹기', icon: s.id };
   if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
-  const unfloor = i >= 0 && !G.wall[i] && isPlacedFloor(G.floor[i]) && hasItem('shovel') && !(it && it.kind === 'shovel');
-  return { k: 'swing', lbl: '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id, t: unfloor ? t : undefined, sub: unfloor ? 'dig' : undefined };
+  return { k: 'swing', lbl: '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
 }
 const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed'];
 const placeLbl = it => it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
@@ -1906,7 +1913,7 @@ const ICONURL = {};
 function iconURL(id) { if (ICONURL[id]) return ICONURL[id]; const c = SPR.ui[id] || iconCanvas(id); return ICONURL[id] = c.toDataURL(); }
 
 // ================= UI =================
-const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false };
+const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
 function slotHTML(s, a, i, cls = '') { return `<button type="button" class="slot ${cls}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>` : ''}</button>`; }
 function refreshHotbar() {
@@ -1923,12 +1930,14 @@ function updateHud() {
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   if (invDirty) refreshHotbar();
 }
-function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it) { if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}`; if (it.kind === 'sword') return `공격력 ${it.dmg}`; if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽'][it.tier]}까지`; return ''; }
 function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
+  const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
+  const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
   if (k === 'inv') {
     h += head('가방', 'bag');
     h += `<div class="sh-body"><p class="hint">칸을 누르면 고를 수 있고, 다른 칸을 누르면 자리가 바뀌어요. 도구와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
@@ -1947,12 +1956,15 @@ function renderPanel() {
     const tabs = [['all', '전체'], ['tool', '도구'], ['furn', '기본 가구'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료']]; if (st) tabs.unshift(['here', STN[st]]);
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
     h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}</div>`;
-    let list = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => UIS.tab === 'all' || (UIS.tab === 'here' ? r.at === st : r.cat === UIS.tab));
-    list.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near));
+    // order is fixed while the panel stays on this tab, so the list does not jump after crafting
+    const okey = UIS.tab + '|' + (st || '');
+    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => UIS.tab === 'all' || (UIS.tab === 'here' ? r.at === st : r.cat === UIS.tab)); l.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near)); UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
+    const list = UIS.craftOrder.ids.map(i => ({ r: RECIPES[i], i }));
     h += `<div class="sh-body"><div class="list">`;
     for (const { r, i } of list) {
-      const ok = canCraft(r, near), it = ITEMS[r.out], stn = r.at && !near.has(r.at);
-      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${it.n}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = countItem(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div>${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>만들기</button></div>`;
+      const ok = canCraft(r, near), it = ITEMS[r.out], stn = r.at && !near.has(r.at), multi = isMulti(r), mx = multi ? maxCraft(r) : 1, q = multi ? clamp(UIS.qty[i] || 1, 1, Math.max(1, mx)) : 1;
+      const qty = multi && ok ? `<div class="qty"><button type="button" data-a="qty" data-i="${i}:-1" ${q <= 1 ? 'disabled' : ''} aria-label="하나 덜">−</button><b>${q * r.n}개</b><button type="button" data-a="qty" data-i="${i}:1" ${q >= mx ? 'disabled' : ''} aria-label="하나 더">+</button><button type="button" class="qmax" data-a="qty" data-i="${i}:max" ${q >= mx ? 'disabled' : ''}>최대</button></div>` : '';
+      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${it.n}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = countItem(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c * q}</span>`; }).join('')}</div>${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>만들기</button>${qty}</div>`;
     }
     h += `</div></div>`;
   } else if (k === 'chest') {
@@ -1971,12 +1983,14 @@ function renderPanel() {
     h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>바닥 앞 작은 [걷기] 버튼으로 깔아 둔 바닥을 걷어요. 삽을 들고 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요. 계속 꾸미고 탐험해 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
-  sh.innerHTML = h;
+  sh.innerHTML = h; sh.dataset.key = key;
+  if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
+  if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
 }
 function drawMap() {
@@ -2010,11 +2024,13 @@ function onSheetClick(e) {
   if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
   if (a === 'trash') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } G.inv[UIS.invSel] = null; UIS.invSel = null; UIS.trash = false; invDirty = true; renderPanel(); return; }
   if (a === 'tab') { UIS.tab = i; renderPanel(); return; }
+  if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, maxCraft(r)), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
   if (a === 'mapzoom') { UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
   if (a === 'craft') {
     const r = RECIPES[i], near = nearStations(); if (!canCraft(r, near)) return;
-    for (const [id, c] of r.req) removeItem(id, c); const left = addItem(r.out, r.n); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
-    SFX.craft(); toast(`${ITEMS[r.out].n}${r.n > 1 ? ' ×' + r.n : ''} 완성!`, 'good');
+    const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, maxCraft(r))) : 1, total = r.n * q;
+    for (const [id, c] of r.req) removeItem(id, c * q); const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
+    SFX.craft(); toast(`${ITEMS[r.out].n}${total > 1 ? ' ×' + total : ''} 완성!`, 'good');
     if (['place', 'wall', 'floor', 'ground', 'shovel', 'food'].includes(ITEMS[r.out].kind)) { let slot = G.inv.findIndex(s => s && s.id === r.out);
       if (slot >= 6) { let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[slot]; G.inv[slot] = tmp; slot = to; }
       if (slot >= 0 && slot < 6) G.sel = slot; }
