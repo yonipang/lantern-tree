@@ -182,6 +182,13 @@ body.touch #pcHint{display:none}
 .cp-card.on{border-color:var(--amber);background:var(--panel2);box-shadow:0 0 18px rgba(255,200,97,.3)}
 .cp-desc{min-height:22px;font-size:16px;color:var(--muted)}
 .sh-body .cp-grid{margin-top:4px}
+.look-prev{flex:none;display:flex;justify-content:center;gap:18px;background:var(--panel2);border-radius:18px;padding:10px;margin-bottom:10px}
+.look-prev img{width:64px;height:76px}
+.look-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.look-opt{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:8px 4px 6px;color:var(--text);font:inherit;font-size:14px;display:grid;justify-items:center;gap:4px;min-height:64px}
+.look-opt img{width:48px;height:57px}
+.look-opt.on{border-color:var(--amber);background:var(--panel2)}
+.look-opt .sw{display:block;width:34px;height:34px;border-radius:50%;border:2px solid #241b2f}
 #title .btn{min-height:58px;font-size:20px}
 #title .ver{font-size:12px;color:var(--muted)}
 #fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:24px;color:var(--rose);text-align:center;padding:20px}
@@ -376,6 +383,71 @@ const CHARS = {
       if (dir === 'side') { A.p(10, 15, C.skin); A.p(11, 12, C.cry); }
       if (dir === 'up') { A.r(4, 13, 8, 1, pal[1]); } } },
 };
+// ---- dress-up: build your own character from original parts ----
+const HAIRC = [['갈색', ['#8a5a3c', '#6b4029', '#b07a52']], ['밤색', ['#9a5a3a', '#6e3d27', '#c07e57']], ['검정', ['#3a3045', '#262033', '#5a4d6b']], ['금발', ['#f0c85a', '#c99a2e', '#ffe69a']], ['주황', ['#e08a4a', '#b8642f', '#ffb57a']],
+  ['분홍', ['#f29ab8', '#c96b8f', '#ffc6da']], ['하늘', ['#5fc7c9', '#3e9a9e', '#a6ecec']], ['초록', ['#6fb86a', '#4e8a4a', '#a6e09c']], ['보라', ['#9b7ad6', '#7356a8', '#c7b0f0']]];
+const EYEC = [['갈색', '#6b4029'], ['초록', '#4f9a5e'], ['파랑', '#3b5a8a'], ['보라', '#8d72c4'], ['호박', '#d98b2b']];
+const OUTC = [['민트', ['#6cc9a3', '#479b7f', '#a5ecc9']], ['딸기', ['#ff8fa3', '#d9607d', '#ffc2cf']], ['라벤더', ['#b493f5', '#7a5cc4', '#e3d4ff']], ['하늘', ['#7fb3e0', '#4f84b8', '#c4e2fa']], ['귤', ['#ffb15c', '#d9822f', '#ffd9a0']],
+  ['노랑', ['#ffd25c', '#d9a63a', '#fff0a8']], ['남색', ['#4a4f8f', '#33366a', '#6d73b8']], ['이끼', ['#7d9a4f', '#5b7536', '#a6c27a']], ['밤', ['#9a6a4a', '#6e4a33', '#c49272']]];
+const HAIRS = {
+  bob: { n: '단발', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(3, 7, 2, 5, h0); H.R(11, 7, 2, 5, h0); H.R(3, 11, 2, 1, h1); H.R(11, 11, 2, 1, h1); H.R(4, 6, 8, 2, h0); H.P(6, 8, h0); H.P(9, 8, h0); H.P(6, 5, h2); H.P(7, 5, h2); }
+    if (d === 'up') { H.E(8, 8.6, 5.2, 4, h0); H.R(4, 11, 8, 1, h1); H.R(6, 5, 3, 1, h2); } if (d === 'side') { H.R(3, 6, 6, 6, h0); H.R(3, 11, 5, 1, h1); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.P(6, 5, h2); } } },
+  short: { n: '짧은 머리', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(3, 7, 1, 3, h0); H.R(12, 7, 1, 3, h0); H.R(4, 6, 8, 2, h0); H.P(4, 8, h0); H.P(8, 8, h0); H.P(11, 8, h0); H.P(5, 5, h2); H.P(6, 4, h2); }
+    if (d === 'up') { H.E(8, 8.2, 5.2, 4.2, h0); H.R(5, 4, 3, 1, h2); } if (d === 'side') { H.R(3, 6, 6, 5, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.P(9, 8, h0); H.P(5, 4, h2); } } },
+  long: { n: '긴 생머리', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(3, 7, 2, 5, h0); H.R(11, 7, 2, 5, h0); H.R(4, 6, 8, 2, h0); H.P(7, 8, h0); H.P(6, 5, h2); H.P(7, 5, h2); }
+      if (d === 'up') { H.E(8, 8.4, 5.2, 4.2, h0); H.R(6, 5, 3, 1, h2); } if (d === 'side') { H.R(3, 6, 6, 6, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); } },
+    over(A, d, [h0, h1]) { if (d === 'down') { A.r(3, 11, 2, 4, h0); A.r(11, 11, 2, 4, h0); A.p(3, 15, h1); A.p(12, 15, h1); } if (d === 'up') { A.r(4, 11, 8, 5, h0); A.r(5, 16, 6, 1, h1); } if (d === 'side') { A.r(3, 11, 4, 5, h0); A.r(4, 16, 2, 1, h1); } } },
+  buns: { n: '양쪽 똥머리', draw(H, d, [h0, h1, h2]) { const bun = (x) => { H.E(x, 4.4, 2.1, 2, h1); H.E(x, 4.1, 1.8, 1.7, h0); H.P(Math.round(x) - 1, 3, h2); };
+    if (d === 'down') { bun(3.6); bun(12.4); H.R(4, 6, 8, 2, h0); H.R(3, 7, 1, 3, h0); H.R(12, 7, 1, 3, h0); H.P(5, 8, h0); H.P(10, 8, h0); }
+    if (d === 'up') { bun(3.6); bun(12.4); H.E(8, 8.2, 5.2, 4.2, h0); } if (d === 'side') { bun(4.4); H.R(3, 6, 6, 5, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); } } },
+  pony: { n: '포니테일', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(4, 6, 8, 2, h0); H.R(3, 7, 1, 4, h0); H.R(12, 7, 1, 4, h0); H.P(6, 8, h0); H.P(10, 8, h0); H.P(6, 5, h2); }
+      if (d === 'up') { H.E(8, 8.2, 5.2, 4.2, h0); H.P(8, 9, '#ff8fa3'); } if (d === 'side') { H.R(3, 6, 6, 5, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.R(1, 8, 2, 5, h0); H.P(1, 13, h1); H.P(3, 8, '#ff8fa3'); } },
+    over(A, d, [h0, h1]) { if (d === 'up') { A.r(7, 10, 2, 5, h0); A.p(7, 15, h1); } } },
+  curly: { n: '곱슬', draw(H, d, [h0, h1, h2]) { const bumps = () => { H.P(3, 5, h0); H.P(5, 3, h0); H.P(8, 2, h0); H.P(11, 3, h0); H.P(13, 5, h0); H.P(5, 4, h2); H.P(9, 3, h2); };
+    if (d === 'down') { bumps(); H.R(2, 7, 2, 5, h0); H.R(12, 7, 2, 5, h0); H.R(4, 6, 8, 2, h0); H.P(4, 8, h0); H.P(7, 8, h0); H.P(9, 8, h0); H.P(11, 8, h0); H.P(2, 12, h1); H.P(13, 12, h1); }
+    if (d === 'up') { bumps(); H.E(8, 8.2, 5.8, 4.6, h0); H.P(4, 12, h1); H.P(11, 12, h1); } if (d === 'side') { bumps(); H.R(2, 6, 7, 6, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.P(10, 8, h0); } } },
+  braid: { n: '땋은 머리', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(3, 7, 2, 5, h0); H.R(11, 7, 2, 3, h0); H.R(4, 6, 8, 2, h0); H.P(10, 8, h0); H.P(11, 8, h0); H.P(5, 8, h0); H.P(6, 5, h2); H.P(7, 5, h2);
+      H.P(12, 10, h1); H.P(12, 11, h0); H.P(12, 12, h1); H.P(12, 13, h0); H.P(12, 14, '#ffc861'); }
+      if (d === 'up') { H.E(8, 8.4, 5.2, 4.2, h0); H.R(5, 5, 3, 1, h2); } if (d === 'side') { H.R(3, 6, 6, 6, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); } },
+    over(A, d, [h0, h1]) { if (d === 'up') { A.r(7, 11, 2, 4, h0); A.p(7, 12, h1); A.p(8, 14, h1); A.p(7, 15, '#ffc861'); } if (d === 'side') { A.r(3, 11, 2, 3, h0); A.p(3, 14, '#ffc861'); } } },
+  spiky: { n: '삐죽 머리', draw(H, d, [h0, h1, h2]) { const sp = () => { H.poly([[3, 6], [4, 2], [6, 5]], h0); H.poly([[6, 5], [8, 1], [10, 5]], h0); H.poly([[10, 5], [12, 2], [13, 6]], h0); H.P(8, 3, h2); };
+    if (d === 'down') { sp(); H.R(3, 7, 1, 3, h0); H.R(12, 7, 1, 3, h0); H.R(4, 6, 8, 1, h0); H.P(4, 7, h0); H.P(6, 8, h0); H.P(8, 7, h0); H.P(10, 8, h0); H.P(11, 7, h0); }
+    if (d === 'up') { sp(); H.E(8, 8.2, 5.2, 4.2, h0); } if (d === 'side') { sp(); H.R(3, 6, 6, 5, h0); H.R(8, 6, 5, 1, h0); H.P(12, 7, h0); H.P(10, 8, h0); H.poly([[2, 8], [1, 5], [4, 6]], h0); } } },
+};
+const HATS = {
+  none: { n: '없음' },
+  sprout: { n: '새싹', draw(H) { H.R(8, 1, 1, 3, C.leafD); H.E(6.6, 2.2, 1.7, 1.1, C.leaf); H.E(9.8, 1.8, 1.7, 1.1, C.leafL); } },
+  ribbon: { n: '리본', draw(H, d) { const x = d === 'side' ? 5 : 10; H.poly([[x - 2.5, 3], [x, 4.5], [x - 2.5, 6]], '#ff8fa3'); H.poly([[x + 2.5, 3], [x, 4.5], [x + 2.5, 6]], '#ff8fa3'); H.P(x, 4, '#d9607d'); } },
+  flowers: { n: '꽃 화관', draw(H, d) { const pts = d === 'side' ? [4, 7, 10] : [3, 6, 9, 12]; pts.forEach((x, k) => { const c = ['#ff8fa3', '#fff1d6', '#ffd25c', '#b493f5'][k % 4]; H.P(x, 4, c); H.P(x + 1, 4, c); H.P(x, 5, c); H.P(x + 1, 5, '#ffc861'); }); H.R(3, 6, 10, 1, C.leafD); } },
+  wizard: { n: '마법사 모자', draw(H, d) { const k0 = '#3d3f7a', k1 = '#2a2b57', k2 = '#5b5fae'; H.E(8, 5.4, 7, 1.6, k1); H.E(8, 5.1, 6.6, 1.2, k0);
+    H.poly(d === 'side' ? [[4.2, 5], [11.8, 5], [7, 1.6], [3.4, 0.6]] : [[4.2, 5], [11.8, 5], [9.8, 1.6], [12.8, 0.6]], k0); H.R(5, 4, 6, 1, '#ffc861'); H.P(d === 'side' ? 6 : 9, 2, '#ffe9a8'); H.P(d === 'side' ? 5 : 8, 3, k2); } },
+  catbeanie: { n: '고양이귀 털모자', draw(H) { const b0 = '#f3e3c8', b1 = '#cdb592', b2 = '#fff9ee', pk = '#ffb3c6'; H.E(8, 5.6, 5.5, 3, b0); H.R(3, 7, 10, 1, b1); H.R(5, 4, 3, 1, b2);
+    H.poly([[2.6, 5], [3.8, 0.8], [6.8, 3.6]], b0); H.poly([[9.2, 3.6], [12.2, 0.8], [13.4, 5]], b0); H.P(4, 3, pk); H.P(11, 3, pk); H.P(4, 2, pk); H.P(11, 2, pk); } },
+  mushroom: { n: '버섯 모자', draw(H) { const r0 = '#e55b5b', r1 = '#b63e45', rim = '#f3d9c0'; H.E(8, 4.8, 6.6, 3.4, r1); H.E(8, 4.4, 6.2, 3, r0); H.R(2, 7, 12, 1, rim); H.P(5, 3, '#fff'); H.R(9, 2, 2, 1, '#fff'); H.P(12, 5, '#fff'); H.P(8, 4, '#fff'); } },
+  lanternpin: { n: '등불 머리핀', draw(H, d) { const x = d === 'up' ? 11 : d === 'side' ? 5 : 3; H.R(x, 5, 2, 2, '#ffd25c'); H.P(x, 4, '#fff0a8'); } },
+  crystalpin: { n: '수정 핀', draw(H, d) { const x = d === 'up' ? 4 : d === 'side' ? 6 : 11; H.R(x, 5, 1, 2, C.cry); H.P(x + 1, 5, C.cryL); } },
+};
+const OUTFITS2 = {
+  tunic: { n: '튜닉', front(A, d, p) { if (d === 'down') { A.r(7, 13, 2, 3, p[1]); A.p(7, 14, '#ffc861'); A.p(8, 14, '#ffc861'); } if (d === 'up') { A.r(5, 12, 6, 4, C.woodD); A.r(6, 13, 4, 2, C.wood); } } },
+  robe: { n: '로브', front(A, d, p) { if (d === 'down') { A.r(7, 12, 2, 1, C.cream); A.p(8, 14, '#ffc861'); A.p(7, 14, '#ffc861'); A.r(4, 16, 8, 1, p[1]); } } },
+  raincoat: { n: '우비', shoe: '#5a7a9a', front(A, d, p) { if (d === 'down') { A.r(8, 12, 1, 5, p[1]); A.p(7, 13, p[1]); A.p(7, 15, p[1]); } if (d === 'up') A.r(5, 12, 6, 1, p[1]); } },
+  vest: { n: '탐험 조끼', shoe: '#6b4a2f', front(A, d) { if (d === 'down') { A.r(7, 12, 2, 4, C.cream); A.line(4, 12, 10, 16, '#7d4d2a'); } if (d === 'up') { A.line(11, 12, 5, 16, '#7d4d2a'); A.r(5, 13, 4, 3, '#a8763f'); } if (d === 'side') A.r(5, 13, 3, 3, '#a8763f'); } },
+  apron: { n: '앞치마', front(A, d) { if (d === 'down') { A.r(6, 13, 4, 4, '#fff1d6'); A.r(6, 13, 4, 1, '#e8d8c0'); A.p(8, 15, '#ff8fa3'); } if (d === 'side') A.r(9, 13, 3, 3, '#fff1d6'); } },
+  cloak: { n: '망토', body(A, d, p) { A.r(3, 12, 10, 5, p[0]); A.r(3, 16, 10, 1, p[1]); A.r(4, 11, 8, 2, p[2]); if (d === 'down') { A.r(8, 13, 1, 4, p[1]); A.p(7, 12, C.cry); A.p(8, 12, C.cryL); A.p(4, 15, C.skin); A.p(11, 15, C.skin); } if (d === 'side') A.p(10, 15, C.skin); if (d === 'up') A.r(4, 13, 8, 1, p[1]); } },
+  armor: { n: '꼬마 갑옷', shoe: '#5a5468', back(A, d) { if (d === 'down') A.r(3, 12, 10, 5, '#a8413a'); if (d === 'side') { A.r(3, 12, 4, 6, '#d9604f'); A.r(3, 17, 3, 1, '#a8413a'); } },
+    front(A, d, p) { if (d === 'down') { A.r(5, 12, 6, 1, p[2]); A.p(7, 14, '#ffc861'); A.p(8, 14, '#ffc861'); A.p(7, 13, '#ffc861'); A.p(8, 15, '#ffc861'); } if (d === 'up') { A.r(4, 12, 8, 5, '#d9604f'); A.r(4, 16, 8, 1, '#a8413a'); } } },
+};
+const LOOK_DEF = { hair: 'bob', hc: 0, eye: 0, outfit: 'tunic', oc: 0, hat: 'none' };
+function cleanLook(L) { L = Object.assign({}, LOOK_DEF, L || {}); if (!HAIRS[L.hair]) L.hair = 'bob'; if (!HATS[L.hat]) L.hat = 'none'; if (!OUTFITS2[L.outfit]) L.outfit = 'tunic'; L.hc = clamp(L.hc | 0, 0, HAIRC.length - 1); L.eye = clamp(L.eye | 0, 0, EYEC.length - 1); L.oc = clamp(L.oc | 0, 0, OUTC.length - 1); return L; }
+function lookDef(L) {
+  L = cleanLook(L); const hs = HAIRS[L.hair], hat = HATS[L.hat], of = OUTFITS2[L.outfit], hc = HAIRC[L.hc][1];
+  return { n: '나만의 캐릭터', d: '직접 고른 머리와 옷', pal: OUTC[L.oc][1], hc, eye: EYEC[L.eye][1], shoe: of.shoe || '#5a4637', custom: true,
+    hair(H, d) { hs.draw(H, d, hc); if (hat.draw) hat.draw(H, d); },
+    back(A, d, p) { if (hs.back) hs.back(A, d, hc); if (of.back) of.back(A, d, p); },
+    over(A, d, p) { if (hs.over) hs.over(A, d, hc); },
+    body: of.body, front: of.front };
+}
+CHARS.custom = lookDef(LOOK_DEF);
 const CHAR_IDS = Object.keys(CHARS);
 function charFrame(id, dir, step, pal) {
   const def = CHARS[id];
@@ -406,7 +478,7 @@ function charHead(A, id, dir, pal, dy, sleep) {
 function curChar() { return G && CHARS[G.char] ? G.char : 'sprout'; }
 function outfitPal(id, o) { return o ? OUTFITS[o % OUTFITS.length].slice(1) : CHARS[id].pal; }
 const charPrevCache = {};
-function charPreview(id, step = 0) { const k = id + step; if (!charPrevCache[k]) { const c = CHARS[id]; charPrevCache[k] = (c.classic ? playerFrame('down', step, c.pal) : charFrame(id, 'down', step, c.pal)).toDataURL(); } return charPrevCache[k]; }
+function charPreview(id, step = 0, dir = 'down') { const k = id + step + dir; if (CHARS[id].custom || id === '__look') { const c = CHARS[id]; return charFrame(id, dir, step, c.pal).toDataURL(); } if (!charPrevCache[k]) { const c = CHARS[id]; charPrevCache[k] = (c.classic ? playerFrame(dir, step, c.pal) : charFrame(id, dir, step, c.pal)).toDataURL(); } return charPrevCache[k]; }
 function buildPlayer(o) {
   const id = curChar(), ch = CHARS[id], pal = outfitPal(id, o || 0);
   const fr = (d, st) => ch.classic ? playerFrame(d, st, pal) : charFrame(id, d, st, pal);
@@ -890,7 +962,7 @@ ITEMS.rod.power = 1;
 const USE = { chair: 'sit', stumpStool: 'sit', shroomStool: 'sit', cryChair: 'sit', mossSofa: 'sit', bed: 'sleep', mossBed: 'sleep', cushion: 'pet',
   torch: 'lamp', lampShroom: 'lamp', lampCrystal: 'lamp', sproutLamp: 'lamp', sporeLamp: 'lamp', fishTank: 'feed', shelf: 'read', cryMirror: 'mirror',
   shroomWardrobe: 'dress', cryFountain: 'wish', plant: 'water', vase: 'water', bootPlanter: 'water', table: 'tea', shroomTable: 'tea', cryTable: 'tea' };
-const USE_LBL = { sit: '앉기', sleep: '잠자기', pet: '쓰다듬기', feed: '밥 주기', read: '책 읽기', mirror: '거울 보기', dress: '옷 갈아입기', wish: '소원 빌기', water: '물 주기', tea: '차 마시기' };
+const USE_LBL = { sit: '앉기', sleep: '잠자기', pet: '쓰다듬기', feed: '밥 주기', read: '책 읽기', mirror: '거울 보기', dress: '꾸미기', wish: '소원 빌기', water: '물 주기', tea: '차 마시기' };
 const TIPS = ['곡괭이와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요.', '횃불이나 램프로 밝힌 곳에는 몬스터가 생기지 않아요.', '침대에서 자면 체력이 가득 차고, 그 침대에서 다시 깨어나요.',
   '말랑대왕은 착지할 때 충격파를 내요. 점프하면 멀리 떨어져요.', '버섯 여왕의 포자는 둥글게 퍼져요. 포자 사이 틈으로 빠져나가요.', '수정골렘이 벽에 부딪혀 기절하면 1.5배 피해를 줄 수 있어요.',
   '수정 분수에서 소원을 빌면 잠시 희귀 물고기가 잘 낚여요.', '구리 낫으로 수확하면 작물을 하나씩 더 얻어요.', '바닥 타일을 물 위에 깔면 다리가 돼요.', '찌가 쏙 들어가고 느낌표가 뜨면 바로 당겨요!', '의자에 앉아 있으면 체력이 조금씩 차올라요.'];
@@ -1157,14 +1229,14 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
 const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
 function serialize() {
   if (!G) return null; const p = G.p;
-  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout',
+  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
     p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
 }
 function deserialize(s) {
@@ -1175,7 +1247,7 @@ function deserialize(s) {
     won: !!s.won, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   while (G.inv.length < 30) G.inv.push(null);
   if ((s.v || 1) < 2) migrateV2();
-  G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
+  G.look = cleanLook(s.look); CHARS.custom = lookDef(G.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
@@ -1522,7 +1594,7 @@ function useObj(a) {
     case 'feed': puff(x, t.y + .4, '#d4f1ff', 8, 1.2, .5); hearts(x, t.y, 3); SFX.plop(); toast('물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; toast(TIPS[G.tipN]); SFX.page(); break;
     case 'mirror': puff(p.x, p.y - .8, '#fff7c2', 10, 2, .8); SFX.seed(); toast(pickOne(COMPLIMENTS), null, 'mirror'); break;
-    case 'dress': { G.outfit = ((G.outfit || 0) + 1) % OUTFITS.length; buildPlayer(G.outfit); const cl = CHARS[curChar()].classic; puff(p.x, p.y - .5, outfitPal(curChar(), G.outfit)[0], 14, 2.5, .6); SFX.craft(); toast(G.outfit === 0 && !cl ? '원래 옷으로 갈아입었어요' : `${OUTFITS[G.outfit][0]}색 옷으로 갈아입었어요`, 'good'); break; }
+    case 'dress': openPanel('look'); break;
     case 'wish': if ((o.cd || 0) > G.time) { toast('분수가 쉬고 있어요. 조금 뒤에 다시 빌어요', null, 'wish'); break; } o.cd = G.time + 120; G.luck = G.time + 120; puff(x, t.y, '#bfefff', 16, 2.5, 1); SFX.seed(); toast('행운이 깃들었어요! 2분 동안 희귀 물고기가 더 잘 낚여요', 'good'); break;
     case 'water': o.shake = .3; for (let k = 0; k < 8; k++) G.parts.push({ x: x + (Math.random() - .5) * .6, y: t.y + .6, z: 1.2, vx: (Math.random() - .5), vy: 0, vz: -1, life: .5, max: .5, col: '#8fd0ff', sz: 1 }); SFX.plop(); toast('촉촉해졌어요', null, 'water'); break;
     case 'tea': if ((o.cd || 0) > G.time) { toast('찻잔이 비었어요. 조금 뒤에 다시 마셔요', null, 'tea'); break; } o.cd = G.time + 45; p.hp = Math.min(100, p.hp + 6); p.hunger = Math.min(100, p.hunger + 4); ftext(p.x, p.y - 1.3, '♥ +6', '#ff8fa3'); SFX.eat(); toast('따뜻한 차 한 잔, 기운이 나요', null, 'tea'); break;
@@ -2160,7 +2232,7 @@ function updateHud() {
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   if (invDirty) refreshHotbar();
 }
-function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it, s) { const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
@@ -2228,11 +2300,24 @@ function renderPanel() {
     const marks = G.marks || [];
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:8px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
-      <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p>
+      <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
+  } else if (k === 'look') {
+    const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
+    const tabs = [['hair', '머리 모양'], ['hc', '머리 색'], ['eye', '눈 색'], ['outfit', '옷'], ['oc', '옷 색'], ['hat', '모자·소품']];
+    h += head('꾸미기', 'hand') + `<div class="look-prev">${pv('down')}${pv('side')}${pv('up')}</div><div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.lookTab === id ? 'on' : ''}" data-a="lookTab" data-i="${id}">${n}</button>`).join('')}</div><div class="sh-body"><div class="look-grid">`;
+    const t = UIS.lookTab, opt = (key, val, label, inner) => `<button type="button" class="look-opt ${String(L[key]) === String(val) ? 'on' : ''}" data-a="lookSet" data-i="${key}:${val}">${inner}<span>${label}</span></button>`;
+    const mini = (key, val) => { const T = Object.assign({}, L, { [key]: val }); CHARS.__mini = lookDef(T); return `<img class="px" src="${charPreview('__mini', 0, 'down')}" alt="">`; };
+    if (t === 'hair') for (const k in HAIRS) h += opt('hair', k, HAIRS[k].n, mini('hair', k));
+    if (t === 'hat') for (const k in HATS) h += opt('hat', k, HATS[k].n, mini('hat', k));
+    if (t === 'outfit') for (const k in OUTFITS2) h += opt('outfit', k, OUTFITS2[k].n, mini('outfit', k));
+    if (t === 'hc') HAIRC.forEach(([n, c], k) => { h += opt('hc', k, n, `<i class="sw" style="background:${c[0]};box-shadow:inset -4px -4px 0 ${c[1]}"></i>`); });
+    if (t === 'oc') OUTC.forEach(([n, c], k) => { h += opt('oc', k, n, `<i class="sw" style="background:${c[0]};box-shadow:inset -4px -4px 0 ${c[1]}"></i>`); });
+    if (t === 'eye') EYEC.forEach(([n, c], k) => { h += opt('eye', k, n, `<i class="sw" style="background:${c}"></i>`); });
+    h += `</div></div><div class="menu-two" style="margin-top:10px"><button class="btn ghost" data-a="close" type="button">취소</button><button class="btn" data-a="lookOk" type="button">이 모습으로 하기</button></div>`;
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요. 계속 꾸미고 탐험해 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
@@ -2294,6 +2379,11 @@ function onSheetClick(e) {
   if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
   if (a === 'save') { saveLocal(); return; }
   if (a === 'export') { exportSave(); return; }
+  if (a === 'openLook') { openPanel('look'); return; }
+  if (a === 'lookTab') { UIS.lookTab = i; renderPanel(); return; }
+  if (a === 'lookSet') { const [k, v] = String(i).split(':'); UIS.look[k] = ['hc', 'eye', 'oc'].includes(k) ? +v : v; SFX.click(); renderPanel(); return; }
+  if (a === 'lookOk') { G.look = cleanLook(UIS.look); CHARS.custom = lookDef(G.look); G.char = 'custom'; G.outfit = 0; buildPlayer(0); puff(G.p.x, G.p.y - .5, CHARS.custom.pal[0], 16, 2.6, .6); SFX.craft(); toast('새 모습으로 꾸몄어요', 'good'); saveLocal(true); closePanel(); return; }
+  if (a === 'charSet' && i === 'custom') { openPanel('look'); return; }
   if (a === 'charSet') { if (CHARS[i] && G.char !== i) { G.char = i; G.outfit = 0; buildPlayer(0); puff(G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); SFX.craft(); toast(`${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); saveLocal(true); } renderPanel(); return; }
   if (a === 'import') { pickSaveFile('menu'); return; }
   if (a === 'impYes') { applyImport(); return; }
@@ -2364,7 +2454,7 @@ function setupInput() {
   $('#btnNew').addEventListener('click', () => { ensureAudio(); showPicker(); });
   $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
   $('#charBack').addEventListener('click', () => hidePicker());
-  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
+  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
   $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
   $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
@@ -2375,7 +2465,7 @@ function setupInput() {
 }
 // ---- character picker (title + menu) ----
 let pickSel = 'sprout', pickAnim = 0;
-function cpCards(sel) { return CHAR_IDS.map(id => `<button type="button" class="cp-card ${id === sel ? 'on' : ''}" data-c="${id}" data-a="charSet" data-i="${id}"><img class="px" src="${charPreview(id)}" alt=""><span>${CHARS[id].n}</span></button>`).join(''); }
+function cpCards(sel) { return CHAR_IDS.map(id => `<button type="button" class="cp-card ${id === sel ? 'on' : ''}" data-c="${id}" data-a="charSet" data-i="${id}"><img class="px" src="${charPreview(id)}" alt=""><span>${id === 'custom' ? '직접 꾸미기' : CHARS[id].n}</span></button>`).join(''); }
 function animPick(root) { clearInterval(pickAnim); let f = 0; pickAnim = setInterval(() => { const im = root && root.querySelector('.cp-card.on img'); if (!im || !im.isConnected) { clearInterval(pickAnim); return; } f ^= 1; im.src = charPreview(im.parentElement.dataset.c, f); }, 320); }
 function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking'); $('#charPick').hidden = false; renderPicker(); }
 function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
