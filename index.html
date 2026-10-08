@@ -188,7 +188,7 @@ body.touch #pcHint{display:none}
   <div class="joy" id="joy"><i id="joyKnob"></i></div>
   <button id="actBtn" type="button" aria-label="행동"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
   <div id="hotbar"></div>
-  <button id="subBtn" type="button" hidden aria-label="회수"><img class="px" id="subIcon" alt=""><span>회수</span></button>
+  <button id="subBtn" type="button" hidden aria-label="회수"><img class="px" id="subIcon" alt=""><span id="subLbl">회수</span></button>
   <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="fade" hidden>기절했어요…</div>
@@ -382,6 +382,7 @@ const ICON = {
 Object.assign(ICON, {
   shroomCap: A => { A.e(8, 8, 6.5, 4.2, '#e07b5f'); A.r(2, 9, 12, 2, '#b9573f'); A.e(5.5, 6, 1.4, 1, C.cream); A.e(10, 5.5, 1.2, .9, C.cream); A.p(12, 8, C.cream); A.p(7, 8, C.cream); },
   rod: rodIcon(C.woodD, C.wood, '#ff6b6b'),
+  shovel: A => { A.line(3, 3, 9, 9, C.woodD, 2); A.line(3, 3, 8, 8, C.wood); A.r(2, 2, 3, 2, C.woodD); A.poly([[8.5, 9.5], [11, 7], [14.5, 10.5], [13.5, 13.5], [10.5, 14.5], [7, 11]], C.copperD); A.poly([[9, 9.5], [11, 7.5], [13.8, 10.3], [13, 13], [10.3, 13.8], [7.6, 11]], C.copper); A.p(11, 9, C.copperL); A.p(12, 10, C.copperL); },
   minnow: fishIcon('#8fc7a0', '#d8f2df', '#5e9a6e'),
   crucian: fishIcon('#d9a24a', '#f6dc9a', '#a8702a'),
   catfish: fishIcon('#8a6a9a', '#d7c4e0', '#5e4370', A => { A.line(13, 9, 15, 11, '#3a2a44'); A.line(13, 9, 15, 9, '#3a2a44'); }),
@@ -717,6 +718,12 @@ const OBJ = {
 };
 Object.assign(ITEMS, {
   shroomCap: { n: '버섯 갓', d: '큰버섯과 버섯 여왕에게서 얻는 탱글한 갓. 버섯 세트 재료예요.' },
+  shovel: { n: '삽', kind: 'shovel', stack: 1, get d() { return shovelDesc(); } },
+  gDirt: { n: '흙 한 삽', kind: 'ground', ground: 2, d: '땅을 흙으로 덮어요. 물을 메울 수도 있어요.' },
+  gMoss: { n: '이끼 한 삽', kind: 'ground', ground: 1, d: '땅을 이끼로 덮어요. 씨앗을 심을 수 있어요.' },
+  gShroom: { n: '버섯흙 한 삽', kind: 'ground', ground: 3, d: '땅을 버섯흙으로 덮어요. 포자를 심기 좋아요.' },
+  gCrystal: { n: '수정 모래 한 삽', kind: 'ground', ground: 4, d: '땅을 반짝이는 수정 바닥으로 덮어요.' },
+  gWater: { n: '물 한 동이', kind: 'ground', ground: 10, d: '빈 땅에 부으면 작은 물웅덩이가 생겨요. 낚시도 할 수 있어요.' },
   rod: { n: '낚싯대', kind: 'rod', stack: 1, d: '물을 바라보며 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 한 번 더 눌러요!' },
   minnow: { n: '이끼 송사리', kind: 'food', fish: 1, food: 6, heal: 3, d: '이끼 동굴 물가의 작은 물고기.' },
   crucian: { n: '통통 붕어', kind: 'food', fish: 1, food: 10, heal: 4, d: '통통하게 살이 오른 붕어.' },
@@ -807,6 +814,8 @@ const RECIPES = [
 ];
 RECIPES.push(
   Rc('rod', 1, [['wood', 3], ['fiber', 2]], null, 'tool'),
+  Rc('shovel', 1, [['copperBar', 2], ['wood', 3]], 'bench', 'tool'),
+  Rc('gDirt', 2, [['dirt', 1]], null, 'build'),
   Rc('fishTank', 1, [['stone', 3], ['anyFish', 1]], 'bench', 'furn'),
   Rc('bootPlanter', 1, [['boot', 1], ['dirt', 2]], 'bench', 'furn'),
   Rc('grilledFish', 1, [['anyFish', 1]], 'furnace', 'food'),
@@ -940,7 +949,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
-  G.sel = 0; G.outfit = 0; G.marks = []; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.marks = []; G.under = new Map(); G.terrain = {}; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -948,7 +957,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [] };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [], under: [...G.under], terrain: G.terrain || {} };
 }
 function deserialize(s) {
   const N = W * H;
@@ -963,6 +972,7 @@ function deserialize(s) {
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
+  G.under = new Map(Array.isArray(s.under) ? s.under : []); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 function saveLocal(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); if (!silent) toast('저장했어요', 'good'); return true; } catch (e) { if (!silent) toast('이 브라우저에서는 저장할 수 없어요'); return false; } }
@@ -1017,7 +1027,7 @@ let invDirty = true;
 function addItem(id, c, count = true) {
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
-  const useful = ['place', 'wall', 'floor', 'seed', 'food', 'key'].includes(ITEMS[id].kind);
+  const useful = ['place', 'wall', 'floor', 'ground', 'shovel', 'seed', 'food', 'key'].includes(ITEMS[id].kind);
   const order = useful ? [...Array(30).keys()] : [...Array(24).keys()].map(k => k + 6).concat([0, 1, 2, 3, 4, 5]);
   for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; left -= k; } }
   const got = c - left;
@@ -1046,9 +1056,39 @@ function occupied(tx, ty) {
   const p = G.p, r = 0.28; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true;
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
+// ---- terrain: ground you can dig with a shovel and lay elsewhere, unlocked one by one ----
+const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
+const isPlacedFloor = f => !!FLOOR_ITEM[f];
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
+// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
+const TERRAIN = {
+  2: { n: '흙', item: 'gDirt', base: true },
+  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
+  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
+  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => G.bossDead.queen },
+  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => G.bossDead.golem },
+};
+const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terrain[f])));
+function checkUnlocks() {
+  if (!G.terrain) G.terrain = {};
+  for (const f in TERRAIN) { const T = TERRAIN[f]; if (T.base || G.terrain[f] || !T.when()) continue; G.terrain[f] = 1;
+    if (started) { toast(`새 지형을 배웠어요: ${T.n}! 삽으로 떠서 다른 곳에 옮길 수 있어요${hasItem('shovel') ? '' : ' (삽은 작업대에서 만들어요)'}`, 'good', 'terrain' + f); SFX.craft(); } }
+}
+function shovelDesc() {
+  const ks = Object.keys(TERRAIN).map(Number), ok = ks.filter(terrainOk).map(f => TERRAIN[f].n), no = ks.filter(f => !terrainOk(f));
+  return `바닥 앞에서 [걷기]로 깔아 둔 바닥을 걷어요. 단축칸에서 들고 땅을 바라보며 누르면, 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
+}
+function digGround(t) {
+  const i = idx(t.x, t.y), f = G.floor[i]; if (G.wall[i] || G.objs.get(i)) return;
+  if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
+  else { if (f === 2 || !terrainOk(f)) return; const id = TERRAIN[f].item; G.floor[i] = 2; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
+    SFX.pick(); puff(t.x + .5, t.y + .7, f === WATER ? '#8fd0ff' : f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : '#b9a8ff', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+  mapPixel(t.x, t.y); invDirty = true;
+}
 function canPlace(tx, ty, it) {
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
+  if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
   if (o) return false;
   if (G.floor[i] === WATER && it.kind !== 'wall') return false;
   if (it.kind === 'seed') return [1, 2, 3].includes(G.floor[i]);
@@ -1106,7 +1146,7 @@ function mouseTile() {
 }
 
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place' };
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place', dig: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   if (aimMouse()) {
@@ -1136,8 +1176,10 @@ function decide() {
   let t = targetTile(), i = inB(t.x, t.y) ? idx(t.x, t.y) : -1, o = i >= 0 ? G.objs.get(i) : null;
   const s = selItem(), it = s && ITEMS[s.id];
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
-    const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (it && ['place', 'wall', 'floor', 'seed'].includes(it.kind) && canPlace(t.x, t.y, it));
+    const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
+  // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
+  if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
   if (o) {
     const d = OBJ[o.t];
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
@@ -1152,19 +1194,27 @@ function decide() {
       return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
     }
   }
-  if (it && ['place', 'wall', 'floor', 'seed'].includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : '놓기', icon: s.id, t };
+  if (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
+  if (it && it.kind === 'shovel' && i >= 0 && !G.wall[i]) { const f = G.floor[i];
+    if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
+    if (f === 2) return { k: 'info', lbl: '흙 땅', icon: 'dots', msg: '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요', t };
+    if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
   if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return hasItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (제작 → 낚싯대)', t };
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
   if (it && it.kind === 'food') return { k: 'eat', lbl: '먹기', icon: s.id };
   if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
-  return { k: 'swing', lbl: '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
+  const unfloor = i >= 0 && !G.wall[i] && isPlacedFloor(G.floor[i]) && hasItem('shovel') && !(it && it.kind === 'shovel');
+  return { k: 'swing', lbl: '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id, t: unfloor ? t : undefined, sub: unfloor ? 'dig' : undefined };
 }
+const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed'];
+const placeLbl = it => it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
+const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
   G.objs.delete(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
-function subAction() { const a = G.act; if (!started || paused || !a || !a.sub || G.p.dead > 0) return; ensureAudio(); pickupObj(a.t, a.o); }
+function subAction() { const a = G.act; if (!started || paused || !a || !a.sub || G.p.dead > 0) return; ensureAudio(); if (a.sub === 'dig') digGround(a.t); else pickupObj(a.t, a.o); }
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
@@ -1185,6 +1235,7 @@ function perform(a) {
     case 'mine': mineWall(a.t); actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
     case 'place': placeItem(a.t); actCd = 0.14; break;
+    case 'dig': digGround(a.t); actCd = 0.22; break;
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
     case 'eat': eat(G.sel); actCd = 0.4; break;
@@ -1292,8 +1343,9 @@ function hitObj(t, o) {
 }
 function placeItem(t) {
   const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
-  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; }
-  else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (old === 5) spawnDrop('floorWood', 1, t.x + .5, t.y + .5); if (old === 6) spawnDrop('floorStone', 1, t.x + .5, t.y + .5); }
+  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.under.get(i) === WATER) G.under.set(i, 2); }
+  else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
+  else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
   else if (it.kind === 'seed') G.objs.set(i, { t: it.crop, p: G.time });
   else { const o = { t: it.obj }; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
@@ -1501,6 +1553,7 @@ function checkGuide() {
   if (n === 1 && started) { toast('목표 달성!', 'good'); SFX.craft(); }
   const g = GUIDE[G.guide]; const txt = g.t(); if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; }
   goalTarget = g.target ? g.target() : null;
+  checkUnlocks();
 }
 function checkBiome() {
   const p = G.p; if (!G.stats.waterTip && started) { outer: for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const x = Math.floor(p.x) + dx, y = Math.floor(p.y) + dy; if (inB(x, y) && G.floor[idx(x, y)] === WATER && !G.wall[idx(x, y)]) { G.stats.waterTip = 1; toast(hasItem('rod') ? '물가예요! 물을 바라보고 눌러 낚시해요' : '물가예요! 낚싯대를 만들면 낚시할 수 있어요 (제작 → 도구)', 'good'); break outer; } } }
@@ -1774,7 +1827,7 @@ function renderOverlay(cw, ch) {
   if (G.act && G.act.t && p.dead <= 0 && !paused && !document.body.classList.contains('touch') && G.act.lbl) {
     const tt = G.act.t, k = G.act.k, hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
-    const lb = G.act.sub ? G.act.lbl + ' · R 회수' : G.act.lbl; ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
+    const lb = G.act.sub ? (G.act.k === 'swing' ? 'R ' + subLabel(G.act) : G.act.lbl + ' · R ' + subLabel(G.act)) : G.act.lbl; ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
   }
   // goal arrow (drawn at screen resolution so it stays crisp)
   if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
@@ -1843,6 +1896,10 @@ function iconCanvas(id) {
   if (it.kind === 'place') return SPR.obj[it.obj];
   if (it.kind === 'wall') { const c = mk(16, 16, A => { A.g.drawImage(SPR.wtop[it.wall][0], 0, 0, 16, 11, 1, 1, 14, 10); A.g.drawImage(SPR.wfront[it.wall], 0, 0, 16, 5, 1, 11, 14, 4); }); return SPR.item[id] = c; }
   if (it.kind === 'floor') { const c = mk(16, 16, A => { A.g.drawImage(SPR.floor[it.floor][1], 0, 0, 16, 16, 1, 3, 14, 11); }); return SPR.item[id] = c; }
+  if (it.kind === 'ground') { const c = it.ground === WATER
+      ? mk(16, 16, A => { A.r(3, 6, 10, 8, C.woodD); A.r(4, 6, 8, 7, C.wood); A.r(3, 8, 10, 1, C.stoneD); A.r(3, 12, 10, 1, C.stoneD); A.e(8, 6, 4.6, 1.6, '#4f9ad8'); A.p(6, 6, '#bfe6ff'); A.p(9, 5, '#bfe6ff'); A.line(3, 6, 6, 1, C.stoneD); A.line(13, 6, 10, 1, C.stoneD); A.r(6, 1, 5, 1, C.stoneD); })
+      : mk(16, 16, A => { const tex = SPR.floor[it.ground][0]; A.e(8, 10, 6.4, 4.2, '#000'); A.g.globalCompositeOperation = 'source-in'; A.g.drawImage(tex, 0, 0); A.g.globalCompositeOperation = 'source-over'; A.e(7, 8, 3, 1.4, 'rgba(255,255,255,0.18)'); });
+    return SPR.item[id] = c; }
   return SPR.ui.dots;
 }
 const ICONURL = {};
@@ -1862,7 +1919,7 @@ function updateHud() {
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger);
   if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = p.hp + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
   const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
-  const sb = $('#subBtn'), sv = !!(a.sub); if (sb.hidden === sv) { sb.hidden = !sv; if (sv) $('#subIcon').src = iconURL('hand'); }
+  const sb = $('#subBtn'), sv = !!(a.sub); if (sb.hidden === sv) sb.hidden = !sv; if (sv) { const sk = subLabel(a); if (sb.dataset.k !== sk) { sb.dataset.k = sk; $('#subIcon').src = iconURL(sk === '걷기' ? 'shovel' : 'hand'); $('#subLbl').textContent = sk; sb.setAttribute('aria-label', sk); } }
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   if (invDirty) refreshHotbar();
 }
@@ -1914,7 +1971,7 @@ function renderPanel() {
     h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>바닥 앞 작은 [걷기] 버튼으로 깔아 둔 바닥을 걷어요. 삽을 들고 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요. 계속 꾸미고 탐험해 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
@@ -1958,7 +2015,7 @@ function onSheetClick(e) {
     const r = RECIPES[i], near = nearStations(); if (!canCraft(r, near)) return;
     for (const [id, c] of r.req) removeItem(id, c); const left = addItem(r.out, r.n); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
     SFX.craft(); toast(`${ITEMS[r.out].n}${r.n > 1 ? ' ×' + r.n : ''} 완성!`, 'good');
-    if (['place', 'wall', 'floor', 'food'].includes(ITEMS[r.out].kind)) { let slot = G.inv.findIndex(s => s && s.id === r.out);
+    if (['place', 'wall', 'floor', 'ground', 'shovel', 'food'].includes(ITEMS[r.out].kind)) { let slot = G.inv.findIndex(s => s && s.id === r.out);
       if (slot >= 6) { let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[slot]; G.inv[slot] = tmp; slot = to; }
       if (slot >= 0 && slot < 6) G.sel = slot; }
     invDirty = true; checkGuide(); renderPanel(); return;
