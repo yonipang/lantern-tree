@@ -144,6 +144,14 @@ body.touch #pcHint{display:none}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px;color:var(--muted);margin:6px 0 14px}
 .keys b{font-weight:400;color:var(--text)}
 .menu-list{display:grid;gap:10px}
+.menu-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.impbox{background:var(--panel2);border:2px solid var(--amber);border-radius:18px;padding:14px;margin:0 0 14px}
+.impbox p{margin:0 0 12px;font-size:15px;line-height:1.55}
+.devbox{border:2px dashed #ff8fa3;border-radius:18px;padding:12px;margin-top:16px}
+.markrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 2px;font-size:15px;border-bottom:1px solid var(--line)}
+.markrow .btn{min-height:40px;padding:0 12px;font-size:14px}
+#impAsk{width:min(320px,100%);background:rgba(27,20,38,.92);border:2px solid var(--amber);border-radius:18px;padding:14px;text-align:center}
+#impAsk p{margin:0 0 12px;font-size:16px;line-height:1.5}
 .menu-list .btn{width:100%}
 
 /* Title */
@@ -184,6 +192,7 @@ body.touch #pcHint{display:none}
   <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="fade" hidden>기절했어요…</div>
+  <input type="file" id="fileIn" hidden>
   <div id="title">
     <div class="sub">작은 정원지기의 땅속 모험</div>
     <div class="logo">등불나무 아래</div>
@@ -191,7 +200,9 @@ body.touch #pcHint{display:none}
     <div class="tb">
       <button class="btn" id="btnContinue" type="button" hidden>이어하기</button>
       <button class="btn" id="btnNew" type="button">새 모험 시작</button>
+      <button class="btn ghost" id="btnImport" type="button" style="min-height:48px;font-size:17px">세이브 파일 불러오기</button>
     </div>
+    <div id="impAsk" hidden></div>
     <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 오른쪽 큰 버튼으로 캐기·공격·놓기</div>
   </div>
 </div>
@@ -929,7 +940,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
-  G.sel = 0; G.outfit = 0; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.marks = []; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -937,7 +948,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [] };
 }
 function deserialize(s) {
   const N = W * H;
@@ -951,10 +962,53 @@ function deserialize(s) {
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
-  G.guide = 0;
+  G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 function saveLocal(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); if (!silent) toast('저장했어요', 'good'); return true; } catch (e) { if (!silent) toast('이 브라우저에서는 저장할 수 없어요'); return false; } }
+// ---- save files: export / import ----
+let DL = null; try { if (window.claude?.use) window.claude.use('downloads').then(d => { DL = d; }).catch(() => { }); } catch (e) { }
+const pad2 = n => String(n).padStart(2, '0');
+function saveFileName() { const d = new Date(); return `등불나무_세이브_${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}.json`; }
+function exportSave() {
+  if (!G) return; saveLocal(true);
+  const txt = JSON.stringify({ app: 'lantern-tree', kind: 'save', ver: 1, at: new Date().toISOString(), save: serialize() }), name = saveFileName();
+  if (DL) { DL.save({ filename: name, data: txt }).then(() => toast('세이브 파일을 저장했어요', 'good')).catch(e => { if (!e || e.code !== 'declined') toast('여기서는 파일을 저장할 수 없어요'); }); return; }
+  let file = null; try { file = new File([txt], name, { type: 'application/json' }); } catch (e) { }
+  if (file && document.body.classList.contains('touch') && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: '등불나무 세이브' }).then(() => toast('세이브 파일을 보냈어요', 'good')).catch(e => { if (e && e.name !== 'AbortError') plainDownload(txt, name); }); return; }
+  plainDownload(txt, name);
+}
+function plainDownload(txt, name) {
+  try { const url = URL.createObjectURL(new Blob([txt], { type: 'application/json' })), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); toast('세이브 파일을 내려받았어요', 'good'); }
+  catch (e) { toast('여기서는 파일을 저장할 수 없어요'); }
+}
+let importFrom = 'menu', pendingImp = null;
+function pickSaveFile(from) { importFrom = from; const f = $('#fileIn'); f.value = ''; f.click(); }
+function readSaveFile(file) {
+  if (!file) return;
+  file.text().then(t => { let o; try { o = JSON.parse(t); } catch (e) { o = null; }
+    const sv = o && o.app === 'lantern-tree' ? o.save : o;
+    if (!sv || !Array.isArray(sv.wall) || !Array.isArray(sv.floor) || !sv.p || !Array.isArray(sv.inv)) { toast('등불나무 세이브 파일이 아니에요'); return; }
+    pendingImp = { save: sv, name: file.name };
+    if (importFrom === 'title') { if (!loadLocal() && !started) { applyImport(); return; } showTitleAsk(); }
+    else if (panel && panel.kind === 'menu') renderPanel();
+  }).catch(() => toast('파일을 읽지 못했어요'));
+}
+function showTitleAsk() { const el = $('#impAsk'); el.hidden = !pendingImp; if (!pendingImp) return;
+  el.innerHTML = `<p>「${escHTML(pendingImp.name)}」 파일을 불러올까요?<br><span style="color:var(--muted);font-size:14px">지금 세이브는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn" type="button" data-imp="yes">불러오기</button><button class="btn ghost" type="button" data-imp="no">취소</button></div>`; }
+function escHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+function applyImport() {
+  if (!pendingImp) return; const sv = pendingImp.save; pendingImp = null; $('#impAsk').hidden = true;
+  const prev = G ? serialize() : null;
+  try { if (prev) localStorage.setItem(SAVE_KEY + '-backup', JSON.stringify(prev)); } catch (e) { }
+  try { deserialize(sv); } catch (e) { if (prev) deserialize(prev); toast('파일을 불러오지 못했어요'); if (panel) renderPanel(); return; }
+  if (panel) closePanel(); beginPlay(); toast('세이브를 불러왔어요', 'good');
+}
+// ---- developer tools (village marks). Later, with multiplayer, canDev() should ask the server for a developer role. ----
+let DEV = false; try { if (/[?&]dev(=1)?(&|$)/.test(location.search)) localStorage.setItem('lantern-tree-dev', '1'); DEV = localStorage.getItem('lantern-tree-dev') === '1'; } catch (e) { }
+function canDev() { return DEV; }
+let devTaps = 0, devTapT = 0;
 function loadLocal() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
 
 // ================= inventory =================
@@ -1681,6 +1735,16 @@ function renderWorld(cw, ch) {
   // boss shots (after lighting so they read in the dark)
   if (G.shots.length) { ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true; for (const s of G.shots) { const gx = s.x * T - camX, gy = (s.y - .3) * T - camY, rr = .55 * T; ctx.drawImage(glowSprite(s.k === 'spore' ? '#d59bff' : '#b9a8ff'), gx - rr, gy - rr, rr * 2, rr * 2); } ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
     for (const s of G.shots) { const img = SPR.shot[s.k], w = img.width, gx = Math.round(s.x * T - camX), gy = Math.round((s.y - .3) * T - camY); if (s.k === 'shard') { ctx.save(); ctx.translate(gx, gy); ctx.rotate((s.a || 0) + Math.PI / 2); ctx.drawImage(img, -w / 2, -w / 2); ctx.restore(); } else ctx.drawImage(img, gx - w / 2, gy - w / 2); } }
+  // village marks (developer mode only)
+  if (canDev() && G.marks && G.marks.length) {
+    const M = G.marks;
+    for (let k = 0; k + 1 < M.length; k += 2) { const a = M[k], b = M[k + 1], x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y), x1 = Math.max(a.x, b.x) + 1, y1 = Math.max(a.y, b.y) + 1;
+      ctx.fillStyle = 'rgba(255,143,163,0.08)'; ctx.fillRect(x0 * T - camX, y0 * T - camY, (x1 - x0) * T, (y1 - y0) * T);
+      ctx.setLineDash([4, 3]); ctx.strokeStyle = 'rgba(255,143,163,0.85)'; ctx.lineWidth = 1; ctx.strokeRect(x0 * T - camX + .5, y0 * T - camY + .5, (x1 - x0) * T - 1, (y1 - y0) * T - 1); ctx.setLineDash([]); }
+    M.forEach((m, k) => { const X = Math.round(m.x * T - camX), Y = Math.round(m.y * T - camY); ctx.fillStyle = INK; ctx.fillRect(X + 3, Y + 1, 2, 14); ctx.fillStyle = '#e8dcc8'; ctx.fillRect(X + 4, Y + 2, 1, 12);
+      ctx.fillStyle = k % 2 ? '#7fe0b5' : '#ff8fa3'; ctx.fillRect(X + 5, Y + 2, 7, 5); ctx.fillStyle = INK; ctx.fillRect(X + 5, Y + 7, 7, 1); ctx.fillRect(X + 12, Y + 2, 1, 5); ctx.fillRect(X + 5, Y + 1, 8, 1);
+      ctx.fillStyle = '#fff'; const n = Math.floor(k / 2) + 1; if (n < 10) { ctx.font = '6px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#2a1830'; ctx.fillText(String(n), X + 8.5, Y + 5); } });
+  }
   // reach area (mouse aiming)
   if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit) {
     const tt = G.act.t, s0 = selItem(), it0 = s0 && ITEMS[s0.id], placing = it0 && ['place', 'wall', 'floor', 'seed'].includes(it0.kind);
@@ -1802,7 +1866,7 @@ function updateHud() {
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   if (invDirty) refreshHotbar();
 }
-function openPanel(kind, data = {}) { panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it) { if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}`; if (it.kind === 'sword') return `공격력 ${it.dmg}`; if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽'][it.tier]}까지`; return ''; }
@@ -1844,10 +1908,14 @@ function renderPanel() {
   } else if (k === 'tree') {
     h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${[0, 1, 2].map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p></div>`;
   } else if (k === 'menu') {
-    h += head('메뉴', 'gear') + `<div class="sh-body"><div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
+    const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:14px">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
+    const marks = G.marks || [];
+    const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:8px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
+    h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
+      <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
-      <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div></div>`;
+      <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요. 계속 꾸미고 탐험해 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
@@ -1898,6 +1966,13 @@ function onSheetClick(e) {
   if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; G.objs.delete(panel.i); const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
   if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
   if (a === 'save') { saveLocal(); return; }
+  if (a === 'export') { exportSave(); return; }
+  if (a === 'import') { pickSaveFile('menu'); return; }
+  if (a === 'impYes') { applyImport(); return; }
+  if (a === 'impNo') { pendingImp = null; renderPanel(); return; }
+  if (a === 'devtap') { const now = performance.now(); devTaps = now - devTapT < 1500 ? devTaps + 1 : 1; devTapT = now; if (devTaps >= 7) { devTaps = 0; DEV = !DEV; try { localStorage.setItem('lantern-tree-dev', DEV ? '1' : '0'); } catch (e) { } toast(DEV ? '개발자 모드를 켰어요' : '개발자 모드를 껐어요'); renderPanel(); } return; }
+  if (a === 'markAdd' && canDev()) { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); saveLocal(true); renderPanel(); return; }
+  if (a === 'markDel' && canDev()) { G.marks.splice(i, 1); saveLocal(true); renderPanel(); return; }
   if (a === 'zoom') { zoomPref = i; try { localStorage.setItem('lantern-tree-zoom', i); } catch (e) { } resize(); renderPanel(); return; }
   if (a === 'sound') { soundOn = !soundOn; try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
   if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } newGame((Math.random() * 1e9) | 0); started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
@@ -1960,6 +2035,9 @@ function setupInput() {
   $('#goal').addEventListener('click', () => { const g = GUIDE[G.guide]; if (g) toast(g.h); });
   $('#btnNew').addEventListener('click', () => { ensureAudio(); newGame((Math.random() * 1e9) | 0); beginPlay(); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
   $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
+  $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
+  $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
+  $('#impAsk').addEventListener('click', e => { const b = e.target.closest('[data-imp]'); if (!b) return; if (b.dataset.imp === 'yes') applyImport(); else { pendingImp = null; $('#impAsk').hidden = true; } });
   window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && started) saveLocal(true); });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
@@ -1984,6 +2062,7 @@ function start(data) {
   ['bInv', 'bCraft', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'map', 'gear'][k]); });
   if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
+  try { navigator.storage?.persist?.().catch(() => { }); } catch (e) { }
   const saved = (data && data.save) || loadLocal();
   if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { newGame(20261008); } } else newGame(20261008);
   cam.x = G.p.x; cam.y = G.p.y - .3; computeLight();
