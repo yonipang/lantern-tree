@@ -45,12 +45,12 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 #bossbar .bn{font-size:14px;color:#ffc2cf;margin-bottom:4px}
 #bossbar .fill{background:linear-gradient(#ffd0a0,#ff7a5c)}
 
-#toasts{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 240px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:min(92vw,420px)}
-.toast{background:rgba(27,20,38,.92);border:2px solid var(--amber-d);border-radius:999px;padding:7px 16px;font-size:15px;text-align:center;animation:tin .25s ease-out;text-wrap:balance}
-.toast.good{border-color:var(--mint)}
-.toast.warn{border-color:#ff8a96;background:#4a1f2e;color:#ffe0e5}
+#toasts{position:absolute;left:calc(env(safe-area-inset-left,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 190px);display:flex;flex-direction:column;align-items:flex-start;gap:4px;pointer-events:none;width:min(66vw,380px)}
+.toast{font-size:15px;line-height:1.35;text-align:left;color:#fff1d6;animation:tin .25s ease-out;text-wrap:pretty;text-shadow:0 0 2px #120f1c,0 0 2px #120f1c,1px 1px 0 #120f1c,-1px -1px 0 #120f1c,1px -1px 0 #120f1c,-1px 1px 0 #120f1c,0 2px 4px rgba(0,0,0,.6)}
+.toast.good{color:#a5ecc9}
+.toast.warn{color:#ffb4c0;font-size:16px}
 .toast.out{opacity:0;transform:translateY(6px);transition:all .3s}
-@media (pointer:fine){#toasts{bottom:calc(var(--slotS) + 60px)}}
+
 @keyframes tin{from{opacity:0;transform:translateY(8px) scale(.96)}}
 
 /* Hotbar */
@@ -810,7 +810,7 @@ function buildSprites() {
   for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
   SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)];
-  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp']) SPR.objOff[k] = dimmed(SPR.obj[k]);
+  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
   SPR.crop = { berry: [0, 1, 2, 3].map(s => cropSpr('berry', s)), shroom: [0, 1, 2, 3].map(s => cropSpr('shroom', s)) };
   SPR.tree = treeSpr(); SPR.lantern = [lanternSpr(false), lanternSpr(true)];
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
@@ -1104,6 +1104,23 @@ function drawRoofs(x0, x1, y0, y1, camX, camY) {
   ctx.globalAlpha = 1;
 }
 addBuildPieces();
+
+// ---- more decorations, spread over early (wood/stone/fiber/dirt) and later (copper/iron) materials ----
+const DECOR = {
+  woodCrate: { n: '나무 상자', d: '차곡차곡 쌓아 두는 장식용 상자.', req: [['wood', 3]], spr: [16, 16, A => { A.r(2, 4, 12, 11, C.wood); A.r(2, 4, 12, 1, C.woodL); A.r(2, 14, 12, 1, C.woodD); A.r(2, 4, 1, 11, C.woodD); A.r(13, 4, 1, 11, C.woodD); A.r(3, 9, 10, 1, C.woodD); A.line(3, 5, 12, 13, C.woodD); A.p(4, 6, '#ffd1a0'); }] },
+  logBench: { n: '통나무 벤치', d: '앉아서 쉴 수 있어요.', req: [['wood', 5]], use: 'sit', spr: [16, 16, A => { A.r(3, 11, 2, 3, C.woodD); A.r(11, 11, 2, 3, C.woodD); A.r(1, 8, 14, 4, C.wood); A.r(1, 8, 14, 1, C.woodL); A.r(1, 11, 14, 1, C.woodD); A.e(1.6, 9.8, 1.2, 1.8, '#e8b97a'); A.e(14.4, 9.8, 1.2, 1.8, '#e8b97a'); A.p(6, 9, C.woodD); A.p(10, 10, C.woodD); A.e(11, 7.6, 1.6, .8, C.leaf); }] },
+  stoneBench: { n: '돌 벤치', d: '서늘하고 단단한 돌 의자. 앉을 수 있어요.', req: [['stone', 6]], use: 'sit', spr: [16, 16, A => { A.r(2, 11, 3, 3, C.stoneD); A.r(11, 11, 3, 3, C.stoneD); A.r(1, 8, 14, 3, C.stone); A.r(1, 8, 14, 1, C.stoneL); A.r(1, 10, 14, 1, C.stoneD); A.p(4, 9, C.stoneL); A.p(12, 9, C.stoneD); }] },
+  stoneLantern: { n: '돌 등롱', d: '정원을 은은하게 밝히는 돌 등. 눌러서 켜고 꺼요.', req: [['stone', 4], ['wood', 1]], use: 'lamp', light: [5, '#ffd27a'], flick: 1, spr: [16, 24, A => { A.r(5, 20, 6, 2, C.stoneD); A.r(7, 13, 2, 7, C.stone); A.r(7, 13, 1, 7, C.stoneL); A.r(4, 8, 8, 5, C.stone); A.r(6, 9, 4, 3, '#ffd27a'); A.p(7, 10, '#fff1c0'); A.poly([[2, 8.5], [8, 3.5], [14, 8.5]], C.stoneD); A.r(3, 8, 10, 1, C.stoneL); A.p(8, 3, C.stone); }] },
+  flowerBox: { n: '꽃 화단', d: '알록달록한 꽃이 핀 화단. 물을 줄 수 있어요.', req: [['wood', 2], ['dirt', 2], ['fiber', 2]], use: 'water', spr: [16, 16, A => { A.r(1, 9, 14, 5, C.wood); A.r(1, 9, 14, 1, C.woodL); A.r(1, 13, 14, 1, C.woodD); A.r(2, 9, 12, 1, C.dirt); [[3, 6, C.rose], [6, 5, '#fff1d6'], [9, 6, '#ffd25c'], [12, 5, C.cry]].forEach(([x, y, c]) => { A.line(x, y + 1, x, 9, C.leafD); A.p(x, y, c); A.p(x - 1, y, c); A.p(x + 1, y, c); A.p(x, y - 1, c); A.p(x, y + 1, c); A.p(x, y, '#ffc861'); }); A.p(4, 8, C.leaf); A.p(10, 8, C.leaf); }] },
+  strawBasket: { n: '짚 바구니', d: '이끼 섬유로 엮은 바구니.', req: [['fiber', 4]], spr: [16, 16, A => { A.line(4, 8, 6, 3, C.leafD); A.line(10, 8, 11, 4, C.leaf); A.p(6, 3, C.leafL); A.e(8, 11, 6, 3.6, '#d9b26a'); for (let x = 3; x < 14; x += 2) A.line(x, 9, x + 1, 14, '#b08a45'); A.e(8, 8.6, 6, 1.4, '#e8c98a'); A.e(8, 8.6, 4.6, .8, '#9a7438'); }] },
+  pictureFrame: { n: '이젤 액자', d: '풍경화가 담긴 작은 이젤.', req: [['wood', 2], ['fiber', 1]], spr: [16, 16, A => { A.line(5, 11, 3, 15, C.woodD); A.line(11, 11, 13, 15, C.woodD); A.line(8, 10, 8, 15, C.woodD); A.r(3, 1, 10, 10, C.woodD); A.r(4, 2, 8, 8, '#a8dcf5'); A.e(6, 9, 3, 2, C.leaf); A.e(10.5, 9.5, 3, 2.2, C.leafD); A.e(10, 4, 1.3, 1.3, C.amber); A.p(5, 4, '#ffffff'); A.p(6, 4, '#ffffff'); }] },
+  copperLamp: { n: '구리 스탠드', d: '반짝이는 구리 스탠드 조명. 눌러서 켜고 꺼요.', req: [['copperBar', 2], ['wood', 1]], use: 'lamp', light: [6, '#ffd9a0'], spr: [16, 24, A => { A.e(8, 21.5, 3.4, 1.4, C.copperD); A.r(7, 9, 2, 12, C.copper); A.r(7, 9, 1, 12, C.copperL); A.poly([[3, 10], [5, 3.5], [11, 3.5], [13, 10]], C.copper); A.line(5, 4, 4, 9, C.copperL); A.r(4, 10, 8, 1, C.copperD); A.r(6, 11, 4, 1, '#fff1c0'); }] },
+  copperKettle: { n: '구리 주전자', d: '따뜻한 차를 마실 수 있어요.', req: [['copperBar', 2]], use: 'tea', spr: [16, 16, A => { A.line(12, 10, 15, 6, C.copperD, 2); A.line(4, 7, 2, 9, C.copperD); A.line(2, 9, 4, 12, C.copperD); A.e(8, 10.5, 5, 4, C.copper); A.e(6.5, 9, 1.6, 1.4, C.copperL); A.r(4, 14, 8, 1, C.copperD); A.e(8, 6.6, 2.6, 1, C.copperD); A.p(8, 5, C.copperL); }] },
+  grandClock: { n: '괘종시계', d: '똑딱똑딱 시간을 알려 주는 커다란 시계.', req: [['copperBar', 1], ['wood', 6]], spr: [16, 24, A => { A.r(4, 3, 8, 19, C.woodD); A.r(3, 2, 10, 2, C.woodL); A.r(3, 21, 10, 2, C.wood); A.e(8, 7.5, 3, 3, C.cream); A.e(8, 7.5, 3, 3, C.cream); A.p(8, 6, INK); A.p(8, 7, INK); A.p(9, 7, INK); A.r(6, 12, 4, 7, '#5a3a24'); A.line(8, 12, 8, 16, C.copper); A.e(8, 17, 1.2, 1.2, C.copperL); A.p(5, 4, C.copper); A.p(10, 4, C.copper); }] },
+  ironStove: { n: '무쇠 난로', d: '집 안을 따뜻하게 밝혀요. 눌러서 켜고 꺼요.', req: [['ironBar', 3], ['stone', 4]], use: 'lamp', light: [5.5, '#ff9a4a'], flick: 1, spr: [16, 24, A => { A.r(9, 1, 3, 8, '#4a4558'); A.r(9, 1, 3, 1, C.iron); A.r(3, 8, 10, 12, '#5a5468'); A.r(2, 8, 12, 2, C.iron); A.r(5, 12, 6, 5, '#2e2b3a'); A.r(6, 14, 4, 3, C.fire); A.r(7, 15, 2, 2, C.amber); A.r(4, 20, 2, 2, '#3d3a4a'); A.r(10, 20, 2, 2, '#3d3a4a'); A.p(4, 10, C.ironL); }] },
+  ironChair: { n: '철제 의자', d: '돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요.', req: [['ironBar', 2], ['fiber', 1]], use: 'sit', spr: [16, 16, A => { A.line(4, 2, 4, 9, C.ironD); A.line(11, 2, 11, 9, C.ironD); A.r(4, 2, 8, 1, C.ironD); A.e(7, 5, 1.5, 1.5, C.ironD); A.e(7, 5, .6, .6, '#00000000'); A.e(9.5, 5, 1.5, 1.5, C.ironD); A.r(3, 9, 10, 2, C.iron); A.r(4, 9, 8, 1, '#7fb3e0'); A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); }] },
+};
+for (const id in DECOR) { const D = DECOR[id]; OSPR[id] = D.spr; ITEMS[id] = { n: D.n, kind: 'place', obj: id, d: D.d }; OBJ[id] = { n: D.n, solid: 1, item: id }; if (D.light) OBJ[id].light = D.light; if (D.flick) OBJ[id].flick = 1; if (D.use) USE[id] = D.use; RECIPES.push(Rc(id, 1, D.req, 'bench', 'furn')); }
 
 RECIPES.push(
   Rc('rod', 1, [['wood', 3], ['fiber', 2]], null, 'tool'),
@@ -1511,9 +1528,10 @@ const SFX = {
 function puff(x, y, col, n = 6, spd = 2.5, z = 0.3) { for (let k = 0; k < n; k++) { const a = Math.random() * 6.283, s = spd * (0.4 + Math.random() * 0.8); G.parts.push({ x, y, z: z + Math.random() * .2, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: 1.5 + Math.random() * 2, life: .5 + Math.random() * .35, max: .8, col, sz: 1 + (Math.random() * 2 | 0) }); } }
 function ftext(x, y, txt, col = '#fff1d6') { G.texts.push({ x, y, txt, col, life: 1, vy: -1.1 }); }
 const toastKeys = {};
+function placeToasts() { const g = document.querySelector('#goal'), box = $('#toasts'); if (!g || !box) return; const r = g.getBoundingClientRect(); if (r.width) { box.style.top = Math.round(r.bottom + 10) + 'px'; box.style.left = Math.round(r.left + 2) + 'px'; } }
 function toast(msg, cls, key) {
   const now = performance.now(); if (key) { if (toastKeys[key] && now - toastKeys[key] < 2200) return; toastKeys[key] = now; }
-  const box = $('#toasts'); const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : ''); el.textContent = msg; box.appendChild(el);
+  const box = $('#toasts'); placeToasts(); const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : ''); el.textContent = msg; box.appendChild(el);
   while (box.children.length > 3) box.firstChild.remove();
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, cls === 'warn' ? 6500 : 2300);
 }
@@ -1561,7 +1579,8 @@ function nearestEnemy(range) {
 function decide() {
   const p = G.p; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
   const sw = bestWeapon(), pk = bestPick();
-  const en = nearestEnemy(1.35);
+  let en = nearestEnemy(1.35);
+  if (en && aimMouse()) { const m = mouseWorld(), a1 = Math.atan2(m.y - p.y, m.x - p.x), a2 = Math.atan2(en.y - p.y, en.x - p.x); let da = Math.abs(a1 - a2); if (da > Math.PI) da = 2 * Math.PI - da; if (da > 1.1) en = null; }
   if (en) return { k: 'attack', lbl: '공격', icon: sw.id === 'hand' ? 'hand' : sw.id, en };
   if (p.sit) return { k: 'stand', lbl: '일어나기', icon: 'hand' };
   if (G.fish) return { k: 'reel', lbl: G.fish.st === 'bite' ? '당기기!' : '거두기', icon: 'rod' };
@@ -1646,7 +1665,7 @@ function perform(a) {
   }
 }
 function swingAttack() {
-  const p = G.p, w = bestWeapon(); const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
+  const p = G.p, w = bestWeapon(); if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
   G.swing = { t: 0.22, max: 0.22, ang, icon: w.id === 'hand' ? null : w.id };
   SFX.swing();
   const hit = (e, rr, isBoss) => {
