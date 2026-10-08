@@ -127,6 +127,7 @@ body.touch #pcHint{display:none}
 .qty button.qmax{font-size:14px;min-width:52px}
 .qty button:disabled{opacity:.35}
 .qty b{font-weight:400;min-width:44px;text-align:center;font-size:16px;color:var(--amber)}
+.ing.gain{color:#9fe8c4}
 .fixbar{height:6px;background:#140f1d;border-radius:3px;overflow:hidden;margin:6px 0 2px;max-width:160px}
 .fixbar i{display:block;height:100%;background:linear-gradient(90deg,#ff6b7a,#ffc861 40%,#7fe0b5)}
 .rc{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px;background:var(--panel2);border-radius:18px;border:2px solid transparent}
@@ -1169,6 +1170,9 @@ function wear(s, n = 1) {
   else if (before > mx * .2 && s.dur <= mx * .2) toast(`${josa(nm, '이', '가')} 많이 닳았어요 (${s.dur}/${mx})`, null, 'worn' + s.id);
 }
 function repairCost(s) { const mx = durMax(s.id), frac = 1 - durOf(s) / mx; return DUR[s.id][1].map(([id, c]) => [id, Math.max(1, Math.ceil(c * frac))]); }
+// ---- salvage: break equipment down at a workbench and get 70% of its crafting materials back (rounded) ----
+const SALVAGE_RATE = 0.7, SALVAGE_BASE = { pickWood: [['wood', 3]], swordWood: [['wood', 3]] }; // starter tools have no recipe
+function salvageGet(id) { const r = RECIPES.find(r => r.out === id), req = r ? r.req : SALVAGE_BASE[id]; if (!req) return null; return req.map(([m, c]) => [m, Math.round(c * SALVAGE_RATE)]).filter(([, c]) => c > 0); }
 const usableItem = id => G.inv.some(s => s && s.id === id && !isBroken(s));
 function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; for (const s of G.inv) if (s && ITEMS[s.id].kind === 'pick' && !isBroken(s) && ITEMS[s.id].power > b.power) b = { ...ITEMS[s.id], id: s.id, slot: s }; return b; }
 function bestWeapon() { let b = { dmg: 3, id: 'hand' }; for (const s of G.inv) if (s && ITEMS[s.id].kind === 'sword' && !isBroken(s) && ITEMS[s.id].dmg > b.dmg) b = { ...ITEMS[s.id], id: s.id, slot: s }; return b; }
@@ -2060,7 +2064,7 @@ function updateHud() {
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   if (invDirty) refreshHotbar();
 }
-function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it, s) { const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
@@ -2084,10 +2088,17 @@ function renderPanel() {
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st;
     h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
-    const tabs = [['all', '전체'], ['tool', '도구'], ['furn', '기본 가구'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['fix', '수리']]; if (st) tabs.unshift(['here', STN[st]]);
+    const tabs = [['all', '전체'], ['tool', '도구'], ['furn', '기본 가구'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['fix', '수리'], ['salv', '분해']]; if (st) tabs.unshift(['here', STN[st]]);
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
     h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}</div>`;
-    if (UIS.tab === 'fix') {
+    if (UIS.tab === 'salv') {
+      const nb = near.has('bench'), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && DUR[s.id]);
+      h += `<div class="sh-body"><p class="hint">${nb ? '장비를 분해하면 만들 때 든 재료의 70%를 돌려받아요. 분해한 장비는 사라져요.' : '작업대 근처에서 분해할 수 있어요.'}</p><div class="list">`;
+      if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">분해할 장비가 없어요</p>`;
+      for (const { s, i } of list) { const got = salvageGet(s.id), ok = nb && !!got, mx = DUR[s.id][0], ask = UIS.salvAsk === i;
+        h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${ITEMS[s.id].n}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="ings"><span class="ing">내구도 ${durOf(s)}/${mx}</span>${got ? got.map(([id, c]) => `<span class="ing gain"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} +${c}</span>`).join('') : '<span class="ing">돌려받을 재료가 없어요</span>'}</div></div><button type="button" class="btn mk ${ask ? 'warn' : ''}" data-a="salv" data-i="${i}" ${ok ? '' : 'disabled'}>${ask ? '정말?' : '분해'}</button></div>`; }
+      h += `</div></div>`;
+    } else if (UIS.tab === 'fix') {
       const nb = near.has('bench'), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
       h += `<div class="sh-body"><p class="hint">${nb ? '닳은 도구를 새것처럼 고쳐요. 많이 닳을수록 재료가 더 들어요.' : '작업대 근처에서 고칠 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">고칠 도구가 없어요</p>`;
@@ -2164,7 +2175,11 @@ function onSheetClick(e) {
   if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
   if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
   if (a === 'trash') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } G.inv[UIS.invSel] = null; UIS.invSel = null; UIS.trash = false; invDirty = true; renderPanel(); return; }
-  if (a === 'tab') { UIS.tab = i; renderPanel(); return; }
+  if (a === 'tab') { UIS.tab = i; UIS.salvAsk = null; renderPanel(); return; }
+  if (a === 'salv') { const s = G.inv[i], got = s && DUR[s.id] && salvageGet(s.id); if (!got || !nearStations().has('bench')) return;
+    if (UIS.salvAsk !== i) { UIS.salvAsk = i; renderPanel(); return; }
+    UIS.salvAsk = null; G.inv[i] = null; for (const [id, c] of got) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
+    SFX.brk(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, c]) => ITEMS[id].n + ' ' + c + '개').join(', ')}`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'fix') { const s = G.inv[i]; if (!s || !DUR[s.id] || !nearStations().has('bench')) return; const cost = repairCost(s); if (!cost.every(([id, c]) => countItem(id) >= c)) return;
     for (const [id, c] of cost) removeItem(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, maxCraft(r)), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
