@@ -45,6 +45,11 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .sbtn img{width:30px;height:30px}
 .sbtn:active{transform:translateY(2px);box-shadow:none}
 .sbtn{position:relative}
+.slot{touch-action:none}
+.slot.dragging{opacity:.35}
+.slot.dropT{border-color:var(--mint);background:#3c4a55}
+#dragGhost{position:fixed;z-index:60;width:56px;height:56px;margin:-28px 0 0 -28px;pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
+@media (min-height:521px){body.touch #bInv,body.touch #bCraft{position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);z-index:2}body.touch #bCraft{bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px)}body.touch #bInv{bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 304px)}}
 .sbtn.dot::after{content:'';position:absolute;top:3px;right:3px;width:13px;height:13px;border-radius:50%;background:#ff8fa3;border:2px solid #241b2f}
 
 #bossbar{background:rgba(27,20,38,.85);border:2px solid #8c4a5e;border-radius:14px;padding:6px 10px 8px}
@@ -728,6 +733,7 @@ const lanternSpr = on => mk(9, 11, A => { A.r(4, 0, 1, 3, C.woodD); A.r(2, 3, 5,
 // tiles
 const FPAL = { 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
 function floorTex(t, v) {
+  if (t >= 11) return natFloorTex(t, v);
   const R = rng(t * 977 + v * 131 + 7), pal = FPAL[t];
   const P = (A, x, y, col) => A.p(((x % 16) + 16) % 16, ((y % 16) + 16) % 16, col);
   return mk(16, 16, A => {
@@ -837,7 +843,7 @@ const DECO_DEF = {
 const SPR = {};
 function buildTerrain() {
   SPR.fringe = {}; SPR.fringeW = {}; SPR.corner = {}; SPR.cornerW = {}; SPR.fringeL = {}; SPR.fringeX = {}; SPR.fringeWL = {}; SPR.fringeWX = {};
-  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
+  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
   SPR.deco = {}; for (const t in DECO_DEF) SPR.deco[t] = DECO_DEF[t].map(f => mk(7, 7, f, 'soft'));
   SPR.lily = [mk(9, 7, A => { A.e(4.5, 3.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 2.8, 1.6, 1, '#6cbb76'); A.poly([[4.5, 3.5], [8.5, 1.8], [8.5, 3.4]], '#00000000'); A.g.globalCompositeOperation = 'destination-out'; A.poly([[4.5, 3.5], [8.6, 1.6], [8.6, 3.6]], '#000'); A.g.globalCompositeOperation = 'source-over'; }, 'sel'),
     mk(9, 8, A => { A.e(4.5, 4.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 3.8, 1.6, 1, '#6cbb76'); A.e(5, 2.6, 1.5, 1.3, '#ffb3c6'); A.p(5, 2, '#ffe0ea'); A.p(5, 3, C.amber); }, 'sel')];
@@ -845,6 +851,8 @@ function buildTerrain() {
 function buildSprites() {
   buildPlayer(0);
   SPR.slimeG = slimeSpr('#86d96b', '#d2f7b8', '#4f9e45'); SPR.slimeO = slimeSpr('#f2a65a', '#ffe0b8', '#c06e2c'); SPR.slimeP = slimeSpr('#b58cf0', '#ecdfff', '#7a55c4');
+  for (const c in FLOWERS) { const F = FLOWERS[c]; SPR['bloom' + c] = bloomSpr(F[2], F[3], F[4]); SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]); }
+  SPR.wild = {}; for (const c in FLOWERS) SPR.wild[c] = wildSpr(FLOWERS[c][2], FLOWERS[c][3]);
   SPR.shroomy = shroomySpr(); SPR.boss = bossSpr(); SPR.queen = queenSpr(); SPR.golem = golemSpr();
   SPR.shot = { spore: shotSpr('#d59bff', '#f6e6ff'), shard: shotSpr(C.cry, '#ffffff', true) }; SPR.water = [waterTex(0), waterTex(1)];
   for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem']) SPR[k + 'W'] = whiten(SPR[k]);
@@ -854,7 +862,7 @@ function buildSprites() {
   SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
   for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
   SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
-  SPR.bush = [bushSpr(false), bushSpr(true)];
+  SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
   SPR.crop = { berry: [0, 1, 2, 3].map(s => cropSpr('berry', s)), shroom: [0, 1, 2, 3].map(s => cropSpr('shroom', s)) };
   SPR.tree = treeSpr(); SPR.lantern = [lanternSpr(false), lanternSpr(true)];
@@ -1325,6 +1333,152 @@ const ENEMY = {
   shroomy: { n: '버섯도깨비', hp: 24, dmg: 9, spd: 2.1, r: 0.3, hop: 0, drops: [['mushroom', 1, 2, 0.8], ['spore', 1, 1, 0.35]], col: '#a65fd1' },
 };
 
+
+// ---- petals & flower critters (bloomlings) living in zones of the moss caves ----
+const FLOWERS = { R: ['빨강', '빨간', '#ff6b81', '#ffb3c0', '#d0485e'], B: ['파랑', '파란', '#6fa8ff', '#c2dcff', '#4a78d0'], Y: ['노랑', '노란', '#ffd25c', '#fff1b0', '#d9a53a'], W: ['하양', '하얀', '#f4f0f8', '#ffffff', '#c9c0d6'], K: ['까망', '검은', '#4a3f5c', '#8a7aa6', '#2a2238'] };
+const petalIcon = (c, cL, cD) => A => { A.e(6, 9, 3.2, 4.6, c); A.e(10.5, 7.5, 2.6, 3.8, cD); A.e(10.5, 7, 1.8, 2.8, c); A.p(5, 7, cL); A.p(6, 6, cL); A.p(10, 5, cL); A.line(6, 13, 6, 14, C.leafD); };
+for (const c in FLOWERS) { const [n, adj, col, cL, cD] = FLOWERS[c];
+  ITEMS['petal' + c] = { n: `${adj} 꽃잎`, d: `${n} 꽃망울이 떨어뜨리는 꽃잎. 자연 꾸미기 재료예요.` };
+  ICON['petal' + c] = petalIcon(col, cL, cD);
+  ENEMY['bloom' + c] = c === 'K' ? { n: `${n} 꽃망울`, hp: 46, dmg: 11, spd: 2.2, r: 0.3, hop: 0, calm: 1, drops: [['petalK', 1, 2, 1], ['petalR', 1, 1, 0.3]], col }
+    : { n: `${n} 꽃망울`, hp: 18, dmg: 6, spd: 1.9, r: 0.3, hop: 0, calm: 1, drops: [['petal' + c, 1, 2, 1], ['berrySeed', 1, 1, 0.08]], col }; }
+function bloomSpr(c, cL, cD) {
+  return mk(16, 16, A => { A.line(8, 12, 8, 15, C.leafD); A.e(5, 14, 2, 1, C.leaf); A.e(11, 14, 2, 1, C.leaf);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283 - 1.57; A.e(8 + Math.cos(a) * 4.4, 7.5 + Math.sin(a) * 4, 2.4, 2.3, k % 2 ? c : cD); }
+    A.e(8, 7.5, 3.3, 3, C.cream); A.p(7, 7, INK); A.p(9, 7, INK); A.p(6, 8, C.blush); A.p(10, 8, C.blush); A.p(5, 3, cL); A.p(11, 3, cL); });
+}
+const wildSpr = (c, cL) => mk(16, 16, A => { A.line(5, 14, 5, 9, C.leafD); A.line(9, 14, 10, 8, C.leafD); A.line(12, 14, 12, 10, C.leaf); A.e(4, 13, 1.6, .8, C.leaf); A.e(10, 13.5, 1.6, .8, C.leaf);
+  for (const [x, y] of [[5, 8], [10, 7], [12, 9.5]]) { A.e(x - 1.2, y, 1.1, 1.1, c); A.e(x + 1.2, y, 1.1, 1.1, c); A.e(x, y - 1.2, 1.1, 1.1, c); A.e(x, y + 1.2, 1.1, 1.1, c); A.p(Math.round(x), Math.round(y), '#ffd25c'); } A.p(9, 6, cL); }, 'soft');
+OBJ.wildF = { n: '들꽃', hp: 1, nat: 'cut', drops: [] };
+function genFlowerZones() {
+  const R = rng((G.seed | 0) * 7 + 99), zones = [];
+  for (const c of ['R', 'B', 'Y', 'W', 'K', 'R', 'B', 'Y', 'W', 'K']) {
+    for (let tries = 0; tries < 1200; tries++) {
+      const loose = tries >= 500, far = c === 'K', a = R() * 6.283, d = loose ? 14 + R() * 50 : (far ? 40 : 16) + R() * (far ? 22 : 28), x = Math.floor(CX + Math.cos(a) * d), y = Math.floor(CY + Math.sin(a) * d);
+      if (x < 4 || y < 4 || x >= W - 4 || y >= H - 4 || G.biome[idx(x, y)] !== 0) continue;
+      if (zones.some(z => Math.hypot(z.x - x, z.y - y) < (loose ? 10 : 13)) || Math.hypot(x - BX, y - BY) < 12) continue;
+      let open = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const j = idx(x + dx, y + dy); if (!G.wall[j] && G.floor[j] !== WATER) open++; }
+      if (open < (loose ? 12 : 17)) continue;
+      zones.push({ x, y, c, dead: [] });
+      for (let k = 0; k < 14; k++) { const fx = x + Math.round((R() - .5) * 7), fy = y + Math.round((R() - .5) * 7), j = idx(fx, fy); if (!G.wall[j] && !G.objs.get(j) && [1, 2].includes(G.floor[j])) G.objs.set(j, { t: 'wildF', c }); }
+      break;
+    }
+  }
+  return zones;
+}
+const cleanZones = zs => zs.filter(z => z && Number.isInteger(z.x) && Number.isInteger(z.y) && FLOWERS[z.c]).map(z => ({ x: z.x, y: z.y, c: z.c, dead: Array.isArray(z.dead) ? z.dead.filter(Number.isFinite) : [] }));
+function zoneTick() {
+  const p = G.p; if (p.dead > 0 || !G.fzones) return;
+  G.fzones.forEach((z, zi) => {
+    z.dead = z.dead.filter(t => t > G.time);
+    if (Math.hypot(z.x + .5 - p.x, z.y + .5 - p.y) > 26 || (z.next || 0) > G.time) return;
+    const alive = G.enemies.reduce((n, e) => n + (e.zone === zi ? 1 : 0), 0), cap = z.c === 'K' ? 2 : 3;
+    if (alive + z.dead.length >= cap) return;
+    for (let k = 0; k < 10; k++) { const x = Math.floor(z.x + (Math.random() - .5) * 6), y = Math.floor(z.y + (Math.random() - .5) * 6);
+      if (!inB(x, y) || isSolid(x, y) || Math.hypot(x + .5 - p.x, y + .5 - p.y) < 3.5) continue;
+      const e = mkEnemy('bloom' + z.c, x + .5, y + .6); e.zone = zi; G.enemies.push(e); puff(x + .5, y + .4, FLOWERS[z.c][2], 8, 2, .3); z.next = G.time + 1.5; break; }
+  });
+}
+// ---- saplings, stumps and regrowth ----
+Object.assign(OBJ, {
+  sapling: { n: '뿌리기둥 묘목', growTo: 'root', into: '뿌리기둥' },
+  capSapling: { n: '아기 큰버섯', growTo: 'bigShroom', into: '큰버섯' },
+  stump: { n: '그루터기', growTo: 'g', stump: 1, into: '뿌리기둥' },
+  capStump: { n: '버섯 밑동', growTo: 'g', stump: 1, into: '큰버섯' },
+});
+Object.assign(ITEMS, {
+  sapling: { n: '뿌리기둥 묘목', kind: 'seed', crop: 'sapling', d: '흙·이끼·버섯흙 바닥에 심으면 3분쯤 뒤 뿌리기둥으로 자라요.' },
+  capSapling: { n: '아기 큰버섯', kind: 'seed', crop: 'capSapling', d: '흙·이끼·버섯흙 바닥에 심으면 3분쯤 뒤 큰버섯으로 자라요.' },
+  berryBush: { n: '베리덤불', kind: 'place', obj: 'bush', d: '삽으로 퍼 온 베리덤불. 원하는 곳에 옮겨 심으면 다시 열매가 열려요.' },
+});
+OBJ.root.drops.push(['sapling', 1, 1, 0.22]); OBJ.bigShroom.drops.push(['capSapling', 1, 1, 0.22]);
+const GROW_TIME = 180, REGROW_TIME = 240;
+Object.assign(OSPR, {
+  sapling: [16, 16, A => { A.e(8, 14, 3, 1, C.dirtD); A.line(8, 14, 8, 9, C.woodD); A.e(6.2, 9, 2, 1.4, C.leaf); A.e(9.8, 8, 2, 1.4, C.leafL); A.p(8, 8, C.leafL); }],
+  saplingB: [16, 22, A => { A.e(8, 20.5, 3.4, 1, C.dirtD); A.r(7, 11, 2, 10, C.wood); A.r(7, 11, 1, 10, C.woodL); A.e(8, 8, 5.4, 4.8, C.leafD); A.e(7, 7, 4, 3.4, C.leaf); A.e(6, 5.5, 1.6, 1, C.leafL); A.p(10, 6, C.leafL); }],
+  capSapling: [16, 16, A => { A.e(8, 14, 3, 1, '#7a5aa0'); A.r(7, 10, 2, 4, C.cream); A.e(8, 9.5, 3.2, 2.2, '#b673de'); A.p(7, 9, '#fbe7ff'); }],
+  capSaplingB: [16, 20, A => { A.e(8, 18.5, 3.6, 1.2, '#7a5aa0'); A.r(6, 9, 4, 10, C.cream); A.r(9, 9, 1, 10, '#e5d3b5'); A.e(8, 8, 6, 4, '#8e4fb8'); A.e(8, 7, 5.4, 3.4, '#b673de'); A.p(6, 6, '#fbe7ff'); A.p(10, 5, '#fbe7ff'); }],
+  stump: [16, 16, A => { A.e(8, 13, 5.5, 2.2, C.woodD); A.r(3, 9, 10, 4, C.wood); A.r(3, 9, 2, 4, C.woodL); A.e(8, 9, 5, 2, '#e8b97a'); A.e(8, 9, 3, 1.2, '#c99560'); A.p(8, 9, C.woodD); A.line(2, 13, 4, 11, C.woodD); A.line(11, 8, 12, 5, C.leaf); A.p(13, 5, C.leafL); }],
+  capStump: [16, 16, A => { A.e(8, 13.5, 4, 1.4, '#7a5aa0'); A.r(6, 8, 4, 6, C.cream); A.r(9, 8, 1, 6, '#e5d3b5'); A.e(8, 8, 2.4, 1, '#e5d3b5'); A.p(10, 7, '#b673de'); A.p(5, 12, '#b673de'); }],
+});
+Object.assign(ICON, {
+  sapling: A => { A.r(4, 11, 8, 4, '#d9774a'); A.r(3, 10, 10, 2, '#e8915f'); A.line(8, 11, 8, 5, C.woodD); A.e(5.6, 5.5, 2.4, 1.6, C.leaf); A.e(10.4, 4.5, 2.4, 1.6, C.leafL); },
+  capSapling: A => { A.r(4, 11, 8, 4, '#d9774a'); A.r(3, 10, 10, 2, '#e8915f'); A.r(7, 6, 2, 5, C.cream); A.e(8, 5.5, 4, 2.8, '#b673de'); A.p(6, 4, '#fbe7ff'); A.p(10, 5, '#fbe7ff'); },
+  berryBush: A => { A.e(8, 10, 6.6, 4.8, C.leafD); A.e(6, 8.6, 3.6, 3, C.leaf); A.e(10.4, 8.2, 3.6, 3, C.leaf); A.e(5, 7.4, 1.4, 1, C.leafL); for (const [x, y] of [[4, 10], [8, 8], [11, 11], [7, 12], [12, 8]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } },
+});
+function afterCut(t, o) {
+  const i = idx(t.x, t.y);
+  if (o.t === 'root' || o.t === 'bigShroom') G.objs.set(i, { t: o.t === 'root' ? 'stump' : 'capStump', g: o.t, at: G.time + REGROW_TIME });
+  else if (o.t === 'grass' || o.t === 'glow' || o.t === 'wildF') { G.regen = G.regen || []; if (G.regen.length < 600) G.regen.push([i, o.t, G.time + (o.t === 'grass' ? 120 : 200), o.c || null]); }
+  if (o.t === 'wildF') rollDrops([['petal' + (FLOWERS[o.c] ? o.c : 'R'), 1, 1, 0.35]], t.x + .5, t.y + .5);
+}
+function growTick() {
+  const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
+  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0)) continue; const x = i % W, y = (i / W) | 0;
+    if (inside(x, y)) { o.at = G.time + 4; continue; }
+    G.objs.set(i, { t: d.growTo === 'g' ? (OBJ[o.g] ? o.g : 'root') : d.growTo }); if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .6, '#9be37a', 8, 2, .3); lightDirty = true; }
+  if (G.regen && G.regen.length) G.regen = G.regen.filter(([i, t, at, c]) => { if (at > G.time) return true; if (!OBJ[t] || G.wall[i] || G.objs.get(i) || ![1, 2, 3].includes(G.floor[i])) return false; const x = i % W, y = (i / W) | 0; if (inside(x, y)) return true; const o = { t }; if (c) o.c = c; G.objs.set(i, o); return false; });
+}
+function digPlant(t, o) {
+  const d = OBJ[o.t], i = idx(t.x, t.y); G.objs.delete(i);
+  const id = d.bush ? 'berryBush' : o.t === 'sapling' ? 'sapling' : o.t === 'capSapling' ? 'capSapling' : 'wood';
+  const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
+  SFX.pick(); puff(t.x + .5, t.y + .7, '#9be37a', 7, 2.2); invDirty = true; lightDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
+  toast(d.bush ? '베리덤불을 퍼냈어요. 원하는 곳에 다시 심어요' : d.stump ? `${d.n}을(를) 뽑았어요` : `${d.n}을(를) 퍼냈어요`, null, 'digplant');
+}
+// ---- nature decorations ----
+const WFLOOR = new Set([11, 12, 13, 14, 15]);
+Object.assign(FPAL, { 11: ['#5fa8d8', '#8fd0f0', '#3f7fb5'], 12: ['#3a6fa8', '#5b9bd0', '#2a5288'], 13: ['#4f93c8', '#7fbfe8', '#356fa0'], 14: ['#6a62b8', '#a99cf0', '#4a4290'], 15: ['#4f93c8', '#7fbfe8', '#356fa0'], 16: ['#4f8f57', '#f7b8cf', '#ffffff'] });
+function natFloorTex(t, v) {
+  const R = rng(t * 911 + v * 37 + 5), pal = FPAL[t];
+  return mk(16, 16, A => {
+    if (t === 16) { A.r(0, 0, 16, 16, '#468a4f'); for (let k = 0; k < 22; k++) { const x = R() * 16 | 0, y = R() * 16 | 0; A.p(x, y, '#3c7a46'); A.p((x + 1) % 16, y, '#3c7a46'); }
+      for (let k = 0; k < 6; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#62ad62');
+      for (let k = 0; k < 9; k++) { const x = R() * 15 | 0, y = R() * 15 | 0, w = R() < .55; A.p(x, y, w ? '#ffffff' : '#f7b8cf'); A.p(x + 1, y, w ? '#fcd9e6' : '#f49ab8'); if (R() < .4) A.p(x, y + 1, '#f49ab8'); } return; }
+    A.r(0, 0, 16, 16, pal[0]); for (let k = 0; k < 6; k++) { const x = R() * 13 | 0, y = R() * 15 | 0; A.r(x, y, 3, 1, pal[1]); } for (let k = 0; k < 5; k++) A.p(R() * 16 | 0, R() * 16 | 0, pal[2]);
+    if (t === 11) for (let k = 0; k < 4; k++) { const x = 2 + R() * 12, y = 2 + R() * 12; A.e(x, y, 1.3, 1, '#a99a7c'); A.p(x | 0, (y - 1) | 0, '#cfc2a4'); }
+    if (t === 12 && v % 2 === 0) { A.e(8, 8, 3.6, 2.6, '#4f9a5e'); A.e(7, 7.4, 1.5, 1, '#6cbb76'); A.line(8, 8, 11, 6, pal[0]); if (v === 0) { A.e(10, 6.4, 1.3, 1.1, '#ffb3c6'); A.p(10, 6, '#ffe0ea'); } }
+    if (t === 13) { A.e(8, 8, 4.8, 3.8, '#625d78'); A.e(8, 7.4, 4.4, 3.2, '#8f8aa3'); A.e(7, 6.6, 2.6, 1.6, '#b9b4cc'); }
+    if (t === 14) { for (let k = 0; k < 3; k++) { const x = R() * 15 | 0, y = R() * 15 | 0; A.p(x, y, '#ffffff'); A.p(x + 1, y, '#e3d4ff'); } if (v === 1) { A.poly([[2, 14], [4, 9], [6, 14]], C.cry); A.p(4, 11, C.cryL); } }
+    if (t === 15) for (let k = 0; k < 6; k++) { const x = R() * 15 | 0, y = R() * 15 | 0; A.p(x, y, R() < .5 ? '#ffffff' : '#f7b8cf'); A.p(x + 1, y, '#f49ab8'); }
+  }, null);
+}
+const NFLOOR = { 11: ['waterShallow', '얕은 물 타일', '자갈이 비치는 맑은 물. 위로 걸어 다닐 수 있어요.', [['gWater', 1], ['stone', 1]]], 12: ['waterPond', '연못 물 타일', '연잎이 동동 떠 있는 연못.', [['gWater', 1], ['gMoss', 1]]],
+  13: ['waterStep', '징검돌 물 타일', '징검돌이 놓인 물길.', [['gWater', 1], ['stone', 3]]], 14: ['waterCrystal', '수정 샘물 타일', '보랏빛으로 반짝이는 샘물.', [['gWater', 1], ['crystal', 1]]],
+  15: ['waterPetal', '꽃잎 물 타일', '벚꽃잎이 떠다니는 물.', [['gWater', 1], ['petalW', 1], ['petalR', 1]]], 16: ['floorCherry', '벚꽃 타일', '벚꽃잎이 흩날린 이끼 바닥.', [['dirt', 1], ['gMoss', 1], ['petalW', 1], ['petalR', 1]]] };
+for (const f in NFLOOR) { const [id, n, d, req] = NFLOOR[f]; ITEMS[id] = { n, kind: 'floor', floor: +f, d }; RECIPES.push(Rc(id, 4, req, req.some(([m]) => m === 'crystal') ? 'forge' : 'bench', 'nature')); }
+const NATURE = {
+  cherryTree: ['벚꽃나무', '분홍 꽃잎이 흩날리는 커다란 벚꽃나무.', [['dirt', 6], ['gMoss', 6], ['wood', 10], ['petalW', 8], ['petalR', 6]], 0, [32, 40, A => {
+    A.poly([[12, 39], [15, 26], [17, 26], [20, 39]], C.woodD); A.r(14, 21, 4, 18, C.wood); A.r(14, 21, 1, 18, C.woodL); A.line(16, 24, 9, 16, C.wood, 2); A.line(17, 23, 24, 15, C.wood, 2);
+    for (const [x, y, r] of [[9, 15, 6.5], [23, 14, 6.5], [16, 9, 7.5], [6, 10, 5], [26, 9, 5], [16, 17, 6], [11, 5, 5], [21, 4, 5]]) A.e(x, y, r, r * .85, '#f49ab8');
+    for (const [x, y, r] of [[9, 13, 4.5], [22, 12, 4.5], [15, 7, 5.5], [7, 9, 3], [25, 8, 3], [11, 4, 3], [20, 3, 3]]) A.e(x, y, r, r * .8, '#f7b8cf');
+    for (const [x, y] of [[8, 11], [13, 5], [19, 9], [24, 11], [16, 14], [10, 16], [22, 5], [5, 8], [27, 12]]) { A.p(x, y, '#ffffff'); A.p(x + 1, y, '#fcd9e6'); }
+    A.p(18, 13, '#d9607d'); A.p(6, 14, '#d9607d'); A.p(26, 13, '#d9607d'); }]],
+  roundTree: ['둥근 나무', '동글동글한 초록 나무.', [['dirt', 4], ['gMoss', 4]], 0, [24, 32, A => {
+    A.poly([[8, 31], [11, 24], [13, 24], [16, 31]], C.woodD); A.r(10, 17, 4, 14, C.wood); A.r(10, 17, 1, 14, C.woodL);
+    A.e(12, 11, 10, 9, C.leafD); A.e(10.5, 9.5, 7.5, 6.5, C.leaf); A.e(15, 8, 5, 4, C.leaf); A.e(8, 6, 2.6, 1.6, C.leafL); A.p(15, 5, C.leafL); A.p(5, 11, C.leafL); A.p(17, 14, '#2f6e33'); }]],
+  shrub: ['덤불', '푸릇푸릇한 작은 덤불.', [['dirt', 2], ['gMoss', 2]], 0, [16, 14, A => {
+    A.e(8, 9, 7, 4.6, C.leafD); A.e(5.5, 7.5, 3.6, 3, C.leaf); A.e(10.5, 7, 3.8, 3.2, C.leaf); A.e(8, 5.5, 3, 2.4, C.leaf); A.p(5, 6, C.leafL); A.p(10, 5, C.leafL); A.p(8, 4, C.leafL); }]],
+  hydrangea: ['수국 덤불', '파란 꽃송이가 탐스러운 수국.', [['dirt', 1], ['gMoss', 1], ['petalB', 3]], 0, [16, 16, A => {
+    A.e(8, 11, 7, 4.4, C.leafD); A.e(8, 10, 5.6, 3.4, C.leaf);
+    for (const [x, y] of [[4.5, 7], [11, 6.5], [8, 4.5]]) { A.e(x, y, 3, 2.6, '#6fa8ff'); A.p(x - 1 | 0, y - 1 | 0, '#c2dcff'); A.p(x + 1 | 0, y | 0, '#c2dcff'); A.p(x | 0, y + 1 | 0, '#4a78d0'); } }]],
+  roseBlack: ['흑장미 덤불', '신비로운 검은 장미가 핀 덤불.', [['dirt', 1], ['gMoss', 1], ['petalK', 2], ['petalR', 1]], 0, [16, 16, A => {
+    A.e(8, 11, 7, 4.4, '#2f6e33'); A.e(8, 10, 5.6, 3.4, C.leafD);
+    for (const [x, y] of [[4.5, 7.5], [11, 7], [8, 4.5]]) { A.e(x, y, 2.4, 2.2, '#4a3f5c'); A.p(x | 0, y | 0, '#8a7aa6'); A.p(x - 1 | 0, y | 0, '#2a2238'); A.p(x + 1 | 0, y - 1 | 0, '#d0485e'); } }]],
+  sunflower: ['해바라기', '키가 큰 노란 해바라기.', [['dirt', 1], ['gMoss', 1], ['petalY', 3]], 0, [16, 28, A => {
+    A.line(8, 27, 8, 11, C.leafD, 2); A.e(5, 20, 3, 1.4, C.leaf); A.e(11, 16, 3, 1.4, C.leaf);
+    for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283; A.e(8 + Math.cos(a) * 4.2, 7 + Math.sin(a) * 4.2, 1.8, 1.8, k % 2 ? '#ffd25c' : '#f2b83a'); }
+    A.e(8, 7, 2.8, 2.8, '#7a4a2a'); A.p(7, 6, '#a06a3a'); A.p(9, 8, '#5a3420'); }]],
+  daisies: ['데이지 무리', '작고 하얀 데이지. 위로 걸어 다닐 수 있어요.', [['gMoss', 1], ['petalW', 2]], 1, [16, 16, A => {
+    for (const [x, y] of [[4, 5], [11, 4], [7, 10], [13, 11], [3, 13]]) { A.line(x, y + 1, x, y + 3, C.leaf); A.p(x - 1, y, '#ffffff'); A.p(x + 1, y, '#ffffff'); A.p(x, y - 1, '#ffffff'); A.p(x, y + 1, '#f4f0f8'); A.p(x, y, '#ffd25c'); } }]],
+  flowerBed: ['꽃밭', '빨강·파랑·노랑 꽃이 가득한 꽃밭. 위로 걸어 다닐 수 있어요.', [['dirt', 2], ['gMoss', 2], ['petalR', 2], ['petalB', 2], ['petalY', 2]], 1, [16, 16, A => {
+    A.e(4, 12, 3.4, 2, C.leafD); A.e(11, 13, 4, 2, C.leafD); A.e(8, 7, 4, 2, C.leafD); A.e(3, 5, 2.6, 1.6, C.leaf); A.e(13, 6, 2.6, 1.6, C.leaf);
+    const cs = ['#ff6b81', '#6fa8ff', '#ffd25c'];
+    [[3, 4], [7, 3], [12, 4], [5, 8], [10, 8], [14, 9], [2, 11], [7, 12], [12, 13], [9, 15]].forEach(([x, y], k) => { const c = cs[k % 3]; A.p(x - 1, y, c); A.p(x + 1, y, c); A.p(x, y - 1, c); A.p(x, y + 1, c); A.p(x, y, k % 3 === 2 ? '#d9a53a' : '#fff1d6'); }); }]],
+};
+for (const id in NATURE) { const [n, d, req, flat, spr] = NATURE[id]; OSPR[id] = spr; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = flat ? { n, flat: 1, item: id } : { n, solid: 1, item: id }; RECIPES.push(Rc(id, 1, req, 'bench', 'nature')); }
+RECIPES.push(Rc('sapling', 1, [['wood', 3], ['dirt', 2], ['fiber', 2]], 'bench', 'nature'));
+
 // ================= world gen =================
 function wallFor(b, x, y, s) {
   if (b === 0) return vn(x * .22, y * .22, s + 21) > 0.72 ? 4 : 1;
@@ -1428,7 +1582,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -1436,7 +1590,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
 }
 function deserialize(s) {
   const N = W * H;
@@ -1452,6 +1606,7 @@ function deserialize(s) {
   if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []); roofVer++; G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
+  G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
   G.rpg = cleanRpg(s.rpg); G.pshots = []; G.skcd = {}; G.p.mp = Number.isFinite(s.p.mp) ? Math.min(s.p.mp, maxMp()) : maxMp(); G.p.hp = Math.min(G.p.hp, maxHp());
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
@@ -1639,6 +1794,7 @@ function occupied(tx, ty) {
 }
 // ---- terrain: ground you can dig with a shovel and lay elsewhere, unlocked one by one ----
 const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
+for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
 const isPlacedFloor = f => !!FLOOR_ITEM[f];
 const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
 // how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
@@ -1767,6 +1923,8 @@ function decide() {
   if (it && it.kind === 'roof' && i >= 0 && G.roof.has(i)) return { k: 'unroof', lbl: '지붕 걷기', icon: s.id, t };
   if (o) {
     const d = OBJ[o.t];
+    if (it && it.kind === 'shovel' && !isBroken(s) && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
+    if (d.growTo) { const m = Math.max(1, Math.ceil(((o.at || 0) - G.time) / 60)); return { k: 'info', lbl: '자라는 중', icon: 'dots', msg: d.stump ? `${d.n} · ${m}분쯤 뒤 다시 ${d.into}가 자라요 (삽으로 뽑을 수 있어요)` : `${d.n} · ${m}분쯤 뒤 ${d.into}로 자라요`, t }; }
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
     if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
     if (d.crop) return cropStage(o) >= 3 ? { k: 'harvest', lbl: '수확', icon: d.crop === 'berry' ? 'berry' : 'mushroom', t, o } : { k: 'info', lbl: '자라는 중', icon: 'dots', msg: '아직 자라고 있어요', t };
@@ -1821,7 +1979,7 @@ function perform(a) {
     case 'mine': mineWall(a.t); actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
     case 'place': placeItem(a.t); actCd = 0.14; break;
-    case 'dig': digGround(a.t); actCd = 0.22; break;
+    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
     case 'unroof': { const i = idx(a.t.x, a.t.y), m = G.roof.get(i); if (m) { G.roof.delete(i); roofVer++; const l = addItem(ROOF_ITEM[m], 1, false); if (l) spawnDrop(ROOF_ITEM[m], 1, a.t.x + .5, a.t.y + .5); SFX.pick(); } actCd = 0.18; break; }
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
@@ -1895,9 +2053,9 @@ const SK_FN = {
 };
 function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); rollDrops(def.drop, tx + .5, ty + .5); puff(tx + .5, ty + .6, WPAL[w][0], 10, 3); SFX.brk(); lightDirty = true; mapPixel(tx, ty); gainXp(w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
 function hitEnemy(e, dmg, crit, kb = 8) {
-  const p = G.p, def = ENEMY[e.k]; e.hp -= dmg; e.hurt = 0.14; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; e.hp -= dmg; e.hurt = 0.14; if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; ftext(e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); puff(e.x, e.y, def.col, 4, 2); SFX.hit(); shake = Math.max(shake, 0.12);
-  if (e.hp <= 0) { G.enemies.splice(G.enemies.indexOf(e), 1); puff(e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
+  if (e.hp <= 0) { G.enemies.splice(G.enemies.indexOf(e), 1); puff(e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
 }
 function hitBoss(b, dmg, crit) {
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
@@ -1972,7 +2130,7 @@ function hitObj(t, o) {
   if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
   o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power) * mineMul()); if (d.nat !== 'pick') wear(pk.slot);
   SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
-  if (o.dmg >= d.hp) { G.objs.delete(i); rollDrops(d.drops, t.x + .5, t.y + .5); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' ? 1 : 0); } else o.shake = 0.15;
+  if (o.dmg >= d.hp) { G.objs.delete(i); rollDrops(d.drops, t.x + .5, t.y + .5); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' ? 1 : 0); } else o.shake = 0.15;
 }
 function placeItem(t) {
   const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
@@ -1980,8 +2138,8 @@ function placeItem(t) {
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
   else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
   else if (it.kind === 'roof') { G.roof.set(i, it.roof); roofVer++; }
-  else if (it.kind === 'seed') G.objs.set(i, { t: it.crop, p: G.time });
-  else { const o = { t: it.obj }; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
+  else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time });
+  else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'forge') G.stats.forge = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
   s.c--; if (!s.c) G.inv[G.sel] = null; invDirty = true;
   SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);
@@ -2021,7 +2179,7 @@ function respawn() {
 }
 
 // ================= update =================
-let regrowT = 0, snapT = 0, cloudT = 0;
+let regrowT = 0, snapT = 0, cloudT = 0, zoneT = 0, growT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
@@ -2066,6 +2224,8 @@ function update(dt) {
   updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt);
   spawnT += dt; if (spawnT > 2.6) { spawnT = 0; trySpawn(); }
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
+  zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
+  growT += dt; if (growT > 2) { growT = 0; growTick(); }
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
   saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
@@ -2080,18 +2240,20 @@ function updateEnemies(dt) {
   for (const e of G.enemies.slice()) {
     const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
     if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); continue; }
-    const chase = d < 8 && p.dead <= 0;
+    if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
+    const chase = d < 8 && p.dead <= 0 && (!def.calm || e.angry > 0);
     if (def.hop) {
       if (e.air > 0) { moveEnt(e, e.vx * dt, e.vy * dt, def.r); e.air -= dt; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
       else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = Math.random() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + Math.random() * 0.6; } }
     } else {
-      e.t -= dt; if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + Math.random() * 2; const a = Math.random() * 6.283, s = Math.random() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
+      e.t -= dt; if (!chase && e.zone != null && G.fzones && G.fzones[e.zone]) { const z = G.fzones[e.zone], zx = z.x + .5 - e.x, zy = z.y + .5 - e.y, zd = Math.hypot(zx, zy); if (zd > 4.5) { e.vx = zx / zd * def.spd * .5; e.vy = zy / zd * def.spd * .5; e.t = .6; } }
+      if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + Math.random() * 2; const a = Math.random() * 6.283, s = Math.random() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
       moveEnt(e, e.vx * dt, e.vy * dt, def.r); e.anim = (e.anim || 0) + dt * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
       if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
     }
     if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
     e.hurt = Math.max(0, (e.hurt || 0) - dt);
-    if (d < def.r + 0.34 && (e.z || 0) < 0.2) hurtPlayer(def.dmg, e.x, e.y);
+    if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(def.dmg, e.x, e.y);
   }
 }
 let bossName = '';
@@ -2160,6 +2322,7 @@ function trySpawn() {
     if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y))) continue;
     if (Math.hypot(x - CX, y - CY) < 13 + G.treeSeeds * 4) continue; if (Math.hypot(x - BX, y - BY) < 11 || Math.hypot(x - SA.x, y - SA.y) < 10 || Math.hypot(x - SB.x, y - SB.y) < 10) continue;
     if (lightAt(x, y) > 0.3) continue;
+    if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
     const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (Math.random() < .55 ? 'slimeO' : 'shroomy') : (Math.random() < .75 ? 'slimeP' : 'shroomy');
     G.enemies.push(mkEnemy(kk, x + .5, y + .6)); return;
   }
@@ -2261,6 +2424,7 @@ function computeLight() {
 // ================= map =================
 let mapCv = null, mapCtx = null, mapImg = null;
 const MAPF = { 7: '#6fb36a', 8: '#7f6191', 9: '#958ccf', 10: '#3f7fb5', 1: '#4f8f57', 2: '#7a5442', 3: '#6a5272', 4: '#4a5378', 5: '#c08a58', 6: '#8f8aa3' };
+Object.assign(MAPF, { 11: '#6fb6e0', 12: '#3f7fb5', 13: '#5b9bd0', 14: '#8a7ad0', 15: '#7fb0d8', 16: '#e8a8c0' });
 const MAPW = { 1: '#3a2a25', 2: '#38364a', 3: '#4a3a78', 4: '#a85f32', 5: '#8d97a8', 6: '#8a5a32', 7: '#6f6a86', 8: '#0b0910' };
 function rebuildMap() { chunks.clear(); AMB.length = 0; if (!mapCv) { mapCv = document.createElement('canvas'); mapCv.width = W; mapCv.height = H; mapCtx = mapCv.getContext('2d'); } mapImg = mapCtx.createImageData(W, H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (G.explored[idx(x, y)]) mapPixel(x, y, true); mapCtx.putImageData(mapImg, 0, 0); }
 function mapPixel(x, y, bulk) {
@@ -2294,6 +2458,11 @@ function drawChunk(c, cx, cy) {
       const hd = hash2(x, y, 77), dens = f === 1 ? .17 : .1;
       if (hd < dens && SPR.deco[f]) { const list = SPR.deco[f], d = list[(hash2(x, y, 78) * list.length) | 0]; g.drawImage(d, X + 2 + ((hash2(x, y, 79) * 8) | 0), Y + 3 + ((hash2(x, y, 80) * 7) | 0)); }
     }
+    if (WFLOOR.has(f)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
+      if (!nw(0, -1)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 16, 1); g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 1, 16, 1); }
+      if (!nw(0, 1)) { g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = '#5d5872'; g.fillRect(X, Y + 15, 16, 1); }
+      if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
+      if (!nw(1, 0)) { g.fillStyle = '#a7a2bb'; g.fillRect(X + 14, Y, 1, 16); g.fillStyle = '#5d5872'; g.fillRect(X + 15, Y, 1, 16); } }
     // contact shadows next to walls
     if (y > 0 && G.wall[i - W]) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
     if (x > 0 && G.wall[i - 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
@@ -2365,13 +2534,14 @@ function renderWorld(cw, ch) {
     const i = idx(x, y); if (G.wall[i]) continue; const sx = x * T - camX, sy = y * T - camY;
     if (G.floor[i] === WATER) {
       ctx.drawImage(SPR.water[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy);
-      const land = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return -1; const j = idx(xx, yy); if (G.wall[j]) return -1; return G.floor[j] === WATER ? 0 : G.floor[j]; };
+      const land = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return -1; const j = idx(xx, yy); if (G.wall[j]) return -1; return G.floor[j] === WATER || WFLOOR.has(G.floor[j]) ? 0 : G.floor[j]; };
       if (y > 0 && G.wall[i - W]) { ctx.fillStyle = 'rgba(10,20,45,0.6)'; ctx.fillRect(sx, sy, 16, 3); }
       const wl = [land(0, -1), land(1, 0), land(0, 1), land(-1, 0)];
       wl.forEach((b, q) => { if (b > 0) ctx.drawImage(SPR.fringeWX[b][q], sx, sy); }); wl.forEach((b, q) => { if (b > 0) ctx.drawImage(SPR.fringeWL[b][q], sx, sy); });
       [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = land(dx, dy); if (b > 0 && land(dx, 0) === 0 && land(0, dy) === 0) ctx.drawImage(SPR.cornerW[b][q], sx, sy); });
       const hl = hash2(x, y, 43); if (hl < .12 && land(0, -1) === 0 && land(0, 1) === 0) { const lp = SPR.lily[hl < .04 ? 1 : 0]; ctx.drawImage(lp, sx + 3 + ((hash2(x, y, 44) * 4) | 0), sy + 4 + Math.round(Math.sin(t * 1.3 + hl * 50) * .6)); }
     }
+    if (WFLOOR.has(G.floor[i])) { const ph = (t * .5 + hash2(x, y, 6)) % 1; ctx.globalAlpha = Math.sin(ph * Math.PI) * .55; ctx.fillStyle = '#e8f8ff'; ctx.fillRect(sx + 3 + ((hash2(x, y, 7) * 8) | 0), sy + 3 + Math.floor(ph * 9), 3, 1); ctx.globalAlpha = 1; }
     const o = G.objs.get(i); if (o && OBJ[o.t].flat) ctx.drawImage(SPR.obj[o.t], sx, sy);
   }
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i]) continue; const o = G.objs.get(i); if (o && isGround(o)) drawEntity({ k: 'o', x, y, o }, t); }
@@ -2505,9 +2675,12 @@ function drawEntity(it, t) {
     let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const wx = it.x + .5, wy = it.y + 1 - 1 / 16;
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
+    if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
+    if (d.growTo && !d.stump && SPR.obj[o.t + 'B'] && G.time > (o.at || 0) - GROW_TIME / 2) img = SPR.obj[o.t + 'B'];
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && img.height > 17) shadow(wx, wy - .08, .38, .25);
     drawImg(img, wx, wy, { sx });
+    if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
     if (d.bed && G.p.sleep && G.p.sleep.x === it.x && G.p.sleep.y === it.y) { drawImg(SPR.sleepHead, wx, it.y - .2); ctx.font = `${Math.round(6 * Z)}px Jua, sans-serif`; ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (wx + .5 + zz * .3) * T - camX, (it.y - 1.2 - zz * .5) * T - camY); ctx.globalAlpha = 1; }
     if (d.shrine && o.has) { const gk = guardOf(it.x, it.y), sealed = gk && !G.bossDead[gk]; const bob = Math.sin(t * 2.5) * 0.08; drawImg(SPR.item.lightSeed, wx, it.y + .25 + bob, { sx: .9, sy: .9, alpha: sealed ? .55 : 1 });
@@ -2611,7 +2784,7 @@ function renderPanel() {
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
   if (k === 'inv') {
     h += head('가방', 'bag');
-    h += `<div class="sh-body"><p class="hint">칸을 누르면 고를 수 있고, 다른 칸을 누르면 자리가 바뀌어요. 도구와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요. 창·망치·단검·활·지팡이는 단축칸에서 골라 들면 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
+    h += `<div class="sh-body"><p class="hint">칸을 끌어다 놓거나, 칸을 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 도구와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요. 창·망치·단검·활·지팡이는 단축칸에서 골라 들면 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
     for (let i = 0; i < 30; i++) { if (i === 6) h += `</div><div class="lbl">가방</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, UIS.invSel === i ? 'pick' : ''); }
     h += `</div>`;
     const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
@@ -2624,7 +2797,7 @@ function renderPanel() {
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st;
     h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
-    const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['fix', '수리'], ['salv', '분해']]; if (st) tabs.unshift(['here', STN[st]]);
+    const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['fix', '수리'], ['salv', '분해']]; if (st) tabs.unshift(['here', STN[st]]);
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
     h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}</div>`;
     if (UIS.tab === 'salv') {
@@ -2658,9 +2831,9 @@ function renderPanel() {
     const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
     const empty = o.items.every(x => !x);
     h += head('보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
-    h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요.</p><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.map((s, i) => slotHTML(s, 'cin', i)).join('')}</div></div>`;
+    h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.map((s, i) => slotHTML(s, 'cin', i)).join('')}</div></div>`;
   } else if (k === 'map') {
-    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span></div></div>`;
+    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span></div></div>`;
   } else if (k === 'tree') {
     h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${[0, 1, 2].map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p></div>`;
   } else if (k === 'menu') {
@@ -2715,6 +2888,7 @@ function drawMap() {
   const dot = (x, y, col, r) => { const X = (x - ox) * s, Y = (y - oy) * s; g.fillStyle = INK; g.beginPath(); g.arc(X, Y, r + 3, 0, 6.283); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(X, Y, r, 0, 6.283); g.fill(); };
   dot(CX + .5, CY, '#ffc861', 9);
   if (G.spawnPt) dot(G.spawnPt.x + .5, G.spawnPt.y + .5, '#ff8fa3', 5);
+  for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) dot(z.x + .5, z.y + .5, FLOWERS[z.c][2], 4);
   for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
   for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
@@ -2723,6 +2897,7 @@ function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floo
 function canCraft(r, near) { return (!r.at || near.has(r.at)) && r.req.every(([id, c]) => countItem(id) >= c); }
 function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } for (let i = 0; i < arr.length && left; i++) if (!arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; if (s.dur != null) arr[i].dur = s.dur; left -= arr[i].c; } return left; }
 function onSheetClick(e) {
+  if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;
   const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, i = b.dataset.i != null ? (isNaN(+b.dataset.i) ? b.dataset.i : +b.dataset.i) : null;
   ensureAudio();
@@ -2788,6 +2963,47 @@ function onSheetClick(e) {
   if (a === 'sound') { soundOn = !soundOn; try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
   if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } saveLocal(true); pushBackup('처음부터 다시 하기 전'); { const keepC = G.char; newGame((Math.random() * 1e9) | 0); G.char = keepC; buildPlayer(0); } started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
 }
+// ---- drag & drop between bag, hotbar and chest slots ----
+const DRAG = { st: null, block: 0 };
+function slotRef(el) {
+  if (!el || !G) return null; const a = el.dataset.a, i = +el.dataset.i; if (!Number.isInteger(i)) return null;
+  if (a === 'inv' || a === 'hot' || a === 'cin') return i < G.inv.length ? { arr: G.inv, i } : null;
+  if (a === 'cout' && panel && panel.kind === 'chest') { const o = G.objs.get(panel.i); if (o && o.items && i < o.items.length) return { arr: o.items, i }; }
+  return null;
+}
+function moveSlot(A, B) {
+  if (A.arr === B.arr && A.i === B.i) return false; const a = A.arr[A.i], b = B.arr[B.i]; if (!a) return false;
+  if (b && a.id === b.id && b.c < stackMax(b.id)) { const k = Math.min(stackMax(b.id) - b.c, a.c); b.c += k; a.c -= k; if (!a.c) A.arr[A.i] = null; }
+  else { A.arr[A.i] = b; B.arr[B.i] = a; }
+  invDirty = true; SFX.place(); return true;
+}
+function dragEnd(commit, e) {
+  const D = DRAG.st; if (!D) return; DRAG.st = null;
+  if (D.ghost) D.ghost.remove(); D.el.classList.remove('dragging'); document.querySelectorAll('.slot.dropT').forEach(x => x.classList.remove('dropT'));
+  if (D.mode) DRAG.block = performance.now();
+  if (D.mode === 'drag' && commit && e) { const t = document.elementFromPoint(e.clientX, e.clientY), B = slotRef(t && t.closest('.slot[data-a]')), A = slotRef(D.el);
+    if (A && B && A.arr[A.i] === D.item && moveSlot(A, B)) { UIS.invSel = null; UIS.trash = false; refreshHotbar(); if (panel) renderPanel(); } }
+}
+function setupDrag() {
+  document.addEventListener('pointerdown', e => {
+    if (DRAG.st || !G || !started || (e.pointerType === 'mouse' && e.button !== 0)) return; const el = e.target.closest && e.target.closest('.slot[data-a]'); if (!el) return;
+    const A = slotRef(el); if (!A || !A.arr[A.i]) return;
+    DRAG.st = { el, item: A.arr[A.i], x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, mode: null, touch: e.pointerType !== 'mouse', body: el.closest('.sh-body'), sy: 0 };
+  }, true);
+  window.addEventListener('pointermove', e => {
+    const D = DRAG.st; if (!D || e.pointerId !== D.id) return; const dx = e.clientX - D.x, dy = e.clientY - D.y;
+    if (!D.mode && Math.hypot(dx, dy) > 7) {
+      if (D.touch && D.body && performance.now() - D.t < 260 && Math.abs(dy) > Math.abs(dx)) { D.mode = 'scroll'; D.sy = D.body.scrollTop; }
+      else { D.mode = 'drag'; D.el.classList.add('dragging'); const g = document.createElement('img'); g.id = 'dragGhost'; g.className = 'px'; g.alt = ''; g.src = iconURL(D.item.id); document.body.appendChild(g); D.ghost = g; }
+    }
+    if (D.mode === 'scroll') D.body.scrollTop = D.sy - dy;
+    else if (D.mode === 'drag') { D.lx = e.clientX; D.ly = e.clientY; if (D.body && !D.raf) { const step = () => { if (DRAG.st !== D) return; const r = D.body.getBoundingClientRect(); if (D.ly < r.top + 44) D.body.scrollTop -= 9; else if (D.ly > r.bottom - 44) D.body.scrollTop += 9; D.raf = requestAnimationFrame(step); }; D.raf = requestAnimationFrame(step); }
+      D.ghost.style.left = e.clientX + 'px'; D.ghost.style.top = e.clientY + 'px'; const t = document.elementFromPoint(e.clientX, e.clientY), tEl = t && t.closest('.slot[data-a]');
+      document.querySelectorAll('.slot.dropT').forEach(x => { if (x !== tEl) x.classList.remove('dropT'); }); if (tEl && tEl !== D.el && slotRef(tEl)) tEl.classList.add('dropT'); }
+  });
+  window.addEventListener('pointerup', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(true, e); });
+  window.addEventListener('pointercancel', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(false); });
+}
 function hotClick(i) {
   ensureAudio();
   if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); }
@@ -2837,10 +3053,11 @@ function setupInput() {
   window.addEventListener('keyup', e => keys.delete(e.code));
   window.addEventListener('blur', () => { keys.clear(); btnHeld = false; mouse.down = false; joyEnd(); });
   cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1; G.sel = (G.sel + d + 6) % 6; invDirty = true; }, { passive: true });
-  $('#hotbar').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
+  $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
+  setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
   $('#sheet').addEventListener('click', onSheetClick);
-  $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450) return; if (panel && panel.kind !== 'win') closePanel(); });
+  $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
