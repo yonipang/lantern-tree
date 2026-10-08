@@ -166,6 +166,15 @@ body.touch #pcHint{display:none}
 #title .sub{font-size:16px;color:var(--mint);letter-spacing:.12em}
 #title .story{font-size:16px;line-height:1.7;max-width:22em;color:var(--text);background:rgba(27,20,38,.72);border-radius:18px;padding:12px 18px;text-wrap:balance}
 #title .tb{display:grid;gap:10px;width:min(320px,100%)}
+#title.picking>*:not(#charPick){display:none!important}
+#charPick{width:min(360px,100%);display:grid;gap:14px}
+.cp-h{font-size:24px;color:var(--amber)}
+.cp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.cp-card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:8px 4px 6px;color:var(--text);font:inherit;font-size:16px;display:grid;justify-items:center;gap:2px;cursor:pointer}
+.cp-card img{width:64px;height:76px}
+.cp-card.on{border-color:var(--amber);background:var(--panel2);box-shadow:0 0 18px rgba(255,200,97,.3)}
+.cp-desc{min-height:22px;font-size:16px;color:var(--muted)}
+.sh-body .cp-grid{margin-top:4px}
 #title .btn{min-height:58px;font-size:20px}
 #title .ver{font-size:12px;color:var(--muted)}
 #fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:24px;color:var(--rose);text-align:center;padding:20px}
@@ -208,6 +217,7 @@ body.touch #pcHint{display:none}
       <button class="btn ghost" id="btnImport" type="button" style="min-height:48px;font-size:17px">세이브 파일 불러오기</button>
     </div>
     <div id="impAsk" hidden></div>
+    <div id="charPick" hidden><div class="cp-h">누구와 모험할까요?</div><div class="cp-grid" id="cpGrid"></div><div class="cp-desc" id="cpDesc"></div><div class="menu-two"><button class="btn ghost" id="charBack" type="button">뒤로</button><button class="btn" id="charGo" type="button">이 친구로 시작</button></div></div>
     <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 오른쪽 큰 버튼으로 캐기·공격·놓기</div>
   </div>
 </div>
@@ -298,11 +308,105 @@ function playerFrame(dir, step, pal) {
   });
 }
 const OUTFITS = [['민트', '#6cc9a3', '#479b7f', '#a5ecc9'], ['딸기', '#ff8fa3', '#d9607d', '#ffc2cf'], ['라벤더', '#b493f5', '#7a5cc4', '#e3d4ff'], ['하늘', '#7fb3e0', '#4f84b8', '#c4e2fa'], ['귤', '#ffb15c', '#d9822f', '#ffd9a0']];
+// ---- playable characters (original designs). Each has its own hair/hat, outfit palette (dyeable) and details ----
+function headHelpers(A, dy) {
+  return { R: (x, y, w, h, c) => A.r(x, y + dy, w, h, c), P: (x, y, c) => A.p(x, y + dy, c), E: (x, y, rx, ry, c) => A.e(x, y + dy, rx, ry, c), poly: (pts, c) => A.poly(pts.map(([x, y]) => [x, y + dy]), c) };
+}
+const CHARS = {
+  sprout: { n: '새싹', d: '민트 후드를 쓴 정원지기', pal: ['#6cc9a3', '#479b7f', '#a5ecc9'], classic: true },
+  momo: { n: '모모', d: '늘 졸린 견습 마법사', pal: ['#6a4fa0', '#4d3678', '#8d72c4'], hc: ['#8a5a3c', '#6b4029', '#b07a52'], eye: '#6b4029', shoe: '#3a2e4f',
+    eyes(H, dir) { const lid = '#f0c2a0'; if (dir === 'down') { H.R(5, 8, 2, 1, lid); H.R(9, 8, 2, 1, lid); H.R(5, 9, 2, 1, INK); H.R(9, 9, 2, 1, INK); } else if (dir === 'side') { H.R(10, 8, 2, 1, lid); H.R(10, 9, 2, 1, INK); } },
+    hair(H, dir) { const [h0, h1, h2] = this.hc, k0 = '#3d3f7a', k1 = '#2a2b57', k2 = '#5b5fae';
+      if (dir === 'down') { H.R(3, 7, 2, 5, h0); H.R(11, 7, 2, 5, h0); H.R(3, 11, 2, 1, h1); H.R(11, 11, 2, 1, h1); H.R(4, 6, 8, 2, h0); H.P(6, 8, h0); H.P(9, 8, h0); }
+      if (dir === 'up') { H.E(8, 8.6, 5.2, 4, h0); H.R(4, 11, 8, 1, h1); }
+      if (dir === 'side') { H.R(3, 6, 6, 6, h0); H.R(3, 11, 5, 1, h1); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); }
+      H.E(8, 5.4, 7, 1.6, k1); H.E(8, 5.1, 6.6, 1.2, k0);
+      const tip = dir === 'side' ? [[4.2, 5], [11.8, 5], [7, 1.6], [3.4, 0.6]] : [[4.2, 5], [11.8, 5], [9.8, 1.6], [12.8, 0.6]]; H.poly(tip, k0);
+      H.R(5, 4, 6, 1, '#ffc861'); H.P(dir === 'side' ? 6 : 9, 2, '#ffe9a8'); H.P(dir === 'side' ? 5 : 8, 3, k2); },
+    front(A, dir, pal) { if (dir === 'down') { A.r(7, 12, 2, 1, C.cream); A.p(8, 14, '#ffc861'); A.p(7, 14, '#ffc861'); A.r(4, 16, 8, 1, pal[1]); } } },
+  naru: { n: '나루', d: '고양이귀 모자의 낚시꾼', pal: ['#ffd25c', '#d9a63a', '#fff0a8'], hc: ['#e08a4a', '#b8642f', '#ffb57a'], eye: '#4f9a5e', shoe: '#5a7a9a',
+    hair(H, dir) { const [h0, h1] = this.hc, b0 = '#f3e3c8', b1 = '#cdb592', b2 = '#fff9ee', pk = '#ffb3c6';
+      if (dir === 'down') { H.R(3, 8, 2, 3, h0); H.R(11, 8, 2, 3, h0); H.P(5, 8, h0); H.P(10, 8, h0); H.P(7, 8, h1); }
+      if (dir === 'side') { H.R(3, 8, 5, 3, h0); H.P(12, 8, h0); }
+      if (dir === 'up') { H.R(3, 8, 10, 4, h0); H.R(4, 11, 8, 1, h1); }
+      H.E(8, 5.6, 5.5, 3, b0); H.R(3, 7, 10, 1, b1); H.R(5, 4, 3, 1, b2);
+      H.poly([[2.6, 5], [3.8, 0.8], [6.8, 3.6]], b0); H.poly([[9.2, 3.6], [12.2, 0.8], [13.4, 5]], b0); H.P(4, 3, pk); H.P(11, 3, pk); H.P(4, 2, pk); H.P(11, 2, pk); },
+    front(A, dir, pal) { if (dir === 'down') { A.r(8, 12, 1, 5, pal[1]); A.p(7, 13, '#c08a2a'); A.p(7, 15, '#c08a2a'); } if (dir === 'up') { A.r(5, 12, 6, 1, pal[1]); } } },
+  pori: { n: '포리', d: '버섯 모자를 쓴 탐험가', pal: ['#7d9a4f', '#5b7536', '#a6c27a'], hc: ['#3a3045', '#262033', '#5a4d6b'], eye: '#3a3045', shoe: '#6b4a2f',
+    hair(H, dir) { const [h0] = this.hc, r0 = '#e55b5b', r1 = '#b63e45', r2 = '#ff8f8f', rim = '#f3d9c0';
+      if (dir === 'down') { H.R(3, 8, 1, 3, h0); H.R(12, 8, 1, 3, h0); H.P(4, 8, h0); H.P(11, 8, h0); }
+      if (dir === 'side') { H.R(3, 8, 4, 3, h0); }
+      if (dir === 'up') { H.R(3, 8, 10, 4, h0); }
+      H.E(8, 4.8, 6.6, 3.4, r1); H.E(8, 4.4, 6.2, 3, r0); H.R(2, 7, 12, 1, rim); H.R(3, 7, 1, 1, '#d9b896'); H.R(12, 7, 1, 1, '#d9b896');
+      H.P(5, 3, '#fff'); H.R(9, 2, 2, 1, '#fff'); H.P(12, 5, '#fff'); H.P(4, 5, r2); H.P(8, 4, '#fff'); },
+    front(A, dir, pal) { if (dir === 'down') { A.r(7, 12, 2, 4, C.cream); A.line(4, 12, 10, 16, '#7d4d2a'); } if (dir === 'up') { A.line(11, 12, 5, 16, '#7d4d2a'); A.r(5, 13, 4, 3, '#a8763f'); } if (dir === 'side') { A.r(5, 13, 3, 3, '#a8763f'); } } },
+  todak: { n: '토닥', d: '이끼 갑옷의 꼬마 기사', pal: ['#6f9a6a', '#4e7349', '#9cc497'], hc: ['#a9b5a0', '#7a8672', '#d4dccb'], eye: '#3b5a8a', shoe: '#5a5468',
+    back(A, dir) { const cp = '#d9604f', cd = '#a8413a'; if (dir === 'down') { A.r(3, 12, 10, 5, cd); } if (dir === 'side') { A.r(3, 12, 4, 6, cp); A.r(3, 17, 3, 1, cd); } },
+    head(H, dir, pal, sleep) { const [m0, m1, m2] = this.hc;
+      H.E(8, 7.8, 5.4, 4.8, m1); H.E(8, 7.6, 5.1, 4.5, m0); H.P(5, 4, m2); H.P(6, 4, m2); H.P(4, 5, m2);
+      if (dir === 'down') { H.E(8, 9.8, 3.4, 2.3, C.skin); H.R(4, 7, 8, 1, m1); if (sleep) { H.R(5, 9, 2, 1, INK); H.R(9, 9, 2, 1, INK); } else { H.R(6, 8, 1, 2, INK); H.R(9, 8, 1, 2, INK); H.P(6, 9, this.eye); H.P(9, 9, this.eye); } H.P(5, 11, C.blush); H.P(10, 11, C.blush); }
+      if (dir === 'side') { H.E(10.2, 9.8, 2.4, 2.3, C.skin); H.R(8, 7, 5, 1, m1); H.R(10, 8, 1, 2, INK); H.P(10, 9, this.eye); H.P(11, 11, C.blush); }
+      H.R(8, 0, 1, 3, '#d9604f'); H.E(9.6, 1.4, 2, 1, '#ff8a7a'); H.P(10, 1, '#ffc2b8'); },
+    front(A, dir, pal) { if (dir === 'down') { A.r(5, 12, 6, 1, pal[2]); A.p(7, 14, '#ffc861'); A.p(8, 14, '#ffc861'); A.p(7, 13, '#ffc861'); A.p(8, 15, '#ffc861'); } if (dir === 'up') { A.r(4, 12, 8, 5, '#d9604f'); A.r(4, 16, 8, 1, '#a8413a'); A.p(5, 12, '#ff8a7a'); } } },
+  rumi: { n: '루미', d: '등불 머리핀의 길 안내인', pal: ['#f0965a', '#c96f3a', '#ffc08a'], hc: ['#9a5a3a', '#6e3d27', '#c07e57'], eye: '#d98b2b', shoe: '#7d4d2a',
+    back(A, dir) { const [h0, h1] = this.hc; if (dir === 'down') { A.r(3, 11, 2, 3, h0); A.p(3, 14, h1); } if (dir === 'side') { A.r(3, 11, 4, 4, h0); A.r(4, 15, 2, 1, h1); } },
+    over(A, dir) { const [h0, h1] = this.hc; if (dir === 'up') { A.r(4, 11, 8, 4, h0); A.r(5, 15, 6, 1, h1); A.r(7, 12, 1, 3, h1); A.p(8, 15, '#ffc861'); } },
+    hair(H, dir) { const [h0, h1, h2] = this.hc, am = '#ffd25c';
+      if (dir === 'down') { H.R(3, 7, 2, 5, h0); H.R(11, 7, 2, 3, h0); H.R(4, 6, 8, 2, h0); H.P(10, 8, h0); H.P(11, 8, h0); H.P(5, 8, h0); H.P(6, 5, h2); H.P(7, 5, h2);
+        H.P(12, 10, h1); H.P(12, 11, h0); H.P(12, 12, h1); H.P(12, 13, h0); H.P(12, 14, '#ffc861'); H.R(3, 5, 2, 2, am); H.P(3, 4, '#fff0a8'); }
+      if (dir === 'up') { H.E(8, 8.4, 5.2, 4.2, h0); H.R(5, 5, 3, 1, h2); H.R(11, 5, 2, 2, am); }
+      if (dir === 'side') { H.R(3, 6, 6, 6, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.R(5, 5, 2, 2, am); H.P(5, 4, '#fff0a8'); } },
+    front(A, dir, pal) { if (dir === 'down') { A.r(6, 13, 4, 4, '#fff1d6'); A.r(6, 13, 4, 1, '#e8d8c0'); A.p(8, 15, '#ff8fa3'); } if (dir === 'side') { A.r(9, 13, 3, 3, '#fff1d6'); } } },
+  ciel: { n: '시엘', d: '수정 장식의 떠돌이', pal: ['#4a4f8f', '#33366a', '#6d73b8'], hc: ['#5fc7c9', '#3e9a9e', '#a6ecec'], eye: '#8d72c4', shoe: '#33366a',
+    back(A, dir) { const [h0, h1] = this.hc; if (dir === 'side') { A.r(3, 11, 2, 3, h0); A.p(3, 14, h1); } },
+    over(A, dir) { const [h0, h1] = this.hc; if (dir === 'up') { A.r(7, 11, 2, 4, h0); A.p(7, 15, h1); A.p(8, 12, C.cry); } },
+    hair(H, dir) { const [h0, h1, h2] = this.hc;
+      if (dir === 'down') { H.R(3, 7, 1, 4, h0); H.R(12, 7, 1, 4, h0); H.R(4, 6, 8, 2, h0); H.P(4, 8, h0); H.P(8, 8, h0); H.P(11, 8, h0); H.P(5, 5, h2); H.P(6, 4, h2); H.R(11, 5, 1, 2, C.cry); H.P(12, 5, C.cryL); }
+      if (dir === 'up') { H.E(8, 8.2, 5.2, 4.4, h0); H.R(5, 4, 3, 1, h2); H.R(4, 5, 1, 2, C.cry); }
+      if (dir === 'side') { H.R(3, 6, 6, 5, h0); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.P(9, 8, h0); H.R(6, 5, 1, 2, C.cry); H.P(7, 5, C.cryL); } },
+    body(A, dir, pal) { A.r(3, 12, 10, 5, pal[0]); A.r(3, 16, 10, 1, pal[1]); A.r(4, 11, 8, 2, pal[2]);
+      if (dir === 'down') { A.r(8, 13, 1, 4, pal[1]); A.p(7, 12, C.cry); A.p(8, 12, C.cryL); A.p(4, 15, C.skin); A.p(11, 15, C.skin); }
+      if (dir === 'side') { A.p(10, 15, C.skin); A.p(11, 12, C.cry); }
+      if (dir === 'up') { A.r(4, 13, 8, 1, pal[1]); } } },
+};
+const CHAR_IDS = Object.keys(CHARS);
+function charFrame(id, dir, step, pal) {
+  const def = CHARS[id];
+  return mk(16, 19, A => {
+    const { r, p } = A; const fy = 17, sh = def.shoe || C.dirtD;
+    if (def.back) def.back(A, dir, pal);
+    if (dir === 'side') { if (step) { r(5, fy, 3, 1, sh); r(9, fy - 1, 3, 1, sh); } else r(6, fy, 4, 1, sh); }
+    else { if (step) { r(5, fy, 2, 1, sh); r(9, fy - 1, 2, 1, sh); } else { r(5, fy, 2, 1, sh); r(9, fy, 2, 1, sh); } }
+    if (def.body) def.body(A, dir, pal);
+    else { r(4, 12, 8, 5, pal[0]); r(4, 16, 8, 1, pal[1]); r(5, 12, 6, 1, pal[2]);
+      if (dir !== 'side') { r(3, 13, 1, 2, pal[0]); r(12, 13, 1, 2, pal[0]); p(3, 15, C.skin); p(12, 15, C.skin); } else { r(8, 13, 2, 2, pal[1]); p(9, 15, C.skin); } }
+    if (def.front) def.front(A, dir, pal);
+    if (def.over) def.over(A, dir, pal);
+    charHead(A, id, dir, pal, 0, false);
+  });
+}
+function charHead(A, id, dir, pal, dy, sleep) {
+  const def = CHARS[id], H = headHelpers(A, dy);
+  if (def.head) { def.head(H, dir, pal, sleep); return; }
+  const h0 = def.hc[0];
+  H.E(8, 7.8, 5.3, 4.6, h0);
+  if (dir === 'down') { H.E(8, 9.6, 3.6, 2.6, C.skin);
+    if (sleep) { H.R(5, 9, 2, 1, INK); H.R(9, 9, 2, 1, INK); } else if (def.eyes) def.eyes(H, dir); else { H.R(6, 8, 1, 2, INK); H.R(9, 8, 1, 2, INK); H.P(6, 9, def.eye); H.P(9, 9, def.eye); }
+    H.P(5, 10, C.blush); H.P(10, 10, C.blush); }
+  if (dir === 'side') { H.E(10.2, 9.6, 2.6, 2.6, C.skin); if (def.eyes) def.eyes(H, dir); else { H.R(10, 8, 1, 2, INK); H.P(10, 9, def.eye); } H.P(11, 10, C.blush); }
+  def.hair(H, dir);
+}
+function curChar() { return G && CHARS[G.char] ? G.char : 'sprout'; }
+function outfitPal(id, o) { return o ? OUTFITS[o % OUTFITS.length].slice(1) : CHARS[id].pal; }
+const charPrevCache = {};
+function charPreview(id, step = 0) { const k = id + step; if (!charPrevCache[k]) { const c = CHARS[id]; charPrevCache[k] = (c.classic ? playerFrame('down', step, c.pal) : charFrame(id, 'down', step, c.pal)).toDataURL(); } return charPrevCache[k]; }
 function buildPlayer(o) {
-  const pal = OUTFITS[(o || 0) % OUTFITS.length].slice(1);
-  SPR.player = {}; for (const d of ['down', 'up', 'side']) SPR.player[d] = [playerFrame(d, 0, pal), playerFrame(d, 1, pal)];
+  const id = curChar(), ch = CHARS[id], pal = outfitPal(id, o || 0);
+  const fr = (d, st) => ch.classic ? playerFrame(d, st, pal) : charFrame(id, d, st, pal);
+  SPR.player = {}; for (const d of ['down', 'up', 'side']) SPR.player[d] = [fr(d, 0), fr(d, 1)];
   SPR.playerW = {}; for (const d of ['down', 'up', 'side']) SPR.playerW[d] = SPR.player[d].map(whiten);
   const f = SPR.player.down[0], c = document.createElement('canvas'); c.width = 16; c.height = 16; c.getContext('2d').drawImage(f, 0, 0, 16, 16, 0, 0, 16, 16); SPR.playerSit = c;
+  if (!ch.classic) { SPR.sleepHead = mk(16, 11, A => charHead(A, id, 'down', pal, -2, true)); return; }
   SPR.sleepHead = mk(16, 11, A => { A.e(8, 5.5, 5.2, 4.4, pal[0]); A.e(6.4, 3.2, 2, 1.1, pal[2]); A.e(8, 6.6, 3.6, 2.6, C.skin); A.r(5, 6, 2, 1, INK); A.r(9, 6, 2, 1, INK); A.p(5, 8, C.blush); A.p(10, 8, C.blush); A.r(8, 0, 1, 2, C.leafD); A.p(7, 0, C.leaf); });
 }
 function dimmed(c) { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; const g = k.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, k.width, k.height), a = d.data; for (let i = 0; i < a.length; i += 4) { if (!a[i + 3]) continue; const l = (a[i] * .3 + a[i + 1] * .59 + a[i + 2] * .11) / 255; if (l > 0.55) { a[i] *= .45; a[i + 1] *= .45; a[i + 2] *= .55; } } g.putImageData(d, 0, 0); return k; }
@@ -957,14 +1061,14 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
-  G.sel = 0; G.outfit = 0; G.marks = []; G.under = new Map(); G.terrain = {}; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.marks = []; G.under = new Map(); G.terrain = {}; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
 const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
 function serialize() {
   if (!G) return null; const p = G.p;
-  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0,
+  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout',
     p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [], under: [...G.under], terrain: G.terrain || {} };
 }
 function deserialize(s) {
@@ -975,7 +1079,7 @@ function deserialize(s) {
     won: !!s.won, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   while (G.inv.length < 30) G.inv.push(null);
   if ((s.v || 1) < 2) migrateV2();
-  G.outfit = s.outfit || 0; buildPlayer(G.outfit);
+  G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
@@ -1297,7 +1401,7 @@ function useObj(a) {
     case 'feed': puff(x, t.y + .4, '#d4f1ff', 8, 1.2, .5); hearts(x, t.y, 3); SFX.plop(); toast('물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; toast(TIPS[G.tipN]); SFX.page(); break;
     case 'mirror': puff(p.x, p.y - .8, '#fff7c2', 10, 2, .8); SFX.seed(); toast(pickOne(COMPLIMENTS), null, 'mirror'); break;
-    case 'dress': G.outfit = ((G.outfit || 0) + 1) % OUTFITS.length; buildPlayer(G.outfit); puff(p.x, p.y - .5, OUTFITS[G.outfit][1], 14, 2.5, .6); SFX.craft(); toast(`${OUTFITS[G.outfit][0]}색 옷으로 갈아입었어요`, 'good'); break;
+    case 'dress': { G.outfit = ((G.outfit || 0) + 1) % OUTFITS.length; buildPlayer(G.outfit); const cl = CHARS[curChar()].classic; puff(p.x, p.y - .5, outfitPal(curChar(), G.outfit)[0], 14, 2.5, .6); SFX.craft(); toast(G.outfit === 0 && !cl ? '원래 옷으로 갈아입었어요' : `${OUTFITS[G.outfit][0]}색 옷으로 갈아입었어요`, 'good'); break; }
     case 'wish': if ((o.cd || 0) > G.time) { toast('분수가 쉬고 있어요. 조금 뒤에 다시 빌어요', null, 'wish'); break; } o.cd = G.time + 120; G.luck = G.time + 120; puff(x, t.y, '#bfefff', 16, 2.5, 1); SFX.seed(); toast('행운이 깃들었어요! 2분 동안 희귀 물고기가 더 잘 낚여요', 'good'); break;
     case 'water': o.shake = .3; for (let k = 0; k < 8; k++) G.parts.push({ x: x + (Math.random() - .5) * .6, y: t.y + .6, z: 1.2, vx: (Math.random() - .5), vy: 0, vz: -1, life: .5, max: .5, col: '#8fd0ff', sz: 1 }); SFX.plop(); toast('촉촉해졌어요', null, 'water'); break;
     case 'tea': if ((o.cd || 0) > G.time) { toast('찻잔이 비었어요. 조금 뒤에 다시 마셔요', null, 'tea'); break; } o.cd = G.time + 45; p.hp = Math.min(100, p.hp + 6); p.hunger = Math.min(100, p.hunger + 4); ftext(p.x, p.y - 1.3, '♥ +6', '#ff8fa3'); SFX.eat(); toast('따뜻한 차 한 잔, 기운이 나요', null, 'tea'); break;
@@ -1981,6 +2085,7 @@ function renderPanel() {
     const marks = G.marks || [];
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:8px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
+      <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
@@ -2040,6 +2145,7 @@ function onSheetClick(e) {
   if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
   if (a === 'save') { saveLocal(); return; }
   if (a === 'export') { exportSave(); return; }
+  if (a === 'charSet') { if (CHARS[i] && G.char !== i) { G.char = i; G.outfit = 0; buildPlayer(0); puff(G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); SFX.craft(); toast(`${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); saveLocal(true); } renderPanel(); return; }
   if (a === 'import') { pickSaveFile('menu'); return; }
   if (a === 'impYes') { applyImport(); return; }
   if (a === 'impNo') { pendingImp = null; renderPanel(); return; }
@@ -2048,7 +2154,7 @@ function onSheetClick(e) {
   if (a === 'markDel' && canDev()) { G.marks.splice(i, 1); saveLocal(true); renderPanel(); return; }
   if (a === 'zoom') { zoomPref = i; try { localStorage.setItem('lantern-tree-zoom', i); } catch (e) { } resize(); renderPanel(); return; }
   if (a === 'sound') { soundOn = !soundOn; try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
-  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } newGame((Math.random() * 1e9) | 0); started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
+  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } { const keepC = G.char; newGame((Math.random() * 1e9) | 0); G.char = keepC; buildPlayer(0); } started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
 }
 function hotClick(i) {
   ensureAudio();
@@ -2106,7 +2212,10 @@ function setupInput() {
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
   $('#goal').addEventListener('click', () => { const g = GUIDE[G.guide]; if (g) toast(g.h); });
-  $('#btnNew').addEventListener('click', () => { ensureAudio(); newGame((Math.random() * 1e9) | 0); beginPlay(); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
+  $('#btnNew').addEventListener('click', () => { ensureAudio(); showPicker(); });
+  $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
+  $('#charBack').addEventListener('click', () => hidePicker());
+  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
   $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
   $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
@@ -2115,6 +2224,14 @@ function setupInput() {
   document.addEventListener('visibilitychange', () => { if (document.hidden && started) saveLocal(true); });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
 }
+// ---- character picker (title + menu) ----
+let pickSel = 'sprout', pickAnim = 0;
+function cpCards(sel) { return CHAR_IDS.map(id => `<button type="button" class="cp-card ${id === sel ? 'on' : ''}" data-c="${id}" data-a="charSet" data-i="${id}"><img class="px" src="${charPreview(id)}" alt=""><span>${CHARS[id].n}</span></button>`).join(''); }
+function animPick(root) { clearInterval(pickAnim); let f = 0; pickAnim = setInterval(() => { const im = root && root.querySelector('.cp-card.on img'); if (!im || !im.isConnected) { clearInterval(pickAnim); return; } f ^= 1; im.src = charPreview(im.parentElement.dataset.c, f); }, 320); }
+function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking'); $('#charPick').hidden = false; renderPicker(); }
+function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
+function hidePicker() { $('#title').classList.remove('picking'); $('#charPick').hidden = true; clearInterval(pickAnim); }
+const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); };
 function beginPlay() { $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
 
 // ================= loop =================
