@@ -167,6 +167,10 @@ body.touch #pcHint{display:none}
 #bkList{width:min(340px,100%);background:rgba(27,20,38,.95);border:2px solid var(--line);border-radius:18px;padding:12px;display:grid;gap:8px;text-align:left}
 #bkList .bk{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
 #bkList .bk .btn{min-height:42px;font-size:15px;padding:0 12px}
+#cloudAsk{width:min(340px,100%);background:rgba(27,20,38,.92);border:2px solid var(--mint);border-radius:18px;padding:14px;text-align:center}
+#cloudAsk p{margin:0 0 12px;font-size:16px;line-height:1.5}
+.cl-form{display:grid;gap:8px;margin-top:10px}
+.cl-form input{font:inherit;font-size:16px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--text);-webkit-user-select:text;user-select:text;touch-action:manipulation}
 #impAsk{width:min(320px,100%);background:rgba(27,20,38,.92);border:2px solid var(--amber);border-radius:18px;padding:14px;text-align:center}
 #impAsk p{margin:0 0 12px;font-size:16px;line-height:1.5}
 .menu-list .btn{width:100%}
@@ -239,6 +243,7 @@ body.touch #pcHint{display:none}
     </div>
     <div id="impAsk" hidden></div>
     <div id="bkList" hidden></div>
+    <div id="cloudAsk" hidden></div>
     <div id="charPick" hidden><div class="cp-h">누구와 모험할까요?</div><div class="cp-grid" id="cpGrid"></div><div class="cp-desc" id="cpDesc"></div><div class="menu-two"><button class="btn ghost" id="charBack" type="button">뒤로</button><button class="btn" id="charGo" type="button">이 친구로 시작</button></div></div>
     <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 오른쪽 큰 버튼으로 캐기·공격·놓기</div>
   </div>
@@ -1247,7 +1252,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
 }
 function deserialize(s) {
   const N = W * H;
@@ -1278,6 +1283,72 @@ function pushBackup(reason, dataStr) {
     b.unshift({ at: Date.now(), reason, data }); while (b.length > 3) b.pop(); localStorage.setItem(BACKUP_KEY, JSON.stringify(b)); } catch (e) { }
 }
 function storageWorks() { try { localStorage.setItem('lantern-tree-probe', '1'); const ok = localStorage.getItem('lantern-tree-probe') === '1'; localStorage.removeItem('lantern-tree-probe'); return ok; } catch (e) { return false; } }
+
+// ---- cloud save (Firebase). Works on the website / home-screen app; the Claude preview cannot reach outside servers ----
+const FB_CONFIG = { apiKey: 'AIzaSyCsGbKTF6oQiS9_Ow_sAZJBH2XfDfjABYw', authDomain: 'lamp-tree.firebaseapp.com', projectId: 'lamp-tree', storageBucket: 'lamp-tree.firebasestorage.app', messagingSenderId: '614596289531', appId: '1:614596289531:web:cd9621a19cbb4c253ce15e' };
+const CLOUD = { st: 'off', user: null, api: null, lastUp: 0, busy: false, err: '', pending: null };
+const FB_ERR = { 'auth/popup-closed-by-user': '로그인 창이 닫혔어요', 'auth/cancelled-popup-request': '로그인 창이 닫혔어요', 'auth/popup-blocked': '로그인 창이 막혔어요. 이메일 로그인을 써 보세요',
+  'auth/invalid-credential': '이메일이나 비밀번호가 맞지 않아요', 'auth/wrong-password': '비밀번호가 맞지 않아요', 'auth/user-not-found': '가입된 이메일이 아니에요. 새로 가입을 눌러 주세요', 'auth/invalid-email': '이메일 주소를 다시 확인해 주세요',
+  'auth/email-already-in-use': '이미 가입된 이메일이에요. 로그인을 눌러 주세요', 'auth/weak-password': '비밀번호는 6자 이상이어야 해요', 'auth/unauthorized-domain': '이 주소는 아직 로그인이 허용되지 않았어요 (Firebase 승인된 도메인 확인)',
+  'auth/network-request-failed': '인터넷 연결을 확인해 주세요', 'permission-denied': '클라우드 저장 권한이 없어요 (Firestore 규칙 확인)', 'unavailable': '클라우드에 연결할 수 없어요. 잠시 뒤 다시 해 주세요' };
+const fbErr = e => FB_ERR[e && e.code] || '클라우드 작업에 실패했어요' + (e && e.code ? ` (${e.code})` : '');
+const fmtTime = t => { const d = new Date(t); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+async function cloudInit() {
+  if (window.__cloudMock) CLOUD.api = window.__cloudMock;
+  else {
+    if (window.claude?.use || location.protocol !== 'https:') { CLOUD.st = 'na'; return; }
+    CLOUD.st = 'loading';
+    try { const B = 'https://www.gstatic.com/firebasejs/10.12.2/'; const [a, au, fs] = await Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-auth.js'), import(B + 'firebase-firestore.js')]);
+      const app = a.initializeApp(FB_CONFIG), auth = au.getAuth(app), db = fs.getFirestore(app);
+      CLOUD.api = { onAuth: cb => au.onAuthStateChanged(auth, cb), google: () => au.signInWithPopup(auth, new au.GoogleAuthProvider()), emailIn: (e, pw) => au.signInWithEmailAndPassword(auth, e, pw), emailUp: (e, pw) => au.createUserWithEmailAndPassword(auth, e, pw),
+        out: () => au.signOut(auth), get: async uid => { const d = await fs.getDoc(fs.doc(db, 'saves', uid)); return d.exists() ? d.data() : null; }, put: (uid, d) => fs.setDoc(fs.doc(db, 'saves', uid), d) };
+    } catch (e) { CLOUD.st = 'na'; CLOUD.err = 'load'; cloudRefresh(); return; }
+  }
+  CLOUD.api.onAuth(u => { CLOUD.user = u ? { uid: u.uid, name: u.displayName || u.email || '로그인됨' } : null; CLOUD.st = u ? 'in' : 'out'; if (u) cloudCheck(); else { CLOUD.pending = null; showCloudAsk(); } cloudRefresh(); });
+}
+function cloudRefresh() { if (panel && panel.kind === 'menu') renderPanel(); }
+async function cloudCheck() {
+  if (!CLOUD.user) return; let doc;
+  try { doc = await CLOUD.api.get(CLOUD.user.uid); } catch (e) { toast(fbErr(e), 'warn', 'cloudget'); return; }
+  const local = loadLocal(), localAt = (local && local.at) || 0;
+  if (doc && doc.data && (doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
+  CLOUD.lastUp = (doc && doc.at) || 0; if (local) cloudUpload(true);
+}
+async function cloudUpload(force, quiet = true) {
+  if (!CLOUD.user || CLOUD.busy || CLOUD.pending) return false; if (!force && !started) return false;
+  if (started) saveLocal(true); let data = null; try { data = localStorage.getItem(SAVE_KEY); } catch (e) { } if (!data && G) data = JSON.stringify(serialize()); if (!data) return false;
+  const at = (JSON.parse(data).at) || Date.now(); if (!force && at <= CLOUD.lastUp) return true;
+  CLOUD.busy = true;
+  try { await CLOUD.api.put(CLOUD.user.uid, { data, at, char: (G && G.char) || 'sprout', v: 1 }); CLOUD.lastUp = at; if (!quiet) toast('클라우드에 올렸어요', 'good'); return true; }
+  catch (e) { toast(fbErr(e), 'warn', 'cloudput'); return false; }
+  finally { CLOUD.busy = false; cloudRefresh(); }
+}
+function cloudTakePending() {
+  const doc = CLOUD.pending; if (!doc) return; let sv; try { sv = JSON.parse(doc.data); } catch (e) { toast('클라우드 세이브를 읽지 못했어요'); return; }
+  saveLocal(true); pushBackup('클라우드 세이브 불러오기 전');
+  try { deserialize(sv); } catch (e) { toast('클라우드 세이브를 불러오지 못했어요'); return; }
+  CLOUD.pending = null; CLOUD.lastUp = doc.at || 0; showCloudAsk(); if (panel) closePanel(); beginPlay(); toast('클라우드 세이브를 불러왔어요', 'good');
+}
+function cloudKeepLocal() { CLOUD.pending = null; showCloudAsk(); cloudUpload(true, false); cloudRefresh(); }
+function showCloudAsk() { const el = $('#cloudAsk'); if (!el) return; const d = CLOUD.pending; el.hidden = !d || started; if (!d) return;
+  el.innerHTML = `<p>☁ 클라우드에 더 최근 세이브가 있어요<br><span style="color:var(--muted);font-size:14px">${fmtTime(d.at)} 저장 · 불러오면 이 기기 세이브는 백업해 둬요</span></p><div class="menu-two"><button class="btn" type="button" data-cl="take">불러오기</button><button class="btn ghost" type="button" data-cl="keep">이 기기 것 쓰기</button></div>`; }
+function cloudMenuHTML() {
+  let h = `<div class="lbl" style="margin-top:16px">클라우드 저장</div>`;
+  if (CLOUD.st === 'na') return h + `<p class="hint">${CLOUD.err === 'load' ? '클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.' : '사이트 주소(홈 화면 앱)로 연 게임에서 쓸 수 있어요.'}</p>`;
+  if (CLOUD.st !== 'in' && CLOUD.st !== 'out') return h + `<p class="hint">연결하는 중…</p>`;
+  if (CLOUD.st === 'out') {
+    h += `<p class="hint">로그인하면 세이브가 자동으로 클라우드에 올라가고, 다른 기기에서도 이어서 할 수 있어요.</p><div class="menu-two"><button class="btn ghost" data-a="clGoogle" type="button">구글로 로그인</button><button class="btn ghost" data-a="clEmailT" type="button">이메일로 로그인</button></div>`;
+    if (UIS.clEmail) h += `<div class="cl-form"><input id="clEm" type="email" placeholder="이메일" autocomplete="email"><input id="clPw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password"><div class="menu-two"><button class="btn" data-a="clIn" type="button">로그인</button><button class="btn ghost" data-a="clUp" type="button">새로 가입</button></div></div>`;
+    return h;
+  }
+  if (CLOUD.pending) h += `<div class="impbox"><p>클라우드에 더 최근 세이브가 있어요 (${fmtTime(CLOUD.pending.at)})<br><span style="color:var(--muted);font-size:14px">불러오면 지금 세이브는 백업해 둬요.</span></p><div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
+  return h + `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
+}
+async function cloudAuth(kind) {
+  try { if (kind === 'google') await CLOUD.api.google(); else { const em = ($('#clEm') || {}).value || '', pw = ($('#clPw') || {}).value || ''; if (!em || !pw) { toast('이메일과 비밀번호를 넣어 주세요'); return; } await (kind === 'up' ? CLOUD.api.emailUp(em.trim(), pw) : CLOUD.api.emailIn(em.trim(), pw)); }
+    UIS.clEmail = false; toast('로그인했어요', 'good'); }
+  catch (e) { toast(fbErr(e), 'warn', 'cloudauth'); }
+}
 // ---- save files: export / import ----
 let DL = null; try { if (window.claude?.use) window.claude.use('downloads').then(d => { DL = d; }).catch(() => { }); } catch (e) { }
 const pad2 = n => String(n).padStart(2, '0');
@@ -1714,7 +1785,7 @@ function respawn() {
 }
 
 // ================= update =================
-let regrowT = 0, snapT = 0;
+let regrowT = 0, snapT = 0, cloudT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
@@ -1761,6 +1832,7 @@ function update(dt) {
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
   saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
   snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
+  cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
   // crops & bush stage only visual
   const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
   shake = Math.max(0, shake - dt);
@@ -2339,7 +2411,7 @@ function renderPanel() {
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:8px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
       <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
-      <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>
+      <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
@@ -2417,6 +2489,14 @@ function onSheetClick(e) {
   if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
   if (a === 'save') { saveLocal(); return; }
   if (a === 'export') { exportSave(); return; }
+  if (a === 'clGoogle') { cloudAuth('google'); return; }
+  if (a === 'clEmailT') { UIS.clEmail = !UIS.clEmail; renderPanel(); return; }
+  if (a === 'clIn') { cloudAuth('in'); return; }
+  if (a === 'clUp') { cloudAuth('up'); return; }
+  if (a === 'clOut') { CLOUD.api.out().then(() => toast('로그아웃했어요')).catch(e => toast(fbErr(e), 'warn')); return; }
+  if (a === 'clUpNow') { cloudUpload(true, false); return; }
+  if (a === 'clTake') { cloudTakePending(); return; }
+  if (a === 'clKeep') { cloudKeepLocal(); return; }
   if (a === 'openLook') { openPanel('look'); return; }
   if (a === 'lookTab') { UIS.lookTab = i; renderPanel(); return; }
   if (a === 'lookSet') { const [k, v] = String(i).split(':'); UIS.look[k] = ['hc', 'eye', 'oc'].includes(k) ? +v : v; SFX.click(); renderPanel(); return; }
@@ -2463,6 +2543,7 @@ function setupInput() {
   ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
   const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
   window.addEventListener('keydown', e => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
     ensureAudio();
     if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
@@ -2496,6 +2577,7 @@ function setupInput() {
   $('#btnBackups').addEventListener('click', () => { const el = $('#bkList'); if (!el.hidden) { el.hidden = true; return; } const b = loadBackups();
     const fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
     el.innerHTML = `<div style="color:var(--muted);font-size:14px">되돌리면 지금 세이브도 백업해 둬요.</div>` + b.map((x, k) => `<div class="bk"><span>${fmt(x.at)}<br><small style="color:var(--muted)">${escHTML(x.reason || '')}</small></span><button class="btn ghost" type="button" data-bk="${k}">되돌리기</button></div>`).join(''); el.hidden = false; });
+  $('#cloudAsk').addEventListener('click', e => { const b = e.target.closest('[data-cl]'); if (!b) return; if (b.dataset.cl === 'take') cloudTakePending(); else cloudKeepLocal(); });
   $('#bkList').addEventListener('click', e => { const bt = e.target.closest('[data-bk]'); if (!bt) return; const x = loadBackups()[+bt.dataset.bk]; if (!x) return;
     let sv; try { sv = JSON.parse(x.data); } catch (err) { toast('백업을 읽지 못했어요'); return; }
     const cur = (() => { try { return localStorage.getItem(SAVE_KEY); } catch (err) { return null; } })();
@@ -2509,7 +2591,7 @@ function setupInput() {
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
   $('#impAsk').addEventListener('click', e => { const b = e.target.closest('[data-imp]'); if (!b) return; if (b.dataset.imp === 'yes') applyImport(); else { pendingImp = null; $('#impAsk').hidden = true; } });
   window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && started) saveLocal(true); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && started) { saveLocal(true); cloudUpload(false); } });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
 }
 // ---- character picker (title + menu) ----
@@ -2520,7 +2602,7 @@ function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking')
 function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
 function hidePicker() { $('#title').classList.remove('picking'); $('#charPick').hidden = true; clearInterval(pickAnim); }
 const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); };
-function beginPlay() { $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
+function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
 
 // ================= loop =================
 let lastT = 0;
@@ -2544,6 +2626,7 @@ function start(data) {
   const saved = (data && data.save) || loadLocal();
   if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { pushBackup('불러오기 실패한 세이브'); newGame(20261008); } } else newGame(20261008);
   if (loadBackups().length) $('#btnBackups').hidden = false;
+  setTimeout(() => cloudInit(), 50);
   if (!storageWorks()) { const w = $('#saveWarn'); w.hidden = false; w.textContent = '⚠ 이 화면에서는 진행 상황이 저장되지 않아요. 홈 화면 앱이나 브라우저에서 열거나, 플레이 중 메뉴 → 세이브 파일로 내보내기로 백업해 주세요.'; }
   cam.x = G.p.x; cam.y = G.p.y - .3; computeLight();
   if (data && data.save && data.playing) beginPlay();
