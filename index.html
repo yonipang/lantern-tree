@@ -27,6 +27,14 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
   padding:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-right,0px) + 14px) 0 calc(env(safe-area-inset-left,0px) + 14px);pointer-events:none}
 #hud > *{pointer-events:auto}
 #buffs{display:flex;gap:6px;margin:2px 0 0}#buffs .bf{position:relative;width:40px;height:40px;border-radius:12px;padding:3px;background:conic-gradient(#ffd25c calc(var(--f)*1turn),rgba(255,255,255,.14) 0)}#buffs .bf img{width:100%;height:100%;display:block;background:#2a2038;border-radius:9px}#buffs .bf i{position:absolute;right:-3px;bottom:-4px;font-style:normal;font-size:12px;background:#1b1426;color:#ffe9a8;border-radius:8px;padding:0 4px;line-height:16px}
+.bar.env .fill{background:#ff8a3d}.bar.env.cold .fill{background:#8fd0f0}.bar.env.hot .fill{background:linear-gradient(90deg,#ffb15c,#ff6a3d)}
+#envFx{position:absolute;inset:0;pointer-events:none;opacity:0}
+#envFx.hot{background:radial-gradient(farthest-side ellipse at center,rgba(255,110,50,0) 74%,rgba(255,90,40,.55) 90%,rgba(255,70,30,.9) 100%);animation:envHaze 2.6s ease-in-out infinite}
+#envFx.cold{background:radial-gradient(farthest-side ellipse at center,rgba(140,205,255,0) 74%,rgba(140,205,255,.55) 90%,rgba(200,235,255,.9) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='46'%3E%3Cg stroke='%23e8f8ff' stroke-width='1.4' stroke-linecap='round' opacity='.9'%3E%3Cpath d='M23 13v20M13 23h20M16 16l14 14M30 16L16 30'/%3E%3C/g%3E%3C/svg%3E");-webkit-mask-image:radial-gradient(farthest-side ellipse at center,transparent 72%,#000 96%);mask-image:radial-gradient(farthest-side ellipse at center,transparent 72%,#000 96%)}
+@media (orientation:portrait){#envFx.hot{background:radial-gradient(farthest-side ellipse at center,rgba(255,110,50,0) 82%,rgba(255,90,40,.55) 93%,rgba(255,70,30,.9) 100%)}#envFx.cold{-webkit-mask-image:radial-gradient(farthest-side ellipse at center,transparent 80%,#000 97%);mask-image:radial-gradient(farthest-side ellipse at center,transparent 80%,#000 97%)}}
+@keyframes envHaze{0%,100%{transform:scale(1) skewX(0)}50%{transform:scale(1.02) skewX(.6deg)}}
+#wearAsk{position:absolute;left:50%;top:44%;transform:translateX(-50%);z-index:6;min-height:52px;padding:0 18px;font-size:17px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.eqrow{display:flex;gap:14px;margin:4px 0 10px}.eqc{display:flex;align-items:center;gap:8px}.eqc small{color:var(--muted);font-size:14px;max-width:110px}.slot.eq.empty span{font-size:13px;color:var(--muted)}
 .rc .rn small.bfx{color:#9fe0c8}.rc.lockd{opacity:.62}.dbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.dbook .dk{position:relative;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}.dbook .dk img{width:40px;height:40px}.dbook .dk b{font-weight:400;font-size:14px}.dbook .dk small{font-size:11px;color:var(--muted);line-height:1.25}.dbook .dk.unk img{opacity:.45}.dbook .dk.done{background:rgba(255,210,92,.12);box-shadow:inset 0 0 0 2px rgba(255,210,92,.5)}.dbook .dk i{position:absolute;top:4px;right:6px;font-style:normal;color:#ffd25c}
 .bars{display:grid;gap:6px;width:min(250px,60vw)}
 .bar{display:flex;align-items:center;gap:6px;background:rgba(27,20,38,.78);border:2px solid var(--line);border-radius:14px;padding:3px 9px 3px 3px}
@@ -294,11 +302,12 @@ body.touch #pcHint{display:none}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
-  <canvas id="cv" aria-label="게임 화면"></canvas><div id="vig"></div>
+  <canvas id="cv" aria-label="게임 화면"></canvas><div id="vig"></div><div id="envFx"></div><button id="wearAsk" class="btn" type="button" hidden></button>
   <div id="hud">
     <div class="bars">
       <div class="bar hp" title="체력"><img class="px" id="icHp" alt="체력"><div class="track"><div class="fill" id="hpFill"></div></div><span id="hpTxt">100</span></div>
       <div class="bar hu" title="포만감"><img class="px" id="icHu" alt="포만감"><div class="track"><div class="fill" id="huFill"></div></div><span id="huTxt">100</span></div>
+      <div class="bar env" id="envBar" title="더위·추위" hidden><img class="px" id="icEnv" alt="더위·추위"><div class="track"><div class="fill" id="envFill"></div></div><span id="envTxt">0</span></div>
       <div class="bar mp" title="기력 · 경험치"><span class="lv" id="lvTxt">Lv.1</span><div class="track"><div class="fill" id="mpFill"></div><i class="xp" id="xpFill"></i></div><span id="mpTxt">40</span></div>
       <div id="buffs" hidden></div>
       <button class="goal" id="goal" type="button"><b>지금 할 일</b><span id="goalTxt">…</span></button>
@@ -589,7 +598,7 @@ function outfitPal(id, o) { return o ? OUTFITS[o % OUTFITS.length].slice(1) : CH
 const charPrevCache = {};
 function charPreview(id, step = 0, dir = 'down') { const k = id + step + dir; if (CHARS[id].custom || id === '__look') { const c = CHARS[id]; return charFrame(id, dir, step, c.pal).toDataURL(); } if (!charPrevCache[k]) { const c = CHARS[id]; charPrevCache[k] = (c.classic ? playerFrame(dir, step, c.pal) : charFrame(id, dir, step, c.pal)).toDataURL(); } return charPrevCache[k]; }
 function buildPlayer(o) {
-  const id = curChar(), ch = CHARS[id], pal = outfitPal(id, o || 0);
+  const id = curChar(), ch = CHARS[id], pal = (G && G.equip && G.equip.body && WEAR_PAL[G.equip.body.id]) || outfitPal(id, o || 0);
   const fr = (d, st) => ch.classic ? playerFrame(d, st, pal) : charFrame(id, d, st, pal);
   SPR.player = {}; for (const d of ['down', 'up', 'side']) SPR.player[d] = [fr(d, 0), fr(d, 1)];
   SPR.playerW = {}; for (const d of ['down', 'up', 'side']) SPR.playerW[d] = SPR.player[d].map(whiten);
@@ -744,7 +753,7 @@ const OSPR = {
   shrine: [16, 22, A => { A.r(3, 14, 10, 7, C.stone); A.r(2, 12, 12, 3, C.stoneL); A.r(3, 20, 10, 1, C.stoneD); A.r(5, 16, 6, 1, C.stoneD); A.p(5, 17, C.amber); A.p(10, 17, C.amber); A.r(6, 18, 4, 1, C.stoneD); A.r(7, 11, 2, 1, C.stoneD); }],
 };
 // crops: seed → sprout → flower/bud → grown. soil: bit 1 watered (dark, wet shine), bit 2 fertilized (pale grains)
-const CROP_STEP = { berry: ['씨앗', '새싹', '꽃', '다 자람'], shroom: ['포자', '새싹', '아기 버섯', '다 자람'], moss: ['포자', '새싹', '반쯤 덮임', '다 자람'], glow: ['포자', '새싹', '빛이 돌기 시작', '다 자람'], bean: ['씨앗', '새싹', '꽃', '다 자람'] };
+const CROP_STEP = { berry: ['씨앗', '새싹', '꽃', '다 자람'], shroom: ['포자', '새싹', '아기 버섯', '다 자람'], moss: ['포자', '새싹', '반쯤 덮임', '다 자람'], glow: ['포자', '새싹', '빛이 돌기 시작', '다 자람'], bean: ['씨앗', '새싹', '꽃', '다 자람'], fire: ['씨앗', '새싹', '꽃', '다 자람'], radish: ['씨앗', '새싹', '서리 맺힌 잎', '다 자람'] };
 function cropSoil(A, soil) {
   const wet = soil & 1; A.e(8, 13, 5, 1.8, wet ? '#3a271c' : C.dirtD); A.e(8, 12.6, 4.4, 1.2, wet ? '#563826' : C.dirt);
   if (wet) { A.p(5, 13, '#7fb4dc'); A.p(11, 12, '#7fb4dc'); A.p(9, 14, '#5a88b0'); }
@@ -754,8 +763,8 @@ const cropSprout = (A, c1, c2, c3) => { A.r(8, 10, 1, 3, c3); A.e(6.4, 9.6, 1.8,
 function cropSpr(kind, stage, soil = 0) {
   return mk(16, 16, A => {
     cropSoil(A, soil);
-    if (stage === 0) { const c = kind === 'berry' || kind === 'bean' ? '#c9a46b' : kind === 'shroom' ? '#c79ae8' : kind === 'glow' ? '#6ff2e6' : '#7cc271'; A.p(6, 12, c); A.p(8, 13, c); A.p(10, 12, c); A.p(7, 12, '#e9d6a8'); return; }
-    if (stage === 1) { if (kind === 'berry') cropSprout(A, C.leaf, C.leafL, C.leafD); else if (kind === 'shroom') cropSprout(A, '#e9dcc4', '#c79ae8', '#cdbb9a'); else if (kind === 'glow') cropSprout(A, '#e8f7f2', C.glowL, '#9fd8cc'); else if (kind === 'bean') cropSprout(A, C.leaf, '#c9b8ff', C.leafD); else cropSprout(A, '#62ad62', '#9be37a', '#468a4f'); return; }
+    if (stage === 0) { const c = kind === 'fire' ? '#ff8a3d' : kind === 'radish' ? '#e8f8ff' : kind === 'berry' || kind === 'bean' ? '#c9a46b' : kind === 'shroom' ? '#c79ae8' : kind === 'glow' ? '#6ff2e6' : '#7cc271'; A.p(6, 12, c); A.p(8, 13, c); A.p(10, 12, c); A.p(7, 12, '#e9d6a8'); return; }
+    if (stage === 1) { if (kind === 'berry') cropSprout(A, C.leaf, C.leafL, C.leafD); else if (kind === 'shroom') cropSprout(A, '#e9dcc4', '#c79ae8', '#cdbb9a'); else if (kind === 'glow') cropSprout(A, '#e8f7f2', C.glowL, '#9fd8cc'); else if (kind === 'bean') cropSprout(A, C.leaf, '#c9b8ff', C.leafD); else if (kind === 'fire') cropSprout(A, C.leaf, '#ff9b4a', C.leafD); else if (kind === 'radish') cropSprout(A, '#bfe6ff', '#e8f8ff', '#7fc0e0'); else cropSprout(A, '#62ad62', '#9be37a', '#468a4f'); return; }
     if (kind === 'berry') {
       if (stage === 2) { A.r(8, 9, 1, 4, C.leafD); A.e(8, 8.6, 4, 3, C.leafD); A.e(7.4, 7.8, 2.8, 2, C.leaf); A.p(6, 7, C.leafL);
         for (const [x, y] of [[5, 8], [10, 6]]) { A.p(x - 1, y, '#ffffff'); A.p(x + 1, y, '#ffffff'); A.p(x, y - 1, '#ffffff'); A.p(x, y + 1, '#f4eefa'); A.p(x, y, '#ffd25c'); } }
@@ -768,6 +777,13 @@ function cropSpr(kind, stage, soil = 0) {
     } else if (kind === 'glow') {
       if (stage === 2) { A.r(6, 10, 2, 3, '#e8f7f2'); A.e(7, 9.4, 2.4, 1.6, '#36b3a8'); A.p(5, 9, C.glowL); A.p(9, 9, C.glowL); A.r(10, 11, 1, 2, '#e8f7f2'); A.e(10.5, 10.5, 1.6, 1.1, '#36b3a8'); A.p(11, 10, C.glowL); }
       else { A.r(4, 9, 2, 4, '#e8f7f2'); A.e(5, 8, 3, 2.2, C.glow); A.p(4, 7, C.glowL); A.p(6, 7, '#ffffff'); A.r(9, 7, 3, 6, '#e8f7f2'); A.r(11, 7, 1, 6, '#c8e6df'); A.e(10.5, 6, 3.6, 2.6, C.glow); A.r(7, 7, 7, 1, '#36b3a8'); A.p(9, 5, '#ffffff'); A.p(12, 5, C.glowL); A.r(7, 11, 1, 2, '#e8f7f2'); A.e(7.5, 10.6, 1.4, 1, C.glowL); }
+    } else if (kind === 'fire') {
+      A.r(8, 8, 1, 5, C.leafD); A.e(6, 10, 2, 1.2, C.leaf); A.e(10.4, 9.2, 2, 1.2, C.leafL);
+      if (stage === 2) { A.e(8, 6.4, 2.6, 2.2, '#ff8a3d'); A.e(8, 6, 1.6, 1.4, '#ffd25c'); A.p(8, 5, '#fff1b0'); A.p(6, 6, '#ff6a2a'); A.p(10, 7, '#ff6a2a'); }
+      else { A.e(8, 7.5, 5, 3.8, C.leafD); A.e(7, 6.6, 3.4, 2.4, C.leaf); for (const [x, y] of [[5, 7], [10, 5], [11, 9], [7, 10]]) { A.e(x + .5, y + .5, 1.5, 1.5, '#ff6a2a'); A.p(x, y, '#ffd25c'); } A.p(9, 8, '#fff1b0'); }
+    } else if (kind === 'radish') {
+      if (stage === 2) { A.e(6, 9, 1.8, 3, '#7fc0e0'); A.e(10, 9, 1.8, 3, '#9fd8f0'); A.e(8, 8, 1.6, 3.4, '#bfe6ff'); A.p(6, 6, '#ffffff'); A.p(10, 6, '#ffffff'); A.p(8, 5, '#ffffff'); }
+      else { A.e(8, 11.6, 3.4, 2.4, '#e8f8ff'); A.e(7, 11, 1.6, 1.2, '#ffffff'); A.p(10, 12, '#bfe6ff'); A.e(5.6, 7, 1.8, 3.2, '#7fc0e0'); A.e(10.4, 7, 1.8, 3.2, '#9fd8f0'); A.e(8, 6, 1.6, 3.4, '#bfe6ff'); A.p(5, 4, '#ffffff'); A.p(11, 4, '#ffffff'); A.p(8, 3, '#ffffff'); }
     } else if (kind === 'bean') {
       A.line(8, 13, 8, 4, C.leafD); A.line(8, 9, 5, 6, C.leafD); A.line(8, 7, 11, 5, C.leafD); A.e(5.5, 9, 1.8, 1.1, C.leaf); A.e(10.6, 8.6, 1.8, 1.1, C.leaf); A.e(8, 3.6, 1.6, 1, C.leafL);
       if (stage === 2) { for (const [x, y] of [[5, 6], [11, 5], [8, 8]]) { A.p(x - 1, y, '#e3d4ff'); A.p(x + 1, y, '#e3d4ff'); A.p(x, y - 1, '#ffffff'); A.p(x, y + 1, '#c9b8ff'); A.p(x, y, '#fff1b0'); } }
@@ -1002,7 +1018,7 @@ function buildSprites() {
   SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
-  SPR.crop = {}; for (const k of ['berry', 'shroom', 'moss', 'glow', 'bean']) SPR.crop[k] = [0, 1, 2, 3].map(s => [0, 1, 2, 3].map(v => cropSpr(k, s, v)));
+  SPR.crop = {}; for (const k of ['berry', 'shroom', 'moss', 'glow', 'bean', 'fire', 'radish']) SPR.crop[k] = [0, 1, 2, 3].map(s => [0, 1, 2, 3].map(v => cropSpr(k, s, v)));
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = youngSpr(OSPR[k]);
   SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
@@ -1484,10 +1500,10 @@ const maxMp = () => 40 + RS('int') * 6;
 const meleeMul = () => (1 + RS('str') * 0.05) * (1 + bval('atk'));
 const rangeMul = () => (1 + RS('dex') * 0.03) * (1 + bval('atk'));
 const magicMul = () => (1 + RS('int') * 0.035) * (1 + bval('atk'));
-const atkSpd = () => 1 - Math.min(0.2, RS('dex') * 0.01);
-const moveMul = () => (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move'));
+const atkSpd = () => (1 - Math.min(0.2, RS('dex') * 0.01)) * (envLv('cold') >= 2 ? 1.1 : 1);
+const moveMul = () => (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move')) * [1, .9, .8, .8][envLv('cold')];
 const mineMul = () => (1 + RS('str') * 0.03) * (1 + skl('miner') * 0.25) * (1 + bval('mine'));
-const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15)) * (bval('hunger') || 1);
+const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15)) * (bval('hunger') || 1) * [1, 1.3, 1.6, 1.6][envLv('hot')];
 function gainXp(n, x, y) {
   const R = G && G.rpg; if (!R || !(n > 0) || R.lv >= MAX_LV) return; n = Math.max(n, Math.round(n * (1 + bval('xp')))); R.xp += n;
   if (x != null && n >= 3) ftext(x, y - 0.9, `+${n} 경험치`, '#b8e0ff');
@@ -1860,8 +1876,8 @@ function updateHazards(dt) {
   const p = G.p; G.hz = G.hz || [];
   for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } if (h.t < h.warn || p.dead > 0) continue;
     const d = Math.hypot(p.x - h.x, p.y - h.y);
-    if (h.k === 'lava') { if (d < h.r) hurtPlayer(h.dmg, h.x, h.y); }
-    else if (!h.done) { h.done = 1; puff(h.x, h.y, '#d4f6ff', 26, 4.5, .4); shake = Math.max(shake, .3); if (d < h.r) { hurtPlayer(h.dmg, h.x, h.y); p.slowT = h.slow || 2; ftext(p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); } } }
+    if (h.k === 'lava') { if (d < h.r) hurtPlayer(h.dmg, h.x, h.y, 'fire'); }
+    else if (!h.done) { h.done = 1; puff(h.x, h.y, '#d4f6ff', 26, 4.5, .4); shake = Math.max(shake, .3); if (d < h.r) { hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? .5 : 1); ftext(p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); } } }
 }
 function drawHazards(T, camX, camY) {
   const t = performance.now() / 1000;
@@ -2054,7 +2070,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2062,7 +2078,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof], run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs() };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof], run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), equip: G.equip || freshEquip(), env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
 function deserialize(s) {
   const N = W * H;
@@ -2076,6 +2092,8 @@ function deserialize(s) {
   if ((s.v || 1) < 2) migrateV2();
   G.wire = new Map(Array.isArray(s.wire) ? s.wire : []); G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []);
   if ((s.v || 1) < 3) migrateV3();
+  G.equip = freshEquip(); if (s.equip && typeof s.equip === 'object') for (const sl of ['body', 'acc']) { const e = s.equip[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && ITEMS[e.id].slot === sl) G.equip[sl] = { id: e.id, c: 1 }; }
+  G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
   G.look = cleanLook(s.look); CHARS.custom = lookDef(G.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
@@ -2093,7 +2111,7 @@ function deserialize(s) {
   G.qt = {}; if (s.qt && typeof s.qt === 'object') for (const k in s.qt) if (Number.isFinite(s.qt[k])) G.qt[k] = s.qt[k];
   fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
-  G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); buffDirty = true;
+  G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
@@ -2123,16 +2141,20 @@ function placeRooms(w0) {
   const rooms = [], safe = [[CX, CY], [BX, BY], [SA.x, SA.y], [SB.x, SB.y], [SL.x, SL.y], [SI.x, SI.y]], cand = [[], [], [], [], []];
   for (let y = 4; y < H - 8; y += 2) for (let x = 4; x < W - 8; x += 2) { const b = G.biome[idx(x + 1, y + 1)]; if (b <= 4) cand[b].push([x, y, hash2(x, y, (G.seed | 0) + 77)]); }
   const natural = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.roof.has(i) && !G.under.has(i);
-  for (let b = 0; b < 5; b++) { cand[b].sort((a, c) => a[2] - c[2]); let n = 0;
+  const open = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && !G.objs.get(i);
+  // the cracked wall faces an open tunnel on any side; a region that still has no room after that takes a door into plain rock
+  for (let pass = 0; pass < 2; pass++) for (let b = 0; b < 5; b++) { cand[b].sort((a, c) => a[2] - c[2]); let n = rooms.filter(r => r.b === b).length; if (pass && n) continue;
     for (const [x, y] of cand[b]) { if (n >= ROOM_N[b]) break;
       if (safe.some(([sx, sy]) => Math.hypot(x + 2 - sx, y + 1 - sy) < 16) || rooms.some(r => Math.hypot(r.x - x, r.y - y) < 24)) continue;
       let ok = true; for (let yy = y - 1; yy <= y + 3 && ok; yy++) for (let xx = x - 1; xx <= x + 4; xx++) { const i = idx(xx, yy); if (!natural(i) || G.biome[i] !== b) { ok = false; break; } }
       if (!ok) continue;
-      const dx = x + 1 + (hash2(x, y, 5) < .5 ? 0 : 1), below = idx(dx, y + 4); // the cracked wall faces an open tunnel
-      if (G.wall[below] || G.floor[below] === WATER || G.floor[below] === LAVA || G.objs.get(below)) continue;
+      const h = hash2(x, y, 5) < .5 ? 0 : 1, sides = [[x + 1 + h, y + 3, 0, 1], [x - 1, y + 1, -1, 0], [x + 4, y + 1, 1, 0], [x + 1 + h, y - 1, 0, -1]];
+      const door = sides.find(([dx, dy, ox, oy]) => inB(dx + ox, dy + oy) && open(idx(dx + ox, dy + oy))) || (pass ? sides[0] : null);
+      if (!door) continue; const [dx, dy] = door;
       for (let yy = y; yy <= y + 2; yy++) for (let xx = x; xx <= x + 3; xx++) { const i = idx(xx, yy); G.wall[i] = 0; G.floor[i] = 6; G.wdmg.delete(i); }
-      const cx = dx === x + 1 ? x + 2 : x + 1; G.objs.set(idx(cx, y), { t: 'tchest', hid: 1 }); // stays dark until the room is found
-      rooms.push({ id: 'r' + b + n, b, k: n, x, y, dx, dy: y + 3, cx, cy: y, found: 0, open: 0, hint: 0 }); n++; } }
+      const spots = [[x + 1, y], [x + 2, y], [x + 1, y + 2], [x + 2, y + 2]].sort((a, c) => Math.hypot(c[0] - dx, c[1] - dy) - Math.hypot(a[0] - dx, a[1] - dy)), [cx, cy] = spots[0];
+      G.objs.set(idx(cx, cy), { t: 'tchest', hid: 1 }); // stays dark until the room is found
+      rooms.push({ id: 'r' + b + n, b, k: n, x, y, dx, dy, cx, cy, found: 0, open: 0, hint: 0 }); n++; } }
   return rooms;
 }
 const cleanRooms = a => a.filter(r => r && Number.isInteger(r.x) && Number.isInteger(r.y) && Number.isInteger(r.b) && r.b >= 0 && r.b < 5).map(r => ({ id: String(r.id || ''), b: r.b, k: r.k | 0, x: r.x, y: r.y, dx: r.dx | 0, dy: r.dy | 0, cx: r.cx | 0, cy: r.cy | 0, found: r.found ? 1 : 0, open: r.open ? 1 : 0, hint: r.hint ? 1 : 0 }));
@@ -2339,7 +2361,7 @@ const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt;
 const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting
 const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['food', '음식'], ['deco', '꾸미기'], ['seed', '씨앗']];
-function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'sword', 'rod', 'shovel', 'sickle', 'wcan'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
+function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 let invDirty = true;
 function addItem(id, c, count = true) {
   if (ITEMS[id] && ITEMS[id].note) { learnRecipe(ITEMS[id].note); return 0; } // recipe notes teach a dish instead of taking a bag slot
@@ -2573,6 +2595,7 @@ function decide() {
   if (it && it.kind === 'wcan' && i >= 0 && !G.wall[i] && G.floor[i] === WATER) return (s.w || 0) >= WCAN_MAX ? { k: 'info', lbl: '가득 참', icon: 'wcan', msg: '물뿌리개에 물이 가득해요', t } : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
   if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return usableItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : hasItem('rod') ? { k: 'info', lbl: '낚싯대 고장', icon: 'rod', msg: '낚싯대가 망가졌어요. 작업대에서 고칠 수 있어요', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (제작 → 낚싯대)', t };
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
+  if (it && it.kind === 'wear') return { k: 'wear', lbl: ITEMS[s.id].slot === 'body' ? '입기' : '달기', icon: s.id };
   if (it && it.kind === 'food') return { k: 'eat', lbl: '먹기', icon: s.id };
   if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
   return { k: 'swing', lbl: WT.ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
@@ -2617,6 +2640,7 @@ function perform(a) {
     case 'fert': fertCrop(a.t, a.o); actCd = 0.3; break;
     case 'fill': fillCan(a.t); actCd = 0.4; break;
     case 'eat': eat(G.sel); actCd = 0.4; break;
+    case 'wear': wearItem(G.sel); actCd = 0.4; break;
     case 'insert': insertSeeds(); actCd = 0.4; break;
     case 'tree': openPanel('tree'); actCd = 0.3; break;
     case 'summon': summonBoss(a.boss); actCd = 0.6; break;
@@ -2715,7 +2739,8 @@ function hitBoss(b, dmg, crit, fx) {
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; ftext(b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); puff(b.x, b.y - .3, def.col, 6, 3); SFX.hit(); shake = Math.max(shake, 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
     G.bossDead[b.k] = true; gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; $('#bossbar').hidden = true; G.shots.length = 0; puff(b.x, b.y, def.col, 40, 5, 0.6); puff(b.x, b.y, '#ffc861', 16, 4, 1); SFX.win(); shake = 0.5;
-    G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y); if (again) { rematchLoot(b); return; }
+    G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
+    if (ACC_OF[b.k] && (!again || Math.random() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { G.stats.uniq[b.k] = 1; spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); toast('용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -2948,7 +2973,8 @@ function insertSeeds() {
   else if (G.treeSeeds >= 3 && !G.won) { G.won = true; setTimeout(() => { SFX.win(); openPanel('win'); }, 1700); }
   else toast(`등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/${G.treeSeeds < 3 ? 3 : 5})`, 'good');
 }
-function hurtPlayer(dmg, sx, sy) {
+function hurtPlayer(dmg, sx, sy, kind) {
+  if (kind === 'fire' && wearing('turtleCharm')) dmg *= .7;
   const p = G.p; if (p.inv > 0 || p.dead > 0 || p.sleep) return; if (p.sit) standUp(); dmg = Math.max(1, Math.round(dmg * (1 - skl('tough') * 0.07) * (1 - bval('def'))));
   p.hp -= dmg; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
   shake = Math.max(shake, 0.28); SFX.hurt(); ftext(p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');
@@ -3007,9 +3033,9 @@ function update(dt) {
   if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
   holdT = held ? holdT + dt : 0;
   // survival
-  buffTick(dt);
+  buffTick(dt); envTick(dt);
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
-  regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0) p.hp = Math.min(maxHp(), p.hp + 1); }
+  regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
   updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt); updateTree(dt);
   spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
@@ -3124,7 +3150,7 @@ function updateShots(dt) {
   for (let i = G.shots.length - 1; i >= 0; i--) {
     const s = G.shots[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
     if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { puff(s.x, s.y, s.k === 'spore' ? '#d59bff' : C.cryL, 3, 1.5, .2); G.shots.splice(i, 1); continue; }
-    if (p.dead <= 0 && Math.hypot(s.x - p.x, s.y - (p.y - .3)) < 0.42) { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy); G.shots.splice(i, 1); }
+    if (p.dead <= 0 && Math.hypot(s.x - p.x, s.y - (p.y - .3)) < 0.42) { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null); G.shots.splice(i, 1); }
   }
 }
 function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: Math.random(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
@@ -3392,7 +3418,7 @@ const ROOM_NOTES = [['petalDango', 'eelGrill'], ['capSteak', 'jellyStew'], ['bea
 const BOSS_NOTES = { slime: ['catfishSoup'], golem: ['shrimpDango'] }, BOSS_REGION = { slime: 0, queen: 1, golem: 2, turtle: 3, spirit: 4 };
 const REGION_N = ['이끼 동굴', '버섯숲', '수정 동굴', '용암 동굴', '얼음 동굴'];
 function noteHint(d) { const s = d.src; if (s === 'mon') return '이끼 동굴·버섯숲 몬스터가 가끔 떨어뜨려요'; if (s === 'gather') return '풀·작물·빛버섯을 거둘 때 가끔 나와요'; if (s === 'fish') return '낚시하다 보면 가끔 걸려요'; if (s === 'bottle') return '낚시하다 병 속 쪽지로 걸려요';
-  if (s.startsWith('room:')) return `${REGION_N[+s[6]]} 숨은 방 어딘가`; if (s.startsWith('boss:')) return `${BOSSES[s.slice(5)].n}을(를) 물리치면`; if (s.startsWith('quest:')) { const q = QSIDE.find(x => x.id === s.slice(6)); return q ? `도전 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '도전 퀘스트 보상'; } return ''; }
+  if (s.startsWith('room:')) return `${REGION_N[+s[6]]} 숨은 방 어딘가`; if (s.startsWith('boss:')) return `${BOSSES[s.slice(5)].n}을(를) 물리치면`; if (s.startsWith('guide:')) { const q = GUIDE.find(x => x.id === s.slice(6)); return q ? `이야기 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '이야기 퀘스트 보상'; } if (s.startsWith('quest:')) { const q = QSIDE.find(x => x.id === s.slice(6)); return q ? `도전 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '도전 퀘스트 보상'; } return ''; }
 const knows = id => !DISH[id] || !!(G && G.recipes && G.recipes[id]);
 const DISH_FOOD = [[60, 60], [20, 6], [28, 10], [36, 14]];
 const buffText = it => { if (!it.buff) return ''; const [ef, tier] = it.buff, E = EFF[ef], m = BUFF_DUR[tier - 1] * (it.star ? 1.5 : 1) / 60; return `${E.n} ${E.t(E.v[tier - 1])} · ${Number.isInteger(m) ? m : m.toFixed(1)}분`; };
@@ -3463,6 +3489,114 @@ function fishBottle() {
   if (!knows('koiSteam')) { learnRecipe('koiSteam', true); toast('병 속에서 쪽지가 나왔어요! 새 레시피: 별빛 잉어찜', 'good'); SFX.seed(); return; }
   const cs = Object.keys(FLOWERS), pool = [['petal' + cs[(Math.random() * cs.length) | 0], 2], ['crystal', 2], ['gel', 2], [['glowSpore', 'cbeanSeed', 'berrySeed'][(Math.random() * 3) | 0], 2]];
   pool.sort(() => Math.random() - .5); for (const [id, c] of pool.slice(0, 3)) { const l = addItem(id, c); if (l) spawnDrop(id, l, G.p.x, G.p.y); } toast('작은 보물상자를 낚았어요!', 'good'); }
+// ================= deep caves: fire berry and frost radish crops, clothes and charms, cold/heat gauge =================
+Object.assign(OBJ, {
+  cropFire: { n: '불꽃 열매', crop: 'fire', grow: 200, yield: [['fireBerry', 2, 3, 1], ['fireSeed', 1, 2, 1]] },
+  cropRadish: { n: '서리 무', crop: 'radish', grow: 200, yield: [['radish', 2, 3, 1], ['radishSeed', 1, 2, 1]] },
+});
+Object.assign(CROP_SOIL, { cropFire: 2, cropRadish: 1 }); Object.assign(STAR_OF, { fireBerry: 'fireBerryS', radish: 'radishS' });
+Object.assign(ITEMS, {
+  fireSeed: { n: '불꽃 열매 씨앗', kind: 'seed', crop: 'cropFire', d: '흙·이끼·버섯흙·수정 모래·풀밭에 심으면 3분 20초쯤 뒤 불꽃 열매가 열려요. 흙이 잘 맞아요.' },
+  radishSeed: { n: '서리 무 씨앗', kind: 'seed', crop: 'cropRadish', d: '흙·이끼·버섯흙·수정 모래·풀밭에 심으면 3분 20초쯤 뒤 서리 무가 자라요. 이끼가 잘 맞아요.' },
+  radish: { n: '서리 무', kind: 'food', food: 10, heal: 6, d: '얼음 동굴에서 온 시원한 무. 더위를 식히는 요리에 들어가요.' },
+  fireBerryS: { n: '별 불꽃 열매', kind: 'food', food: 26, heal: 20, d: '별 작물에서 딴 특별한 불꽃 열매. 제작에서는 불꽃 열매 대신 쓸 수 있어요.' },
+  radishS: { n: '별 서리 무', kind: 'food', food: 12, heal: 6, d: '별 작물에서 딴 특별한 서리 무. 제작에서는 서리 무 대신 쓸 수 있어요.' },
+});
+Object.assign(ICON, {
+  fireSeed: packet('#ecd6a8', A => { A.e(8, 9, 2.2, 2.2, '#ff8a3d'); A.p(7, 8, '#ffd25c'); A.p(9, 6, C.leaf); }),
+  radishSeed: packet('#ecd6a8', A => { A.e(8, 9, 2.2, 2.2, '#e8f8ff'); A.p(7, 8, '#ffffff'); A.p(9, 6, '#9fd8f0'); }),
+  radish: A => { A.e(8, 10, 3.6, 4.4, '#e8f8ff'); A.e(7, 9, 2, 2.6, '#ffffff'); A.line(8, 14, 9, 15, '#c8e6f5'); A.p(10, 11, '#bfe6ff'); A.e(6, 4, 1.6, 2.6, '#7fc0e0'); A.e(10, 4, 1.6, 2.6, '#9fd8f0'); A.e(8, 3, 1.4, 2.4, '#bfe6ff'); },
+  fireBerryS: A => { ICON.fireBerry(A); starMark(A); }, radishS: A => { ICON.radish(A); starMark(A); },
+});
+OBJ.fireBloom.drops.push(['fireSeed', 1, 1, 0.25]); ENEMY.snowling.drops.push(['radishSeed', 1, 1, 0.2]);
+// ---- clothes (body) and charms (accessory): two slots; clothes halve the cold or heat gauge, charms come from the deep bosses ----
+const WEAR_PAL = { obsCoat: ['#5a4a78', '#3a2f52', '#8a7ab0'], frostRobe: ['#8fd0f0', '#5a9ac8', '#d8f2ff'] };
+const ACC_OF = { turtle: 'turtleCharm', spirit: 'snowBrooch' };
+Object.assign(ITEMS, {
+  obsCoat: { n: '흑요석 외투', kind: 'wear', slot: 'body', guard: 'cold', stack: 1, d: '얼음 동굴의 추위 게이지가 반 속도로 올라요. 입으면 어두운 보랏빛 외투가 보여요.' },
+  frostRobe: { n: '서리 비단옷', kind: 'wear', slot: 'body', guard: 'hot', stack: 1, d: '용암 동굴의 더위 게이지가 반 속도로 올라요. 입으면 하늘빛 비단옷이 보여요.' },
+  turtleCharm: { n: '거북 등껍질 부적', kind: 'wear', slot: 'acc', stack: 1, d: '용암 거북의 등껍질 조각. 불덩이와 용암 웅덩이 피해가 30% 줄어요.' },
+  snowBrooch: { n: '눈꽃 브로치', kind: 'wear', slot: 'acc', stack: 1, d: '서리 정령의 눈꽃. 얼어서 느려지는 시간이 절반이 돼요.' },
+});
+Object.assign(ICON, {
+  obsCoat: A => { A.poly([[4, 3], [12, 3], [14, 14], [2, 14]], '#3a2f52'); A.poly([[5, 3], [11, 3], [12.5, 13], [3.5, 13]], '#5a4a78'); A.r(7, 3, 2, 11, '#2a2238'); A.p(6, 6, '#8a7ab0'); A.p(6, 9, '#8a7ab0'); A.r(4, 2, 8, 2, '#8a7ab0'); A.p(10, 5, '#b99bff'); },
+  frostRobe: A => { A.poly([[5, 2], [11, 2], [14, 14], [2, 14]], '#5a9ac8'); A.poly([[6, 2], [10, 2], [12.5, 13], [3.5, 13]], '#8fd0f0'); A.r(7, 2, 2, 12, '#d8f2ff'); A.p(5, 8, '#ffffff'); A.p(11, 10, '#ffffff'); A.r(3, 12, 10, 1, '#d8f2ff'); },
+  turtleCharm: A => { A.line(8, 1, 8, 4, '#c9a46b'); A.e(8, 9, 5, 4.6, '#2f6e33'); A.e(8, 8.6, 4, 3.6, '#ff8a3d'); for (const [x, y] of [[6, 7], [10, 7], [8, 10]]) A.e(x, y, 1.3, 1.1, '#c4441a'); A.p(7, 6, '#ffd25c'); },
+  snowBrooch: A => { for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; A.line(8, 8, 8 + Math.cos(a) * 5.4, 8 + Math.sin(a) * 5.4, '#9fd8f0'); } A.e(8, 8, 2.2, 2.2, '#ffffff'); A.p(8, 8, '#7fc0e0'); },
+});
+RECIPES.push(Rc('obsCoat', 1, [['obsidian', 4], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'), Rc('frostRobe', 1, [['frostShard', 6], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'));
+const freshEquip = () => ({ body: null, acc: null });
+const wearing = id => !!(G && G.equip && ((G.equip.body && G.equip.body.id === id) || (G.equip.acc && G.equip.acc.id === id)));
+function wearItem(i) { const s = G.inv[i], it = s && ITEMS[s.id]; if (!it || it.kind !== 'wear') return; const old = G.equip[it.slot];
+  G.equip[it.slot] = { id: s.id, c: 1 }; G.inv[i] = old ? { id: old.id, c: 1 } : null; // the one taken off goes where the new one was
+  if (it.slot === 'body') buildPlayer(G.outfit || 0); SFX.craft(); puff(G.p.x, G.p.y - .5, it.slot === 'body' ? (WEAR_PAL[s.id] || ['#fff'])[0] : '#ffe9a8', 12, 2.2, .5); toast(`${josa(it.n, '을', '를')} ${it.slot === 'body' ? '입었어요' : '달았어요'}`, 'good', 'wear'); invDirty = true; }
+function unwear(slot) { const s = G.equip[slot]; if (!s) return; const left = moveInto(G.inv, { id: s.id, c: 1 }); if (left) { toast('가방이 가득 찼어요', null, 'full'); return; } G.equip[slot] = null; if (slot === 'body') buildPlayer(G.outfit || 0); SFX.place(); invDirty = true; }
+function grantAccs() { G.stats.accGot = G.stats.accGot || {}; for (const k in ACC_OF) if (beat(k) && !G.stats.accGot[k]) { G.stats.accGot[k] = 1; const l = moveInto(G.inv, { id: ACC_OF[k], c: 1 }); if (l) spawnDrop(ACC_OF[k], 1, G.p.x, G.p.y); } }
+// ---- dishes for the deep caves: cold / heat protection and the tier-3 dishes made with fire berries and frost radishes ----
+Object.assign(EFF, { cold: { n: '추위 대비', v: [.75, .5, 0], t: v => v ? `추위 게이지 ${pct(v)} 속도` : '추위 게이지 안 오름' }, heat: { n: '더위 대비', v: [.75, .5, 0], t: v => v ? `더위 게이지 ${pct(v)} 속도` : '더위 게이지 안 오름' } });
+const DEEP_DISHES = [
+  ['hotTea', '따끈 버섯차', 'cold', 1, 'cup', ['#c98a5a', '#e36b6b'], [['mushroom', 1], ['gWater', 1]], 'guide:cpick'],
+  ['hotSoup', '따끈 버섯 수프', 'cold', 2, 'bowl', ['#d9774a', '#6ff2e6'], [['mushroom', 2], ['glowcap', 1], ['gWater', 1]], 'guide:cpick'],
+  ['fireStew', '불꽃 열매 스튜', 'cold', 3, 'bowl', ['#ff6a3d', '#ffd25c'], [['fireBerry', 2], ['mushroom', 1]], 'boss:turtle'],
+  ['coolTea', '시원 베리차', 'heat', 1, 'cup', ['#ff9ab0', '#bfe6ff'], [['berry', 1], ['gWater', 1]], 'guide:cpick'],
+  ['coolPunch', '시원 베리 화채', 'heat', 2, 'bowl', ['#ffb3c6', '#ff7aa2'], [['berry', 3], ['gWater', 1]], 'guide:cpick'],
+  ['radishSoup', '서리 무 냉국', 'heat', 3, 'bowl', ['#d8f2ff', '#9fd8f0'], [['radish', 2], ['gWater', 1]], 'boss:spirit'],
+  ['fireSkewer', '불꽃 버섯 꼬치', 'atk', 3, 'skewer', ['#ff6a3d', '#b9573f'], [['fireBerry', 1], ['shroomCap', 2]], 'boss:turtle'],
+  ['radishSalad', '서리 무 베리 냉채', 'move', 3, 'plate', ['#e8f8ff', '#ff7aa2'], [['radish', 1], ['berry', 2]], 'boss:spirit'],
+  ['fireBeans', '불꽃 콩 볶음', 'mine', 3, 'plate', ['#b99bff', '#ff8a3d'], [['cbean', 2], ['fireBerry', 1]], 'boss:turtle'],
+  ['fireJelly', '불꽃 열매 젤리', 'regen', 3, 'jelly', ['#ff8a3d', '#ffd25c'], [['fireBerry', 1], ['gel', 3]], 'room:r30'],
+  ['frostTea', '서리 꽃잎 냉차', 'hunger', 3, 'cup', ['#bfe6ff', '#f7b8cf'], [['radish', 1], ['anyPetal', 2], ['gWater', 1]], 'boss:spirit'],
+  ['firePie', '불꽃 꽃잎 파이', 'xp', 3, 'cake', ['#ff8a3d', '#f7b8cf'], [['fireBerry', 1], ['anyPetal', 2], ['berry', 2]], 'room:r40'],
+];
+for (const d of DEEP_DISHES) { DISHES.push(d); DISH[d[0]] = { id: d[0], n: d[1], ef: d[2], tier: d[3], shape: d[4], col: d[5], req: d[6], src: d[7] }; const [fd, hl] = DISH_FOOD[d[3]];
+  ITEMS[d[0]] = { n: d[1], kind: 'food', food: fd, heal: hl, buff: [d[2], d[3]], d: d[2] === 'cold' || d[2] === 'heat' ? '깊은 동굴에 가기 전에 먹어 두면 든든해요.' : '버프 요리예요. 먹으면 효과가 생겨요.' }; ICON[d[0]] = dishIcon(d[4], d[5]);
+  const r = Rc(d[0], 1, d[6], 'pot', 'food'); r.dish = d[0]; RECIPES.push(r);
+  ITEMS['rn_' + d[0]] = { n: `레시피 쪽지 · ${d[1]}`, note: d[0], d: '주우면 바로 요리솥 레시피를 알게 돼요.' }; ICON['rn_' + d[0]] = noteIcon;
+  const k = d[6].findIndex(([m]) => STAR_OF[m]); if (k >= 0) { const [m, c] = d[6][k], sm = STAR_OF[m], base = ITEMS[d[0]], id = d[0];
+    ITEMS[id + 'S'] = { ...base, n: '별 ' + base.n, food: Math.round(base.food * 1.2), star: 1, base: id, d: '별 작물로 만든 특별한 요리. 효과가 1.5배 오래가고 배가 더 불러요.' }; ICON[id + 'S'] = (f => A => { f(A); starMark(A); })(ICON[id]);
+    const req = d[6].map(x => x.slice()); if (c > 1) { req[k][1] = c - 1; req.push([sm, 1]); } else req[k] = [sm, 1]; const sr = Rc(id + 'S', 1, req, 'pot', 'food'); sr.dish = id; sr.star = 1; sr.need = () => knows(id) && availCount0(sm) > 0; RECIPES.push(sr); } }
+ROOM_NOTES[3].push('fireJelly'); ROOM_NOTES[4].push('firePie');
+Object.assign(BOSS_NOTES, { turtle: ['fireStew', 'fireSkewer', 'fireBeans'], spirit: ['radishSoup', 'radishSalad', 'frostTea'] });
+{ const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat(['hotTea', 'hotSoup', 'coolTea', 'coolPunch'].map(id => ['rn_' + id, 1])); }
+// notes the save has already earned (opened rooms, beaten bosses, claimed quests) — run on every load so later versions can add notes to old places
+function syncNotes() {
+  for (const r of G.rooms || []) if (r.open) for (const id of roomNotes(r)) learnRecipe(id, true);
+  for (const k of BKEYS) if (beat(k)) for (const id of bossNoteIds(k)) learnRecipe(id, true);
+  for (const d of DISHES) { const s = d[7]; if ((s.startsWith('quest:') || s.startsWith('guide:')) && (G.qclaim || {})[s.slice(6)]) learnRecipe(d[0], true); }
+}
+// ---- cold / heat gauge: only in the lava and ice caves ----
+const ENV_TXT = { hot: ['후끈해요', '더워요', '너무 더워요!', '타 버릴 것 같아요!'], cold: ['으슬으슬해요', '추워요', '너무 추워요!', '얼어붙을 것 같아요!'] };
+const envLv = k => G && G.env && G.env.k === k ? (G.env.v >= 100 ? 3 : G.env.v >= 70 ? 2 : G.env.v >= 40 ? 1 : 0) : 0;
+function bmul(ef) { if (!G || !G.buffs) return 1; let best = null; for (const b of G.buffs) if (b.ef === ef && b.end > G.time && (!best || b.tier > best.tier)) best = b; return best ? EFF[ef].v[best.tier - 1] : 1; }
+const inDeepArena = () => { const p = G.p; return Math.hypot(p.x - SL.x - .5, p.y - SL.y - .5) < 9.6 || Math.hypot(p.x - SI.x - .5, p.y - SI.y - .5) < 9.6; };
+function envRelief(k) { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y);
+  for (let y = py - 3; y <= py + 3; y++) for (let x = px - 3; x <= px + 3; x++) { if (!inB(x, y) || Math.hypot(x + .5 - p.x, y + .5 - p.y) > 3.5) continue; const i = idx(x, y);
+    if (k === 'hot') { if (G.floor[i] === WATER && !G.wall[i]) return true; continue; }
+    const o = G.objs.get(i); if (!o) continue; const d = OBJ[o.t]; if (d && d.light && !d.nat && !d.crop && !o.off && o.t !== 'tchest') return true; }
+  return false; }
+let envFxV = 0, envFxShown = -1;
+function envTick(dt) {
+  const p = G.p, E = G.env || (G.env = { k: null, v: 0, lv: 0, t: 0 }), b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))], zone = b === 3 ? 'hot' : b === 4 ? 'cold' : null;
+  if (zone && E.k !== zone) { E.k = zone; E.v = 0; E.lv = -1; E.t = 0; }
+  let rate = -4; if (zone && !envRelief(zone)) rate = (inDeepArena() ? .5 : 1) * bmul(zone === 'hot' ? 'heat' : 'cold') * (G.equip && G.equip.body && ITEMS[G.equip.body.id].guard === zone ? .5 : 1);
+  E.v = clamp(E.v + rate * dt, 0, 100); if (!zone && E.v <= 0) E.k = null;
+  const lv = !E.k ? 0 : E.v >= 100 ? 3 : E.v >= 70 ? 2 : E.v >= 40 ? 1 : 0;
+  if (E.k && started && (lv > E.lv)) { if (lv || E.lv < 0) toast(ENV_TXT[E.k][lv], lv >= 2 ? 'warn' : null, 'env'); } if (E.k) E.lv = lv;
+  if (lv === 3 && p.dead <= 0) { E.t += dt; if (E.t >= 5) { E.t = 0; p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', E.k === 'hot' ? '#ff9b4a' : '#9fd8f0'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; $('#fade').textContent = '기절했어요…'; $('#fade').hidden = false; } } } else E.t = 0;
+  // the screen edge: fades in and out over a second or two, never stronger than 30% during a boss fight
+  let tgt = [0, .15, .30, .375 + Math.sin(performance.now() / 420) * .075][lv]; if (!$('#bossbar').hidden) tgt = Math.min(tgt, .30);
+  envFxV += (tgt - envFxV) * Math.min(1, dt / (tgt > envFxV ? 1.2 : 1.6));
+}
+function eqRowHTML() { const one = (sl, n) => { const s = G.equip[sl]; return `<div class="eqc"><button type="button" class="slot eq ${s ? '' : 'empty'}" data-a="eqSlot" data-i="${sl}" aria-label="${n}${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">` : `<span>${n}</span>`}</button><small>${s ? ITEMS[s.id].n : n + ' 비어 있음'}</small></div>`; };
+  return `<div class="lbl">장비 <span style="color:var(--muted);font-size:13px">누르면 벗어요 · 옷을 고르고 칸을 누르면 입어요</span></div><div class="eqrow">${one('body', '옷')}${one('acc', '장신구')}</div>`; }
+let wearAskT = 0;
+function suggestWear(b) { const need = b === 3 ? 'hot' : b === 4 ? 'cold' : null, el = $('#wearAsk'); if (!need || !started) return; const cur = G.equip.body;
+  if (cur && ITEMS[cur.id].guard === need) return; const k = G.inv.findIndex(x => x && ITEMS[x.id].kind === 'wear' && ITEMS[x.id].guard === need); if (k < 0) return;
+  el.textContent = `${ITEMS[G.inv[k].id].n}${roJosa(ITEMS[G.inv[k].id].n).slice(ITEMS[G.inv[k].id].n.length)} 갈아입을까요?`; el.dataset.id = G.inv[k].id; el.hidden = false; clearTimeout(wearAskT); wearAskT = setTimeout(() => { el.hidden = true; }, 8000); }
+function drawEnv() { const E = G.env || {}, bar = $('#envBar'), on = !!E.k; if (bar.hidden === on) bar.hidden = !on;
+  if (on) { const k = E.k + '|' + Math.round(E.v); if (bar.dataset.k !== k) { bar.dataset.k = k; bar.className = 'bar env ' + E.k; $('#envFill').style.width = E.v + '%'; $('#envTxt').textContent = Math.round(E.v); const ic = E.k === 'hot' ? 'fireBerry' : 'frostShard'; if ($('#icEnv').dataset.ic !== ic) { $('#icEnv').dataset.ic = ic; $('#icEnv').src = iconURL(ic); } } }
+  const fx = $('#envFx'), v = Math.round(envFxV * 200) / 200; if (v !== envFxShown) { envFxShown = v; fx.style.opacity = (v / .45).toFixed(3); } const cls = E.k || (envFxV > .005 ? fx.dataset.k : ''); if (fx.dataset.k !== cls) { fx.dataset.k = cls || ''; fx.className = cls || ''; } }
+TIPS.push('용암 동굴과 얼음 동굴에서는 더위·추위 게이지가 올라요. 대비 요리와 옷으로 늦출 수 있어요.', '얼음 동굴에서는 횃불이나 램프 곁, 용암 동굴에서는 물웅덩이 곁에서 게이지가 내려가요.');
 TIPS.push('버프 요리는 세 가지까지 함께 효과가 있어요. 같은 효과는 가장 좋은 것 하나만 적용돼요.', '레시피 쪽지는 몬스터·채집·낚시·숨은 방·보스에서 찾을 수 있어요.', '별 작물을 넣어 만든 요리는 효과가 1.5배 오래가요.');
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
@@ -3485,7 +3619,7 @@ function checkBiome() {
   const p = G.p; if (!G.stats.waterTip && started) { outer: for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const x = Math.floor(p.x) + dx, y = Math.floor(p.y) + dy; if (inB(x, y) && G.floor[idx(x, y)] === WATER && !G.wall[idx(x, y)]) { G.stats.waterTip = 1; toast(hasItem('rod') ? '물가예요! 물을 바라보고 눌러 낚시해요' : '물가예요! 낚싯대를 만들면 낚시할 수 있어요 (제작 → 도구)', 'good'); break outer; } } }
   checkBiome0();
 }
-function checkBiome0() { const p = G.p, b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))]; if (b !== G.biomeNow) { G.biomeNow = b; if (b >= 3) G.stats['seen' + b] = 1; if (started) toast(BIOME[b] || '', null, 'biome' + b); } }
+function checkBiome0() { const p = G.p, b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))]; if (b !== G.biomeNow) { G.biomeNow = b; if (b >= 3) G.stats['seen' + b] = 1; if (started) { toast(BIOME[b] || '', null, 'biome' + b); suggestWear(b); } } }
 
 // ================= lighting =================
 let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
@@ -3506,7 +3640,7 @@ function computeLight() {
   for (let y = y0 - 8; y <= y1 + 8; y++) for (let x = x0 - 8; x <= x1 + 8; x++) {
     if (!inB(x, y)) continue; if (G.floor[idx(x, y)] === LAVA && !G.wall[idx(x, y)] && (x * 7 + y * 3) % 4 === 0) lights.push({ x: x + .5, y: y + .5, r: 3.4, c: [1, .5, .2], k: .9 });
     const o = G.objs.get(idx(x, y)); if (!o) continue; const d = OBJ[o.t];
-    let L = d.light; if (o.t === 'shrine' && o.has) L = [4.5, '#ffd97a']; if (o.t === 'tchest' && (o.open || o.hid)) L = null; if (o.t === 'cropGlow') { const cs = cropStage(o); L = cs >= 3 ? [2.6, '#6ff2e6'] : cs >= 2 ? [1.4, '#6ff2e6'] : null; } if (!L || o.off) continue;
+    let L = d.light; if (o.t === 'shrine' && o.has) L = [4.5, '#ffd97a']; if (o.t === 'tchest' && (o.open || o.hid)) L = null; if (o.t === 'cropGlow') { const cs = cropStage(o); L = cs >= 3 ? [2.6, '#6ff2e6'] : cs >= 2 ? [1.4, '#6ff2e6'] : null; } if (o.t === 'cropFire') L = cropStage(o) >= 3 ? [2, '#ff9b4a'] : null; if (!L || o.off) continue;
     const fl = d.flick ? 1 + Math.sin(t * 9 + x * 3) * 0.05 + Math.sin(t * 23 + y) * 0.03 : 1;
     lights.push({ x: x + (d.sz ? fpOf(o)[0] / 2 : .5), y: y + (d.sz ? fpOf(o)[1] / 2 : .5), r: L[0] * fl, c: hexRgb(L[1]), k: 1, col: L[1], tall: SPR.obj[o.t] && SPR.obj[o.t].height > 20 });
   }
@@ -3899,7 +4033,7 @@ function refreshHotbar() {
 let lastHud = '', lastAct = '', hbSel = -1;
 function updateHud() {
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
-  drawBuffs();
+  drawBuffs(); drawEnv();
   if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
   const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
   { const rb = $('#rotBtn'), rv = rotTarget(); if (rb && rb.hidden === rv) rb.hidden = !rv; }
@@ -3926,7 +4060,7 @@ function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !s
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
-function itemStat0(it) { if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽', '현무암·얼음벽'][it.tier]}까지`; return ''; }
+function itemStat0(it) { if (it.kind === 'wear') return it.slot === 'body' ? '옷 칸' : '장신구 칸'; if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽', '현무암·얼음벽'][it.tier]}까지`; return ''; }
 function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
@@ -3935,13 +4069,14 @@ function renderPanel() {
     h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:46px;padding:0 14px;font-size:15px">정렬</button>`);
     h += `<div class="sh-body"><p class="hint">칸을 끌어다 놓거나, 칸을 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 도구와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요. 창·망치·단검·활·지팡이는 단축칸에서 골라 들면 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
     const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && G.newIds && G.newIds[s0.id] && i >= HOT) c += ' new'; return c; };
-    h = h.replace(`<div class="lbl">단축칸</div>`, `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
+    h = h.replace(`<div class="lbl">단축칸</div>`, `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div>${eqRowHTML()}<div class="lbl">단축칸</div>`);
     for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(제작 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
     h += `</div>`;
     const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
     if (s) { const it = ITEMS[s.id]; const st = itemStat(it, s);
       h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)} <span style="color:var(--muted);font-size:15px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${rarOf(s.id) >= 0 && (it.kind === 'sword' || it.kind === 'pick' || rarOf(s.id) >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, rarOf(s.id))][1]}">★ ${RARITY[Math.max(0, rarOf(s.id))][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
       if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
+      if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;
       if (UIS.invSel >= HOT) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
       h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
     h += `</div>`;
@@ -4122,6 +4257,8 @@ function onSheetClick(e) {
   if (a === 'stash') { const o = panel && panel.kind === 'chest' ? G.objs.get(panel.i) : null; if (!o || !o.items) return; const r = stashBag(o, i === 'same');
     toast(r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : i === 'same' ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) SFX.place(); invDirty = true; renderPanel(); return; }
   if (a === 'sortBag') { sortBag(); SFX.place(); toast('가방을 정리했어요', null, 'sortbag'); renderPanel(); return; }
+  if (a === 'wearOn') { const k = UIS.invSel; if (k != null && G.inv[k]) wearItem(k); UIS.invSel = null; renderPanel(); return; }
+  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) unwear(sl); else { const k = UIS.invSel, it = k != null && G.inv[k] && ITEMS[G.inv[k].id]; if (it && it.kind === 'wear' && it.slot === sl) { wearItem(k); UIS.invSel = null; } else toast(sl === 'body' ? '옷을 고른 뒤 눌러 입어요' : '장신구를 고른 뒤 눌러 달아요', null, 'eq'); } renderPanel(); return; }
   if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
   if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
   if (a === 'trash') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } G.inv[UIS.invSel] = null; UIS.invSel = null; UIS.trash = false; invDirty = true; renderPanel(); return; }
@@ -4238,7 +4375,7 @@ function sortBag() { // merge stacks and order the bag by kind; the hotbar stays
 }
 function hotClick(i) {
   ensureAudio();
-  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); }
+  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
   G.sel = i; invDirty = true;
 }
 
@@ -4325,6 +4462,7 @@ function setupInput() {
   $('#cloudTitle').addEventListener('click', e => { const b = e.target.closest('[data-ct]'); if (!b) return; const k = b.dataset.ct;
     if (k === 'emailT') { UIS.clTitleEmail = !UIS.clTitleEmail; cloudTitleRefresh(); return; }
     CLOUD.wantTake = true; cloudAuth(k, 'ct'); });
+  $('#wearAsk').addEventListener('click', () => { const el = $('#wearAsk'), k = G.inv.findIndex(x => x && x.id === el.dataset.id); el.hidden = true; if (k >= 0) wearItem(k); });
   $('#cloudAsk').addEventListener('click', e => { const b = e.target.closest('[data-cl]'); if (!b) return; if (b.dataset.cl === 'take') cloudTakePending(); else cloudKeepLocal(); });
   $('#bkList').addEventListener('click', e => { const bt = e.target.closest('[data-bk]'); if (!bt) return; const x = loadBackups()[+bt.dataset.bk]; if (!x) return;
     let sv; try { sv = JSON.parse(x.data); } catch (err) { toast('백업을 읽지 못했어요'); return; }

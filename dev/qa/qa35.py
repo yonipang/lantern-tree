@@ -7,21 +7,21 @@ async def main():
     mkpage(SRC,'qa.html',H2)
     async with async_playwright() as p:
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
-        await ev(pg,"()=>{__T.G.enemies.length=0}")
+        await ev(pg,"()=>{__T.G.enemies.length=0;window.__out=r=>r.dy===r.y+3?[0,1]:r.dy===r.y-1?[0,-1]:r.dx===r.x-1?[-1,0]:[1,0]}")
         r=await ev(pg,"""()=>{const T=__T,G=T.G,R=G.rooms;const per=[0,0,0,0,0];for(const r of R)per[r.b]++;
           const bad=[];for(const r of R){for(let y=r.y;y<=r.y+2;y++)for(let x=r.x;x<=r.x+3;x++){const i=T.idx(x,y);if(G.wall[i]||G.floor[i]!==6)bad.push('in'+r.id)}
             for(let y=r.y-1;y<=r.y+3;y++)for(let x=r.x-1;x<=r.x+4;x++){if(y>=r.y&&y<=r.y+2&&x>=r.x&&x<=r.x+3)continue;if(!G.wall[T.idx(x,y)])bad.push('ring'+r.id)}
-            const c=G.objs.get(T.idx(r.cx,r.cy));if(!c||c.t!=='tchest')bad.push('chest'+r.id);if(G.wall[T.idx(r.dx,r.dy+1)])bad.push('door'+r.id);if(G.biome[T.idx(r.x+1,r.y+1)]!==r.b)bad.push('biome'+r.id)}
+            const c=G.objs.get(T.idx(r.cx,r.cy));if(!c||c.t!=='tchest')bad.push('chest'+r.id);const dIn=[[0,1],[0,-1],[1,0],[-1,0]].some(([ox,oy])=>{const x=r.dx+ox,y=r.dy+oy;return x>=r.x&&x<=r.x+3&&y>=r.y&&y<=r.y+2});if(!dIn||!G.wall[T.idx(r.dx,r.dy)])bad.push('door'+r.id);if(G.biome[T.idx(r.x+1,r.y+1)]!==r.b)bad.push('biome'+r.id)}
           return [R.length,per,bad]}""")
         rec('생성','새 게임: 지역마다 1~2개 숨은 방 (이끼·버섯숲·수정 2개, 용암·얼음 1개 목표)', r[0]>=6 and all(1<=n<=2 for n in r[1]), str(r[:2]))
-        rec('생성','방 안은 빈 돌바닥, 둘레는 벽, 보물상자 있음, 금 간 벽 앞은 통로', r[2]==[], str(r[2][:6]))
+        rec('생성','방 안은 빈 돌바닥, 둘레는 벽, 보물상자 있음, 금 간 벽은 방 둘레 한 칸', r[2]==[], str(r[2][:6]))
         r=await ev(pg,"()=>{const T=__T,G=T.G;const R=G.rooms;let far=true;for(const a of R)for(const b2 of R)if(a!==b2&&Math.hypot(a.x-b2.x,a.y-b2.y)<24)far=false;const safe=[[__T.CX,__T.CY],[__T.BX,__T.BY]];const nearSafe=R.some(r=>safe.some(([x,y])=>Math.hypot(r.x+2-x,r.y+1-y)<16));return [far,nearSafe]}")
         rec('생성','방끼리 떨어져 있고 시작 지점·보스방 근처엔 없음', r==[True,False], str(r))
-        r=await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms[2];G.treeSeeds=0;G.p.x=rm.dx+.5;G.p.y=rm.dy+6.5;T.cam.x=G.p.x;T.cam.y=G.p.y;T.computeLight();const a=T.lightAt(rm.cx,rm.cy);const tc=G.objs.get(T.idx(rm.cx,rm.cy));const h=!!tc.hid;delete tc.hid;T.computeLight();const b2=T.lightAt(rm.cx,rm.cy);tc.hid=1;return [h,+a.toFixed(3),+b2.toFixed(3)]}""")
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms[2];G.treeSeeds=0;const od=__out(rm);G.p.x=rm.dx+.5+od[0]*3;G.p.y=rm.dy+.5+od[1]*3;T.cam.x=G.p.x;T.cam.y=G.p.y;T.computeLight();const a=T.lightAt(rm.cx,rm.cy);const tc=G.objs.get(T.idx(rm.cx,rm.cy));const h=!!tc.hid;delete tc.hid;T.computeLight();const b2=T.lightAt(rm.cx,rm.cy);tc.hid=1;return [h,+a.toFixed(3),+b2.toFixed(3)]}""")
         rec('발견','찾기 전엔 방 안이 어두움 (보물상자 빛은 찾은 뒤부터)', r[0] is True and r[2]>r[1]+0.05, str(r))
         # hint and discovery
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms[0];const di=T.idx(rm.dx,rm.dy);const had=T.DOORS.has(di);
-          G.p.x=rm.dx+.5;G.p.y=rm.dy+2.6;T.roomTick();const h=rm.hint;const f0=rm.found;const toast1=document.body.innerText.includes('바람이 새어');
+          const od=__out(rm);G.p.x=rm.dx+.5+od[0]*2.1;G.p.y=rm.dy+.5+od[1]*2.1;T.roomTick();const h=rm.hint;const f0=rm.found;const toast1=document.body.innerText.includes('바람이 새어');
           G.p.x=rm.x+1.5;G.p.y=rm.y+1.5;T.roomTick();return [had,h,f0,toast1,rm.found,T.DOORS.has(di),G.stats.rooms]}""")
         rec('발견','금 간 벽 근처에 가면 "바람이 새어 나와요" 힌트', r[0] is True and r[1]==1 and r[2]==0 and r[3] is True, str(r))
         rec('발견','방 안에 들어가면 찾은 것으로 기록, 금 간 벽 표시가 사라짐', r[4]==1 and r[5] is False and r[6]==1, str(r))
@@ -58,7 +58,7 @@ async def main():
         rec('옛 세이브','숨은 방이 없던 세이브도 불러오면 방이 생김', r[0]>=6 and r[4] is True, str(r))
         rec('옛 세이브','손대지 않은 암반만 파고, 플레이어 물건·다른 칸은 그대로', r[1]==r[0]*12 and r[2]==0 and r[3]==0, str(r))
         # screenshot: in front of a cracked wall
-        await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms[0];G.p.x=rm.dx+.5;G.p.y=rm.dy+2.2;G.enemies.length=0;G.treeSeeds=5}""")
+        await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms[0];const od=__out(rm);G.p.x=rm.dx+.5+od[0]*1.8;G.p.y=rm.dy+.5+od[1]*1.8;G.enemies.length=0;G.treeSeeds=5}""")
         await pg.wait_for_timeout(800); await pg.screenshot(path=SP+'qa35_door.png')
         await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms[0];G.wall[T.idx(rm.dx,rm.dy)]=0;G.p.x=rm.dx+.5;G.p.y=rm.y+2.4;G.enemies.length=0}""")
         await pg.wait_for_timeout(800); await pg.screenshot(path=SP+'qa35_room.png')

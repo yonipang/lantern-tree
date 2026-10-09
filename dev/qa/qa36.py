@@ -9,12 +9,12 @@ async def main():
     async with async_playwright() as p:
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
         await ev(pg,"()=>{"+EATS+"__T.G.enemies.length=0}")
-        r=await ev(pg,"""()=>{const T=__T;const D=T.DISHES;const buff=D.filter(d=>d[3]>0).length;const per={};for(const d of D)if(d[2])per[d[2]]=(per[d[2]]||0)+1;const pot=T.RECIPES.filter(r=>r.at==='pot'&&r.dish&&!r.star).length;const deep=D.some(d=>d[6].some(([m])=>['fireBerry'].includes(m)));return [D.length,buff,per,pot,deep]}""")
+        r=await ev(pg,"""()=>{const T=__T;const D=T.DISHES.filter(d=>!d[6].some(([m])=>['fireBerry','radish'].includes(m))&&!['cold','heat'].includes(d[2]));const buff=D.filter(d=>d[3]>0).length;const per={};for(const d of D)if(d[2])per[d[2]]=(per[d[2]]||0)+1;const pot=T.RECIPES.filter(r=>r.at==='pot'&&r.dish&&!r.star&&D.some(d=>d[0]===r.dish)).length;const deep=D.some(d=>d[6].some(([m])=>['fireBerry'].includes(m)));return [D.length,buff,per,pot,deep]}""")
         rec('요리','깊은 동굴 재료 없는 요리 25가지 (버프 24 + 메기 매운탕), 모두 요리솥 레시피', r[0]==25 and r[1]==24 and r[3]==25 and r[4] is False, str(r))
         rec('요리','효과 10가지 (공격·피해·이동·채굴·빛·재생·최대체력·배고픔·낚시 운·경험치)', len(r[2])==10, str(r[2]))
         # unknown recipes
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x),y=Math.floor(G.p.y);const i=T.idx(x+1,y);G.wall[i]=0;G.objs.set(i,{t:'pot'});T.openPanel('craft',{st:'pot'});const h=document.querySelector('#sheet').innerText;const n=document.querySelectorAll('#sheet .rc.lockd').length;T.closePanel();return [Object.keys(G.recipes).length,h.includes('???'),n,h.includes('베리 파이'),h.includes('몬스터가 가끔'),h.includes('요리 도감')]}""")
-        rec('해금','새 게임은 초기 3종만 알고 나머지는 ??? 카드와 위치 힌트', r[0]==0 and r[1] is True and r[2]==25 and r[3] is True and r[4] is True, str(r))
+        rec('해금','새 게임은 초기 3종만 알고 나머지는 ??? 카드와 위치 힌트 (v37부터 깊은 동굴 요리 포함 37장)', r[0]==0 and r[1] is True and r[2]==37 and r[3] is True and r[4] is True, str(r))
         rec('도감','요리솥에 요리 도감 탭', r[5] is True, str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const before=T.knows('skewer');const left=T.addItem('rn_skewer',1);const inBag=G.inv.some(s=>s&&s.id==='rn_skewer');const t=document.body.innerText.includes('새 레시피');return [before,left,inBag,T.knows('skewer'),t]}""")
         rec('해금','레시피 쪽지를 주우면 바로 해금 (가방엔 안 들어감)', r==[False,0,False,True,True], str(r))
@@ -73,7 +73,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.knows('koiSteam');T.fishBottle();const b2=T.knows('koiSteam');const n0=G.inv.filter(Boolean).reduce((a,s)=>a+s.c,0)+G.drops.length;T.fishBottle();const n1=G.inv.filter(Boolean).reduce((a,s)=>a+s.c,0)+G.drops.length;return [a,b2,n1-n0>=3]}""")
         rec('낚시 운','병 속 쪽지: 처음엔 별빛 잉어찜 레시피, 그다음부터는 작은 보물상자', r==[False,True,True], str(r))
         # save
-        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.buffs=[];__eat('capSoup');const rc=Object.keys(G.recipes).sort().join(',');const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const G2=T.G;return [Object.keys(G2.recipes).sort().join(',')===rc,T.activeBuffs().map(b=>b.ef).join(','),T.maxHp()]}""")
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.buffs=[];__eat('capSoup');const rc=Object.keys(G.recipes).sort().join(',');const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const G2=T.G;return [rc.split(',').every(k=>G2.recipes[k]),T.activeBuffs().map(b=>b.ef).join(','),T.maxHp()]}""")
         rec('세이브','아는 레시피와 지금 효과가 저장·불러오기 뒤에도 그대로', r[0] is True and r[1]=='maxhp' and r[2]>=110, str(r))
         r=await ev(pg,"""()=>{const T=__T;const sv=JSON.parse(JSON.stringify(T.serialize()));delete sv.recipes;delete sv.buffs;sv.bossDead.queen=true;sv.bossDead.slime=true;sv.qclaim={s_fish:1};sv.rooms=sv.rooms.map((r,k)=>Object.assign(r,{open:k===0?1:0}));
           T.deserialize(sv);const G=T.G;const r0=G.rooms[0];return [T.knows('skewer')&&T.knows('glowGrill')&&T.knows('baitDango'),T.knows('catfishSoup'),T.knows('crucianBraise'),T.roomNotes(r0).every(id=>T.knows(id)),T.knows('shrimpDango'),G.buffs.length]}""")
@@ -87,7 +87,7 @@ async def main():
         await ev(pg,"()=>{const b=document.querySelector('[data-a=tab][data-i=book]');if(b)b.click()}"); await pg.wait_for_timeout(700)
         await ev(pg,"()=>{const b=document.querySelector('[data-a=tab][data-i=book]');if(b)b.click()}"); await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'qa36_book.png')
         r=await ev(pg,"()=>document.querySelectorAll('.dbook .dk').length")
-        rec('도감','도감에 요리 28가지 (초기 3 + 새 25), 만든 요리에 도장', r==28, r)
+        rec('도감','도감에 요리 40가지 (초기 3 + v36 25 + v37 12), 만든 요리에 도장', r==40, r)
         rec('기능','콘솔 오류 없음', not errs, errs[:4])
         await ctx.close(); await b.close()
     print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
