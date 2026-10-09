@@ -1,0 +1,1705 @@
+<title>등불나무 아래</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+/* Layout: full-bleed pixel canvas; HUD floats top-left, menu column top-right, hotbar + big action button at the thumb zone. One dark lantern-lit look. */
+:root{
+  --bg:#120f1c; --ink:#1b1426; --panel:#2a2139; --panel2:#352a48; --slot:#3a2e50; --line:#57476e;
+  --text:#fbefd9; --muted:#bfaed3; --amber:#ffc861; --amber-d:#d9902f; --mint:#7fe0b5;
+  --rose:#ff8fa3; --hunger:#ffb15c; --danger:#ff7a8a;
+  --font:'Jua','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+  --slotS:clamp(46px, calc((100vw - 88px) / 6), 60px);
+  color-scheme:dark;
+}
+html,body{height:100%;background:var(--bg);color:var(--text)}
+body{margin:0;overflow:hidden;font-family:var(--font);word-break:keep-all;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font-family:var(--font);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+[hidden]{display:none!important}
+img.px{image-rendering:pixelated;image-rendering:crisp-edges}
+#game{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-right,0px) + 14px) 0 calc(env(safe-area-inset-left,0px) + 14px);pointer-events:none}
+#hud > *{pointer-events:auto}
+.bars{display:grid;gap:6px;width:min(250px,60vw)}
+.bar{display:flex;align-items:center;gap:6px;background:rgba(27,20,38,.78);border:2px solid var(--line);border-radius:14px;padding:3px 9px 3px 3px}
+.bar img{width:28px;height:28px;flex:none}
+.track{flex:1;height:12px;background:#140f1d;border-radius:7px;overflow:hidden;box-shadow:inset 0 2px 0 rgba(0,0,0,.35)}
+.fill{height:100%;width:100%;border-radius:7px;transition:width .2s}
+.hp .fill{background:linear-gradient(#ffb0bf,var(--rose) 45%,#e0647d)}
+.hu .fill{background:linear-gradient(#ffd59a,var(--hunger) 45%,#e08a3a)}
+.bar span{font-size:15px;min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
+.goal{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:rgba(42,33,57,.9);border:2px solid #6c5585;border-radius:14px;padding:6px 11px 7px;font-size:15px;line-height:1.3;min-width:0}
+.goal b{font-weight:400;font-size:12px;letter-spacing:.06em;color:var(--amber)}
+.side{display:grid;gap:8px}
+.sbtn{width:58px;height:58px;border-radius:17px;background:rgba(42,33,57,.92);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;padding:0;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.sbtn img{width:30px;height:30px}
+.sbtn:active{transform:translateY(2px);box-shadow:none}
+
+#bossbar{background:rgba(27,20,38,.85);border:2px solid #8c4a5e;border-radius:14px;padding:6px 10px 8px}
+#bossbar .bn{font-size:14px;color:#ffc2cf;margin-bottom:4px}
+#bossbar .fill{background:linear-gradient(#ffd0a0,#ff7a5c)}
+
+#toasts{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 170px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:min(92vw,420px)}
+.toast{background:rgba(27,20,38,.92);border:2px solid var(--amber-d);border-radius:999px;padding:7px 16px;font-size:15px;text-align:center;animation:tin .25s ease-out;text-wrap:balance}
+.toast.good{border-color:var(--mint)}
+.toast.out{opacity:0;transform:translateY(6px);transition:all .3s}
+@media (pointer:fine){#toasts{bottom:calc(var(--slotS) + 60px)}}
+@keyframes tin{from{opacity:0;transform:translateY(8px) scale(.96)}}
+
+/* Hotbar */
+#hotbar{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);display:flex;gap:8px;padding:8px;background:rgba(27,20,38,.82);border:2px solid var(--line);border-radius:20px}
+.slot{width:var(--slotS);height:var(--slotS);border-radius:13px;background:var(--slot);border:2px solid #4d3e66;position:relative;display:grid;place-items:center;padding:0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.slot img{width:70%;height:70%;object-fit:contain}
+.slot .cnt{position:absolute;right:5px;bottom:2px;font-size:14px;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}
+.slot .key{position:absolute;left:6px;top:2px;font-size:11px;color:var(--muted)}
+.slot.sel{border-color:var(--amber);background:#4b3a63;box-shadow:0 0 0 2px rgba(255,200,97,.35),inset 0 -3px 0 rgba(0,0,0,.25)}
+.slot.pick{border-color:var(--mint);background:#3c4a55}
+
+/* Touch controls */
+#actBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 48px);width:100px;height:100px;border-radius:50%;
+  background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:3px solid var(--amber);box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 24px rgba(255,200,97,.25);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:none}
+#actBtn img{width:44px;height:44px}
+#actBtn span{font-size:15px}
+#actBtn.on{transform:translateY(3px) scale(.96);box-shadow:0 2px 0 rgba(0,0,0,.4),0 0 30px rgba(255,200,97,.45)}
+.joy{position:absolute;width:128px;height:128px;margin:-64px 0 0 -64px;border-radius:50%;border:3px solid rgba(255,241,214,.35);background:rgba(27,20,38,.35);pointer-events:none;opacity:.55;transition:opacity .15s}
+.joy.on{opacity:.95}
+.joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff1d6,#d9c3a3);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+body:not(.touch) #actBtn, body:not(.touch) .joy{display:none}
+body.intro #hud, body.intro #hotbar, body.intro #actBtn, body.intro .joy, body.intro #pcHint, body.intro #toasts{display:none}
+#pcHint{position:absolute;left:14px;bottom:14px;font-size:13px;color:var(--muted);background:rgba(27,20,38,.75);border-radius:12px;padding:8px 12px;line-height:1.6;max-width:260px}
+body.touch #pcHint{display:none}
+@media (max-width:900px){#pcHint{display:none}}
+
+/* Sheet panels */
+#sheetWrap{position:absolute;inset:0;z-index:20}
+.backdrop{position:absolute;inset:0;background:rgba(10,7,16,.55)}
+.sheet{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(100%,620px);max-height:86%;display:flex;flex-direction:column;background:var(--panel);
+  border:2px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));box-sizing:border-box;animation:sup .22s ease-out}
+@keyframes sup{from{transform:translate(-50%,30px);opacity:0}}
+@media (min-width:760px) and (min-height:640px){.sheet{bottom:auto;top:50%;transform:translate(-50%,-50%);border-radius:26px;border-bottom:2px solid var(--line);max-height:84%;animation:none}}
+.sh-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.sh-head h2{margin:0;font-weight:400;font-size:24px;display:flex;align-items:center;gap:8px}
+.sh-head h2 img{width:32px;height:32px}
+.xbtn{width:50px;height:50px;border-radius:15px;background:var(--panel2);border:2px solid var(--line);font-size:22px;padding:0}
+.sh-body{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-bottom:4px}
+.lbl{font-size:13px;color:var(--muted);margin:10px 2px 6px;letter-spacing:.04em}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.grid .slot{width:100%;height:auto;aspect-ratio:1}
+.hint{flex:none;font-size:14px;color:var(--muted);line-height:1.5;margin:2px 2px 8px}
+.detail{display:grid;grid-template-columns:60px 1fr;gap:12px;align-items:center;background:var(--panel2);border-radius:18px;padding:12px;margin-top:12px}
+.detail img{width:56px;height:56px}
+.detail h3{margin:0 0 3px;font-weight:400;font-size:19px}
+.detail p{margin:0;font-size:14px;color:var(--muted);line-height:1.45}
+.detail .st{color:var(--amber);font-size:14px;margin-top:3px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}
+.btn{min-height:48px;padding:0 18px;border-radius:15px;border:0;background:var(--amber);color:#3a2410;font-size:17px;box-shadow:0 3px 0 var(--amber-d)}
+.btn.ghost{background:var(--panel);color:var(--text);box-shadow:0 3px 0 #1b1426;border:2px solid var(--line)}
+.btn.warn{background:#ff8a96;color:#3a1018;box-shadow:0 3px 0 #c4505f}
+.btn:disabled{background:#4d3e66;color:var(--muted);box-shadow:none}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:none}
+.tabs{flex:none;display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px;touch-action:pan-x}
+.tab{flex:none;height:42px;padding:0 15px;border-radius:13px;background:var(--panel2);border:2px solid transparent;font-size:16px}
+.tab.on{border-color:var(--amber);background:#4b3a63}
+.stations{flex:none;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:4px 10px;border-radius:999px;background:#1f182c;color:var(--muted)}
+.chip.on{background:#2f4a3f;color:#c9f5df}
+.list{display:grid;gap:8px}
+.rc{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px;background:var(--panel2);border-radius:18px;border:2px solid transparent}
+.rc.ok{border-color:#6a557f}
+.rc.no .ri,.rc.no .rn{opacity:.55}
+.ri{width:56px;height:56px;border-radius:14px;background:var(--slot);display:grid;place-items:center}
+.ri img{width:40px;height:40px;object-fit:contain}
+.rn{font-size:17px;min-width:0}
+.rn small{color:var(--muted);font-size:13px;margin-left:4px}
+.ings{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.ing{display:inline-flex;align-items:center;gap:3px;padding:2px 8px 2px 4px;background:#241c33;border-radius:10px;font-size:14px;font-variant-numeric:tabular-nums}
+.ing img{width:20px;height:20px}
+.ing.short{color:var(--danger)}
+.at{font-size:12px;color:#ffb4c0;margin-top:4px}
+.mk{min-width:76px}
+#mapCv{width:100%;aspect-ratio:1;border-radius:16px;background:#0c0a12;display:block;image-rendering:pixelated}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.seeds{display:flex;gap:14px;justify-content:center;margin:12px 0 16px}
+.seeds div{width:76px;height:76px;border-radius:22px;background:var(--panel2);display:grid;place-items:center;border:2px solid var(--line)}
+.seeds div.lit{border-color:var(--amber);box-shadow:0 0 22px rgba(255,200,97,.4)}
+.seeds img{width:52px;height:52px}
+.seeds div:not(.lit) img{opacity:.25;filter:grayscale(1)}
+.prose{font-size:15px;line-height:1.65;color:var(--text);margin:0 0 12px}
+.prose em{font-style:normal;color:var(--amber)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px;color:var(--muted);margin:6px 0 14px}
+.keys b{font-weight:400;color:var(--text)}
+.menu-list{display:grid;gap:10px}
+.menu-list .btn{width:100%}
+
+/* Title */
+#title{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 20px calc(env(safe-area-inset-bottom,0px) + 24px);background:radial-gradient(ellipse at 50% 40%,rgba(18,15,28,.25),rgba(18,15,28,.88) 70%)}
+#title .logo{font-size:clamp(44px,13vw,76px);line-height:1;color:var(--amber);text-shadow:0 4px 0 #6b3d16,0 0 40px rgba(255,200,97,.35);letter-spacing:.02em;text-wrap:balance}
+#title .sub{font-size:16px;color:var(--mint);letter-spacing:.12em}
+#title .story{font-size:16px;line-height:1.7;max-width:22em;color:var(--text);background:rgba(27,20,38,.72);border-radius:18px;padding:12px 18px;text-wrap:balance}
+#title .tb{display:grid;gap:10px;width:min(320px,100%)}
+#title .btn{min-height:58px;font-size:20px}
+#title .ver{font-size:12px;color:var(--muted)}
+#fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:24px;color:var(--rose);text-align:center;padding:20px}
+@media (prefers-reduced-motion:reduce){.toast,.sheet{animation:none}.fill{transition:none}}
+</style>
+
+<div id="game">
+  <canvas id="cv" aria-label="게임 화면"></canvas>
+  <div id="hud">
+    <div class="bars">
+      <div class="bar hp" title="체력"><img class="px" id="icHp" alt="체력"><div class="track"><div class="fill" id="hpFill"></div></div><span id="hpTxt">100</span></div>
+      <div class="bar hu" title="포만감"><img class="px" id="icHu" alt="포만감"><div class="track"><div class="fill" id="huFill"></div></div><span id="huTxt">100</span></div>
+      <button class="goal" id="goal" type="button"><b>지금 할 일</b><span id="goalTxt">…</span></button>
+      <div id="bossbar" hidden><div class="bn">말랑대왕</div><div class="track"><div class="fill" id="bossFill"></div></div></div>
+    </div>
+    <div class="side">
+      <button class="sbtn" id="bInv" type="button"><img class="px" alt="">가방</button>
+      <button class="sbtn" id="bCraft" type="button"><img class="px" alt="">제작</button>
+      <button class="sbtn" id="bMap" type="button"><img class="px" alt="">지도</button>
+      <button class="sbtn" id="bMenu" type="button"><img class="px" alt="">메뉴</button>
+    </div>
+  </div>
+  <div id="toasts" aria-live="polite"></div>
+  <div class="joy" id="joy"><i id="joyKnob"></i></div>
+  <button id="actBtn" type="button" aria-label="행동"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
+  <div id="hotbar"></div>
+  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–6 단축칸 · I 가방 · C 제작 · M 지도</div>
+  <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
+  <div id="fade" hidden>기절했어요…</div>
+  <div id="title">
+    <div class="sub">작은 정원지기의 땅속 모험</div>
+    <div class="logo">등불나무 아래</div>
+    <div class="story">아주 깊은 땅속, 잠든 등불나무 곁에서 눈을 떴어요. 흩어진 빛씨앗 세 개를 모아 나무를 다시 깨워 주세요.</div>
+    <div class="tb">
+      <button class="btn" id="btnContinue" type="button" hidden>이어하기</button>
+      <button class="btn" id="btnNew" type="button">새 모험 시작</button>
+    </div>
+    <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 오른쪽 큰 버튼으로 캐기·공격·놓기</div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(() => {
+// ================= utils =================
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+function hash2(x, y, s) { let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1442695041)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+function vn(x, y, s) { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi; const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy); const a = hash2(xi, yi, s), b = hash2(xi + 1, yi, s), c = hash2(xi, yi + 1, s), d = hash2(xi + 1, yi + 1, s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+function fbm(x, y, s) { return vn(x, y, s) * 0.55 + vn(x * 2.1, y * 2.1, s + 1) * 0.3 + vn(x * 4.3, y * 4.3, s + 2) * 0.15; }
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hexRgb(h) { const n = parseInt(h.slice(1, 7), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
+const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+// ================= sprites =================
+const INK = '#241b2f';
+const C = {
+  skin: '#ffe0c2', blush: '#f59bab', mint: '#6cc9a3', mintD: '#479b7f', mintL: '#a5ecc9',
+  leaf: '#5bbf4f', leafD: '#3b8a3a', leafL: '#9be37a', wood: '#b0743f', woodD: '#7d4d2a', woodL: '#d9a066',
+  stone: '#8f8aa3', stoneD: '#625d78', stoneL: '#b9b4cc', dirt: '#7a5038', dirtD: '#5a3929', dirtL: '#9c6a4a',
+  copper: '#e5884a', copperL: '#ffb57a', copperD: '#b8642f', iron: '#c8d0dc', ironL: '#eef2f7', ironD: '#8d97a8',
+  cry: '#b493f5', cryL: '#e3d4ff', cryD: '#7a5cc4', rose: '#ff8fa3', roseD: '#d9607d', cream: '#fff1d6',
+  amber: '#ffc861', fire: '#ff8a3d', glow: '#5fe3d6', glowL: '#d9fffb', berry: '#d94f7a', berryL: '#ff9ab8'
+};
+function inPoly(x, y, pts) { let ins = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) ins = !ins; } return ins; }
+function outline(c, col) {
+  const w = c.width, h = c.height, g = c.getContext('2d');
+  const d = g.getImageData(0, 0, w, h), s = d.data, o = new Uint8ClampedArray(s);
+  const [r, gg, b] = hexRgb(col).map(v => Math.round(v * 255));
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4; if (s[i + 3]) continue;
+    if ((x > 0 && s[i - 1]) || (x < w - 1 && s[i + 7]) || (y > 0 && s[i - w * 4 + 3]) || (y < h - 1 && s[i + w * 4 + 3])) { o[i] = r; o[i + 1] = gg; o[i + 2] = b; o[i + 3] = 255; }
+  }
+  g.putImageData(new ImageData(o, w, h), 0, 0);
+}
+function mk(w, h, fn, ol) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const A = {
+    g,
+    r(x, y, ww, hh, col) { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(ww), Math.round(hh)); },
+    p(x, y, col) { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), 1, 1); },
+    e(cx, cy, rx, ry, col) { g.fillStyle = col; for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) { const dx = (x + .5 - cx) / rx, dy = (y + .5 - cy) / ry; if (dx * dx + dy * dy <= 1) g.fillRect(x, y, 1, 1); } },
+    poly(pts, col) { g.fillStyle = col; let mx = 1e9, my = 1e9, Mx = -1e9, My = -1e9; for (const [a, b] of pts) { mx = Math.min(mx, a); my = Math.min(my, b); Mx = Math.max(Mx, a); My = Math.max(My, b); } for (let y = Math.floor(my); y <= Math.ceil(My); y++) for (let x = Math.floor(mx); x <= Math.ceil(Mx); x++) if (inPoly(x + .5, y + .5, pts)) g.fillRect(x, y, 1, 1); },
+    line(x0, y0, x1, y1, col, t = 1) { g.fillStyle = col; const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2 || 1; for (let i = 0; i <= n; i++) g.fillRect(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), t, t); }
+  };
+  fn(A);
+  if (ol !== null) outline(c, ol || INK);
+  return c;
+}
+function whiten(c) { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; const g = k.getContext('2d'); g.drawImage(c, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, k.width, k.height); return k; }
+
+function playerFrame(dir, step) {
+  return mk(16, 19, A => {
+    const { r, p, e } = A; const fy = 17;
+    if (dir === 'side') { if (step) { r(5, fy, 3, 1, C.dirtD); r(9, fy - 1, 3, 1, C.dirtD); } else r(6, fy, 4, 1, C.dirtD); }
+    else { if (step) { r(5, fy, 2, 1, C.dirtD); r(9, fy - 1, 2, 1, C.dirtD); } else { r(5, fy, 2, 1, C.dirtD); r(9, fy, 2, 1, C.dirtD); } }
+    r(4, 12, 8, 5, C.mint); r(4, 16, 8, 1, C.mintD); r(5, 12, 6, 1, C.mintL);
+    if (dir === 'up') { r(5, 12, 6, 4, C.woodD); r(6, 13, 4, 2, C.wood); p(8, 12, C.amber); }
+    else if (dir === 'down') { r(7, 13, 2, 3, C.mintD); p(7, 14, C.amber); p(8, 14, C.amber); }
+    if (dir !== 'side') { r(3, 13, 1, 2, C.mint); r(12, 13, 1, 2, C.mint); p(3, 15, C.skin); p(12, 15, C.skin); }
+    else { r(8, 13, 2, 2, C.mintD); p(9, 15, C.skin); }
+    e(8, 8.2, 5.2, 4.6, C.mint); e(6.4, 5.8, 2, 1.2, C.mintL);
+    if (dir === 'down') { e(8, 9.4, 3.6, 2.8, C.skin); r(6, 8, 1, 2, INK); r(9, 8, 1, 2, INK); p(5, 10, C.blush); p(10, 10, C.blush); }
+    if (dir === 'side') { e(10, 9.4, 2.6, 2.8, C.skin); r(10, 8, 1, 2, INK); p(11, 10, C.blush); }
+    if (dir === 'up') { r(5, 11, 6, 1, C.mintD); }
+    r(8, 1, 1, 3, C.leafD); e(6.6, 2.2, 1.7, 1.1, C.leaf); e(9.8, 1.8, 1.7, 1.1, C.leafL);
+  });
+}
+function slimeSpr(col, colL, colD) {
+  return mk(16, 14, A => {
+    A.e(8, 8, 6.5, 5, colD); A.e(8, 7.5, 6, 4.5, col); A.e(5.6, 5.6, 1.9, 1.1, colL); A.p(4, 6, '#ffffff');
+    A.r(6, 7, 1, 2, INK); A.r(10, 7, 1, 2, INK); A.p(5, 9, '#ff9ab0'); A.p(11, 9, '#ff9ab0'); A.p(8, 9, INK);
+  });
+}
+function bossSpr() {
+  return mk(36, 32, A => {
+    A.e(18, 20, 15.5, 10.5, '#4f9e45'); A.e(18, 19, 14.5, 9.6, '#86d96b'); A.e(11.5, 14.5, 4.2, 2.2, '#d2f7b8'); A.p(9, 14, '#fff'); A.p(10, 14, '#fff');
+    A.r(12, 17, 2, 4, INK); A.r(23, 17, 2, 4, INK); A.p(12, 17, '#fff'); A.p(23, 17, '#fff');
+    A.r(16, 23, 5, 1, INK); A.p(15, 22, INK); A.p(21, 22, INK);
+    A.e(9, 22, 1.6, 1, '#ff9ab0'); A.e(27, 22, 1.6, 1, '#ff9ab0');
+    A.poly([[10, 11], [12, 3], [15, 7], [18, 1], [21, 7], [24, 3], [26, 11]], C.amber);
+    A.r(11, 9, 15, 2, '#e5a73f'); A.p(18, 5, C.rose); A.p(13, 7, '#7fe0b5'); A.p(23, 7, '#7fe0b5');
+  });
+}
+function shroomySpr() {
+  return mk(16, 16, A => {
+    A.r(5, 14, 2, 1, C.dirtD); A.r(9, 14, 2, 1, C.dirtD);
+    A.e(8, 11, 3.8, 3.3, C.cream); A.p(7, 11, INK); A.p(9, 11, INK); A.p(6, 12, C.blush); A.p(10, 12, C.blush);
+    A.e(8, 6.5, 6.5, 4, '#a65fd1'); A.r(3, 8, 10, 1, '#7d3fa3');
+    A.p(5, 5, '#fbe7ff'); A.p(6, 5, '#fbe7ff'); A.p(9, 4, '#fbe7ff'); A.p(11, 6, '#fbe7ff'); A.p(7, 7, '#fbe7ff');
+  });
+}
+function queenSpr() {
+  return mk(36, 36, A => {
+    A.e(9, 27, 2.4, 2.2, C.cream); A.e(27, 27, 2.4, 2.2, C.cream);
+    A.poly([[11, 20], [25, 20], [29, 34], [7, 34]], '#f3e2c4'); A.r(7, 32, 22, 2, '#e5cfae'); for (let x = 8; x < 29; x += 3) A.p(x, 31, '#d9bfe8');
+    A.e(18, 24, 7.5, 6, C.cream);
+    A.r(14, 23, 2, 3, INK); A.r(20, 23, 2, 3, INK); A.p(14, 23, '#fff'); A.p(20, 23, '#fff');
+    A.p(17, 27, INK); A.p(18, 28, INK); A.p(19, 27, INK); A.e(12, 27, 1.6, 1, C.blush); A.e(24, 27, 1.6, 1, C.blush);
+    A.e(18, 14, 16.5, 8.5, '#8e4fb8'); A.e(18, 13, 15.5, 7.5, '#b673de'); A.r(2, 17, 32, 2, '#7d3fa3');
+    for (const [x, y, r] of [[9, 12, 2.2], [18, 9, 2.6], [27, 12, 2.2], [13, 16, 1.3], [23, 16, 1.3]]) A.e(x, y, r, r * .8, '#fbe7ff');
+    A.poly([[12, 7], [13, 1.5], [16, 4.5], [18, 0.6], [20, 4.5], [23, 1.5], [24, 7]], C.amber); A.r(12, 6, 12, 2, '#e5a73f'); A.p(18, 3, C.rose);
+  });
+}
+function golemSpr() {
+  return mk(36, 34, A => {
+    A.r(8, 29, 7, 4, '#4a4468'); A.r(21, 29, 7, 4, '#4a4468');
+    A.poly([[6, 15], [10, 2], [14, 14]], C.cryD); A.poly([[14, 13], [18, 1], [22, 13]], C.cry); A.poly([[14, 13], [18, 1], [18, 13]], C.cryL); A.poly([[22, 14], [27, 4], [30, 15]], C.cry);
+    A.e(4, 22, 3, 4, '#57507a'); A.e(32, 22, 3, 4, '#57507a');
+    A.e(18, 21, 15, 9.5, '#57507a'); A.e(18, 20, 14, 8.6, '#6a6488'); A.e(12, 15, 5, 2.2, '#8a83ad');
+    A.r(11, 19, 4, 3, '#2a2340'); A.r(21, 19, 4, 3, '#2a2340'); A.r(12, 20, 2, 1, '#7ff0e6'); A.r(22, 20, 2, 1, '#7ff0e6');
+    A.r(15, 25, 6, 1, '#2a2340'); A.p(9, 25, C.cry); A.p(27, 17, C.cry); A.p(25, 26, C.cryL);
+  });
+}
+const shotSpr = (c1, c2, diamond) => mk(8, 8, A => { if (diamond) { A.poly([[4, 0.5], [7, 4], [4, 7.5], [1, 4]], c1); A.p(3, 3, c2); A.p(3, 4, c2); } else { A.e(4, 4, 3.2, 3.2, c1); A.e(3.5, 3.5, 1.5, 1.5, c2); } }, null);
+const fishIcon = (body, belly, fin, extra) => A => { A.poly([[1.5, 4.5], [5, 8], [1.5, 11.5]], fin); A.e(9, 8, 5.6, 3.4, body); A.e(9.5, 9.6, 4, 1.4, belly); A.p(8, 4, fin); A.p(9, 4, fin); A.p(10, 5, fin); A.p(12, 7, INK); A.p(10, 6, '#ffffff'); if (extra) extra(A); };
+function waterTex(f) { const R = rng(5150 + f * 17); return mk(16, 16, A => { A.r(0, 0, 16, 16, '#3a78b0'); for (let k = 0; k < 6; k++) { const x = R() * 13 | 0, y = R() * 15 | 0; A.r((x + f * 2) % 13, y, 3, 1, '#5b9bd0'); } for (let k = 0; k < 3; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#8cc4ec'); A.p((4 + f * 5) % 16, (9 + f * 3) % 16, '#e6f7ff'); }, null); }
+const pickIcon = (h, hl) => A => { A.line(3, 13, 10, 6, C.woodD, 2); A.line(3, 12, 9, 6, C.woodL, 1); A.line(5, 3, 9, 3, h, 2); A.line(10, 4, 12, 6, h, 2); A.line(13, 7, 13, 11, h, 2); A.line(6, 3, 9, 3, hl, 1); A.p(11, 4, hl); };
+const swordIcon = (b, bl, g) => A => { A.line(5, 10, 12, 3, b, 2); A.line(6, 9, 12, 3, bl, 1); A.p(13, 2, bl); A.line(3, 8, 7, 12, g, 2); A.line(2, 13, 4, 11, C.woodD, 2); A.p(1, 14, C.amber); };
+const packet = (col, pic) => A => { A.r(4, 3, 8, 11, '#ecd6a8'); A.r(4, 3, 8, 2, '#cdb282'); A.r(5, 13, 6, 1, '#cdb282'); pic(A); };
+const ICON = {
+  wood: A => { A.r(2, 6, 11, 6, C.wood); A.r(2, 6, 11, 1, C.woodL); A.r(2, 11, 11, 1, C.woodD); A.p(5, 8, C.woodD); A.p(8, 10, C.woodD); A.p(6, 9, C.woodD); A.e(12.5, 9, 2.3, 3, '#e8b97a'); A.p(12, 9, C.woodD); A.p(13, 8, '#c99560'); },
+  dirt: A => { A.e(8, 9.5, 5.6, 4.2, C.dirt); A.e(6.5, 8, 2.6, 1.5, C.dirtL); A.p(10, 10, C.dirtD); A.p(5, 11, C.dirtD); A.p(9, 12, C.dirtD); A.p(11, 8, '#8f7a72'); },
+  stone: A => { A.e(8, 9, 5.6, 4.6, C.stone); A.e(6.5, 7.5, 2.6, 1.5, C.stoneL); A.p(10, 11, C.stoneD); A.p(9, 12, C.stoneD); A.p(5, 10, C.stoneD); },
+  fiber: A => { A.line(5, 13, 6, 3, C.leafD, 1); A.line(8, 13, 8, 2, C.leaf, 1); A.line(11, 13, 10, 3, C.leafL, 1); A.line(6, 13, 4, 4, C.leaf, 1); A.line(10, 13, 12, 4, C.leafD, 1); A.r(4, 9, 8, 2, '#e5c97a'); },
+  gel: A => { A.e(8, 10, 5, 4, '#86d96b'); A.poly([[8, 2], [12, 8], [4, 8]], '#86d96b'); A.p(6, 8, '#e2fbd2'); A.p(6, 9, '#e2fbd2'); A.p(7, 7, '#e2fbd2'); A.p(10, 12, '#4f9e45'); },
+  copperOre: A => { A.e(8, 9, 5.6, 4.6, C.stoneD); A.e(6.5, 7.5, 2.4, 1.3, C.stone); A.e(6, 10, 1.7, 1.3, C.copper); A.e(10, 8, 1.5, 1.3, C.copper); A.p(9, 11, C.copperL); A.p(10, 7, C.copperL); },
+  ironOre: A => { A.e(8, 9, 5.6, 4.6, C.stoneD); A.e(6.5, 7.5, 2.4, 1.3, C.stone); A.e(6, 10, 1.7, 1.3, C.iron); A.e(10, 8, 1.5, 1.3, C.iron); A.p(9, 11, C.ironL); A.p(10, 7, C.ironL); },
+  crystal: A => { A.poly([[8, 1], [12, 7], [8, 14], [4, 7]], C.cry); A.poly([[8, 1], [8, 14], [4, 7]], C.cryL); A.p(6, 6, '#fff'); A.p(10, 9, C.cryD); A.p(9, 11, C.cryD); },
+  copperBar: A => { A.r(3, 8, 10, 4, C.copper); A.poly([[3, 8], [5, 5], [11, 5], [13, 8]], C.copperL); A.r(3, 11, 10, 1, C.copperD); A.p(6, 6, '#fff3e0'); },
+  ironBar: A => { A.r(3, 8, 10, 4, C.iron); A.poly([[3, 8], [5, 5], [11, 5], [13, 8]], C.ironL); A.r(3, 11, 10, 1, C.ironD); A.p(6, 6, '#ffffff'); },
+  glowcap: A => { A.r(6, 9, 4, 5, '#e8f7f2'); A.e(8, 6.5, 5, 3.5, C.glow); A.p(6, 5, C.glowL); A.p(9, 4, C.glowL); A.p(10, 7, C.glowL); A.r(3, 8, 10, 1, '#36b3a8'); },
+  mushroom: A => { A.r(6, 9, 4, 5, C.cream); A.r(6, 9, 4, 1, '#e8d2b0'); A.e(8, 6.5, 5, 3.5, '#e36b6b'); A.p(6, 5, C.cream); A.p(9, 4, C.cream); A.p(10, 7, C.cream); A.r(3, 8, 10, 1, '#b94c55'); },
+  berry: A => { A.e(6.5, 10, 3.5, 3.5, C.berry); A.e(10.5, 9, 3, 3, '#e86a92'); A.p(5, 9, '#ffc2d4'); A.p(10, 8, '#ffc2d4'); A.e(9, 4.5, 2.5, 1.3, C.leaf); A.p(8, 6, C.leafD); },
+  berrySeed: packet('#ecd6a8', A => { A.e(8, 9, 2.2, 2.2, C.berry); A.p(7, 8, '#ffc2d4'); A.p(9, 6, C.leaf); }),
+  spore: packet('#ecd6a8', A => { A.e(8, 8, 2.6, 1.6, '#a65fd1'); A.r(7, 9, 2, 2, C.cream); }),
+  grilled: A => { A.line(2, 14, 13, 3, C.woodL, 1); A.e(6, 10, 2.6, 2.1, '#b5523f'); A.e(9.6, 6.5, 2.6, 2.1, '#b5523f'); A.p(5, 9, '#7a2f22'); A.p(9, 6, '#7a2f22'); A.p(6, 11, '#e8925f'); A.p(10, 7, '#e8925f'); },
+  pie: A => { A.e(8, 10.5, 6.5, 3.5, '#e0a35f'); A.e(8, 9.5, 5.5, 2.6, '#c73e6b'); A.line(4, 9, 12, 9, '#f6d39b', 1); A.p(6, 8, '#f6d39b'); A.p(9, 8, '#f6d39b'); A.p(7, 11, '#f6d39b'); A.p(10, 11, '#f6d39b'); A.r(2, 12, 12, 1, '#b97c3f'); },
+  stew: A => { A.r(2, 8, 12, 3, '#8c5a3c'); A.e(8, 11, 6, 3, '#8c5a3c'); A.e(8, 8, 6, 1.8, '#e0953f'); A.p(6, 8, '#e36b6b'); A.p(10, 8, C.glow); A.p(8, 7, '#fff1d6'); A.p(6, 4, '#e8e0f0'); A.p(7, 3, '#e8e0f0'); A.p(10, 4, '#e8e0f0'); A.p(11, 3, '#e8e0f0'); A.r(3, 12, 10, 1, '#5e3a26'); },
+  lightSeed: A => { A.e(8, 9.5, 4.5, 5, '#ffcf4f'); A.e(7, 8, 2, 2.4, '#fff1b0'); A.p(6, 7, '#fff'); A.e(9.6, 3.6, 1.8, 1, C.leaf); A.p(8, 4, C.leafD); A.p(13, 2, '#fff'); A.p(12, 2, '#fff7c2'); A.p(14, 2, '#fff7c2'); A.p(13, 1, '#fff7c2'); A.p(13, 3, '#fff7c2'); },
+  pickWood: pickIcon(C.stone, C.stoneL), pickCopper: pickIcon(C.copper, C.copperL), pickIron: pickIcon(C.iron, C.ironL),
+  swordWood: swordIcon(C.woodL, '#f0c890', C.woodD), swordCopper: swordIcon(C.copper, C.copperL, C.woodD), swordIron: swordIcon(C.iron, C.ironL, C.amber), swordCrystal: swordIcon(C.cry, C.cryL, C.amber),
+};
+Object.assign(ICON, {
+  shroomCap: A => { A.e(8, 8, 6.5, 4.2, '#e07b5f'); A.r(2, 9, 12, 2, '#b9573f'); A.e(5.5, 6, 1.4, 1, C.cream); A.e(10, 5.5, 1.2, .9, C.cream); A.p(12, 8, C.cream); A.p(7, 8, C.cream); },
+  rod: A => { A.line(2, 14, 12, 3, C.woodD, 1); A.line(3, 14, 12, 4, C.wood, 1); A.p(5, 11, C.iron); A.p(4, 12, C.iron); A.line(13, 3, 13, 10, '#e8e0f0'); A.e(13, 11.5, 1.6, 1.6, '#ff6b6b'); A.p(13, 10, '#ffffff'); },
+  minnow: fishIcon('#8fc7a0', '#d8f2df', '#5e9a6e'),
+  crucian: fishIcon('#d9a24a', '#f6dc9a', '#a8702a'),
+  catfish: fishIcon('#8a6a9a', '#d7c4e0', '#5e4370', A => { A.line(13, 9, 15, 11, '#3a2a44'); A.line(13, 9, 15, 9, '#3a2a44'); }),
+  sporeEel: A => { A.poly([[1, 6], [3, 8], [1, 10]], '#4fae98'); A.e(8, 8, 6.6, 2.2, '#6fd0b8'); A.e(8, 9, 6, 1, '#bff0e0'); A.p(13, 7, INK); A.p(5, 7, '#b673de'); A.p(8, 7, '#b673de'); A.p(11, 8, '#b673de'); },
+  smelt: fishIcon('#b9d8f0', '#ffffff', '#8fb0e0', A => { A.p(13, 3, '#fff'); A.p(13, 2, C.cryL); A.p(12, 3, C.cryL); A.p(14, 3, C.cryL); A.p(13, 4, C.cryL); }),
+  shrimp: A => { A.poly([[2, 7], [4, 10], [1, 12]], '#e07aa0'); A.e(8, 9, 5, 3.5, '#f2a0c0'); A.e(7, 8, 3.5, 2.2, '#ffc6da'); A.p(12, 7, INK); A.line(12, 6, 15, 3, '#e07aa0'); A.line(12, 6, 15, 5, '#e07aa0'); for (const x of [6, 8, 10]) A.p(x, 12, '#e07aa0'); },
+  koi: fishIcon('#fff4ea', '#ffffff', '#ffb48a', A => { A.e(7, 7, 1.6, 1.2, '#ff8a3d'); A.e(10.5, 9, 1.4, 1, '#ff8a3d'); A.p(13, 2, '#ffe9a8'); A.p(14, 4, '#ffe9a8'); A.p(4, 3, '#ffe9a8'); }),
+  boot: A => { A.poly([[4, 2], [10, 2], [10, 10], [14, 10], [14, 14], [4, 14]], '#7a5a3a'); A.r(4, 13, 10, 1, '#4a3424'); A.r(4, 2, 6, 2, '#9c7650'); A.p(8, 6, '#4a3424'); A.p(8, 8, '#4a3424'); A.p(5, 7, '#6fb0e0'); },
+  anyFish: fishIcon('#8fc7a0', '#d8f2df', '#5e9a6e'),
+  grilledFish: A => { A.e(8, 11, 7, 2.6, '#e8e2d8'); A.e(8, 10.5, 6, 1.7, '#ffffff'); A.poly([[2, 6], [4, 8], [2, 10]], '#a0603a'); A.e(9, 8, 5, 2.6, '#c9824a'); A.line(6, 7, 7, 9, '#7a3f22'); A.line(9, 7, 10, 9, '#7a3f22'); A.p(12, 7, INK); A.p(13, 11, C.leaf); A.p(14, 11, C.leafL); },
+  fishStew: A => { A.r(2, 8, 12, 3, '#6d8fb0'); A.e(8, 11, 6, 3, '#6d8fb0'); A.e(8, 8, 6, 1.8, '#f2e3c2'); A.p(6, 8, '#e36b6b'); A.p(10, 8, C.leaf); A.poly([[9, 5], [11, 7], [9, 8]], '#8fc7a0'); A.p(6, 4, '#e8e0f0'); A.p(7, 3, '#e8e0f0'); A.r(3, 12, 10, 1, '#4a6a8a'); },
+});
+const UICON = {
+  heart: A => { A.e(5.5, 6, 3.6, 3.6, C.rose); A.e(10.5, 6, 3.6, 3.6, C.rose); A.poly([[1.9, 7], [14.1, 7], [8, 14]], C.rose); A.p(4, 4, '#fff'); A.p(4, 5, '#ffd0d8'); A.p(11, 10, C.roseD); A.p(10, 11, C.roseD); },
+  food: ICON.berry,
+  bag: A => { A.r(6, 2, 4, 1, C.woodD); A.p(5, 3, C.woodD); A.p(10, 3, C.woodD); A.e(8, 10, 6, 4.5, C.wood); A.r(2, 9, 12, 4, C.wood); A.e(8, 7, 5.5, 3, C.woodL); A.r(7, 8, 2, 2, C.amber); A.r(3, 13, 10, 1, C.woodD); },
+  hammer: A => { A.line(3, 13, 9, 7, C.woodL, 2); A.poly([[6, 5], [10, 1], [14, 5], [10, 9]], C.iron); A.poly([[6, 5], [10, 1], [11, 2], [7, 6]], C.ironL); A.p(11, 7, C.ironD); },
+  map: A => { A.r(2, 3, 12, 11, C.cream); A.r(6, 3, 1, 11, '#e2cfae'); A.r(10, 3, 1, 11, '#e2cfae'); A.p(4, 11, C.rose); A.p(5, 10, C.rose); A.p(7, 9, C.rose); A.p(8, 7, C.rose); A.line(10, 5, 12, 7, C.roseD, 1); A.line(12, 5, 10, 7, C.roseD, 1); A.p(4, 5, C.leaf); A.p(5, 6, C.leaf); },
+  gear: A => { for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; A.e(8 + Math.cos(a) * 5.3, 8 + Math.sin(a) * 5.3, 1.5, 1.5, C.stoneL); } A.e(8, 8, 5, 5, C.stoneL); A.e(8, 8, 2.1, 2.1, '#3a2e50'); A.p(6, 5, '#fff'); },
+  hand: A => { A.e(8, 10.5, 4.6, 4, C.skin); A.r(4, 4, 2, 6, C.skin); A.r(6, 3, 2, 7, C.skin); A.r(8, 3, 2, 7, C.skin); A.r(10, 4, 2, 6, C.skin); A.e(3.4, 10, 1.4, 2.5, C.skin); A.p(5, 5, '#fff'); A.p(7, 4, '#fff'); A.r(6, 12, 4, 1, '#f0c2a0'); },
+  dots: A => { A.e(4, 8, 1.6, 1.6, C.cream); A.e(8, 8, 1.6, 1.6, C.cream); A.e(12, 8, 1.6, 1.6, C.cream); },
+};
+// --- world object sprites
+const OSPR = {
+  bench: [16, 16, A => { A.r(3, 9, 2, 5, C.woodD); A.r(11, 9, 2, 5, C.woodD); A.r(1, 6, 14, 4, C.wood); A.r(1, 6, 14, 1, C.woodL); A.r(1, 9, 14, 1, C.woodD); A.r(3, 4, 4, 2, C.iron); A.r(3, 4, 4, 1, C.ironL); A.r(9, 3, 1, 3, C.woodD); A.r(8, 3, 3, 1, C.stoneD); A.r(12, 5, 2, 1, C.amber); }],
+  furnace: [16, 20, A => { A.r(10, 1, 3, 5, C.stoneD); A.r(10, 1, 3, 1, C.stone); A.e(8, 9, 6.2, 5, C.stone); A.r(2, 9, 12, 9, C.stone); A.e(6, 6.5, 2.5, 1.4, C.stoneL); A.r(2, 17, 12, 1, C.stoneD); for (const [x, y] of [[3, 10], [9, 9], [6, 12], [12, 13], [3, 15]]) A.r(x, y, 2, 1, C.stoneD); A.e(8, 14.5, 3.2, 2.6, '#2a1d2f'); A.r(5, 15, 6, 2, '#2a1d2f'); A.e(8, 15.5, 2.2, 1.4, C.fire); A.p(8, 15, C.amber); A.p(7, 16, C.amber); }],
+  pot: [16, 16, A => { A.r(4, 13, 2, 2, '#3a3448'); A.r(10, 13, 2, 2, '#3a3448'); A.e(8, 10, 6, 4.5, '#4a4458'); A.e(6, 9, 2, 1.2, '#6d6680'); A.r(2, 6, 12, 2, '#6d6680'); A.r(2, 6, 12, 1, '#8c86a0'); A.e(8, 6.5, 5, 1, '#e7a24b'); A.p(6, 6, '#ffd08a'); A.r(0, 8, 2, 1, '#6d6680'); A.r(14, 8, 2, 1, '#6d6680'); A.p(6, 3, '#e8e0f0'); A.p(7, 2, '#e8e0f0'); A.p(10, 3, '#e8e0f0'); }],
+  chest: [16, 16, A => { A.r(2, 7, 12, 7, C.wood); A.e(8, 7, 6, 3.2, C.woodL); A.r(2, 7, 12, 1, C.woodD); A.r(2, 13, 12, 1, C.woodD); A.r(4, 4, 1, 10, C.woodD); A.r(11, 4, 1, 10, C.woodD); A.r(7, 7, 2, 3, C.amber); A.p(7, 9, '#a8692a'); A.p(4, 8, C.amber); A.p(11, 8, C.amber); A.p(5, 5, '#f0c890'); }],
+  torch: [16, 16, A => { A.r(7, 8, 2, 7, C.woodD); A.r(7, 8, 1, 7, C.wood); A.r(6, 8, 4, 2, '#e5c97a'); A.e(8, 5.5, 2.6, 3.2, C.fire); A.e(8, 6, 1.5, 2, C.amber); A.p(8, 2, '#ffe9a8'); A.p(8, 6, '#fff6d8'); }],
+  chair: [16, 16, A => { A.r(4, 2, 8, 2, C.woodL); A.r(4, 4, 1, 6, C.wood); A.r(11, 4, 1, 6, C.wood); A.r(7, 4, 2, 5, C.wood); A.r(3, 9, 10, 3, C.woodL); A.r(4, 9, 8, 2, '#f2a1b6'); A.p(5, 9, '#ffd1dd'); A.r(3, 11, 10, 1, C.woodD); A.r(4, 12, 1, 3, C.woodD); A.r(11, 12, 1, 3, C.woodD); }],
+  table: [16, 16, A => { A.r(7, 11, 2, 4, C.woodD); A.e(8, 7, 7, 3.6, C.cream); A.r(1, 7, 14, 4, C.cream); A.r(1, 10, 14, 1, '#f2c2cc'); for (let x = 1; x < 15; x += 2) A.p(x, 11, C.rose); A.e(6, 6, 3, 1.2, '#ffffff'); A.r(9, 4, 3, 2, '#ffffff'); A.p(12, 5, '#ffffff'); A.r(9, 4, 3, 1, '#9fd8f0'); }],
+  bed: [16, 24, A => { A.e(8, 4, 6, 3, C.wood); A.r(2, 4, 12, 4, C.wood); A.r(2, 4, 12, 1, C.woodL); A.p(8, 3, C.amber); A.r(2, 8, 12, 14, C.cream); A.e(8, 9.5, 5, 2, '#ffffff'); A.r(2, 12, 12, 10, '#f28aa6'); for (let y = 12; y < 22; y += 2) for (let x = 2 + ((y / 2) % 2) * 2; x < 14; x += 4) A.r(x, y, 2, 2, '#ffb3c6'); A.r(2, 12, 12, 2, '#ffd1dd'); A.r(2, 21, 12, 2, C.woodD); }],
+  plant: [16, 18, A => { A.poly([[4, 11], [12, 11], [11, 17], [5, 17]], '#d9774a'); A.r(3, 10, 10, 2, '#e8915f'); A.r(5, 15, 6, 1, '#b85d36'); A.e(5.5, 7, 2.6, 3.6, C.leaf); A.e(10.5, 6, 2.6, 4, C.leafL); A.e(8, 5, 2, 4.5, C.leafD); A.e(11, 2.6, 1.6, 1.6, C.rose); A.p(11, 2, C.amber); }],
+  rug: [16, 16, A => { A.r(1, 2, 14, 12, '#e98ca6'); A.r(2, 3, 12, 10, '#f8cfd9'); A.poly([[8, 4], [12, 8], [8, 12], [4, 8]], '#e98ca6'); A.poly([[8, 6], [10, 8], [8, 10], [6, 8]], C.amber); for (let x = 2; x < 15; x += 2) { A.p(x, 1, C.cream); A.p(x, 14, C.cream); } }],
+  lampShroom: [16, 24, A => { A.e(8, 21.5, 3.4, 1.6, '#b98a6a'); A.r(7, 10, 2, 11, '#efe2ce'); A.r(8, 10, 1, 11, '#d9c8ae'); A.e(8, 8, 6.4, 4.6, '#ff9ad5'); A.r(2, 9, 12, 2, '#d96aa9'); A.e(6, 6, 2.2, 1.2, '#ffd6ef'); A.p(10, 5, '#ffd6ef'); A.p(11, 7, '#ffffff'); A.p(4, 8, '#ffffff'); }],
+  lampCrystal: [16, 24, A => { A.r(4, 17, 8, 5, C.stone); A.r(3, 16, 10, 2, C.stoneL); A.r(4, 21, 8, 1, C.stoneD); A.poly([[8, 1], [12, 8], [10, 16], [6, 16], [4, 8]], C.cry); A.poly([[8, 1], [8, 16], [6, 16], [4, 8]], C.cryL); A.p(6, 6, '#ffffff'); A.p(6, 7, '#ffffff'); A.p(10, 11, C.cryD); }],
+  shelf: [16, 24, A => { A.r(1, 2, 14, 20, C.woodD); A.r(2, 3, 12, 18, '#5a3a24'); A.r(2, 9, 12, 1, C.wood); A.r(2, 15, 12, 1, C.wood); A.r(1, 2, 14, 1, C.woodL); const bk = [C.rose, C.mint, C.amber, C.cry, '#7fb3e0', C.berry]; let x = 2; for (const c of bk) { A.r(x, 4 + (x % 3 === 0 ? 1 : 0), 2, 5 - (x % 3 === 0 ? 1 : 0), c); x += 2; } x = 2; for (const c of bk.slice().reverse()) { A.r(x, 10 + (x % 4 === 0 ? 1 : 0), 2, 5 - (x % 4 === 0 ? 1 : 0), c); x += 2; } A.e(6, 18.5, 2.5, 1.5, C.leaf); A.r(9, 17, 4, 4, '#e8915f'); }],
+  cushion: [16, 16, A => { A.e(8, 10, 6.2, 4.6, '#f3c58f'); A.poly([[2.5, 8], [4.5, 2.5], [7.5, 6.5]], '#f3c58f'); A.poly([[8.5, 6.5], [11.5, 2.5], [13.5, 8]], '#f3c58f'); A.p(5, 5, C.rose); A.p(11, 5, C.rose); A.r(5, 9, 2, 1, INK); A.r(9, 9, 2, 1, INK); A.p(8, 10, C.rose); A.p(4, 11, '#ffa9b9'); A.p(12, 11, '#ffa9b9'); A.r(7, 6, 2, 1, '#d99a5c'); A.r(6, 13, 4, 1, '#d99a5c'); }],
+  vase: [16, 16, A => { A.line(6, 9, 5, 4, C.leafD, 1); A.line(8, 9, 10, 3, C.leafD, 1); A.line(8, 9, 8, 5, C.leafD, 1); A.e(5, 3.5, 1.7, 1.7, C.rose); A.e(10.5, 3, 1.7, 1.7, C.amber); A.e(8, 5.5, 1.6, 1.6, '#ffffff'); A.p(5, 3, '#fff1b0'); A.p(10, 3, '#fff'); A.r(7, 8, 2, 3, '#7fb3e0'); A.e(8, 12.5, 3.6, 3, '#7fb3e0'); A.p(6, 11, '#d4ecff'); A.p(6, 12, '#d4ecff'); }],
+  root: [16, 28, A => { A.poly([[2, 27], [5, 21], [7, 27]], C.woodD); A.poly([[9, 27], [11, 21], [14, 27]], C.woodD); A.r(5, 9, 6, 18, C.woodD); A.r(6, 9, 2, 18, C.wood); A.p(9, 14, '#5e391f'); A.p(8, 19, '#5e391f'); A.e(8, 8, 6.4, 5.2, C.leafD); A.e(7, 6.5, 4.4, 3.4, C.leaf); A.e(5.6, 5, 2, 1.4, C.leafL); A.p(4, 12, C.leaf); A.p(4, 13, C.leaf); A.p(12, 11, C.leaf); A.p(12, 12, C.leafD); }],
+  bigShroom: [16, 26, A => { A.e(8, 24.5, 4, 1.4, '#7a5aa0'); A.r(6, 11, 4, 14, C.cream); A.r(9, 11, 1, 14, '#e5d3b5'); A.e(8, 8.5, 7.3, 5.6, '#e07b5f'); A.r(1, 10, 14, 2, '#b9573f'); A.e(5, 5.5, 1.6, 1.2, C.cream); A.e(10, 4.5, 1.3, 1, C.cream); A.p(12, 8, C.cream); A.p(4, 9, C.cream); A.p(8, 7, C.cream); }],
+  grass: [16, 16, A => { A.line(4, 14, 3, 8, C.leafD); A.line(6, 14, 6, 5, C.leaf); A.line(8, 14, 9, 7, C.leafL); A.line(10, 14, 11, 6, C.leaf); A.line(12, 14, 13, 9, C.leafD); A.p(6, 5, '#d9f7b0'); A.p(11, 6, '#d9f7b0'); }, '#244a2a'],
+  glow: [16, 16, A => { A.r(5, 10, 2, 4, '#e8f7f2'); A.e(6, 9, 3, 2, C.glow); A.p(5, 8, C.glowL); A.r(10, 9, 2, 5, '#e8f7f2'); A.e(11, 7.5, 2.6, 2, '#7ff0e6'); A.p(10, 7, C.glowL); A.r(8, 12, 1, 2, '#e8f7f2'); A.e(8.5, 11.5, 1.6, 1.2, C.glow); }],
+  cluster: [16, 18, A => { A.poly([[3, 16], [4, 7], [7, 16]], C.cryD); A.poly([[6, 16], [8, 2], [11, 16]], C.cry); A.poly([[6, 16], [8, 2], [8, 16]], C.cryL); A.poly([[10, 16], [13, 8], [14, 16]], C.cry); A.p(7, 6, '#fff'); A.e(8, 16.5, 6, 1.2, '#3c3263'); }],
+  stumpStool: [16, 16, A => { A.r(3, 8, 10, 6, C.wood); A.r(4, 9, 1, 4, C.woodD); A.r(8, 9, 1, 5, C.woodD); A.r(11, 9, 1, 4, C.woodD); A.p(2, 13, C.woodD); A.p(13, 13, C.woodD); A.e(8, 8, 5, 2.2, '#e8b97a'); A.e(8, 8, 3, 1.2, '#c99560'); A.p(8, 8, C.woodD); A.e(5.5, 7, 2, 1, C.leaf); A.p(5, 6, C.leafL); }],
+  mossSofa: [16, 16, A => { A.r(1, 5, 14, 9, C.woodD); A.r(2, 3, 12, 6, '#6fae5f'); A.r(2, 3, 12, 1, '#8fd07a'); A.r(7, 4, 1, 4, '#5e9a50'); A.r(2, 9, 12, 3, '#7dbd6b'); A.r(2, 9, 12, 1, '#a5dc8a'); A.r(1, 7, 2, 6, '#5e9a50'); A.r(13, 7, 2, 6, '#5e9a50'); A.r(2, 13, 1, 2, C.woodD); A.r(13, 13, 1, 2, C.woodD); A.p(4, 4, '#ffd36b'); A.p(11, 5, '#ff9ab0'); A.p(10, 4, C.leafL); }],
+  sproutLamp: [16, 24, A => { A.r(5, 19, 6, 3, '#c9845a'); A.r(4, 18, 8, 2, '#e09a6a'); A.line(8, 18, 7, 12, C.leafD); A.line(7, 12, 9, 8, C.leafD); A.e(5, 14, 2.4, 1.2, C.leaf); A.e(11, 11, 2.4, 1.2, C.leafL); A.e(9, 5, 3.2, 3.6, '#c8f58a'); A.e(9, 5.5, 1.8, 2.2, '#f4ffd8'); A.p(8, 4, '#ffffff'); A.e(9, 1.8, 2, 1, C.leaf); }],
+  leafRug: [16, 16, A => { A.poly([[1, 8], [5, 3], [11, 2], [15, 7], [11, 13], [5, 13]], '#6fb66a'); A.poly([[1, 8], [5, 3], [11, 2], [15, 7]], '#82c77a'); A.line(2, 8, 14, 7, '#4c8f4a'); A.line(5, 8, 4, 5, '#4c8f4a'); A.line(9, 8, 8, 4, '#4c8f4a'); A.line(6, 8, 7, 11, '#4c8f4a'); A.line(10, 8, 11, 11, '#4c8f4a'); }, '#2f5a33'],
+  mossBed: [16, 24, A => { A.r(2, 3, 12, 5, C.wood); A.r(2, 3, 12, 1, C.woodL); A.e(8, 3, 6, 1.4, C.leaf); A.p(4, 2, C.leafL); A.p(11, 2, '#ffd36b'); A.r(2, 8, 12, 14, C.cream); A.e(8, 9.5, 4.6, 1.8, '#ffffff'); A.r(2, 12, 12, 10, '#7dbd6b'); A.r(2, 12, 12, 2, '#a5dc8a'); for (const [x, y] of [[4, 15], [9, 16], [6, 19], [11, 19], [3, 20]]) { A.p(x, y, '#a5dc8a'); A.p(x + 1, y, '#5e9a50'); } A.r(2, 21, 12, 2, C.woodD); }],
+  shroomStool: [16, 16, A => { A.r(6, 9, 4, 5, C.cream); A.r(9, 9, 1, 5, '#e5d3b5'); A.e(8, 8, 6.4, 3.2, '#e36b6b'); A.r(2, 9, 12, 1, '#b94c55'); A.p(5, 7, C.cream); A.p(9, 6, C.cream); A.p(11, 8, C.cream); A.p(6, 8, C.cream); }],
+  shroomTable: [16, 16, A => { A.r(6, 9, 4, 6, C.cream); A.r(9, 9, 1, 6, '#e5d3b5'); A.e(8, 7.4, 7.4, 3.4, '#8e4fb8'); A.e(8, 6.8, 6.4, 2.5, '#b673de'); A.p(4, 7, '#fbe7ff'); A.p(12, 6, '#fbe7ff'); A.r(9, 4, 3, 2, '#ffffff'); A.r(9, 4, 3, 1, '#f2a0c0'); A.p(12, 5, '#ffffff'); A.e(5.5, 6, 1.4, 0.8, '#e36b6b'); }],
+  sporeLamp: [16, 24, A => { A.e(8, 21.5, 3.6, 1.4, '#4a3850'); A.r(7, 10, 2, 11, '#5e4370'); A.r(7, 10, 1, 11, '#7d5a90'); A.e(8, 7, 4.6, 5, '#b673de'); A.e(8, 7.4, 3.4, 3.8, '#d59bff'); A.e(8, 7.6, 1.8, 2.2, '#f3dcff'); A.e(8, 2.5, 4.6, 1.6, '#8e4fb8'); A.p(2, 4, '#e8c8ff'); A.p(14, 6, '#e8c8ff'); A.p(13, 1, '#e8c8ff'); }],
+  shroomWardrobe: [16, 24, A => { A.r(2, 9, 12, 13, C.cream); A.r(12, 9, 2, 13, '#e5d3b5'); A.e(8, 8, 7.4, 5, '#e07b5f'); A.r(1, 9, 14, 2, '#b9573f'); A.e(5, 6, 1.5, 1, C.cream); A.e(10.5, 5, 1.3, 0.9, C.cream); A.p(12, 8, C.cream); A.e(8, 17, 3, 3.5, '#b9845a'); A.r(5, 17, 6, 5, '#b9845a'); A.r(8, 14, 1, 8, '#8a5a3a'); A.p(7, 18, C.amber); A.p(9, 18, C.amber); A.e(4.5, 12.5, 1.3, 1.3, '#9fd8f0'); A.e(11.5, 12.5, 1.3, 1.3, '#9fd8f0'); A.r(2, 21, 12, 1, '#d9c2a0'); }],
+  dotRug: [16, 16, A => { A.r(1, 2, 14, 12, '#8e5fb5'); A.r(2, 3, 12, 10, '#a978cf'); for (let y = 4; y < 13; y += 3) for (let x = (y % 2 ? 4 : 3); x < 14; x += 3) A.p(x, y, '#fbe7ff'); for (let x = 2; x < 15; x += 2) { A.p(x, 1, C.cream); A.p(x, 14, C.cream); } }],
+  cryChair: [16, 16, A => { A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); A.poly([[4, 9], [5, 3], [8, 1], [11, 3], [12, 9]], C.cry); A.poly([[4, 9], [5, 3], [8, 1], [8, 9]], C.cryL); A.p(6, 4, '#ffffff'); A.r(3, 9, 10, 3, C.iron); A.r(3, 9, 10, 1, C.ironL); A.r(4, 10, 8, 1, '#d9c8ff'); }],
+  cryTable: [16, 16, A => { A.r(3, 9, 1, 6, C.ironD); A.r(12, 9, 1, 6, C.ironD); A.r(7, 9, 2, 5, C.ironD); A.r(1, 7, 14, 2, C.cry); A.poly([[1, 7], [3, 4], [13, 4], [15, 7]], C.cryL); A.p(4, 5, '#ffffff'); A.p(5, 5, '#ffffff'); A.poly([[9, 1], [10.5, 3.5], [9, 5], [7.5, 3.5]], C.cry); A.p(9, 2, '#ffffff'); }],
+  cryFountain: [16, 20, A => { A.e(8, 16, 7, 3, C.stone); A.e(8, 15.5, 6, 2.2, C.stoneL); A.e(8, 15.6, 5, 1.6, '#7fd0f0'); A.p(5, 15, '#d4f4ff'); A.p(10, 16, '#d4f4ff'); A.r(7, 7, 2, 8, C.stoneL); A.r(8, 7, 1, 8, C.stone); A.poly([[8, 0.6], [10.5, 4], [8, 7.5], [5.5, 4]], C.cry); A.poly([[8, 0.6], [8, 7.5], [5.5, 4]], C.cryL); A.p(5, 9, '#bfefff'); A.p(11, 10, '#bfefff'); A.p(4, 12, '#bfefff'); }],
+  cryMirror: [16, 24, A => { A.r(4, 21, 8, 1, C.ironD); A.r(7, 18, 2, 3, C.ironD); A.e(8, 10, 5.6, 8.4, C.cry); A.e(8, 10, 4.2, 7, '#d9ecf8'); A.e(8, 10, 3.2, 6, '#c4def2'); A.line(6, 6, 9, 12, '#ffffff'); A.line(7, 5, 10, 11, '#eef7ff'); A.p(8, 1, C.cryL); A.p(3, 10, C.cryL); A.p(13, 10, C.cryL); }],
+  starRug: [16, 16, A => { A.r(1, 2, 14, 12, '#3b3a72'); A.r(2, 3, 12, 10, '#4a4890'); for (const [x, y] of [[4, 5], [11, 5], [7, 8], [12, 10], [4, 11]]) { A.p(x, y, '#ffe9a8'); A.p(x - 1, y, '#c9b86a'); A.p(x + 1, y, '#c9b86a'); A.p(x, y - 1, '#c9b86a'); A.p(x, y + 1, '#c9b86a'); } for (let x = 2; x < 15; x += 2) { A.p(x, 1, C.cryL); A.p(x, 14, C.cryL); } }],
+  fishTank: [16, 16, A => { A.r(2, 12, 12, 3, C.woodD); A.r(2, 12, 12, 1, C.wood); A.r(2, 3, 12, 9, '#bfe6f6'); A.r(3, 5, 10, 6, '#6fb8e0'); A.r(3, 9, 10, 2, '#e8d29a'); A.line(5, 10, 5, 6, C.leaf); A.p(4, 7, C.leafL); A.e(10, 7, 1.8, 1.1, '#ff9a4d'); A.p(12, 7, '#ff9a4d'); A.p(12, 6, '#ff9a4d'); A.p(9, 7, INK); A.p(7, 5, '#ffffff'); A.p(8, 4, '#ffffff'); A.r(2, 3, 12, 1, '#e6f6ff'); }],
+  bootPlanter: [16, 18, A => { A.poly([[4, 8], [10, 8], [10, 13], [14, 13], [14, 17], [4, 17]], '#7a5a3a'); A.r(4, 16, 10, 1, '#4a3424'); A.r(4, 8, 6, 1, '#9c7650'); A.p(7, 12, '#4a3424'); A.line(6, 8, 5, 4, C.leafD); A.line(8, 8, 9, 3, C.leafD); A.e(5, 3.5, 1.6, 1.6, C.rose); A.e(9.5, 2.6, 1.6, 1.6, C.amber); A.p(9, 2, '#fff'); A.e(7, 6, 1.4, 1, C.leaf); }],
+  shrine: [16, 22, A => { A.r(3, 14, 10, 7, C.stone); A.r(2, 12, 12, 3, C.stoneL); A.r(3, 20, 10, 1, C.stoneD); A.r(5, 16, 6, 1, C.stoneD); A.p(5, 17, C.amber); A.p(10, 17, C.amber); A.r(6, 18, 4, 1, C.stoneD); A.r(7, 11, 2, 1, C.stoneD); }],
+};
+function cropSpr(kind, stage) {
+  return mk(16, 16, A => {
+    A.e(8, 13, 5, 1.8, C.dirtD); A.e(8, 12.6, 4.4, 1.2, C.dirt);
+    if (stage === 0) { A.p(7, 12, '#c9a46b'); A.p(9, 12, '#c9a46b'); return; }
+    if (kind === 'berry') {
+      if (stage === 1) { A.r(8, 9, 1, 3, C.leafD); A.e(6.5, 9, 1.6, 1, C.leaf); A.e(9.6, 8, 1.6, 1, C.leafL); }
+      else { A.e(8, 8, 5, 4, C.leafD); A.e(7, 7, 3.4, 2.6, C.leaf); A.e(6, 6, 1.4, 1, C.leafL); if (stage === 3) { for (const [x, y] of [[5, 8], [9, 6], [10, 9], [7, 10]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } } }
+    } else {
+      if (stage === 1) { A.r(7, 10, 2, 2, C.cream); A.e(8, 9.5, 2, 1.3, '#a65fd1'); }
+      else if (stage === 2) { A.r(6, 9, 2, 3, C.cream); A.e(7, 8, 2.6, 1.8, '#a65fd1'); A.r(10, 10, 1, 2, C.cream); A.e(10.5, 9.6, 1.6, 1.1, '#e36b6b'); }
+      else { A.r(5, 8, 3, 4, C.cream); A.e(6.5, 6.8, 3.4, 2.4, '#e36b6b'); A.p(5, 6, C.cream); A.p(8, 6, C.cream); A.r(10, 9, 2, 3, C.cream); A.e(11, 8, 2.4, 1.8, '#a65fd1'); A.p(11, 7, '#fbe7ff'); }
+    }
+  });
+}
+function bushSpr(full) {
+  return mk(16, 16, A => { A.e(8, 10, 6.6, 4.8, C.leafD); A.e(6, 8.6, 3.6, 3, C.leaf); A.e(10.4, 8.2, 3.6, 3, C.leaf); A.e(5, 7.4, 1.4, 1, C.leafL); A.e(10, 6.8, 1.4, 1, C.leafL);
+    if (full) for (const [x, y] of [[4, 10], [8, 8], [11, 11], [7, 12], [12, 8]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } });
+}
+function treeSpr() {
+  return mk(48, 60, A => {
+    A.poly([[9, 59], [17, 47], [21, 59]], C.woodD); A.poly([[27, 59], [31, 47], [39, 59]], C.woodD); A.poly([[14, 59], [20, 52], [22, 59]], C.wood);
+    A.r(18, 28, 12, 31, C.wood); A.r(18, 28, 3, 31, C.woodL); A.r(27, 28, 3, 31, C.woodD);
+    A.e(24, 51, 3.4, 5.5, '#5e3519'); A.r(21, 51, 7, 6, '#5e3519'); A.e(24, 51, 2.4, 4.5, '#7a4b2a'); A.r(22, 51, 5, 5, '#7a4b2a'); A.p(26, 53, C.amber);
+    A.p(21, 38, C.woodD); A.p(22, 39, C.woodD); A.p(26, 33, C.woodD);
+    A.e(24, 22, 22, 13.5, '#2c7454'); A.e(12, 25, 10, 8, '#38896a'); A.e(36, 25, 10, 8, '#38896a');
+    A.e(24, 16, 16, 10, '#46a07a'); A.e(17, 10, 9, 6, '#5cb98c'); A.e(31, 11, 8, 5.5, '#5cb98c'); A.e(24, 7, 7, 4, '#6fca9a');
+    A.e(16, 7.5, 3.6, 1.7, '#9ee3bb'); A.e(30, 8.5, 2.6, 1.3, '#9ee3bb'); A.e(9, 21, 2.4, 1.2, '#6fca9a'); A.e(39, 21, 2.4, 1.2, '#6fca9a');
+    A.e(24, 33, 17, 2.6, '#22593f');
+    for (const [x, y] of [[8, 28], [13, 14], [35, 15], [40, 27], [22, 4], [28, 24]]) { A.p(x, y, '#ffe9a8'); }
+  });
+}
+const lanternSpr = on => mk(9, 11, A => { A.r(4, 0, 1, 3, C.woodD); A.r(2, 3, 5, 1, C.woodD); A.r(2, 4, 5, 5, on ? '#ffcf6b' : '#5a4a52'); A.r(3, 5, 3, 3, on ? '#fff3c4' : '#6e5c66'); A.r(2, 9, 5, 1, C.woodD); });
+
+// tiles
+const FPAL = { 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
+function floorTex(t, v) {
+  const R = rng(t * 977 + v * 131 + 7), pal = FPAL[t];
+  return mk(16, 16, A => {
+    A.r(0, 0, 16, 16, pal[0]);
+    if (t === 5) { for (let y = 0; y < 16; y += 4) { A.r(0, y, 16, 1, pal[1]); A.r(0, y + 3, 16, 1, pal[2]); const j = ((y / 4 + v) % 2) ? 5 : 11; A.r(j, y, 1, 3, pal[2]); } A.p(3, 1, '#c99a6a'); A.p(13, 9, '#c99a6a'); return; }
+    if (t === 7) { A.r(0, 7, 16, 1, pal[2]); A.r(7, 0, 1, 16, pal[2]); A.r(0, 15, 16, 1, pal[2]); A.r(15, 0, 1, 16, pal[2]); A.r(0, 0, 7, 1, pal[1]); A.r(8, 8, 7, 1, pal[1]); A.p(3, 4, '#9be37a'); A.p(4, 3, '#9be37a'); if (v % 2) A.p(11, 11, '#ffd36b'); return; }
+    if (t === 8) { for (const [x, y] of [[4, 4], [12, 4], [8, 12], [0, 12], [16, 12]]) A.e(x, y, 3.3, 3.3, pal[1]); A.p(3, 3, '#d9bfe8'); A.p(11, 3, '#d9bfe8'); A.p(7, 11, '#d9bfe8'); return; }
+    if (t === 9) { A.poly([[8, 0], [16, 8], [8, 16], [0, 8]], pal[1]); A.line(0, 8, 8, 0, pal[2]); A.line(8, 0, 16, 8, pal[2]); A.line(16, 8, 8, 16, pal[2]); A.line(8, 16, 0, 8, pal[2]); A.p(8, 5, '#ffffff'); if (v % 2) A.p(3, 3, '#e3d4ff'); return; }
+    if (t === 6) { A.r(0, 7, 16, 1, pal[2]); A.r(0, 15, 16, 1, pal[2]); A.r(7, 0, 1, 7, pal[2]); A.r(15, 0, 1, 7, pal[2]); A.r(3, 8, 1, 7, pal[2]); A.r(11, 8, 1, 7, pal[2]); A.r(0, 0, 7, 1, pal[1]); A.r(8, 0, 7, 1, pal[1]); A.r(0, 8, 3, 1, pal[1]); A.r(4, 8, 7, 1, pal[1]); A.r(12, 8, 4, 1, pal[1]); return; }
+    for (let k = 0; k < 24; k++) A.p(R() * 16 | 0, R() * 16 | 0, pal[1 + (R() * 2 | 0)]);
+    for (let k = 0; k < 3; k++) { const x = 1 + R() * 13 | 0, y = 2 + R() * 12 | 0; A.p(x, y, pal[1]); A.p(x + 1, y, pal[1]); A.p(x, y + 1, pal[2]); }
+    if (t === 1) { for (let k = 0; k < 3; k++) { const x = 1 + R() * 13 | 0, y = 3 + R() * 11 | 0; A.p(x, y, '#72bb72'); A.p(x + 1, y - 1, '#72bb72'); A.p(x - 1, y - 1, '#5ea366'); } if (v === 0) { A.p(5, 5, '#ffd36b'); A.p(11, 11, '#ff9ab0'); } if (v === 2) A.p(9, 4, '#fff1d6'); }
+    if (t === 2) { const x = 3 + R() * 9 | 0, y = 3 + R() * 9 | 0; A.p(x, y, '#8f7a72'); A.p(x + 1, y, '#a48f86'); }
+    if (t === 3) { for (let k = 0; k < 3; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#b98ad0'); }
+    if (t === 4) { for (let k = 0; k < 2; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#a99cf0'); A.r(0, 0, 16, 1, '#454e72'); A.r(0, 0, 1, 16, '#454e72'); }
+  }, null);
+}
+const WPAL = { 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
+const WFRONT_COL = { 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
+function wallTop(t, v) {
+  const R = rng(t * 733 + v * 97 + 3), pal = WPAL[t];
+  return mk(16, 16, A => {
+    A.r(0, 0, 16, 16, pal[0]);
+    if (t === 6) { for (const x of [0, 5, 10, 15]) { A.r(x, 0, 1, 16, pal[2]); if (x < 15) A.r(x + 1, 0, 1, 16, pal[1]); } A.p(3, 3, pal[2]); A.p(8, 12, pal[2]); A.p(13, 6, pal[2]); return; }
+    if (t === 7) { for (let y = 0; y < 16; y += 4) { A.r(0, y + 3, 16, 1, pal[2]); A.r(0, y, 16, 1, pal[1]); const o = (y / 4) % 2 ? 4 : 0; for (let x = o; x < 16; x += 8) A.r(x, y, 1, 3, pal[2]); } return; }
+    for (let k = 0; k < 5; k++) A.e(R() * 16, R() * 16, 1 + R() * 2, 1 + R() * 1.4, pal[2]);
+    for (let k = 0; k < 4; k++) A.e(R() * 16, R() * 16, 0.8 + R() * 1.5, 0.7 + R(), pal[1]);
+    for (let k = 0; k < 10; k++) A.p(R() * 16 | 0, R() * 16 | 0, pal[1 + (R() * 2 | 0)]);
+    if (t === 3) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 4 + R() * 9; A.poly([[x, y - 3], [x + 2, y], [x, y + 2], [x - 2, y]], C.cry); A.p(x | 0, (y - 1) | 0, C.cryL); }
+    if (t === 4) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.e(x, y, 1.7, 1.4, C.copper); A.p(x - 1, y - 1, C.copperL); A.p(x + 1, y, C.copperD); }
+    if (t === 5) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.e(x, y, 1.6, 1.3, C.iron); A.p(x - 1, y - 1, '#ffffff'); A.p(x + 1, y, C.ironD); }
+  }, null);
+}
+function wallFront(t) {
+  return mk(16, 5, A => { const c = WFRONT_COL[t]; A.r(0, 0, 16, 5, c); for (let x = 1; x < 16; x += 3) A.r(x, 1, 1, 3, 'rgba(255,255,255,0.07)'); A.r(0, 4, 16, 1, '#1d1424'); A.r(0, 0, 16, 1, 'rgba(255,255,255,0.06)');
+    if (t === 4) A.p(6, 2, C.copper); if (t === 5) A.p(9, 2, C.iron); if (t === 3) { A.p(4, 2, C.cry); A.p(11, 1, C.cry); } if (t === 7) { A.r(0, 2, 16, 1, '#5e5a74'); A.r(7, 0, 1, 2, '#5e5a74'); } }, null);
+}
+function crackSpr(n) { return mk(16, 16, A => { const c = 'rgba(30,18,34,0.75)'; A.line(8, 8, 4, 4, c); A.line(8, 8, 12, 6, c); if (n > 0) { A.line(8, 8, 6, 13, c); A.line(4, 4, 2, 6, c); } if (n > 1) { A.line(8, 8, 13, 12, c); A.line(12, 6, 14, 2, c); A.line(6, 13, 3, 14, c); } }, null); }
+
+const SPR = {};
+function buildSprites() {
+  SPR.player = {}; for (const d of ['down', 'up', 'side']) SPR.player[d] = [playerFrame(d, 0), playerFrame(d, 1)];
+  SPR.playerW = {}; for (const d of ['down', 'up', 'side']) SPR.playerW[d] = SPR.player[d].map(whiten);
+  SPR.slimeG = slimeSpr('#86d96b', '#d2f7b8', '#4f9e45'); SPR.slimeO = slimeSpr('#f2a65a', '#ffe0b8', '#c06e2c'); SPR.slimeP = slimeSpr('#b58cf0', '#ecdfff', '#7a55c4');
+  SPR.shroomy = shroomySpr(); SPR.boss = bossSpr(); SPR.queen = queenSpr(); SPR.golem = golemSpr();
+  SPR.shot = { spore: shotSpr('#d59bff', '#f6e6ff'), shard: shotSpr(C.cry, '#ffffff', true) }; SPR.water = [waterTex(0), waterTex(1)];
+  for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem']) SPR[k + 'W'] = whiten(SPR[k]);
+  SPR.item = {}; for (const k in ICON) SPR.item[k] = mk(16, 16, ICON[k]);
+  SPR.ui = {}; for (const k in UICON) SPR.ui[k] = mk(16, 16, UICON[k]);
+  SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
+  SPR.bush = [bushSpr(false), bushSpr(true)];
+  SPR.crop = { berry: [0, 1, 2, 3].map(s => cropSpr('berry', s)), shroom: [0, 1, 2, 3].map(s => cropSpr('shroom', s)) };
+  SPR.tree = treeSpr(); SPR.lantern = [lanternSpr(false), lanternSpr(true)];
+  SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
+  SPR.wtop = {}; SPR.wfront = {}; for (const t in WPAL) { SPR.wtop[t] = [0, 1, 2, 3].map(v => wallTop(+t, v)); SPR.wfront[t] = wallFront(+t); }
+  SPR.crack = [0, 1, 2].map(crackSpr);
+  SPR.glow = {};
+}
+function glowSprite(col) {
+  if (SPR.glow[col]) return SPR.glow[col];
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const [r, gg, b] = hexRgb(col).map(v => Math.round(v * 255));
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, `rgba(${r},${gg},${b},0.55)`); gr.addColorStop(0.4, `rgba(${r},${gg},${b},0.16)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return SPR.glow[col] = c;
+}
+
+// ================= data =================
+const W = 200, H = 200, CX = 100, CY = 100;
+const BX = CX + 44, BY = CY + 2, SA = { x: CX - 46, y: CY + 18 }, SB = { x: CX + 6, y: CY - 76 };
+const idx = (x, y) => y * W + x;
+const WALLS = {
+  1: { n: '흙벽', tier: 0, hp: 3, drop: [['dirt', 1, 1, 1]] },
+  2: { n: '돌벽', tier: 1, hp: 5, drop: [['stone', 1, 1, 1]] },
+  3: { n: '수정벽', tier: 2, hp: 7, drop: [['crystal', 1, 2, 1]] },
+  4: { n: '구리 광맥', tier: 0, hp: 4, drop: [['copperOre', 1, 2, 1], ['dirt', 1, 1, 0.4]] },
+  5: { n: '철 광맥', tier: 1, hp: 6, drop: [['ironOre', 1, 2, 1], ['stone', 1, 1, 0.4]] },
+  6: { n: '나무 벽', tier: 0, hp: 3, drop: [['wallWood', 1, 1, 1]] },
+  7: { n: '돌벽돌 벽', tier: 0, hp: 5, drop: [['wallBrick', 1, 1, 1]] },
+  8: { n: '단단한 암반', tier: 9, hp: 1e9, drop: [] },
+};
+const TIERNAME = ['나무 곡괭이', '구리 곡괭이', '철 곡괭이'];
+const BIOME = ['이끼 동굴', '버섯숲', '수정 동굴'];
+const FURN_D = '집을 꾸미는 예쁜 가구예요.';
+const ITEMS = {
+  wood: { n: '나무', d: '뿌리기둥이나 큰버섯을 베면 얻어요.' },
+  dirt: { n: '흙', kind: 'wall', wall: 1, d: '흙벽을 캐면 나와요. 들고 있으면 흙벽을 쌓을 수 있어요.' },
+  stone: { n: '돌', d: '돌벽을 캐면 나와요. 구리 곡괭이가 필요해요.' },
+  fiber: { n: '이끼 섬유', d: '이끼풀을 베면 얻는 부드러운 실.' },
+  gel: { n: '말랑 젤', d: '말랑이들이 남기는 말랑말랑한 젤.' },
+  copperOre: { n: '구리광석', d: '화로에서 녹이면 구리괴가 돼요.' },
+  ironOre: { n: '철광석', d: '화로에서 녹이면 철괴가 돼요.' },
+  crystal: { n: '수정 조각', d: '수정벽과 수정 결정에서 나와요.' },
+  copperBar: { n: '구리괴', d: '구리 도구와 요리솥을 만들어요.' },
+  ironBar: { n: '철괴', d: '튼튼한 철 도구를 만들어요.' },
+  glowcap: { n: '빛버섯', d: '은은하게 빛나는 작은 버섯.' },
+  mushroom: { n: '버섯', kind: 'food', food: 8, heal: 0, d: '날로도 먹지만 구우면 훨씬 맛있어요.' },
+  berry: { n: '통통베리', kind: 'food', food: 14, heal: 5, d: '새콤달콤한 땅속 베리.' },
+  berrySeed: { n: '베리 씨앗', kind: 'seed', crop: 'cropBerry', d: '이끼나 흙 바닥에 심어요.' },
+  spore: { n: '버섯 포자', kind: 'seed', crop: 'cropShroom', d: '흙이나 버섯흙 바닥에 심어요.' },
+  grilled: { n: '구운 버섯', kind: 'food', food: 30, heal: 12, d: '고소한 냄새가 솔솔.' },
+  pie: { n: '베리 파이', kind: 'food', food: 55, heal: 30, d: '배가 든든해지는 달콤한 파이.' },
+  stew: { n: '버섯 스튜', kind: 'food', food: 45, heal: 50, d: '몸이 따뜻해지는 스튜. 체력을 많이 회복해요.' },
+  lightSeed: { n: '빛씨앗', kind: 'key', d: '등불나무에 심으면 빛이 돌아와요.' },
+  pickWood: { n: '나무 곡괭이', kind: 'pick', power: 1, tier: 0, stack: 1, d: '흙벽과 구리 광맥을 캘 수 있어요.' },
+  pickCopper: { n: '구리 곡괭이', kind: 'pick', power: 2, tier: 1, stack: 1, d: '돌벽과 철 광맥도 캘 수 있어요.' },
+  pickIron: { n: '철 곡괭이', kind: 'pick', power: 3, tier: 2, stack: 1, d: '단단한 수정벽까지 캘 수 있어요.' },
+  swordWood: { n: '나무 검', kind: 'sword', dmg: 6, stack: 1, d: '가방에 있는 가장 좋은 검을 자동으로 써요.' },
+  swordCopper: { n: '구리 검', kind: 'sword', dmg: 11, stack: 1, d: '가볍고 튼튼한 검.' },
+  swordIron: { n: '철 검', kind: 'sword', dmg: 17, stack: 1, d: '묵직한 한 방.' },
+  swordCrystal: { n: '수정 검', kind: 'sword', dmg: 26, stack: 1, d: '보랏빛으로 반짝이는 검.' },
+  bench: { n: '작업대', kind: 'place', obj: 'bench', d: '도구와 가구를 만드는 곳.' },
+  furnace: { n: '화로', kind: 'place', obj: 'furnace', d: '광석을 녹이고 버섯을 구워요.' },
+  pot: { n: '요리솥', kind: 'place', obj: 'pot', d: '든든한 요리를 만들어요.' },
+  chest: { n: '보관상자', kind: 'place', obj: 'chest', d: '물건을 18칸 보관해요.' },
+  torch: { n: '횃불', kind: 'place', obj: 'torch', d: '주변을 밝혀요. 밝은 곳엔 몬스터가 생기지 않아요.' },
+  chair: { n: '나무 의자', kind: 'place', obj: 'chair' },
+  table: { n: '둥근 탁자', kind: 'place', obj: 'table' },
+  bed: { n: '포근한 침대', kind: 'place', obj: 'bed', d: '기절하면 침대에서 깨어나요.' },
+  plant: { n: '화분', kind: 'place', obj: 'plant' },
+  rug: { n: '꽃무늬 러그', kind: 'place', obj: 'rug', d: '위로 걸어 다닐 수 있는 러그.' },
+  lampShroom: { n: '버섯 램프', kind: 'place', obj: 'lampShroom', d: '분홍빛으로 은은하게 밝혀요.' },
+  lampCrystal: { n: '수정 램프', kind: 'place', obj: 'lampCrystal', d: '넓게 밝히는 보랏빛 램프.' },
+  shelf: { n: '책장', kind: 'place', obj: 'shelf' },
+  cushion: { n: '고양이 쿠션', kind: 'place', obj: 'cushion', d: '말랑한 고양이 모양 쿠션.' },
+  vase: { n: '꽃병', kind: 'place', obj: 'vase' },
+  wallWood: { n: '나무 벽', kind: 'wall', wall: 6, d: '집 벽을 쌓아요.' },
+  wallBrick: { n: '돌벽돌 벽', kind: 'wall', wall: 7, d: '단정한 돌벽돌 벽.' },
+  floorWood: { n: '나무 바닥', kind: 'floor', floor: 5, d: '따뜻한 나무 바닥을 깔아요.' },
+  floorStone: { n: '돌 바닥', kind: 'floor', floor: 6, d: '깔끔한 돌 바닥을 깔아요.' },
+};
+const OBJ = {
+  bench: { n: '작업대', solid: 1, station: 'bench', item: 'bench' },
+  furnace: { n: '화로', solid: 1, station: 'furnace', item: 'furnace', light: [3.4, '#ff9a4d'] },
+  pot: { n: '요리솥', solid: 1, station: 'pot', item: 'pot' },
+  chest: { n: '보관상자', solid: 1, chest: 1, item: 'chest' },
+  torch: { n: '횃불', item: 'torch', light: [6.5, '#ffb860'], flick: 1 },
+  chair: { n: '나무 의자', solid: 1, item: 'chair' },
+  table: { n: '둥근 탁자', solid: 1, item: 'table' },
+  bed: { n: '포근한 침대', solid: 1, item: 'bed' },
+  plant: { n: '화분', solid: 1, item: 'plant' },
+  rug: { n: '꽃무늬 러그', flat: 1, item: 'rug' },
+  lampShroom: { n: '버섯 램프', solid: 1, item: 'lampShroom', light: [5.5, '#ff9fd8'] },
+  lampCrystal: { n: '수정 램프', solid: 1, item: 'lampCrystal', light: [7.5, '#c6b0ff'] },
+  shelf: { n: '책장', solid: 1, item: 'shelf' },
+  cushion: { n: '고양이 쿠션', item: 'cushion' },
+  vase: { n: '꽃병', solid: 1, item: 'vase' },
+  root: { n: '뿌리기둥', solid: 1, hp: 3, nat: 'chop', drops: [['wood', 2, 3, 1], ['fiber', 1, 1, 0.4]] },
+  bigShroom: { n: '큰버섯', solid: 1, hp: 3, nat: 'chop', drops: [['wood', 1, 2, 1], ['mushroom', 1, 2, 1], ['spore', 1, 1, 0.4]] },
+  bush: { n: '베리덤불', solid: 1, bush: 1 },
+  grass: { n: '이끼풀', hp: 1, nat: 'chop', drops: [['fiber', 1, 2, 1], ['berrySeed', 1, 1, 0.08]] },
+  glow: { n: '빛버섯', hp: 1, nat: 'pick', light: [3, '#6ff2e6'], drops: [['glowcap', 1, 1, 1], ['spore', 1, 1, 0.2]] },
+  cluster: { n: '수정 결정', solid: 1, hp: 4, tier: 1, nat: 'mine', light: [3.5, '#b99bff'], drops: [['crystal', 2, 3, 1]] },
+  cropBerry: { n: '베리', crop: 'berry', grow: 110, yield: [['berry', 2, 3, 1], ['berrySeed', 1, 2, 1]] },
+  cropShroom: { n: '버섯', crop: 'shroom', grow: 130, yield: [['mushroom', 2, 3, 1], ['spore', 1, 1, 0.8], ['glowcap', 1, 1, 0.3]] },
+  shrine: { n: '고대 제단', solid: 1, shrine: 1 },
+  treeP: { n: '등불나무', solid: 1, tree: 1 },
+};
+Object.assign(ITEMS, {
+  shroomCap: { n: '버섯 갓', d: '큰버섯과 버섯 여왕에게서 얻는 탱글한 갓. 버섯 세트 재료예요.' },
+  rod: { n: '낚싯대', kind: 'rod', stack: 1, d: '물을 바라보며 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 한 번 더 눌러요!' },
+  minnow: { n: '이끼 송사리', kind: 'food', fish: 1, food: 6, heal: 3, d: '이끼 동굴 물가의 작은 물고기.' },
+  crucian: { n: '통통 붕어', kind: 'food', fish: 1, food: 10, heal: 4, d: '통통하게 살이 오른 붕어.' },
+  catfish: { n: '버섯 메기', kind: 'food', fish: 1, food: 12, heal: 5, d: '버섯숲 물웅덩이에 사는 수염 메기.' },
+  sporeEel: { n: '포자 장어', kind: 'food', fish: 1, food: 12, heal: 8, d: '보랏빛 점무늬가 있는 장어.' },
+  smelt: { n: '수정 빙어', kind: 'food', fish: 1, food: 10, heal: 10, d: '몸이 투명하게 반짝여요.' },
+  shrimp: { n: '반짝 새우', kind: 'food', fish: 1, food: 14, heal: 8, d: '수정동굴 물속의 분홍 새우.' },
+  koi: { n: '별빛 잉어', kind: 'food', fish: 1, food: 20, heal: 20, d: '아주 드물게 낚이는 행운의 잉어!' },
+  boot: { n: '낡은 장화', d: '누가 버린 장화… 화분으로 쓸 수 있을지도?' },
+  anyFish: { n: '물고기', virtual: 1 },
+  grilledFish: { n: '구운 생선', kind: 'food', food: 32, heal: 18, d: '노릇노릇 잘 구워졌어요.' },
+  fishStew: { n: '생선 스튜', kind: 'food', food: 55, heal: 50, d: '든든하고 따뜻한 스튜.' },
+  fishTank: { n: '어항', kind: 'place', obj: 'fishTank', d: '물고기가 헤엄치는 작은 어항.' },
+  bootPlanter: { n: '장화 화분', kind: 'place', obj: 'bootPlanter', d: '낡은 장화에 꽃을 심었어요.' },
+  stumpStool: { n: '그루터기 의자', kind: 'place', obj: 'stumpStool', set: 'moss' },
+  mossSofa: { n: '이끼 소파', kind: 'place', obj: 'mossSofa', set: 'moss' },
+  sproutLamp: { n: '새싹 등불', kind: 'place', obj: 'sproutLamp', set: 'moss', d: '연둣빛으로 은은하게 밝혀요.' },
+  leafRug: { n: '나뭇잎 러그', kind: 'place', obj: 'leafRug', set: 'moss', d: '위로 걸어 다닐 수 있는 러그.' },
+  mossBed: { n: '이끼 침대', kind: 'place', obj: 'mossBed', set: 'moss', d: '기절하면 이 침대에서 깨어나요.' },
+  floorMoss: { n: '이끼 타일 바닥', kind: 'floor', floor: 7, set: 'moss', d: '폭신한 이끼 타일을 깔아요.' },
+  shroomStool: { n: '버섯 의자', kind: 'place', obj: 'shroomStool', set: 'shroom' },
+  shroomTable: { n: '버섯 탁자', kind: 'place', obj: 'shroomTable', set: 'shroom' },
+  sporeLamp: { n: '포자 등불', kind: 'place', obj: 'sporeLamp', set: 'shroom', d: '보랏빛 포자가 반짝여요.' },
+  shroomWardrobe: { n: '버섯집 옷장', kind: 'place', obj: 'shroomWardrobe', set: 'shroom' },
+  dotRug: { n: '점박이 러그', kind: 'place', obj: 'dotRug', set: 'shroom', d: '위로 걸어 다닐 수 있는 러그.' },
+  floorShroom: { n: '버섯 조약돌 바닥', kind: 'floor', floor: 8, set: 'shroom', d: '동글동글한 조약돌 바닥을 깔아요.' },
+  cryChair: { n: '수정 의자', kind: 'place', obj: 'cryChair', set: 'crystal' },
+  cryTable: { n: '수정 탁자', kind: 'place', obj: 'cryTable', set: 'crystal' },
+  cryFountain: { n: '수정 분수', kind: 'place', obj: 'cryFountain', set: 'crystal', d: '맑은 물빛으로 주변을 밝혀요.' },
+  cryMirror: { n: '수정 거울', kind: 'place', obj: 'cryMirror', set: 'crystal' },
+  starRug: { n: '별빛 러그', kind: 'place', obj: 'starRug', set: 'crystal', d: '위로 걸어 다닐 수 있는 러그.' },
+  floorCrystal: { n: '수정 타일 바닥', kind: 'floor', floor: 9, set: 'crystal', d: '반짝이는 수정 타일을 깔아요.' },
+});
+Object.assign(OBJ, {
+  fishTank: { n: '어항', solid: 1, item: 'fishTank', light: [2.2, '#9fd8f0'] }, bootPlanter: { n: '장화 화분', solid: 1, item: 'bootPlanter' },
+  stumpStool: { n: '그루터기 의자', solid: 1, item: 'stumpStool' }, mossSofa: { n: '이끼 소파', solid: 1, item: 'mossSofa' }, sproutLamp: { n: '새싹 등불', solid: 1, item: 'sproutLamp', light: [5, '#c8f58a'] },
+  leafRug: { n: '나뭇잎 러그', flat: 1, item: 'leafRug' }, mossBed: { n: '이끼 침대', solid: 1, item: 'mossBed', bed: 1 },
+  shroomStool: { n: '버섯 의자', solid: 1, item: 'shroomStool' }, shroomTable: { n: '버섯 탁자', solid: 1, item: 'shroomTable' }, sporeLamp: { n: '포자 등불', solid: 1, item: 'sporeLamp', light: [5.5, '#d59bff'] },
+  shroomWardrobe: { n: '버섯집 옷장', solid: 1, item: 'shroomWardrobe' }, dotRug: { n: '점박이 러그', flat: 1, item: 'dotRug' },
+  cryChair: { n: '수정 의자', solid: 1, item: 'cryChair' }, cryTable: { n: '수정 탁자', solid: 1, item: 'cryTable' }, cryFountain: { n: '수정 분수', solid: 1, item: 'cryFountain', light: [5, '#9fe0ff'] },
+  cryMirror: { n: '수정 거울', solid: 1, item: 'cryMirror' }, starRug: { n: '별빛 러그', flat: 1, item: 'starRug' },
+});
+OBJ.bed.bed = 1;
+OBJ.bigShroom.drops.push(['shroomCap', 1, 2, 1]);
+const SETN = { moss: '이끼 세트', shroom: '버섯 세트', crystal: '수정 세트' };
+const STN = { bench: '작업대', furnace: '화로', pot: '요리솥' };
+const Rc = (out, n, req, at, cat) => ({ out, n, req, at, cat });
+const RECIPES = [
+  Rc('bench', 1, [['wood', 6]], null, 'furn'),
+  Rc('torch', 2, [['wood', 1]], null, 'build'),
+  Rc('chest', 1, [['wood', 8]], 'bench', 'furn'),
+  Rc('furnace', 1, [['dirt', 10], ['wood', 4]], 'bench', 'furn'),
+  Rc('pot', 1, [['copperBar', 3], ['wood', 2]], 'bench', 'furn'),
+  Rc('pickCopper', 1, [['copperBar', 4], ['wood', 2]], 'bench', 'tool'),
+  Rc('swordCopper', 1, [['copperBar', 5], ['wood', 1]], 'bench', 'tool'),
+  Rc('pickIron', 1, [['ironBar', 4], ['wood', 2]], 'bench', 'tool'),
+  Rc('swordIron', 1, [['ironBar', 5], ['wood', 1]], 'bench', 'tool'),
+  Rc('swordCrystal', 1, [['crystal', 8], ['ironBar', 3]], 'bench', 'tool'),
+  Rc('chair', 1, [['wood', 4]], 'bench', 'furn'),
+  Rc('table', 1, [['wood', 6], ['fiber', 2]], 'bench', 'furn'),
+  Rc('bed', 1, [['wood', 8], ['fiber', 6]], 'bench', 'furn'),
+  Rc('plant', 1, [['dirt', 3], ['fiber', 2]], 'bench', 'furn'),
+  Rc('rug', 1, [['fiber', 6]], 'bench', 'furn'),
+  Rc('lampShroom', 1, [['glowcap', 2], ['wood', 2]], 'bench', 'furn'),
+  Rc('lampCrystal', 1, [['crystal', 3], ['ironBar', 1]], 'bench', 'furn'),
+  Rc('shelf', 1, [['wood', 10]], 'bench', 'furn'),
+  Rc('cushion', 1, [['fiber', 5], ['gel', 2]], 'bench', 'furn'),
+  Rc('vase', 1, [['stone', 3], ['fiber', 1]], 'bench', 'furn'),
+  Rc('wallWood', 2, [['wood', 2]], 'bench', 'build'),
+  Rc('wallBrick', 2, [['stone', 3]], 'bench', 'build'),
+  Rc('floorWood', 4, [['wood', 2]], 'bench', 'build'),
+  Rc('floorStone', 4, [['stone', 2]], 'bench', 'build'),
+  Rc('copperBar', 1, [['copperOre', 2]], 'furnace', 'mat'),
+  Rc('ironBar', 1, [['ironOre', 2]], 'furnace', 'mat'),
+  Rc('grilled', 1, [['mushroom', 1]], 'furnace', 'food'),
+  Rc('pie', 1, [['berry', 3], ['mushroom', 1]], 'pot', 'food'),
+  Rc('stew', 1, [['mushroom', 3], ['glowcap', 1]], 'pot', 'food'),
+];
+RECIPES.push(
+  Rc('rod', 1, [['wood', 3], ['fiber', 2]], null, 'tool'),
+  Rc('fishTank', 1, [['stone', 3], ['anyFish', 1]], 'bench', 'furn'),
+  Rc('bootPlanter', 1, [['boot', 1], ['dirt', 2]], 'bench', 'furn'),
+  Rc('grilledFish', 1, [['anyFish', 1]], 'furnace', 'food'),
+  Rc('fishStew', 1, [['anyFish', 2], ['mushroom', 1]], 'pot', 'food'),
+  Rc('stumpStool', 1, [['wood', 3], ['fiber', 1]], 'bench', 'moss'),
+  Rc('mossSofa', 1, [['wood', 6], ['fiber', 6]], 'bench', 'moss'),
+  Rc('sproutLamp', 1, [['wood', 2], ['fiber', 2], ['glowcap', 1]], 'bench', 'moss'),
+  Rc('leafRug', 1, [['fiber', 8]], 'bench', 'moss'),
+  Rc('mossBed', 1, [['wood', 8], ['fiber', 8]], 'bench', 'moss'),
+  Rc('floorMoss', 4, [['fiber', 2], ['dirt', 2]], 'bench', 'moss'),
+  Rc('shroomStool', 1, [['shroomCap', 2], ['wood', 1]], 'bench', 'shroom'),
+  Rc('shroomTable', 1, [['shroomCap', 4], ['wood', 2]], 'bench', 'shroom'),
+  Rc('sporeLamp', 1, [['shroomCap', 2], ['glowcap', 2]], 'bench', 'shroom'),
+  Rc('shroomWardrobe', 1, [['shroomCap', 6], ['wood', 6]], 'bench', 'shroom'),
+  Rc('dotRug', 1, [['fiber', 6], ['shroomCap', 1]], 'bench', 'shroom'),
+  Rc('floorShroom', 4, [['shroomCap', 1], ['dirt', 2]], 'bench', 'shroom'),
+  Rc('cryChair', 1, [['crystal', 3], ['ironBar', 1]], 'bench', 'crystal'),
+  Rc('cryTable', 1, [['crystal', 4], ['ironBar', 2]], 'bench', 'crystal'),
+  Rc('cryFountain', 1, [['crystal', 6], ['stone', 6]], 'bench', 'crystal'),
+  Rc('cryMirror', 1, [['crystal', 4], ['ironBar', 2]], 'bench', 'crystal'),
+  Rc('starRug', 1, [['fiber', 6], ['crystal', 1]], 'bench', 'crystal'),
+  Rc('floorCrystal', 4, [['crystal', 1], ['stone', 2]], 'bench', 'crystal'),
+);
+const CATCH = { 0: [['minnow', 50], ['crucian', 34], ['boot', 10], ['koi', 6]], 1: [['catfish', 44], ['sporeEel', 30], ['minnow', 12], ['boot', 8], ['koi', 6]], 2: [['smelt', 46], ['shrimp', 30], ['crystal', 8], ['boot', 6], ['koi', 10]] };
+const WATER = 10;
+const ENEMY = {
+  slimeG: { n: '초록 말랑이', hp: 14, dmg: 6, spd: 2.6, r: 0.32, hop: 1, drops: [['gel', 1, 1, 0.7]], col: '#86d96b' },
+  slimeO: { n: '주황 말랑이', hp: 30, dmg: 10, spd: 2.8, r: 0.34, hop: 1, drops: [['gel', 1, 2, 0.8]], col: '#f2a65a' },
+  slimeP: { n: '보라 말랑이', hp: 55, dmg: 15, spd: 3.0, r: 0.36, hop: 1, drops: [['gel', 1, 2, 0.8], ['crystal', 1, 1, 0.4]], col: '#b58cf0' },
+  shroomy: { n: '버섯도깨비', hp: 24, dmg: 9, spd: 2.1, r: 0.3, hop: 0, drops: [['mushroom', 1, 2, 0.8], ['spore', 1, 1, 0.35]], col: '#a65fd1' },
+};
+
+// ================= world gen =================
+function wallFor(b, x, y, s) {
+  if (b === 0) return vn(x * .22, y * .22, s + 21) > 0.72 ? 4 : 1;
+  if (b === 1) { if (vn(x * .07, y * .07, s + 31) > 0.47) return vn(x * .22, y * .22, s + 41) > 0.73 ? 5 : 2; return vn(x * .22, y * .22, s + 21) > 0.74 ? 4 : 1; }
+  if (vn(x * .08, y * .08, s + 51) > 0.4) return 3; return vn(x * .22, y * .22, s + 41) > 0.7 ? 5 : 2;
+}
+function genWorld(seed) {
+  const wall = new Uint8Array(W * H), floor = new Uint8Array(W * H), biome = new Uint8Array(W * H), objs = new Map();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = idx(x, y), dx = x - CX, dy = y - CY, d = Math.hypot(dx, dy);
+    const dd = d + (vn(x * 0.05, y * 0.05, seed + 7) - 0.5) * 18, ca = d > 0 ? dx / d : 1;
+    const b = dd < 30 ? 0 : dd > 66 ? 2 : (ca + (vn(x * .04, y * .04, seed + 9) - 0.5) * 0.6 > 0.3 ? 0 : 1);
+    biome[i] = b;
+    floor[i] = b === 0 ? (vn(x * .16, y * .16, seed + 3) > 0.66 ? 2 : 1) : b === 1 ? 3 : 4;
+    const open = fbm(x * 0.085, y * 0.085, seed) > 0.585 || Math.abs(vn(x * 0.035, y * 0.035, seed + 11) - 0.5) < 0.028;
+    if (d > 95 || x < 2 || y < 2 || x > W - 3 || y > H - 3) wall[i] = 8;
+    else if (!open) wall[i] = wallFor(b, x, y, seed);
+  }
+  const circ = (cx, cy, r, fn) => { for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) continue; const d = Math.hypot(x - cx, y - cy); if (d <= r) fn(x, y, idx(x, y), d); } };
+  const carve = (x, y) => { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) return; const i = idx(x, y); if (wall[i] !== 8) wall[i] = 0; };
+  const walk = (sx, sy, tx, ty, s) => { const R = rng(s); let x = sx, y = sy, n = 0; while ((Math.abs(x - tx) + Math.abs(y - ty)) > 1 && n++ < 5000) { if (R() < 0.6) { if (Math.abs(tx - x) > Math.abs(ty - y)) x += Math.sign(tx - x); else y += Math.sign(ty - y); } else { const k = R() * 4 | 0; x += [1, -1, 0, 0][k]; y += [0, 0, 1, -1][k]; } carve(x, y); carve(x + 1, y); carve(x, y + 1); carve(x + 1, y + 1); } };
+  walk(CX + 8, CY, BX - 9, BY, seed + 5);
+  walk(CX - 8, CY + 2, SA.x + 5, SA.y, seed + 6);
+  circ(CX + .5, CY + .5, 8.5, (x, y, i) => { wall[i] = 0; floor[i] = 1; biome[i] = 0; });
+  circ(BX + .5, BY + .5, 9.6, (x, y, i, d) => { biome[i] = 0; if (d < 7.6 || (x < BX && Math.abs(y - BY) <= 1)) { wall[i] = 0; floor[i] = d < 3 ? 6 : 2; } else wall[i] = (x * 7 + y * 3) % 5 === 0 ? 4 : 1; });
+  circ(SA.x + .5, SA.y + .5, 8.2, (x, y, i, d) => { wall[i] = 0; biome[i] = 1; floor[i] = d < 4.6 ? 6 : 3; });
+  circ(SB.x + .5, SB.y + .5, 8.2, (x, y, i, d) => { wall[i] = 0; biome[i] = 2; floor[i] = d < 4.6 ? 6 : 4; });
+  // natural objects
+  const nearSafe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5;
+  addWater({ wall, floor, objs }, seed, nearSafe, null);
+  for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
+    const i = idx(x, y); if (wall[i] || floor[i] === WATER || nearSafe(x, y)) continue;
+    const r = hash2(x, y, seed + 99), b = biome[i]; let t = null;
+    if (b === 0) t = r < 0.024 ? 'root' : r < 0.036 ? 'bush' : r < 0.1 ? 'grass' : r < 0.11 ? 'glow' : null;
+    else if (b === 1) t = r < 0.03 ? 'bigShroom' : r < 0.052 ? 'glow' : r < 0.07 ? 'grass' : r < 0.076 ? 'bush' : null;
+    else t = r < 0.024 ? 'cluster' : r < 0.036 ? 'glow' : null;
+    if (t) objs.set(i, t === 'bush' ? { t, r: 0 } : { t });
+  }
+  for (let y = CY - 1; y <= CY; y++) for (let x = CX - 1; x <= CX + 1; x++) objs.set(idx(x, y), { t: 'treeP' });
+  for (let y = CY + 2; y <= CY + 4; y++) for (let x = CX - 4; x <= CX + 4; x++) floor[idx(x, y)] = 5;
+  const put = (dx, dy, o) => objs.set(idx(CX + dx, CY + dy), o);
+  [[7, -1], [-7, 1], [5, -5], [-5, -6], [1, -7], [-6, 5], [7, 4], [-3, 7]].forEach(([a, b]) => put(a, b, { t: 'root' }));
+  [[-3, -6], [6, -3]].forEach(([a, b]) => put(a, b, { t: 'bush', r: 0 }));
+  [[-2, -7], [4, 6]].forEach(([a, b]) => put(a, b, { t: 'glow' }));
+  [[-7, -2], [6, 1], [-5, 3], [3, -6], [-1, 6], [5, 6]].forEach(([a, b]) => put(a, b, { t: 'grass' }));
+  put(-4, 2, { t: 'plant' }); put(-3, 3, { t: 'chair' }); put(-2, 3, { t: 'table' }); put(0, 3, { t: 'rug' }); put(4, 2, { t: 'lampShroom' }); put(-4, 4, { t: 'torch' });
+  const starter = [['bed', 1], ['chair', 1], ['table', 1], ['plant', 1], ['rug', 2], ['cushion', 1], ['vase', 1], ['shelf', 1], ['lampShroom', 1], ['torch', 4], ['wallWood', 10], ['floorWood', 12]];
+  put(2, 3, { t: 'chest', items: starter.map(([id, c]) => ({ id, c })).concat(Array(18 - starter.length).fill(null)) });
+  objs.set(idx(SA.x, SA.y), { t: 'shrine', has: 1 }); objs.set(idx(SB.x, SB.y), { t: 'shrine', has: 1 });
+  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; objs.set(idx(Math.round(SA.x + Math.cos(a) * 3.4), Math.round(SA.y + Math.sin(a) * 3.4)), { t: 'glow' }); objs.set(idx(Math.round(SB.x + Math.cos(a) * 3.4), Math.round(SB.y + Math.sin(a) * 3.4)), { t: 'cluster' }); }
+  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + .6; objs.set(idx(Math.round(BX + Math.cos(a) * 6.3), Math.round(BY + Math.sin(a) * 6.3)), { t: 'glow' }); }
+  addPond({ wall, floor, objs }, null);
+  return { wall, floor, biome, objs };
+}
+function addWater(w, seed, nearSafe, ok) {
+  for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) {
+    const i = idx(x, y); if (w.wall[i] || nearSafe(x, y) || vn(x * .09, y * .09, seed + 77) < 0.715) continue;
+    let open = true; for (let dy = -1; dy <= 1 && open; dy++) for (let dx = -1; dx <= 1; dx++) if (w.wall[i + dy * W + dx]) { open = false; break; }
+    if (!open || (ok && !ok(i))) continue; w.floor[i] = WATER; w.objs.delete(i);
+  }
+}
+function addPond(w, ok) {
+  for (let y = CY - 6; y <= CY - 2; y++) for (let x = CX + 2; x <= CX + 8; x++) {
+    const dx = (x + .5 - (CX + 5)) / 2.4, dy = (y + .5 - (CY - 4.2)) / 1.5; if (dx * dx + dy * dy > 1) continue;
+    const i = idx(x, y); if (ok && !ok(i)) continue; if (w.wall[i] !== 8) w.wall[i] = 0; w.floor[i] = WATER; w.objs.delete(i);
+  }
+}
+function migrateV2() {
+  const natural = o => !o || !!OBJ[o.t].nat || o.t === 'bush';
+  for (const [S, fl, b] of [[SA, 3, 1], [SB, 4, 2]]) for (let y = S.y - 9; y <= S.y + 9; y++) for (let x = S.x - 9; x <= S.x + 9; x++) {
+    if (!inB(x, y)) continue; const d = Math.hypot(x + .5 - (S.x + .5), y + .5 - (S.y + .5)); if (d > 8.2) continue; const i = idx(x, y);
+    if (G.wall[i] && G.wall[i] !== 8 && G.wall[i] !== 6 && G.wall[i] !== 7) { G.wall[i] = 0; G.floor[i] = d < 4.6 ? 6 : fl; G.biome[i] = b; }
+    const o = G.objs.get(i); if (o && d > 4.2 && OBJ[o.t].solid && natural(o)) G.objs.delete(i);
+  }
+  const safe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5;
+  addWater(G, G.seed, safe, i => !G.explored[i] && !G.objs.get(i) && [1, 2, 3, 4].includes(G.floor[i]));
+  addPond(G, i => [1, 2].includes(G.floor[i]) && natural(G.objs.get(i)) && !(G.objs.get(i) && G.objs.get(i).t === 'treeP'));
+}
+
+// ================= state =================
+const SAVE_KEY = 'lantern-tree-save-v1';
+let G = null;
+let TP = 48, Z = 3, DPR = 1;
+const cam = { x: CX + .5, y: CY + 2 };
+let shake = 0, paused = true, started = false, soundOn = true;
+const freshStats = () => ({ wood: 0, bench: 0, torch: 0, copperOre: 0, copperBar: 0, seedsFound: 0 });
+const BOSSES = {
+  slime: { n: '말랑대왕', hp: 450, home: () => ({ x: BX + .5, y: BY + .5 }), wake: 8.5, hr: .95, col: '#86d96b', spr: 'boss', scale: 1.25 },
+  queen: { n: '버섯 여왕', hp: 700, home: () => ({ x: SA.x + .5, y: SA.y - 3 }), wake: 8, hr: 1.0, col: '#b673de', spr: 'queen', scale: 1.15 },
+  golem: { n: '수정골렘', hp: 950, home: () => ({ x: SB.x + .5, y: SB.y + 4.2 }), wake: 8, hr: 1.1, col: '#b493f5', spr: 'golem', scale: 1.2 },
+};
+const BKEYS = ['slime', 'queen', 'golem'];
+const freshBoss = k => { const h = BOSSES[k].home(); return { k, x: h.x, y: h.y, hp: BOSSES[k].hp, max: BOSSES[k].hp, st: 'sleep', t: 0, z: 0, air: 0, airMax: 1, vx: 0, vy: 0, lands: 0, hurt: 0, ph: 'walk', casts: 0, rot: 0, dx: 0, dy: 1, d: 99 }; };
+const freshBosses = () => ({ slime: freshBoss('slime'), queen: freshBoss('queen'), golem: freshBoss('golem') });
+const guardOf = (x, y) => (x === SA.x && y === SA.y) ? 'queen' : (x === SB.x && y === SB.y) ? 'golem' : null;
+function newGame(seed) {
+  const w = genWorld(seed);
+  G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(30).fill(null), sel: 0,
+    p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
+    enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
+  [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
+  rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
+}
+const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
+const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
+function serialize() {
+  if (!G) return null; const p = G.p;
+  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel,
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger }, stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide };
+}
+function deserialize(s) {
+  const N = W * H;
+  G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: s.sel || 0,
+    p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
+    enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: (s.bossDead && typeof s.bossDead === 'object') ? Object.assign({ slime: false, queen: false, golem: false }, s.bossDead) : { slime: !!s.bossDead, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: Object.assign(freshStats(), s.stats), time: s.time || 0, spawnPt: s.spawnPt, treeSeeds: s.treeSeeds || 0,
+    won: !!s.won, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
+  while (G.inv.length < 30) G.inv.push(null);
+  if ((s.v || 1) < 2) migrateV2();
+  G.guide = 0;
+  rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
+}
+function saveLocal(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); if (!silent) toast('저장했어요', 'good'); return true; } catch (e) { if (!silent) toast('이 브라우저에서는 저장할 수 없어요'); return false; } }
+function loadLocal() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+
+// ================= inventory =================
+const stackMax = id => ITEMS[id].stack || 99;
+let invDirty = true;
+function addItem(id, c, count = true) {
+  let left = c; const inv = G.inv, mx = stackMax(id);
+  for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
+  const useful = ['place', 'wall', 'floor', 'seed', 'food', 'key'].includes(ITEMS[id].kind);
+  const order = useful ? [...Array(30).keys()] : [...Array(24).keys()].map(k => k + 6).concat([0, 1, 2, 3, 4, 5]);
+  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; left -= k; } }
+  const got = c - left;
+  if (count && got > 0) { const S = G.stats; if (id === 'wood') S.wood += got; if (id === 'copperOre') S.copperOre += got; if (id === 'copperBar') S.copperBar += got; if (id === 'lightSeed') S.seedsFound += got; }
+  invDirty = true; return left;
+}
+const countItem = id => G.inv.reduce((a, s) => a + (s && (id === 'anyFish' ? ITEMS[s.id] && ITEMS[s.id].fish : s.id === id) ? s.c : 0), 0);
+function removeItem(id, c) { for (let i = G.inv.length - 1; i >= 0 && c > 0; i--) { const s = G.inv[i]; if (s && (id === 'anyFish' ? ITEMS[s.id].fish : s.id === id)) { const k = Math.min(s.c, c); s.c -= k; c -= k; if (!s.c) G.inv[i] = null; } } invDirty = true; }
+function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; for (const s of G.inv) if (s && ITEMS[s.id].kind === 'pick' && ITEMS[s.id].power > b.power) b = { ...ITEMS[s.id], id: s.id }; return b; }
+function bestWeapon() { let b = { dmg: 3, id: 'hand' }; for (const s of G.inv) if (s && ITEMS[s.id].kind === 'sword' && ITEMS[s.id].dmg > b.dmg) b = { ...ITEMS[s.id], id: s.id }; return b; }
+const selItem = () => G.inv[G.sel];
+
+// ================= world helpers =================
+const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER) return true; const o = G.objs.get(i); return !!(o && OBJ[o.t].solid); }
+function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
+function moveEnt(e, dx, dy, r) {
+  const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.15)); let bx = false, by = false;
+  for (let k = 0; k < n; k++) {
+    if (!bx) { const nx = e.x + dx / n; if (!boxHits(nx, e.y, r)) e.x = nx; else bx = true; }
+    if (!by) { const ny = e.y + dy / n; if (!boxHits(e.x, ny, r)) e.y = ny; else by = true; }
+  }
+  return bx || by;
+}
+function occupied(tx, ty) {
+  const p = G.p, r = 0.28; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true;
+  for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
+}
+function canPlace(tx, ty, it) {
+  if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
+  if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
+  if (o) return false;
+  if (G.floor[i] === WATER && it.kind !== 'wall') return false;
+  if (it.kind === 'seed') return [1, 2, 3].includes(G.floor[i]);
+  if (it.kind === 'wall') return !occupied(tx, ty);
+  if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty)); }
+  return false;
+}
+
+// ================= audio =================
+let AC = null, noiseBuf = null;
+function ensureAudio() { try { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 0.4; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; } if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } }
+function tone(f, dur, type = 'square', vol = 0.05, slide = 0) { if (!AC || !soundOn) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02); }
+function nz(dur, vol, freq) { if (!AC || !soundOn) return; const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02); }
+let lastPickSfx = 0;
+const SFX = {
+  hit: () => { tone(260, .09, 'square', .045, -140); nz(.05, .06, 1800); }, mine: () => { nz(.07, .09, 900); tone(180, .05, 'triangle', .03); }, brk: () => { nz(.16, .11, 500); tone(150, .14, 'triangle', .05, -70); },
+  pick: () => { const n = performance.now(); if (n - lastPickSfx < 60) return; lastPickSfx = n; tone(880, .07, 'triangle', .045, 380); }, place: () => tone(330, .07, 'triangle', .06, -90),
+  hurt: () => tone(170, .2, 'sawtooth', .05, -100), craft: () => { tone(660, .08, 'triangle', .05); setTimeout(() => tone(990, .1, 'triangle', .05), 70); }, eat: () => { tone(520, .09, 'sine', .07, -200); setTimeout(() => tone(620, .08, 'sine', .06, -200), 90); },
+  clink: () => tone(1300, .05, 'square', .025), boss: () => { tone(90, .55, 'sawtooth', .07, -40); nz(.4, .06, 300); }, swing: () => nz(.06, .035, 2600),
+  cast: () => { nz(.12, .04, 1800); tone(420, .12, 'sine', .03, 300); }, plop: () => tone(320, .09, 'sine', .05, -170), bite: () => { tone(880, .06, 'square', .04); setTimeout(() => tone(1175, .08, 'square', .04), 70); },
+  catch: () => [660, 880, 1046].forEach((f, i) => setTimeout(() => tone(f, .12, 'triangle', .05), i * 70)), cast2: () => { tone(500, .25, 'sine', .04, -250); nz(.2, .03, 1200); },
+  win: () => [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .06), i * 130)), seed: () => [784, 988, 1175].forEach((f, i) => setTimeout(() => tone(f, .2, 'triangle', .05), i * 90)),
+};
+
+// ================= effects =================
+function puff(x, y, col, n = 6, spd = 2.5, z = 0.3) { for (let k = 0; k < n; k++) { const a = Math.random() * 6.283, s = spd * (0.4 + Math.random() * 0.8); G.parts.push({ x, y, z: z + Math.random() * .2, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: 1.5 + Math.random() * 2, life: .5 + Math.random() * .35, max: .8, col, sz: 1 + (Math.random() * 2 | 0) }); } }
+function ftext(x, y, txt, col = '#fff1d6') { G.texts.push({ x, y, txt, col, life: 1, vy: -1.1 }); }
+const toastKeys = {};
+function toast(msg, cls, key) {
+  const now = performance.now(); if (key) { if (toastKeys[key] && now - toastKeys[key] < 2200) return; toastKeys[key] = now; }
+  const box = $('#toasts'); const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : ''); el.textContent = msg; box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 2300);
+}
+function spawnDrop(id, c, x, y) { const a = Math.random() * 6.283; G.drops.push({ id, c, x, y, vx: Math.cos(a) * 1.4, vy: Math.sin(a) * 1.1, z: 0.3, vz: 2.6, t: 0, hold: 0 }); }
+function rollDrops(list, x, y) { for (const [id, a, b, ch] of list) if (Math.random() < ch) { const c = rint(a, b); if (c > 0) spawnDrop(id, c, x, y); } }
+
+// ================= input =================
+const keys = new Set();
+const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
+const mouse = { x: 0, y: 0, down: false, last: 0, used: false };
+let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0;
+const aimMouse = () => mouse.used && (mouse.down || performance.now() - mouse.last < 3500);
+const actHeld = () => btnHeld || mouse.down || keys.has('Space') || keys.has('KeyJ') || keys.has('KeyE');
+function mouseWorld() { return { x: (mouse.x * DPR + VIEW.camX) / TP, y: (mouse.y * DPR + VIEW.camY) / TP }; }
+
+// ================= actions =================
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place' };
+function targetTile() {
+  const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
+  if (aimMouse()) {
+    const m = mouseWorld(); const tx = Math.floor(m.x), ty = Math.floor(m.y);
+    if ((tx !== ptx || ty !== pty) && Math.hypot(tx + .5 - p.x, ty + .5 - p.y) <= 2.4) return { x: tx, y: ty };
+  }
+  const f = p.face; if (Math.abs(f.x) > Math.abs(f.y)) return { x: ptx + Math.sign(f.x), y: pty }; return { x: ptx, y: pty + (f.y < 0 ? -1 : 1) };
+}
+function nearestEnemy(range) {
+  let best = null, bd = 1e9; const p = G.p;
+  for (const e of G.enemies) { const d = Math.hypot(e.x - p.x, e.y - p.y) - ENEMY[e.k].r; if (d < range && d < bd) { bd = d; best = e; } }
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.8) continue; const d = Math.hypot(b.x - p.x, b.y - p.y) - BOSSES[k].hr; if (d < range && d < bd) { bd = d; best = b; } }
+  return best;
+}
+function decide() {
+  const p = G.p; if (p.dead > 0) return { k: 'none', lbl: '…', icon: 'dots' };
+  const sw = bestWeapon(), pk = bestPick();
+  const en = nearestEnemy(1.35);
+  if (en) return { k: 'attack', lbl: '공격', icon: sw.id === 'hand' ? 'hand' : sw.id, en };
+  if (G.fish) return G.fish.st === 'bite' ? { k: 'reel', lbl: '당기기!', icon: 'rod' } : { k: 'reel', lbl: '거두기', icon: 'rod' };
+  const t = targetTile(); const i = inB(t.x, t.y) ? idx(t.x, t.y) : -1; const o = i >= 0 ? G.objs.get(i) : null;
+  const s = selItem(), it = s && ITEMS[s.id];
+  if (o) {
+    const d = OBJ[o.t];
+    if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
+    if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o };
+    if (d.crop) return cropStage(o) >= 3 ? { k: 'harvest', lbl: '수확', icon: d.crop === 'berry' ? 'berry' : 'mushroom', t, o } : { k: 'info', lbl: '자라는 중', icon: 'dots', msg: '아직 자라고 있어요', t };
+    if (d.bush) return (o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t };
+    if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) return { k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t }; }
+    if (d.shrine) return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t };
+    if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
+    if (d.item && !(it && it.kind === 'floor')) return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
+  }
+  if (it && ['place', 'wall', 'floor', 'seed'].includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : '놓기', icon: s.id, t };
+  if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return hasItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (제작 → 낚싯대)', t };
+  if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
+  if (it && it.kind === 'food') return { k: 'eat', lbl: '먹기', icon: s.id };
+  if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
+  return { k: 'swing', lbl: '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
+}
+const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
+function tryAct(edge) {
+  const a = G.act; const grp = GROUP[a.k] || null;
+  if (edge) holdGroup = grp;
+  else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
+  perform(a);
+}
+function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
+function perform(a) {
+  const p = G.p;
+  switch (a.k) {
+    case 'attack': {
+      if (!aimMouse()) faceTo(a.en.x - p.x, a.en.y - p.y);
+      swingAttack(); actCd = 0.36; break;
+    }
+    case 'swing': swingAttack(); actCd = 0.36; break;
+    case 'mine': mineWall(a.t); actCd = 0.27; break;
+    case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
+    case 'place': placeItem(a.t); actCd = 0.14; break;
+    case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
+    case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
+    case 'eat': eat(G.sel); actCd = 0.4; break;
+    case 'insert': insertSeeds(); actCd = 0.4; break;
+    case 'tree': openPanel('tree'); actCd = 0.3; break;
+    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); SFX.seed(); puff(a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); toast('빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
+    case 'pickup': { const d = OBJ[a.o.t]; G.objs.delete(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
+    case 'fish': startFish(a.t); actCd = 0.4; break;
+    case 'reel': reel(); actCd = 0.35; break;
+    case 'info': if (a.msg) toast(a.msg, null, 'info' + a.msg); actCd = 0.4; break;
+  }
+}
+function swingAttack() {
+  const p = G.p, w = bestWeapon(); const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
+  G.swing = { t: 0.22, max: 0.22, ang, icon: w.id === 'hand' ? null : w.id };
+  SFX.swing();
+  const hit = (e, rr, isBoss) => {
+    const dx = e.x - p.x, dy = e.y - (p.y), d = Math.hypot(dx, dy); if (d > 1.45 + rr) return false;
+    let da = Math.abs(Math.atan2(dy, dx) - ang); if (da > Math.PI) da = 2 * Math.PI - da;
+    return da < 1.3 || d < 0.6 + rr;
+  };
+  let crit = Math.random() < 0.1; const dmg = Math.round(w.dmg * (crit ? 1.6 : 1) * (0.9 + Math.random() * 0.2));
+  for (const e of G.enemies.slice()) if (hit(e, ENEMY[e.k].r, false)) hitEnemy(e, dmg, crit);
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && hit(b, BOSSES[k].hr, true)) { if (b.z > 0.7) ftext(b.x, b.y - 2, '빗나감', '#bfaed3'); else hitBoss(b, dmg, crit); } }
+}
+function hitEnemy(e, dmg, crit) {
+  const p = G.p, def = ENEMY[e.k]; e.hp -= dmg; e.hurt = 0.14; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  e.kx = dx / l * 8; e.ky = dy / l * 8; ftext(e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); puff(e.x, e.y, def.col, 4, 2); SFX.hit(); shake = Math.max(shake, 0.12);
+  if (e.hp <= 0) { G.enemies.splice(G.enemies.indexOf(e), 1); puff(e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); }
+}
+function hitBoss(b, dmg, crit) {
+  const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
+  b.hp -= dmg; b.hurt = 0.14; ftext(b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); puff(b.x, b.y - .3, def.col, 6, 3); SFX.hit(); shake = Math.max(shake, 0.18);
+  if (b.hp <= 0) {
+    G.bossDead[b.k] = true; $('#bossbar').hidden = true; G.shots.length = 0; puff(b.x, b.y, def.col, 40, 5, 0.6); puff(b.x, b.y, '#ffc861', 16, 4, 1); SFX.win(); shake = 0.5;
+    if (b.k === 'slime') { spawnDrop('lightSeed', 1, b.x, b.y); spawnDrop('gel', 8, b.x, b.y); spawnDrop('copperBar', 5, b.x, b.y); spawnDrop('ironOre', 4, b.x, b.y); toast('말랑대왕을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
+    if (b.k === 'queen') { spawnDrop('shroomCap', 10, b.x, b.y); spawnDrop('glowcap', 6, b.x, b.y); spawnDrop('ironBar', 4, b.x, b.y); spawnDrop('spore', 3, b.x, b.y); toast('버섯 여왕을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
+    if (b.k === 'golem') { spawnDrop('crystal', 12, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); toast('수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
+  }
+}
+function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (Math.random() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + Math.random() * 3.4, bite: 0, fly: 0.3, nib: 0 }; SFX.cast(); }
+function splash(x, y, n) { for (let k = 0; k < n; k++) { const a = Math.random() * 6.283; G.parts.push({ x, y, z: .05, vx: Math.cos(a) * 1.2, vy: Math.sin(a) * .6, vz: 2 + Math.random() * 1.5, life: .4, max: .4, col: '#bfe6ff', sz: 1 }); } }
+function updateFish(dt) {
+  if (G.fishFx) { G.fishFx.t += dt; if (G.fishFx.t > 0.55) G.fishFx = null; }
+  const f = G.fish; if (!f) return; const p = G.p;
+  if (p.moving || p.dead > 0) { G.fish = null; return; }
+  if (f.fly > 0) { f.fly -= dt; if (f.fly <= 0) { SFX.plop(); splash(f.bx, f.by, 5); } return; }
+  f.nib = Math.max(0, f.nib - dt);
+  if (f.st === 'wait') { f.t -= dt; if (f.t > 0.7 && f.nib <= 0 && Math.random() < dt * 0.7) { f.nib = 0.22; SFX.plop(); }
+    if (f.t <= 0) { f.st = 'bite'; f.bite = 0.95; SFX.bite(); splash(f.bx, f.by, 8); ftext(p.x, p.y - 1.7, '!', '#ffc861'); try { navigator.vibrate && navigator.vibrate(40); } catch (e) { } } }
+  else { f.bite -= dt; if (f.bite <= 0) { toast('놓쳤어요… 다시 던져 봐요', null, 'miss'); G.fish = null; } }
+}
+function reel() {
+  const f = G.fish; if (!f) return; G.fish = null;
+  if (f.st !== 'bite') { SFX.place(); return; }
+  const tbl = CATCH[G.biome[idx(f.tx, f.ty)]] || CATCH[0]; let r = Math.random() * tbl.reduce((a, x) => a + x[1], 0), id = tbl[0][0];
+  for (const [k, w] of tbl) { r -= w; if (r <= 0) { id = k; break; } }
+  const left = addItem(id, 1); if (left) spawnDrop(id, 1, G.p.x, G.p.y);
+  G.fishFx = { id, t: 0, x0: f.bx, y0: f.by, x1: G.p.x, y1: G.p.y - .5 }; splash(f.bx, f.by, 12); SFX.catch();
+  const seen = G.stats.fishSeen || (G.stats.fishSeen = {});
+  if (!seen[id]) { seen[id] = 1; toast(`처음 낚았어요: ${ITEMS[id].n}!`, 'good'); } else ftext(G.p.x, G.p.y - 1.5, ITEMS[id].n, '#bfe6ff');
+  G.stats.fishCaught = (G.stats.fishCaught || 0) + 1;
+}
+function mineWall(t) {
+  const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
+  faceTo(t.x + .5 - p.x, t.y + .5 - p.y);
+  G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(p.face.y, p.face.x), icon: pk.id === 'hand' ? null : pk.id };
+  if (def.tier > pk.tier) { SFX.clink(); puff(t.x + .5, t.y + .9, '#ffffff', 3, 1.5); toast(`${def.n}은(는) ${TIERNAME[def.tier] || '더 좋은 곡괭이'}가 필요해요`, null, 'tier' + w); return; }
+  const dm = (G.wdmg.get(i) || 0) + pk.power; SFX.mine(); puff(t.x + .5, t.y + .95, WPAL[w][1], 4, 2, 0.2); shake = Math.max(shake, 0.06);
+  if (dm >= def.hp) {
+    G.wall[i] = 0; G.wdmg.delete(i); rollDrops(def.drop, t.x + .5, t.y + .5); puff(t.x + .5, t.y + .6, WPAL[w][0], 10, 3); SFX.brk(); lightDirty = true; mapPixel(t.x, t.y);
+  } else G.wdmg.set(i, dm);
+}
+function hitObj(t, o) {
+  const d = OBJ[o.t], pk = bestPick(), i = idx(t.x, t.y);
+  faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y);
+  G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' ? null : pk.id === 'hand' ? null : pk.id };
+  if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
+  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power));
+  SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
+  if (o.dmg >= d.hp) { G.objs.delete(i); rollDrops(d.drops, t.x + .5, t.y + .5); SFX.brk(); lightDirty = true; } else o.shake = 0.15;
+}
+function placeItem(t) {
+  const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
+  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; }
+  else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (old === 5) spawnDrop('floorWood', 1, t.x + .5, t.y + .5); if (old === 6) spawnDrop('floorStone', 1, t.x + .5, t.y + .5); }
+  else if (it.kind === 'seed') G.objs.set(i, { t: it.crop, p: G.time });
+  else { const o = { t: it.obj }; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
+    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
+  s.c--; if (!s.c) G.inv[G.sel] = null; invDirty = true;
+  SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);
+}
+function harvest(t, o) {
+  const d = OBJ[o.t];
+  if (d.crop) { G.objs.delete(idx(t.x, t.y)); rollDrops(d.yield, t.x + .5, t.y + .5); }
+  else { o.r = G.time + 150; rollDrops([['berry', 2, 3, 1], ['berrySeed', 1, 1, 0.3]], t.x + .5, t.y + .6); }
+  SFX.pick(); puff(t.x + .5, t.y + .5, '#9be37a', 6, 2);
+}
+function eat(slot) {
+  const s = G.inv[slot]; if (!s) return; const it = ITEMS[s.id]; if (it.kind !== 'food') return;
+  const p = G.p; if (p.hunger >= 99.5 && p.hp >= 100) { toast('지금은 배가 불러요', null, 'full'); return; }
+  p.hunger = Math.min(100, p.hunger + it.food); p.hp = Math.min(100, p.hp + it.heal); s.c--; if (!s.c) G.inv[slot] = null; invDirty = true;
+  SFX.eat(); ftext(p.x, p.y - 1.3, `+${it.food}`, '#ffb15c'); if (it.heal) ftext(p.x + .4, p.y - 1.0, `♥${it.heal}`, '#ff8fa3');
+}
+function insertSeeds() {
+  const n = Math.min(countItem('lightSeed'), 3 - G.treeSeeds); if (n <= 0) return; removeItem('lightSeed', n); G.treeSeeds += n; lightDirty = true;
+  SFX.seed(); puff(CX + .5, CY - 1, '#ffd25c', 30, 4, 2); G.p.hp = 100;
+  if (G.treeSeeds >= 3 && !G.won) { G.won = true; setTimeout(() => { SFX.win(); openPanel('win'); }, 600); }
+  else toast(`등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/3)`, 'good');
+}
+function hurtPlayer(dmg, sx, sy) {
+  const p = G.p; if (p.inv > 0 || p.dead > 0) return;
+  p.hp -= dmg; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
+  shake = Math.max(shake, 0.28); SFX.hurt(); ftext(p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');
+  if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; }
+}
+function respawn() {
+  const p = G.p; $('#fade').hidden = true;
+  const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); const sp = so && OBJ[so.t].bed ? G.spawnPt : null;
+  if (sp) { p.x = sp.x + .5; p.y = sp.y + 1.6; if (boxHits(p.x, p.y, .28)) { p.x = sp.x + 1.5; p.y = sp.y + .5; } } else { p.x = CX + .5; p.y = CY + 1.7; }
+  p.hp = 70; p.hunger = Math.max(p.hunger, 45); p.inv = 2; p.dead = 0; G.enemies.length = 0;
+  for (const k of BKEYS) if (!G.bossDead[k]) G.bosses[k] = freshBoss(k); G.shots.length = 0; G.fish = null; $('#bossbar').hidden = true;
+  cam.x = p.x; cam.y = p.y; toast(sp ? '침대에서 깨어났어요' : '등불나무 곁에서 깨어났어요');
+}
+
+// ================= update =================
+let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0, saveT = 0;
+function update(dt) {
+  G.time += dt; const p = G.p;
+  let mx = 0, my = 0;
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
+  if (joy.active) { mx += joy.vx; my += joy.vy; }
+  let mag = Math.hypot(mx, my); if (mag > 1) { mx /= mag; my /= mag; mag = 1; }
+  if (p.dead > 0) { p.dead -= dt; mag = 0; if (p.dead <= 0) respawn(); }
+  p.moving = mag > 0.12;
+  if (p.moving) { const sp = 4.4 * Math.max(0.5, mag); moveEnt(p, mx * sp * dt, my * sp * dt, 0.28); p.anim += dt; if (!aimMouse()) p.face = { x: mx / mag, y: my / mag }; }
+  if (aimMouse() && p.dead <= 0) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .4)); }
+  const f = p.face; if (Math.abs(f.x) > Math.abs(f.y) * 1.05) { p.dir = 'side'; p.flip = f.x < 0; } else p.dir = f.y < 0 ? 'up' : 'down';
+  if (Math.abs(p.kx) + Math.abs(p.ky) > 0.05) { moveEnt(p, p.kx * dt, p.ky * dt, 0.28); const k = Math.pow(0.0015, dt); p.kx *= k; p.ky *= k; } else p.kx = p.ky = 0;
+  p.inv = Math.max(0, p.inv - dt); p.hurt = Math.max(0, p.hurt - dt);
+  // action
+  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
+  const held = actHeld() && p.dead <= 0; actQ = Math.max(0, actQ - dt);
+  if (p.dead > 0) actQ = 0;
+  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
+  if (!held && actQ <= 0) holdGroup = null;
+  // survival
+  hungerT += dt; if (hungerT >= 9) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
+  regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; } } else if (p.hunger >= 55 && p.hp < 100 && p.dead <= 0) p.hp = Math.min(100, p.hp + 1); }
+  updateEnemies(dt); updateBosses(dt); updateFish(dt); updateDrops(dt); updateFx(dt);
+  spawnT += dt; if (spawnT > 2.6) { spawnT = 0; trySpawn(); }
+  lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
+  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
+  saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
+  // crops & bush stage only visual
+  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
+  shake = Math.max(0, shake - dt);
+}
+function updateEnemies(dt) {
+  const p = G.p;
+  for (const e of G.enemies.slice()) {
+    const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
+    if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); continue; }
+    const chase = d < 8 && p.dead <= 0;
+    if (def.hop) {
+      if (e.air > 0) { moveEnt(e, e.vx * dt, e.vy * dt, def.r); e.air -= dt; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
+      else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = Math.random() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + Math.random() * 0.6; } }
+    } else {
+      e.t -= dt; if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + Math.random() * 2; const a = Math.random() * 6.283, s = Math.random() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
+      moveEnt(e, e.vx * dt, e.vy * dt, def.r); e.anim = (e.anim || 0) + dt * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
+      if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
+    }
+    if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
+    e.hurt = Math.max(0, (e.hurt || 0) - dt);
+    if (d < def.r + 0.34 && (e.z || 0) < 0.2) hurtPlayer(def.dmg, e.x, e.y);
+  }
+}
+let bossName = '';
+function updateBosses(dt) {
+  let active = null;
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (bossCommon(b, dt)) { BOSS_AI[k](b, dt); active = b; } }
+  if (active) { $('#bossFill').style.width = Math.max(0, active.hp / active.max * 100) + '%'; if (bossName !== active.k) { bossName = active.k; $('#bossbar .bn').textContent = BOSSES[active.k].n; } }
+  updateShots(dt);
+}
+function bossCommon(b, dt) {
+  const def = BOSSES[b.k], p = G.p, d = Math.hypot(p.x - b.x, p.y - b.y); b.hurt = Math.max(0, b.hurt - dt); b.d = d;
+  if (b.st === 'sleep') { if (d < def.wake && p.dead <= 0) { b.st = 'fight'; b.t = 1.2; SFX.boss(); shake = 0.4; toast(`${def.n}이 깨어났어요!`); $('#bossbar').hidden = false; bossName = ''; } return false; }
+  if (p.dead > 0 || d > 24) { Object.assign(b, freshBoss(b.k)); $('#bossbar').hidden = true; G.shots.length = 0; return false; }
+  return true;
+}
+const BOSS_AI = {
+  slime(b, dt) {
+    const p = G.p, d = b.d;
+    if (b.air > 0) {
+      moveEnt(b, b.vx * dt, b.vy * dt, 0.85); b.air -= dt; b.z = Math.sin((1 - Math.max(0, b.air) / b.airMax) * Math.PI) * 1.8;
+      if (b.air <= 0) {
+        b.z = 0; b.lands++; shake = 0.35; SFX.brk(); for (let k = 0; k < 18; k++) { const a = k / 18 * 6.283; G.parts.push({ x: b.x + Math.cos(a) * 1.2, y: b.y + Math.sin(a) * .8, z: .1, vx: Math.cos(a) * 5, vy: Math.sin(a) * 3.5, vz: 1, life: .45, max: .45, col: '#c9f0b0', sz: 2 }); }
+        if (Math.hypot(p.x - b.x, p.y - b.y) < 2.8) hurtPlayer(16, b.x, b.y);
+        if (b.lands % 3 === 0 && G.enemies.length < 10) for (let k = 0; k < 2; k++) G.enemies.push(mkEnemy('slimeG', b.x + (k ? 1.4 : -1.4), b.y + .5));
+        b.t = b.hp < b.max / 2 ? 0.65 : 1.1;
+      }
+    } else { b.t -= dt; if (b.t <= 0) { b.airMax = 0.85; b.air = b.airMax; let vx = (p.x - b.x) / b.airMax, vy = (p.y - b.y) / b.airMax; const sp = Math.hypot(vx, vy); if (sp > 8) { vx *= 8 / sp; vy *= 8 / sp; } b.vx = vx; b.vy = vy; } }
+    if (b.z < 0.4 && d < 1.3) hurtPlayer(12, b.x, b.y);
+  },
+  queen(b, dt) {
+    const p = G.p, d = b.d, half = b.hp < b.max / 2;
+    if (b.ph !== 'cast') { b.t -= dt; if (d > 1.7) { const sp = half ? 2.0 : 1.5; moveEnt(b, (p.x - b.x) / d * sp * dt, (p.y - b.y) / d * sp * dt, .8); } b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'cast'; b.t = 0.75; } }
+    else { b.t -= dt; if (b.t <= 0) {
+      const n = half ? 14 : 10; for (let k = 0; k < n; k++) { const a = k / n * 6.283 + b.rot; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 3.5, dmg: 10, k: 'spore' }); }
+      b.rot += 0.31; b.casts++; SFX.cast2();
+      if (b.casts % 2 === 0 && G.enemies.length < 9) for (let k = 0; k < 2; k++) G.enemies.push(mkEnemy('shroomy', b.x + (k ? 1.6 : -1.6), b.y + .8));
+      b.ph = 'walk'; b.t = half ? 1.6 : 2.4; } }
+    if (d < 1.3) hurtPlayer(14, b.x, b.y);
+  },
+  golem(b, dt) {
+    const p = G.p, d = b.d, half = b.hp < b.max / 2; b.t -= dt;
+    if (b.ph === 'walk') { if (d > 2.5) moveEnt(b, (p.x - b.x) / d * 1.2 * dt, (p.y - b.y) / d * 1.2 * dt, .9); if (b.t <= 0) { b.ph = 'aim'; b.t = 0.85; } }
+    else if (b.ph === 'aim') { if (b.t > 0.3) { b.dx = (p.x - b.x) / (d || 1); b.dy = (p.y - b.y) / (d || 1); } if (b.t <= 0) { b.ph = 'dash'; b.t = 0.75; SFX.swing(); } }
+    else if (b.ph === 'dash') {
+      const blocked = moveEnt(b, b.dx * 10.5 * dt, b.dy * 10.5 * dt, .9); if (Math.random() < .5) puff(b.x, b.y + .3, '#8a83ad', 1, 1, .1);
+      if (blocked) { b.ph = 'stun'; b.t = 1.5; shake = 0.45; SFX.brk(); puff(b.x + b.dx, b.y + b.dy, C.cryL, 14, 3); ftext(b.x, b.y - 2.6, '기절!', '#7ff0e6'); }
+      else if (b.t <= 0) { const n = half ? 7 : 5, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.22; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 6.5, vy: Math.sin(a) * 6.5, life: 3, dmg: 14, k: 'shard', a }); } SFX.clink(); b.ph = 'walk'; b.t = half ? 0.7 : 1.1; }
+    }
+    else if (b.ph === 'stun') { if (b.t <= 0) { b.ph = 'walk'; b.t = 0.6; } }
+    if (d < 1.4 && b.ph !== 'stun') hurtPlayer(b.ph === 'dash' ? 22 : 16, b.x, b.y);
+  },
+};
+function updateShots(dt) {
+  const p = G.p;
+  for (let i = G.shots.length - 1; i >= 0; i--) {
+    const s = G.shots[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
+    if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { puff(s.x, s.y, s.k === 'spore' ? '#d59bff' : C.cryL, 3, 1.5, .2); G.shots.splice(i, 1); continue; }
+    if (p.dead <= 0 && Math.hypot(s.x - p.x, s.y - (p.y - .3)) < 0.42) { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy); G.shots.splice(i, 1); }
+  }
+}
+function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: Math.random(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
+function trySpawn() {
+  const p = G.p; if (p.dead > 0) return; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= 7) return;
+  for (let k = 0; k < 10; k++) {
+    const a = Math.random() * 6.283, r = 10 + Math.random() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
+    if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y))) continue;
+    if (Math.hypot(x - CX, y - CY) < 13 + G.treeSeeds * 4) continue; if (Math.hypot(x - BX, y - BY) < 11 || Math.hypot(x - SA.x, y - SA.y) < 10 || Math.hypot(x - SB.x, y - SB.y) < 10) continue;
+    if (lightAt(x, y) > 0.3) continue;
+    const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (Math.random() < .55 ? 'slimeO' : 'shroomy') : (Math.random() < .75 ? 'slimeP' : 'shroomy');
+    G.enemies.push(mkEnemy(kk, x + .5, y + .6)); return;
+  }
+}
+function updateDrops(dt) {
+  const p = G.p;
+  for (const d of G.drops.slice()) {
+    d.t += dt; d.vz -= 12 * dt; d.z += d.vz * dt; if (d.z < 0) { d.z = 0; d.vz = Math.abs(d.vz) * 0.35; if (d.vz < 0.6) d.vz = 0; d.vx *= 0.6; d.vy *= 0.6; }
+    moveEnt(d, d.vx * dt, d.vy * dt, 0.15); d.vx *= Math.pow(0.05, dt); d.vy *= Math.pow(0.05, dt);
+    d.hold = Math.max(0, d.hold - dt);
+    const dx = p.x - d.x, dy = p.y - .3 - d.y, l = Math.hypot(dx, dy);
+    if (d.t > 0.4 && l < 2.2 && d.hold <= 0 && p.dead <= 0) { const s = 9 * (1 - l / 2.6) + 2; d.x += dx / l * s * dt; d.y += dy / l * s * dt;
+      if (l < 0.45) { const left = addItem(d.id, d.c); const got = d.c - left; if (got) { SFX.pick(); ftext(p.x, p.y - 1.4, `+${got} ${ITEMS[d.id].n}`, '#fff1d6'); } if (left) { d.c = left; d.hold = 1.5; toast('가방이 가득 찼어요', null, 'full-inv'); } else G.drops.splice(G.drops.indexOf(d), 1); } }
+    if (d.t > 400) G.drops.splice(G.drops.indexOf(d), 1);
+  }
+}
+function updateFx(dt) {
+  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= 9 * dt; q.z = Math.max(0, q.z + q.vz * dt); q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); }
+  for (let i = G.texts.length - 1; i >= 0; i--) { const t = G.texts[i]; t.life -= dt; t.y += t.vy * dt; t.vy *= Math.pow(.15, dt); if (t.life <= 0) G.texts.splice(i, 1); }
+  for (const o of visibleShakers) { o.shake = Math.max(0, (o.shake || 0) - dt); }
+}
+const visibleShakers = new Set();
+
+// ================= guide =================
+function nearestObjOf(t, rad = 24) { const p = G.p; let best = null, bd = 1e9; for (let y = Math.floor(p.y - rad); y <= p.y + rad; y++) for (let x = Math.floor(p.x - rad); x <= p.x + rad; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === t) { const d = Math.hypot(x - p.x, y - p.y); if (d < bd) { bd = d; best = { x: x + .5, y: y + .5 }; } } } return best; }
+const hasItem = id => countItem(id) > 0;
+const GUIDE = [
+  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 큰 버튼을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
+  { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [제작] → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
+  { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '횃불은 어디서나 만들 수 있어요. 밝은 곳에는 몬스터가 생기지 않아요.', done: () => G.stats.torch > 0 },
+  { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽을 찾아 캐요. 흙은 화로 재료가 돼요.', done: () => G.stats.copperOre >= 6 },
+  { t: () => '화로를 놓고 구리괴 만들기', h: '작업대에서 화로를 만든 뒤 설치하고, 화로를 열어 구리괴를 만들어요.', done: () => G.stats.copperBar >= 1 },
+  { t: () => '구리 곡괭이 만들기', h: '구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요. 구리 검도 함께 만들면 든든해요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
+  { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '화살표를 따라 동쪽으로! 음식을 넉넉히 챙기고, 점프 후 착지할 때 멀리 떨어져요.', done: () => G.bossDead.slime, target: () => BOSSES.slime.home() },
+  { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비를 먼저 정리해요.', done: () => G.bossDead.queen, target: () => BOSSES.queen.home() },
+  { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '빨간 점선이 보이면 옆으로 피해요! 벽에 부딪혀 기절했을 때 때리면 더 아파요. 수정벽은 철 곡괭이로 캘 수 있어요.', done: () => G.bossDead.golem, target: () => BOSSES.golem.home() },
+  { t: () => `빛씨앗 모으기 (${Math.min(3, G.stats.seedsFound)}/3)`, h: '말랑대왕이 남긴 씨앗과, 봉인이 풀린 두 제단의 씨앗을 모아요.', done: () => G.stats.seedsFound >= 3,
+    target: () => { const p = G.p; const c = [SA, SB].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
+  { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/3)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 3, target: () => ({ x: CX + .5, y: CY + .5 }) },
+  { t: () => '낚시하고 지역 가구로 꾸미기', h: '물가에서 낚시를 하고, 제작에서 이끼·버섯·수정 세트 가구를 만들어 나만의 아지트를 꾸며 보세요.', done: () => false },
+];
+let goalTarget = null, lastGoalTxt = '';
+function checkGuide() {
+  let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { G.guide++; n++; }
+  if (n === 1 && started) { toast('목표 달성!', 'good'); SFX.craft(); }
+  const g = GUIDE[G.guide]; const txt = g.t(); if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; }
+  goalTarget = g.target ? g.target() : null;
+}
+function checkBiome() {
+  const p = G.p; if (!G.stats.waterTip && started) { outer: for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const x = Math.floor(p.x) + dx, y = Math.floor(p.y) + dy; if (inB(x, y) && G.floor[idx(x, y)] === WATER && !G.wall[idx(x, y)]) { G.stats.waterTip = 1; toast(hasItem('rod') ? '물가예요! 물을 바라보고 눌러 낚시해요' : '물가예요! 낚싯대를 만들면 낚시할 수 있어요 (제작 → 도구)', 'good'); break outer; } } }
+  checkBiome0();
+}
+function checkBiome0() { const p = G.p, b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))]; if (b !== G.biomeNow) { G.biomeNow = b; if (started) toast(BIOME[b], null, 'biome' + b); } }
+
+// ================= lighting =================
+let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
+function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
+function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
+function computeLight() {
+  if (!G) return; const cw = cv.width, ch = cv.height;
+  const camX = cam.x * TP - cw / 2, camY = cam.y * TP - ch / 2;
+  const x0 = Math.floor(camX / TP) - 2, x1 = Math.ceil((camX + cw) / TP) + 2, y0 = Math.floor(camY / TP) - 3, y1 = Math.ceil((camY + ch) / TP) + 3;
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  if (w !== LW || h !== LH || !LR) { LW = w; LH = h; LR = new Float32Array(w * h); LG = new Float32Array(w * h); LB = new Float32Array(w * h); lightCv.width = w; lightCv.height = h; lightImg = lightCtx.createImageData(w, h); }
+  LX0 = x0; LY0 = y0;
+  const amb = 0.075 + G.treeSeeds * 0.03; LR.fill(amb * 0.85); LG.fill(amb * 0.8); LB.fill(amb * 1.35);
+  const lights = []; const p = G.p;
+  lights.push({ x: p.x, y: p.y - .3, r: 4.6, c: [1, .9, .75], k: 0.95 });
+  lights.push({ x: CX + .5, y: CY - .2, r: 7 + G.treeSeeds * 3.5, c: [1, .85, .55], k: 1.1, col: '#ffd27a' });
+  const t = G.time;
+  for (let y = y0 - 8; y <= y1 + 8; y++) for (let x = x0 - 8; x <= x1 + 8; x++) {
+    if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o) continue; const d = OBJ[o.t];
+    let L = d.light; if (o.t === 'shrine' && o.has) L = [4.5, '#ffd97a']; if (!L) continue;
+    const fl = d.flick ? 1 + Math.sin(t * 9 + x * 3) * 0.05 + Math.sin(t * 23 + y) * 0.03 : 1;
+    lights.push({ x: x + .5, y: y + .5, r: L[0] * fl, c: hexRgb(L[1]), k: 1, col: L[1], tall: SPR.obj[o.t] && SPR.obj[o.t].height > 20 });
+  }
+  for (const k of BKEYS) { const b = G.bosses[k]; if (!G.bossDead[k] && b.st === 'fight') lights.push({ x: b.x, y: b.y - .5, r: 5, c: hexRgb(BOSSES[k].col), k: 1 }); }
+  LIGHTS = lights;
+  for (const L of lights) {
+    const sx = Math.floor(L.x), sy = Math.floor(L.y), r = L.r, r2 = r * r;
+    const ya = Math.max(y0, Math.floor(L.y - r)), yb = Math.min(y1, Math.ceil(L.y + r)), xa = Math.max(x0, Math.floor(L.x - r)), xb = Math.min(x1, Math.ceil(L.x + r));
+    for (let ty = ya; ty <= yb; ty++) for (let tx = xa; tx <= xb; tx++) {
+      if (!inB(tx, ty)) continue; const dx = tx + .5 - L.x, dy = ty + .5 - L.y, d2 = dx * dx + dy * dy; if (d2 > r2) continue;
+      let f = Math.pow(1 - Math.sqrt(d2) / r, 1.25) * L.k; if (!(tx === sx && ty === sy) && !los(sx, sy, tx, ty)) f *= 0.1; if (f < 0.01) continue;
+      const i = (ty - y0) * w + (tx - x0); LR[i] += f * L.c[0]; LG[i] += f * L.c[1]; LB[i] += f * L.c[2];
+    }
+  }
+  const D = lightImg.data;
+  for (let i = 0; i < w * h; i++) {
+    const r = Math.min(1, LR[i]), g = Math.min(1, LG[i]), b = Math.min(1, LB[i]);
+    D[i * 4] = r * 255; D[i * 4 + 1] = g * 255; D[i * 4 + 2] = b * 255; D[i * 4 + 3] = 255;
+    if (r + g + b > 0.95) { const tx = x0 + i % w, ty = y0 + (i / w | 0); if (inB(tx, ty)) { const j = idx(tx, ty); if (!G.explored[j]) { G.explored[j] = 1; mapPixel(tx, ty); } } }
+  }
+  lightCtx.putImageData(lightImg, 0, 0);
+}
+
+// ================= map =================
+let mapCv = null, mapCtx = null, mapImg = null;
+const MAPF = { 7: '#6fb36a', 8: '#7f6191', 9: '#958ccf', 10: '#3f7fb5', 1: '#4f8f57', 2: '#7a5442', 3: '#6a5272', 4: '#4a5378', 5: '#c08a58', 6: '#8f8aa3' };
+const MAPW = { 1: '#3a2a25', 2: '#38364a', 3: '#4a3a78', 4: '#a85f32', 5: '#8d97a8', 6: '#8a5a32', 7: '#6f6a86', 8: '#0b0910' };
+function rebuildMap() { if (!mapCv) { mapCv = document.createElement('canvas'); mapCv.width = W; mapCv.height = H; mapCtx = mapCv.getContext('2d'); } mapImg = mapCtx.createImageData(W, H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (G.explored[idx(x, y)]) mapPixel(x, y, true); mapCtx.putImageData(mapImg, 0, 0); }
+function mapPixel(x, y, bulk) {
+  const i = idx(x, y); if (!G.explored[i] || !mapImg) return; const w = G.wall[i]; const col = w ? MAPW[w] : MAPF[G.floor[i]] || '#555';
+  const [r, g, b] = hexRgb(col); const k = i * 4; mapImg.data[k] = r * 255; mapImg.data[k + 1] = g * 255; mapImg.data[k + 2] = b * 255; mapImg.data[k + 3] = 255; if (!bulk) mapDirty = true;
+}
+let mapDirty = false;
+
+// ================= render =================
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let VIEW = { camX: 0, camY: 0 };
+const LIFT = 5;
+function resize() {
+  DPR = Math.min(3, window.devicePixelRatio || 1);
+  const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
+  const target = clamp(Math.min(w, h) / 10.5, 30, 54); Z = Math.max(1, Math.round(target * DPR / 16)); TP = 16 * Z; lightDirty = true;
+}
+function drawImg(img, wx, wyFoot, o = {}) {
+  const sx = (o.sx || 1), sy = (o.sy || 1); const sw = img.width * Z * sx, sh = img.height * Z * sy;
+  const dx = Math.round(wx * TP - VIEW.camX - sw / 2), dy = Math.round(wyFoot * TP - VIEW.camY - sh - (o.z || 0) * TP);
+  if (o.alpha != null) ctx.globalAlpha = o.alpha;
+  if (o.flip) { ctx.save(); ctx.translate(dx + sw, dy); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, sw, sh); ctx.restore(); } else ctx.drawImage(img, dx, dy, sw, sh);
+  if (o.alpha != null) ctx.globalAlpha = 1;
+}
+function shadow(wx, wy, rw, alpha = 0.32) { ctx.fillStyle = `rgba(12,6,22,${alpha})`; ctx.beginPath(); ctx.ellipse(wx * TP - VIEW.camX, wy * TP - VIEW.camY, rw * TP, rw * TP * 0.42, 0, 0, 6.283); ctx.fill(); }
+function render() {
+  const cw = cv.width, ch = cv.height, T = TP;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#120f1c'; ctx.fillRect(0, 0, cw, ch);
+  if (!G) return;
+  const sh = shake > 0 ? shake * 14 * Z / 3 : 0;
+  const camX = Math.round(cam.x * T - cw / 2 + (Math.random() - .5) * sh), camY = Math.round(cam.y * T - ch / 2 + (Math.random() - .5) * sh);
+  VIEW = { camX, camY };
+  const x0 = Math.max(0, Math.floor(camX / T) - 1), x1 = Math.min(W - 1, Math.ceil((camX + cw) / T) + 1);
+  const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(H - 1, Math.ceil((camY + ch) / T) + 3);
+  const t = G.time;
+  // floors
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const i = idx(x, y); if (G.wall[i]) continue;
+    const fl = G.floor[i], sx = x * T - camX, sy = y * T - camY;
+    if (fl === WATER) {
+      ctx.drawImage(SPR.water[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy, T, T);
+      const up = y > 0 && G.floor[i - W] !== WATER && !G.wall[i - W];
+      if (up || (y > 0 && G.wall[i - W])) { ctx.fillStyle = 'rgba(16,30,60,0.55)'; ctx.fillRect(sx, sy, T, 3 * Z); ctx.fillStyle = 'rgba(220,245,255,0.35)'; ctx.fillRect(sx, sy + 3 * Z, T, Z); }
+      ctx.fillStyle = 'rgba(220,245,255,0.28)';
+      if (x > 0 && G.floor[i - 1] !== WATER) ctx.fillRect(sx, sy, Z, T); if (x < W - 1 && G.floor[i + 1] !== WATER) ctx.fillRect(sx + T - Z, sy, Z, T); if (y < H - 1 && G.floor[i + W] !== WATER) ctx.fillRect(sx, sy + T - Z, T, Z);
+    } else ctx.drawImage(SPR.floor[fl][(hash2(x, y, 5) * 4) | 0], sx, sy, T, T);
+    const o = G.objs.get(i); if (o && OBJ[o.t].flat) ctx.drawImage(SPR.obj[o.t], x * T - camX, y * T - camY, T, T);
+  }
+  // buckets
+  const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
+  const push = (y, item) => { const r = Math.floor(y) - y0; if (r >= 0 && r < rows.length) rows[r].push(item); };
+  visibleShakers.clear();
+  for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t !== 'treeP' && !OBJ[o.t].flat) { push(y, { k: 'o', x, y, o, s: y + 1 }); if (o.shake) visibleShakers.add(o); } }
+  push(CY, { k: 'tree', s: CY + 1 });
+  const p = G.p; push(p.y, { k: 'p', s: p.y });
+  for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
+  for (const k of BKEYS) if (!G.bossDead[k]) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
+  for (const d of G.drops) push(d.y, { k: 'd', d, s: d.y });
+  const L = LIFT * Z;
+  for (let r = 0; r < rows.length; r++) {
+    const y = y0 + r, sy = y * T - camY;
+    for (let x = x0; x <= x1; x++) {
+      const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
+      ctx.drawImage(SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L, T, T);
+      const below = y + 1 < H ? G.wall[i + W] : 1;
+      if (!below) ctx.drawImage(SPR.wfront[w], sx, sy + T - L, T, L);
+      ctx.fillStyle = 'rgba(20,12,30,0.55)';
+      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, Z, T);
+      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - Z, sy - L, Z, T);
+      if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, Z); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + Z, T, Z); }
+      const dm = G.wdmg.get(i); if (dm) ctx.drawImage(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))], sx, sy - L, T, T);
+    }
+    const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
+    for (const it of list) drawEntity(it, t);
+  }
+  // swing arc
+  if (G.swing) {
+    const s = G.swing, pr = 1 - s.t / s.max, a = s.ang - 1.2 + pr * 2.4, hx = p.x, hy = p.y - .45;
+    ctx.strokeStyle = `rgba(255,244,220,${0.55 * (1 - pr)})`; ctx.lineWidth = 2.5 * Z; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(hx * T - camX, hy * T - camY, 0.95 * T, s.ang - 1.2, a); ctx.stroke();
+    if (s.icon) { const ix = (hx + Math.cos(a) * .55) * T - camX, iy = (hy + Math.sin(a) * .55) * T - camY; ctx.save(); ctx.translate(ix, iy); ctx.rotate(a + Math.PI / 4); ctx.drawImage(SPR.item[s.icon], -8 * Z, -8 * Z, 16 * Z, 16 * Z); ctx.restore(); }
+  }
+  for (const q of G.parts) { ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life / q.max * 1.6); const s = q.sz * Z; ctx.fillRect(Math.round(q.x * T - camX - s / 2), Math.round((q.y - q.z) * T - camY - s / 2), s, s); }
+  ctx.globalAlpha = 1;
+  // fishing line
+  if (G.fish) {
+    const f = G.fish, hx = p.x + p.face.x * .35, hy = p.y - .55; let bx = f.bx, by = f.by, bz = 0;
+    if (f.fly > 0) { const pr = 1 - f.fly / 0.3; bx = hx + (f.bx - hx) * pr; by = hy + (f.by - hy) * pr; bz = Math.sin(pr * Math.PI) * .8; }
+    else { by += f.st === 'bite' ? .12 : f.nib > 0 ? .06 : Math.sin(t * 3) * .03; }
+    const X0 = hx * T - camX, Y0 = hy * T - camY, X1 = bx * T - camX, Y1 = (by - bz) * T - camY;
+    ctx.strokeStyle = 'rgba(240,235,250,0.85)'; ctx.lineWidth = Math.max(1, Z * .5); ctx.beginPath(); ctx.moveTo(X0, Y0); ctx.quadraticCurveTo((X0 + X1) / 2, Math.max(Y0, Y1) + .35 * T, X1, Y1); ctx.stroke();
+    if (f.fly <= 0) { ctx.strokeStyle = `rgba(220,245,255,${0.5 - ((t * .8) % 1) * .5})`; ctx.lineWidth = Z * .6; ctx.beginPath(); ctx.ellipse(X1, f.by * T - camY + 1.5 * Z, (2 + ((t * .8) % 1) * 5) * Z, (1 + ((t * .8) % 1) * 2.2) * Z, 0, 0, 6.283); ctx.stroke(); }
+    const r = 1.6 * Z; ctx.fillStyle = '#ff6b6b'; ctx.beginPath(); ctx.arc(X1, Y1, r, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(X1, Y1, r, 0, Math.PI); ctx.fill();
+  }
+  if (G.fishFx) { const fx = G.fishFx, pr = Math.min(1, fx.t / .5); drawImg(iconCanvas(fx.id), fx.x0 + (fx.x1 - fx.x0) * pr, fx.y0 + (fx.y1 - fx.y0) * pr + .3, { sx: .8, sy: .8, z: Math.sin(pr * Math.PI) * 1.4 }); }
+  // lighting
+  if (lightCv && LW) {
+    ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(lightCv, 0, 0, LW, LH, LX0 * T - camX, LY0 * T - camY - L * 0.5, LW * T, LH * T);
+    ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
+    for (const Lt of LIGHTS) { if (!Lt.col) continue; const gx = Lt.x * T - camX, gy = (Lt.y - (Lt.tall ? .9 : .35)) * T - camY, rr = Math.min(Lt.r, 7) * T * 0.38; if (gx < -rr || gy < -rr || gx > cw + rr || gy > ch + rr) continue; ctx.drawImage(glowSprite(Lt.col), gx - rr, gy - rr, rr * 2, rr * 2); }
+    ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+  }
+  // tree lanterns glow on top
+  // boss shots (drawn after lighting so they read in the dark)
+  if (G.shots.length) { ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true; for (const s of G.shots) { const gx = s.x * T - camX, gy = (s.y - .3) * T - camY, rr = .55 * T; ctx.drawImage(glowSprite(s.k === 'spore' ? '#d59bff' : '#b9a8ff'), gx - rr, gy - rr, rr * 2, rr * 2); } ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+    for (const s of G.shots) { const img = SPR.shot[s.k], w = img.width * Z, gx = s.x * T - camX, gy = (s.y - .3) * T - camY; if (s.k === 'shard') { ctx.save(); ctx.translate(gx, gy); ctx.rotate((s.a || 0) + Math.PI / 2); ctx.drawImage(img, -w / 2, -w / 2, w, w); ctx.restore(); } else ctx.drawImage(img, gx - w / 2, gy - w / 2, w, w); } }
+  // target highlight
+  if (G.act && G.act.t && p.dead <= 0 && !paused) {
+    const tt = G.act.t, k = G.act.k; const hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
+    const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
+    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse})`; const c = 4 * Z, th = Z;
+    for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + T, hy, -1, 1], [hx, hy + T, 1, -1], [hx + T, hy + T, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - c, sy > 0 ? ay : ay - th, c, th); ctx.fillRect(sx > 0 ? ax : ax - th, sy > 0 ? ay : ay - c, th, c); }
+    if (!document.body.classList.contains('touch') && G.act.lbl) { ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(G.act.lbl).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(G.act.lbl, lx, ly + Z * .3); }
+    if (k === 'place') { const s = selItem(); if (s) { ctx.globalAlpha = 0.45; const it = ITEMS[s.id]; const img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id); ctx.drawImage(img, hx + T / 2 - img.width * Z / 2, hy + T - img.height * Z, img.width * Z, img.height * Z); ctx.globalAlpha = 1; } }
+  }
+  // goal arrow
+  if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = (p.x + Math.cos(a) * r) * T - camX, ay = (p.y - .4 + Math.sin(a) * r) * T - camY; ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.sin(performance.now() / 200) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
+  // texts
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${Math.round(6.2 * Z)}px Jua, sans-serif`; ctx.lineJoin = 'round';
+  for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); const X = tx.x * T - camX, Y = tx.y * T - camY; ctx.lineWidth = 1.6 * Z; ctx.strokeStyle = INK; ctx.strokeText(tx.txt, X, Y); ctx.fillStyle = tx.col; ctx.fillText(tx.txt, X, Y); }
+  ctx.globalAlpha = 1;
+}
+function drawEntity(it, t) {
+  const T = TP, camX = VIEW.camX, camY = VIEW.camY;
+  if (it.k === 'o') {
+    const o = it.o, d = OBJ[o.t]; let img = SPR.obj[o.t]; const wx = it.x + .5, wy = it.y + 1 - 1 / 16;
+    if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))];
+    if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
+    const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
+    if (d.solid && img.height > 17) shadow(wx, wy - .08, .38, .25);
+    drawImg(img, wx, wy, { sx });
+    if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
+    if (d.shrine && o.has) { const gk = guardOf(it.x, it.y), sealed = gk && !G.bossDead[gk]; const bob = Math.sin(t * 2.5) * 0.08; drawImg(SPR.item.lightSeed, wx, it.y + .25 + bob, { sx: .9, sy: .9, alpha: sealed ? .55 : 1 });
+      if (sealed) { ctx.strokeStyle = `rgba(190,140,255,${.45 + Math.sin(t * 3) * .2})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.arc(wx * T - camX, (it.y - .3) * T - camY, .55 * T, 0, 6.283); ctx.stroke(); } }
+    if (d.crop && cropStage(o) >= 3) { ctx.fillStyle = `rgba(255,241,214,${0.5 + Math.sin(t * 5) * 0.3})`; ctx.fillRect(Math.round((it.x + .78) * T - camX), Math.round((it.y + .1) * T - camY), Z, Z); }
+    return;
+  }
+  if (it.k === 'tree') {
+    shadow(CX + .5, CY + .95, 1.5, .3); drawImg(SPR.tree, CX + .5, CY + 1 + 2 / 16);
+    const base = { x: CX + .5 - 24 / 16, y: CY + 1 + 2 / 16 - 60 / 16 };
+    [[9, 32], [24, 35], [39, 32]].forEach(([lx, ly], k) => { const on = k < G.treeSeeds; const sw = Math.sin(t * 1.6 + k) * 0.6; drawImg(SPR.lantern[on ? 1 : 0], base.x + (lx + sw) / 16, base.y + (ly + 11) / 16); });
+    return;
+  }
+  if (it.k === 'p') {
+    const p = G.p; if (p.dead > 0) { drawImg(SPR.player.down[0], p.x, p.y + .15, { alpha: .5, sy: .6 }); return; }
+    if (p.inv > 0 && p.inv < 0.7 && Math.floor(performance.now() / 70) % 2) return;
+    shadow(p.x, p.y + .1, .3); const fr = p.moving ? Math.floor(p.anim * 7) % 2 : 0; const bob = p.moving ? (fr ? 1 / 16 : 0) : Math.sin(t * 2) > .7 ? 1 / 16 : 0;
+    drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[p.dir][fr], p.x, p.y + .15 - bob, { flip: p.flip });
+    return;
+  }
+  if (it.k === 'e') {
+    const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
+    let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
+    else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
+    drawImg(e.hurt > 0 ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip });
+    if (e.hp < def.hp) { const w = 12 * Z, hx = e.x * T - camX - w / 2, hy = (e.y - .95 - (e.z || 0)) * T - camY; ctx.fillStyle = INK; ctx.fillRect(hx - Z, hy - Z, w + 2 * Z, 3 * Z); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(hx, hy, w * Math.max(0, e.hp / def.hp), Z); }
+    return;
+  }
+  if (it.k === 'b') {
+    const b = it.b, def = BOSSES[b.k]; shadow(b.x, b.y + .2, 1.1 - b.z * .15, .35);
+    let sx = 1, sy = 1;
+    if (b.st === 'sleep') { const k = Math.sin(t * 1.5) * .04; sx = 1 + k; sy = 1 - k; }
+    else if (b.k === 'slime') { if (b.air > 0) { sx = .92; sy = 1.1; } else { const k = Math.min(1, b.t) * .1; sx = 1 + k; sy = 1 - k; } }
+    else if (b.k === 'queen') { if (b.ph === 'cast') { sx = 1.05 + Math.sin(t * 30) * .03; sy = .96; } else { const k = Math.sin((b.anim || 0) * 8) * .04; sx = 1 - k; sy = 1 + k; } }
+    else { if (b.ph === 'aim') { sx = 1.07; sy = .93; } else if (b.ph === 'dash') { sx = 1.1; sy = .92; } else if (b.ph === 'stun') sx = 1 + Math.sin(t * 40) * .03; }
+    if (b.st === 'fight' && b.k === 'queen' && b.ph === 'cast') { const pr = 1 - Math.max(0, b.t) / .75; ctx.strokeStyle = `rgba(213,155,255,${.35 + pr * .45})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.6 + pr * 1.4) * T, (.3 + pr * .7) * T, 0, 0, 6.283); ctx.stroke(); }
+    if (b.st === 'fight' && b.k === 'golem' && b.ph === 'aim') { ctx.strokeStyle = 'rgba(255,110,130,0.7)'; ctx.lineWidth = 1.5 * Z; ctx.setLineDash([3 * Z, 2 * Z]); ctx.beginPath(); ctx.moveTo(b.x * T - camX, b.y * T - camY); ctx.lineTo((b.x + b.dx * 7) * T - camX, (b.y + b.dy * 7) * T - camY); ctx.stroke(); ctx.setLineDash([]); }
+    drawImg(b.hurt > 0 ? SPR[def.spr + 'W'] : SPR[def.spr], b.x, b.y + .3, { sx: sx * def.scale, sy: sy * def.scale, z: b.z || 0 });
+    if (b.st === 'sleep') { ctx.font = `${Math.round(7 * Z)}px Jua, sans-serif`; ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
+    if (b.k === 'golem' && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
+    return;
+  }
+  if (it.k === 'd') { const d = it.d; shadow(d.x, d.y + .05, .16, .3); const bob = d.z === 0 ? Math.sin(t * 4 + d.x * 3) * 0.05 + 0.05 : 0; drawImg(iconCanvas(d.id), d.x, d.y + .05, { sx: .6, sy: .6, z: d.z + bob }); }
+}
+function iconCanvas(id) {
+  if (SPR.item[id]) return SPR.item[id];
+  const it = ITEMS[id];
+  if (it.kind === 'place') return SPR.obj[it.obj];
+  if (it.kind === 'wall') { const c = mk(16, 16, A => { A.g.drawImage(SPR.wtop[it.wall][0], 0, 0, 16, 11, 1, 1, 14, 10); A.g.drawImage(SPR.wfront[it.wall], 0, 0, 16, 5, 1, 11, 14, 4); }); return SPR.item[id] = c; }
+  if (it.kind === 'floor') { const c = mk(16, 16, A => { A.g.drawImage(SPR.floor[it.floor][1], 0, 0, 16, 16, 1, 3, 14, 11); }); return SPR.item[id] = c; }
+  return SPR.ui.dots;
+}
+const ICONURL = {};
+function iconURL(id) { if (ICONURL[id]) return ICONURL[id]; const c = SPR.ui[id] || iconCanvas(id); return ICONURL[id] = c.toDataURL(); }
+
+// ================= UI =================
+const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false };
+let panel = null, panelAt = 0;
+function slotHTML(s, a, i, cls = '') { return `<button type="button" class="slot ${cls}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>` : ''}</button>`; }
+function refreshHotbar() {
+  const hb = $('#hotbar'); let h = '';
+  for (let i = 0; i < 6; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
+  hb.innerHTML = h; invDirty = false; if (panel) renderPanel();
+}
+let lastHud = '', lastAct = '';
+function updateHud() {
+  const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger);
+  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = p.hp + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
+  const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
+  if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
+  if (invDirty) refreshHotbar();
+}
+function openPanel(kind, data = {}) { panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
+function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
+function itemStat(it) { if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}`; if (it.kind === 'sword') return `공격력 ${it.dmg}`; if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽'][it.tier]}까지`; return ''; }
+function renderPanel() {
+  const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
+  if (k === 'inv') {
+    h += head('가방', 'bag');
+    h += `<div class="sh-body"><p class="hint">칸을 누르면 고를 수 있고, 다른 칸을 누르면 자리가 바뀌어요. 도구와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
+    for (let i = 0; i < 30; i++) { if (i === 6) h += `</div><div class="lbl">가방</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, UIS.invSel === i ? 'pick' : ''); }
+    h += `</div>`;
+    const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
+    if (s) { const it = ITEMS[s.id]; const st = itemStat(it);
+      h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${it.n} <span style="color:var(--muted);font-size:15px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
+      if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
+      if (UIS.invSel >= 6) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
+      h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
+    h += `</div>`;
+  } else if (k === 'craft') {
+    const near = nearStations(); const st = panel.st;
+    h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
+    const tabs = [['all', '전체'], ['tool', '도구'], ['furn', '기본 가구'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료']]; if (st) tabs.unshift(['here', STN[st]]);
+    h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
+    h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}</div>`;
+    let list = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => UIS.tab === 'all' || (UIS.tab === 'here' ? r.at === st : r.cat === UIS.tab));
+    list.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near));
+    h += `<div class="sh-body"><div class="list">`;
+    for (const { r, i } of list) {
+      const ok = canCraft(r, near), it = ITEMS[r.out], stn = r.at && !near.has(r.at);
+      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${it.n}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = countItem(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div>${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>만들기</button></div>`;
+    }
+    h += `</div></div>`;
+  } else if (k === 'chest') {
+    const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
+    const empty = o.items.every(x => !x);
+    h += head('보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
+    h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요.</p><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.map((s, i) => slotHTML(s, 'cin', i)).join('')}</div></div>`;
+  } else if (k === 'map') {
+    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span></div></div>`;
+  } else if (k === 'tree') {
+    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${[0, 1, 2].map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p></div>`;
+  } else if (k === 'menu') {
+    h += head('메뉴', 'gear') + `<div class="sh-body"><div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기로 바뀌어요</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>단축키</b><span>1–6 단축칸 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요?' : '처음부터 다시 하기'}</button></div></div>`;
+  } else if (k === 'win') {
+    h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요. 계속 꾸미고 탐험해 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
+  }
+  sh.innerHTML = h;
+  if (k === 'map') drawMap();
+}
+function drawMap() {
+  const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
+  if (mapDirty) { mapCtx.putImageData(mapImg, 0, 0); mapDirty = false; }
+  const span = UIS.mapAll ? W : 90, s = 600 / span; const ox = UIS.mapAll ? 0 : clamp(G.p.x - span / 2, 0, W - span), oy = UIS.mapAll ? 0 : clamp(G.p.y - span / 2, 0, H - span);
+  g.drawImage(mapCv, ox, oy, span, span, 0, 0, 600, 600);
+  const dot = (x, y, col, r) => { const X = (x - ox) * s, Y = (y - oy) * s; g.fillStyle = INK; g.beginPath(); g.arc(X, Y, r + 3, 0, 6.283); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(X, Y, r, 0, 6.283); g.fill(); };
+  dot(CX + .5, CY, '#ffc861', 9);
+  if (G.spawnPt) dot(G.spawnPt.x + .5, G.spawnPt.y + .5, '#ff8fa3', 5);
+  for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
+  for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
+  dot(G.p.x, G.p.y, '#7fe0b5', 8);
+}
+function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) set.add(OBJ[o.t].station); } return set; }
+function canCraft(r, near) { return (!r.at || near.has(r.at)) && r.req.every(([id, c]) => countItem(id) >= c); }
+function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } for (let i = 0; i < arr.length && left; i++) if (!arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; left -= arr[i].c; } return left; }
+function onSheetClick(e) {
+  if (performance.now() - panelAt < 450) return;
+  const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, i = b.dataset.i != null ? (isNaN(+b.dataset.i) ? b.dataset.i : +b.dataset.i) : null;
+  ensureAudio();
+  if (a === 'close') { closePanel(); return; }
+  if (a === 'inv') {
+    UIS.trash = false;
+    if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
+    else if (UIS.invSel === i) UIS.invSel = null;
+    else { const A = G.inv[UIS.invSel], B = G.inv[i]; if (A && B && A.id === B.id && B.c < stackMax(B.id)) { const k = Math.min(stackMax(B.id) - B.c, A.c); B.c += k; A.c -= k; if (!A.c) G.inv[UIS.invSel] = null; } else { G.inv[UIS.invSel] = B; G.inv[i] = A; } UIS.invSel = null; SFX.place(); }
+    invDirty = true; renderPanel(); return;
+  }
+  if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
+  if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
+  if (a === 'trash') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } G.inv[UIS.invSel] = null; UIS.invSel = null; UIS.trash = false; invDirty = true; renderPanel(); return; }
+  if (a === 'tab') { UIS.tab = i; renderPanel(); return; }
+  if (a === 'mapzoom') { UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
+  if (a === 'craft') {
+    const r = RECIPES[i], near = nearStations(); if (!canCraft(r, near)) return;
+    for (const [id, c] of r.req) removeItem(id, c); const left = addItem(r.out, r.n); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
+    SFX.craft(); toast(`${ITEMS[r.out].n}${r.n > 1 ? ' ×' + r.n : ''} 완성!`, 'good');
+    if (['place', 'wall', 'floor', 'food'].includes(ITEMS[r.out].kind)) { let slot = G.inv.findIndex(s => s && s.id === r.out);
+      if (slot >= 6) { let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel; const tmp = G.inv[to]; G.inv[to] = G.inv[slot]; G.inv[slot] = tmp; slot = to; }
+      if (slot >= 0 && slot < 6) G.sel = slot; }
+    invDirty = true; checkGuide(); renderPanel(); return;
+  }
+  if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; G.objs.delete(panel.i); const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
+  if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
+  if (a === 'save') { saveLocal(); return; }
+  if (a === 'sound') { soundOn = !soundOn; try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
+  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } newGame((Math.random() * 1e9) | 0); started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
+}
+function hotClick(i) {
+  ensureAudio();
+  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); }
+  G.sel = i; invDirty = true;
+}
+
+// ================= input wiring =================
+function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
+function placeJoyIdle() { const j = $('#joy'); j.style.left = '96px'; j.style.top = (innerHeight - 220) + 'px'; }
+function setupInput() {
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('pointerdown', e => {
+    ensureAudio(); if (paused) return;
+    if (e.pointerType === 'mouse') { mouse.down = e.button === 0; if (mouse.down) actQ = 0.3; mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
+    document.body.classList.add('touch'); mouse.used = false;
+    if (!joy.active && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
+  });
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; mouse.last = performance.now(); mouse.used = true; return; }
+    if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 50; if (l > R) { joy.ox += dx * (1 - R / l) * 0.35; joy.oy += dy * (1 - R / l) * 0.35; dx = e.clientX - joy.ox; dy = e.clientY - joy.oy; const l2 = Math.hypot(dx, dy); if (l2 > R) { dx *= R / l2; dy *= R / l2; } const j = $('#joy'); j.style.left = joy.ox + 'px'; j.style.top = joy.oy + 'px'; }
+      const m = Math.hypot(dx, dy) / R; joy.vx = m > 0.15 ? dx / R : 0; joy.vy = m > 0.15 ? dy / R : 0; $('#joyKnob').style.transform = `translate(${dx}px,${dy}px)`; }
+  });
+  const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); window.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') mouse.down = false; });
+  const ab = $('#actBtn');
+  ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
+  const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
+  window.addEventListener('keydown', e => {
+    if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
+    ensureAudio();
+    if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
+    if (!started) return;
+    if (panel) { if ((e.code === 'KeyI' || e.code === 'Tab') && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); return; }
+    if (e.code === 'KeyI' || e.code === 'Tab' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
+    if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; }
+    if (/^Digit[1-6]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
+    if (e.code === 'KeyQ') { const s = selItem(); if (s && ITEMS[s.id].kind === 'food') eat(G.sel); return; }
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+    if (['Space', 'KeyJ', 'KeyE'].includes(e.code)) actQ = 0.3;
+    keys.add(e.code);
+  });
+  window.addEventListener('keyup', e => keys.delete(e.code));
+  window.addEventListener('blur', () => { keys.clear(); btnHeld = false; mouse.down = false; joyEnd(); });
+  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1; G.sel = (G.sel + d + 6) % 6; invDirty = true; }, { passive: true });
+  $('#hotbar').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
+  $('#sheet').addEventListener('click', onSheetClick);
+  $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450) return; if (panel && panel.kind !== 'win') closePanel(); });
+  $('#bInv').addEventListener('click', () => started && openPanel('inv'));
+  $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
+  $('#bMap').addEventListener('click', () => started && openPanel('map'));
+  $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
+  $('#goal').addEventListener('click', () => { const g = GUIDE[G.guide]; if (g) toast(g.h); });
+  $('#btnNew').addEventListener('click', () => { ensureAudio(); newGame((Math.random() * 1e9) | 0); beginPlay(); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
+  $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
+  window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && started) saveLocal(true); });
+  window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
+}
+function beginPlay() { $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
+
+// ================= loop =================
+let lastT = 0;
+function loop(ts) {
+  const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
+  if (G) { if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
+  render(); if (G && started) updateHud();
+  requestAnimationFrame(loop);
+}
+function start(data) {
+  document.body.classList.add('intro');
+  buildSprites();
+  lightCv = document.createElement('canvas'); lightCtx = lightCv.getContext('2d');
+  try { soundOn = localStorage.getItem('lantern-tree-sound') !== '0'; } catch (e) { }
+  if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
+  $('#icHp').src = iconURL('heart'); $('#icHu').src = iconURL('food');
+  ['bInv', 'bCraft', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'map', 'gear'][k]); });
+  if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
+  setupInput(); resize(); placeJoyIdle();
+  const saved = (data && data.save) || loadLocal();
+  if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { newGame(20261008); } } else newGame(20261008);
+  cam.x = G.p.x; cam.y = G.p.y - .3; computeLight();
+  if (data && data.save && data.playing) beginPlay();
+  requestAnimationFrame(loop);
+}
+window.claude?.hot?.snapshot?.(() => ({ save: serialize(), playing: started }));
+if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? {});
+})();
+</script>

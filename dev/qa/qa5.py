@@ -1,0 +1,71 @@
+import asyncio, sys, json
+sys.argv=['x']
+exec(open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'qa2.py')).read().split('async def main():')[0])
+async def main():
+    mkpage(SRC,'qa.html')
+    async with async_playwright() as p:
+        b=await p.chromium.launch()
+        ctx=await b.new_context(viewport={'width':1280,'height':800},accept_downloads=True)
+        pg=await ctx.new_page(); errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+        await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(600)
+        # build something recognizable
+        await ev(pg,"()=>{const G=__T.G;G.p.x=105.5;G.p.y=110.5;__T.addItem('stone',77);G.objs.set(__T.idx(104,112),{t:'chair'})}")
+        await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
+        html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
+        rec('세이브파일','메뉴에 내보내기/불러오기 버튼', '파일로 내보내기' in html and '파일 불러오기' in html)
+        rec('개발자','기본 상태에서는 개발자 도구가 안 보임', '마을 표시' not in html)
+        async with pg.expect_download() as di:
+            await pg.click('button[data-a=export]')
+        d=await di.value; path=SP+'exported.json'; await d.save_as(path)
+        j=json.load(open(path)); rec('세이브파일','내보낸 파일 형식', j.get('app')=='lantern-tree' and 'save' in j and d.suggested_filename.startswith('등불나무_세이브_') and d.suggested_filename.endswith('.json'), d.suggested_filename)
+        # change the world, then import
+        await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(104,112));G.inv.fill(null);G.p.x=60.5;G.p.y=60.5}")
+        await pg.set_input_files('#fileIn', path); await pg.wait_for_timeout(500)
+        html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
+        rec('세이브파일','불러오기 전 확인 문구', '세이브로 바꿀까요' in html)
+        await pg.click('button[data-a=impYes]'); await pg.wait_for_timeout(500)
+        r=await ev(pg,"()=>{const G=__T.G;return [!!G.objs.get(__T.idx(104,112)), __T.countItem('stone'), Math.round(G.p.x*10)/10, !document.querySelector('#sheetWrap').hidden]}")
+        rec('세이브파일','불러오면 세계·가방·위치 복원', r[0] and r[1]>=77 and r[2]==105.5 and not r[3], str(r))
+        # bad file
+        open(SP+'bad.json','w').write('{"hello":1}')
+        await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
+        await pg.click('button[data-a=import]')
+        await pg.set_input_files('#fileIn', SP+'bad.json'); await pg.wait_for_timeout(400)
+        t=await ev(pg,"()=>document.querySelector('#toasts').innerText")
+        rec('세이브파일','엉뚱한 파일은 거절', '세이브 파일이 아니에요' in t, t[-40:])
+        # dev mode: tap title 7 times
+        for _ in range(7): await pg.click('#sheet [data-a=devtap]'); await pg.wait_for_timeout(60)
+        html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
+        rec('개발자','메뉴 제목 7번 누르면 개발자 도구', '마을 표시' in html)
+        await pg.click('button[data-a=markAdd]'); await ev(pg,"()=>{__T.G.p.x=112.5;__T.G.p.y=116.5}"); await pg.wait_for_timeout(100); await pg.click('button[data-a=markAdd]'); await pg.wait_for_timeout(200)
+        html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
+        rec('개발자','표시 2개 (시작/끝)', '마을 1 · 시작 (105, 110)' in html and '마을 1 · 끝 (112, 116)' in html, html[-120:])
+        await pg.click('button[data-a=close]'); await ev(pg,"()=>{__T.G.p.x=108.5;__T.G.p.y=113.5}"); await pg.wait_for_timeout(700)
+        await pg.screenshot(path=SP+'qa5_marks.png')
+        s=await ev(pg,"()=>__T.serialize().marks")
+        rec('개발자','표시가 세이브에 포함', s==[{'x':105,'y':110},{'x':112,'y':116}], str(s))
+        # toggle off
+        await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
+        for _ in range(7): await pg.click('#sheet [data-a=devtap]'); await pg.wait_for_timeout(60)
+        html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
+        rec('개발자','다시 7번 누르면 꺼짐', '마을 표시' not in html)
+        await pg.click('button[data-a=close]'); await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'qa5_nomarks.png')
+        await ctx.close()
+        # title import on a fresh context with existing save
+        ctx=await b.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True,device_scale_factor=2)
+        pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
+        await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
+        await ev(pg,"()=>{localStorage.setItem('lantern-tree-save-v1',JSON.stringify(__T.serialize()))}")
+        await pg.reload(); await pg.wait_for_timeout(600)
+        await pg.screenshot(path=SP+'qa5_title.png')
+        await pg.set_input_files('#fileIn', path)
+        await ev(pg,"()=>{}")
+        # simulate title origin
+        await ev(pg,"()=>{}")
+        await pg.click('#btnImport', no_wait_after=True) if False else None
+        await pg.evaluate("()=>{}")
+        await ctx.close()
+        rec('기능','콘솔 오류 없음', not errs, errs[:3])
+        await b.close()
+    print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+asyncio.run(main())

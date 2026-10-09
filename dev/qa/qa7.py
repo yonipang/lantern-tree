@@ -1,0 +1,98 @@
+import asyncio, sys
+sys.argv=['x']
+exec(open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'qa2.py')).read().split('async def main():')[0])
+H2=HOOK.replace("computeLight}","computeLight,checkGuide,subAction:()=>subAction(),get act(){return G.act},canPlace,RECIPES}")
+async def main():
+    mkpage(SRC,'qa.html',H2)
+    async with async_playwright() as p:
+        b=await p.chromium.launch()
+        ctx,pg,errs=await new_ctx(b,390,844,True)
+        F=lambda x,y: f"__T.G.floor[__T.idx({x},{y})]"
+        async def setup(extra):
+            await ev(pg,"()=>{const G=__T.G;for(let y=106;y<116;y++)for(let x=104;x<118;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.fish=null;G.inv.fill(null);G.under.clear();G.p.x=110.5;G.p.y=110.5;G.p.face={x:1,y:0};"+extra+"}")
+            await pg.wait_for_timeout(150)
+        sel="G.sel=G.inv.findIndex(s=>s&&s.id==='{}');"
+        # 1. build priority
+        await setup("G.objs.set(__T.idx(111,110),{t:'bench'});__T.addItem('floorWood',5);"+sel.format('floorWood'))
+        r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+        rec('건축 우선','바닥 들고 작업대 앞 → 깔기', r==['place','깔기'], str(r))
+        await tap(pg,1); r=await ev(pg,f"()=>[{F(111,110)}, !!__T.G.objs.get(__T.idx(111,110)), document.querySelector('#sheetWrap').hidden]")
+        rec('건축 우선','작업대는 그대로, 아래에 바닥이 깔리고 창은 안 열림', r==[5,True,True], str(r))
+        await setup("G.objs.set(__T.idx(111,110),{t:'bench'});__T.addItem('chair',1);"+sel.format('chair'))
+        r=await ev(pg,"()=>__T.decide().k")
+        rec('건축 우선','가구 들고 작업대 앞(놓을 수 없음) → 열기로 대체', r=='open', r)
+        # 2. bug fix: set floors return
+        await setup("__T.addItem('floorMoss',1);__T.addItem('floorWood',1);"+sel.format('floorMoss'))
+        await tap(pg,1); await ev(pg,"()=>{const G=__T.G;"+sel.format('floorWood')+"}"); await pg.wait_for_timeout(150); await tap(pg,1); await pg.wait_for_timeout(900)
+        r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('floorMoss')]")
+        rec('버그 수정','이끼 타일 위에 나무 바닥 → 이끼 타일 돌려받음', r==[5,1], str(r))
+        # 3. shovel: only in hand
+        await setup("__T.addItem('floorWood',1);__T.addItem('shovel',1);"+sel.format('floorWood'))
+        await tap(pg,1); await ev(pg,"()=>{__T.G.sel=5}"); await pg.wait_for_timeout(200)
+        r=await ev(pg,"()=>[!!__T.decide().sub, document.querySelector('#subBtn').hidden]")
+        rec('삽','삽이 가방에만 있으면 [걷기] 없음', r==[False,True], str(r))
+        await ev(pg,"()=>{const G=__T.G;"+sel.format('shovel')+"}"); await pg.wait_for_timeout(150)
+        r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+        rec('삽','삽을 들면 바닥 앞 큰 버튼이 걷기', r==['dig','걷기'], str(r))
+        await tap(pg,1)
+        r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('floorWood')]")
+        rec('삽','걷으면 원래 이끼 땅으로 + 바닥 돌려받음', r==[1,1], str(r))
+        # 4. locked terrain
+        await setup("G.terrain={};__T.addItem('shovel',1);"+sel.format('shovel'))
+        r=await ev(pg,"()=>[__T.decide().k,__T.decide().msg]")
+        rec('지형 해금','배우기 전: 이끼 파기 막힘 + 방법 안내', r[0]=='info' and '이끼는 아직' in r[1] and '구리 곡괭이' in r[1], str(r))
+        r=await ev(pg,"()=>__T.ITEMS.shovel.d")
+        rec('지형 해금','삽 설명에 배운/아직 지형 표시', '배운 지형: 흙' in r and '아직:' in r, r[-80:])
+        # unlock moss via quest
+        await ev(pg,"()=>{__T.addItem('pickCopper',1);__T.G.stats.wood=9;__T.G.stats.bench=1;__T.G.stats.torch=1;__T.G.stats.copperOre=9;__T.G.stats.copperBar=2;__T.checkGuide()}")
+        await pg.wait_for_timeout(200)
+        r=await ev(pg,"()=>[__T.G.terrain[1], document.querySelector('#toasts').innerText.includes('새 지형을 배웠어요: 이끼')]")
+        rec('지형 해금','퀘스트 「구리 곡괭이」 완료 → 이끼 해금 + 알림', r==[1,True], str(r))
+        await ev(pg,"()=>{const G=__T.G;"+sel.format('shovel')+"}"); await pg.wait_for_timeout(150)
+        r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+        rec('지형 해금','배운 뒤: 삽 들고 이끼 → 파기', r==['dig','파기'], str(r))
+        await tap(pg,1)
+        r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gMoss')]")
+        rec('삽','이끼를 파면 흙이 되고 이끼 한 삽 획득', r==[2,1], str(r))
+        r=await ev(pg,"()=>__T.decide().lbl")
+        rec('삽','흙은 더 못 팜', r=='흙 땅', r)
+        # place moss elsewhere: make a dirt tile in front
+        await ev(pg,"()=>{const G=__T.G;G.floor[__T.idx(111,110)]=2;G.p.x=112.5;G.p.face={x:-1,y:0};G.floor[__T.idx(111,110)]=2;"+sel.format('gMoss')+"}"); await pg.wait_for_timeout(150)
+        r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+        rec('지형 배치','이끼 한 삽 들고 흙 → 덮기', r==['place','덮기'], str(r))
+        await tap(pg,1); r=await ev(pg,f"()=>{F(111,110)}")
+        rec('지형 배치','흙이 이끼로 바뀜', r==1, r)
+        # dirt crafting recipe and fill water
+        r=await ev(pg,"()=>!!__T.RECIPES.find(r=>r.out==='gDirt'&&r.req[0][0]==='dirt'&&r.at===null)")
+        rec('지형 배치','흙 한 삽은 흙으로 어디서나 제작', r)
+        await setup("__T.addItem('gDirt',2);G.floor[__T.idx(111,110)]=__T.WATER;"+sel.format('gDirt'))
+        r=await ev(pg,"()=>__T.decide().lbl"); await tap(pg,1)
+        r2=await ev(pg,f"()=>{F(111,110)}")
+        rec('지형 배치','흙으로 물 메우기', r=='덮기' and r2==2, f'{r} {r2}')
+        # water unlock by fishing
+        await setup("G.terrain={1:1};G.stats.fishCaught=10;__T.addItem('shovel',1);G.floor[__T.idx(111,110)]=__T.WATER;")
+        await ev(pg,"()=>{__T.checkGuide();const G=__T.G;"+sel.format('shovel')+"}"); await pg.wait_for_timeout(150)
+        r=await ev(pg,"()=>[__T.G.terrain[10], __T.decide().lbl]")
+        rec('지형 해금','물고기 10마리 → 물 해금, 물 뜨기', r==[1,'물 뜨기'], str(r))
+        await tap(pg,1); r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gWater')]")
+        rec('삽','물을 뜨면 흙이 되고 물 한 동이 획득', r==[2,1], str(r))
+        await ev(pg,"()=>{const G=__T.G;"+sel.format('gWater')+"}"); await pg.wait_for_timeout(150)
+        r=await ev(pg,"()=>__T.decide().lbl"); await tap(pg,1); r2=await ev(pg,f"()=>{F(111,110)}")
+        rec('지형 배치','물 한 동이 붓기 → 물웅덩이', r=='붓기' and r2==10, f'{r} {r2}')
+        # bosses unlock
+        await ev(pg,"()=>{__T.G.bossDead.queen=true;__T.G.bossDead.golem=true;__T.checkGuide()}")
+        r=await ev(pg,"()=>[__T.G.terrain[3],__T.G.terrain[4]]")
+        rec('지형 해금','버섯 여왕/수정골렘 → 버섯흙/수정바닥 해금', r==[1,1], str(r))
+        # save roundtrip
+        await setup("__T.addItem('floorStone',1);"+sel.format('floorStone'))
+        await tap(pg,1)
+        r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.under.get(__T.idx(111,110)), __T.G.terrain[3], __T.G.floor[__T.idx(111,110)]]}")
+        rec('저장','깔린 바닥 아래 땅·해금 정보가 저장됨', r==[1,1,6], str(r))
+        # old save without new fields
+        r=await ev(pg,"()=>{const s=__T.serialize();delete s.under;delete s.terrain;__T.deserialize(s);return [__T.G.under.size, typeof __T.G.terrain]}")
+        rec('저장','예전 세이브(새 항목 없음)도 정상 로드', r==[0,'object'], str(r))
+        await pg.screenshot(path=SP+'qa7.png')
+        rec('기능','콘솔 오류 없음', not errs, errs[:3])
+        await b.close()
+    print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+asyncio.run(main())
