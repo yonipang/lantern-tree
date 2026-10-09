@@ -31,7 +31,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms.find(r=>r.k===0);G.p.x=rm.cx+.5;G.p.y=rm.cy+1.5;G.p.face={x:0,y:-1};const a=T.decide();
           T.computeLight();const l0=T.lightAt(rm.cx,rm.cy);G.drops.length=0;T.openTreasure({x:rm.cx,y:rm.cy},G.objs.get(T.idx(rm.cx,rm.cy)));const got={};for(const d of G.drops)got[d.id]=(got[d.id]||0)+d.c;const a2=T.decide();
           const exp=T.ROOM_LOOT[rm.b][0];return [a.k,a.lbl,got,exp,T.ROOM_DECO[rm.b],rm.open,G.objs.get(T.idx(rm.cx,rm.cy)).open,a2.k,a2.lbl,G.stats.chests]}""")
-        rec('보물상자','바라보면 "보물상자 열기"', r[0]=='treasure', str(r[:2]))
+        rec('보물상자','바라보면 "상자 열기"', r[0]=='treasure', str(r[:2]))
         rec('보물상자','열면 지역별 보물과 그 지역 장식(첫 방)이 나옴', all(r[2].get(i,0)==c for i,c in r[3]) and r[2].get(r[4],0)==1, str(r[2:5]))
         rec('보물상자','한 번 열면 빈 상자 (다시 열 수 없음)', r[5]==1 and r[6]==1 and r[7]=='info' and r[8]=='빈 보물상자' and r[9]==1, str(r[5:]))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const rm=G.rooms.find(r=>r.k===1);if(!rm)return 'none';G.drops.length=0;T.openTreasure({x:rm.cx,y:rm.cy},G.objs.get(T.idx(rm.cx,rm.cy)));const ids=G.drops.map(d=>d.id);G.drops.length=0;return [ids.some(i=>T.ROOM_DECO.includes(i)),ids.length]}""")
