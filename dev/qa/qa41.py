@@ -95,7 +95,7 @@ async def main():
         rec('저장','자동 미닫이문 저장/불러오기 (움직임 상태는 저장 안 함)', r[0]=='slideDoor' and 'sl' not in r[1].split(','), str(r))
         # ---- skill points at the top level ----
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg=T.cleanRpg(null);let n=0;while(G.rpg.lv<T.MAX_LV&&n<500){T.gainXp(5000);n++}const tot=Object.values(T.SKILLS).reduce((a,s)=>a+s.max,0);return [G.rpg.lv,G.rpg.sp,tot]}""")
-        rec('스킬 포인트','최고 레벨이 되면 모든 스킬을 다 올릴 만큼 (30)', r==[30,30,30], str(r))
+        rec('스킬 포인트','최고 레벨 30이면 스킬 포인트 30 (v44부터 스킬이 더 많아 다 올리진 못하고, 다시 배우기는 무료)', r[:2]==[30,30] and r[2]>30, str(r))
         r=await ev(pg,"""()=>{const T=__T;const sk={};let left=29;for(const k in T.SKILLS){const l=Math.min(T.SKILLS[k].max,left);if(l)sk[k]=l;left-=l}
           const a=T.cleanRpg({lv:30,xp:0,sp:0,sk});const b=T.cleanRpg({lv:30,xp:0,sp:1,sk});const c=T.cleanRpg({lv:12,xp:0,sp:2,sk:{tough:3,miner:3,dash:3}});const d=T.cleanRpg({lv:12,xp:0,sp:11,sk:{}});return [a.sp,b.sp,c.sp,d.sp]}""")
         rec('스킬 포인트','옛 세이브(최고 레벨, 하나 모자람) 불러오면 +1, 이미 받았으면 그대로', r==[1,1,2,11], str(r))
