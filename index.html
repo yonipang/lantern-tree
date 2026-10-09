@@ -50,6 +50,11 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .slot.dropT{border-color:var(--mint);background:#3c4a55}
 #dragGhost{position:fixed;z-index:60;width:56px;height:56px;margin:-28px 0 0 -28px;pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
 @media (min-height:521px){body.touch #bCraft{position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);z-index:2;bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px)}}
+.goal{position:relative}.goal.dot::after{content:'';position:absolute;top:6px;right:8px;width:12px;height:12px;border-radius:50%;background:#7fe0b5;border:2px solid #241b2f}
+.qrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid #3a2f4d}.qrow.lock{opacity:.45}
+.qrow .st{font-size:12px;border-radius:10px;padding:3px 8px;white-space:nowrap}.qrow .st.done{background:#2f5a46;color:#a5ecc9}.qrow .st.cur{background:#5a4a20;color:#ffd25c}.qrow .st.lock{background:#2a2139;color:var(--muted)}
+.qrow h4{margin:0;font-weight:400;font-size:16px;line-height:1.3}.qrow p{margin:3px 0 0;font-size:13px;color:var(--muted);line-height:1.4}.qrw{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.qrw span{display:inline-flex;align-items:center;gap:3px;font-size:12px;background:#2a2139;border-radius:8px;padding:2px 6px}.qrw img{width:18px;height:18px}
+.qrow .btn{min-height:42px;padding:0 12px;font-size:14px}.qrow .got{font-size:13px;color:#a5ecc9;white-space:nowrap}
 .sbtn.dot::after{content:'';position:absolute;top:3px;right:3px;width:13px;height:13px;border-radius:50%;background:#ff8fa3;border:2px solid #241b2f}
 
 #bossbar{background:rgba(27,20,38,.85);border:2px solid #8c4a5e;border-radius:14px;padding:6px 10px 8px}
@@ -280,6 +285,7 @@ body.touch #pcHint{display:none}
     </div>
     <div class="side">
       <button class="sbtn" id="bCraft" type="button"><img class="px" alt="">제작</button>
+      <button class="sbtn" id="bQuest" type="button"><img class="px" alt="">퀘스트</button>
       <button class="sbtn" id="bStat" type="button"><img class="px" alt="">능력</button>
       <button class="sbtn" id="bMap" type="button"><img class="px" alt="">지도</button>
       <button class="sbtn" id="bMenu" type="button"><img class="px" alt="">메뉴</button>
@@ -1265,7 +1271,7 @@ const WEAPONS = {
 const WEAPON_DUR = {};
 for (const id in WEAPONS) { const [n, wt, dmg, req, dur, fix, icon, d, orb] = WEAPONS[id];
   ITEMS[id] = { n, kind: 'sword', wt, dmg, stack: 1, d, orb }; ICON[id] = icon; WEAPON_DUR[id] = [dur, fix]; RECIPES.push(Rc(id, 1, req, 'bench', 'weapon')); }
-RECIPES.push(Rc('rope', 1, [['fiber', 3]], null, 'mat'), Rc('forge', 1, [['copperBar', 3], ['wood', 8], ['resin', 2]], 'bench', 'furn'));
+RECIPES.push(Rc('gMoss', 1, [['fiber', 3]], null, 'mat'), Rc('rope', 1, [['fiber', 3]], null, 'mat'), Rc('forge', 1, [['copperBar', 3], ['wood', 8], ['resin', 2]], 'bench', 'furn'));
 // crafting asks for one or two more kinds of material than before
 const REQ_FIX = {
   chest: [['wood', 8], ['resin', 1]], furnace: [['dirt', 10], ['wood', 4], ['resin', 1]], pot: [['copperBar', 3], ['stone', 4], ['wood', 2]],
@@ -1304,6 +1310,7 @@ const SKILLS = {
   swift: { n: '날쌘 발', lv: 4, max: 3, d: l => `이동 속도 +${6 * l}%` },
 };
 Object.assign(UICON, {
+  quest: A => { A.r(3, 2, 10, 12, '#f0e2c8'); A.r(3, 2, 10, 1, '#fff7e8'); A.r(2, 1, 12, 2, '#c9a878'); A.r(2, 13, 12, 2, '#c9a878'); for (const y of [5, 7, 9]) A.r(5, y, 6, 1, '#8a7a6a'); A.p(11, 11, '#e0552a'); A.p(10, 11, '#ff8a3d'); },
   star: A => { A.poly([[8, 1], [10, 6], [15, 6], [11, 9.5], [12.5, 15], [8, 11.5], [3.5, 15], [5, 9.5], [1, 6], [6, 6]], C.amber); A.poly([[8, 3], [9.3, 6.8], [8, 9]], '#fff1b0'); A.p(7, 7, '#fff7d6'); },
   sk_dash: A => { A.e(10.5, 9, 4.5, 4.5, C.mint); A.e(9.5, 7.6, 1.8, 1.4, C.mintL); A.p(12, 8, INK); A.line(1, 6, 5, 6, C.cream); A.line(0, 9, 4, 9, C.cream); A.line(1, 12, 5, 12, C.cream); },
   sk_spin: A => { for (let k = 0; k < 22; k++) { const a = k / 22 * 5.2 + .5; A.r(Math.round(8 + Math.cos(a) * 5.5), Math.round(8 + Math.sin(a) * 5.5), 2, 1, C.cream); } A.poly([[2, 3], [6, 3], [4, 7]], C.cream); A.line(6, 10, 10, 6, C.ironL, 2); A.p(5, 11, C.woodD); },
@@ -1497,6 +1504,103 @@ const NATURE = {
 for (const id in NATURE) { const [n, d, req, flat, spr] = NATURE[id]; OSPR[id] = spr; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = flat ? { n, flat: 1, item: id } : { n, solid: 1, item: id }; RECIPES.push(Rc(id, 1, req, 'bench', 'nature')); }
 RECIPES.push(Rc('sapling', 1, [['wood', 3], ['dirt', 2], ['fiber', 2]], 'bench', 'nature'));
 
+
+// ---- circuits: wires, power (battery → generator → crystal generator), switches, powered devices ----
+const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+Object.assign(ITEMS, {
+  wire: { n: '전선', kind: 'wire', d: '바닥에 깔아 전기를 이어요. 위·아래·옆으로 붙은 전선끼리 연결돼요. 전선을 들고 전선 칸을 누르면 걷어요.' },
+  battery: { n: '건전지', kind: 'place', obj: 'battery', stack: 1, d: '붙은 전선에 전기를 보내요. 쓰면 줄어들고, 작업대 [수리]에서 다시 충전해요.' },
+  generator: { n: '발전기', kind: 'place', obj: 'generator', d: '연료(나무·젤·송진)를 넣으면 건전지 없이 전기를 계속 만들어요. 기계가 일할 때만 연료를 써요.' },
+  crystalGen: { n: '수정 발전기', kind: 'place', obj: 'crystalGen', d: '수정의 힘으로 연료 없이 영원히 전기를 만들어요.' },
+  lever: { n: '레버', kind: 'place', obj: 'lever', d: '누르면 켜고 꺼요. 켜져 있을 때만 양쪽 전선을 이어 줘요.' },
+  plate: { n: '압력판', kind: 'place', obj: 'plate', d: '누군가 올라서 있는 동안만 양쪽 전선을 이어 줘요.' },
+  timer: { n: '타이머 회로', kind: 'place', obj: 'timer', d: '정해진 간격으로 켜졌다 꺼졌다 하며 양쪽 전선을 이어요. 누르면 간격이 바뀌어요.' },
+  eLamp: { n: '전기 램프', kind: 'place', obj: 'eLamp', d: '전기가 들어오면 환하게 켜져요.' },
+  eDoor: { n: '전기 문', kind: 'place', obj: 'eDoor', d: '전기가 들어오면 열리고, 끊기면 닫혀요.' },
+  drillCu: { n: '구리 채굴기', kind: 'place', obj: 'drillCu', d: '놓을 때 바라보는 쪽의 벽에서 광물을 계속 캐요(벽은 사라지지 않아요). 흙·구리·돌·철 광맥까지. 전기가 필요해요.' },
+  drillFe: { n: '철 채굴기', kind: 'place', obj: 'drillFe', d: '수정벽까지 더 빠르게 캐는 채굴기. 전기가 필요해요.' },
+});
+Object.assign(OBJ, {
+  battery: { n: '건전지', solid: 1, item: 'battery', src: 'batt' },
+  generator: { n: '발전기', solid: 1, item: 'generator', src: 'gen', light: [2.5, '#ff9a4a'] },
+  crystalGen: { n: '수정 발전기', solid: 1, item: 'crystalGen', src: 'cgen', light: [4, '#c6b0ff'] },
+  lever: { n: '레버', solid: 1, item: 'lever', sw: 'lever' },
+  plate: { n: '압력판', flat: 1, item: 'plate', sw: 'plate' },
+  timer: { n: '타이머 회로', solid: 1, item: 'timer', sw: 'timer' },
+  eLamp: { n: '전기 램프', solid: 1, item: 'eLamp', dev: 'lamp', light: [7, '#fff1c0'], idle: .02 },
+  eDoor: { n: '전기 문', solid: 1, item: 'eDoor', dev: 'door', door: 1, idle: .01 },
+  drillCu: { n: '구리 채굴기', solid: 1, item: 'drillCu', dev: 'drill', tier: 1, every: 12, draw: .5, idle: 0 },
+  drillFe: { n: '철 채굴기', solid: 1, item: 'drillFe', dev: 'drill', tier: 2, every: 7, draw: .8, idle: 0 },
+});
+Object.assign(USE, { battery: 'batt', generator: 'fuel', crystalGen: 'cinfo', lever: 'lever', plate: 'cinfo', timer: 'timer', eLamp: 'cinfo', eDoor: 'cinfo', drillCu: 'drill', drillFe: 'drill' });
+Object.assign(USE_LBL, { batt: '확인', fuel: '연료 넣기', cinfo: '살펴보기', lever: '레버 당기기', timer: '간격 바꾸기', drill: '꺼내기' });
+const BATT_MAX = 600, FUEL = { wood: 30, gel: 45, resin: 90 }, FUEL_MAX = 3600, DRILL_CAP = 60;
+const drillSpr = dir => A => { A.r(3, 8, 10, 10, '#5a5468'); A.r(3, 8, 10, 2, '#8d97a8'); A.r(3, 8, 1, 10, '#787090'); A.r(12, 8, 1, 10, '#36334a'); A.r(5, 12, 6, 3, '#e5884a'); A.r(5, 12, 6, 1, '#ffb57a'); A.p(7, 16, '#7fe0b5');
+  const [dx, dy] = dir, cx = 8 + dx * 5, cy = 12 + dy * 5; if (dy < 0) A.poly([[5, 9], [11, 9], [8, 1]], '#c8d0dc'); else if (dy > 0) A.poly([[5, 17], [11, 17], [8, 21]], '#c8d0dc'); else if (dx > 0) A.poly([[12, 10], [12, 16], [16, 13]], '#c8d0dc'); else A.poly([[4, 10], [4, 16], [0, 13]], '#c8d0dc'); A.p(cx, cy, '#ffffff'); };
+Object.assign(OSPR, {
+  battery: [16, 16, A => { A.r(4, 4, 8, 11, '#3e4a5a'); A.r(4, 4, 2, 11, '#5a6a80'); A.r(11, 4, 1, 11, '#2a3240'); A.r(6, 2, 4, 2, '#e5884a'); A.r(6, 2, 4, 1, '#ffb57a'); A.r(5, 7, 6, 5, '#2a3240'); A.r(7, 8, 2, 3, '#ffd25c'); A.r(6, 9, 4, 1, '#ffd25c'); }],
+  generator: [16, 22, A => { A.r(10, 1, 3, 9, '#5a5468'); A.r(10, 1, 1, 9, '#8d97a8'); A.r(2, 8, 12, 13, '#4a4558'); A.r(2, 8, 12, 2, '#8d97a8'); A.r(2, 8, 1, 13, '#6c7688'); A.r(13, 8, 1, 13, '#2a2836'); A.r(4, 13, 8, 5, '#2a1810'); A.r(4, 13, 8, 1, '#1a1018'); A.r(3, 20, 10, 1, '#24222e'); A.p(5, 11, '#ffd25c'); A.p(7, 11, '#7fe0b5'); }],
+  crystalGen: [16, 24, A => { A.r(3, 17, 10, 6, '#625d78'); A.r(3, 17, 10, 1, '#b9b4cc'); A.r(2, 16, 12, 2, '#8f8aa3'); A.poly([[8, 2], [12, 9], [8, 15], [4, 9]], '#9d7fe0'); A.poly([[8, 2], [8, 15], [4, 9]], '#c1a8f5'); A.p(7, 6, '#ffffff'); A.r(5, 19, 6, 2, '#3a3450'); A.p(6, 20, '#c6b0ff'); A.p(9, 20, '#c6b0ff'); }],
+  lever: [16, 16, A => { A.r(4, 11, 8, 4, '#5a5468'); A.r(4, 11, 8, 1, '#8d97a8'); A.line(8, 12, 4, 5, '#8a6a52', 2); A.e(4, 4, 1.8, 1.8, '#e05a5a'); A.p(3, 3, '#ffb0b0'); }],
+  leverOn: [16, 16, A => { A.r(4, 11, 8, 4, '#5a5468'); A.r(4, 11, 8, 1, '#8d97a8'); A.line(8, 12, 12, 5, '#8a6a52', 2); A.e(12, 4, 1.8, 1.8, '#5ad08a'); A.p(11, 3, '#c0ffd8'); }],
+  plate: [16, 16, A => { A.r(2, 2, 12, 12, '#5a5468'); A.r(3, 3, 10, 10, '#8d97a8'); A.r(3, 3, 10, 1, '#c8d0dc'); A.r(3, 12, 10, 1, '#5a5468'); A.p(4, 4, '#ffffff'); }],
+  plateOn: [16, 16, A => { A.r(2, 2, 12, 12, '#5a5468'); A.r(3, 4, 10, 9, '#6c7688'); A.r(3, 4, 10, 1, '#5ad08a'); }],
+  timer: [16, 16, A => { A.r(3, 5, 10, 10, '#4a4558'); A.r(3, 5, 10, 2, '#787090'); A.e(8, 10, 3.4, 3.4, '#fff1d6'); A.line(8, 10, 8, 8, INK); A.line(8, 10, 10, 10, INK); A.r(7, 3, 2, 2, '#e5884a'); }],
+  eLamp: [16, 24, A => { A.e(8, 22, 4, 1.4, '#36334a'); A.r(7, 9, 2, 13, '#8d97a8'); A.r(7, 9, 1, 13, '#c8d0dc'); A.r(4, 7, 8, 2, '#5a5468'); A.e(8, 4.5, 3.6, 3.6, '#fff1c0'); A.e(7, 3.6, 1.6, 1.4, '#ffffff'); A.r(5, 7, 6, 1, '#787090'); }],
+  eDoor: [16, 18, A => { A.r(2, 1, 12, 17, '#5a5468'); A.r(3, 2, 10, 15, '#8d97a8'); A.r(3, 2, 10, 1, '#c8d0dc'); A.r(7, 2, 2, 15, '#6c7688'); A.r(4, 8, 2, 2, '#ffd25c'); A.r(10, 8, 2, 2, '#ffd25c'); }],
+  eDoorOpen: [16, 18, A => { A.r(1, 1, 3, 17, '#8d97a8'); A.r(12, 1, 3, 17, '#8d97a8'); A.r(1, 1, 3, 1, '#c8d0dc'); A.r(12, 1, 3, 1, '#c8d0dc'); A.r(2, 8, 1, 2, '#5ad08a'); A.r(13, 8, 1, 2, '#5ad08a'); }],
+  drillCu: [16, 22, drillSpr([0, -1])],
+});
+OSPR.drillFe = [16, 22, A => { drillSpr([0, -1])(A); A.r(5, 12, 6, 3, '#c8d0dc'); A.r(5, 12, 6, 1, '#ffffff'); }];
+for (const [k, d] of [['U', [0, -1]], ['D', [0, 1]], ['L', [-1, 0]], ['R', [1, 0]]]) { OSPR['drillCu' + k] = [16, 22, drillSpr(d)]; OSPR['drillFe' + k] = [16, 22, A => { drillSpr(d)(A); A.r(5, 12, 6, 3, '#c8d0dc'); A.r(5, 12, 6, 1, '#ffffff'); }]; }
+Object.assign(ICON, { wire: A => { A.e(8, 9, 6, 4.6, '#b8642f'); A.e(8, 9, 4.4, 3.2, '#e5884a'); A.e(8, 9, 2.8, 2, '#b8642f'); A.e(8, 9, 1.4, 1, '#5a3a14'); A.line(12, 11, 15, 14, '#e5884a', 2); A.p(15, 15, '#c8d0dc'); } });
+RECIPES.push(Rc('wire', 10, [['copperBar', 1], ['rope', 1]], 'forge', 'circuit'), Rc('battery', 1, [['copperBar', 2], ['gel', 3], ['glowcap', 1]], 'forge', 'circuit'),
+  Rc('lever', 1, [['copperBar', 1], ['wood', 2]], 'forge', 'circuit'), Rc('plate', 1, [['copperBar', 1], ['stone', 3]], 'forge', 'circuit'), Rc('timer', 1, [['copperBar', 2], ['glowcap', 1], ['ironBar', 1]], 'forge', 'circuit'),
+  Rc('eLamp', 1, [['copperBar', 1], ['glowcap', 2]], 'forge', 'circuit'), Rc('eDoor', 1, [['ironBar', 2], ['copperBar', 2], ['wood', 2]], 'forge', 'circuit'),
+  Rc('drillCu', 1, [['copperBar', 8], ['stone', 12], ['gel', 4], ['rope', 2]], 'forge', 'circuit'), Rc('drillFe', 1, [['ironBar', 8], ['copperBar', 4], ['crystal', 4]], 'forge', 'circuit'),
+  Rc('generator', 1, [['ironBar', 6], ['stone', 16], ['copperBar', 4]], 'forge', 'circuit'), Rc('crystalGen', 1, [['crystal', 16], ['ironBar', 8], ['glowcap', 6]], 'forge', 'circuit'));
+const CIRC = { net: new Map(), pRoots: new Set(), find: x => x };
+function circuitTick(dt) {
+  const comps = []; for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (d && (d.src || d.sw || d.dev)) comps.push([i, o, d]); }
+  if (!comps.length) { CIRC.net = new Map(); CIRC.pRoots = new Set(); return; }
+  const swT = new Set(comps.filter(c => c[2].sw).map(c => c[0])), net = new Map(); let nid = 0;
+  for (const i of G.wire.keys()) { if (net.has(i) || swT.has(i)) continue; const id = nid++, st = [i]; net.set(i, id);
+    while (st.length) { const j = st.pop(), x = j % W, y = (j / W) | 0; for (const [dx, dy] of D4) { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const k = idx(nx, ny); if (G.wire.has(k) && !net.has(k) && !swT.has(k)) { net.set(k, id); st.push(k); } } } }
+  const par = Array.from({ length: nid }, (_, k) => k), find = a => { while (par[a] !== a) a = par[a] = par[par[a]]; return a; }, uni = (a, b) => { a = find(a); b = find(b); if (a !== b) par[a] = b; };
+  const adj = (i, own) => { const x = i % W, y = (i / W) | 0, out = new Set(); if (own && net.has(i)) out.add(net.get(i)); for (const [dx, dy] of D4) { const nx = x + dx, ny = y + dy; if (inB(nx, ny) && net.has(idx(nx, ny))) out.add(net.get(idx(nx, ny))); } return [...out]; };
+  const px = Math.floor(G.p.x), py = Math.floor(G.p.y);
+  for (const [i, o, d] of comps) { if (!d.sw) continue; let on = false; const x = i % W, y = (i / W) | 0;
+    if (d.sw === 'lever') on = !!o.on; else if (d.sw === 'plate') on = (px === x && py === y && G.p.dead <= 0) || G.enemies.some(e => Math.floor(e.x) === x && Math.floor(e.y) === y);
+    else { o.tt = (o.tt || 0) + dt; on = Math.floor(o.tt / (o.per || 2)) % 2 === 0; }
+    o.lit = on; if (on) { const a = adj(i, false); for (let k = 1; k < a.length; k++) uni(a[0], a[k]); } }
+  const rs = new Map();
+  for (const [i, o, d] of comps) { if (!d.src) continue; const ok = d.src === 'cgen' || (d.src === 'gen' && (o.fuel || 0) > 0) || (d.src === 'batt' && (o.e || 0) > 0); o.lit = ok; if (!ok) continue;
+    for (const n of adj(i, true)) { const r = find(n); let e = rs.get(r); if (!e) rs.set(r, e = { inf: false, b: [], g: [], load: 0 }); if (d.src === 'cgen') e.inf = true; else if (d.src === 'gen') { if (!e.g.includes(o)) e.g.push(o); } else if (!e.b.includes(o)) e.b.push(o); } }
+  for (const [i, o, d] of comps) { if (!d.dev) continue; let pr = null; for (const n of adj(i, true)) { const r = find(n); if (rs.has(r)) { pr = r; break; } }
+    deviceStep(i, o, d, pr != null, dt); if (pr != null) rs.get(pr).load += (o.work ? (d.draw || 0) : (d.idle || 0)) * dt; }
+  for (const [, e] of rs) { if (!e.load || e.inf) continue; if (e.g.length) { for (const g of e.g) { g.fuel = Math.max(0, g.fuel - dt); G.stats.genRun = 1; } continue; } if (e.b.length) { const per = e.load / e.b.length; for (const b of e.b) b.e = Math.max(0, b.e - per); } }
+  CIRC.net = net; CIRC.pRoots = new Set(rs.keys()); CIRC.find = find;
+}
+function deviceStep(i, o, d, on, dt) {
+  const x = i % W, y = (i / W) | 0;
+  if (d.dev === 'lamp') { if (o.off !== !on) { o.off = !on; lightDirty = true; } o.work = on; if (on) G.stats.litLamp = 1; return; }
+  if (d.dev === 'door') { if (!!o.open !== on) { if (!on && occupied(x, y)) return; o.open = on; SFX.place(); } o.work = false; return; }
+  if (d.dev === 'drill') { const dir = o.dir || { x: 0, y: -1 }, tx = x + dir.x, ty = y + dir.y, w = inB(tx, ty) ? G.wall[idx(tx, ty)] : 0, cnt = (o.store || []).reduce((a, s2) => a + s2.c, 0);
+    const can = on && w && WALLS[w] && WALLS[w].tier <= d.tier && w !== 6 && w !== 7 && w !== 8 && cnt < DRILL_CAP; o.work = !!can; o.why = !on ? 'power' : !w || w === 6 || w === 7 || w === 8 ? 'wall' : WALLS[w].tier > d.tier ? 'tier' : cnt >= DRILL_CAP ? 'full' : '';
+    if (!can) return; o.prog = (o.prog || 0) + dt;
+    if (Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) < 14 && Math.random() < dt * 3) puff(tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, WPAL[w][1], 2, 1.4, .1);
+    if (o.prog >= d.every) { o.prog = 0; const id = WALLS[w].drop[0][0]; G.stats.drilled = (G.stats.drilled || 0) + 1;
+      let put = false; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const c = G.objs.get(idx(cx, cy)); if (c && c.t === 'chest' && c.items && !moveInto(c.items, { id, c: 1 })) { put = true; break; } }
+      if (!put) { o.store = o.store || []; const s2 = o.store.find(z => z.id === id); if (s2) s2.c++; else o.store.push({ id, c: 1 }); } } }
+}
+function returnObj(o, x, y) {
+  const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
+  if (DUR[d.item]) { const it = { id: d.item, c: 1, dur: Math.round(o.e != null ? o.e : DUR[d.item][0]) }; if (moveInto(G.inv, it)) { spawnDrop(d.item, 1, x, y); G.drops[G.drops.length - 1].dur = it.dur; } }
+  else { const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, x, y); }
+  invDirty = true;
+}
+function wirePowered(i) { const n = CIRC.net.get(i); return n != null && CIRC.pRoots.has(CIRC.find(n)); }
+
 // ================= world gen =================
 function wallFor(b, x, y, s) {
   if (b === 0) return vn(x * .22, y * .22, s + 21) > 0.72 ? 4 : 1;
@@ -1600,7 +1704,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -1608,7 +1712,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
 }
 function deserialize(s) {
   const N = W * H;
@@ -1628,6 +1732,7 @@ function deserialize(s) {
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []); roofVer++; G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
+  G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []);
   G.rpg = cleanRpg(s.rpg); G.pshots = []; G.skcd = {}; G.p.mp = Number.isFinite(s.p.mp) ? Math.min(s.p.mp, maxMp()) : maxMp(); G.p.hp = Math.min(G.p.hp, maxHp());
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
@@ -1780,7 +1885,7 @@ function removeItem(id, c) { for (let i = G.inv.length - 1; i >= 0 && c > 0; i--
 const DUR = { pickWood: [200, [['wood', 3]]], pickCopper: [400, [['copperBar', 2]]], pickIron: [800, [['ironBar', 2]]],
   swordWood: [120, [['wood', 3]]], swordCopper: [250, [['copperBar', 2]]], swordIron: [450, [['ironBar', 2]]], swordCrystal: [800, [['crystal', 3]]],
   rod: [150, [['fiber', 2]]], shovel: [250, [['copperBar', 1]]] };
-Object.assign(DUR, WEAPON_DUR);
+Object.assign(DUR, WEAPON_DUR); DUR.battery = [600, [['glowcap', 1], ['gel', 2]]];
 const durMax = id => DUR[id] ? DUR[id][0] : 0;
 const durOf = s => !s || !DUR[s.id] ? 0 : (s.dur == null ? DUR[s.id][0] : s.dur);
 const isBroken = s => !!(s && DUR[s.id] && durOf(s) <= 0);
@@ -1850,6 +1955,7 @@ function digGround(t) {
 }
 function canPlace(tx, ty, it) {
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (it.kind === 'roof') return !G.roof.has(i); if (G.wall[i]) return false; const o = G.objs.get(i);
+  if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && (!o || !OBJ[o.t].tree);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
   if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
   if (o) return false;
@@ -1910,7 +2016,7 @@ function mouseTile() {
 }
 
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place', dig: 'dig', unroof: 'dig' };
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place', dig: 'dig', unroof: 'dig', unwire: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   if (aimMouse()) {
@@ -1947,6 +2053,7 @@ function decide() {
   // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
   if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
   if (it && it.kind === 'roof' && i >= 0 && G.roof.has(i)) return { k: 'unroof', lbl: '지붕 걷기', icon: s.id, t };
+  if (it && it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
   if (o) {
     const d = OBJ[o.t];
     if (it && it.kind === 'shovel' && !isBroken(s) && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
@@ -1976,13 +2083,13 @@ function decide() {
   if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
   return { k: 'swing', lbl: WT.ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
 }
-const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'roof', 'seed'];
-const placeLbl = it => it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : it.kind === 'roof' ? '지붕 얹기' : '놓기';
+const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'roof', 'seed', 'wire'];
+const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : it.kind === 'roof' ? '지붕 얹기' : '놓기';
 const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
   G.objs.delete(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
-  const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
+  returnObj(o, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
 function subAction() { const a = G.act; if (!started || paused || !a || !a.sub || G.p.dead > 0) return; ensureAudio(); if (a.sub === 'dig') digGround(a.t); else pickupObj(a.t, a.o); }
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
@@ -2006,6 +2113,7 @@ function perform(a) {
     case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
     case 'place': placeItem(a.t); actCd = 0.14; break;
     case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
+    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); SFX.pick(); actCd = 0.15; break; }
     case 'unroof': { const i = idx(a.t.x, a.t.y), m = G.roof.get(i); if (m) { G.roof.delete(i); roofVer++; const l = addItem(ROOF_ITEM[m], 1, false); if (l) spawnDrop(ROOF_ITEM[m], 1, a.t.x + .5, a.t.y + .5); SFX.pick(); } actCd = 0.18; break; }
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
@@ -2013,7 +2121,7 @@ function perform(a) {
     case 'insert': insertSeeds(); actCd = 0.4; break;
     case 'tree': openPanel('tree'); actCd = 0.3; break;
     case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); SFX.seed(); puff(a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); toast('빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
-    case 'pickup': { const d = OBJ[a.o.t]; G.objs.delete(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
+    case 'pickup': { const d = OBJ[a.o.t]; G.objs.delete(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
     case 'fish': startFish(a.t); actCd = 0.4; break;
     case 'stand': standUp(); actCd = 0.25; break;
     case 'use': useObj(a); actCd = 0.4; break;
@@ -2098,6 +2206,15 @@ function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k
 function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
+    case 'lever': o.on = !o.on; SFX.click(); toast(o.on ? '레버를 켰어요' : '레버를 껐어요', null, 'lever'); break;
+    case 'timer': { const L = [1, 2, 4, 8], k = (L.indexOf(o.per || 2) + 1) % L.length; o.per = L[k]; SFX.click(); toast(`타이머 간격: ${o.per}초마다 켜고 꺼요`, null, 'timer'); break; }
+    case 'batt': toast(`건전지 ${Math.round((o.e || 0) / BATT_MAX * 100)}% 남았어요${(o.e || 0) <= 0 ? ' · 회수해서 작업대 [수리]로 충전해요' : ''}`, null, 'batt'); break;
+    case 'fuel': { let added = 0; for (const f of ['resin', 'gel', 'wood']) { while ((o.fuel || 0) + FUEL[f] <= FUEL_MAX && countItem(f) > 0) { removeItem(f, 1); o.fuel = (o.fuel || 0) + FUEL[f]; added++; } }
+      toast(added ? `연료를 넣었어요 · 약 ${Math.round((o.fuel || 0) / 60)}분 동안 일할 수 있어요` : (o.fuel || 0) >= FUEL_MAX - 30 ? '연료가 가득 찼어요' : `연료가 없어요 (나무·젤·송진) · 남은 연료 약 ${Math.round((o.fuel || 0) / 60)}분`, added ? 'good' : null, 'fuel'); if (added) SFX.place(); break; }
+    case 'drill': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); SFX.pick(); toast(o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); invDirty = true; break; }
+      const d2 = OBJ[o.t]; toast(o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? '이 채굴기로는 못 캐는 벽이에요' : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
+    case 'cinfo': { const d2 = OBJ[o.t]; toast(d2.src === 'cgen' ? '수정 발전기 · 연료 없이 계속 전기를 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 전선을 이어 줘요' : d2.dev === 'door' ? (o.open ? '전기 문 · 전기가 들어와 열려 있어요' : '전기 문 · 전기가 들어오면 열려요') : (o.off === false ? '전기 램프 · 켜져 있어요' : '전기 램프 · 전기가 들어오면 켜져요'), null, 'cinfo'); break; }
     case 'door': if (o.open && occupied(t.x, t.y)) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; } o.open = !o.open; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break;
     case 'sit': p.sit = { x: t.x, y: t.y, px: p.x, py: p.y }; p.x = x; p.y = t.y + .62; p.face = { x: 0, y: 1 }; p.dir = 'down'; p.flip = false; G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
@@ -2164,8 +2281,9 @@ function placeItem(t) {
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
   else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
   else if (it.kind === 'roof') { G.roof.set(i, it.roof); roofVer++; }
+  else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time });
-  else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
+  else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'forge') G.stats.forge = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
   s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
   SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);
@@ -2205,7 +2323,7 @@ function respawn() {
 }
 
 // ================= update =================
-let regrowT = 0, snapT = 0, cloudT = 0, zoneT = 0, growT = 0;
+let regrowT = 0, snapT = 0, cloudT = 0, zoneT = 0, growT = 0, circT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
@@ -2252,6 +2370,7 @@ function update(dt) {
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
   zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
   growT += dt; if (growT > 2) { growT = 0; growTick(); }
+  circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
   saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
@@ -2361,7 +2480,7 @@ function updateDrops(dt) {
     d.hold = Math.max(0, d.hold - dt);
     const dx = p.x - d.x, dy = p.y - .3 - d.y, l = Math.hypot(dx, dy);
     if (d.t > 0.4 && l < 2.2 && d.hold <= 0 && p.dead <= 0) { const s = 9 * (1 - l / 2.6) + 2; d.x += dx / l * s * dt; d.y += dy / l * s * dt;
-      if (l < 0.45) { const left = addItem(d.id, d.c); const got = d.c - left; if (got) { SFX.pick(); ftext(p.x, p.y - 1.4, `+${got} ${ITEMS[d.id].n}`, '#fff1d6'); } if (left) { d.c = left; d.hold = 1.5; toast('가방이 가득 찼어요', null, 'full-inv'); } else G.drops.splice(G.drops.indexOf(d), 1); } }
+      if (l < 0.45) { const left = d.dur != null ? moveInto(G.inv, { id: d.id, c: d.c, dur: d.dur }) : addItem(d.id, d.c); if (ITEMS[d.id] && /^petal/.test(d.id)) { G.stats.petals = G.stats.petals || {}; G.stats.petals[d.id.slice(5)] = 1; } const got = d.c - left; if (got) { SFX.pick(); ftext(p.x, p.y - 1.4, `+${got} ${ITEMS[d.id].n}`, '#fff1d6'); } if (left) { d.c = left; d.hold = 1.5; toast('가방이 가득 찼어요', null, 'full-inv'); } else G.drops.splice(G.drops.indexOf(d), 1); } }
     if (d.t > 400) G.drops.splice(G.drops.indexOf(d), 1);
   }
 }
@@ -2391,6 +2510,31 @@ const GUIDE = [
   { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/3)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 3, target: () => ({ x: CX + .5, y: CY + .5 }) },
   { t: () => '낚시하고 지역 가구로 꾸미기', h: '물가에서 낚시를 하고, 제작에서 이끼·버섯·수정 세트 가구를 만들어 나만의 아지트를 꾸며 보세요.', done: () => false },
 ];
+// quest ids, rewards and xp (main story, in order)
+const Q_META = [['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch', 4]], 10], ['torch', [['berrySeed', 3], ['rope', 2]], 10], ['ore', [['copperOre', 3], ['resin', 1]], 15], ['bar', [['resin', 2], ['gel', 2]], 15],
+  ['forge', [['rope', 4]], 20], ['pick', [['grilled', 3], ['torch', 6]], 25], ['queen', [['copperBar', 5], ['glowcap', 3]], 80], ['slime', [['ironBar', 4], ['gel', 6]], 100], ['golem', [['crystal', 8], ['ironBar', 4]], 140],
+  ['seeds', [['stew', 3]], 40], ['tree', [['crystal', 10], ['stew', 2]], 100], ['free', [], 0]];
+GUIDE.forEach((g, k) => { const m = Q_META[k]; g.id = m[0]; g.rw = m[1]; g.xp = m[2]; });
+// side quests: any time, in any order
+const QSIDE = [
+  { id: 's_moss', t: '이끼 섬유로 이끼 한 삽 만들기', h: '[제작 → 재료]에서 이끼 섬유 3개로 만들어요.', done: () => (G.stats.made || {}).gMoss > 0, rw: [['fiber', 6]], xp: 10 },
+  { id: 's_lv5', t: '레벨 5 달성하기', h: '몬스터를 물리치고 광석을 캐면 경험치가 쌓여요.', done: () => G.rpg.lv >= 5, rw: [['stew', 2], ['rope', 4]], xp: 0 },
+  { id: 's_fish', t: () => `물고기 10마리 낚기 (${Math.min(10, G.stats.fishCaught || 0)}/10)`, h: '물가에서 낚싯대로 낚아요.', done: () => (G.stats.fishCaught || 0) >= 10, rw: [['grilledFish', 3], ['gel', 3]], xp: 30 },
+  { id: 's_bag', t: '가방 한 번 늘리기', h: '[제작 → 도구]의 튼튼한 가방을 만들어요.', done: () => (G.bagLv || 0) >= 1, rw: [['rope', 6], ['resin', 2]], xp: 30 },
+  { id: 's_kill', t: () => `몬스터 50마리 물리치기 (${Math.min(50, G.stats.kills || 0)}/50)`, h: '꽃망울과 말랑이들도 포함돼요.', done: () => (G.stats.kills || 0) >= 50, rw: [['ironBar', 3], ['stew', 2]], xp: 60 },
+  { id: 's_petal', t: () => `꽃잎 다섯 색 모으기 (${Object.keys(FLOWERS).filter(c => countItem('petal' + c) > 0 || (G.stats.petals || {})[c]).length}/5)`, h: '이끼 동굴 곳곳의 꽃망울 구역을 찾아가요.', done: () => Object.keys(FLOWERS).every(c => countItem('petal' + c) > 0 || (G.stats.petals || {})[c]), rw: [['glowcap', 4], ['rope', 4]], xp: 50 },
+  { id: 's_lamp', t: '전기 램프에 불 켜기', h: '건전지 → 전선 → 전기 램프를 이어 놓아요. 모두 구리 제작대에서 만들어요.', done: () => !!G.stats.litLamp, rw: [['wire', 10], ['battery', 1]], xp: 40 },
+  { id: 's_drill', t: () => `자동 채굴기로 광물 20개 얻기 (${Math.min(20, G.stats.drilled || 0)}/20)`, h: '채굴기를 광맥 벽 앞에 놓고 전기를 연결하면 계속 캐요. 옆에 상자가 있으면 거기에 담아요.', done: () => (G.stats.drilled || 0) >= 20, rw: [['battery', 2], ['copperBar', 6]], xp: 60 },
+  { id: 's_gen', t: '발전기 돌리기', h: '발전기를 만들고 연료(나무·젤·송진)를 넣으면 건전지 없이 전기를 계속 써요.', done: () => !!G.stats.genRun, rw: [['ironBar', 4], ['resin', 4]], xp: 60 },
+];
+const qText = q => typeof q.t === 'function' ? q.t() : q.t;
+function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: (q.rw && q.rw.length) || q.xp }; }
+const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has; });
+function claimQuest(id) {
+  const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q) return; const k = GUIDE.indexOf(q), st = questState(q, k < 0 ? null : k); if (!st.done || st.claimed) return;
+  G.qclaim = G.qclaim || {}; G.qclaim[id] = 1; for (const [it, c] of q.rw) { const l = addItem(it, c, false); if (l) spawnDrop(it, l, G.p.x, G.p.y); } if (q.xp) gainXp(q.xp, G.p.x, G.p.y);
+  SFX.craft(); puff(G.p.x, G.p.y - .5, '#ffe9a8', 16, 2.6, .6);
+}
 let goalTarget = null, lastGoalTxt = '';
 function checkGuide() {
   let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { G.guide++; n++; }
@@ -2568,7 +2712,11 @@ function renderWorld(cw, ch) {
       const hl = hash2(x, y, 43); if (hl < .12 && land(0, -1) === 0 && land(0, 1) === 0) { const lp = SPR.lily[hl < .04 ? 1 : 0]; ctx.drawImage(lp, sx + 3 + ((hash2(x, y, 44) * 4) | 0), sy + 4 + Math.round(Math.sin(t * 1.3 + hl * 50) * .6)); }
     }
     if (WFLOOR.has(G.floor[i])) { const ph = (t * .5 + hash2(x, y, 6)) % 1; ctx.globalAlpha = Math.sin(ph * Math.PI) * .55; ctx.fillStyle = '#e8f8ff'; ctx.fillRect(sx + 3 + ((hash2(x, y, 7) * 8) | 0), sy + 3 + Math.floor(ph * 9), 3, 1); ctx.globalAlpha = 1; }
-    const o = G.objs.get(i); if (o && OBJ[o.t].flat) ctx.drawImage(SPR.obj[o.t], sx, sy);
+    if (G.wire.has(i)) { const pw = wirePowered(i), c1 = pw ? '#ffd25c' : '#8a5a34', c2 = pw ? '#fff1b0' : '#b8784a', hw = (dx, dy) => { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) return false; const j = idx(nx, ny), oo = G.objs.get(j); return G.wire.has(j) || !!(oo && OBJ[oo.t] && (OBJ[oo.t].src || OBJ[oo.t].sw || OBJ[oo.t].dev)); };
+      ctx.fillStyle = 'rgba(20,12,30,.45)'; ctx.fillRect(sx + 6, sy + 7, 4, 4); ctx.fillStyle = c1; ctx.fillRect(sx + 6, sy + 6, 4, 4);
+      if (hw(1, 0)) ctx.fillRect(sx + 10, sy + 7, 6, 2); if (hw(-1, 0)) ctx.fillRect(sx, sy + 7, 6, 2); if (hw(0, 1)) ctx.fillRect(sx + 7, sy + 10, 2, 6); if (hw(0, -1)) ctx.fillRect(sx + 7, sy, 2, 6);
+      ctx.fillStyle = c2; ctx.fillRect(sx + 7, sy + 7, 1, 1); }
+    const o = G.objs.get(i); if (o && OBJ[o.t].flat) ctx.drawImage(o.t === 'plate' && o.lit ? SPR.obj.plateOn : SPR.obj[o.t], sx, sy);
   }
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i]) continue; const o = G.objs.get(i); if (o && isGround(o)) drawEntity({ k: 'o', x, y, o }, t); }
   // rows: walls interleaved with everything that stands
@@ -2702,10 +2850,16 @@ function drawEntity(it, t) {
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
+    if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
+    if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo && !d.stump && SPR.obj[o.t + 'B'] && G.time > (o.at || 0) - GROW_TIME / 2) img = SPR.obj[o.t + 'B'];
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && img.height > 17) shadow(wx, wy - .08, .38, .25);
-    drawImg(img, wx, wy, { sx });
+    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : sx });
+    if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }
+    if (o.t === 'generator' && o.lit && CIRC.pRoots.size) { const fl = (t * 8) % 1; ctx.fillStyle = fl < .5 ? '#ff8a3d' : '#ffc861'; ctx.fillRect(Math.round(wx * T - camX) - 3, Math.round((it.y + 1) * T - camY) - 8, 6, 3); }
+    if ((o.t === 'timer' || o.t === 'crystalGen') && o.lit) { ctx.fillStyle = '#7fe0b5'; ctx.fillRect(Math.round(wx * T - camX) - 1, Math.round((it.y + 1) * T - camY) - (o.t === 'timer' ? 14 : 6), 2, 2); }
+    if (d.dev === 'drill' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
     if (d.bed && G.p.sleep && G.p.sleep.x === it.x && G.p.sleep.y === it.y) { drawImg(SPR.sleepHead, wx, it.y - .2); ctx.font = `${Math.round(6 * Z)}px Jua, sans-serif`; ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (wx + .5 + zz * .3) * T - camX, (it.y - 1.2 - zz * .5) * T - camY); ctx.globalAlpha = 1; }
@@ -2790,6 +2944,7 @@ function updateHud() {
   const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
   if (mk2 !== lastMp) { lastMp = mk2; $('#mpFill').style.width = (p.mp / maxMp() * 100) + '%'; $('#mpTxt').textContent = Math.round(p.mp); $('#lvTxt').textContent = 'Lv.' + R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#bStat').classList.toggle('dot', R.pts > 0 || R.sp > 0); }
   updateSkBar();
+  if (G.time - (G.__qt || 0) > .5 || G.__qt == null) { G.__qt = G.time; $('#goal').classList.toggle('dot', canClaim()); }
   if (invDirty) refreshHotbar();
 }
 let lastMp = '';
@@ -2827,7 +2982,7 @@ function renderPanel() {
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; POOL = null; POOL = linkedChests(); const nCh = POOL.length;
     h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
-    const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['fix', '수리'], ['salv', '분해']]; if (st) tabs.unshift(['here', STN[st]]);
+    const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['fix', '수리'], ['salv', '분해']]; if (st) tabs.unshift(['here', STN[st]]);
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
     h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}${nCh ? `<span class="chip on">연결된 상자 ${nCh}개</span>` : ''}</div>${nCh ? `<p class="hint">작업대·화로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함) ${nCh}개의 재료도 함께 써요. 가방에 있는 것부터 써요.</p>` : ''}`;
     if (UIS.tab === 'salv') {
@@ -2889,6 +3044,18 @@ function renderPanel() {
     if (t === 'oc') OUTC.forEach(([n, c], k) => { h += opt('oc', k, n, `<i class="sw" style="background:${c[0]};box-shadow:inset -4px -4px 0 ${c[1]}"></i>`); });
     if (t === 'eye') EYEC.forEach(([n, c], k) => { h += opt('eye', k, n, `<i class="sw" style="background:${c}"></i>`); });
     h += `</div></div><div class="menu-two" style="margin-top:10px"><button class="btn ghost" data-a="close" type="button">취소</button><button class="btn" data-a="lookOk" type="button">이 모습으로 하기</button></div>`;
+  } else if (k === 'quest') {
+    const tab = UIS.qTab || 'main';
+    const rwHTML = q => `<div class="qrw">${q.rw.map(([id, c]) => `<span><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${c}</span>`).join('')}${q.xp ? `<span>경험치 ${q.xp}</span>` : ''}</div>`;
+    const row = (q, st, lockTxt) => { const lock = !st.done && !st.cur && lockTxt; const chip = st.done ? '<span class="st done">완료</span>' : st.cur ? '<span class="st cur">진행 중</span>' : `<span class="st lock">${lockTxt ? '잠김' : '진행 중'}</span>`;
+      const act = !st.has ? '' : st.claimed ? '<span class="got">받음 ✓</span>' : st.done ? `<button type="button" class="btn" data-a="qClaim" data-i="${q.id}">보상 받기</button>` : '';
+      return `<div class="qrow ${lock ? 'lock' : ''}">${chip}<div><h4>${lock ? '???' : escHTML(qText(q))}</h4>${!lock && (st.cur || (!st.done && !lockTxt)) ? `<p>${escHTML(q.h || '')}</p>` : ''}${!lock && st.has ? rwHTML(q) : ''}</div>${act}</div>`; };
+    const n1 = GUIDE.filter((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has; }).length, n2 = QSIDE.filter(q => { const st = questState(q); return st.done && !st.claimed && st.has; }).length;
+    h += head('퀘스트', 'quest', (n1 + n2) ? `<button type="button" class="btn" data-a="qClaimAll" style="min-height:46px;padding:0 12px;font-size:15px">모두 받기 (${n1 + n2})</button>` : '');
+    h += `<div class="tabs"><button type="button" class="tab ${tab === 'main' ? 'on' : ''}" data-a="qTab" data-i="main">이야기${n1 ? ` · ${n1}` : ''}</button><button type="button" class="tab ${tab === 'side' ? 'on' : ''}" data-a="qTab" data-i="side">도전${n2 ? ` · ${n2}` : ''}</button></div><div class="sh-body">`;
+    if (tab === 'main') GUIDE.forEach((q, k) => { if (k > G.guide + 1) return; h += row(q, questState(q, k), true); });
+    else { const L = QSIDE.map(q => [q, questState(q)]).sort((a, b) => (b[1].done && !b[1].claimed) - (a[1].done && !a[1].claimed) || a[1].claimed - b[1].claimed); for (const [q, st] of L) h += row(q, st, false); }
+    h += `</div>`;
   } else if (k === 'stat') {
     const R = G.rpg, need = XP_NEED(R.lv), touch = document.body.classList.contains('touch');
     h += head('능력', 'star') + `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
@@ -2987,13 +3154,17 @@ function onSheetClick(e) {
     const r = RECIPES[i], near = nearStations(); POOL = null; if (!canCraft(r, near)) return;
     const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, maxCraft(r))) : 1, total = r.n * q;
     for (const [id, c] of r.req) takeAvail(id, c * q);
+    G.stats.made = G.stats.made || {}; G.stats.made[r.out] = (G.stats.made[r.out] || 0) + q;
     if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); SFX.craft(); craftNote(r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); UIS.craftOrder = null; invDirty = true; renderPanel(); return; }
     const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
     SFX.craft(); craftNote(r.out, total); gainXp(Math.min(8, q * (r.at === 'forge' ? 3 : r.at ? 1 : 0)));
     invDirty = true; checkGuide(); renderPanel(); return;
   }
-  if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; G.objs.delete(panel.i); const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
+  if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; G.objs.delete(panel.i); returnObj(o, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
   if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
+  if (a === 'qTab') { UIS.qTab = i; renderPanel(); return; }
+  if (a === 'qClaim') { claimQuest(i); renderPanel(); return; }
+  if (a === 'qClaimAll') { for (const q of [...GUIDE, ...QSIDE]) claimQuest(q.id); toast('보상을 모두 받았어요', 'good'); renderPanel(); return; }
   if (a === 'statUp') { const R = G.rpg; if (R.pts > 0 && STATN[i]) { R[i]++; R.pts--; if (i === 'vit') G.p.hp = Math.min(maxHp(), G.p.hp + 8); SFX.click(); } UIS.statAsk = false; renderPanel(); return; }
   if (a === 'statReset') { if (!UIS.statAsk) { UIS.statAsk = true; renderPanel(); return; } const R = G.rpg; R.pts += R.str + R.dex + R.vit + R.int; R.str = R.dex = R.vit = R.int = 0; G.p.hp = Math.min(G.p.hp, maxHp()); G.p.mp = Math.min(G.p.mp, maxMp()); UIS.statAsk = false; SFX.craft(); toast('능력치 포인트를 모두 돌려받았어요'); renderPanel(); return; }
   if (a === 'skUp') { const R = G.rpg, S = SKILLS[i]; if (!S) return; const l = R.sk[i] || 0; if (R.sp <= 0 || R.lv < S.lv || l >= S.max) return; R.sk[i] = l + 1; R.sp--; if (S.act && !l && !R.slot.includes(i)) { const e = R.slot.indexOf(null); if (e >= 0) R.slot[e] = i; } SFX.craft(); toast(l ? `${S.n} ${l + 1}단계로 올렸어요` : `${S.n}을(를) 배웠어요!`, 'good'); renderPanel(); return; }
@@ -3138,7 +3309,8 @@ function setupInput() {
   $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); useSkill(+b.dataset.n); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
-  $('#goal').addEventListener('click', () => { const g = GUIDE[G.guide]; if (g) toast(g.h); });
+  $('#goal').addEventListener('click', () => started && openPanel('quest'));
+  $('#bQuest').addEventListener('click', () => started && openPanel('quest'));
   let newAsk = false;
   $('#btnNew').addEventListener('click', () => { ensureAudio();
     if (loadLocal() && !newAsk) { newAsk = true; $('#btnNew').textContent = '정말 새로 시작할까요? (지금 세이브는 백업돼요)'; $('#btnNew').classList.add('warn'); return; }
@@ -3188,7 +3360,7 @@ function start(data) {
   try { soundOn = localStorage.getItem('lantern-tree-sound') !== '0'; } catch (e) { }
   if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   $('#icHp').src = iconURL('heart'); $('#icHu').src = iconURL('food');
-  ['bInv', 'bCraft', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'star', 'map', 'gear'][k]); });
+  ['bInv', 'bCraft', 'bQuest', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'quest', 'star', 'map', 'gear'][k]); });
   if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
   try { navigator.storage?.persist?.().catch(() => { }); } catch (e) { }
