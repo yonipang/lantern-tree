@@ -49,7 +49,7 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .slot.dragging{opacity:.35}
 .slot.dropT{border-color:var(--mint);background:#3c4a55}
 #dragGhost{position:fixed;z-index:60;width:56px;height:56px;margin:-28px 0 0 -28px;pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
-@media (min-height:521px){body.touch #bInv,body.touch #bCraft{position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);z-index:2}body.touch #bCraft{bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px)}body.touch #bInv{bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 304px)}}
+@media (min-height:521px){body.touch #bCraft{position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);z-index:2;bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px)}}
 .sbtn.dot::after{content:'';position:absolute;top:3px;right:3px;width:13px;height:13px;border-radius:50%;background:#ff8fa3;border:2px solid #241b2f}
 
 #bossbar{background:rgba(27,20,38,.85);border:2px solid #8c4a5e;border-radius:14px;padding:6px 10px 8px}
@@ -65,7 +65,23 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 @keyframes tin{from{opacity:0;transform:translateY(8px) scale(.96)}}
 
 /* Hotbar */
-#hotbar{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);display:flex;gap:8px;padding:8px;background:rgba(27,20,38,.82);border:2px solid var(--line);border-radius:20px}
+#hotbar{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);display:flex;gap:8px;padding:8px;background:rgba(27,20,38,.82);border:2px solid var(--line);border-radius:20px;max-width:calc(100vw - 16px);box-sizing:border-box;align-items:center}
+#hbSlots{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x;min-width:0;scroll-behavior:smooth}
+#hbSlots::-webkit-scrollbar{display:none}
+#hbSlots .slot{flex:none}
+#hotbar #bInv{flex:none;width:var(--slotS);height:var(--slotS);border-radius:14px;margin-left:2px;border-color:var(--amber)}
+#hotbar #bInv img{width:58%;height:58%}
+img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
+.slot img{pointer-events:none}
+#hotbar,#sheet,.slot{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.slot.dim{opacity:.22}
+.slot.new::before{content:'';position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:#7fe0b5;box-shadow:0 0 0 2px #241b2f}
+.invtools{display:flex;gap:8px;align-items:center;margin:2px 0 6px}
+.invtools .tabs{flex:1;margin:0}
+.invtools .btn{min-height:42px;padding:0 14px;font-size:15px;flex:none}
+#craftNote{position:fixed;left:50%;transform:translateX(-50%);z-index:40;background:rgba(36,27,47,.96);border:2px solid #7fe0b5;color:#a5ecc9;border-radius:16px;padding:9px 16px;font-size:16px;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;animation:tin .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px}
+#craftNote img{width:28px;height:28px}
+#craftNote.out{opacity:0;transition:opacity .35s}
 .slot{width:var(--slotS);height:var(--slotS);border-radius:13px;background:var(--slot);border:2px solid #4d3e66;position:relative;display:grid;place-items:center;padding:0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
 .slot img{width:70%;height:70%;object-fit:contain}
 .slot .dur{position:absolute;left:7px;right:7px;bottom:5px;height:4px;background:#140f1d;border-radius:2px;overflow:hidden}
@@ -110,7 +126,7 @@ body.intro #skBar{display:none}
 .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff1d6,#d9c3a3);box-shadow:0 3px 0 rgba(0,0,0,.35)}
 body:not(.touch) #actBtn, body:not(.touch) .joy{display:none}
 body.intro #hud, body.intro #hotbar, body.intro #actBtn, body.intro .joy, body.intro #pcHint, body.intro #toasts{display:none}
-#pcHint{position:absolute;left:14px;bottom:14px;font-size:13px;color:var(--muted);background:rgba(27,20,38,.75);border-radius:12px;padding:8px 12px;line-height:1.6;max-width:260px}
+#pcHint{position:absolute;left:14px;bottom:calc(var(--slotS) + 44px);font-size:13px;color:var(--muted);background:rgba(27,20,38,.75);border-radius:12px;padding:8px 12px;line-height:1.6;max-width:260px}
 body.touch #pcHint{display:none}
 @media (max-width:900px){#pcHint{display:none}}
 
@@ -248,7 +264,7 @@ body.touch #pcHint{display:none}
 .skslots .btn{min-height:38px;padding:0 12px;font-size:14px}
 #title .ver{font-size:12px;color:var(--muted)}
 #fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:24px;color:var(--rose);text-align:center;padding:20px}
-@media (max-height:520px){.side{grid-auto-flow:column}.goal{max-width:46vw;padding:4px 10px 5px;font-size:14px}.bars{gap:4px}.bar{padding:1px 8px 1px 2px;border-radius:12px}.bar img,.bar .lv{width:22px;height:22px}.bar span{font-size:13px}}
+@media (max-height:520px){:root{--slotS:44px}.side{grid-auto-flow:column}.goal{max-width:46vw;padding:4px 10px 5px;font-size:14px}.bars{gap:4px}.bar{padding:1px 8px 1px 2px;border-radius:12px}.bar img,.bar .lv{width:22px;height:22px}.bar span{font-size:13px}}
 @media (prefers-reduced-motion:reduce){.toast,.sheet{animation:none}.fill{transition:none}}
 </style>
 
@@ -263,7 +279,6 @@ body.touch #pcHint{display:none}
       <div id="bossbar" hidden><div class="bn">말랑대왕</div><div class="track"><div class="fill" id="bossFill"></div></div></div>
     </div>
     <div class="side">
-      <button class="sbtn" id="bInv" type="button"><img class="px" alt="">가방</button>
       <button class="sbtn" id="bCraft" type="button"><img class="px" alt="">제작</button>
       <button class="sbtn" id="bStat" type="button"><img class="px" alt="">능력</button>
       <button class="sbtn" id="bMap" type="button"><img class="px" alt="">지도</button>
@@ -273,10 +288,10 @@ body.touch #pcHint{display:none}
   <div id="toasts" aria-live="polite"></div>
   <div class="joy" id="joy"><i id="joyKnob"></i></div>
   <button id="actBtn" type="button" aria-label="행동"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
-  <div id="hotbar"></div>
+  <div id="hotbar"><div id="hbSlots"></div><button class="sbtn" id="bInv" type="button" aria-label="가방"><img class="px" alt=""></button></div>
   <div id="skBar" hidden><button class="skb" type="button" data-n="0"><img class="px" alt=""><i class="cd"></i><span class="k">F</span></button><button class="skb" type="button" data-n="1"><img class="px" alt=""><i class="cd"></i><span class="k">G</span></button></div>
   <button id="subBtn" type="button" hidden aria-label="회수"><img class="px" id="subIcon" alt=""><span id="subLbl">회수</span></button>
-  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
+  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–9 단축칸 · R 회수 · I 가방 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="fade" hidden>기절했어요…</div>
   <input type="file" id="fileIn" hidden>
@@ -1269,6 +1284,9 @@ for (const r of RECIPES) { if (REQ_FIX[r.out]) r.req = REQ_FIX[r.out]; if (ITEMS
 const METAL = ['copperBar', 'ironBar', 'crystal'];
 for (const r of RECIPES) if (r.at === 'bench' && r.out !== 'forge' && r.req.some(([id]) => METAL.includes(id))) r.at = 'forge';
 const benchNear = near => near.has('bench') || near.has('forge');
+const HOT = 9, BAG0 = 24, BAG_STEP = 6, BAG_MAX_LV = 3;
+const BAG_UPS = [['bagUp1', '튼튼한 가방', [['fiber', 20], ['rope', 6], ['resin', 2]], 'bench'], ['bagUp2', '여행자의 가방', [['rope', 10], ['gel', 10], ['copperBar', 4]], 'forge'], ['bagUp3', '큰 모험가 가방', [['rope', 16], ['shroomCap', 8], ['ironBar', 4]], 'forge']];
+BAG_UPS.forEach(([id, n, req, at], k) => { ITEMS[id] = { n, bagUp: k + 1, d: `만들면 가방이 ${BAG_STEP}칸 늘어나요 (${BAG0 + BAG_STEP * k}칸 → ${BAG0 + BAG_STEP * (k + 1)}칸).` }; ICON[id] = A => { UICON.bag(A); A.r(10, 1, 6, 6, '#7fe0b5'); A.r(12, 2, 2, 4, '#241b2f'); A.r(11, 3, 4, 2, '#241b2f'); }; const r = Rc(id, 1, req, at, 'tool'); r.bag = k; RECIPES.push(r); });
 
 // ---- level, stats and skills ----
 const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
@@ -1578,10 +1596,10 @@ const freshBosses = () => ({ slime: freshBoss('slime'), queen: freshBoss('queen'
 const guardOf = (x, y) => (x === SA.x && y === SA.y) ? 'queen' : (x === SB.x && y === SB.y) ? 'golem' : null;
 function newGame(seed) {
   const w = genWorld(seed);
-  G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(30).fill(null), sel: 0,
+  G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: { slime: false, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
-  [['berry', 4], ['berrySeed', 2], ['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false));
+  G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
   G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
@@ -1589,7 +1607,7 @@ const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.leng
 const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
 function serialize() {
   if (!G) return null; const p = G.p;
-  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
+  return { v: 2, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
     p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
 }
 function deserialize(s) {
@@ -1598,12 +1616,15 @@ function deserialize(s) {
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: (s.bossDead && typeof s.bossDead === 'object') ? Object.assign({ slime: false, queen: false, golem: false }, s.bossDead) : { slime: !!s.bossDead, queen: false, golem: false }, shots: [], fish: null, fishFx: null, stats: Object.assign(freshStats(), s.stats), time: s.time || 0, spawnPt: s.spawnPt, treeSeeds: s.treeSeeds || 0,
     won: !!s.won, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
-  while (G.inv.length < 30) G.inv.push(null);
+  G.bagLv = clamp(Math.floor(+s.bagLv || 0), 0, BAG_MAX_LV);
+  if ((s.invV || 1) < 2) { while (G.inv.length < 30) G.inv.push(null); G.inv.splice(6, 0, null, null, null); if (!(G.sel < 6)) G.sel = 0; }
+  while (G.inv.length < invSize()) G.inv.push(null); if (G.inv.length > invSize()) { const extra = G.inv.splice(invSize()).filter(Boolean); G.inv.push(...[]); G.__extra = extra; }
   if ((s.v || 1) < 2) migrateV2();
   G.look = cleanLook(s.look); CHARS.custom = lookDef(G.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
-  if (!(G.sel >= 0 && G.sel < 6)) G.sel = 0;
+  if (!(G.sel >= 0 && G.sel < HOT)) G.sel = 0; G.newIds = {};
+  if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []); roofVer++; G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
@@ -1735,14 +1756,19 @@ let devTaps = 0, devTapT = 0;
 function loadLocal() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
 
 // ================= inventory =================
-const stackMax = id => ITEMS[id].stack || 99;
+const invSize = () => HOT + BAG0 + BAG_STEP * ((G && G.bagLv) || 0);
+const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt;
+const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
+// bag kinds for the tabs and for sorting
+const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['food', '음식'], ['deco', '꾸미기'], ['seed', '씨앗']];
+function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'sword', 'rod', 'shovel'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 let invDirty = true;
 function addItem(id, c, count = true) {
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
-  const useful = ['place', 'wall', 'floor', 'ground', 'roof', 'shovel', 'seed', 'food', 'key'].includes(ITEMS[id].kind) || (ITEMS[id].kind === 'sword' && ITEMS[id].wt && ITEMS[id].wt !== 'sword');
-  const order = useful ? [...Array(30).keys()] : [...Array(24).keys()].map(k => k + 6).concat([0, 1, 2, 3, 4, 5]);
-  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; } }
+  // new stacks go into the bag; the hotbar is only used when the bag is full (the player arranges the hotbar)
+  const order = [...Array(inv.length - HOT).keys()].map(k => k + HOT).concat([...Array(HOT).keys()]);
+  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; G.newIds = G.newIds || {}; G.newIds[id] = 1; } }
   const got = c - left;
   if (count && got > 0) { const S = G.stats; if (id === 'wood') S.wood += got; if (id === 'copperOre') S.copperOre += got; if (id === 'copperBar') S.copperBar += got; if (id === 'lightSeed') S.seedsFound += got; }
   invDirty = true; return left;
@@ -2141,7 +2167,7 @@ function placeItem(t) {
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time });
   else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'forge') G.stats.forge = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
-  s.c--; if (!s.c) G.inv[G.sel] = null; invDirty = true;
+  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
   SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);
 }
 function harvest(t, o) {
@@ -2154,7 +2180,7 @@ function eat(slot) {
   const s = G.inv[slot]; if (!s) return; const it = ITEMS[s.id]; if (it.kind !== 'food') return;
   const p = G.p; if (p.hunger >= 99.5 && p.hp >= maxHp()) { toast('지금은 배가 불러요', null, 'full'); return; }
   const gm = 1 + skl('gourmet') * 0.1, fd = Math.round(it.food * gm), hl = Math.round((it.heal || 0) * gm);
-  p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) G.inv[slot] = null; invDirty = true;
+  p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) { G.inv[slot] = null; refillHot(slot, s.id); } invDirty = true;
   SFX.eat(); ftext(p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) ftext(p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
 }
 function insertSeeds() {
@@ -2748,11 +2774,13 @@ let panel = null, panelAt = 0;
 function durBar(s) { if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
 function slotHTML(s, a, i, cls = '') { const br = isBroken(s); return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
 function refreshHotbar() {
-  const hb = $('#hotbar'); let h = '';
-  for (let i = 0; i < 6; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
+  const hb = $('#hbSlots'); let h = '';
+  for (let i = 0; i < HOT; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
   hb.innerHTML = h; invDirty = false; if (panel) renderPanel();
+  if (hbSel !== G.sel) { hbSel = G.sel; const el = hb.children[G.sel]; if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
+  const full = G.inv.slice(HOT).every(Boolean); $('#bInv').classList.toggle('dot', full);
 }
-let lastHud = '', lastAct = '';
+let lastHud = '', lastAct = '', hbSel = -1;
 function updateHud() {
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
   if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
@@ -2773,7 +2801,7 @@ function updateSkBar() {
   bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
     b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
 }
-function openPanel(kind, data = {}) { if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it, s) { const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
@@ -2783,15 +2811,17 @@ function renderPanel() {
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
   if (k === 'inv') {
-    h += head('가방', 'bag');
+    h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:46px;padding:0 14px;font-size:15px">정렬</button>`);
     h += `<div class="sh-body"><p class="hint">칸을 끌어다 놓거나, 칸을 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 도구와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요. 창·망치·단검·활·지팡이는 단축칸에서 골라 들면 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
-    for (let i = 0; i < 30; i++) { if (i === 6) h += `</div><div class="lbl">가방</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, UIS.invSel === i ? 'pick' : ''); }
+    const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && G.newIds && G.newIds[s0.id] && i >= HOT) c += ' new'; return c; };
+    h = h.replace(`<div class="lbl">단축칸</div>`, `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
+    for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(제작 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
     h += `</div>`;
     const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
     if (s) { const it = ITEMS[s.id]; const st = itemStat(it, s);
       h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${it.n} <span style="color:var(--muted);font-size:15px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
       if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
-      if (UIS.invSel >= 6) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
+      if (UIS.invSel >= HOT) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
       h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
     h += `</div>`;
   } else if (k === 'craft') {
@@ -2817,7 +2847,7 @@ function renderPanel() {
     } else {
     // order is fixed while the panel stays on this tab, so the list does not jump after crafting
     const okey = UIS.tab + '|' + (st || '');
-    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => UIS.tab === 'all' || (UIS.tab === 'here' ? r.at === st : r.cat === UIS.tab)); l.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near)); UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
+    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => (r.bag == null || r.bag === (G.bagLv || 0)) && (UIS.tab === 'all' || (UIS.tab === 'here' ? r.at === st : r.cat === UIS.tab))); l.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near)); UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
     const list = UIS.craftOrder.ids.map(i => ({ r: RECIPES[i], i }));
     h += `<div class="sh-body"><div class="list">`;
     for (const { r, i } of list) {
@@ -2831,7 +2861,7 @@ function renderPanel() {
     const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
     const empty = o.items.every(x => !x);
     h += head('보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
-    h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.map((s, i) => slotHTML(s, 'cin', i)).join('')}</div></div>`;
+    h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'cin', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'cin', i + HOT)).join('')}</div></div>`;
   } else if (k === 'map') {
     h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span></div></div>`;
   } else if (k === 'tree') {
@@ -2844,7 +2874,7 @@ function renderPanel() {
       <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–6 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–9 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
@@ -2895,6 +2925,14 @@ function drawMap() {
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
 }
 function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) set.add(OBJ[o.t].station); } return set; }
+let craftNoteT = 0;
+function craftNote(id, n, msg) {
+  let el = $('#craftNote'); if (!el) { el = document.createElement('div'); el.id = 'craftNote'; el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+  const nm = ITEMS[id].n; el.innerHTML = `<img class="px" src="${iconURL(id)}" alt=""><span>${escHTML(msg || (n > 1 ? `${josa(nm, '을', '를')} ${n}개 제작했어요!` : `${josa(nm, '을', '를')} 제작했어요`))}</span>`;
+  const sh = $('#sheet').getBoundingClientRect(), open = !$('#sheetWrap').hidden; el.style.top = (open ? Math.max(8, sh.top - 58) : 120) + 'px';
+  if (open && sh.top < 70) el.style.top = (sh.top + 12) + 'px';
+  el.classList.remove('out'); el.hidden = false; clearTimeout(craftNoteT); craftNoteT = setTimeout(() => { el.classList.add('out'); craftNoteT = setTimeout(() => { el.hidden = true; }, 400); }, 1800);
+}
 function canCraft(r, near) { return (!r.at || near.has(r.at)) && r.req.every(([id, c]) => availCount(id) >= c); }
 // ---- chests touching a crafting station lend their items (a chain of touching chests counts as one big store) ----
 let POOL = null;
@@ -2913,7 +2951,11 @@ function takeAvail(id, c) { // bag first, then the linked chests
   for (const o of linkedChests()) for (let k = 0; k < o.items.length && c > 0; k++) { const s = o.items[k]; if (!slotIs(s, id)) continue; const t = Math.min(s.c, c); s.c -= t; c -= t; if (!s.c) o.items[k] = null; }
   invDirty = true;
 }
-function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } for (let i = 0; i < arr.length && left; i++) if (!arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; if (s.dur != null) arr[i].dur = s.dur; left -= arr[i].c; } return left; }
+function refillHot(slot, id) {
+  if (slot == null || slot >= HOT || G.inv[slot] || !id) return;
+  for (let j = HOT; j < G.inv.length; j++) { const t = G.inv[j]; if (t && t.id === id) { G.inv[slot] = t; G.inv[j] = null; invDirty = true; ftext(G.p.x, G.p.y - 1.5, `${ITEMS[id].n} 보충`, '#bfe6ff'); return; } }
+}
+function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } const ord = arr === G.inv ? [...Array(arr.length - HOT).keys()].map(k => k + HOT).concat([...Array(HOT).keys()]) : [...arr.keys()]; for (const i of ord) if (left && !arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; if (s.dur != null) arr[i].dur = s.dur; left -= arr[i].c; } return left; }
 function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;
@@ -2927,8 +2969,10 @@ function onSheetClick(e) {
     else { const A = G.inv[UIS.invSel], B = G.inv[i]; if (A && B && A.id === B.id && B.c < stackMax(B.id)) { const k = Math.min(stackMax(B.id) - B.c, A.c); B.c += k; A.c -= k; if (!A.c) G.inv[UIS.invSel] = null; } else { G.inv[UIS.invSel] = B; G.inv[i] = A; } UIS.invSel = null; SFX.place(); }
     invDirty = true; renderPanel(); return;
   }
+  if (a === 'bagTab') { UIS.bagTab = i; UIS.invSel = null; renderPanel(); return; }
+  if (a === 'sortBag') { sortBag(); SFX.place(); toast('가방을 정리했어요', null, 'sortbag'); renderPanel(); return; }
   if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
-  if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
+  if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
   if (a === 'trash') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } G.inv[UIS.invSel] = null; UIS.invSel = null; UIS.trash = false; invDirty = true; renderPanel(); return; }
   if (a === 'tab') { UIS.tab = i; UIS.salvAsk = null; renderPanel(); return; }
   if (a === 'salv') { const s = G.inv[i], got = s && DUR[s.id] && salvageGet(s.id); if (!got || !benchNear(nearStations())) return;
@@ -2942,11 +2986,10 @@ function onSheetClick(e) {
   if (a === 'craft') {
     const r = RECIPES[i], near = nearStations(); POOL = null; if (!canCraft(r, near)) return;
     const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, maxCraft(r))) : 1, total = r.n * q;
-    for (const [id, c] of r.req) takeAvail(id, c * q); const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
-    SFX.craft(); toast(`${ITEMS[r.out].n}${total > 1 ? ' ×' + total : ''} 완성!`, 'good'); gainXp(Math.min(8, q * (r.at === 'forge' ? 3 : r.at ? 1 : 0)));
-    if (['place', 'wall', 'floor', 'ground', 'roof', 'shovel', 'food'].includes(ITEMS[r.out].kind) || (ITEMS[r.out].wt && ITEMS[r.out].wt !== 'sword')) { let slot = G.inv.findIndex(s => s && s.id === r.out);
-      if (slot >= 6) { let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[slot]; G.inv[slot] = tmp; slot = to; }
-      if (slot >= 0 && slot < 6) G.sel = slot; }
+    for (const [id, c] of r.req) takeAvail(id, c * q);
+    if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); SFX.craft(); craftNote(r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); UIS.craftOrder = null; invDirty = true; renderPanel(); return; }
+    const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
+    SFX.craft(); craftNote(r.out, total); gainXp(Math.min(8, q * (r.at === 'forge' ? 3 : r.at ? 1 : 0)));
     invDirty = true; checkGuide(); renderPanel(); return;
   }
   if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; G.objs.delete(panel.i); const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
@@ -2997,30 +3040,43 @@ function moveSlot(A, B) {
 }
 function dragEnd(commit, e) {
   const D = DRAG.st; if (!D) return; DRAG.st = null;
-  if (D.ghost) D.ghost.remove(); D.el.classList.remove('dragging'); document.querySelectorAll('.slot.dropT').forEach(x => x.classList.remove('dropT'));
+  if (D.ghost) D.ghost.remove(); if (D.hb) D.hb.style.scrollBehavior = ''; D.el.classList.remove('dragging'); document.querySelectorAll('.slot.dropT').forEach(x => x.classList.remove('dropT'));
   if (D.mode) DRAG.block = performance.now();
   if (D.mode === 'drag' && commit && e) { const t = document.elementFromPoint(e.clientX, e.clientY), B = slotRef(t && t.closest('.slot[data-a]')), A = slotRef(D.el);
     if (A && B && A.arr[A.i] === D.item && moveSlot(A, B)) { UIS.invSel = null; UIS.trash = false; refreshHotbar(); if (panel) renderPanel(); } }
 }
 function setupDrag() {
+  document.addEventListener('dragstart', e => e.preventDefault());
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.slot, #hotbar, #sheet')) e.preventDefault(); });
   document.addEventListener('pointerdown', e => {
     if (DRAG.st || !G || !started || (e.pointerType === 'mouse' && e.button !== 0)) return; const el = e.target.closest && e.target.closest('.slot[data-a]'); if (!el) return;
-    const A = slotRef(el); if (!A || !A.arr[A.i]) return;
-    DRAG.st = { el, item: A.arr[A.i], x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, mode: null, touch: e.pointerType !== 'mouse', body: el.closest('.sh-body'), sy: 0 };
+    const A = slotRef(el), item = A && A.arr[A.i]; if (!item && !(e.pointerType !== 'mouse' && (el.closest('.sh-body') || el.closest('#hbSlots')))) return;
+    DRAG.st = { el, item, x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, mode: null, touch: e.pointerType !== 'mouse', body: el.closest('.sh-body'), hb: el.closest('#hbSlots'), sy: 0, sx: 0 };
   }, true);
   window.addEventListener('pointermove', e => {
     const D = DRAG.st; if (!D || e.pointerId !== D.id) return; const dx = e.clientX - D.x, dy = e.clientY - D.y;
     if (!D.mode && Math.hypot(dx, dy) > 7) {
       if (D.touch && D.body && performance.now() - D.t < 260 && Math.abs(dy) > Math.abs(dx)) { D.mode = 'scroll'; D.sy = D.body.scrollTop; }
+      else if (D.touch && D.hb && performance.now() - D.t < 260 && Math.abs(dx) >= Math.abs(dy)) { D.mode = 'hscroll'; D.sx = D.hb.scrollLeft; D.hb.style.scrollBehavior = 'auto'; }
+      else if (!D.item) { D.mode = 'none'; }
       else { D.mode = 'drag'; D.el.classList.add('dragging'); const g = document.createElement('img'); g.id = 'dragGhost'; g.className = 'px'; g.alt = ''; g.src = iconURL(D.item.id); document.body.appendChild(g); D.ghost = g; }
     }
     if (D.mode === 'scroll') D.body.scrollTop = D.sy - dy;
+    else if (D.mode === 'hscroll') D.hb.scrollLeft = D.sx - dx;
     else if (D.mode === 'drag') { D.lx = e.clientX; D.ly = e.clientY; if (D.body && !D.raf) { const step = () => { if (DRAG.st !== D) return; const r = D.body.getBoundingClientRect(); if (D.ly < r.top + 44) D.body.scrollTop -= 9; else if (D.ly > r.bottom - 44) D.body.scrollTop += 9; D.raf = requestAnimationFrame(step); }; D.raf = requestAnimationFrame(step); }
       D.ghost.style.left = e.clientX + 'px'; D.ghost.style.top = e.clientY + 'px'; const t = document.elementFromPoint(e.clientX, e.clientY), tEl = t && t.closest('.slot[data-a]');
       document.querySelectorAll('.slot.dropT').forEach(x => { if (x !== tEl) x.classList.remove('dropT'); }); if (tEl && tEl !== D.el && slotRef(tEl)) tEl.classList.add('dropT'); }
   });
   window.addEventListener('pointerup', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(true, e); });
   window.addEventListener('pointercancel', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(false); });
+}
+function sortBag() { // merge stacks and order the bag by kind; the hotbar stays as the player set it
+  const items = G.inv.slice(HOT).filter(Boolean), merged = [];
+  for (const it of items) { const mx = stackMax(it.id); if (DUR[it.id]) { merged.push(it); continue; } let left = it.c; for (const m of merged) if (m.id === it.id && m.c < mx && left) { const k = Math.min(mx - m.c, left); m.c += k; left -= k; } if (left) merged.push({ ...it, c: left }); }
+  const catOrd = { equip: 0, food: 1, mat: 2, seed: 3, deco: 4 }, ord = Object.keys(ITEMS);
+  merged.sort((a, b) => catOrd[bagCat(a.id)] - catOrd[bagCat(b.id)] || ord.indexOf(a.id) - ord.indexOf(b.id) || b.c - a.c);
+  for (let j = HOT; j < G.inv.length; j++) G.inv[j] = merged[j - HOT] || null;
+  UIS.invSel = null; invDirty = true;
 }
 function hotClick(i) {
   ensureAudio();
@@ -3030,7 +3086,7 @@ function hotClick(i) {
 
 // ================= input wiring =================
 function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
-function placeJoyIdle() { const j = $('#joy'); j.style.left = '96px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 120)) + 'px'; }
+function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 120)) + 'px'; }
 function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
@@ -3061,7 +3117,7 @@ function setupInput() {
     if (e.code === 'KeyI' || e.code === 'Tab' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; }
     if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
-    if (/^Digit[1-6]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
+    if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
     if (e.code === 'KeyQ') { const s = selItem(); if (s && ITEMS[s.id].kind === 'food') eat(G.sel); return; }
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
@@ -3070,7 +3126,7 @@ function setupInput() {
   });
   window.addEventListener('keyup', e => keys.delete(e.code));
   window.addEventListener('blur', () => { keys.clear(); btnHeld = false; mouse.down = false; joyEnd(); });
-  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1; G.sel = (G.sel + d + 6) % 6; invDirty = true; }, { passive: true });
+  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1; G.sel = (G.sel + d + HOT) % HOT; invDirty = true; }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
