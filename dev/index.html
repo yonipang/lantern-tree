@@ -218,6 +218,7 @@ body.touch #pcHint{display:none}
 .keys b{font-weight:400;color:var(--text)}
 .menu-list{display:grid;gap:10px}
 .menu-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qtlist{display:grid;gap:6px;margin-top:8px}.qtrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;line-height:1.4;padding:6px 10px;border-radius:10px;background:var(--panel2)}.qtrow b{color:var(--amber);white-space:nowrap;font-weight:normal}
 .impbox{background:var(--panel2);border:2px solid var(--amber);border-radius:18px;padding:14px;margin:0 0 14px}
 .impbox p{margin:0 0 12px;font-size:15px;line-height:1.55}
 .devbox{border:2px dashed #ff8fa3;border-radius:18px;padding:12px;margin-top:16px}
@@ -229,6 +230,9 @@ body.touch #pcHint{display:none}
 #bkList .bk .btn{min-height:42px;font-size:15px;padding:0 12px}
 #cloudAsk{width:min(340px,100%);background:rgba(27,20,38,.92);border:2px solid var(--mint);border-radius:18px;padding:14px;text-align:center}
 #cloudAsk p{margin:0 0 12px;font-size:16px;line-height:1.5}
+#cloudTitle .btn{font-size:16px;min-height:48px;padding:0 10px}
+#cloudTitle{width:100%;box-sizing:border-box;background:rgba(27,20,38,.92);border:2px solid var(--line);border-radius:18px;padding:14px;text-align:center}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px;text-align:left}.cmp>div{background:rgba(0,0,0,.18);border:2px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;gap:4px}.cmp b{font-size:14px}.cmp span{font-size:13px;line-height:1.45;color:var(--muted)}
 .cl-form{display:grid;gap:8px;margin-top:10px}
 .cl-form input{font:inherit;font-size:16px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--text);-webkit-user-select:text;user-select:text;touch-action:manipulation}
 #impAsk{width:min(320px,100%);background:rgba(27,20,38,.92);border:2px solid var(--amber);border-radius:18px;padding:14px;text-align:center}
@@ -323,6 +327,8 @@ body.touch #pcHint{display:none}
     <div class="story">아주 깊은 땅속, 잠든 등불나무 곁에서 눈을 떴어요. 흩어진 빛씨앗 세 개를 모아 나무를 다시 깨워 주세요.</div>
     <div class="tb">
       <button class="btn" id="btnContinue" type="button" hidden>이어하기</button>
+      <button class="btn ghost" id="btnCloud" type="button" style="min-height:52px;font-size:17px" hidden>☁ 클라우드에서 이어하기</button>
+      <div id="cloudTitle" hidden></div>
       <button class="btn" id="btnNew" type="button">새 모험 시작</button>
       <button class="btn ghost" id="btnImport" type="button" style="min-height:48px;font-size:17px">세이브 파일 불러오기</button>
       <button class="btn ghost" id="btnBackups" type="button" style="min-height:44px;font-size:15px" hidden>백업에서 되돌리기</button>
@@ -1989,6 +1995,11 @@ function migrateV2() {
 
 // ================= state =================
 const SAVE_KEY = 'lantern-tree-save-v1';
+// each playthrough gets its own id so cloud sync never mixes two different adventures
+const newRunId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+// play time: counts only while the game is open, visible and someone touched it in the last 2 minutes
+let lastInputAt = 0; const IDLE_LIMIT = 120;
+function fmtPlay(sec, est) { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); const t = h ? `${h}시간 ${m}분` : m ? `${m}분` : '1분 미만'; return (est ? '약 ' : '') + t; }
 let G = null;
 let TP = 48, Z = 3, DPR = 1;
 const cam = { x: CX + .5, y: CY + 2 };
@@ -2013,7 +2024,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2021,7 +2032,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof] };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof], run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {} };
 }
 function deserialize(s) {
   const N = W * H;
@@ -2046,6 +2057,9 @@ function deserialize(s) {
   G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []);
   G.rpg = cleanRpg(s.rpg); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = Number.isFinite(s.p.mp) ? Math.min(s.p.mp, maxMp()) : maxMp(); G.p.hp = Math.min(G.p.hp, maxHp());
   G.stats.beaten = G.stats.beaten || {}; for (const k of BKEYS) if (G.bossDead[k]) G.stats.beaten[k] = 1;
+  G.run = typeof s.run === 'string' && s.run ? s.run : newRunId();
+  G.playTEst = !Number.isFinite(s.playT) || !!s.playTEst; G.playT = Number.isFinite(s.playT) ? s.playT : Math.max(0, Math.round(+s.time || 0));
+  G.qt = {}; if (s.qt && typeof s.qt === 'object') for (const k in s.qt) if (Number.isFinite(s.qt[k])) G.qt[k] = s.qt[k];
   fixParts(); grantUniques(); ensureDeepAltars();
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
@@ -2095,34 +2109,91 @@ async function cloudInit() {
         out: () => au.signOut(auth), get: async uid => { const d = await fs.getDoc(fs.doc(db, 'saves', uid)); return d.exists() ? d.data() : null; }, put: (uid, d) => fs.setDoc(fs.doc(db, 'saves', uid), d) };
     } catch (e) { CLOUD.st = 'na'; CLOUD.err = 'load'; cloudRefresh(); return; }
   }
-  CLOUD.api.onAuth(u => { CLOUD.user = u ? { uid: u.uid, name: u.displayName || u.email || '로그인됨' } : null; CLOUD.st = u ? 'in' : 'out'; if (u) cloudCheck(); else { CLOUD.pending = null; showCloudAsk(); } cloudRefresh(); });
+  CLOUD.api.onAuth(u => { CLOUD.user = u ? { uid: u.uid, name: u.displayName || u.email || '로그인됨' } : null; CLOUD.st = u ? 'in' : 'out'; if (u) cloudCheck(); else { CLOUD.pending = null; CLOUD.doc = null; CLOUD.docRun = null; CLOUD.prev = null; CLOUD.diffRun = false; CLOUD.wantTake = false; showCloudAsk(); } cloudRefresh(); });
 }
-function cloudRefresh() { if (panel && panel.kind === 'menu') renderPanel(); }
+function cloudRefresh() { if (panel && panel.kind === 'menu') renderPanel(); cloudTitleRefresh(); }
+// what a save looks like at a glance, for choosing between two of them
+function saveInfo(sv, at) { if (!sv) return null; return { run: sv.run || '', at: at || sv.at || 0, playT: Number.isFinite(sv.playT) ? sv.playT : (+sv.time || 0), est: !Number.isFinite(sv.playT) || !!sv.playTEst, seeds: sv.treeSeeds || 0, lv: (sv.rpg && sv.rpg.lv) || 1 }; }
+function parseSave(txt) { try { return JSON.parse(txt); } catch (e) { return null; } }
+function docInfo(doc) { if (!doc || !doc.data) return null; if (!doc.__info) doc.__info = saveInfo(parseSave(doc.data), doc.at); return doc.__info; }
+function localInfo() { if (started && G) return saveInfo(serialize()); return saveInfo(loadLocal()); }
+function infoLine(i) { return i ? `플레이 ${fmtPlay(i.playT, i.est)} · 빛씨앗 ${i.seeds}개 · Lv ${i.lv}<br>${fmtTime(i.at)} 저장` : '세이브 없음'; }
+function cloudCompareHTML(doc) { return `<div class="cmp"><div><b>☁ 클라우드</b><span>${infoLine(docInfo(doc))}</span></div><div><b>📱 이 기기</b><span>${infoLine(localInfo())}</span></div></div>`; }
 async function cloudCheck() {
   if (!CLOUD.user) return; let doc;
   try { doc = await CLOUD.api.get(CLOUD.user.uid); } catch (e) { toast(fbErr(e), 'warn', 'cloudget'); return; }
+  doc = doc && doc.data ? doc : null; CLOUD.doc = doc; CLOUD.docRun = doc ? (doc.run || (docInfo(doc) || {}).run || '') : null; CLOUD.prev = doc && doc.prev && doc.prev.data ? doc.prev : null;
+  // the player pressed "continue from cloud" on the title screen: just load it
+  if (CLOUD.wantTake) { CLOUD.wantTake = false; if (doc) { CLOUD.pending = doc; cloudTakePending(); return; } toast('이 계정에는 아직 클라우드 세이브가 없어요', 'warn', 'cloudnone'); }
   const local = loadLocal(), localAt = (local && local.at) || 0;
-  if (doc && doc.data && (doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
-  CLOUD.lastUp = (doc && doc.at) || 0; if (local) cloudUpload(true);
+  if (!doc) { CLOUD.lastUp = 0; CLOUD.diffRun = false; if (local) cloudUpload(true); cloudRefresh(); return; }
+  const localRun = (local && local.run) || (started && G && G.run) || '';
+  // a different adventure (or one saved before adventures had ids): never overwrite either side without asking
+  if (!local || !localRun || !CLOUD.docRun || localRun !== CLOUD.docRun) {
+    if (local && local.run && CLOUD.docRun === local.run) { /* same */ } else {
+      CLOUD.pending = doc; CLOUD.diffRun = !!local; showCloudAsk();
+      if (started) toast(local ? '클라우드에 다른 모험이 있어요. 메뉴에서 어느 쪽을 쓸지 골라 주세요' : '클라우드에 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew');
+      cloudRefresh(); return;
+    }
+  }
+  CLOUD.diffRun = false;
+  if ((doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
+  CLOUD.lastUp = doc.at || 0; cloudUpload(true);
 }
 async function cloudUpload(force, quiet = true) {
   if (!CLOUD.user || CLOUD.busy || CLOUD.pending) return false; if (!force && !started) return false;
   if (started) saveLocal(true); let data = null; try { data = localStorage.getItem(SAVE_KEY); } catch (e) { } if (!data && G) data = JSON.stringify(serialize()); if (!data) return false;
-  const at = (JSON.parse(data).at) || Date.now(); if (!force && at <= CLOUD.lastUp) return true;
+  const sv = parseSave(data); if (!sv) return false;
+  if (!sv.run && G && G.run) { sv.run = G.run; data = JSON.stringify(sv); }
+  const at = sv.at || Date.now(); if (!force && at <= CLOUD.lastUp) return true;
+  // replacing a different adventure in the cloud: keep that one as the cloud backup
+  let prev = CLOUD.prev;
+  if (CLOUD.doc && CLOUD.doc.data && CLOUD.docRun !== sv.run && CLOUD.doc.data !== data) { const i = docInfo(CLOUD.doc) || {}; prev = { data: CLOUD.doc.data, at: CLOUD.doc.at || 0, run: CLOUD.docRun || '', playT: i.playT || 0, seeds: i.seeds || 0 }; }
+  if (prev && prev.data.length + data.length > 900000) prev = null;
+  const info = saveInfo(sv, at), doc = { data, at, char: (G && G.char) || 'sprout', v: 2, run: sv.run, playT: Math.round(info.playT), seeds: info.seeds };
+  if (prev) doc.prev = prev;
   CLOUD.busy = true;
-  try { await CLOUD.api.put(CLOUD.user.uid, { data, at, char: (G && G.char) || 'sprout', v: 1 }); CLOUD.lastUp = at; if (!quiet) toast('클라우드에 올렸어요', 'good'); return true; }
+  try { await CLOUD.api.put(CLOUD.user.uid, doc); CLOUD.lastUp = at; CLOUD.doc = { data, at, run: sv.run }; CLOUD.docRun = sv.run; CLOUD.prev = prev || null; if (!quiet) toast('클라우드에 올렸어요', 'good'); return true; }
   catch (e) { toast(fbErr(e), 'warn', 'cloudput'); return false; }
   finally { CLOUD.busy = false; cloudRefresh(); }
 }
-function cloudTakePending() {
-  const doc = CLOUD.pending; if (!doc) return; let sv; try { sv = JSON.parse(doc.data); } catch (e) { toast('클라우드 세이브를 읽지 못했어요'); return; }
-  saveLocal(true); pushBackup('클라우드 세이브 불러오기 전');
+function cloudTakePending(fromPrev) {
+  const doc = fromPrev ? CLOUD.prev : CLOUD.pending; if (!doc) return; const sv = parseSave(doc.data); if (!sv) { toast('클라우드 세이브를 읽지 못했어요'); return; }
+  if (started) saveLocal(true); pushBackup(fromPrev ? '클라우드 백업 되돌리기 전' : '클라우드 세이브 불러오기 전');
   try { deserialize(sv); } catch (e) { toast('클라우드 세이브를 불러오지 못했어요'); return; }
-  CLOUD.pending = null; CLOUD.lastUp = doc.at || 0; showCloudAsk(); if (panel) closePanel(); beginPlay(); toast('클라우드 세이브를 불러왔어요', 'good');
+  CLOUD.pending = null; CLOUD.diffRun = false; UIS.prevAsk = false;
+  // taking the cloud's own save: it is now the same adventure (an old save just got its id). Taking the backup: the current cloud save becomes the backup
+  if (!fromPrev) { CLOUD.docRun = G.run; CLOUD.lastUp = doc.at || 0; }
+  showCloudAsk(); if (panel) closePanel(); beginPlay(); toast(fromPrev ? '클라우드 백업으로 되돌렸어요' : '클라우드 세이브를 불러왔어요', 'good');
+  cloudUpload(true);
 }
-function cloudKeepLocal() { CLOUD.pending = null; showCloudAsk(); cloudUpload(true, false); cloudRefresh(); }
+function cloudKeepLocal() { CLOUD.pending = null; CLOUD.diffRun = false; showCloudAsk(); cloudUpload(true, false); cloudRefresh(); }
 function showCloudAsk() { const el = $('#cloudAsk'); if (!el) return; const d = CLOUD.pending; el.hidden = !d || started; if (!d) return;
-  el.innerHTML = `<p>☁ 클라우드에 더 최근 세이브가 있어요<br><span style="color:var(--muted);font-size:14px">${fmtTime(d.at)} 저장 · 불러오면 이 기기 세이브는 백업해 둬요</span></p><div class="menu-two"><button class="btn" type="button" data-cl="take">불러오기</button><button class="btn ghost" type="button" data-cl="keep">이 기기 것 쓰기</button></div>`; }
+  const hasLocal = started || !!loadLocal(), t = CLOUD.diffRun ? '☁ 클라우드에 다른 모험이 있어요' : hasLocal ? '☁ 클라우드에 더 최근 세이브가 있어요' : '☁ 클라우드에 저장된 모험이 있어요';
+  const sub = CLOUD.diffRun ? '어느 쪽으로 할까요? 고르지 않은 쪽은 백업해 둬요.' : hasLocal ? '불러오면 이 기기 세이브는 백업해 둬요.' : '불러와서 이어서 할 수 있어요.';
+  el.innerHTML = `<p>${t}<br><span style="color:var(--muted);font-size:14px">${sub}</span></p>${cloudCompareHTML(d)}<div class="menu-two"><button class="btn" type="button" data-cl="take">클라우드 것 불러오기</button><button class="btn ghost" type="button" data-cl="keep">이 기기 것 쓰기</button></div>`; }
+// title screen: log in and continue from the cloud without starting a new game first
+function cloudTitleRefresh() {
+  const bt = $('#btnCloud'), box = $('#cloudTitle'); if (!bt || !box) return;
+  const ok = !started && (CLOUD.st === 'in' || CLOUD.st === 'out') && !CLOUD.pending; bt.hidden = !ok; if (!ok) { box.hidden = true; return; }
+  bt.textContent = CLOUD.st === 'in' ? `☁ 클라우드에서 이어하기` : '☁ 클라우드에서 이어하기 (로그인)';
+  if (CLOUD.st !== 'out' || !UIS.clTitle) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<p class="hint" style="margin:0 0 10px">로그인하면 클라우드에 저장된 모험을 바로 불러와요.</p><div class="menu-two"><button class="btn ghost" data-ct="google" type="button">구글로 로그인</button><button class="btn ghost" data-ct="emailT" type="button">이메일로 로그인</button></div>` +
+    (UIS.clTitleEmail ? `<div class="cl-form"><input id="ctEm" type="email" placeholder="이메일" autocomplete="email"><input id="ctPw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password"><div class="menu-two"><button class="btn" data-ct="in" type="button">로그인</button><button class="btn ghost" data-ct="up" type="button">새로 가입</button></div></div>` : '');
+}
+function cloudTitleClick() {
+  if (CLOUD.st === 'in') { if (CLOUD.doc) { CLOUD.pending = CLOUD.doc; cloudTakePending(); } else toast('이 계정에는 아직 클라우드 세이브가 없어요', 'warn', 'cloudnone'); return; }
+  UIS.clTitle = !UIS.clTitle; cloudTitleRefresh();
+}
+// play time and when each main quest was cleared (testers send this to measure pacing)
+function playRecordHTML() {
+  const rows = GUIDE.filter(g => G.qt && G.qt[g.id]).map(g => `<div class="qtrow"><span>${escHTML(String(g.t()).replace(/\s*\([^)]*\)\s*$/, ''))}</span><b>${fmtPlay(G.qt[g.id])}</b></div>`);
+  let h = `<div class="lbl" style="margin-top:16px">플레이 기록</div><p class="hint" id="playTime">플레이 시간 <b style="color:var(--text)">${fmtPlay(G.playT, G.playTEst)}</b>${G.playTEst ? ' (기록을 시작하기 전 시간은 어림값이에요)' : ''}</p>`;
+  h += `<div class="menu-list"><button class="btn ghost" data-a="qtShow" type="button">${UIS.qtShow ? '구간 기록 접기' : '구간 기록 보기'}</button></div>`;
+  if (UIS.qtShow) h += `<div class="qtlist">${rows.length ? rows.join('') : '<p class="hint">아직 기록된 목표가 없어요. 이제부터 목표를 이룰 때마다 그때의 플레이 시간이 남아요.</p>'}</div>`;
+  return h;
+}
 function cloudMenuHTML() {
   let h = `<div class="lbl" style="margin-top:16px">클라우드 저장</div>`;
   if (CLOUD.st === 'na') return h + `<p class="hint">${CLOUD.err === 'load' ? '클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.' : '사이트 주소(홈 화면 앱)로 연 게임에서 쓸 수 있어요.'}</p>`;
@@ -2132,13 +2203,16 @@ function cloudMenuHTML() {
     if (UIS.clEmail) h += `<div class="cl-form"><input id="clEm" type="email" placeholder="이메일" autocomplete="email"><input id="clPw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password"><div class="menu-two"><button class="btn" data-a="clIn" type="button">로그인</button><button class="btn ghost" data-a="clUp" type="button">새로 가입</button></div></div>`;
     return h;
   }
-  if (CLOUD.pending) h += `<div class="impbox"><p>클라우드에 더 최근 세이브가 있어요 (${fmtTime(CLOUD.pending.at)})<br><span style="color:var(--muted);font-size:14px">불러오면 지금 세이브는 백업해 둬요.</span></p><div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
-  return h + `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
+  if (CLOUD.pending) h += `<div class="impbox"><p>${CLOUD.diffRun ? '클라우드에 다른 모험이 있어요' : `클라우드에 더 최근 세이브가 있어요`}<br><span style="color:var(--muted);font-size:14px">${CLOUD.diffRun ? '어느 쪽으로 할까요? 고르기 전까지는 클라우드에 올리지 않아요. 고르지 않은 쪽은 백업해 둬요.' : '불러오면 지금 세이브는 백업해 둬요.'}</span></p>${cloudCompareHTML(CLOUD.pending)}<div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
+  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
+  if (CLOUD.prev && !CLOUD.pending) { const i = saveInfo(parseSave(CLOUD.prev.data), CLOUD.prev.at);
+    h += `<p class="hint" style="margin-top:10px">클라우드 백업 · 덮어쓰기 전 세이브<br>${infoLine(i)}</p><div class="menu-list"><button class="btn ${UIS.prevAsk ? 'warn' : 'ghost'}" data-a="clPrev" type="button">${UIS.prevAsk ? '정말 되돌릴까요? (지금 세이브는 백업돼요)' : '클라우드 백업으로 되돌리기'}</button></div>`; }
+  return h;
 }
-async function cloudAuth(kind) {
-  try { if (kind === 'google') await CLOUD.api.google(); else { const em = ($('#clEm') || {}).value || '', pw = ($('#clPw') || {}).value || ''; if (!em || !pw) { toast('이메일과 비밀번호를 넣어 주세요'); return; } await (kind === 'up' ? CLOUD.api.emailUp(em.trim(), pw) : CLOUD.api.emailIn(em.trim(), pw)); }
-    UIS.clEmail = false; toast('로그인했어요', 'good'); }
-  catch (e) { toast(fbErr(e), 'warn', 'cloudauth'); }
+async function cloudAuth(kind, pre = 'cl') {
+  try { if (kind === 'google') await CLOUD.api.google(); else { const em = ($('#' + pre + 'Em') || {}).value || '', pw = ($('#' + pre + 'Pw') || {}).value || ''; if (!em || !pw) { toast('이메일과 비밀번호를 넣어 주세요'); return; } await (kind === 'up' ? CLOUD.api.emailUp(em.trim(), pw) : CLOUD.api.emailIn(em.trim(), pw)); }
+    UIS.clEmail = false; UIS.clTitleEmail = false; toast('로그인했어요', 'good'); }
+  catch (e) { if (pre === 'ct') CLOUD.wantTake = false; toast(fbErr(e), 'warn', 'cloudauth'); }
 }
 // ---- save files: export / import ----
 let DL = null; try { if (window.claude?.use) window.claude.use('downloads').then(d => { DL = d; }).catch(() => { }); } catch (e) { }
@@ -3093,7 +3167,7 @@ function claimQuest(id) {
 }
 let goalTarget = null, lastGoalTxt = '';
 function checkGuide() {
-  let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { G.guide++; n++; }
+  let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { if (started && !G.qt[GUIDE[G.guide].id]) G.qt[GUIDE[G.guide].id] = Math.max(1, Math.round(G.playT || 0)); G.guide++; n++; }
   if (n === 1 && started) { toast('목표 달성!', 'good'); SFX.craft(); }
   const g = GUIDE[G.guide]; const txt = g.t(); if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; }
   goalTarget = g.target ? g.target() : null;
@@ -3607,6 +3681,7 @@ function renderPanel() {
     const marks = G.marks || [];
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:8px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
+      ${playRecordHTML()}
       <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:16px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
@@ -3758,6 +3833,7 @@ function onSheetClick(e) {
   if (a === 'skUp') { const R = G.rpg, S = SKILLS[i]; if (!S) return; const l = R.sk[i] || 0; if (R.sp <= 0 || R.lv < S.lv || l >= S.max) return; R.sk[i] = l + 1; R.sp--; if (S.act && !l && !R.slot.includes(i)) { const e = R.slot.indexOf(null); if (e >= 0) R.slot[e] = i; } SFX.craft(); toast(l ? `${S.n} ${l + 1}단계로 올렸어요` : `${S.n}을(를) 배웠어요!`, 'good'); renderPanel(); return; }
   if (a === 'skSlot') { const [id, n] = String(i).split(':'), R = G.rpg, m = +n; if (!R.sk[id]) return; if (R.slot[m] === id) R.slot[m] = null; else { const o = R.slot.indexOf(id); if (o >= 0) R.slot[o] = R.slot[m]; R.slot[m] = id; } SFX.click(); renderPanel(); return; }
   if (a === 'save') { saveLocal(); return; }
+  if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
   if (a === 'export') { exportSave(); return; }
   if (a === 'clGoogle') { cloudAuth('google'); return; }
   if (a === 'clEmailT') { UIS.clEmail = !UIS.clEmail; renderPanel(); return; }
@@ -3767,6 +3843,7 @@ function onSheetClick(e) {
   if (a === 'clUpNow') { cloudUpload(true, false); return; }
   if (a === 'clTake') { cloudTakePending(); return; }
   if (a === 'clKeep') { cloudKeepLocal(); return; }
+  if (a === 'clPrev') { if (!UIS.prevAsk) { UIS.prevAsk = true; renderPanel(); return; } cloudTakePending(true); return; }
   if (a === 'openLook') { openPanel('look'); return; }
   if (a === 'lookTab') { UIS.lookTab = i; renderPanel(); return; }
   if (a === 'lookSet') { const [k, v] = String(i).split(':'); UIS.look[k] = ['hc', 'eye', 'oc'].includes(k) ? +v : v; SFX.click(); renderPanel(); return; }
@@ -3923,6 +4000,10 @@ function setupInput() {
   $('#btnBackups').addEventListener('click', () => { const el = $('#bkList'); if (!el.hidden) { el.hidden = true; return; } const b = loadBackups();
     const fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
     el.innerHTML = `<div style="color:var(--muted);font-size:14px">되돌리면 지금 세이브도 백업해 둬요.</div>` + b.map((x, k) => `<div class="bk"><span>${fmt(x.at)}<br><small style="color:var(--muted)">${escHTML(x.reason || '')}</small></span><button class="btn ghost" type="button" data-bk="${k}">되돌리기</button></div>`).join(''); el.hidden = false; });
+  $('#btnCloud').addEventListener('click', () => { ensureAudio(); cloudTitleClick(); });
+  $('#cloudTitle').addEventListener('click', e => { const b = e.target.closest('[data-ct]'); if (!b) return; const k = b.dataset.ct;
+    if (k === 'emailT') { UIS.clTitleEmail = !UIS.clTitleEmail; cloudTitleRefresh(); return; }
+    CLOUD.wantTake = true; cloudAuth(k, 'ct'); });
   $('#cloudAsk').addEventListener('click', e => { const b = e.target.closest('[data-cl]'); if (!b) return; if (b.dataset.cl === 'take') cloudTakePending(); else cloudKeepLocal(); });
   $('#bkList').addEventListener('click', e => { const bt = e.target.closest('[data-bk]'); if (!bt) return; const x = loadBackups()[+bt.dataset.bk]; if (!x) return;
     let sv; try { sv = JSON.parse(x.data); } catch (err) { toast('백업을 읽지 못했어요'); return; }
@@ -3948,13 +4029,14 @@ function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking')
 function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
 function hidePicker() { $('#title').classList.remove('picking'); $('#charPick').hidden = true; clearInterval(pickAnim); }
 const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); };
-function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
+function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { const bc = $('#btnCloud'), ct = $('#cloudTitle'); if (bc) bc.hidden = true; if (ct) ct.hidden = true; } $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; lastInputAt = performance.now(); G.qt = G.qt || {}; { let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 40) { G.guide++; n++; } } checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
 
 // ================= loop =================
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
   if (G) { if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
+  if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);
 }
@@ -3968,6 +4050,7 @@ function start(data) {
   ['bInv', 'bCraft', 'bQuest', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'quest', 'star', 'map', 'gear'][k]); });
   if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
+  for (const ev of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) window.addEventListener(ev, () => { lastInputAt = performance.now(); }, { capture: true, passive: true });
   try { navigator.storage?.persist?.().catch(() => { }); } catch (e) { }
   const saved = (data && data.save) || loadLocal();
   if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { pushBackup('불러오기 실패한 세이브'); newGame(20261008); } } else newGame(20261008);
