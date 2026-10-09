@@ -102,7 +102,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=id=>T.QSIDE.find(x=>x.id===id);G.stats.berryH=0;G.stats.wetH=0;G.stats.fert=0;const a=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);
           G.stats.berryH=1;G.stats.wetH=5;G.stats.fert=10;const b2=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);return [a,b2,['s_crop1','s_crop2','s_crop3'].map(id=>JSON.stringify(q(id).rw)+q(id).xp)]}""")
         rec('도전','농사 도전 퀘스트 1~3 (베리 거두기 · 물 준 작물 5개 · 비료 10번)', r[0]==[False,False,False] and r[1]==[True,True,True], str(r))
-        rec('도전','보상: 베리 씨앗 3·포자 3·경험치 15 / 구리괴 3·25 / 젤 6·40', r[2]==['[["berrySeed",3],["spore",3]]15','[["copperBar",3]]25','[["gel",6]]40'], str(r))
+        rec('도전','보상: 베리 씨앗 3·포자 3·경험치 15 / 구리괴 3·25 (+v36 레시피 쪽지) / 젤 6·40', r[2]==['[["berrySeed",3],["spore",3]]15','[["copperBar",3],["rn_glowPancake",1]]25','[["gel",6]]40'], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.berryH=0;const x=Math.floor(G.p.x)+8,y=Math.floor(G.p.y)+10;const o=__crop(x,y,'cropBerry',200);o.w=1;const w0=G.stats.wetH;T.harvest({x,y},o);G.drops.length=0;return [G.stats.berryH,G.stats.wetH-w0]}""")
         rec('도전','베리를 거두면 개수가 쌓이고, 물 준 작물도 따로 셈', r==[1,1], str(r))
         # craft panel tab

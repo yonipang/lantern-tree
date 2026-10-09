@@ -49,7 +49,7 @@ async def main():
         rec('흙','바라보면 맞는 흙인지 안내 (수정골렘 뒤)', '이끼에 심으면 별 작물' in r[0] and '맞는 흙' in r[1] and '흙' not in r[2].split('·')[-1], str(r))
         # ---- quest ----
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_crop4');G.stats.starH=4;const a=T.questState(q).done;G.stats.starH=5;return [a,T.questState(q).done,JSON.stringify(q.rw),q.xp]}""")
-        rec('도전','별 작물 5개 거두기 (수정 조각 8, 경험치 60)', r==[False,True,'[["crystal",8]]',60], str(r))
+        rec('도전','별 작물 5개 거두기 (수정 조각 8, 경험치 60, +v36 레시피 쪽지)', r==[False,True,'[["crystal",8],["rn_beanSteam",1]]',60], str(r))
         # ---- save ----
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__spot(7,3);const o=__crop(x,y,'cropBean',999,4);o.star=1;T.addItem('cbeanS',2);const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const n=T.G.objs.get(T.idx(x,y));return [n.t,n.star,T.countItem('cbeanS')>=2]}""")
         rec('세이브','별 작물 표시와 별 아이템이 저장·불러오기 뒤에도 그대로', r==['cropBean',1,True], str(r))
