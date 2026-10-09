@@ -740,20 +740,36 @@ const OSPR = {
   bootPlanter: [16, 18, A => { A.poly([[4, 8], [10, 8], [10, 13], [14, 13], [14, 17], [4, 17]], '#7a5a3a'); A.r(4, 16, 10, 1, '#4a3424'); A.r(4, 8, 6, 1, '#9c7650'); A.p(7, 12, '#4a3424'); A.line(6, 8, 5, 4, C.leafD); A.line(8, 8, 9, 3, C.leafD); A.e(5, 3.5, 1.6, 1.6, C.rose); A.e(9.5, 2.6, 1.6, 1.6, C.amber); A.p(9, 2, '#fff'); A.e(7, 6, 1.4, 1, C.leaf); }],
   shrine: [16, 22, A => { A.r(3, 14, 10, 7, C.stone); A.r(2, 12, 12, 3, C.stoneL); A.r(3, 20, 10, 1, C.stoneD); A.r(5, 16, 6, 1, C.stoneD); A.p(5, 17, C.amber); A.p(10, 17, C.amber); A.r(6, 18, 4, 1, C.stoneD); A.r(7, 11, 2, 1, C.stoneD); }],
 };
-function cropSpr(kind, stage) {
+// crops: seed → sprout → flower/bud → grown. soil: bit 1 watered (dark, wet shine), bit 2 fertilized (pale grains)
+const CROP_STEP = { berry: ['씨앗', '새싹', '꽃', '다 자람'], shroom: ['포자', '새싹', '아기 버섯', '다 자람'], moss: ['포자', '새싹', '반쯤 덮임', '다 자람'] };
+function cropSoil(A, soil) {
+  const wet = soil & 1; A.e(8, 13, 5, 1.8, wet ? '#3a271c' : C.dirtD); A.e(8, 12.6, 4.4, 1.2, wet ? '#563826' : C.dirt);
+  if (wet) { A.p(5, 13, '#7fb4dc'); A.p(11, 12, '#7fb4dc'); A.p(9, 14, '#5a88b0'); }
+  if (soil & 2) for (const [x, y] of [[4, 12], [12, 13], [7, 14], [10, 12]]) A.p(x, y, '#efe4c4');
+}
+const cropSprout = (A, c1, c2, c3) => { A.r(8, 10, 1, 3, c3); A.e(6.4, 9.6, 1.8, 1.1, c1); A.e(9.7, 8.8, 1.8, 1.1, c2); A.p(6, 9, c2); };
+function cropSpr(kind, stage, soil = 0) {
   return mk(16, 16, A => {
-    A.e(8, 13, 5, 1.8, C.dirtD); A.e(8, 12.6, 4.4, 1.2, C.dirt);
-    if (stage === 0) { A.p(7, 12, '#c9a46b'); A.p(9, 12, '#c9a46b'); return; }
+    cropSoil(A, soil);
+    if (stage === 0) { const c = kind === 'berry' ? '#c9a46b' : kind === 'shroom' ? '#c79ae8' : '#7cc271'; A.p(6, 12, c); A.p(8, 13, c); A.p(10, 12, c); A.p(7, 12, '#e9d6a8'); return; }
+    if (stage === 1) { if (kind === 'berry') cropSprout(A, C.leaf, C.leafL, C.leafD); else if (kind === 'shroom') cropSprout(A, '#e9dcc4', '#c79ae8', '#cdbb9a'); else cropSprout(A, '#62ad62', '#9be37a', '#468a4f'); return; }
     if (kind === 'berry') {
-      if (stage === 1) { A.r(8, 9, 1, 3, C.leafD); A.e(6.5, 9, 1.6, 1, C.leaf); A.e(9.6, 8, 1.6, 1, C.leafL); }
-      else { A.e(8, 8, 5, 4, C.leafD); A.e(7, 7, 3.4, 2.6, C.leaf); A.e(6, 6, 1.4, 1, C.leafL); if (stage === 3) { for (const [x, y] of [[5, 8], [9, 6], [10, 9], [7, 10]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } } }
+      if (stage === 2) { A.r(8, 9, 1, 4, C.leafD); A.e(8, 8.6, 4, 3, C.leafD); A.e(7.4, 7.8, 2.8, 2, C.leaf); A.p(6, 7, C.leafL);
+        for (const [x, y] of [[5, 8], [10, 6]]) { A.p(x - 1, y, '#ffffff'); A.p(x + 1, y, '#ffffff'); A.p(x, y - 1, '#ffffff'); A.p(x, y + 1, '#f4eefa'); A.p(x, y, '#ffd25c'); } }
+      else { A.e(8, 8, 5.6, 4.6, C.leafD); A.e(7, 6.8, 4, 3.2, C.leaf); A.e(5.6, 5.4, 1.6, 1, C.leafL); A.p(11, 5, C.leafL);
+        for (const [x, y] of [[4, 8], [8, 5], [11, 8], [7, 10], [9, 8]]) { A.e(x + .5, y + .5, 1.5, 1.5, C.berry); A.p(x, y, '#ffc2d4'); } }
+    } else if (kind === 'shroom') {
+      if (stage === 2) { A.r(6, 10, 2, 3, C.cream); A.e(7, 9.4, 2.2, 1.5, '#e36b6b'); A.p(6, 9, '#ffd6d6'); A.r(10, 11, 1, 2, C.cream); A.e(10.5, 10.6, 1.5, 1.1, '#a65fd1'); }
+      else { A.r(4, 8, 3, 5, C.cream); A.r(6, 8, 1, 5, '#e5d3b5'); A.e(5.5, 6.8, 3.8, 2.6, '#e36b6b'); A.r(2, 7, 7, 1, '#b9573f'); A.p(4, 5, C.cream); A.p(7, 6, C.cream);
+        A.r(10, 9, 2, 4, C.cream); A.e(11, 8, 2.8, 2, '#a65fd1'); A.p(10, 7, '#fbe7ff'); A.p(12, 8, '#fbe7ff'); }
     } else {
-      if (stage === 1) { A.r(7, 10, 2, 2, C.cream); A.e(8, 9.5, 2, 1.3, '#a65fd1'); }
-      else if (stage === 2) { A.r(6, 9, 2, 3, C.cream); A.e(7, 8, 2.6, 1.8, '#a65fd1'); A.r(10, 10, 1, 2, C.cream); A.e(10.5, 9.6, 1.6, 1.1, '#e36b6b'); }
-      else { A.r(5, 8, 3, 4, C.cream); A.e(6.5, 6.8, 3.4, 2.4, '#e36b6b'); A.p(5, 6, C.cream); A.p(8, 6, C.cream); A.r(10, 9, 2, 3, C.cream); A.e(11, 8, 2.4, 1.8, '#a65fd1'); A.p(11, 7, '#fbe7ff'); }
+      if (stage === 2) { A.e(8, 11.4, 4.4, 2.2, '#468a4f'); A.e(7, 10.8, 2.6, 1.4, '#62ad62'); A.p(6, 10, '#9be37a'); A.p(10, 11, '#9be37a'); A.p(11, 10, '#62ad62'); }
+      else { A.e(8, 10.6, 6.2, 3.8, '#3c7a46'); A.e(7.5, 9.6, 4.8, 2.8, '#58a05c'); A.e(6, 8.6, 2.2, 1.3, '#7cc271'); for (const [x, y] of [[4, 10], [8, 8], [11, 10], [9, 11], [12, 9]]) A.p(x, y, '#9be37a'); A.p(10, 8, '#ffd36b'); A.p(5, 11, '#fff1d6'); }
     }
   });
 }
+// a younger look for a tree: the same picture drawn smaller, then outlined again
+function youngSpr([w, h, f]) { const raw = mk(w, h, f, null), k = .78, w2 = Math.round(w * k), h2 = Math.round(h * k); return mk(w2, h2, A => { A.g.imageSmoothingEnabled = false; A.g.drawImage(raw, 0, 0, w2, h2); }); }
 function bushSpr(full) {
   return mk(16, 16, A => { A.e(8, 10, 6.6, 4.8, C.leafD); A.e(6, 8.6, 3.6, 3, C.leaf); A.e(10.4, 8.2, 3.6, 3, C.leaf); A.e(5, 7.4, 1.4, 1, C.leafL); A.e(10, 6.8, 1.4, 1, C.leafL);
     if (full) for (const [x, y] of [[4, 10], [8, 8], [11, 11], [7, 12], [12, 8]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } });
@@ -976,12 +992,8 @@ function buildSprites() {
   SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
-  SPR.crop = { berry: [0, 1, 2, 3].map(s => cropSpr('berry', s)), shroom: [0, 1, 2, 3].map(s => cropSpr('shroom', s)) };
-  SPR.crop.moss = [0, 1, 2, 3].map(st => mk(16, 16, A => { A.e(8, 13, 5, 1.8, C.dirtD); A.e(8, 12.6, 4.4, 1.2, C.dirt);
-    if (st === 0) { A.p(6, 12, '#7cc271'); A.p(9, 12, '#7cc271'); A.p(8, 13, '#62ad62'); return; }
-    if (st === 1) { A.e(6, 11.5, 1.6, 1, '#62ad62'); A.e(10, 11.8, 1.6, 1, '#62ad62'); A.p(6, 11, '#9be37a'); return; }
-    if (st === 2) { A.e(8, 11, 4.2, 2.4, '#468a4f'); A.e(7, 10.4, 2.6, 1.4, '#62ad62'); A.p(6, 10, '#9be37a'); A.p(10, 11, '#9be37a'); return; }
-    A.e(8, 10.5, 6, 3.6, '#3c7a46'); A.e(7.5, 9.6, 4.6, 2.6, '#58a05c'); A.e(6, 8.8, 2, 1.2, '#7cc271'); for (const [x, y] of [[4, 10], [8, 8], [11, 10], [9, 11]]) A.p(x, y, '#9be37a'); A.p(10, 8, '#ffd36b'); A.p(5, 11, '#fff1d6'); }));
+  SPR.crop = {}; for (const k of ['berry', 'shroom', 'moss']) SPR.crop[k] = [0, 1, 2, 3].map(s => [0, 1, 2, 3].map(v => cropSpr(k, s, v)));
+  SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = youngSpr(OSPR[k]);
   SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
   SPR.wtop = {}; SPR.wfront = {}; for (const t in WPAL) { SPR.wtop[t] = [0, 1, 2, 3].map(v => wallTop(+t, v)); SPR.wfront[t] = wallFront(+t); }
@@ -1153,14 +1165,14 @@ const USE = { chair: 'sit', stumpStool: 'sit', shroomStool: 'sit', cryChair: 'si
 const USE_LBL = { sit: '앉기', sleep: '잠자기', pet: '쓰다듬기', feed: '밥 주기', read: '책 읽기', mirror: '거울 보기', dress: '꾸미기', wish: '소원 빌기', water: '물 주기', tea: '차 마시기' };
 const TIPS = ['곡괭이와 검은 가방에 있기만 하면 가장 좋은 것을 자동으로 써요.', '횃불이나 램프로 밝힌 곳에는 몬스터가 생기지 않아요.', '침대에서 자면 체력이 가득 차고, 그 침대에서 다시 깨어나요.',
   '말랑대왕은 착지할 때 충격파를 내요. 점프하면 멀리 떨어져요.', '버섯 여왕의 포자는 둥글게 퍼져요. 포자 사이 틈으로 빠져나가요.', '수정골렘이 벽에 부딪혀 기절하면 1.5배 피해를 줄 수 있어요.',
-  '수정 분수에서 소원을 빌면 잠시 희귀 물고기가 잘 낚여요.', '구리 낫으로 수확하면 작물을 하나씩 더 얻어요.', '바닥 타일을 물 위에 깔면 다리가 돼요.', '찌가 쏙 들어가고 느낌표가 뜨면 바로 당겨요!', '의자에 앉아 있으면 체력이 조금씩 차올라요.'];
+  '수정 분수에서 소원을 빌면 잠시 희귀 물고기가 잘 낚여요.', '구리 낫이 가방에 있으면 작물을 하나씩 더 얻어요. 꾹 누르면 주변 3×3을 한 번에 거둬요.', '바닥 타일을 물 위에 깔면 다리가 돼요.', '찌가 쏙 들어가고 느낌표가 뜨면 바로 당겨요!', '의자에 앉아 있으면 체력이 조금씩 차올라요.'];
 const COMPLIMENTS = ['오늘도 귀여워요!', '반짝반짝, 멋진 모험가예요', '새싹이 생기 있어 보여요', '웃는 얼굴이 제일 예뻐요'];
 OBJ.bigShroom.drops.push(['shroomCap', 1, 2, 1]);
 const SETN = { moss: '이끼 세트', shroom: '버섯 세트', crystal: '수정 세트' };
 const STN = { bench: '작업대', furnace: '화로', pot: '요리솥' };
 const Rc = (out, n, req, at, cat) => ({ out, n, req, at, cat });
 // recipes people usually make many of at once get a quantity picker
-const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat'].includes(ITEMS[r.out].kind);
+const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat', 'fert'].includes(ITEMS[r.out].kind);
 function maxCraft(r) { let m = 99; for (const [id, c] of r.req) m = Math.min(m, Math.floor(availCount(id) / c)); return Math.max(0, m); }
 const RECIPES = [
   Rc('bench', 1, [['wood', 6]], null, 'furn'),
@@ -1541,12 +1553,17 @@ Object.assign(ITEMS, {
   berryBush: { n: '베리덤불', kind: 'place', obj: 'bush', d: '삽으로 퍼 온 베리덤불. 원하는 곳에 옮겨 심으면 다시 열매가 열려요.' },
 });
 OBJ.root.drops.push(['sapling', 1, 1, 0.22]); OBJ.bigShroom.drops.push(['capSapling', 1, 1, 0.22]);
-const GROW_TIME = 180, REGROW_TIME = 240;
+const GROW_TIME = 180, REGROW_TIME = 240, YOUNG_T = 60; // each tree step lasts YOUNG_T: sapling → young sapling → young tree → grown (stumps wait one step first)
+const YOUNG_TREES = ['root', 'bigShroom', 'cherryTree', 'roundTree', 'bigTree'];
+const isYoung = o => !!(o && o.yg && G.time < o.yg);
+// -1 bare stump, 0 sapling, 1 young sapling, 2 young tree (can be cut for a little wood), 3 grown. Worked out from times already saved, so old saves need nothing new
+function treeStep(o) { const d = OBJ[o.t]; if (d.growTo) { const r = (o.at || 0) - G.time; return d.stump && r > 3 * YOUNG_T ? -1 : r > 2 * YOUNG_T ? 0 : 1; } return isYoung(o) ? 2 : 3; }
+const youngDrops = drops => drops.filter(([id, , , ch]) => ch >= 1 && !['sapling', 'capSapling', 'resin'].includes(id)).map(([id, a, b]) => [id, Math.max(1, Math.ceil(a / 2)), Math.max(1, Math.ceil(b / 2)), 1]);
 Object.assign(OSPR, {
   sapling: [16, 16, A => { A.e(8, 14, 3, 1, C.dirtD); A.line(8, 14, 8, 9, C.woodD); A.e(6.2, 9, 2, 1.4, C.leaf); A.e(9.8, 8, 2, 1.4, C.leafL); A.p(8, 8, C.leafL); }],
-  saplingB: [16, 22, A => { A.e(8, 20.5, 3.4, 1, C.dirtD); A.r(7, 11, 2, 10, C.wood); A.r(7, 11, 1, 10, C.woodL); A.e(8, 8, 5.4, 4.8, C.leafD); A.e(7, 7, 4, 3.4, C.leaf); A.e(6, 5.5, 1.6, 1, C.leafL); A.p(10, 6, C.leafL); }],
+  saplingB: [16, 18, A => { A.e(8, 16.5, 3.2, 1, C.dirtD); A.r(7, 9, 2, 8, C.wood); A.r(7, 9, 1, 8, C.woodL); A.line(9, 12, 11, 10, C.wood); A.p(11, 9, C.leafL); A.e(8, 7, 4.6, 4, C.leafD); A.e(7, 6, 3.4, 2.8, C.leaf); A.e(6, 4.8, 1.4, 1, C.leafL); A.p(10, 5, C.leafL); }],
   capSapling: [16, 16, A => { A.e(8, 14, 3, 1, '#7a5aa0'); A.r(7, 10, 2, 4, C.cream); A.e(8, 9.5, 3.2, 2.2, '#b673de'); A.p(7, 9, '#fbe7ff'); }],
-  capSaplingB: [16, 20, A => { A.e(8, 18.5, 3.6, 1.2, '#7a5aa0'); A.r(6, 9, 4, 10, C.cream); A.r(9, 9, 1, 10, '#e5d3b5'); A.e(8, 8, 6, 4, '#8e4fb8'); A.e(8, 7, 5.4, 3.4, '#b673de'); A.p(6, 6, '#fbe7ff'); A.p(10, 5, '#fbe7ff'); }],
+  capSaplingB: [16, 17, A => { A.e(8, 15.5, 3.4, 1.1, '#7a5aa0'); A.r(6, 8, 4, 8, C.cream); A.r(9, 8, 1, 8, '#e5d3b5'); A.e(8, 7, 5.4, 3.6, '#a8584a'); A.e(8, 6, 4.8, 3, '#e07b5f'); A.p(6, 5, C.cream); A.p(10, 4, C.cream); A.p(8, 6, C.cream); }],
   stump: [16, 16, A => { A.e(8, 13, 5.5, 2.2, C.woodD); A.r(3, 9, 10, 4, C.wood); A.r(3, 9, 2, 4, C.woodL); A.e(8, 9, 5, 2, '#e8b97a'); A.e(8, 9, 3, 1.2, '#c99560'); A.p(8, 9, C.woodD); A.line(2, 13, 4, 11, C.woodD); A.line(11, 8, 12, 5, C.leaf); A.p(13, 5, C.leafL); }],
   capStump: [16, 16, A => { A.e(8, 13.5, 4, 1.4, '#7a5aa0'); A.r(6, 8, 4, 6, C.cream); A.r(9, 8, 1, 6, '#e5d3b5'); A.e(8, 8, 2.4, 1, '#e5d3b5'); A.p(10, 7, '#b673de'); A.p(5, 12, '#b673de'); }],
 });
@@ -1563,12 +1580,15 @@ function afterCut(t, o) {
   if (o.t === 'wildF') rollDrops([['petal' + (FLOWERS[o.c] ? o.c : 'R'), 1, 1, 0.35]], t.x + .5, t.y + .5);
 }
 function growTick(dt = 2) {
-  const BR = TREE_BLESS(treeStage()); if (BR) for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null || G.time - o.p >= d.grow) continue; if (Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) o.p -= dt * .25; }
+  // crops: lantern-tree blessing (time ×0.8) and water (time ×0.75) add up, but never below half the normal time
+  const BR = TREE_BLESS(treeStage());
+  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null || G.time - o.p >= d.grow) continue; let k = 0; if (BR && Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) k += .25; if (o.w) k += 1 / 3; if (k) { o.p -= dt * k; clampCrop(o); } }
   const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
-  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0)) continue; const x = i % W, y = (i / W) | 0;
-    if (inside(x, y)) { o.at = G.time + 4; continue; }
-    const nt = d.growTo === 'g' ? (OBJ[o.g] ? o.g : 'root') : d.growTo;
-    if (OBJ[nt].sz) { const no = { t: nt }; G.objs.delete(i); if (!fpFree(x, y, fpOf(no), true)) { G.objs.set(i, o); o.at = G.time + 10; continue; } G.objs.set(i, no); setParts(i, no); } else G.objs.set(i, { t: nt }); if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .6, '#9be37a', 8, 2, .3); lightDirty = true; }
+  for (const [i, o] of G.objs) { if (o.yg && G.time >= o.yg) { delete o.yg; const x = i % W, y = (i / W) | 0; if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .2, '#9be37a', 6, 2, .3); } }
+  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0) - YOUNG_T) continue; const x = i % W, y = (i / W) | 0;
+    if (inside(x, y)) { o.at = Math.max(o.at || 0, G.time + 4 + YOUNG_T); continue; }
+    const nt = d.growTo === 'g' ? (OBJ[o.g] ? o.g : 'root') : d.growTo, yg = (o.at || 0) > G.time ? o.at : 0, no = yg ? { t: nt, yg } : { t: nt };
+    if (OBJ[nt].sz) { G.objs.delete(i); if (!fpFree(x, y, fpOf(no), true)) { G.objs.set(i, o); o.at = G.time + 10 + YOUNG_T; continue; } G.objs.set(i, no); setParts(i, no); } else G.objs.set(i, no); if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .6, '#9be37a', 8, 2, .3); lightDirty = true; }
   if (G.regen && G.regen.length) G.regen = G.regen.filter(([i, t, at, c]) => { if (at > G.time) return true; if (!OBJ[t] || G.wall[i] || G.objs.get(i) || ![1, 2, 3].includes(G.floor[i])) return false; const x = i % W, y = (i / W) | 0; if (inside(x, y)) return true; const o = { t }; if (c) o.c = c; G.objs.set(i, o); return false; });
 }
 function digPlant(t, o) {
@@ -2265,7 +2285,7 @@ const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt;
 const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting
 const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['food', '음식'], ['deco', '꾸미기'], ['seed', '씨앗']];
-function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'sword', 'rod', 'shovel'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
+function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'sword', 'rod', 'shovel', 'sickle', 'wcan'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 let invDirty = true;
 function addItem(id, c, count = true) {
   let left = c; const inv = G.inv, mx = stackMax(id);
@@ -2406,7 +2426,7 @@ const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
 const dpad = { id: null, vx: 0, vy: 0 };
 let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
 const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
-let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0;
+let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
 const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
 const actHeld = () => btnHeld || mouse.down || keys.has('Space') || keys.has('KeyJ') || keys.has('KeyE');
 function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
@@ -2420,7 +2440,7 @@ function mouseTile() {
 }
 
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', place: 'place', dig: 'dig', unroof: 'dig', unwire: 'dig' };
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unroof: 'dig', unwire: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   if (aimMouse()) {
@@ -2455,6 +2475,7 @@ function decide() {
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
+  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3') && hasItem('sickle')) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list }; }
   if (it && it.kind === 'summon') return summonDecide(it, s);
   // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
   if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
@@ -2463,14 +2484,20 @@ function decide() {
   if (o) {
     const d = OBJ[o.t];
     if (it && it.kind === 'shovel' && !isBroken(s) && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
-    if (d.growTo) { const m = Math.max(1, Math.ceil(((o.at || 0) - G.time) / 60)); return { k: 'info', lbl: '자라는 중', icon: 'dots', msg: d.stump ? `${d.n} · ${m}분쯤 뒤 다시 ${d.into}가 자라요 (삽으로 뽑을 수 있어요)` : `${d.n} · ${m}분쯤 뒤 ${d.into}로 자라요`, t }; }
+    if (d.growTo) { const st = treeStep(o), into = d.stump && OBJ[o.g] ? OBJ[o.g].n : d.into, mins = s2 => Math.max(1, Math.ceil(s2 / 60)), r = (o.at || 0) - G.time;
+      if (st < 0) return { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t };
+      return { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t }; }
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
     if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
-    if (d.crop) return cropStage(o) >= 3 ? { k: 'harvest', lbl: '수확', icon: d.crop === 'berry' ? 'berry' : d.crop === 'moss' ? 'gMoss' : 'mushroom', t, o } : { k: 'info', lbl: '자라는 중', icon: 'dots', msg: '아직 자라고 있어요', t };
+    if (d.crop) { const cs = Math.max(0, cropStage(o));
+      if (cs >= 3) return { k: 'harvest', lbl: '수확', icon: d.crop === 'berry' ? 'berry' : d.crop === 'moss' ? 'gMoss' : 'mushroom', t, o };
+      if (it && it.kind === 'wcan' && !o.w) return (s.w || 0) > 0 ? { k: 'water', lbl: '물 주기', icon: 'wcan', t, o } : { k: 'info', lbl: '물 없음', icon: 'wcan', msg: '물뿌리개가 비었어요 · 물가를 바라보고 눌러 채워요', t };
+      if (it && it.kind === 'fert' && !o.f) return { k: 'fert', lbl: '비료 주기', icon: s.id, t, o };
+      return { k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs), t }; }
     if (d.bush) return (o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t };
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) return { k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t };
       return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
-    if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
+    if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
     if (d.item && !(it && it.kind === 'floor')) {
       const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? 'wood' : 'hand', t, o, sub: true };
       if (it && ['place', 'wall', 'roof'].includes(it.kind)) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: true };
@@ -2483,6 +2510,7 @@ function decide() {
     if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
     if (f === 2) return { k: 'info', lbl: '흙 땅', icon: 'dots', msg: '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요', t };
     if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
+  if (it && it.kind === 'wcan' && i >= 0 && !G.wall[i] && G.floor[i] === WATER) return (s.w || 0) >= WCAN_MAX ? { k: 'info', lbl: '가득 참', icon: 'wcan', msg: '물뿌리개에 물이 가득해요', t } : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
   if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return usableItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : hasItem('rod') ? { k: 'info', lbl: '낚싯대 고장', icon: 'rod', msg: '낚싯대가 망가졌어요. 작업대에서 고칠 수 있어요', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (제작 → 낚싯대)', t };
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
   if (it && it.kind === 'food') return { k: 'eat', lbl: '먹기', icon: s.id };
@@ -2502,7 +2530,7 @@ const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.cro
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
   const a = G.act; const grp = GROUP[a.k] || null;
-  if (edge) holdGroup = grp;
+  if (edge) { holdGroup = grp; holdK = a.k; }
   else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
   perform(a);
 }
@@ -2523,6 +2551,10 @@ function perform(a) {
     case 'unroof': { const i = idx(a.t.x, a.t.y), m = G.roof.get(i); if (m) { G.roof.delete(i); roofVer++; const l = addItem(ROOF_ITEM[m], 1, false); if (l) spawnDrop(ROOF_ITEM[m], 1, a.t.x + .5, a.t.y + .5); SFX.pick(); } actCd = 0.18; break; }
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
+    case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); actCd = 0.35; break;
+    case 'water': waterCrop(a.t, a.o); actCd = 0.25; break;
+    case 'fert': fertCrop(a.t, a.o); actCd = 0.3; break;
+    case 'fill': fillCan(a.t); actCd = 0.4; break;
     case 'eat': eat(G.sel); actCd = 0.4; break;
     case 'insert': insertSeeds(); actCd = 0.4; break;
     case 'tree': openPanel('tree'); actCd = 0.3; break;
@@ -2731,7 +2763,8 @@ function hitObj(t, o) {
   if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
   o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power) * mineMul()); if (d.nat !== 'pick') wear(pk.slot);
   SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
-  if (o.dmg >= d.hp) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
+  const yg = isYoung(o);
+  if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
 }
 function placeItem(t) {
   const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
@@ -2740,7 +2773,7 @@ function placeItem(t) {
   else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
   else if (it.kind === 'roof') { G.roof.set(i, it.roof); roofVer++; }
   else if (it.kind === 'wire') G.wire.set(i, 1);
-  else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time });
+  else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
   else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'treeFarm') o.p = G.time; const dd = OBJ[it.obj];
     const pr = pRot(); if (dd.sz) { if (pr % 2 && dd.rotV) o.rot = 1; const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else { if (pr && canRotObj(it.obj)) { if (dd.dir4) o.dir = pr % 4; else if (pr % 2) o.flip = true; } G.objs.set(i, o); }
@@ -2750,8 +2783,10 @@ function placeItem(t) {
 }
 function harvest(t, o) {
   const d = OBJ[o.t];
-  if (d.crop) { G.objs.delete(idx(t.x, t.y)); rollDrops(d.yield, t.x + .5, t.y + .5); }
-  else { o.r = G.time + 150; rollDrops([['berry', 2, 3, 1], ['berrySeed', 1, 1, 0.3]], t.x + .5, t.y + .6); }
+  const sk = hasItem('sickle'); // a copper sickle in the bag gives one more of the main crop
+  if (d.crop) { G.objs.delete(idx(t.x, t.y)); rollDrops(d.yield.map(([id, a, b, ch], k) => [id, a + (sk && !k ? 1 : 0), b + (sk && !k ? 1 : 0), id === 'glowcap' && o.f === 2 ? .6 : ch]), t.x + .5, t.y + .5);
+    const S = G.stats; S.cropH = (S.cropH || 0) + 1; if (o.t === 'cropBerry') S.berryH = (S.berryH || 0) + 1; if (o.w) S.wetH = (S.wetH || 0) + 1; }
+  else { o.r = G.time + 150; rollDrops([['berry', 2 + (sk ? 1 : 0), 3 + (sk ? 1 : 0), 1], ['berrySeed', 1, 1, 0.3]], t.x + .5, t.y + .6); }
   SFX.pick(); puff(t.x + .5, t.y + .5, '#9be37a', 6, 2); gainXp(2);
 }
 function eat(slot) {
@@ -2905,7 +2940,8 @@ function update(dt) {
   const held = actHeld() && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
   if (p.dead > 0) actQ = 0;
   if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
-  if (!held && actQ <= 0) holdGroup = null;
+  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
+  holdT = held ? holdT + dt : 0;
   // survival
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
   regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0) p.hp = Math.min(maxHp(), p.hp + 1); }
@@ -3156,6 +3192,40 @@ Object.assign(OSPR, {
   mossSofaU: [16, 16, A => { A.r(1, 5, 14, 9, C.woodD); A.r(2, 9, 12, 3, '#7dbd6b'); A.r(1, 3, 14, 9, '#5e9a50'); A.r(1, 3, 14, 1, '#8fd07a'); A.r(4, 5, 8, 5, '#6fae5f'); A.r(1, 7, 2, 6, '#4e8a42'); A.r(13, 7, 2, 6, '#4e8a42'); A.r(2, 13, 1, 2, C.woodD); A.r(13, 13, 1, 2, C.woodD); }],
 });
 QSIDE.push({ id: 's_farm', t: () => `나무 작업장으로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '작업대에서 나무 작업장을 만들어 놓고, 다 자라면 베어요. 건전지와 전선으로 전기를 이으면 저절로 베어 옆 상자에 담아요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
+// ---- farming basics: copper sickle, watering can, fertilizer (water and fertilizer marks live on the crop object: w, f, p0) ----
+const WCAN_MAX = 10;
+Object.assign(ITEMS, {
+  sickle: { n: '구리 낫', kind: 'sickle', stack: 1, d: '가방에 있기만 해도 작물을 거둘 때 하나씩 더 얻어요. 다 자란 작물 앞에서 꾹 누르고 있으면 주변 3×3을 한 번에 거둬요. 닳지 않아요.' },
+  wcan: { n: '물뿌리개', kind: 'wcan', stack: 1, d: `단축칸에서 골라 들고 물가를 바라보며 누르면 가득 채워요 (${WCAN_MAX}번). 자라는 작물에 물을 주면 25% 빨리 자라요.` },
+  fert: { n: '비료', kind: 'fert', d: '단축칸에서 골라 들고 자라는 작물에 뿌리면 남은 성장 시간이 바로 40% 줄어요. 작물마다 한 번만 줄 수 있어요.' },
+  fertShroom: { n: '버섯 비료', kind: 'fert', fx: 'shroom', d: '비료와 같아요. 버섯에 주면 거둘 때 빛버섯이 나올 확률이 30%에서 60%로 올라요.' },
+});
+Object.assign(ICON, {
+  sickle: sickleIcon(C.copper, C.copperL),
+  wcan: A => { A.e(7, 5.6, 3.4, 2.6, C.copperD); A.g.globalCompositeOperation = 'destination-out'; A.e(7, 5.8, 1.9, 1.3, '#000'); A.g.globalCompositeOperation = 'source-over'; A.line(10, 11, 14, 5, C.copperD, 2); A.r(13, 3, 3, 2, C.copperL);
+    A.r(2, 7, 9, 7, C.copper); A.r(2, 7, 9, 1, C.copperL); A.r(2, 13, 9, 1, C.copperD); A.r(3, 9, 1, 3, C.copperL); A.p(15, 6, '#bfe6ff'); A.p(15, 8, '#8fd0f0'); },
+  fert: A => { A.e(8, 10.5, 5.4, 4.6, '#b8903f'); A.e(7, 9.6, 3.8, 3.2, '#d9b66a'); A.poly([[5, 6], [6, 2.5], [10, 2.5], [11, 6]], '#c9a46b'); A.r(5, 6, 6, 1, '#7a5a2a'); A.p(7, 3, '#ecd8a8'); A.e(8.5, 11, 2.2, 1.6, '#62ad62'); A.p(7, 10, '#9be37a'); A.p(10, 13, '#5a3a2c'); A.p(5, 12, '#5a3a2c'); },
+  fertShroom: A => { A.e(8, 10.5, 5.4, 4.6, '#7a5aa0'); A.e(7, 9.6, 3.8, 3.2, '#a17fc9'); A.poly([[5, 6], [6, 2.5], [10, 2.5], [11, 6]], '#8e6fb0'); A.r(5, 6, 6, 1, '#4a3468'); A.p(7, 3, '#cdb8ea'); A.r(7, 10, 2, 3, C.cream); A.e(8, 9.6, 2.6, 1.6, '#e36b6b'); A.p(7, 9, '#ffd6d6'); },
+});
+RECIPES.push(Rc('sickle', 1, [['copperBar', 3], ['wood', 2], ['rope', 1]], 'forge', 'farm'), Rc('wcan', 1, [['copperBar', 2], ['resin', 1]], 'forge', 'farm'),
+  Object.assign(Rc('fert', 2, [['dirt', 3], ['gel', 1]], 'bench', 'farm'), { need: () => beat('queen') }), Object.assign(Rc('fertShroom', 2, [['gShroom', 1], ['spore', 1]], 'bench', 'farm'), { need: () => beat('queen') }));
+const recipeOn = r => (r.bag == null || r.bag === (G.bagLv || 0)) && (!r.need || r.need());
+function clampCrop(o) { if (o.p0 != null) o.p = Math.max(o.p, o.p0 - OBJ[o.t].grow * .5); }
+function cropMsg(o, cs) { const d = OBJ[o.t], rem = Math.max(0, d.grow - (G.time - o.p)), left = rem >= 90 ? `${Math.round(rem / 60)}분쯤` : `${Math.max(10, Math.ceil(rem / 10) * 10)}초쯤`;
+  return `${d.n} · ${CROP_STEP[d.crop][cs]} (${cs + 1}/4단계) · ${left} 남았어요${o.w ? ' · 물 줌' : ''}${o.f ? ' · 비료 줌' : ''}`; }
+function ripeAround(cx, cy) { const out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = cx + dx, y = cy + dy; if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t] && OBJ[o.t].crop && cropStage(o) >= 3) out.push([x, y, o]); } return out; }
+function waterCrop(t, o) { const s = selItem(); if (!s || s.id !== 'wcan' || (s.w || 0) <= 0 || o.w || !OBJ[o.t].crop) return;
+  s.w--; o.w = 1; if (o.p0 == null) o.p0 = o.p; invDirty = true; SFX.place(); puff(t.x + .5, t.y + .7, '#8fd0f0', 7, 1.8, .2);
+  if (!s.w) toast('물뿌리개가 비었어요. 물가를 바라보고 눌러 채워요', null, 'wcanEmpty'); }
+function fertCrop(t, o) { const s = selItem(), it = s && ITEMS[s.id]; if (!it || it.kind !== 'fert' || o.f || !OBJ[o.t].crop) return; const d = OBJ[o.t];
+  if (o.p0 == null) o.p0 = o.p; const rem = d.grow - (G.time - o.p); if (rem > 0) o.p -= rem * .4; clampCrop(o); o.f = it.fx === 'shroom' ? 2 : 1;
+  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } G.stats.fert = (G.stats.fert || 0) + 1; invDirty = true; SFX.craft(); puff(t.x + .5, t.y + .7, '#e8d098', 9, 2, .25); }
+function fillCan(t) { const s = selItem(); if (!s || s.id !== 'wcan') return; s.w = WCAN_MAX; invDirty = true; SFX.pick(); puff(t.x + .5, t.y + .5, '#bfe6ff', 8, 2, .2); toast('물뿌리개를 가득 채웠어요', 'good', 'wfill'); }
+QSIDE.push(
+  { id: 's_crop1', t: () => '베리 심고 거두기', h: '베리 씨앗을 이끼나 흙 바닥에 심고, 다 자라면 거둬요. 작물을 바라보면 몇 단계인지 보여요.', done: () => (G.stats.berryH || 0) >= 1, rw: [['berrySeed', 3], ['spore', 3]], xp: 15 },
+  { id: 's_crop2', t: () => `물 준 작물 5개 거두기 (${Math.min(5, G.stats.wetH || 0)}/5)`, h: '구리 제작대에서 물뿌리개를 만들어 물가에서 채우고, 자라는 작물에 물을 줘요. 물 준 작물은 25% 빨리 자라요.', done: () => (G.stats.wetH || 0) >= 5, rw: [['copperBar', 3]], xp: 25 },
+  { id: 's_crop3', t: () => `비료 10번 쓰기 (${Math.min(10, G.stats.fert || 0)}/10)`, h: '버섯 여왕을 물리치면 작업대에서 비료를 만들 수 있어요. 자라는 작물에 뿌리면 남은 시간이 확 줄어요.', done: () => (G.stats.fert || 0) >= 10, rw: [['gel', 6]], xp: 40 });
+TIPS.push('물뿌리개로 물을 준 작물은 25% 빨리 자라요. 물가에서 채워요.', '비료는 작물마다 한 번, 남은 성장 시간을 40% 줄여 줘요.');
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
 function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: (q.rw && q.rw.length) || q.xp }; }
@@ -3495,12 +3565,13 @@ function drawEntity(it, t) {
     const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), !!o.open), it.x + .5, it.y + 1); return; }
     let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const fpD = d.sz ? fpOf(o) : null, wx = it.x + (fpD ? fpD[0] / 2 : .5), wy = it.y + (fpD ? fpD[1] : 1) - 1 / 16; let flipX = !!o.flip;
     if (fpD && o.rot && d.rotV && SPR.obj[o.t + 'V']) img = SPR.obj[o.t + 'V']; if (o.t === 'treeFarm') img = SPR.obj['treeFarm' + (farmStage(o) || '')] || img; if (d.dir4 && o.dir) { img = SPR.obj[o.t + (o.dir === 2 ? 'U' : 'S')] || img; flipX = o.dir === 3; }
-    if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))];
+    if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))][(o.w ? 1 : 0) + (o.f ? 2 : 0)];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
-    if (d.growTo && !d.stump && SPR.obj[o.t + 'B'] && G.time > (o.at || 0) - GROW_TIME / 2) img = SPR.obj[o.t + 'B'];
+    if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
+    if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && img.height > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
     drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : sx, flip: flipX });
@@ -3575,7 +3646,7 @@ function iconURL(id) { if (ICONURL[id]) return ICONURL[id]; const c = SPR.ui[id]
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
-function durBar(s) { if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
+function durBar(s) { if (s && s.id === 'wcan') return `<span class="dur"><i style="width:${Math.max(4, Math.round((s.w || 0) / WCAN_MAX * 100))}%;background:${s.w ? '#6fb8ff' : '#ff6b7a'}"></i></span>`; if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
 function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
 function refreshHotbar() {
   const hb = $('#hbSlots'); let h = '';
@@ -3612,7 +3683,7 @@ function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !s
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
-function itemStat(it, s) { const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
+function itemStat(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
 function itemStat0(it) { if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽', '현무암·얼음벽'][it.tier]}까지`; return ''; }
 function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
@@ -3635,8 +3706,8 @@ function renderPanel() {
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; POOL = null; POOL = linkedChests(); const nCh = POOL.length;
     h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
-    const hereR = RECIPES.filter(r => (r.at || null) === (st || null) && (r.bag == null || r.bag === (G.bagLv || 0))), benchy = st === 'bench' || st === 'forge';
-    const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['fix', '수리'], ['salv', '분해']].filter(([id]) => id === 'all' || (id === 'fix' || id === 'salv' ? benchy : hereR.some(r => r.cat === id)));
+    const hereR = RECIPES.filter(r => (r.at || null) === (st || null) && recipeOn(r)), benchy = st === 'bench' || st === 'forge';
+    const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['farm', '농사'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['fix', '수리'], ['salv', '분해']].filter(([id]) => id === 'all' || (id === 'fix' || id === 'salv' ? benchy : hereR.some(r => r.cat === id)));
     if (!tabs.some(([id]) => id === UIS.tab)) UIS.tab = 'all';
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
     h += `<div class="stations"><span class="chip on">${st ? STN[st] + '에서 만들기' : '손 제작'}</span>${nCh ? `<span class="chip on">연결된 상자 ${nCh}개</span>` : ''}</div>${st ? '' : `<p class="hint">여기선 손으로 만들 수 있는 것만 보여요. 작업대·구리 제작대·화로·요리솥을 바라보고 [열기]를 누르면 그곳에서 만드는 것들이 나와요.</p>`}${nCh ? `<p class="hint">작업대·화로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함) ${nCh}개의 재료도 함께 써요. 가방에 있는 것부터 써요.</p>` : ''}`;
@@ -3657,7 +3728,7 @@ function renderPanel() {
     } else {
     // order is fixed while the panel stays on this tab, so the list does not jump after crafting
     const okey = UIS.tab + '|' + (st || '');
-    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => (r.bag == null || r.bag === (G.bagLv || 0)) && (r.at || null) === (st || null) && (UIS.tab === 'all' || r.cat === UIS.tab)); l.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near)); UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
+    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => recipeOn(r) && (r.at || null) === (st || null) && (UIS.tab === 'all' || r.cat === UIS.tab)); l.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near)); UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
     const list = UIS.craftOrder.ids.map(i => ({ r: RECIPES[i], i }));
     h += `<div class="sh-body"><div class="list">`;
     for (const { r, i } of list) {
@@ -3783,7 +3854,7 @@ function refillHot(slot, id) {
 }
 // bag (not the hotbar) → chest; 'same' only moves kinds the chest already holds
 function stashBag(o, same) { let n = 0, left = 0; for (let i = HOT; i < G.inv.length; i++) { const s = G.inv[i]; if (!s) continue; if (same && !o.items.some(x => x && x.id === s.id)) continue; const l = moveInto(o.items, s); n += s.c - l; if (l) { s.c = l; left++; } else G.inv[i] = null; } return { n, left }; }
-function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } const ord = arr === G.inv ? [...Array(arr.length - HOT).keys()].map(k => k + HOT).concat([...Array(HOT).keys()]) : [...arr.keys()]; for (const i of ord) if (left && !arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; if (s.dur != null) arr[i].dur = s.dur; left -= arr[i].c; } return left; }
+function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } const ord = arr === G.inv ? [...Array(arr.length - HOT).keys()].map(k => k + HOT).concat([...Array(HOT).keys()]) : [...arr.keys()]; for (const i of ord) if (left && !arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; if (s.dur != null) arr[i].dur = s.dur; if (s.w != null) arr[i].w = s.w; left -= arr[i].c; } return left; }
 function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;

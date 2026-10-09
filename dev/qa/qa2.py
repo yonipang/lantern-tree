@@ -71,8 +71,8 @@ async def main():
         CX,CY=100,100
         r=await ev(pg,"()=>[__T.G.sel, __T.G.inv.filter(x=>x).map(s=>s.id).join(','), !!document.querySelector('#toolbelt')]")
         rec('되돌림','시작 아이템: 베리·씨앗·나무 곡괭이·나무 검, 도구 칸 없음', r[0]==0 and r[1]=='berry,berrySeed,pickWood,swordWood' and not r[2], str(r))
-        recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/axe|sickle|rodCrystal/.test(k)).join(',')")
-        rec('되돌림','도끼·낫·수정 낚싯대 항목 제거됨', recipes=='', recipes or '-')
+        recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/axe|rodCrystal/.test(k)).join(',')")
+        rec('되돌림','도끼·수정 낚싯대 항목 제거됨 (구리 낫은 v33 농사에서 다시 생김)', recipes=='', recipes or '-')
         # bare hand chop
         await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&s.id==='pickWood'?null:s)}")
         await stand(pg,CX+6.5,CY-0.4,1,0)

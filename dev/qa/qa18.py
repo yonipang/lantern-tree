@@ -43,7 +43,7 @@ async def main():
         r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];const i=__T.idx(107,110);G.objs.set(i,{t:'root'});__T.addItem('pickWood',1);for(let k=0;k<6;k++)__T.perform({k:'chop',t:{x:107,y:110},o:G.objs.get(i)});return G.objs.get(i)&&G.objs.get(i).t}")
         rec('리젠','뿌리기둥을 베면 그루터기가 남음', r=='stump', r)
         r=await ev(pg,"()=>{const G=__T.G;G.p.x=106.5;G.p.face={x:1,y:0};const d=__T.decide();return [d.k,d.lbl]}")
-        rec('리젠','그루터기 앞 → 자라는 중 안내', r==['info','자라는 중'], str(r))
+        rec('리젠','그루터기 앞 → 그루터기 안내 (새순이 돋기 전, v33)', r==['info','그루터기'], str(r))
         r=await ev(pg,"()=>{const G=__T.G;G.time+=241;__T.growTick();return G.objs.get(__T.idx(107,110)).t}")
         rec('리젠','4분 뒤 뿌리기둥이 다시 자람', r=='root', r)
         r=await ev(pg,"()=>{const G=__T.G;const i=__T.idx(105,110);G.p.x=105.5;G.objs.set(i,{t:'stump',g:'root',at:G.time-1});__T.growTick();return G.objs.get(i).t}")
