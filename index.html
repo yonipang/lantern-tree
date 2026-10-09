@@ -1039,7 +1039,7 @@ const STN = { bench: '작업대', furnace: '화로', pot: '요리솥' };
 const Rc = (out, n, req, at, cat) => ({ out, n, req, at, cat });
 // recipes people usually make many of at once get a quantity picker
 const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat'].includes(ITEMS[r.out].kind);
-function maxCraft(r) { let m = 99; for (const [id, c] of r.req) m = Math.min(m, Math.floor(countItem(id) / c)); return Math.max(0, m); }
+function maxCraft(r) { let m = 99; for (const [id, c] of r.req) m = Math.min(m, Math.floor(availCount(id) / c)); return Math.max(0, m); }
 const RECIPES = [
   Rc('bench', 1, [['wood', 6]], null, 'furn'),
   Rc('torch', 2, [['wood', 1]], null, 'build'),
@@ -2795,11 +2795,11 @@ function renderPanel() {
       h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
     h += `</div>`;
   } else if (k === 'craft') {
-    const near = nearStations(); const st = panel.st;
+    const near = nearStations(); const st = panel.st; POOL = null; POOL = linkedChests(); const nCh = POOL.length;
     h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
     const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['fix', '수리'], ['salv', '분해']]; if (st) tabs.unshift(['here', STN[st]]);
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
-    h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}</div>`;
+    h += `<div class="stations"><span class="chip on">손 제작</span>${Object.keys(STN).map(s => `<span class="chip ${near.has(s) ? 'on' : ''}">${STN[s]} ${near.has(s) ? '근처' : '없음'}</span>`).join('')}${nCh ? `<span class="chip on">연결된 상자 ${nCh}개</span>` : ''}</div>${nCh ? `<p class="hint">작업대·화로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함) ${nCh}개의 재료도 함께 써요. 가방에 있는 것부터 써요.</p>` : ''}`;
     if (UIS.tab === 'salv') {
       const nb = benchNear(near), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && DUR[s.id]);
       h += `<div class="sh-body"><p class="hint">${nb ? '장비를 분해하면 만들 때 든 재료의 70%를 돌려받아요. 분해한 장비는 사라져요.' : '작업대 근처에서 분해할 수 있어요.'}</p><div class="list">`;
@@ -2811,8 +2811,8 @@ function renderPanel() {
       const nb = benchNear(near), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
       h += `<div class="sh-body"><p class="hint">${nb ? '닳은 도구를 새것처럼 고쳐요. 많이 닳을수록 재료가 더 들어요.' : '작업대 근처에서 고칠 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">고칠 도구가 없어요</p>`;
-      for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => countItem(id) >= c), mx = DUR[s.id][0];
-        h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri" style="position:relative"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${ITEMS[s.id].n}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="fixbar"><i style="width:${Math.round(durOf(s) / mx * 100)}%"></i></div><div class="ings"><span class="ing">내구도 ${durOf(s)}/${mx}</span>${cost.map(([id, c]) => { const have = countItem(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="fix" data-i="${i}" ${ok ? '' : 'disabled'}>수리</button></div>`; }
+      for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => availCount(id) >= c), mx = DUR[s.id][0];
+        h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri" style="position:relative"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${ITEMS[s.id].n}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="fixbar"><i style="width:${Math.round(durOf(s) / mx * 100)}%"></i></div><div class="ings"><span class="ing">내구도 ${durOf(s)}/${mx}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="fix" data-i="${i}" ${ok ? '' : 'disabled'}>수리</button></div>`; }
       h += `</div></div>`;
     } else {
     // order is fixed while the panel stays on this tab, so the list does not jump after crafting
@@ -2823,7 +2823,7 @@ function renderPanel() {
     for (const { r, i } of list) {
       const ok = canCraft(r, near), it = ITEMS[r.out], stn = r.at && !near.has(r.at), multi = isMulti(r), mx = multi ? maxCraft(r) : 1, q = multi ? clamp(UIS.qty[i] || 1, 1, Math.max(1, mx)) : 1;
       const qty = multi && ok ? `<div class="qty"><button type="button" data-a="qty" data-i="${i}:-1" ${q <= 1 ? 'disabled' : ''} aria-label="하나 덜">−</button><b>${q * r.n}개</b><button type="button" data-a="qty" data-i="${i}:1" ${q >= mx ? 'disabled' : ''} aria-label="하나 더">+</button><button type="button" class="qmax" data-a="qty" data-i="${i}:max" ${q >= mx ? 'disabled' : ''}>최대</button></div>` : '';
-      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${it.n}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = countItem(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c * q}</span>`; }).join('')}</div>${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>만들기</button>${qty}</div>`;
+      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${it.n}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c * q}</span>`; }).join('')}</div>${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>만들기</button>${qty}</div>`;
     }
     h += `</div></div>`;
     }
@@ -2875,6 +2875,7 @@ function renderPanel() {
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요. 계속 꾸미고 탐험해 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
+  POOL = null;
   sh.innerHTML = h; sh.dataset.key = key;
   if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
@@ -2894,7 +2895,24 @@ function drawMap() {
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
 }
 function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) set.add(OBJ[o.t].station); } return set; }
-function canCraft(r, near) { return (!r.at || near.has(r.at)) && r.req.every(([id, c]) => countItem(id) >= c); }
+function canCraft(r, near) { return (!r.at || near.has(r.at)) && r.req.every(([id, c]) => availCount(id) >= c); }
+// ---- chests touching a crafting station lend their items (a chain of touching chests counts as one big store) ----
+let POOL = null;
+function linkedChests() {
+  if (POOL) return POOL;
+  const p = G.p, seen = new Set(), out = [], q = [];
+  for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) q.push([x, y]); }
+  while (q.length && out.length < 80) { const [x, y] = q.shift();
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j); if (o && o.t === 'chest' && o.items) { seen.add(j); out.push(o); q.push([nx, ny]); } } }
+  return out;
+}
+const slotIs = (s, id) => !!s && (id === 'anyFish' ? !!(ITEMS[s.id] && ITEMS[s.id].fish) : s.id === id);
+function availCount(id) { let n = countItem(id); for (const o of linkedChests()) for (const s of o.items) if (slotIs(s, id)) n += s.c; return n; }
+function takeAvail(id, c) { // bag first, then the linked chests
+  const fromBag = Math.min(c, countItem(id)); if (fromBag) removeItem(id, fromBag); c -= fromBag;
+  for (const o of linkedChests()) for (let k = 0; k < o.items.length && c > 0; k++) { const s = o.items[k]; if (!slotIs(s, id)) continue; const t = Math.min(s.c, c); s.c -= t; c -= t; if (!s.c) o.items[k] = null; }
+  invDirty = true;
+}
 function moveInto(arr, s) { const mx = stackMax(s.id); let left = s.c; for (let i = 0; i < arr.length && left; i++) { const t = arr[i]; if (t && t.id === s.id && t.c < mx) { const k = Math.min(mx - t.c, left); t.c += k; left -= k; } } for (let i = 0; i < arr.length && left; i++) if (!arr[i]) { arr[i] = { id: s.id, c: Math.min(mx, left) }; if (s.dur != null) arr[i].dur = s.dur; left -= arr[i].c; } return left; }
 function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
@@ -2917,14 +2935,14 @@ function onSheetClick(e) {
     if (UIS.salvAsk !== i) { UIS.salvAsk = i; renderPanel(); return; }
     UIS.salvAsk = null; G.inv[i] = null; for (const [id, c] of got) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
     SFX.brk(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, c]) => ITEMS[id].n + ' ' + c + '개').join(', ')}`, 'good'); invDirty = true; renderPanel(); return; }
-  if (a === 'fix') { const s = G.inv[i]; if (!s || !DUR[s.id] || !benchNear(nearStations())) return; const cost = repairCost(s); if (!cost.every(([id, c]) => countItem(id) >= c)) return;
-    for (const [id, c] of cost) removeItem(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
+  if (a === 'fix') { const s = G.inv[i]; if (!s || !DUR[s.id] || !benchNear(nearStations())) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
+    for (const [id, c] of cost) takeAvail(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, maxCraft(r)), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
   if (a === 'mapzoom') { UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
   if (a === 'craft') {
-    const r = RECIPES[i], near = nearStations(); if (!canCraft(r, near)) return;
+    const r = RECIPES[i], near = nearStations(); POOL = null; if (!canCraft(r, near)) return;
     const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, maxCraft(r))) : 1, total = r.n * q;
-    for (const [id, c] of r.req) removeItem(id, c * q); const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
+    for (const [id, c] of r.req) takeAvail(id, c * q); const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
     SFX.craft(); toast(`${ITEMS[r.out].n}${total > 1 ? ' ×' + total : ''} 완성!`, 'good'); gainXp(Math.min(8, q * (r.at === 'forge' ? 3 : r.at ? 1 : 0)));
     if (['place', 'wall', 'floor', 'ground', 'roof', 'shovel', 'food'].includes(ITEMS[r.out].kind) || (ITEMS[r.out].wt && ITEMS[r.out].wt !== 'sword')) { let slot = G.inv.findIndex(s => s && s.id === r.out);
       if (slot >= 6) { let to = G.inv.slice(0, 6).findIndex(x => !x); if (to < 0) to = G.sel < 6 ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[slot]; G.inv[slot] = tmp; slot = to; }
