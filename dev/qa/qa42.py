@@ -115,7 +115,7 @@ async def main():
         await pg.wait_for_timeout(2300)  # same-key toasts are held back for 2.2s
         await tap(pg,1); await pg.wait_for_timeout(200)
         r=await ev(pg,"()=>document.querySelector('#toasts').innerText")
-        rec('돌 채굴기','못 캐는 벽 안내', '흙벽·돌벽(지형)만' in r, r[-60:])
+        rec('돌 채굴기','못 캐는 벽 안내', '(지형)만' in r, r[-60:])
         await ev(pg,"()=>{const T=__T,G=T.G;const x=T.CX+8,y=T.CY+8;G.wall[T.idx(x+3,y)]=2;G.objs.get(T.idx(x+2,y)).work=true;G.p.x=x+.5;G.p.y=y+1.5}"); await pg.wait_for_timeout(300)
         await pg.screenshot(path=SP+'qa42_drill.png')
         rec('기능','콘솔 오류 없음', not errs, errs[:3])

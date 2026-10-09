@@ -30,7 +30,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillFe',dir:{x:1,y:0}};const ai=T.idx(110,108);G.objs.set(ai,o);G.wall[T.idx(111,108)]=10;G.objs.set(T.idx(110,110),{t:'battery',e:600});G.wire.set(T.idx(110,109),1);for(let k=0;k<5;k++)T.circuitTick(.2);return o.why}""")
         rec('채굴기','철 채굴기로는 금 광맥 불가 (tier)', r=='tier', r)
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillGold',dir:{x:1,y:0}};const ai=T.idx(110,112);G.objs.set(ai,o);G.wall[T.idx(111,112)]=11;G.objs.set(T.idx(110,114),{t:'battery',e:6000});G.wire.set(T.idx(110,113),1);for(let k=0;k<25*40;k++)T.circuitTick(.2);return (o.store||[]).reduce((a,s)=>a+s.c,0)}""")
-        rec('채굴기','얼음벽에서는 가끔만 서리 결정 (확률 반영, 40번 중 약 6개)', 1<=r<=16, r)
+        rec('채굴기','얼음벽에서는 얼음 덩이 (v43: 지역 지형 재료, 40번 중 40개)', r==40, r)
         await ev(pg,ARENA)
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.objs.set(T.idx(105,108),{t:'chair',dir:2});G.p.x=105.5;G.p.y=109.6;G.p.face={x:0,y:-1};const a=T.decide();T.perform(a);return [a.u,G.p.sit&&G.p.sit.dir]}""")
         rec('의자','위를 보는 의자에 앉기', r==['sit',2], str(r))
