@@ -1016,7 +1016,6 @@ function buildSprites() {
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11, 0, 0, src.width, 11); SPR.obj[k + 'Ub'] = c2; }
   for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
-  SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
   SPR.crop = {}; for (const k of ['berry', 'shroom', 'moss', 'glow', 'bean', 'fire', 'radish']) SPR.crop[k] = [0, 1, 2, 3].map(s => [0, 1, 2, 3].map(v => cropSpr(k, s, v)));
@@ -1233,21 +1232,25 @@ const RECIPES = [
   Rc('pie', 1, [['berry', 3], ['mushroom', 1]], 'pot', 'food'),
   Rc('stew', 1, [['mushroom', 3], ['glowcap', 1]], 'pot', 'food'),
 ];
-// ---- building pieces: thin walls, half walls, window walls, window frames, fences, doors, pillars (auto-connecting) and roofs ----
-const BMAT = { wood: { n: '나무', res: 'wood', f: '#b0743f', fd: '#7d4d2a', fl: '#d9a066', c: '#e0b07a', cd: '#8a5a33', door: '#8f5a32', roof: ['#b5583f', '#8a3f2e', '#d97a5a'] },
-  stone: { n: '돌', res: 'stone', f: '#8f8aa3', fd: '#625d78', fl: '#b9b4cc', c: '#d3cee3', cd: '#6d6884', door: '#6d6884', roof: ['#5f6f9a', '#45507a', '#8394c4'] } };
+// ---- building pieces: thin walls, half walls, window walls, window frames, fences, doors, pillars and the auto sliding door (auto-connecting) ----
+// v41: pieces stand on the tile's bottom line like natural walls (TW_BASE), and the tall ones are as high as a natural wall; roofs were removed
+const BMAT = { wood: { n: '나무', res: 'wood', f: '#b0743f', fd: '#7d4d2a', fl: '#d9a066', c: '#e0b07a', cd: '#8a5a33', door: '#8f5a32' },
+  stone: { n: '돌', res: 'stone', f: '#8f8aa3', fd: '#625d78', fl: '#b9b4cc', c: '#d3cee3', cd: '#6d6884', door: '#6d6884' } };
+const BMAT_X = { metal: { n: '금속', f: '#8d97a8', fd: '#5a5468', fl: '#c8d0dc', c: '#dfe5ee', cd: '#6c7688', door: '#a9b6c8' } };
+const bmat = m => BMAT[m] || BMAT_X[m];
 const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft
-  thin: { n: '얇은 벽', h: 18, cnt: 2, cost: 2, d: '얇고 아늑한 실내 벽. 옆 칸과 자동으로 이어져요.' },
+  thin: { n: '얇은 벽', h: 16, cnt: 2, cost: 2, d: '얇고 아늑한 실내 벽. 옆 칸과 자동으로 이어지고, 바위벽과 높이가 같아요.' },
   half: { n: '반벽', h: 9, cnt: 2, cost: 1, d: '허리 높이의 낮은 벽. 옆 칸과 자동으로 이어져요.' },
-  win: { n: '창문벽', h: 18, cnt: 2, cost: 3, d: '작은 창이 난 얇은 벽.' },
-  frame: { n: '창문 틀', h: 18, cnt: 1, cost: 2, d: '벽 대신 세우는 큰 유리창.' },
+  win: { n: '창문벽', h: 16, cnt: 2, cost: 3, d: '작은 창이 난 얇은 벽. 나란히 놓으면 긴 창이 돼요.' },
+  frame: { n: '창문 틀', h: 16, cnt: 1, cost: 2, d: '벽 대신 세우는 큰 유리창.' },
   fence: { n: '울타리', h: 10, cnt: 2, cost: 1, d: '마당을 두르는 울타리. 울타리·기둥·문과 이어져요.' },
-  door: { n: '문', h: 18, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 열려 있으면 지나갈 수 있어요.' },
+  door: { n: '문', h: 16, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요.' },
   pillar: { n: '기둥', h: 22, cnt: 2, cost: 1, d: '가느다란 기둥. 벽과 울타리가 이어져요.' },
 };
+const TW_H = { slide: 16 }; // pieces outside the wood/stone sets
+const twH = type => (BTYPE[type] || {}).h || TW_H[type];
 const BCAP = s => s[0].toUpperCase() + s.slice(1);
 const bId = (type, mat) => 'b' + BCAP(type) + BCAP(mat); // e.g. bThinWood
-const ROOF_ITEM = { wood: 'roofWood', stone: 'roofStone' };
 function addBuildPieces() {
   for (const mat in BMAT) {
     const M = BMAT[mat];
@@ -1256,11 +1259,17 @@ function addBuildPieces() {
       ITEMS[id] = { n: `${M.n} ${T.n}`, kind: 'place', obj: id, d: T.d };
       if (type === 'door') USE[id] = 'door';
       RECIPES.push(Rc(id, T.cnt, [[M.res, T.cost]], 'bench', 'build')); }
-    ITEMS[ROOF_ITEM[mat]] = { n: `${M.n} 지붕`, kind: 'roof', roof: mat, d: '머리 위에 지붕을 얹어요. 지붕 아래로 들어가면 지붕이 투명해져요. 지붕을 들고 지붕 칸을 누르면 걷어요.' };
-    RECIPES.push(Rc(ROOF_ITEM[mat], 4, [[M.res, 2]], 'bench', 'build'));
   }
+  // auto sliding door: opens by itself while powered and someone walks up; without power it is an ordinary door
+  OBJ.slideDoor = { n: '자동 미닫이문', solid: 1, item: 'slideDoor', tw: { type: 'slide', mat: 'metal' }, door: 1, dev: 'slide', idle: .01 };
+  ITEMS.slideDoor = { n: '자동 미닫이문', kind: 'place', obj: 'slideDoor', d: '전선으로 전기를 이어 주면 다가갈 때 옆으로 스르륵 열리고, 멀어지면 닫혀요. 몬스터는 못 열어요. 전기가 없으면 손으로 여닫아요.' };
+  USE.slideDoor = 'door';
+  RECIPES.push(Rc('slideDoor', 1, [['copperBar', 3], ['ironBar', 2], ['crystal', 1]], 'forge', 'build'));
 }
 const twType = o => o && OBJ[o.t] && OBJ[o.t].tw ? OBJ[o.t].tw.type : null;
+// wall-like pieces split the floor of their own tile along the wall line
+const TW_WALL = { thin: 1, half: 1, win: 1, frame: 1, door: 1, slide: 1 };
+const wallPiece = i => { const o = G.objs.get(i); return !!(o && TW_WALL[twType(o)]); };
 function twLinks(type, x, y) {
   if (!inB(x, y)) return false; const i = idx(x, y);
   if (G.wall[i]) return type !== 'fence';
@@ -1268,56 +1277,73 @@ function twLinks(type, x, y) {
   if (type === 'fence') return t === 'fence' || t === 'pillar' || t === 'door';
   return t !== 'fence' || type === 'door' || type === 'pillar';
 }
-function twMask(x, y, type) { if (type === 'pillar') return 0; return (twLinks(type, x, y - 1) ? 1 : 0) | (twLinks(type, x + 1, y) ? 2 : 0) | (twLinks(type, x, y + 1) ? 4 : 0) | (twLinks(type, x - 1, y) ? 8 : 0); }
-// draws one piece in tile coordinates (tile top at y0); the piece rises h px above its footprint line at y=12
+const TW_JOIN = { door: 1, win: 1, slide: 1 }; // the same kind side by side draws as one wide piece (double door, long window)
+const twSame = (type, x, y) => inB(x, y) && twType(G.objs.get(idx(x, y))) === type;
+function twMask(x, y, type) { if (type === 'pillar') return 0;
+  let m = (twLinks(type, x, y - 1) ? 1 : 0) | (twLinks(type, x + 1, y) ? 2 : 0) | (twLinks(type, x, y + 1) ? 4 : 0) | (twLinks(type, x - 1, y) ? 8 : 0);
+  if (TW_JOIN[type]) m |= (twSame(type, x - 1, y) ? 16 : 0) | (twSame(type, x + 1, y) ? 32 : 0);
+  return m; }
+// doors that open together: the same kind joined left and right in one row
+function doorGroup(x, y) { const o = G.objs.get(idx(x, y)), t = twType(o), out = [[idx(x, y), o]]; if (!t || !TW_JOIN[t]) return out;
+  for (const s of [-1, 1]) for (let k = 1; k <= 4; k++) { const xx = x + s * k; if (!twSame(t, xx, y)) break; const j = idx(xx, y); out.push([j, G.objs.get(j)]); }
+  return out; }
+const TW_BASE = 4; // pieces are drawn in their own coordinates with the footprint line at y=12, then moved down onto the tile's bottom line
+// draws one piece in tile coordinates (tile top at y0); the piece rises h px above its footprint line. open: 0..1 (a sliding door slides part way)
 function twDraw(A, type, mat, mask, open, h, y0) {
-  const M = BMAT[mat], R = (x, y, w, hh, c) => { if (w > 0 && hh > 0) A.r(x, y0 + y, w, hh, c); }, P = (x, y, c) => A.p(x, y0 + y, c);
-  const N = mask & 1, E = mask & 2, S = mask & 4, Wm = mask & 8, ew = E || Wm || !(N || S), x0 = Wm ? 0 : 6, x1 = E ? 16 : 10;
+  y0 += TW_BASE;
+  const M = bmat(mat), R = (x, y, w, hh, c) => { if (w > 0 && hh > 0) A.r(x, y0 + y, w, hh, c); }, P = (x, y, c) => A.p(x, y0 + y, c);
+  const N = mask & 1, E = mask & 2, S = mask & 4, Wm = mask & 8, jw = mask & 16, je = mask & 32, ew = E || Wm || !(N || S), x0 = Wm ? 0 : 6, x1 = E ? 16 : 10;
   const face = (a, b) => { R(a, 12 - h, b - a, h, M.f); R(a, 11, b - a, 1, M.fd);
     if (mat === 'wood') { for (let x = a; x < b; x++) if (x % 4 === 0) R(x, 12 - h, 1, h - 1, M.fd); }
+    else if (mat === 'metal') { R(a, 12 - h + 2, b - a, 1, M.fl); R(a, 12 - h + 9, b - a, 1, M.fd); }
     else for (let r = 0, y = 12 - h + 3; y < 11; y += 4, r++) { R(a, y, b - a, 1, M.fd); for (let x = a + (r % 2 ? 2 : 0); x < b; x += 5) R(x, y - 3, 1, 3, M.fd); } };
   const cap = (a, b, ya, yb, col) => { R(a, ya - h, b - a, yb - ya, col || M.c); };
   if (type === 'pillar') { R(6, 12 - h, 4, h, M.f); R(6, 12 - h, 1, h, M.fl); R(9, 12 - h, 1, h, M.fd); R(5, 8 - h, 6, 4, M.c); R(5, 11 - h, 6, 1, M.cd); R(5, 10, 6, 2, M.fd); return; }
   if (type === 'fence') { const rail = (a, b) => { R(a, 12 - h + 2, b - a, 2, M.fl); R(a, 12 - h + 4, b - a, 1, M.fd); R(a, 12 - h + 6, b - a, 2, M.fl); R(a, 12 - h + 8, b - a, 1, M.fd); };
     if (N) R(7, 0 - h + 3, 2, 12, M.fl); if (S) R(7, 12 - h + 3, 2, 4, M.fl); if (ew) rail(x0, x1); R(7, 12 - h, 2, h, M.f); R(7, 12 - h - 1, 2, 1, M.c); return; }
+  if (type === 'slide') { // two metal posts with a panel that slides into the left post (or apart, for a pair)
+    if (ew) { const a = jw ? 0 : 3, b = je ? 16 : 13, w = b - a, s = open || 0, right = jw && !je;
+      if (!jw) face(x0, 3); if (!je) face(13, x1); cap(x0, x1, 8, 12); R(x0, 12 - h, x1 - x0, 1, M.cd);
+      R(a, 12 - h + 1, w, 1, M.fd); P(right ? 14 : 8, 12 - h, s > .5 ? '#7fe0b5' : '#ffd25c');
+      const pw = Math.max(1, Math.round(w * (1 - s))), px = right ? b - pw : a;
+      R(px, 12 - h + 2, pw, h - 3, M.door); R(px, 12 - h + 2, pw, 1, M.fl); R(right ? px : px + pw - 1, 12 - h + 2, 1, h - 3, M.fd);
+      if (pw >= 6) { R(px + (right ? 2 : pw - 5), 12 - h + 4, 3, h - 9, '#a8dcf5'); P(px + (right ? 2 : pw - 5), 12 - h + 5, '#eaf8ff'); }
+      if (s > .02) R(right ? a : a + pw, 12 - h + 2, w - pw, 1, 'rgba(20,12,30,0.35)'); }
+    else { if (N) cap(6, 10, 0, 8); cap(6, 10, 8, 12); if (S) cap(6, 10, 12, 16); else face(6, 10); if ((open || 0) < .5) R(7, (N ? 0 : 8) - h + 1, 2, (S ? 16 : 12) - (N ? 0 : 8) - 1, M.door); }
+    return; }
   if (type === 'door' && open) {
-    if (ew) { face(x0, 3); face(13, x1); cap(x0, x1, 8, 12); R(3, 12 - h, 1, h, M.fd); R(4, 12 - h + 1, 2, h - 1, M.door); R(4, 12 - h + 1, 1, h - 1, M.fl); }
+    if (ew) { if (!jw) face(x0, 3); if (!je) face(13, x1); cap(x0, x1, 8, 12);
+      if (jw && !je) { R(12, 12 - h, 1, h, M.fd); R(10, 12 - h + 1, 2, h - 1, M.door); R(11, 12 - h + 1, 1, h - 1, M.fl); } // right leaf of a pair swings to the right post
+      else if (!jw) { R(3, 12 - h, 1, h, M.fd); R(4, 12 - h + 1, 2, h - 1, M.door); R(4, 12 - h + 1, 1, h - 1, M.fl); } }
     else { cap(6, 10, 0, 2); cap(6, 10, 14, 16); R(10, 2 - h + 2, 1, 10, M.door); }
     return; }
   if (N) cap(6, 10, 0, 8);
   if (ew) { face(x0, x1); cap(x0, x1, 8, 12); R(x0, 12 - h, x1 - x0, 1, M.cd);
-    if (type === 'win') { const a = Math.max(x0, 4), b = Math.min(x1, 12); if (b - a >= 4) { R(a, 12 - h + 3, b - a, 8, M.fl); R(a + 1, 12 - h + 4, b - a - 2, 6, '#a8dcf5'); P(a + 2, 12 - h + 5, '#eaf8ff'); P(a + 3, 12 - h + 6, '#eaf8ff'); R((a + b) >> 1, 12 - h + 4, 1, 6, M.fl); } }
+    if (type === 'win') { const a = jw ? 0 : Math.max(x0, 4), b = je ? 16 : Math.min(x1, 12); if (b - a >= 4) { R(a, 12 - h + 3, b - a, 8, M.fl); R(a + (jw ? 0 : 1), 12 - h + 4, b - a - (jw ? 0 : 1) - (je ? 0 : 1), 6, '#a8dcf5'); P(a + 2, 12 - h + 5, '#eaf8ff'); P(a + 3, 12 - h + 6, '#eaf8ff'); if (!jw && !je) R((a + b) >> 1, 12 - h + 4, 1, 6, M.fl); } }
     if (type === 'frame') { R(x0 + (Wm ? 0 : 1), 12 - h + 1, x1 - x0 - (Wm ? 0 : 1) - (E ? 0 : 1), h - 3, '#a8dcf5'); R(x0, 12 - h + Math.round(h / 2), x1 - x0, 1, M.fl); if (x1 - x0 >= 8) R(8, 12 - h + 1, 1, h - 3, M.fl); P(x0 + 2, 12 - h + 3, '#eaf8ff'); P(x0 + 3, 12 - h + 4, '#eaf8ff'); }
-    if (type === 'door') { R(3, 12 - h + 1, 10, h - 2, M.door); R(3, 12 - h + 1, 10, 1, M.fl); R(8, 12 - h + 1, 1, h - 2, M.fd); P(10, 12 - h + 10, '#ffc861'); P(6, 12 - h + 10, '#ffc861'); }
+    if (type === 'door') { const a = jw ? 0 : 3, b = je ? 16 : 13; R(a, 12 - h + 1, b - a, h - 2, M.door); R(a, 12 - h + 1, b - a, 1, M.fl);
+      if (!jw && !je) { R(8, 12 - h + 1, 1, h - 2, M.fd); P(10, 12 - h + 10, '#ffc861'); P(6, 12 - h + 10, '#ffc861'); }
+      else { if (je) R(15, 12 - h + 1, 1, h - 2, M.fd); P(je ? 13 : 2, 12 - h + 10, '#ffc861'); } }
   } else { cap(6, 10, 8, 12); if (!S) { face(6, 10); if (type === 'win' || type === 'frame') R(7, 12 - h + 3, 2, 8, '#a8dcf5'); if (type === 'door') R(7, 12 - h + 1, 2, h - 2, M.door); } }
   if (S) cap(6, 10, 12, 16);
   if (!ew) { if (type === 'win' || type === 'frame') R(7, (N ? 0 : 8) - h + 1, 2, (S ? 16 : 12) - (N ? 0 : 8) - 2, '#a8dcf5'); if (type === 'door') R(7, (N ? 0 : 8) - h, 2, (S ? 16 : 12) - (N ? 0 : 8), M.door); }
 }
 const TWC = {}, TW_Y0 = 26;
-function twSprite(id, mask, open) { const k = id + '|' + mask + '|' + (open ? 1 : 0); if (TWC[k]) return TWC[k]; const { type, mat } = OBJ[id].tw;
-  return TWC[k] = mk(16, TW_Y0 + 16, A => twDraw(A, type, mat, mask, open, BTYPE[type].h, TW_Y0), 'sel'); }
-function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.round(BTYPE[type].h * .5) + 2); return mk(16, 16, A => twDraw(A, type, mat, type === 'pillar' ? 0 : 10, false, h, 3), 'sel'); }
-function roofTile(mat, v) { const [r0, r1, r2] = BMAT[mat].roof; return mk(16, 16, A => { A.r(0, 0, 16, 16, r0); for (let y = 0; y < 16; y += 4) { A.r(0, y + 3, 16, 1, r1); for (let x = (y / 4 + v) % 2 ? 0 : 4; x < 16; x += 8) { A.r(x, y, 1, 3, r1); A.r(x + 1, y, 3, 1, r2); } } }, null); }
-function roofIcon(mat) { const [r0, r1, r2] = BMAT[mat].roof; return mk(16, 16, A => { A.poly([[1, 9], [8, 2], [15, 9]], r0); A.r(2, 9, 12, 5, BMAT[mat].f); A.r(6, 10, 4, 4, BMAT[mat].door); A.line(1, 9, 8, 2, r2); A.line(8, 2, 15, 9, r1); A.r(1, 9, 14, 1, r1); }); }
-let roofVer = 0, roofHideKey = '', roofHide = new Set();
-function roofHidden() {
-  const p = G.p, tx = Math.floor(p.x), ty = Math.floor(p.y), k = tx + ',' + ty + ',' + roofVer; if (k === roofHideKey) return roofHide; roofHideKey = k; roofHide = new Set();
-  const st = inB(tx, ty) ? idx(tx, ty) : -1; if (st < 0 || !G.roof.has(st)) return roofHide;
-  const q = [st]; roofHide.add(st); while (q.length && roofHide.size < 900) { const i = q.pop(), x = i % W, y = (i / W) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (G.roof.has(j) && !roofHide.has(j)) { roofHide.add(j); q.push(j); } } }
-  return roofHide;
-}
-const ROOF_LIFT = 22;
-function drawRoofs(x0, x1, y0, y1, camX, camY) {
-  if (!G.roof.size) return; const hide = roofHidden(), T = TP;
-  for (let y = y0; y <= y1 + 2; y++) for (let x = x0; x <= x1; x++) { if (!inB(x, y)) continue; const i = idx(x, y), m = G.roof.get(i); if (!m) continue;
-    const sx = x * T - camX, sy = y * T - camY - ROOF_LIFT, R = BMAT[m].roof; ctx.globalAlpha = hide.has(i) ? 0.16 : 1;
-    ctx.drawImage(SPR.roof[m][(x + y) & 1], sx, sy);
-    const has = (dx, dy) => inB(x + dx, y + dy) && G.roof.has(idx(x + dx, y + dy));
-    ctx.fillStyle = R[2]; if (!has(0, -1)) ctx.fillRect(sx, sy, 16, 1);
-    ctx.fillStyle = R[1]; if (!has(-1, 0)) ctx.fillRect(sx, sy, 1, 16); if (!has(1, 0)) ctx.fillRect(sx + 15, sy, 1, 16);
-    if (!has(0, 1)) { ctx.fillStyle = R[1]; ctx.fillRect(sx, sy + 16, 16, 4); ctx.fillStyle = 'rgba(20,10,30,0.55)'; ctx.fillRect(sx, sy + 19, 16, 1); ctx.fillStyle = 'rgba(14,8,22,0.25)'; ctx.fillRect(sx, sy + 20, 16, 3); } }
-  ctx.globalAlpha = 1;
-}
+function twSprite(id, mask, open) { const k = id + '|' + mask + '|' + (+open || 0); if (TWC[k]) return TWC[k]; const { type, mat } = OBJ[id].tw;
+  return TWC[k] = mk(16, TW_Y0 + 16, A => twDraw(A, type, mat, mask, +open || 0, twH(type), TW_Y0), 'sel'); }
+function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.round(twH(type) * .5) + 2); return mk(16, 16, A => twDraw(A, type, mat, type === 'pillar' ? 0 : 10, false, h, 3 - TW_BASE), 'sel'); }
+// a sliding door's panel glides open and shut (kept outside the save)
+const SLIDE = new WeakMap(), SLIDE_PW = new WeakMap(), SLIDE_NEAR = 2;
+function slideStep(o, t) { const tg = o.open ? 1 : 0; let s = SLIDE.get(o); if (!s) SLIDE.set(o, s = { v: tg, t }); const dt = clamp(t - s.t, 0, .1); s.t = t; s.v += clamp(tg - s.v, -dt * 5, dt * 5); return Math.round(s.v * 4) / 4; }
+// v41: roofs were removed — old saves get their roof items and placed roofs back as material (4 roofs were made from 2 wood or stone)
+const OLD_ROOF = { roofWood: 'wood', roofStone: 'stone' };
+function refundRoofItems() { const back = { n: 0 };
+  const fix = a => Array.isArray(a) ? a.map(s2 => { if (!s2 || !OLD_ROOF[s2.id]) return s2; back.n += s2.c || 1; return { id: OLD_ROOF[s2.id], c: Math.ceil((s2.c || 1) / 2) }; }) : a;
+  G.inv = fix(G.inv); for (const o of G.objs.values()) if (o.items) o.items = fix(o.items); return back; }
+function refundRoofTiles(arr, back) { const cnt = { wood: 0, stone: 0 };
+  if (Array.isArray(arr)) for (const e of arr) if (Array.isArray(e) && cnt[e[1]] != null) cnt[e[1]]++;
+  for (const m in cnt) if (cnt[m]) { const n = Math.ceil(cnt[m] / 2), l = addItem(m, n, false); if (l) spawnDrop(m, l, G.p.x, G.p.y + .6); back.n += cnt[m]; }
+  if (back.n) { G.stats.roofBack = (G.stats.roofBack || 0) + back.n; setTimeout(() => { try { toast('지붕이 없어져서, 가지고 있던 지붕을 나무·돌로 돌려받았어요', 'good', 'roofback'); } catch (e) { } }, 1200); } }
 addBuildPieces();
 
 // ---- more decorations, spread over early (wood/stone/fiber/dirt) and later (copper/iron) materials ----
@@ -1487,11 +1513,14 @@ Object.assign(UICON, {
   sk_lucky: A => { for (const [x, y] of [[5.5, 5.5], [10.5, 5.5], [5.5, 10.5], [10.5, 10.5]]) A.e(x, y, 3, 3, C.leaf); A.p(4, 4, C.leafL); A.p(9, 4, C.leafL); A.e(8, 8, 1.6, 1.6, C.leafD); A.line(9, 10, 13, 15, C.leafD); },
   sk_swift: A => { A.poly([[3, 13], [6, 3], [11, 1], [9, 6], [14, 5], [9, 11]], '#e8f0ff'); A.line(3, 13, 10, 4, '#9fb6e0'); A.p(13, 2, C.amber); A.p(14, 9, C.amber); },
 });
+// skill points earned by a level: one per level up, plus a bonus one at the top level (10 skills × 3 steps = 30)
+const spDue = lv => lv - 1 + (lv >= MAX_LV ? 1 : 0);
 const freshRpg = () => ({ lv: 1, xp: 0, pts: 0, sp: 0, str: 0, dex: 0, vit: 0, int: 0, sk: {}, slot: [null, null] });
 function cleanRpg(r) {
   const f = freshRpg(); if (!r || typeof r !== 'object') return f;
   for (const k of ['lv', 'xp', 'pts', 'sp', 'str', 'dex', 'vit', 'int']) f[k] = Math.max(0, Math.floor(+r[k] || 0)); f.lv = clamp(f.lv || 1, 1, MAX_LV);
   if (r.sk && typeof r.sk === 'object') for (const k in r.sk) if (SKILLS[k]) { const l = clamp(Math.floor(+r.sk[k] || 0), 0, SKILLS[k].max); if (l) f.sk[k] = l; }
+  const spent = Object.values(f.sk).reduce((a, l) => a + l, 0), due = spDue(f.lv); if (spent + f.sp < due) f.sp = due - spent; // older saves at the top level never got the bonus point
   if (Array.isArray(r.slot)) f.slot = [0, 1].map(i => { const k = r.slot[i]; return SKILLS[k] && SKILLS[k].act && f.sk[k] ? k : null; });
   return f;
 }
@@ -1510,8 +1539,8 @@ function gainXp(n, x, y) {
   const R = G && G.rpg; if (!R || !(n > 0) || R.lv >= MAX_LV) return; n = Math.max(n, Math.round(n * (1 + bval('xp')))); R.xp += n;
   if (x != null && n >= 3) ftext(x, y - 0.9, `+${n} 경험치`, '#b8e0ff');
   let up = 0; while (R.lv < MAX_LV && R.xp >= XP_NEED(R.lv)) { R.xp -= XP_NEED(R.lv); R.lv++; R.pts += 2; R.sp += 1; up++; }
-  if (R.lv >= MAX_LV) R.xp = 0;
-  if (up) { const p = G.p; p.hp = maxHp(); p.mp = maxMp(); puff(p.x, p.y - .5, '#ffe9a8', 26, 3.5, .8); ftext(p.x, p.y - 1.6, `Lv.${R.lv}!`, '#ffd25c'); SFX.seed(); toast(`레벨 업! Lv.${R.lv} · [능력]에서 능력치와 스킬을 올려요`, 'good'); if (panel && panel.kind === 'stat') renderPanel(); }
+  if (R.lv >= MAX_LV) { R.xp = 0; if (up) R.sp += 1; } // reaching the top level gives one more skill point, enough to max every skill
+  if (up) { const p = G.p; p.hp = maxHp(); p.mp = maxMp(); puff(p.x, p.y - .5, '#ffe9a8', 26, 3.5, .8); ftext(p.x, p.y - 1.6, `Lv.${R.lv}!`, '#ffd25c'); SFX.seed(); toast(R.lv >= MAX_LV ? `최고 레벨 Lv.${R.lv}! 보너스 스킬 포인트 +1 · [능력]에서 올려요` : `레벨 업! Lv.${R.lv} · [능력]에서 능력치와 스킬을 올려요`, 'good'); if (panel && panel.kind === 'stat') renderPanel(); }
 }
 const CATCH = { 0: [['minnow', 50], ['crucian', 34], ['boot', 10], ['koi', 6]], 1: [['catfish', 44], ['sporeEel', 30], ['minnow', 12], ['boot', 8], ['koi', 6]], 2: [['smelt', 46], ['shrimp', 30], ['crystal', 8], ['boot', 6], ['koi', 10]] };
 const WATER = 10;
@@ -1779,6 +1808,10 @@ function deviceStep(i, o, d, on, dt) {
   if (d.dev === 'lamp') { if (o.off !== !on) { o.off = !on; lightDirty = true; } o.work = on; if (on) G.stats.litLamp = 1; return; }
   if (d.dev === 'farm') { const ready = farmStage(o) >= 3; o.work = on && ready; if (on && ready) farmHarvest(i, o, true); return; }
   if (d.dev === 'door') { if (!!o.open !== on) { if (!on && occupied(x, y)) return; o.open = on; SFX.place(); } o.work = false; return; }
+  if (d.dev === 'slide') { o.work = false; if (on) SLIDE_PW.set(o, G.time); // powered (or joined to a powered leaf): opens while the player is close, closes when they walk away
+    const grp = doorGroup(x, y); o.pw = grp.some(([, g]) => (SLIDE_PW.get(g) ?? -9) > G.time - .5) ? 1 : 0; if (!o.pw) return;
+    const near = G.p.dead <= 0 && grp.some(([j]) => Math.hypot(j % W + .5 - G.p.x, ((j / W) | 0) + .5 - G.p.y) < SLIDE_NEAR);
+    if (!!o.open !== near) { if (!near && occupied(x, y)) return; o.open = near ? 1 : 0; if (Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) < 8) SFX.place(); } return; }
   if (d.dev === 'drill') { const dir = o.dir || { x: 0, y: -1 }, tx = x + dir.x, ty = y + dir.y, w = inB(tx, ty) ? G.wall[idx(tx, ty)] : 0, cnt = (o.store || []).reduce((a, s2) => a + s2.c, 0);
     const can = on && w && WALLS[w] && WALLS[w].tier <= d.tier && w !== 6 && w !== 7 && w !== 8 && cnt < DRILL_CAP; o.work = !!can; o.why = !on ? 'power' : !w || w === 6 || w === 7 || w === 8 ? 'wall' : WALLS[w].tier > d.tier ? 'tier' : cnt >= DRILL_CAP ? 'full' : '';
     if (!can) return; o.prog = (o.prog || 0) + dt;
@@ -2025,7 +2058,7 @@ function addPond(w, ok) {
 }
 function migrateV3() {
   const w = genWorld(G.seed); let n = 0;
-  for (let i = 0; i < W * H; i++) { if (w.biome[i] < 3) continue; const o = G.objs.get(i); const mine = (o && !OBJ[o.t].nat && o.t !== 'bush') || G.wire.has(i) || G.under.has(i) || G.roof.has(i);
+  for (let i = 0; i < W * H; i++) { if (w.biome[i] < 3) continue; const o = G.objs.get(i); const mine = (o && !OBJ[o.t].nat && o.t !== 'bush') || G.wire.has(i) || G.under.has(i);
     G.biome[i] = w.biome[i]; if (G.explored[i] || mine) continue;
     G.wall[i] = w.wall[i]; G.floor[i] = w.floor[i]; const no = w.objs.get(i); if (no) G.objs.set(i, no); else G.objs.delete(i); n++; }
   return n;
@@ -2073,7 +2106,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2081,7 +2114,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof], run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), equip: G.equip || freshEquip(), backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), equip: G.equip || freshEquip(), backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
 function deserialize(s) {
   const N = W * H;
@@ -2093,18 +2126,19 @@ function deserialize(s) {
   if ((s.invV || 1) < 2) { while (G.inv.length < 30) G.inv.push(null); G.inv.splice(6, 0, null, null, null); if (!(G.sel < 6)) G.sel = 0; }
   while (G.inv.length < invSize()) G.inv.push(null); if (G.inv.length > invSize()) { const extra = G.inv.splice(invSize()).filter(Boolean); G.inv.push(...[]); G.__extra = extra; }
   if ((s.v || 1) < 2) migrateV2();
-  G.wire = new Map(Array.isArray(s.wire) ? s.wire : []); G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []);
+  G.wire = new Map(Array.isArray(s.wire) ? s.wire : []); G.under = new Map(Array.isArray(s.under) ? s.under : []);
   if ((s.v || 1) < 3) migrateV3();
   G.equip = freshEquip(); if (s.equip && typeof s.equip === 'object') for (const sl of ['body', 'acc']) { const e = s.equip[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && ITEMS[e.id].slot === sl) G.equip[sl] = { id: e.id, c: 1 }; }
   G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null;
   G.look = cleanLook(s.look); CHARS.custom = lookDef(G.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
+  const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < HOT)) G.sel = 0; G.newIds = {};
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
-  G.under = new Map(Array.isArray(s.under) ? s.under : []); G.roof = new Map(Array.isArray(s.roof) ? s.roof : []); roofVer++; G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
+  G.under = new Map(Array.isArray(s.under) ? s.under : []); refundRoofTiles(s.roof, roofBack); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
   G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []);
   G.buffs = Array.isArray(s.buffs) ? s.buffs.filter(b => b && EFF[b.ef] && [1, 2, 3].includes(b.tier) && Number.isFinite(b.end) && b.end > G.time && ITEMS[b.id]).slice(0, BUFF_MAX).map(b => ({ ef: b.ef, tier: b.tier, end: b.end, max: Number.isFinite(b.max) ? b.max : b.end - G.time, id: b.id })) : [];
@@ -2145,7 +2179,7 @@ const refreshDoors = () => { DOORS = new Set((G.rooms || []).filter(r => !r.foun
 function placeRooms(w0) {
   const rooms = [], safe = [[CX, CY], [BX, BY], [SA.x, SA.y], [SB.x, SB.y], [SL.x, SL.y], [SI.x, SI.y]], cand = [[], [], [], [], []];
   for (let y = 4; y < H - 8; y += 2) for (let x = 4; x < W - 8; x += 2) { const b = G.biome[idx(x + 1, y + 1)]; if (b <= 4) cand[b].push([x, y, hash2(x, y, (G.seed | 0) + 77)]); }
-  const natural = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.roof.has(i) && !G.under.has(i);
+  const natural = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.under.has(i);
   const open = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && !G.objs.get(i);
   // the cracked wall faces an open tunnel on any side; a region that still has no room after that takes a door into plain rock
   for (let pass = 0; pass < 2; pass++) for (let b = 0; b < 5; b++) { cand[b].sort((a, c) => a[2] - c[2]); let n = rooms.filter(r => r.b === b).length; if (pass && n) continue;
@@ -2462,7 +2496,7 @@ function digGround(t) {
 }
 function canPlace(tx, ty, it) {
   if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid); }
-  if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (it.kind === 'roof') return !G.roof.has(i); if (G.wall[i]) return false; const o = G.objs.get(i);
+  if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
   if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && (!o || !OBJ[o.t].tree);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
   if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
@@ -2526,7 +2560,7 @@ function mouseTile() {
 }
 
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unroof: 'dig', unwire: 'dig' };
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   if (aimMouse()) {
@@ -2566,7 +2600,6 @@ function decide() {
   if (it && it.kind === 'recall') return recallDecide(s); // holding the homestone means you want to use it, whatever is in front
   // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
   if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
-  if (it && it.kind === 'roof' && i >= 0 && G.roof.has(i)) return { k: 'unroof', lbl: '지붕 걷기', icon: s.id, t };
   if (it && it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
   if (o) {
     const d = OBJ[o.t];
@@ -2591,8 +2624,8 @@ function decide() {
       return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
     if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
     if (d.item && !(it && it.kind === 'floor')) {
-      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? 'wood' : 'hand', t, o, sub: true };
-      if (it && ['place', 'wall', 'roof'].includes(it.kind)) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: true };
+      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? 'wood' : 'hand', t, o, sub: true };
+      if (it && ['place', 'wall'].includes(it.kind)) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: true };
       return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
     }
   }
@@ -2610,8 +2643,8 @@ function decide() {
   if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
   return { k: 'swing', lbl: WT.ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
 }
-const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'roof', 'seed', 'wire'];
-const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : it.kind === 'roof' ? '지붕 얹기' : '놓기';
+const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
+const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
 const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
@@ -2641,7 +2674,6 @@ function perform(a) {
     case 'place': placeItem(a.t); actCd = 0.14; break;
     case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); SFX.pick(); actCd = 0.15; break; }
-    case 'unroof': { const i = idx(a.t.x, a.t.y), m = G.roof.get(i); if (m) { G.roof.delete(i); roofVer++; const l = addItem(ROOF_ITEM[m], 1, false); if (l) spawnDrop(ROOF_ITEM[m], 1, a.t.x + .5, a.t.y + .5); SFX.pick(); } actCd = 0.18; break; }
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
     case 'treasure': openTreasure(a.t, a.o); actCd = 0.4; break;
@@ -2812,7 +2844,10 @@ function useObj(a) {
       if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); SFX.pick(); toast(o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); invDirty = true; break; }
       const d2 = OBJ[o.t]; toast(o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? '이 채굴기로는 못 캐는 벽이에요' : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
     case 'cinfo': { const d2 = OBJ[o.t]; toast(d2.src === 'cgen' ? '수정 발전기 · 연료 없이 계속 전기를 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 전선을 이어 줘요' : d2.dev === 'door' ? (o.open ? '전기 문 · 전기가 들어와 열려 있어요' : '전기 문 · 전기가 들어오면 열려요') : (o.off === false ? '전기 램프 · 켜져 있어요' : '전기 램프 · 전기가 들어오면 켜져요'), null, 'cinfo'); break; }
-    case 'door': if (o.open && occupied(t.x, t.y)) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; } o.open = !o.open; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break;
+    case 'door': { if (OBJ[o.t].dev === 'slide' && o.pw) { toast('자동 미닫이문 · 전기가 들어와 있어서 다가가면 저절로 열려요', null, 'cinfo'); break; }
+      const grp = doorGroup(t.x, t.y), nv = !o.open; // a double door opens and closes together
+      if (!nv && grp.some(([j]) => occupied(j % W, (j / W) | 0))) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; }
+      for (const [, g] of grp) g.open = nv; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break; }
     case 'sit': { const sd = OBJ[o.t].dir4 ? (o.dir || 0) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
     case 'pet': hearts(x, t.y, 5); SFX.purr(); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); ftext(p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } toast(pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
@@ -2878,7 +2913,6 @@ function placeItem(t) {
   if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
   else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
-  else if (it.kind === 'roof') { G.roof.set(i, it.roof); roofVer++; }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
   else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'treeFarm') o.p = G.time; const dd = OBJ[it.obj];
@@ -3017,7 +3051,7 @@ function regrow() {
   for (let k = 0; k < 14; k++) {
     const a = Math.random() * 6.283, d = 13 + Math.random() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
     if (x < 2 || y < 2 || x >= W - 2 || y >= H - 2) continue; const i = idx(x, y), f = G.floor[i], b = G.biome[i];
-    if (G.wall[i] || G.objs.get(i) || G.roof.has(i) || !(f === 1 || f === 2 || f === 3) || b === 2) continue;
+    if (G.wall[i] || G.objs.get(i) || !(f === 1 || f === 2 || f === 3) || b === 2) continue;
     if (Math.hypot(x - CX, y - CY) < 3.5) continue;
     let nat = 0, built = false;
     for (let dy = -3; dy <= 3 && !built; dy++) for (let dx = -3; dx <= 3; dx++) { const j = idx(x + dx, y + dy), o = G.objs.get(j); if (isPlacedFloor(G.floor[j])) { built = true; break; } if (!o) continue; const od = OBJ[o.t]; if (od.nat || od.bush) nat++; else if (od.item || od.tw) { built = true; break; } }
@@ -3832,14 +3866,18 @@ let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoo
 let vignette = null;
 // ---- floor chunks: 16x16 tiles pre-rendered once, redrawn only when their tiles change ----
 const CHN = 16, chunks = new Map();
-function chunkSig(cx, cy) { let h = 7; for (let y = cy * CHN - 1; y <= cy * CHN + CHN; y++) for (let x = cx * CHN - 1; x <= cx * CHN + CHN; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i]) | 0; } return h; }
+function chunkSig(cx, cy) { let h = 7; for (let y = cy * CHN - 1; y <= cy * CHN + CHN; y++) for (let x = cx * CHN - 1; x <= cx * CHN + CHN; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
 const natural = f => !!PRI[f];
 function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i]) continue; const f = G.floor[i]; if (f === WATER) continue;
-    const X = tx * 16, Y = ty * 16; g.drawImage(SPR.floor[f][(hash2(x, y, 5) * 4) | 0], X, Y);
-    if (natural(f)) {
+    const X = tx * 16, Y = ty * 16, vr = (hash2(x, y, 5) * 4) | 0;
+    if (wallPiece(i)) { // a thin wall's tile: each quarter takes the floor of the open side it faces, so floors stop right at the wall line
+      const side = (hx, vy) => { for (const [dx, dy] of [[hx, 0], [0, vy], [hx, vy]]) { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) continue; const j = idx(xx, yy); if (G.wall[j] || wallPiece(j)) continue; const nf = G.floor[j]; if (nf === WATER || nf === LAVA || !SPR.floor[nf]) continue; return nf; } return f; };
+      for (const [qx, qy] of [[0, 0], [8, 0], [0, 8], [8, 8]]) { const qf = side(qx ? 1 : -1, qy ? 1 : -1); g.drawImage(SPR.floor[qf][vr], qx, qy, 8, 8, X + qx, Y + qy, 8, 8); } }
+    else g.drawImage(SPR.floor[f][vr], X, Y);
+    if (natural(f) && !wallPiece(i)) {
       const nb = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return 0; const j = idx(xx, yy); return G.wall[j] ? 0 : G.floor[j]; };
       const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
       const fr = dirs.map(([dx, dy]) => { const b = nb(dx, dy); return natural(b) && PRI[b] > PRI[f] ? b : 0; });
@@ -3848,7 +3886,7 @@ function drawChunk(c, cx, cy) {
       const hd = hash2(x, y, 77), dens = f === 1 ? .17 : .1;
       if (hd < dens && SPR.deco[f]) { const list = SPR.deco[f], d = list[(hash2(x, y, 78) * list.length) | 0]; g.drawImage(d, X + 2 + ((hash2(x, y, 79) * 8) | 0), Y + 3 + ((hash2(x, y, 80) * 7) | 0)); }
     }
-    if (WFLOOR.has(f)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
+    if (WFLOOR.has(f) && !wallPiece(i)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
       if (!nw(0, -1)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 16, 1); g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 1, 16, 1); }
       if (!nw(0, 1)) { g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = '#5d5872'; g.fillRect(X, Y + 15, 16, 1); }
       if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
@@ -3975,7 +4013,6 @@ function renderWorld(cw, ch) {
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
     for (const it of list) drawEntity(it, t);
   }
-  drawRoofs(x0, x1, y0, y1, camX, camY);
   // swing arc
   if (G.swing) {
     const s = G.swing, pr = 1 - s.t / s.max, hx = p.x, hy = p.y - .45, SW = WTYPE[s.wt];
@@ -4081,7 +4118,7 @@ function renderOverlay(cw, ch) {
 function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
-    const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), !!o.open), it.x + .5, it.y + 1); return; }
+    const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), d.dev === 'slide' ? slideStep(o, t) : !!o.open), it.x + .5, it.y + 1); return; }
     let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const fpD = d.sz ? fpOf(o) : null, wx = it.x + (fpD ? fpD[0] / 2 : .5), wy = it.y + (fpD ? fpD[1] : 1) - 1 / 16; let flipX = !!o.flip;
     if (fpD && o.rot && d.rotV && SPR.obj[o.t + 'V']) img = SPR.obj[o.t + 'V']; if (o.t === 'treeFarm') img = SPR.obj['treeFarm' + (farmStage(o) || '')] || img; if (d.dir4 && o.dir) { img = SPR.obj[o.t + (o.dir === 2 ? 'U' : 'S')] || img; flipX = o.dir === 3; }
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))][(o.w ? 1 : 0) + (o.f ? 2 : 0)];
