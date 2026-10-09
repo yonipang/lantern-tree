@@ -63,7 +63,7 @@ async def main():
         r=await ev(pg,"()=>{const m=__T.G.p.mp;__T.perform(__T.decide());return [m-__T.G.p.mp,__T.G.pshots[0]&&__T.G.pshots[0].pierce]}")
         rec('무기','지팡이: 기력 4 소모, 관통 구슬', r[0]>3.9 and r[1]==1, str(r))
         await pg.wait_for_timeout(900)
-        r=await ev(pg,"()=>__T.G.enemies.map(e=>e.hp<999)"); rec('무기','구슬이 두 적을 꿰뚫음', r==[True,True], str(r))
+        r=await ev(pg,"()=>__T.G.enemies.map(e=>e.hp<999)"); rec('무기','구슬이 두 적을 꿰뚫음', len(r)>=2 and all(r), str(r))
         await ev(pg,ARENA); await ev(pg,"()=>{__T.give('hammerCopper');__T.G.sel=0;const f="+EN+";f(106.3,110.5);f(105.5,111.4)}")
         r=await ev(pg,"()=>{__T.perform(__T.decide());return __T.G.enemies.map(e=>e.hp<999)}")
         rec('무기','망치: 넓게 휘둘러 두 적 모두 맞힘', r==[True,True], str(r))

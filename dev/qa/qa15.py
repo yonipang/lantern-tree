@@ -45,7 +45,7 @@ async def main():
         r=await ev(pg,"()=>[document.querySelector('#title').hidden, __T.countItem('crystal')]")
         rec('다른 기기','불러오기 → 다른 기기 진행 그대로', r==[True,43], str(r))
         # local newer than cloud → auto upload, no prompt
-        await ev(pg,"()=>{__T.addItem('crystal',7);__T.openPanel('menu')}"); await pg.wait_for_timeout(300)
+        await ev(pg,"()=>{__T.addItem('crystal',7);__T.openPanel('menu');window.dispatchEvent(new Event('pagehide'))}"); await pg.wait_for_timeout(300)
         await pg.reload(); await pg.wait_for_timeout(900)
         r=await ev(pg,"()=>[document.querySelector('#cloudAsk').hidden, JSON.parse(JSON.parse(localStorage.getItem('mockcloud'))['u_juyeon@test.kr'].data).inv.find(s=>s&&s.id==='crystal').c]")
         rec('충돌','이 기기가 더 최근이면 묻지 않고 자동 업로드', r==[True,50], str(r))

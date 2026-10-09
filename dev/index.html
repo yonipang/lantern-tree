@@ -1281,8 +1281,8 @@ const WTYPE = {
   dagger: { n: '단검', reach: 1.2, arc: 1.05, cd: 0.22, kb: 4, crit: 0.15 },
   spear: { n: '창', reach: 2.35, arc: 0.42, cd: 0.46, kb: 11 },
   hammer: { n: '망치', reach: 1.7, arc: 2.5, cd: 0.72, kb: 16 },
-  bow: { n: '활', ranged: 'arrow', range: 7, cd: 0.5, spd: 12 },
-  staff: { n: '지팡이', ranged: 'orb', range: 6.5, cd: 0.55, spd: 8, mp: 4, magic: 1 },
+  bow: { n: '활', ranged: 'arrow', range: 6.5, cd: 0.62, spd: 12, kb: 2.5 },
+  staff: { n: '지팡이', ranged: 'orb', range: 6.5, cd: 0.66, spd: 8, mp: 5, magic: 1, kb: 2 },
 };
 const wtOf = w => WTYPE[(w && w.wt) || 'sword'];
 for (const id of ['swordWood', 'swordCopper', 'swordIron', 'swordCrystal']) ITEMS[id].wt = 'sword';
@@ -1291,16 +1291,16 @@ const rarDefault = () => { for (const id in ITEMS) if ((ITEMS[id].kind === 'swor
 const WEAPONS = {
   daggerWood: ['나무 단검', 'dagger', 4, [['wood', 3], ['fiber', 2]], 150, [['wood', 2]], daggerIcon(C.woodL, '#f0c890', C.woodD), '짧지만 아주 빠르게 찔러요. 치명타가 잘 터져요.'],
   spearWood: ['나무 창', 'spear', 6, [['wood', 5], ['rope', 1]], 180, [['wood', 3]], spearIcon(C.stone, C.stoneL), '멀리 있는 적을 콕 찔러요. 앞쪽 좁은 곳만 맞혀요.'],
-  bowWood: ['나무 활', 'bow', 5, [['wood', 4], ['rope', 2]], 160, [['rope', 1]], bowIcon(C.wood, C.woodL), '멀리 화살을 쏴요. 화살은 따로 필요 없어요.'],
+  bowWood: ['나무 활', 'bow', 4, [['wood', 4], ['rope', 2]], 160, [['rope', 1]], bowIcon(C.wood, C.woodL), '멀리 화살을 쏴요. 화살은 따로 필요 없어요.'],
   daggerCopper: ['구리 단검', 'dagger', 8, [['copperBar', 3], ['wood', 1], ['rope', 1]], 300, [['copperBar', 1]], daggerIcon(C.copper, C.copperL, C.woodD), '빠르게 콕콕! 치명타가 잘 터져요.'],
   spearCopper: ['구리 창', 'spear', 12, [['copperBar', 4], ['wood', 3], ['rope', 1]], 320, [['copperBar', 2]], spearIcon(C.copper, C.copperL), '긴 창으로 멀리서 안전하게 찔러요.'],
   hammerCopper: ['구리 망치', 'hammer', 20, [['copperBar', 6], ['wood', 2], ['stone', 4]], 300, [['copperBar', 2]], hammerIcon(C.copper, C.copperL, C.copperD), '느리지만 넓게 쾅! 적을 멀리 밀어내요.'],
-  staffGlow: ['빛버섯 지팡이', 'staff', 11, [['wood', 4], ['glowcap', 4], ['gel', 3], ['copperBar', 1]], 250, [['glowcap', 2]], staffIcon(C.glow, C.glowL), '기력을 조금 써서 적을 꿰뚫는 빛 구슬을 쏴요. 지혜가 높을수록 세져요.', '#9ff2e6'],
+  staffGlow: ['빛버섯 지팡이', 'staff', 9, [['wood', 4], ['glowcap', 4], ['gel', 3], ['copperBar', 1]], 250, [['glowcap', 2]], staffIcon(C.glow, C.glowL), '기력을 조금 써서 적을 꿰뚫는 빛 구슬을 쏴요. 지혜가 높을수록 세져요.', '#9ff2e6'],
   spearIron: ['철 창', 'spear', 19, [['ironBar', 4], ['wood', 3], ['rope', 2]], 550, [['ironBar', 2]], spearIcon(C.iron, C.ironL), '묵직한 철 창. 멀리서 깊게 찔러요.'],
   hammerIron: ['철 망치', 'hammer', 32, [['ironBar', 7], ['wood', 2], ['resin', 2]], 600, [['ironBar', 3]], hammerIcon(C.iron, C.ironL, C.ironD), '바닥이 울릴 만큼 강한 한 방.'],
-  bowIron: ['사냥꾼의 활', 'bow', 14, [['ironBar', 3], ['wood', 4], ['rope', 3], ['gel', 2]], 450, [['ironBar', 1], ['rope', 1]], bowIcon(C.woodD, C.wood, C.iron), '팽팽한 시위로 빠른 화살을 쏴요.'],
-  staffCrystal: ['수정 지팡이', 'staff', 22, [['crystal', 6], ['ironBar', 2], ['glowcap', 3]], 700, [['crystal', 3]], staffIcon(C.cry, C.cryL), '보랏빛 구슬이 적 여럿을 꿰뚫어요.', '#d6c2ff'],
-  bowCrystal: ['별빛 활', 'bow', 24, [['crystal', 6], ['ironBar', 2], ['rope', 3]], 800, [['crystal', 3]], bowIcon(C.cry, C.cryL, C.cryL), '별빛처럼 반짝이는 화살을 쏴요.'],
+  bowIron: ['사냥꾼의 활', 'bow', 11, [['ironBar', 3], ['wood', 4], ['rope', 3], ['gel', 2]], 450, [['ironBar', 1], ['rope', 1]], bowIcon(C.woodD, C.wood, C.iron), '팽팽한 시위로 빠른 화살을 쏴요.'],
+  staffCrystal: ['수정 지팡이', 'staff', 17, [['crystal', 10], ['ironBar', 4], ['glowcap', 4]], 700, [['crystal', 3]], staffIcon(C.cry, C.cryL), '보랏빛 구슬이 적 여럿을 꿰뚫어요.', '#d6c2ff'],
+  bowCrystal: ['별빛 활', 'bow', 18, [['crystal', 10], ['ironBar', 4], ['rope', 4], ['glowcap', 2]], 800, [['crystal', 3]], bowIcon(C.cry, C.cryL, C.cryL), '별빛처럼 반짝이는 화살을 쏴요.'],
 };
 const WEAPON_DUR = {}, DUR2 = {};
 for (const id in WEAPONS) { const [n, wt, dmg, req, dur, fix, icon, d, orb] = WEAPONS[id];
@@ -1310,7 +1310,7 @@ const FXN = { poison: '독: 맞은 적이 몇 초 동안 계속 아파요', slow
 const UNIQ = {
   daggerQueen: ['포자 여왕의 단검', 'dagger', 18, 650, [['shroomCap', 3]], daggerIcon('#c58cf0', '#f6e6ff', '#7d3fa3'), '버섯 여왕이 남긴 단검. 찌를 때마다 독 포자가 퍼져요.', 'poison', 'queen'],
   hammerSlime: ['말랑대왕 망치', 'hammer', 34, 700, [['gel', 6]], hammerIcon('#86d96b', '#d2f7b8', '#4f9e45'), '말랑대왕의 왕관 조각으로 만든 망치. 맞은 적이 끈적해져 느려져요.', 'slow', 'slime'],
-  bowGolem: ['수정 거인의 활', 'bow', 30, 900, [['crystal', 4]], bowIcon('#6a6488', C.cryL, C.cry), '수정골렘의 팔로 만든 활. 화살이 맞으면 수정 파편이 튀어요.', 'split', 'golem'],
+  bowGolem: ['수정 거인의 활', 'bow', 24, 900, [['crystal', 4]], bowIcon('#6a6488', C.cryL, C.cry), '수정골렘의 팔로 만든 활. 화살이 맞으면 수정 파편이 튀어요.', 'split', 'golem'],
 };
 const UNIQ_OF = {};
 for (const id in UNIQ) { const [n, wt, dmg, dur, fix, icon, d, fx, boss] = UNIQ[id];
@@ -1352,7 +1352,7 @@ BAG_UPS.forEach(([id, n, req, at], k) => { ITEMS[id] = { n, bagUp: k + 1, d: `�
 
 // ---- level, stats and skills ----
 const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
-const STATN = { str: ['힘', '근접 무기 피해 +5% · 캐는 힘 +3%'], dex: ['민첩', '활 피해 +5% · 공격 속도 +1.5% · 이동 속도 +1%'], vit: ['체력', '최대 체력 +8 · 배고파지는 속도 −2%'], int: ['지혜', '지팡이·스킬 피해 +6% · 최대 기력 +6'] };
+const STATN = { str: ['힘', '근접 무기 피해 +5% · 캐는 힘 +3%'], dex: ['민첩', '활 피해 +3% · 공격 속도 +1% (최대 20%) · 이동 속도 +1%'], vit: ['체력', '최대 체력 +8 · 배고파지는 속도 −2%'], int: ['지혜', '지팡이·스킬 피해 +3.5% · 최대 기력 +6'] };
 const SKILLS = {
   dash: { n: '구르기', act: 1, lv: 2, max: 3, mp: l => 12 - l * 2, cd: () => 1.4, d: l => `바라보는 쪽으로 데굴 굴러요. 구르는 동안은 다치지 않아요${l > 1 ? ` · 거리 +${(l - 1) * 15}%` : ''}` },
   spin: { n: '회전 베기', act: 1, lv: 3, max: 3, mp: () => 18, cd: l => 5.5 - l, d: l => `빙글 돌며 주변의 적을 모두 베요. 무기 피해의 ${130 + 30 * l}%` },
@@ -1392,9 +1392,9 @@ const RS = k => (G && G.rpg ? G.rpg[k] : 0);
 const maxHp = () => 100 + RS('vit') * 8;
 const maxMp = () => 40 + RS('int') * 6;
 const meleeMul = () => 1 + RS('str') * 0.05;
-const rangeMul = () => 1 + RS('dex') * 0.05;
-const magicMul = () => 1 + RS('int') * 0.06;
-const atkSpd = () => 1 - Math.min(0.3, RS('dex') * 0.015);
+const rangeMul = () => 1 + RS('dex') * 0.03;
+const magicMul = () => 1 + RS('int') * 0.035;
+const atkSpd = () => 1 - Math.min(0.2, RS('dex') * 0.01);
 const moveMul = () => 1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06;
 const mineMul = () => (1 + RS('str') * 0.03) * (1 + skl('miner') * 0.25);
 const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15));
@@ -1716,15 +1716,15 @@ const GEAR2 = {
   daggerObsidian: ['흑요석 단검', 'dagger', 24, [['obsidian', 4], ['goldBar', 1], ['rope', 1]], 900, [['obsidian', 2]], daggerIcon('#3a2a4a', '#9a8ad0', '#c9902a'), '유리처럼 날카로운 단검. 치명타가 잘 터져요.'],
   hammerObsidian: ['흑요석 망치', 'hammer', 54, [['obsidian', 6], ['goldBar', 3], ['wood', 2]], 1000, [['obsidian', 3]], hammerIcon('#3a2a4a', '#6a5a8a', '#1a1424'), '땅이 갈라질 만큼 무거운 한 방.'],
   spearFrost: ['서리 창', 'spear', 34, [['frostShard', 8], ['goldBar', 2], ['wood', 3]], 1000, [['frostShard', 3]], spearIcon('#7fd8f0', '#e8f8ff'), '찌르면 적이 꽁꽁 얼어붙어요.', null, 'chill'],
-  staffFrost: ['눈꽃 지팡이', 'staff', 36, [['frostShard', 6], ['crystal', 4], ['glowcap', 3]], 1000, [['frostShard', 3]], staffIcon('#9fd8f0', '#ffffff'), '눈꽃 구슬이 적을 꿰뚫고 얼려요.', '#d4f6ff', 'chill'],
-  bowGold: ['황금 활', 'bow', 36, [['goldBar', 4], ['rope', 3], ['frostShard', 2]], 1000, [['goldBar', 2]], bowIcon('#c9902a', '#ffd25c', '#fff1b0'), '황금빛 화살이 멀리 날아가요.'],
+  staffFrost: ['눈꽃 지팡이', 'staff', 28, [['frostShard', 6], ['crystal', 4], ['glowcap', 3]], 1000, [['frostShard', 3]], staffIcon('#9fd8f0', '#ffffff'), '눈꽃 구슬이 적을 꿰뚫고 얼려요.', '#d4f6ff', 'chill'],
+  bowGold: ['황금 활', 'bow', 28, [['goldBar', 4], ['rope', 3], ['frostShard', 2]], 1000, [['goldBar', 2]], bowIcon('#c9902a', '#ffd25c', '#fff1b0'), '황금빛 화살이 멀리 날아가요.'],
 };
 for (const id in GEAR2) { const [n, wt, dmg, req, dur, fix, icon, d, orb, fx] = GEAR2[id]; ITEMS[id] = { n, kind: 'sword', wt, dmg, stack: 1, d, orb, fx }; ICON[id] = icon; DUR2[id] = [dur, fix]; RAR[id] = 3; RECIPES.push(Rc(id, 1, req, 'forge', 'weapon')); }
 ITEMS.pickGold = { n: '황금 곡괭이', kind: 'pick', power: 5, tier: 3, stack: 1, d: '깊은 동굴의 벽도 빠르게 캐는 곡괭이.' }; ICON.pickGold = pickIcon('#ffd25c', '#fff1b0'); DUR2.pickGold = [1800, [['goldBar', 2]]]; RAR.pickGold = 3;
 RECIPES.push(Rc('pickGold', 1, [['goldBar', 6], ['obsidian', 2], ['frostShard', 2]], 'forge', 'tool'));
 Object.assign(UNIQ_OF, { turtle: 'swordLava', spirit: 'bowFrost' });
 ITEMS.swordLava = { n: '용암 거북의 대검', kind: 'sword', wt: 'sword', dmg: 44, stack: 1, fx: 'burn', d: '용암 거북의 등껍질을 깎아 만든 대검. 벤 자리에 불꽃이 일어요.' }; ICON.swordLava = swordIcon('#e8501f', '#ffc861', '#5a3a2e'); DUR2.swordLava = [1300, [['obsidian', 3]]]; RAR.swordLava = 3;
-ITEMS.bowFrost = { n: '서리 정령의 활', kind: 'sword', wt: 'bow', dmg: 40, stack: 1, fx: 'chill', d: '서리 정령이 남긴 활. 화살에 맞은 적이 얼어붙어요.' }; ICON.bowFrost = bowIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'); DUR2.bowFrost = [1300, [['frostShard', 3]]]; RAR.bowFrost = 3;
+ITEMS.bowFrost = { n: '서리 정령의 활', kind: 'sword', wt: 'bow', dmg: 32, stack: 1, fx: 'chill', d: '서리 정령이 남긴 활. 화살에 맞은 적이 얼어붙어요.' }; ICON.bowFrost = bowIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'); DUR2.bowFrost = [1300, [['frostShard', 3]]]; RAR.bowFrost = 3;
 ITEMS.swordDawn = { n: '새벽빛 검', kind: 'sword', wt: 'sword', dmg: 62, stack: 1, fx: 'burn', d: '용암과 서리의 핵을 함께 벼린 전설의 검. 새벽처럼 환하게 타올라요.' }; ICON.swordDawn = swordIcon('#ffe9a8', '#ffffff', '#ff8fa3'); DUR2.swordDawn = [2400, [['goldBar', 2], ['crystal', 2]]]; RAR.swordDawn = 4;
 ITEMS.pickStar = { n: '별빛 곡괭이', kind: 'pick', power: 7, tier: 3, stack: 1, d: '별빛이 깃든 전설의 곡괭이. 어떤 벽이든 순식간에 캐요.' }; ICON.pickStar = pickIcon('#ffe9a8', '#ffffff'); DUR2.pickStar = [3000, [['goldBar', 2], ['frostShard', 2]]]; RAR.pickStar = 4;
 RECIPES.push(Rc('swordDawn', 1, [['lavaCore', 1], ['frostCore', 1], ['goldBar', 8], ['crystal', 10]], 'forge', 'weapon'), Rc('pickStar', 1, [['lavaCore', 1], ['frostCore', 1], ['goldBar', 8], ['frostShard', 8]], 'forge', 'tool'));
@@ -1925,10 +1925,10 @@ let shake = 0, paused = true, started = false, soundOn = true;
 const freshStats = () => ({ wood: 0, bench: 0, torch: 0, copperOre: 0, copperBar: 0, seedsFound: 0 });
 const BOSSES = {
   slime: { n: '말랑대왕', hp: 720, home: () => ({ x: BX + .5, y: BY + .5 }), wake: 8.5, hr: .95, col: '#86d96b', spr: 'boss', scale: 1.25 },
-  queen: { n: '버섯 여왕', hp: 520, home: () => ({ x: SA.x + .5, y: SA.y - 3 }), wake: 8, hr: 1.0, col: '#b673de', spr: 'queen', scale: 1.15 },
-  golem: { n: '수정골렘', hp: 950, home: () => ({ x: SB.x + .5, y: SB.y + 4.2 }), wake: 8, hr: 1.1, col: '#b493f5', spr: 'golem', scale: 1.2 },
-  turtle: { n: '용암 거북', hp: 1600, home: () => ({ x: SL.x + .5, y: SL.y - 3.5 }), wake: 8, hr: 1.2, col: '#ff8a3d', spr: 'turtle', scale: 1.2 },
-  spirit: { n: '서리 정령', hp: 1400, home: () => ({ x: SI.x + 4, y: SI.y + .5 }), wake: 8, hr: 1.0, col: '#9fd8f0', spr: 'spirit', scale: 1.15 },
+  queen: { n: '버섯 여왕', hp: 700, home: () => ({ x: SA.x + .5, y: SA.y - 3 }), wake: 8, hr: 1.0, col: '#b673de', spr: 'queen', scale: 1.15 },
+  golem: { n: '수정골렘', hp: 1500, home: () => ({ x: SB.x + .5, y: SB.y + 4.2 }), wake: 8, hr: 1.1, col: '#b493f5', spr: 'golem', scale: 1.2 },
+  turtle: { n: '용암 거북', hp: 2300, home: () => ({ x: SL.x + .5, y: SL.y - 3.5 }), wake: 8, hr: 1.2, col: '#ff8a3d', spr: 'turtle', scale: 1.2 },
+  spirit: { n: '서리 정령', hp: 2000, home: () => ({ x: SI.x + 4, y: SI.y + .5 }), wake: 8, hr: 1.0, col: '#9fd8f0', spr: 'spirit', scale: 1.15 },
 };
 const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
 const freshBoss = k => { const h = BOSSES[k].home(); return { k, x: h.x, y: h.y, hp: BOSSES[k].hp, max: BOSSES[k].hp, st: 'sleep', t: 0, z: 0, air: 0, airMax: 1, vx: 0, vy: 0, lands: 0, hurt: 0, ph: 'walk', casts: 0, rot: 0, dx: 0, dy: 1, d: 99, poison: null, burn: null }; };
@@ -2393,7 +2393,7 @@ function swingAttack() {
     if (W.mp && (p.mp || 0) < W.mp) { toast('기력이 부족해요. 잠깐 기다리면 다시 차요', null, 'nomp'); SFX.clink(); return false; }
     if (W.mp) p.mp -= W.mp;
     const crit = Math.random() < 0.1, dmg = Math.round(w.dmg * (W.magic ? magicMul() : rangeMul()) * (crit ? 1.6 : 1) * (0.9 + Math.random() * 0.2));
-    shootP(ang, { k: W.ranged, dmg, crit, spd: W.spd, range: W.range, pierce: W.magic ? 1 : 0, col: w.orb || '#bff7ef', slot: w.slot, kb: W.magic ? 4 : 6, fx: w.fx });
+    shootP(ang, { k: W.ranged, dmg, crit, spd: W.spd, range: W.range, pierce: W.magic ? 1 : 0, col: w.orb || '#bff7ef', slot: w.slot, kb: W.kb != null ? W.kb : W.magic ? 4 : 6, fx: w.fx });
     G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; SFX.swing(); return true;
   }
   const big = W.arc > 2, dur = big ? 0.3 : W === WTYPE.dagger ? 0.14 : 0.22;
@@ -2708,25 +2708,25 @@ function bossCommon(b, dt) {
 const BOSS_AI = {
   turtle(b, dt) {
     const p = G.p, d = b.d, half = b.hp < b.max / 2; b.t -= dt;
-    if (b.ph === 'walk') { if (d > 2.4) moveEnt(b, (p.x - b.x) / d * 1.1 * dt, (p.y - b.y) / d * 1.1 * dt, 1.0); b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.casts++; if (b.casts % 3 === 0) { b.ph = 'hide'; b.t = .6; } else { b.ph = 'spit'; b.t = .55; } } }
-    else if (b.ph === 'spit') { if (b.t <= 0) { const n = half ? 5 : 3, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.28; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 5.5, vy: Math.sin(a) * 5.5, life: 3, dmg: 17, k: 'fire' }); } SFX.cast2(); b.ph = 'walk'; b.t = half ? 1.0 : 1.5; } }
+    if (b.ph === 'walk') { if (d > 2.4) moveEnt(b, (p.x - b.x) / d * 1.1 * dt, (p.y - b.y) / d * 1.1 * dt, 1.0); b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.casts++; if (b.casts % 3 === 0) { b.ph = 'hide'; b.t = .55; } else { b.ph = 'spit'; b.t = .5; } } }
+    else if (b.ph === 'spit') { if (b.t <= 0) { const n = half ? 7 : 5, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.26; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 6, vy: Math.sin(a) * 6, life: 3, dmg: 20, k: 'fire' }); } SFX.cast2(); b.ph = 'walk'; b.t = half ? 0.8 : 1.2; } }
     else if (b.ph === 'hide') { if (b.t <= 0) { b.ph = 'shell'; b.t = half ? 3.2 : 2.6; const a = Math.atan2(p.y - b.y, p.x - b.x); b.dx = Math.cos(a); b.dy = Math.sin(a); b.bounce = 0; SFX.swing(); } }
     else if (b.ph === 'shell') {
-      const sp = half ? 9 : 7.5, ox = b.x, oy = b.y, mx = b.dx * sp * dt, my = b.dy * sp * dt;
+      const sp = half ? 10.5 : 8.5, ox = b.x, oy = b.y, mx = b.dx * sp * dt, my = b.dy * sp * dt;
       if (moveEnt(b, mx, my, 1.0)) { if (Math.abs(b.x - ox) < Math.abs(mx) * .5) b.dx = -b.dx; if (Math.abs(b.y - oy) < Math.abs(my) * .5) b.dy = -b.dy; b.bounce++; shake = Math.max(shake, .3); SFX.brk(); puff(b.x, b.y, '#ff8a3d', 8, 3); }
       if (Math.random() < dt * 8) puff(b.x, b.y + .3, '#ff8a3d', 1, 1, .2);
-      if (b.t <= 0 || b.bounce >= 4) { b.ph = 'walk'; b.t = 1.3; G.hz = G.hz || []; const n = half ? 4 : 3; for (let k = 0; k < n; k++) { const hx = p.x + (Math.random() - .5) * 5, hy = p.y + (Math.random() - .5) * 5; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.05, t: 0, warn: .8, life: 5.5, dmg: 12, k: 'lava' }); } }
+      if (b.t <= 0 || b.bounce >= 5) { b.ph = 'walk'; b.t = 1.1; G.hz = G.hz || []; const n = half ? 6 : 4; for (let k = 0; k < n; k++) { const hx = p.x + (Math.random() - .5) * 5, hy = p.y + (Math.random() - .5) * 5; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.1, t: 0, warn: .8, life: 7, dmg: 15, k: 'lava' }); } }
     }
-    if (d < 1.5) hurtPlayer(b.ph === 'shell' ? 24 : 16, b.x, b.y);
+    if (d < 1.5) hurtPlayer(b.ph === 'shell' ? 28 : 18, b.x, b.y);
   },
   spirit(b, dt) {
     const p = G.p, d = b.d, half = b.hp < b.max / 2; b.t -= dt; b.anim = (b.anim || 0) + dt;
-    if (b.ph === 'walk') { const want = d > 5 ? 1 : d < 3.4 ? -1 : 0; if (want && d > 0) moveEnt(b, (p.x - b.x) / d * 1.9 * want * dt, (p.y - b.y) / d * 1.9 * want * dt, .8); if (b.t <= 0) { b.casts++; b.ph = b.casts % 3 === 0 ? 'fade' : 'ring'; b.t = b.ph === 'fade' ? .6 : .7; } }
-    else if (b.ph === 'ring') { if (b.t <= 0) { const n = 18, gap = Math.floor(Math.random() * n), off = Math.random(); for (let k = 0; k < n; k++) { if ((k - gap + n) % n < 3) continue; const a = (k + off) / n * 6.283; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 3.8, vy: Math.sin(a) * 3.8, life: 4, dmg: 14, k: 'ice', a }); } SFX.cast2(); b.rings = (b.rings || 0) + 1; if (half && b.rings % 2 === 1) b.t = .6; else { b.ph = 'walk'; b.t = half ? 1.2 : 1.8; } } }
+    if (b.ph === 'walk') { const want = d > 5 ? 1 : d < 3.4 ? -1 : 0; if (want && d > 0) moveEnt(b, (p.x - b.x) / d * 1.9 * want * dt, (p.y - b.y) / d * 1.9 * want * dt, .8); if (b.t <= 0) { b.casts++; b.ph = b.casts % (half ? 2 : 3) === 0 ? 'fade' : 'ring'; b.t = b.ph === 'fade' ? .55 : .65; } }
+    else if (b.ph === 'ring') { if (b.t <= 0) { const n = 18, gap = Math.floor(Math.random() * n), off = Math.random(); for (let k = 0; k < n; k++) { if ((k - gap + n) % n < 3) continue; const a = (k + off) / n * 6.283; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4, life: 4, dmg: 17, k: 'ice', a }); } SFX.cast2(); b.rings = (b.rings || 0) + 1; if (half && b.rings % 2 === 1) b.t = .55; else { b.ph = 'walk'; b.t = half ? 1.0 : 1.5; } } }
     else if (b.ph === 'fade') { if (b.t <= 0) { const h0 = BOSSES.spirit.home(); for (let k = 0; k < 24; k++) { const a = Math.random() * 6.283, r = 1.8 + Math.random() * 1.0, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r; if (!boxHits(x, y, .8) && Math.hypot(x - h0.x, y - h0.y) < 12) { b.x = x; b.y = y; break; } }
-      b.ph = 'nova'; b.t = 1.0; G.hz = G.hz || []; G.hz.push({ x: b.x, y: b.y, r: 3.2, t: 0, warn: .95, life: 1.1, dmg: 20, k: 'frost', slow: 2.2 }); puff(b.x, b.y - .5, '#d4f6ff', 14, 2.5); } }
-    else if (b.ph === 'nova') { if (b.t <= 0) { b.ph = 'walk'; b.t = 1.0; } }
-    if (d < 1.2 && b.ph !== 'fade') hurtPlayer(14, b.x, b.y);
+      b.ph = 'nova'; b.t = 1.0; G.hz = G.hz || []; G.hz.push({ x: b.x, y: b.y, r: 3.2, t: 0, warn: .9, life: 1.05, dmg: 26, k: 'frost', slow: 2.8 }); puff(b.x, b.y - .5, '#d4f6ff', 14, 2.5); } }
+    else if (b.ph === 'nova') { if (b.t <= 0) { b.ph = 'walk'; b.t = .9; if (half && G.enemies.length < 8) for (let k = 0; k < 2; k++) G.enemies.push(mkEnemy('frostSlime', b.x + (k ? 1.4 : -1.4), b.y + .6)); } }
+    if (d < 1.2 && b.ph !== 'fade') hurtPlayer(18, b.x, b.y);
   },
   slime(b, dt) {
     const p = G.p, d = b.d;
@@ -2743,25 +2743,25 @@ const BOSS_AI = {
   },
   queen(b, dt) {
     const p = G.p, d = b.d, half = b.hp < b.max / 2;
-    if (b.ph !== 'cast') { b.t -= dt; if (d > 1.7) { const sp = half ? 2.0 : 1.5; moveEnt(b, (p.x - b.x) / d * sp * dt, (p.y - b.y) / d * sp * dt, .8); } b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'cast'; b.t = 0.75; } }
+    if (b.ph !== 'cast') { b.t -= dt; if (d > 1.7) { const sp = half ? 2.3 : 1.7; moveEnt(b, (p.x - b.x) / d * sp * dt, (p.y - b.y) / d * sp * dt, .8); } b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'cast'; b.t = 0.75; } }
     else { b.t -= dt; if (b.t <= 0) {
-      const n = half ? 14 : 10; for (let k = 0; k < n; k++) { const a = k / n * 6.283 + b.rot; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 3.5, dmg: 9, k: 'spore' }); }
+      const n = half ? 18 : 14; for (let k = 0; k < n; k++) { const a = k / n * 6.283 + b.rot; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.6, vy: Math.sin(a) * 4.6, life: 3.5, dmg: 12, k: 'spore' }); }
       b.rot += 0.31; b.casts++; SFX.cast2();
-      if (b.casts % 2 === 0 && G.enemies.length < 9) for (let k = 0; k < 2; k++) G.enemies.push(mkEnemy('shroomy', b.x + (k ? 1.6 : -1.6), b.y + .8));
-      b.ph = 'walk'; b.t = half ? 1.6 : 2.4; } }
-    if (d < 1.3) hurtPlayer(12, b.x, b.y);
+      if (!b.dbl && b.casts % 2 === 0 && G.enemies.length < 9) for (let k = 0; k < (half ? 3 : 2); k++) G.enemies.push(mkEnemy('shroomy', b.x + (k - (half ? 1 : .5)) * 1.6, b.y + .8));
+      if (half && !b.dbl) { b.dbl = 1; b.ph = 'cast'; b.t = .45; } else { b.dbl = 0; b.ph = 'walk'; b.t = half ? 1.3 : 1.9; } } }
+    if (d < 1.3) hurtPlayer(15, b.x, b.y);
   },
   golem(b, dt) {
     const p = G.p, d = b.d, half = b.hp < b.max / 2; b.t -= dt;
-    if (b.ph === 'walk') { if (d > 2.5) moveEnt(b, (p.x - b.x) / d * 1.2 * dt, (p.y - b.y) / d * 1.2 * dt, .9); if (b.t <= 0) { b.ph = 'aim'; b.t = 0.85; } }
-    else if (b.ph === 'aim') { if (b.t > 0.3) { b.dx = (p.x - b.x) / (d || 1); b.dy = (p.y - b.y) / (d || 1); } if (b.t <= 0) { b.ph = 'dash'; b.t = 0.75; SFX.swing(); } }
+    if (b.ph === 'walk') { if (d > 2.5) moveEnt(b, (p.x - b.x) / d * 1.4 * dt, (p.y - b.y) / d * 1.4 * dt, .9); if (b.t <= 0) { b.ph = 'aim'; b.t = 0.75; } }
+    else if (b.ph === 'aim') { if (b.t > 0.3) { b.dx = (p.x - b.x) / (d || 1); b.dy = (p.y - b.y) / (d || 1); } if (b.t <= 0) { b.ph = 'dash'; b.t = 0.62; SFX.swing(); } }
     else if (b.ph === 'dash') {
-      const blocked = moveEnt(b, b.dx * 10.5 * dt, b.dy * 10.5 * dt, .9); if (Math.random() < .5) puff(b.x, b.y + .3, '#8a83ad', 1, 1, .1);
-      if (blocked) { b.ph = 'stun'; b.t = 1.5; shake = 0.45; SFX.brk(); puff(b.x + b.dx, b.y + b.dy, C.cryL, 14, 3); ftext(b.x, b.y - 2.6, '기절!', '#7ff0e6'); }
-      else if (b.t <= 0) { const n = half ? 7 : 5, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.22; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 6.5, vy: Math.sin(a) * 6.5, life: 3, dmg: 14, k: 'shard', a }); } SFX.clink(); b.ph = 'walk'; b.t = half ? 0.7 : 1.1; }
+      const blocked = moveEnt(b, b.dx * 12.5 * dt, b.dy * 12.5 * dt, .9); if (Math.random() < .5) puff(b.x, b.y + .3, '#8a83ad', 1, 1, .1);
+      if (blocked) { b.ph = 'stun'; b.t = 1.0; b.chain = 0; shake = 0.45; SFX.brk(); puff(b.x + b.dx, b.y + b.dy, C.cryL, 14, 3); ftext(b.x, b.y - 2.6, '기절!', '#7ff0e6'); }
+      else if (b.t <= 0) { const n = half ? 9 : 7, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.22; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 7, vy: Math.sin(a) * 7, life: 3, dmg: 17, k: 'shard', a }); } SFX.clink(); if (half && !b.chain) { b.chain = 1; b.ph = 'aim'; b.t = .6; } else { b.chain = 0; b.ph = 'walk'; b.t = half ? 0.5 : 0.9; } }
     }
     else if (b.ph === 'stun') { if (b.t <= 0) { b.ph = 'walk'; b.t = 0.6; } }
-    if (d < 1.4 && b.ph !== 'stun') hurtPlayer(b.ph === 'dash' ? 22 : 16, b.x, b.y);
+    if (d < 1.4 && b.ph !== 'stun') hurtPlayer(b.ph === 'dash' ? 26 : 18, b.x, b.y);
   },
 };
 function updateShots(dt) {
