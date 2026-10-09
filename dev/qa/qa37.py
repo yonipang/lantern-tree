@@ -65,7 +65,7 @@ async def main():
         # dishes and notes
         r=await ev(pg,"""()=>{const T=__T;const ids=['hotTea','hotSoup','fireStew','coolTea','coolPunch','radishSoup','fireSkewer','radishSalad','fireBeans','fireJelly','frostTea','firePie'];const ok=ids.every(id=>T.DISH[id]&&T.RECIPES.some(r=>r.out===id&&r.at==='pot'));
           const g=T.GUIDE.find(q=>q.id==='cpick');return [ok,T.DISHES.length,g.rw.filter(([id])=>id.startsWith('rn_')).map(x=>x[0]).join(','),T.bossNoteIds('turtle').join(','),T.bossNoteIds('spirit').join(',')]}""")
-        rec('요리','대비 요리 6가지 + 깊은 동굴 재료 3단계 요리 6가지', r[0] is True and r[1]==37, str(r))
+        rec('요리','대비 요리 6가지 + 깊은 동굴 재료 3단계 요리 6가지 (전체 38, v40 케이크 포함)', r[0] is True and r[1]==38, str(r))
         rec('쪽지','대비 요리 1·2단계는 「수정 곡괭이」 퀘스트 보상, 3단계는 깊은 동굴 보스', r[2]=='rn_hotTea,rn_hotSoup,rn_coolTea,rn_coolPunch' and r[3].startswith('fireStew') and r[4].startswith('radishSoup'), str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const out={};for(const rm of G.rooms.filter(q=>q.b>=3))out[rm.id]=T.roomNotes(rm).join(',');return [out,T.bossNoteIds('turtle').join(','),T.bossNoteIds('spirit').join(','),[3,4].map(b=>G.rooms.filter(q=>q.b===b).length)]}""")
         rec('쪽지','용암·얼음 숨은 방에 불꽃 열매 젤리·불꽃 꽃잎 파이 쪽지 (방이 없으면 그 지역 보스가 줌)', ('fireJelly' in (r[0].get('r30','') if r[3][0] else r[1])) and ('firePie' in (r[0].get('r40','') if r[3][1] else r[2])), str(r))

@@ -1020,6 +1020,7 @@ function buildSprites() {
   SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
   SPR.crop = {}; for (const k of ['berry', 'shroom', 'moss', 'glow', 'bean', 'fire', 'radish']) SPR.crop[k] = [0, 1, 2, 3].map(s => [0, 1, 2, 3].map(v => cropSpr(k, s, v)));
+  SPR.giant = {}; for (const k in SPR.crop) SPR.giant[k] = giantSpr(k);
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = youngSpr(OSPR[k]);
   SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
@@ -1609,7 +1610,7 @@ function afterCut(t, o) {
 function growTick(dt = 2) {
   // crops: lantern-tree blessing (time ×0.8) and water (time ×0.75) add up, but never below half the normal time
   const BR = TREE_BLESS(treeStage());
-  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null) continue; if (G.time - o.p >= d.grow) { if (o.star == null) rollStar(i, o); continue; } let k = 0; if (BR && Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) k += .25; if (o.w) k += 1 / 3; if (k) { o.p -= dt * k; clampCrop(o); } }
+  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null) continue; if (G.time - o.p >= d.grow) { if (o.star == null) rollStar(i, o); giantTry(i, o); continue; } let k = 0; if (BR && Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) k += .25; if (o.w) k += 1 / 3; if (k) { o.p -= dt * k; clampCrop(o); } }
   const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
   for (const [i, o] of G.objs) { if (o.yg && G.time >= o.yg) { delete o.yg; const x = i % W, y = (i / W) | 0; if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .2, '#9be37a', 6, 2, .3); } }
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0) - YOUNG_T) continue; const x = i % W, y = (i / W) | 0;
@@ -1773,6 +1774,7 @@ function circuitTick(dt) {
   CIRC.net = net; CIRC.pRoots = new Set(rs.keys()); CIRC.find = find;
 }
 function deviceStep(i, o, d, on, dt) {
+  if (d.dev === 'sprk' || d.dev === 'harv') { farmDevStep(i, o, d, on, dt); return; }
   const x = i % W, y = (i / W) | 0;
   if (d.dev === 'lamp') { if (o.off !== !on) { o.off = !on; lightDirty = true; } o.work = on; if (on) G.stats.litLamp = 1; return; }
   if (d.dev === 'farm') { const ready = farmStage(o) >= 3; o.work = on && ready; if (on && ready) farmHarvest(i, o, true); return; }
@@ -2573,6 +2575,9 @@ function decide() {
       if (st < 0) return { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t };
       return { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t }; }
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
+    if (d.giant) return { k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o };
+    if (o.cake) return { k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o };
+    if (it && it.cake && CAKE_TABLES.includes(o.t)) return { k: 'cakeOn', lbl: '올리기', icon: 'festCake', t, o };
     if (d.lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o };
     if (d.tchest) return o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o };
     if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
@@ -2648,6 +2653,9 @@ function perform(a) {
     case 'wear': wearItem(G.sel); actCd = 0.4; break;
     case 'recall': startRecall(a.mode); actCd = 0.4; break;
     case 'lost': pickLost(a.t, a.o); actCd = 0.3; break;
+    case 'giant': harvestGiant(a.t, a.o); actCd = 0.4; break;
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; SFX.place(); puff(a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); toast('탁자 위에 케이크를 올렸어요', 'good', 'cake'); actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { toast('가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; SFX.pick(); actCd = .4; break; }
     case 'insert': insertSeeds(); actCd = 0.4; break;
     case 'tree': openPanel('tree'); actCd = 0.3; break;
     case 'summon': summonBoss(a.boss); actCd = 0.6; break;
@@ -2796,6 +2804,10 @@ function useObj(a) {
     case 'batt': toast(`건전지 ${Math.round((o.e || 0) / BATT_MAX * 100)}% 남았어요${(o.e || 0) <= 0 ? ' · 회수해서 작업대 [수리]로 충전해요' : ''}`, null, 'batt'); break;
     case 'fuel': { let added = 0; for (const f of ['resin', 'gel', 'wood']) { while ((o.fuel || 0) + FUEL[f] <= FUEL_MAX && countItem(f) > 0) { removeItem(f, 1); o.fuel = (o.fuel || 0) + FUEL[f]; added++; } }
       toast(added ? `연료를 넣었어요 · 약 ${Math.round((o.fuel || 0) / 60)}분 동안 일할 수 있어요` : (o.fuel || 0) >= FUEL_MAX - 30 ? '연료가 가득 찼어요' : `연료가 없어요 (나무·젤·송진) · 남은 연료 약 ${Math.round((o.fuel || 0) / 60)}분`, added ? 'good' : null, 'fuel'); if (added) SFX.place(); break; }
+    case 'sprk': toast(o.work ? '물을 주는 중이에요 · 둘레 5×5 칸의 자라는 작물에 2초마다 물을 줘요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'sprk'); break;
+    case 'harv': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); SFX.pick(); toast(o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `자동 수확기에서 ${n}개를 꺼냈어요`, 'good', 'harv'); invDirty = true; break; }
+      toast(o.work ? '둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'harv'); break; }
     case 'drill': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
       if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); SFX.pick(); toast(o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); invDirty = true; break; }
       const d2 = OBJ[o.t]; toast(o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? '이 채굴기로는 못 캐는 벽이에요' : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
@@ -2978,7 +2990,7 @@ function insertSeeds() {
   const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; const from = treeStage(); removeItem('lightSeed', n); G.treeSeeds += n; lightDirty = true;
   TREEFX.grow = { t: 0, from, to: treeStage() }; shake = Math.max(shake, .15);
   SFX.seed(); puff(CX + .5, CY - 1, '#ffd25c', 30, 4, 2); G.p.hp = maxHp(); gainXp(50 * n);
-  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; setTimeout(() => { SFX.win(); openPanel('win2'); }, 1700); }
+  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); setTimeout(() => { SFX.win(); openPanel('win2'); }, 1700); }
   else if (G.treeSeeds >= 3 && !G.won) { G.won = true; setTimeout(() => { SFX.win(); openPanel('win'); }, 1700); }
   else toast(`등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/${G.treeSeeds < 3 ? 3 : 5})`, 'good');
 }
@@ -3429,7 +3441,7 @@ const KNOWN0 = ['pie', 'stew', 'fishStew'];
 const ROOM_NOTES = [['petalDango', 'eelGrill'], ['capSteak', 'jellyStew'], ['beanPorridge', 'beanStirfry'], ['beanHotpot'], ['glowSoup']];
 const BOSS_NOTES = { slime: ['catfishSoup'], golem: ['shrimpDango'] }, BOSS_REGION = { slime: 0, queen: 1, golem: 2, turtle: 3, spirit: 4 };
 const REGION_N = ['이끼 동굴', '버섯숲', '수정 동굴', '용암 동굴', '얼음 동굴'];
-function noteHint(d) { const s = d.src; if (s === 'mon') return '이끼 동굴·버섯숲 몬스터가 가끔 떨어뜨려요'; if (s === 'gather') return '풀·작물·빛버섯을 거둘 때 가끔 나와요'; if (s === 'fish') return '낚시하다 보면 가끔 걸려요'; if (s === 'bottle') return '낚시하다 병 속 쪽지로 걸려요';
+function noteHint(d) { const s = d.src; if (s === 'mon') return '이끼 동굴·버섯숲 몬스터가 가끔 떨어뜨려요'; if (s === 'gather') return '풀·작물·빛버섯을 거둘 때 가끔 나와요'; if (s === 'fish') return '낚시하다 보면 가끔 걸려요'; if (s === 'bottle') return '낚시하다 병 속 쪽지로 걸려요'; if (s === 'ending') return '다섯 등불을 모두 밝히면';
   if (s.startsWith('room:')) return `${REGION_N[+s[6]]} 숨은 방 어딘가`; if (s.startsWith('boss:')) return `${BOSSES[s.slice(5)].n}을(를) 물리치면`; if (s.startsWith('guide:')) { const q = GUIDE.find(x => x.id === s.slice(6)); return q ? `이야기 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '이야기 퀘스트 보상'; } if (s.startsWith('quest:')) { const q = QSIDE.find(x => x.id === s.slice(6)); return q ? `도전 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '도전 퀘스트 보상'; } return ''; }
 const knows = id => !DISH[id] || !!(G && G.recipes && G.recipes[id]);
 const DISH_FOOD = [[60, 60], [20, 6], [28, 10], [36, 14]];
@@ -3572,6 +3584,7 @@ Object.assign(BOSS_NOTES, { turtle: ['fireStew', 'fireSkewer', 'fireBeans'], spi
 { const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat(['hotTea', 'hotSoup', 'coolTea', 'coolPunch'].map(id => ['rn_' + id, 1])); }
 // notes the save has already earned (opened rooms, beaten bosses, claimed quests) — run on every load so later versions can add notes to old places
 function syncNotes() {
+  if (G.won2) learnRecipe('festCake', true);
   for (const r of G.rooms || []) if (r.open) for (const id of roomNotes(r)) learnRecipe(id, true);
   for (const k of BKEYS) if (beat(k)) for (const id of bossNoteIds(k)) learnRecipe(id, true);
   for (const d of DISHES) { const s = d[7]; if ((s.startsWith('quest:') || s.startsWith('guide:')) && (G.qclaim || {})[s.slice(6)]) learnRecipe(d[0], true); }
@@ -3679,6 +3692,57 @@ function bossExtraSprites() {
   SPR.turtleC = crack(SPR.turtle); SPR.turtleCW = whiten(SPR.turtleC); SPR.turtleSC = crack(SPR.turtleS); SPR.turtleSCW = whiten(SPR.turtleSC);
   SPR.spiritClone = alpha(SPR.spirit, .5); SPR.spiritCloneW = alpha(whiten(SPR.spirit), .7); }
 TIPS.push('용암 거북과 서리 정령은 체력이 3분의 2, 3분의 1로 줄 때마다 새 기술을 꺼내요. 체력 막대의 눈금을 봐요.');
+// ================= farm automation (after the crystal generator), giant crops, the festival cake =================
+const hasCgen = () => ((G.stats.made || {}).crystalGen || 0) > 0 || [...G.objs.values()].some(o => o.t === 'crystalGen');
+const HARV_CAP = 60, HARV_EVERY = 3, SPRK_EVERY = 2;
+Object.assign(ITEMS, {
+  sprinkler: { n: '스프링클러', kind: 'place', obj: 'sprinkler', d: '전기가 들어오면 둘레 5×5 칸의 자라는 작물에 물을 줘요 (물 준 작물은 25% 빨리 자라요).' },
+  harvester: { n: '자동 수확기', kind: 'place', obj: 'harvester', d: '전기가 들어오면 둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요 (구리 낫 보너스는 없어요). 상자가 없거나 차면 안에 모아 둬요.' },
+});
+Object.assign(OBJ, {
+  sprinkler: { n: '스프링클러', solid: 1, item: 'sprinkler', dev: 'sprk', draw: .3, idle: .02 },
+  harvester: { n: '자동 수확기', solid: 1, item: 'harvester', dev: 'harv', draw: .4, idle: .02 },
+});
+Object.assign(OSPR, {
+  sprinkler: [16, 18, A => { A.e(8, 16.5, 5, 1.4, '#6f6a86'); A.r(5, 12, 6, 4, '#8e89a3'); A.r(5, 12, 6, 1, '#bab5cb'); A.r(7, 5, 2, 7, C.copper); A.r(7, 5, 1, 7, C.copperL); A.e(8, 4.5, 3.6, 1.8, C.copperD); A.e(8, 4, 3, 1.2, C.copperL); for (const x of [4, 8, 12]) A.p(x, 2, '#8fd0f0'); A.p(6, 1, '#bfe6ff'); A.p(10, 1, '#bfe6ff'); A.r(6, 14, 4, 1, '#3f7fb5'); }],
+  harvester: [16, 20, A => { A.r(2, 8, 12, 11, C.ironD); A.r(3, 9, 10, 9, C.iron); A.r(3, 9, 10, 1, C.ironL); A.r(5, 11, 6, 4, '#2a2238'); A.r(6, 12, 4, 2, '#7fe0b5'); A.line(2, 8, 0, 4, C.woodD); A.line(14, 8, 16, 4, C.woodD); A.e(1, 4, 2, 1.2, C.cryL); A.e(15, 4, 2, 1.2, C.cryL); A.r(4, 18, 8, 1, '#3a3270'); A.p(7, 5, C.cry); A.r(6, 5, 4, 3, C.cry); A.p(7, 5, '#ffffff'); }],
+});
+Object.assign(USE, { sprinkler: 'sprk', harvester: 'harv' }); Object.assign(USE_LBL, { sprk: '살펴보기', harv: '꺼내기' });
+RECIPES.push(Object.assign(Rc('sprinkler', 1, [['ironBar', 4], ['copperBar', 2], ['gWater', 2]], 'forge', 'farm'), { need: hasCgen }), Object.assign(Rc('harvester', 1, [['ironBar', 6], ['crystal', 4], ['wire', 4]], 'forge', 'farm'), { need: hasCgen }));
+// what one ripe crop gives (star and mushroom-fertilizer rules apply, the sickle bonus does not); also counts it for the quests
+function cropYield(i, o) { const d = OBJ[o.t]; if (o.star == null) rollStar(i, o); const out = [];
+  for (const [id, a, b, ch] of d.yield.map(([id, a, b, ch], k) => [!k && o.star && STAR_OF[id] ? STAR_OF[id] : id, a, b, id === 'glowcap' && o.f === 2 ? .6 : ch])) if (Math.random() < ch) { const c = rint(a, b); if (c > 0) out.push([id, c]); }
+  const S = G.stats; S.cropH = (S.cropH || 0) + 1; if (o.t === 'cropBerry') S.berryH = (S.berryH || 0) + 1; if (o.w) S.wetH = (S.wetH || 0) + 1; if (o.star) S.starH = (S.starH || 0) + 1; return out; }
+function devStore(i, o, got) { const x = i % W, y = (i / W) | 0; for (const [id, c] of got) { let left = c; for (const [dx, dy] of D4) { if (!left) break; const ch = inB(x + dx, y + dy) && G.objs.get(idx(x + dx, y + dy)); if (ch && ch.t === 'chest' && ch.items) left = moveInto(ch.items, { id, c: left }); }
+    if (left) { o.store = o.store || []; const n = o.store.reduce((a, s2) => a + s2.c, 0), add = Math.min(left, HARV_CAP - n); if (add > 0) { const s2 = o.store.find(z => z.id === id); if (s2) s2.c += add; else o.store.push({ id, c: add }); } } } }
+function farmDevStep(i, o, d, on, dt) { const x = i % W, y = (i / W) | 0; o.work = on; if (!on) return; o.prog = (o.prog || 0) + dt;
+  if (d.dev === 'sprk') { if (o.prog < SPRK_EVERY) return; o.prog = 0; let n = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const c = inB(x + dx, y + dy) && G.objs.get(idx(x + dx, y + dy)); if (c && OBJ[c.t] && OBJ[c.t].crop && !c.w && cropStage(c) < 3) { c.w = 1; if (c.p0 == null) c.p0 = c.p; n++; } }
+    if (n && Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) < 14) for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283; G.parts.push({ x: x + .5, y: y + .2, z: 1, vx: Math.cos(a) * 3, vy: Math.sin(a) * 2, vz: 1.5, life: .6, max: .6, col: '#8fd0ff', sz: 1 }); } return; }
+  if (o.prog < HARV_EVERY) return; o.prog = 0; const n0 = (o.store || []).reduce((a, s2) => a + s2.c, 0); if (n0 >= HARV_CAP) { o.why = 'full'; return; } o.why = '';
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const j = inB(x + dx, y + dy) ? idx(x + dx, y + dy) : -1, c = j >= 0 && G.objs.get(j); if (!c || !OBJ[c.t] || !OBJ[c.t].crop || cropStage(c) < 3) continue;
+    G.objs.delete(j); devStore(i, o, cropYield(j, c)); if (Math.hypot(x + dx + .5 - G.p.x, y + dy + .5 - G.p.y) < 14) puff(x + dx + .5, y + dy + .5, '#9be37a', 5, 2); G.stats.autoH = (G.stats.autoH || 0) + 1; } }
+// giant crops: four of the same crop in a 2×2 square on their own soil, all grown → 3% chance to merge into one giant (6× harvest, 3 seeds)
+const GIANT_CH = .03;
+OBJ.giantCrop = { n: '거대 작물', sz: [2, 2], solid: 1, giant: 1 };
+function giantTry(i, o) { if (o.gt || !beat('golem')) return; const x = i % W, y = (i / W) | 0, js = [i, idx(x + 1, y), idx(x, y + 1), idx(x + 1, y + 1)];
+  if (!inB(x + 1, y + 1)) return; const cs = js.map(j => G.objs.get(j)); if (cs.some(c => !c || c.t !== o.t || cropStage(c) < 3 || c.gt || c.star)) return;
+  if (js.some(j => CROP_SOIL[o.t] !== G.floor[j])) return; for (const c of cs) c.gt = 1; if (Math.random() >= GIANT_CH) return;
+  for (const j of js) G.objs.delete(j); const g = { t: 'giantCrop', c: o.t }; G.objs.set(i, g); setParts(i, g); G.stats.giants = (G.stats.giants || 0) + 1;
+  if (Math.hypot(x + 1 - G.p.x, y + 1 - G.p.y) < 16) { puff(x + 1, y + 1, '#ffe9a8', 26, 3.5, .6); SFX.win(); toast(`${josa('거대 ' + OBJ[o.t].n, '이', '가')} 자랐어요!`, 'good', 'giant'); } lightDirty = true; }
+function harvestGiant(t, o) { const base = OBJ[o.c], [id, a, b] = base.yield[0], seed = base.yield[1] && base.yield[1][0]; delObj(idx(t.x, t.y)); spawnDrop(id, rint(a * 6, b * 6), t.x + 1, t.y + 1); if (seed) spawnDrop(seed, 3, t.x + 1, t.y + 1);
+  const S = G.stats; S.cropH = (S.cropH || 0) + 1; S.giantH = (S.giantH || 0) + 1; SFX.win(); puff(t.x + 1, t.y + 1, '#9be37a', 20, 3.5); gainXp(20); }
+const giantSpr = kind => { const src = SPR.crop[kind][3][0]; return mk(32, 32, A => { A.g.imageSmoothingEnabled = false; A.g.drawImage(src, 0, 0, 32, 32); }, null); };
+QSIDE.push({ id: 's_auto', t: () => `자동 수확기로 작물 20개 거두기 (${Math.min(20, G.stats.autoH || 0)}/20)`, h: '수정 발전기를 만든 뒤 구리 제작대에서 자동 수확기와 스프링클러를 만들어요. 전선으로 전기를 이어 주세요.', done: () => (G.stats.autoH || 0) >= 20, rw: [['crystal', 10], ['goldBar', 2]], xp: 80 },
+  { id: 's_giant', t: '거대 작물 거두기', h: '같은 작물 네 개를 2×2로 맞는 흙에 심어 두면, 다 자랐을 때 아주 가끔 하나로 합쳐져요.', done: () => (G.stats.giantH || 0) >= 1, rw: [['fertCry', 6], ['cbeanSeed', 4]], xp: 100 });
+// festival cake: the true ending's reward; eat it, or set it on a table as decoration
+DISHES.push(['festCake', '등불 축제 케이크', null, 0, 'cake', ['#fff1d6', '#ff7aa2'], [['berry', 5], ['petalR', 1], ['petalB', 1], ['petalY', 1], ['petalW', 1], ['petalK', 1], ['glowcap', 2]], 'ending']);
+DISH.festCake = { id: 'festCake', n: '등불 축제 케이크', ef: null, tier: 0, shape: 'cake', req: DISHES[DISHES.length - 1][6], src: 'ending' };
+ITEMS.festCake = { n: '등불 축제 케이크', kind: 'food', food: 100, heal: 40, cake: 1, d: '다섯 등불을 밝힌 날의 축하 케이크. 먹으면 배가 가득 차요. 탁자 앞에서 들고 누르면 탁자 위에 올려 장식해요.' };
+ICON.festCake = A => { A.e(8, 12.6, 6.8, 2.4, '#e8e0f0'); A.r(3, 7, 10, 5, '#fff1d6'); A.e(8, 7, 5, 1.8, '#ffffff'); A.r(3, 9, 10, 1, '#ff9ab0'); A.e(8, 12, 5, 1.6, '#f2d38a'); for (const [x, c] of [[4, '#ff6b81'], [6, '#6fa8ff'], [8, '#ffd25c'], [10, '#f4f0f8'], [12, '#4a3f5c']]) A.p(x, 6, c); A.r(7, 2, 2, 4, '#ffd27a'); A.p(8, 1, '#fff1c0'); };
+ITEMS.rn_festCake = { n: '레시피 쪽지 · 등불 축제 케이크', note: 'festCake', d: '주우면 바로 요리솥 레시피를 알게 돼요.' }; ICON.rn_festCake = noteIcon;
+{ const r = Rc('festCake', 1, DISH.festCake.req, 'pot', 'food'); r.dish = 'festCake'; RECIPES.push(r); }
+const CAKE_TABLES = ['table', 'shroomTable', 'cryTable', 'longTable'];
+TIPS.push('수정 발전기를 만들면 스프링클러와 자동 수확기로 밭을 자동으로 돌볼 수 있어요.', '같은 작물 네 개를 2×2로 맞는 흙에 심으면 가끔 거대 작물이 자라요.');
 TIPS.push('버프 요리는 세 가지까지 함께 효과가 있어요. 같은 효과는 가장 좋은 것 하나만 적용돼요.', '레시피 쪽지는 몬스터·채집·낚시·숨은 방·보스에서 찾을 수 있어요.', '별 작물을 넣어 만든 요리는 효과가 1.5배 오래가요.');
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
@@ -4021,6 +4085,7 @@ function drawEntity(it, t) {
     let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const fpD = d.sz ? fpOf(o) : null, wx = it.x + (fpD ? fpD[0] / 2 : .5), wy = it.y + (fpD ? fpD[1] : 1) - 1 / 16; let flipX = !!o.flip;
     if (fpD && o.rot && d.rotV && SPR.obj[o.t + 'V']) img = SPR.obj[o.t + 'V']; if (o.t === 'treeFarm') img = SPR.obj['treeFarm' + (farmStage(o) || '')] || img; if (d.dir4 && o.dir) { img = SPR.obj[o.t + (o.dir === 2 ? 'U' : 'S')] || img; flipX = o.dir === 3; }
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))][(o.w ? 1 : 0) + (o.f ? 2 : 0)];
+    if (o.t === 'giantCrop') img = (OBJ[o.c] && SPR.giant[OBJ[o.c].crop]) || SPR.crop.berry[3][0];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
     if (o.t === 'tchest' && o.open) img = SPR.obj.tchestOpen;
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
@@ -4036,6 +4101,8 @@ function drawEntity(it, t) {
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }
     if (o.t === 'generator' && o.lit && CIRC.pRoots.size) { const fl = (t * 8) % 1; ctx.fillStyle = fl < .5 ? '#ff8a3d' : '#ffc861'; ctx.fillRect(Math.round(wx * T - camX) - 3, Math.round((it.y + 1) * T - camY) - 8, 6, 3); }
     if ((o.t === 'timer' || o.t === 'crystalGen') && o.lit) { ctx.fillStyle = '#7fe0b5'; ctx.fillRect(Math.round(wx * T - camX) - 1, Math.round((it.y + 1) * T - camY) - (o.t === 'timer' ? 14 : 6), 2, 2); }
+    if (o.cake) drawImg(SPR.item.festCake, wx, wy - img.height / 16 * .55, { sx: .85, sy: .85 });
+    if (d.dev === 'harv' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (d.dev === 'drill' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
@@ -4262,7 +4329,7 @@ function renderPanel() {
       h += `<div class="skrow ${lock ? 'lock' : ''}"><img class="px" src="${iconURL('sk_' + id)}" alt=""><div><h4>${S.n}<small>${S.act ? '사용' : '항상 적용'} · ${l}/${S.max}</small></h4><p>${S.d(L1)}${S.act ? ` · 기력 ${S.mp(L1)} · ${S.cd(L1).toFixed(1)}초` : ''}</p>${l && l < S.max ? `<p class="nx">다음 단계: ${S.d(l + 1)}</p>` : ''}${lock ? `<p>Lv.${S.lv}부터 배울 수 있어요</p>` : ''}${slots}</div><button type="button" class="btn mk" data-a="skUp" data-i="${id}" ${can ? '' : 'disabled'}>${l ? (l >= S.max ? '최고' : '올리기') : '배우기'}</button></div>`; }
     h += `</div>`;
   } else if (k === 'win2') {
-    h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">다섯 등불이 모두 밝아졌어요!</h2><p class="prose">용암과 얼음 깊은 곳까지 빛이 닿았어요. 땅속 세상 전체가 등불나무의 품 안에서 반짝여요. 끝까지 함께해 줘서 고마워요!</p><p class="prose" style="color:var(--muted)">전설 장비를 모으고, 남은 도전 퀘스트를 깨고, 나만의 정원을 마음껏 꾸며 보세요.</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 모험하기</button></div>`;
+    h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">다섯 등불이 모두 밝아졌어요!</h2><p class="prose">용암과 얼음 깊은 곳까지 빛이 닿았어요. 땅속 세상 전체가 등불나무의 품 안에서 반짝여요. 끝까지 함께해 줘서 고마워요!</p><p class="prose" style="color:var(--muted)">전설 장비를 모으고, 남은 도전 퀘스트를 깨고, 나만의 정원을 마음껏 꾸며 보세요.</p><p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 모험하기</button></div>`;
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요.</p><p class="prose" style="color:var(--amber)">그런데… 나무 꼭대기에 아직 불 꺼진 등불이 두 개 남아 있어요. 수정 곡괭이를 만들어 남쪽 용암 동굴과 서쪽 얼음 동굴로 떠나 보세요!</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
