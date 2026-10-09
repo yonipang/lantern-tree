@@ -10,8 +10,9 @@
 | `dev/build_web.py` | 원본 → 배포용 `index.html`·`sw.js`·`manifest.webmanifest`(저장소 맨 위) |
 | `dev/qa/` | 회귀 테스트 (Playwright). `run_all.sh`로 한 번에 실행 |
 | `dev/old/` | 옛 버전(v1~v3). 예전 세이브를 불러오는 테스트에 써요 |
-| `dev/index.hdwip.html` | 중단한 픽셀 밀도(HD) 작업본. 요청이 있을 때만 이어서 해요 |
 | `dev/character-parts/` | 캐릭터 부위 그리기 템플릿 |
+
+> 픽셀 밀도(HD) 작업은 2026-10-09에 폐기했어요. 16px 칸 밀도를 유지해요. 작업본 `dev/index.hdwip.html`은 지웠고, 필요하면 깃 기록에서 꺼낼 수 있어요.
 
 ## 작업 순서
 
