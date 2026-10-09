@@ -57,7 +57,7 @@ async def main():
           for(let i=0;i<G.inv.length;i++)G.inv[i]=null;T.addItem('pickCopper',1,false);G.guide=0;T.checkGuide();const a=T.GUIDE[G.guide].id;T.addItem('pickCrystal',1,false);T.checkGuide();const b2=T.GUIDE[G.guide].id;return [a,b2,G.bossDead.turtle,G.bossDead.spirit]}""")
         rec('이야기','3개 심은 뒤 2막 (두 보스를 이미 잡았으면 씨앗 모으기로 건너뜀)', r[0]=='seeds2' and r[1]=='seeds2', str(r))
         r=await ev(pg,"()=>{const T=__T,G=T.G;T.addItem('lightSeed',2);T.checkGuide();const g=T.GUIDE[G.guide].id;T.insertSeeds();return [g,G.treeSeeds,G.won2]}")
-        await pg.wait_for_timeout(900)
+        await pg.wait_for_timeout(2000)
         r2=await ev(pg,"()=>document.querySelector('#sheet h2,#sheet .sh-body h2')?.textContent||''")
         rec('이야기','다섯 번째 씨앗 → 진 엔딩 창', r[1]==5 and r[2] is True and '다섯 등불' in r2, str(r)+r2)
         await pg.screenshot(path=SP+'qa24_win2.png'); await ev(pg,"()=>__T.closePanel()")

@@ -752,20 +752,81 @@ function bushSpr(full) {
   return mk(16, 16, A => { A.e(8, 10, 6.6, 4.8, C.leafD); A.e(6, 8.6, 3.6, 3, C.leaf); A.e(10.4, 8.2, 3.6, 3, C.leaf); A.e(5, 7.4, 1.4, 1, C.leafL); A.e(10, 6.8, 1.4, 1, C.leafL);
     if (full) for (const [x, y] of [[4, 10], [8, 8], [11, 11], [7, 12], [12, 8]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } });
 }
-function treeSpr() {
-  return mk(48, 60, A => {
-    A.poly([[9, 59], [17, 47], [21, 59]], C.woodD); A.poly([[27, 59], [31, 47], [39, 59]], C.woodD); A.poly([[14, 59], [20, 52], [22, 59]], C.wood);
-    A.r(18, 28, 12, 31, C.wood); A.r(18, 28, 3, 31, C.woodL); A.r(27, 28, 3, 31, C.woodD);
-    A.e(24, 51, 3.4, 5.5, '#5e3519'); A.r(21, 51, 7, 6, '#5e3519'); A.e(24, 51, 2.4, 4.5, '#7a4b2a'); A.r(22, 51, 5, 5, '#7a4b2a'); A.p(26, 53, C.amber);
-    A.p(21, 38, C.woodD); A.p(22, 39, C.woodD); A.p(26, 33, C.woodD);
-    A.e(24, 22, 22, 13.5, '#2c7454'); A.e(12, 25, 10, 8, '#38896a'); A.e(36, 25, 10, 8, '#38896a');
-    A.e(24, 16, 16, 10, '#46a07a'); A.e(17, 10, 9, 6, '#5cb98c'); A.e(31, 11, 8, 5.5, '#5cb98c'); A.e(24, 7, 7, 4, '#6fca9a');
-    A.e(16, 7.5, 3.6, 1.7, '#9ee3bb'); A.e(30, 8.5, 2.6, 1.3, '#9ee3bb'); A.e(9, 21, 2.4, 1.2, '#6fca9a'); A.e(39, 21, 2.4, 1.2, '#6fca9a');
-    A.e(24, 33, 17, 2.6, '#22593f');
-    for (const [x, y] of [[8, 28], [13, 14], [35, 15], [40, 27], [22, 4], [28, 24]]) { A.p(x, y, '#ffe9a8'); }
+// ---- lantern tree: six looks, one per planted light seed. The look follows G.treeSeeds only, so old saves need nothing new ----
+const TREE_STAGE = ['잠든 나무', '새순', '잎이 차오름', '첫 꽃', '빛 열매', '완성'];
+const TREE_BLESS = s => s >= 5 ? 18 : s >= 3 ? 12 : 0; // crops within this many tiles grow 20% faster
+const TREE_SPREAD = [0, 0, 3.5, 5.5, 7.5, 9.5]; // moss and little flowers creep over the bare ground around the roots
+// leaf palettes: dark, mid, light, lighter, shine, underside
+const TREE_PAL = [
+  ['#56605a', '#68736b', '#7a857c', '#8c968d', '#a4ada4', '#454e48'],
+  ['#3f7a4c', '#5ea35a', '#8fd66a', '#b8f08a', '#e4ffc4', '#2f5e3a'],
+  ['#2c7454', '#38896a', '#46a07a', '#5cb98c', '#9ee3bb', '#22593f'],
+  ['#235f45', '#2c7552', '#3a8c62', '#4fa676', '#86d4a4', '#1a4a35'],
+  ['#1d5740', '#276c4d', '#33845c', '#46a06f', '#7cc99a', '#163f2e'],
+  ['#164a35', '#1e6044', '#287752', '#349064', '#56b47f', '#0f3626'],
+];
+const TREE_BARK = [['#7a7078', '#958b93', '#564d58'], ['#8c6a52', '#a8856a', '#5e4436'], [C.wood, C.woodL, C.woodD], [C.wood, C.woodL, C.woodD], ['#a86c3a', '#cf9860', '#74462a'], ['#a46838', '#cd955c', '#6e4127']];
+// w,h: sprite size · cx/tw/top: trunk · br: branches [x0,y0,x1,y1,thick] · bl: leaf blobs back→front [cx,cy,rx,ry] · lan: seed lanterns (top of string) · small: extra lanterns · fruit: light fruits
+const TREE_SPEC = [
+  { w: 48, h: 60, cx: 24, tw: 10, top: 24, br: [[23, 32, 10, 17, 2], [10, 17, 5, 13, 1], [14, 22, 7, 23, 1], [25, 30, 38, 15, 2], [38, 15, 43, 11, 1], [34, 21, 41, 22, 1], [24, 27, 23, 8, 2], [23, 12, 18, 6, 1], [23, 10, 28, 5, 1]],
+    tuft: [[5, 12], [43, 10], [18, 5], [28, 4], [41, 21]], lan: [[11, 17], [37, 16], [8, 23]] },
+  { w: 48, h: 60, cx: 24, tw: 10, top: 24, br: [[23, 32, 10, 17, 2], [10, 17, 5, 13, 1], [14, 22, 7, 23, 1], [25, 30, 38, 15, 2], [38, 15, 43, 11, 1], [34, 21, 41, 22, 1], [24, 27, 23, 8, 2], [23, 12, 18, 6, 1], [23, 10, 28, 5, 1]],
+    sprout: [[5, 12], [43, 10], [18, 5], [28, 4], [41, 21], [7, 22], [23, 7], [31, 22], [15, 19], [33, 14], [22, 15]], lan: [[11, 17], [37, 16], [8, 23]] },
+  { w: 48, h: 60, cx: 24, tw: 12, top: 28, br: [], bl: [[12, 25, 10, 8], [36, 25, 10, 8], [24, 18, 21, 14]], lan: [[9, 31], [24, 34], [39, 31]], base: 1 },
+  { w: 60, h: 70, cx: 30, tw: 12, top: 34, br: [[30, 42, 14, 34, 2], [30, 40, 46, 34, 2]], bl: [[13, 31, 11, 9], [47, 31, 11, 9], [30, 24, 26, 17], [30, 13, 15, 8]], lan: [[11, 37], [30, 42], [49, 37], [19, 26], [41, 26]], flowers: 16, base: 2 },
+  { w: 68, h: 76, cx: 34, tw: 15, top: 40, br: [[34, 50, 9, 40, 3], [9, 40, 4, 37, 2], [34, 48, 59, 40, 3], [59, 40, 64, 37, 2]], bl: [[12, 36, 12, 10], [56, 36, 12, 10], [34, 28, 30, 19], [34, 15, 18, 10]], lan: [[12, 43], [34, 48], [56, 43], [22, 32], [46, 32]], flowers: 8, fruit: [[16, 30], [29, 22], [41, 24], [52, 30], [34, 37], [23, 39], [46, 40]], base: 3 },
+  { w: 80, h: 84, cx: 40, tw: 17, top: 46, br: [[40, 58, 9, 46, 3], [9, 46, 3, 42, 2], [40, 56, 71, 46, 3], [71, 46, 77, 42, 2]], bl: [[11, 42, 12, 10], [69, 42, 12, 10], [22, 30, 15, 13], [58, 30, 15, 13], [40, 31, 33, 21], [40, 16, 22, 12]], lan: [[13, 49], [40, 54], [67, 49], [25, 40], [55, 40]],
+    small: [[5, 38], [75, 38], [16, 27], [64, 27], [31, 18], [49, 18], [40, 8]], flowers: 6, fruit: [[20, 34], [33, 25], [47, 25], [60, 34], [40, 42]], base: 4, rim: 1 },
+];
+function leafBlob(A, R, cx, cy, rx, ry, P) {
+  const n = Math.max(6, Math.round((rx + ry) / 2.6));
+  A.e(cx, cy, rx * .86, ry * .84, P[0]);
+  for (let k = 0; k < n; k++) { const a = k / n * 6.283 + R() * .35; A.e(cx + Math.cos(a) * rx * .7, cy + Math.sin(a) * ry * .68, rx * .3 + R() * 1.1, ry * .33 + R() * .9, P[0]); }
+  A.e(cx, cy + ry * .62, rx * .66, ry * .26, P[5]);
+  A.e(cx, cy - ry * .14, rx * .78, ry * .62, P[1]);
+  for (let k = 0; k < n; k++) { const a = Math.PI * (1.05 + .9 * (k + .5) / n); A.e(cx + Math.cos(a) * rx * .6, cy - ry * .16 + Math.sin(a) * ry * .54, rx * .22 + R() * .9, ry * .25 + R() * .7, P[1]); }
+  A.e(cx - rx * .16, cy - ry * .36, rx * .5, ry * .36, P[2]); A.e(cx + rx * .3, cy - ry * .28, rx * .28, ry * .24, P[2]);
+  A.e(cx - rx * .3, cy - ry * .54, rx * .26, ry * .19, P[3]); A.e(cx + rx * .12, cy - ry * .6, rx * .2, ry * .14, P[3]);
+  A.e(cx - rx * .38, cy - ry * .62, Math.max(1.3, rx * .1), Math.max(.8, ry * .06), P[4]); A.p(cx + rx * .1, cy - ry * .7, P[4]);
+  for (let k = 0; k < rx * ry / 7; k++) { const a = R() * 6.283, d = Math.sqrt(R()) * .78, x = Math.round(cx + Math.cos(a) * rx * d), y = Math.round(cy + Math.sin(a) * ry * d), col = y < cy - ry * .25 ? P[1] : P[0]; A.p(x, y, col); A.p(x + 1, y - 1, col); }
+}
+function treeSprs(s) {
+  const S = TREE_SPEC[s], P = TREE_PAL[s], B = TREE_BARK[s], R = rng(4021 + s * 97), hl = (S.cx - S.tw / 2) | 0, hr = hl + S.tw;
+  const trunk = mk(S.w, S.h, A => {
+    const by = S.h - 1;
+    A.poly([[hl - 6, by], [hl + 1, by - 12], [hl + 3, by]], B[2]); A.poly([[hr + 6, by], [hr - 1, by - 12], [hr - 3, by]], B[2]); A.poly([[hl - 1, by], [hl + 3, by - 7], [hl + 5, by]], B[0]);
+    if (s >= 4) { A.poly([[hl - 10, by], [hl - 1, by - 8], [hl, by]], B[2]); A.poly([[hr + 10, by], [hr + 1, by - 8], [hr, by]], B[2]); }
+    for (const [x0, y0, x1, y1, t] of S.br) { A.line(x0, y0, x1, y1, B[2], t + 1); A.line(x0, y0 - 1, x1, y1 - 1, B[0], t); }
+    A.r(hl, S.top, S.tw, by - S.top, B[0]); A.r(hl, S.top, 3, by - S.top, B[1]); A.r(hr - 3, S.top, 3, by - S.top, B[2]);
+    for (let k = 0; k < S.tw / 3; k++) { const x = hl + 4 + ((R() * (S.tw - 7)) | 0), y0 = S.top + 3 + ((R() * (by - S.top - 18)) | 0); A.line(x, y0, x, y0 + 4 + ((R() * 6) | 0), B[2]); }
+    const hx = S.cx, hy = by - 8, hw = S.tw * .28; A.e(hx, hy, hw + 1, 5.5, '#5e3519'); A.r(hx - hw - 1, hy, hw * 2 + 2, 7, '#5e3519'); A.e(hx, hy, hw, 4.5, '#7a4b2a'); A.r(hx - hw, hy, hw * 2, 6, '#7a4b2a'); A.p(hx + 2, hy + 2, s ? C.amber : '#8a7a70');
+    if (S.base) { const mo = ['#5ea366', '#7cc271', '#9be37a'];
+      for (let k = 0; k < 4 + S.base * 3; k++) { const left = k % 2, x = left ? hl - 2 - R() * (5 + S.base * 2) : hr + 2 + R() * (5 + S.base * 2), y = by - R() * 3; A.e(x, y, 2 + R() * 1.5, 1, mo[(R() * 2) | 0]); A.p(x, y - 1, mo[2]); }
+      const fc = ['#ff8fa3', '#fff1d6', '#ffd25c', '#c2dcff']; for (let k = 0; k < S.base * 2 + 1; k++) { const x = k % 2 ? hl - 3 - R() * (4 + S.base * 2) : hr + 3 + R() * (4 + S.base * 2), y = by - 1 - R() * 2; A.p(x, y, fc[k % 4]); A.p(x, y - 1, '#5ea366'); } }
   });
+  const canopy = mk(S.w, S.h, A => {
+    for (const [x, y] of S.tuft || []) { A.e(x, y, 2, 1.2, P[0]); A.p(x - 1, y - 1, P[1]); }
+    for (const [x, y] of S.sprout || []) { A.e(x - 1, y, 1.6, 1, P[1]); A.e(x + 1.2, y - 1, 1.6, 1, P[2]); A.p(x, y - 2, P[3]); A.p(x + 1, y - 2, P[4]); }
+    for (const [x, y, rx, ry] of S.bl || []) leafBlob(A, R, x, y, rx, ry, P);
+    const solid = (x, y) => x >= 0 && y >= 0 && x < S.w && y < S.h && A.g.getImageData(x, y, 1, 1).data[3] > 0;
+    for (let k = 0, n = 0; n < (S.flowers || 0) && k < 400; k++) { const [bx, by2, rx, ry] = S.bl[(R() * S.bl.length) | 0], a = R() * 6.283, d = Math.sqrt(R()) * .8, x = Math.round(bx + Math.cos(a) * rx * d), y = Math.round(by2 + Math.sin(a) * ry * d);
+      if (y > by2 + ry * .35 || !solid(x - 1, y) || !solid(x + 1, y) || !solid(x, y - 1) || !solid(x, y + 1)) continue; n++;
+      const pk = R() < .3 ? '#fff1f6' : '#ffb3c8'; A.p(x - 1, y, pk); A.p(x + 1, y, pk); A.p(x, y - 1, pk); A.p(x, y + 1, pk); A.p(x, y, '#ffe27a'); }
+    for (const [x, y] of S.fruit || []) { A.p(x, y - 2, P[5]); A.e(x + .5, y + .5, 1.7, 1.7, '#ffc861'); A.p(x, y, '#fff3c4'); A.p(x + 1, y + 1, '#e8a23f'); }
+    if (S.rim) for (let x = 2; x < S.w - 2; x++) { if (hash2(x, s, 77) > .12) continue; let y = 0; while (y < S.h && !solid(x, y)) y++; if (y >= S.h - 30) continue; A.p(x, y, '#ffd98a'); if (solid(x + 1, y)) A.p(x + 1, y, '#f2e3a8'); if (solid(x, y + 1)) A.p(x, y + 1, P[3]); }
+  });
+  // canopy bounds (for see-through) from the drawn pixels
+  const d = canopy.getContext('2d').getImageData(0, 0, S.w, S.h).data; let x0 = S.w, x1 = 0, y0 = S.h, y1 = 0;
+  for (let y = 0; y < S.h; y++) for (let x = 0; x < S.w; x++) if (d[(y * S.w + x) * 4 + 3]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return { s, w: S.w, h: S.h, trunk, canopy, lan: S.lan, small: S.small || [], fruit: S.fruit || [], box: { x0, x1, y0, y1 } };
 }
 const lanternSpr = on => mk(9, 11, A => { A.r(4, 0, 1, 3, C.woodD); A.r(2, 3, 5, 1, C.woodD); A.r(2, 4, 5, 5, on ? '#ffcf6b' : '#5a4a52'); A.r(3, 5, 3, 3, on ? '#fff3c4' : '#6e5c66'); A.r(2, 9, 5, 1, C.woodD); });
+const lanternSmallSpr = () => mk(5, 8, A => { A.r(2, 0, 1, 2, C.woodD); A.r(1, 2, 3, 1, C.woodD); A.r(1, 3, 3, 3, '#ffcf6b'); A.p(2, 4, '#fff3c4'); A.r(1, 6, 3, 1, C.woodD); });
+function spreadSprs() {
+  const mo = ['#4a8a50', '#62ad62', '#7cc271', '#9be37a'];
+  SPR.tmoss = [0, 1, 2].map(v => mk(10, 6, A => { const R = rng(311 + v); for (let k = 0; k < 5 + v; k++) { const x = 1 + R() * 8, y = 2 + R() * 3; A.p(x, y, mo[(R() * 2) | 0]); A.p(x, y - 1, mo[2]); if (R() < .4) A.p(x + 1, y - 2, mo[3]); } }, null));
+  SPR.tflower = {}; for (const c of ['R', 'B', 'Y', 'W']) { const F = FLOWERS[c]; SPR.tflower[c] = mk(5, 6, A => { A.p(2, 5, '#4a8a50'); A.p(2, 4, '#62ad62'); A.p(1, 2, F[2]); A.p(3, 2, F[2]); A.p(2, 1, F[2]); A.p(2, 3, F[4]); A.p(2, 2, c === 'Y' ? '#fff1b0' : '#ffe27a'); }, null); }
+}
 
 // tiles
 const FPAL = { 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
@@ -915,7 +976,7 @@ function buildSprites() {
     if (st === 1) { A.e(6, 11.5, 1.6, 1, '#62ad62'); A.e(10, 11.8, 1.6, 1, '#62ad62'); A.p(6, 11, '#9be37a'); return; }
     if (st === 2) { A.e(8, 11, 4.2, 2.4, '#468a4f'); A.e(7, 10.4, 2.6, 1.4, '#62ad62'); A.p(6, 10, '#9be37a'); A.p(10, 11, '#9be37a'); return; }
     A.e(8, 10.5, 6, 3.6, '#3c7a46'); A.e(7.5, 9.6, 4.6, 2.6, '#58a05c'); A.e(6, 8.8, 2, 1.2, '#7cc271'); for (const [x, y] of [[4, 10], [8, 8], [11, 10], [9, 11]]) A.p(x, y, '#9be37a'); A.p(10, 8, '#ffd36b'); A.p(5, 11, '#fff1d6'); }));
-  SPR.tree = treeSpr(); SPR.lantern = [lanternSpr(false), lanternSpr(true)];
+  SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
   SPR.wtop = {}; SPR.wfront = {}; for (const t in WPAL) { SPR.wtop[t] = [0, 1, 2, 3].map(v => wallTop(+t, v)); SPR.wfront[t] = wallFront(+t); }
   SPR.crack = [0, 1, 2].map(crackSpr);
@@ -1495,7 +1556,8 @@ function afterCut(t, o) {
   else if (o.t === 'grass' || o.t === 'glow' || o.t === 'wildF') { G.regen = G.regen || []; if (G.regen.length < 600) G.regen.push([i, o.t, G.time + (o.t === 'grass' ? 120 : 200), o.c || null]); }
   if (o.t === 'wildF') rollDrops([['petal' + (FLOWERS[o.c] ? o.c : 'R'), 1, 1, 0.35]], t.x + .5, t.y + .5);
 }
-function growTick() {
+function growTick(dt = 2) {
+  const BR = TREE_BLESS(treeStage()); if (BR) for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null || G.time - o.p >= d.grow) continue; if (Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) o.p -= dt * .25; }
   const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0)) continue; const x = i % W, y = (i / W) | 0;
     if (inside(x, y)) { o.at = G.time + 4; continue; }
@@ -2625,11 +2687,92 @@ function eat(slot) {
   p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) { G.inv[slot] = null; refillHot(slot, s.id); } invDirty = true;
   SFX.eat(); ftext(p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) ftext(p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
 }
+// ---- lantern tree at play: growth show, see-through canopy, falling leaves, glow (all visual, nothing saved) ----
+const TREEFX = { grow: null, leaves: [], alpha: 1, leafT: 0 };
+const treeStage = () => G ? clamp(G.treeSeeds | 0, 0, 5) : 0;
+const treeBase = () => ({ x: CX + .5, y: CY + 1 + 2 / 16 });
+function treeBox(L) { const b = treeBase(); return { l: b.x + (L.box.x0 - L.w / 2) / 16, r: b.x + (L.box.x1 + 1 - L.w / 2) / 16, t: b.y - (L.h - L.box.y0) / 16, b: b.y - (L.h - L.box.y1 - 1) / 16 }; }
+function behindCanopy() { const p = G.p, L = SPR.treeSt && SPR.treeSt[treeStage()]; if (!L || p.y >= CY + 1) return false; const k = treeBox(L); return p.x + .3 > k.l && p.x - .3 < k.r && p.y > k.t + .3 && p.y - .9 < k.b; }
+function treeLeaf(st, burst) {
+  const L = SPR.treeSt[st], b = treeBase(), k = treeBox(L), P = TREE_PAL[st];
+  const x = k.l + .3 + Math.random() * Math.max(.1, k.r - k.l - .6), top = k.t + (k.b - k.t) * (.35 + Math.random() * .6), gy = b.y - .2 + Math.random() * .8;
+  const col = burst && st >= 3 && Math.random() < .35 ? (Math.random() < .5 ? '#ffb3c8' : '#fff1f6') : P[1 + ((Math.random() * 3) | 0)];
+  TREEFX.leaves.push({ x, y: gy, z: Math.max(.3, gy - top), vz: burst ? .9 + Math.random() * .8 : .3 + Math.random() * .2, vx: burst ? (x - b.x) * (.8 + Math.random()) : (Math.random() - .5) * .3, vy: burst ? (Math.random() - .2) * .7 : 0, t: 0, ph: Math.random() * 6.28, col });
+}
+function updateTree(dt) {
+  const F = TREEFX, st = treeStage(), g = F.grow;
+  if (g) { g.t += dt; if (!g.burst && g.t >= .45) { g.burst = 1; if (g.to >= 1) for (let k = 0; k < 22; k++) treeLeaf(g.to, 1); } if (g.t >= 1.6) F.grow = null; }
+  F.alpha += ((behindCanopy() ? .42 : 1) - F.alpha) * Math.min(1, dt * 8);
+  for (let i = F.leaves.length - 1; i >= 0; i--) { const q = F.leaves[i]; q.t += dt;
+    if (q.z > 0) { q.z = Math.max(0, q.z - q.vz * dt); q.x += (q.vx + Math.sin(q.t * 2.4 + q.ph) * .35) * dt; q.y += q.vy * dt; q.vx *= Math.pow(.4, dt); q.vy *= Math.pow(.4, dt); }
+    else { q.rest = (q.rest || 0) + dt; if (q.rest > .8) F.leaves.splice(i, 1); } }
+  if (st >= 5 && F.leaves.length < 14 && Math.hypot(G.p.x - CX, G.p.y - CY) < 22) { F.leafT -= dt; if (F.leafT <= 0) { F.leafT = .7 + Math.random() * 1.1; treeLeaf(st, 0); } }
+}
+// moss and little flowers on bare ground (dirt or moss with nothing on it) near the roots; decided per tile, never stored
+function spreadKind(x, y, R) {
+  if (!R || !inB(x, y)) return null; const i = idx(x, y); if (G.wall[i] || (G.floor[i] !== 1 && G.floor[i] !== 2) || G.objs.get(i) || G.wire.has(i)) return null;
+  const e = Math.hypot(x - CX, y - CY) / R; if (e >= 1 || hash2(x, y, 71) > .6 * (1 - e * e * e)) return null;
+  const k = hash2(x, y, 72); return k < .55 ? 'm' + (((k * 6) | 0) % 3) : ['R', 'B', 'Y', 'W'][Math.min(3, ((k - .55) / .45 * 4) | 0)];
+}
+function drawSpread(x, y, sx, sy, R) {
+  const k = spreadKind(x, y, R); if (!k) return;
+  if (k[0] === 'm') ctx.drawImage(SPR.tmoss[+k[1]], sx + 1 + ((hash2(x, y, 73) * 5) | 0), sy + 4 + ((hash2(x, y, 74) * 6) | 0));
+  else { ctx.drawImage(SPR.tflower[k], sx + 2 + ((hash2(x, y, 73) * 9) | 0), sy + 2 + ((hash2(x, y, 74) * 8) | 0)); if (hash2(x, y, 75) < .35) ctx.drawImage(SPR.tmoss[0], sx + ((hash2(x, y, 76) * 6) | 0), sy + 9); }
+}
+function drawTreeLook(L, t, o) {
+  const b = treeBase(), sc = o.sc || 1, a = o.alpha, ca = a * o.ca, sw = L.s >= 5 ? Math.round(Math.sin(t * .7) * 1.2) / 16 : 0;
+  const at = (lx, ly) => ({ x: b.x + (lx - L.w / 2) * sc / 16, y: b.y - (L.h - ly) * sc / 16 });
+  if (a <= 0) return;
+  shadow(b.x, CY + .95, (1.1 + L.w / 64) * sc, .3 * a);
+  drawImg(L.trunk, b.x, b.y, { sx: sc, sy: sc, alpha: a });
+  if (L.s < 2) L.lan.forEach(([lx, ly], k) => { const q = at(lx + Math.sin(t * 1.6 + k) * .6, ly + 11); drawImg(SPR.lantern[k < L.s ? 1 : 0], q.x, q.y, { alpha: a }); });
+  drawImg(L.canopy, b.x + sw, b.y, { sx: sc, sy: sc, alpha: ca });
+  if (L.s >= 2) L.lan.forEach(([lx, ly], k) => { const q = at(lx + Math.sin(t * 1.6 + k) * .6, ly + 11); drawImg(SPR.lantern[k < L.s ? 1 : 0], q.x + sw, q.y, { alpha: ca }); });
+  L.small.forEach(([lx, ly], k) => { const q = at(lx + Math.sin(t * 1.3 + k * 2) * .5, ly + 8); drawImg(SPR.lanternS, q.x + sw, q.y, { alpha: ca }); });
+}
+function drawTree(t) {
+  const S = SPR.treeSt, g = TREEFX.grow, ca = TREEFX.alpha;
+  if (!g) { drawTreeLook(S[treeStage()], t, { alpha: 1, ca }); return; }
+  const u = clamp((g.t - .2) / .9, 0, 1), e = 1 + 2.70158 * Math.pow(u - 1, 3) + 1.70158 * Math.pow(u - 1, 2); // grows with a little overshoot
+  drawTreeLook(S[g.from], t, { alpha: 1 - clamp((u - .7) / .3, 0, 1), ca });
+  drawTreeLook(S[g.to], t, { alpha: Math.min(1, u * 1.7), ca, sc: .78 + .22 * e });
+}
+function drawTreeLeaves(T, camX, camY) {
+  for (const q of TREEFX.leaves) { ctx.globalAlpha = q.z > 0 ? 1 : Math.max(0, 1 - q.rest / .8); ctx.fillStyle = q.col; const X = Math.round(q.x * T - camX), Y = Math.round((q.y - q.z) * T - camY); ctx.fillRect(X, Y, 2, 1); if (Math.sin(q.t * 5 + q.ph) > 0) ctx.fillRect(X + 1, Y - 1, 1, 1); }
+  ctx.globalAlpha = 1;
+}
+// drawn after the darkness so lanterns, fruit, fireflies and the blessing edge read as light
+function drawTreeGlow(t, T, camX, camY, cw, ch) {
+  const st = treeStage(), g = TREEFX.grow, b = treeBase(), show = g ? (g.t > .7 ? g.to : g.from) : st, L = SPR.treeSt[show], ca = TREEFX.alpha;
+  const onS = (X, Y, m = 12) => X > -m && Y > -m && X < cw + m && Y < ch + m, sw = show >= 5 ? Math.round(Math.sin(t * .7) * 1.2) : 0;
+  const at = (lx, ly) => [Math.round((b.x + (lx - L.w / 2) / 16) * T - camX), Math.round((b.y - (L.h - ly) / 16) * T - camY)];
+  ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
+  if (onS(b.x * T - camX, (b.y - 2.5) * T - camY, 120)) {
+    L.lan.forEach(([lx, ly], k) => { if (k >= show) return; const [X, Y] = at(lx + Math.sin(t * 1.6 + k) * .6, ly + 7); ctx.globalAlpha = (.5 + Math.sin(t * 2 + k) * .08) * (show >= 2 ? ca : 1); ctx.drawImage(glowSprite('#ffd27a'), X + sw - 10, Y - 10, 20, 20); });
+    L.small.forEach(([lx, ly], k) => { const [X, Y] = at(lx, ly + 5); ctx.globalAlpha = (.45 + Math.sin(t * 2.3 + k * 1.9) * .1) * ca; ctx.drawImage(glowSprite('#ffd27a'), X + sw - 7, Y - 7, 14, 14); });
+    L.fruit.forEach(([lx, ly], k) => { const [X, Y] = at(lx + .5, ly + .5); ctx.globalAlpha = (.38 + Math.sin(t * 1.4 + k * 1.3) * .2) * ca; ctx.drawImage(glowSprite('#ffe08a'), X + sw - 7, Y - 7, 14, 14); });
+    const nf = [0, 0, 0, 6, 10, 18][show], cx = b.x, cy = b.y - L.h * .52 / 16, rx = L.w / 16 * .62 + .6, ry = L.h / 16 * .42 + .4;
+    for (let k = 0; k < nf; k++) { const h1 = hash2(k, 1, 9), h2 = hash2(k, 2, 9), h3 = hash2(k, 3, 9), X = (cx + Math.sin(t * .3 * (.6 + h1) + k * 2.1) * rx * (.45 + .55 * h2)) * T - camX, Y = (cy + Math.cos(t * .23 * (.7 + h3) + k) * ry * (.5 + .5 * h1)) * T - camY;
+      const al = Math.max(0, Math.sin(t * 2.6 * (.5 + h2) + k * 1.7)); if (al <= .02) continue; ctx.globalAlpha = al * .9; ctx.drawImage(glowSprite('#e6ff9a'), X - 5, Y - 5, 10, 10); ctx.fillStyle = '#f8ffd0'; ctx.fillRect(Math.round(X), Math.round(Y), 1, 1); }
+  }
+  const R = TREE_BLESS(g ? (g.t > 1 ? g.to : g.from) : st);
+  if (R) { const n = Math.round(R * 4), ox = CX + .5, oy = CY + .5;
+    for (let k = 0; k < n; k++) { const h = hash2(k, R, 5), a = (k + h * .6) / n * 6.283 + t * .015, r = R + Math.sin(t * .6 + k * 1.7) * .22, wx = ox + Math.cos(a) * r, wy = oy + Math.sin(a) * r, X = wx * T - camX, Y0 = wy * T - camY;
+      if (!onS(X, Y0)) continue; const tx = Math.floor(wx), ty = Math.floor(wy); if (!inB(tx, ty) || G.wall[idx(tx, ty)]) continue;
+      const ph = (t * .22 + h) % 1, Y = Y0 - ph * 10; ctx.globalAlpha = Math.sin(ph * Math.PI) * .75; ctx.drawImage(glowSprite('#e9ffb8'), X - 4, Y - 4, 8, 8); ctx.fillStyle = '#f6ffdc'; ctx.fillRect(Math.round(X), Math.round(Y), 1, 1); } }
+  if (g) { const X = b.x * T - camX, Y = b.y * T - camY, pa = g.t < .25 ? g.t / .25 : Math.max(0, 1 - (g.t - .25) / 1.1), Hh = 7.5 * T;
+    const gr = ctx.createLinearGradient(0, Y - Hh, 0, Y); gr.addColorStop(0, 'rgba(255,236,170,0)'); gr.addColorStop(.45, `rgba(255,236,170,${.3 * pa})`); gr.addColorStop(1, `rgba(255,236,170,${.55 * pa})`);
+    ctx.globalAlpha = 1; ctx.fillStyle = gr; ctx.fillRect(X - 10, Y - Hh, 20, Hh); ctx.fillRect(X - 3, Y - Hh, 6, Hh);
+    for (const dl of [0, .3]) { const q = clamp((g.t - dl) / 1.3, 0, 1); if (q <= 0 || q >= 1) continue; const rr = (1 + q * (TREE_BLESS(g.to) || 9)) * T;
+      ctx.strokeStyle = `rgba(255,233,160,${.6 * (1 - q)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X, (CY + .6) * T - camY, rr, 0, 6.283); ctx.stroke(); } }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+}
 function insertSeeds() {
-  const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; removeItem('lightSeed', n); G.treeSeeds += n; lightDirty = true;
+  const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; const from = treeStage(); removeItem('lightSeed', n); G.treeSeeds += n; lightDirty = true;
+  TREEFX.grow = { t: 0, from, to: treeStage() }; shake = Math.max(shake, .15);
   SFX.seed(); puff(CX + .5, CY - 1, '#ffd25c', 30, 4, 2); G.p.hp = maxHp(); gainXp(50 * n);
-  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; setTimeout(() => { SFX.win(); openPanel('win2'); }, 600); }
-  else if (G.treeSeeds >= 3 && !G.won) { G.won = true; setTimeout(() => { SFX.win(); openPanel('win'); }, 600); }
+  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; setTimeout(() => { SFX.win(); openPanel('win2'); }, 1700); }
+  else if (G.treeSeeds >= 3 && !G.won) { G.won = true; setTimeout(() => { SFX.win(); openPanel('win'); }, 1700); }
   else toast(`등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/${G.treeSeeds < 3 ? 3 : 5})`, 'good');
 }
 function hurtPlayer(dmg, sx, sy) {
@@ -2692,11 +2835,11 @@ function update(dt) {
   // survival
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
   regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0) p.hp = Math.min(maxHp(), p.hp + 1); }
-  updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt);
+  updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt); updateTree(dt);
   spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
   zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
-  growT += dt; if (growT > 2) { growT = 0; growTick(); }
+  growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
   circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
@@ -3116,8 +3259,10 @@ function renderWorld(cw, ch) {
   for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) ctx.drawImage(getChunk(cx, cy), cx * 256 - camX, cy * 256 - camY);
   drawHazards(T, camX, camY);
   // water, rugs and ground plants (change often, drawn live)
+  const spR = TREE_SPREAD[treeStage()], spIn = spR && Math.abs((x0 + x1) / 2 - CX) < (x1 - x0) / 2 + spR + 1 && Math.abs((y0 + y1) / 2 - CY) < (y1 - y0) / 2 + spR + 1;
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const i = idx(x, y); if (G.wall[i]) continue; const sx = x * T - camX, sy = y * T - camY;
+    if (spIn && Math.abs(x - CX) <= spR && Math.abs(y - CY) <= spR) drawSpread(x, y, sx, sy, spR);
     if (G.floor[i] === WATER) {
       ctx.drawImage(SPR.water[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy);
       const land = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return -1; const j = idx(xx, yy); if (G.wall[j]) return -1; return G.floor[j] === WATER || WFLOOR.has(G.floor[j]) ? 0 : G.floor[j]; };
@@ -3145,7 +3290,7 @@ function renderWorld(cw, ch) {
   for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; let ii = idx(x, y), o = G.objs.get(ii); if (o && o.t === '_part') { ii = o.a; o = G.objs.get(ii); if (!o || o.t === '_part') continue; }
     if (o && OBJ[o.t] && OBJ[o.t].sz) { if (seenA.has(ii)) continue; seenA.add(ii); if (OBJ[o.t].flat) continue; const ax = ii % W, ay = (ii / W) | 0, by = ay + fpOf(o)[1] - 1; push(Math.min(by, y1), { k: 'o', x: ax, y: ay, o, s: OBJ[o.t].solid ? by + 1 : by + .01 }); if (o.shake) visibleShakers.add(o); continue; }
     if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
-  push(CY, { k: 'tree', s: CY + 1 });
+  if (CY >= y0 && CY <= y1 + 5) push(Math.min(CY, y1), { k: 'tree', s: CY + 1 });
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
   for (const k of BKEYS) if (!G.bossDead[k]) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
@@ -3183,7 +3328,7 @@ function renderWorld(cw, ch) {
     if (q.k === 'arrow') { ctx.save(); ctx.translate(X, Y); ctx.rotate(q.ang); ctx.fillStyle = '#7d4d2a'; ctx.fillRect(-5, 0, 8, 1); ctx.fillStyle = '#eef2f7'; ctx.fillRect(3, -1, 2, 3); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(-6, -1, 2, 3); ctx.restore(); }
     else { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(q.col), X - 7, Y - 7, 14, 14); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = q.col; ctx.fillRect(X - 2, Y - 2, 4, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(X - 1, Y - 1, 2, 2); } }
   for (const q of G.parts) { ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life / q.max * 1.6); const s = q.sz; ctx.fillRect(Math.round(q.x * T - camX - s / 2), Math.round((q.y - q.z) * T - camY - s / 2), s, s); }
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; drawTreeLeaves(T, camX, camY);
   // fishing line
   if (G.fish) {
     const f = G.fish, hx = p.x + p.face.x * .35, hy = p.y - .55; let bx = f.bx, by = f.by, bz = 0;
@@ -3215,6 +3360,7 @@ function renderWorld(cw, ch) {
       else { const al = life * Math.max(0, Math.sin(t * 4 + a.ph)); ctx.globalAlpha = al; ctx.fillStyle = '#e6dcff'; ctx.fillRect(X, Y - 1, 1, 3); ctx.fillRect(X - 1, Y, 3, 1); } }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
   }
+  drawTreeGlow(t, T, camX, camY, cw, ch);
   // boss shots (after lighting so they read in the dark)
   if (G.shots.length) { ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true; for (const s of G.shots) { const gx = s.x * T - camX, gy = (s.y - .3) * T - camY, rr = .55 * T; ctx.drawImage(glowSprite(s.k === 'spore' ? '#d59bff' : '#b9a8ff'), gx - rr, gy - rr, rr * 2, rr * 2); } ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
     for (const s of G.shots) { const img = SPR.shot[s.k], w = img.width, gx = Math.round(s.x * T - camX), gy = Math.round((s.y - .3) * T - camY); if (s.k === 'shard' || s.k === 'ice') { ctx.save(); ctx.translate(gx, gy); ctx.rotate((s.a || 0) + Math.PI / 2); ctx.drawImage(img, -w / 2, -w / 2); ctx.restore(); } else ctx.drawImage(img, gx - w / 2, gy - w / 2); } }
@@ -3298,12 +3444,7 @@ function drawEntity(it, t) {
     if (d.crop && cropStage(o) >= 3) { ctx.fillStyle = `rgba(255,241,214,${0.5 + Math.sin(t * 5) * 0.3})`; ctx.fillRect(Math.round((it.x + .78) * T - camX), Math.round((it.y + .1) * T - camY), Z, Z); }
     return;
   }
-  if (it.k === 'tree') {
-    shadow(CX + .5, CY + .95, 1.5, .3); drawImg(SPR.tree, CX + .5, CY + 1 + 2 / 16);
-    const base = { x: CX + .5 - 24 / 16, y: CY + 1 + 2 / 16 - 60 / 16 };
-    (G.treeSeeds >= 3 ? [[9, 32], [24, 35], [39, 32], [16, 25], [32, 25]] : [[9, 32], [24, 35], [39, 32]]).forEach(([lx, ly], k) => { const on = k < G.treeSeeds; const sw = Math.sin(t * 1.6 + k) * 0.6; drawImg(SPR.lantern[on ? 1 : 0], base.x + (lx + sw) / 16, base.y + (ly + 11) / 16); });
-    return;
-  }
+  if (it.k === 'tree') { drawTree(t); return; }
   if (it.k === 'p') {
     const p = G.p; if (p.dead > 0) { drawImg(SPR.player.down[0], p.x, p.y + .15, { alpha: .5, sy: .6 }); return; }
     if (p.sleep) return;
@@ -3460,7 +3601,7 @@ function renderPanel() {
   } else if (k === 'map') {
     h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span></div></div>`;
   } else if (k === 'tree') {
-    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
+    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
   } else if (k === 'menu') {
     const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:14px">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
     const marks = G.marks || [];
