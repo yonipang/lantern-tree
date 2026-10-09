@@ -904,6 +904,7 @@ function buildSprites() {
   SPR.ui = {}; for (const k in UICON) SPR.ui[k] = mk(16, 16, UICON[k]);
   SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
+  for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11, 0, 0, src.width, 11); SPR.obj[k + 'Ub'] = c2; }
   for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
   SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
@@ -1603,7 +1604,9 @@ Object.assign(OBJ, {
   drillCu: { n: '구리 채굴기', solid: 1, item: 'drillCu', dev: 'drill', tier: 1, every: 12, draw: .5, idle: 0 },
   drillFe: { n: '철 채굴기', solid: 1, item: 'drillFe', dev: 'drill', tier: 2, every: 7, draw: .8, idle: 0 },
 });
-Object.assign(USE, { battery: 'batt', generator: 'fuel', crystalGen: 'cinfo', lever: 'lever', plate: 'cinfo', timer: 'timer', eLamp: 'cinfo', eDoor: 'cinfo', drillCu: 'drill', drillFe: 'drill' });
+ITEMS.drillGold = { n: '황금 채굴기', kind: 'place', obj: 'drillGold', d: '용암·얼음 동굴의 금·서리 광맥까지 빠르게 캐는 채굴기. 전기가 필요해요.' };
+OBJ.drillGold = { n: '황금 채굴기', solid: 1, item: 'drillGold', dev: 'drill', tier: 3, every: 5, draw: 1, idle: 0 };
+Object.assign(USE, { battery: 'batt', generator: 'fuel', crystalGen: 'cinfo', lever: 'lever', plate: 'cinfo', timer: 'timer', eLamp: 'cinfo', eDoor: 'cinfo', drillCu: 'drill', drillFe: 'drill', drillGold: 'drill' });
 Object.assign(USE_LBL, { batt: '확인', fuel: '연료 넣기', cinfo: '살펴보기', lever: '레버 당기기', timer: '간격 바꾸기', drill: '꺼내기' });
 const BATT_MAX = 600, FUEL = { wood: 30, gel: 45, resin: 90 }, FUEL_MAX = 3600, DRILL_CAP = 60;
 const drillSpr = dir => A => { A.r(3, 8, 10, 10, '#5a5468'); A.r(3, 8, 10, 2, '#8d97a8'); A.r(3, 8, 1, 10, '#787090'); A.r(12, 8, 1, 10, '#36334a'); A.r(5, 12, 6, 3, '#e5884a'); A.r(5, 12, 6, 1, '#ffb57a'); A.p(7, 16, '#7fe0b5');
@@ -1623,12 +1626,14 @@ Object.assign(OSPR, {
   drillCu: [16, 22, drillSpr([0, -1])],
 });
 OSPR.drillFe = [16, 22, A => { drillSpr([0, -1])(A); A.r(5, 12, 6, 3, '#c8d0dc'); A.r(5, 12, 6, 1, '#ffffff'); }];
-for (const [k, d] of [['U', [0, -1]], ['D', [0, 1]], ['L', [-1, 0]], ['R', [1, 0]]]) { OSPR['drillCu' + k] = [16, 22, drillSpr(d)]; OSPR['drillFe' + k] = [16, 22, A => { drillSpr(d)(A); A.r(5, 12, 6, 3, '#c8d0dc'); A.r(5, 12, 6, 1, '#ffffff'); }]; }
+const goldTrim = A => { A.r(5, 12, 6, 3, '#ffd25c'); A.r(5, 12, 6, 1, '#fff1b0'); A.r(3, 8, 10, 1, '#ffc23a'); };
+OSPR.drillGold = [16, 22, A => { drillSpr([0, -1])(A); goldTrim(A); }];
+for (const [k, d] of [['U', [0, -1]], ['D', [0, 1]], ['L', [-1, 0]], ['R', [1, 0]]]) { OSPR['drillGold' + k] = [16, 22, A => { drillSpr(d)(A); goldTrim(A); }]; OSPR['drillCu' + k] = [16, 22, drillSpr(d)]; OSPR['drillFe' + k] = [16, 22, A => { drillSpr(d)(A); A.r(5, 12, 6, 3, '#c8d0dc'); A.r(5, 12, 6, 1, '#ffffff'); }]; }
 Object.assign(ICON, { wire: A => { A.e(8, 9, 6, 4.6, '#b8642f'); A.e(8, 9, 4.4, 3.2, '#e5884a'); A.e(8, 9, 2.8, 2, '#b8642f'); A.e(8, 9, 1.4, 1, '#5a3a14'); A.line(12, 11, 15, 14, '#e5884a', 2); A.p(15, 15, '#c8d0dc'); } });
 RECIPES.push(Rc('wire', 10, [['copperBar', 1], ['rope', 1]], 'forge', 'circuit'), Rc('battery', 1, [['copperBar', 2], ['gel', 3], ['glowcap', 1]], 'forge', 'circuit'),
   Rc('lever', 1, [['copperBar', 1], ['wood', 2]], 'forge', 'circuit'), Rc('plate', 1, [['copperBar', 1], ['stone', 3]], 'forge', 'circuit'), Rc('timer', 1, [['copperBar', 2], ['glowcap', 1], ['ironBar', 1]], 'forge', 'circuit'),
   Rc('eLamp', 1, [['copperBar', 1], ['glowcap', 2]], 'forge', 'circuit'), Rc('eDoor', 1, [['ironBar', 2], ['copperBar', 2], ['wood', 2]], 'forge', 'circuit'),
-  Rc('drillCu', 1, [['copperBar', 8], ['stone', 12], ['gel', 4], ['rope', 2]], 'forge', 'circuit'), Rc('drillFe', 1, [['ironBar', 8], ['copperBar', 4], ['crystal', 4]], 'forge', 'circuit'),
+  Rc('drillCu', 1, [['copperBar', 8], ['stone', 12], ['gel', 4], ['rope', 2]], 'forge', 'circuit'), Rc('drillFe', 1, [['ironBar', 8], ['copperBar', 4], ['crystal', 4]], 'forge', 'circuit'), Rc('drillGold', 1, [['goldBar', 6], ['obsidian', 4], ['ironBar', 4], ['frostShard', 2]], 'forge', 'circuit'),
   Rc('generator', 1, [['ironBar', 6], ['stone', 16], ['copperBar', 4]], 'forge', 'circuit'), Rc('crystalGen', 1, [['crystal', 16], ['ironBar', 8], ['glowcap', 6]], 'forge', 'circuit'));
 const CIRC = { net: new Map(), pRoots: new Set(), find: x => x };
 function circuitTick(dt) {
@@ -1661,7 +1666,7 @@ function deviceStep(i, o, d, on, dt) {
     const can = on && w && WALLS[w] && WALLS[w].tier <= d.tier && w !== 6 && w !== 7 && w !== 8 && cnt < DRILL_CAP; o.work = !!can; o.why = !on ? 'power' : !w || w === 6 || w === 7 || w === 8 ? 'wall' : WALLS[w].tier > d.tier ? 'tier' : cnt >= DRILL_CAP ? 'full' : '';
     if (!can) return; o.prog = (o.prog || 0) + dt;
     if (Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) < 14 && Math.random() < dt * 3) puff(tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, WPAL[w][1], 2, 1.4, .1);
-    if (o.prog >= d.every) { o.prog = 0; const id = WALLS[w].drop[0][0]; G.stats.drilled = (G.stats.drilled || 0) + 1;
+    if (o.prog >= d.every) { o.prog = 0; const dr0 = WALLS[w].drop[0]; if (Math.random() > (dr0[3] == null ? 1 : dr0[3])) return; const id = dr0[0]; G.stats.drilled = (G.stats.drilled || 0) + 1;
       let put = false; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const c = G.objs.get(idx(cx, cy)); if (c && c.t === 'chest' && c.items && !moveInto(c.items, { id, c: 1 })) { put = true; break; } }
       if (!put) { o.store = o.store || []; const s2 = o.store.find(z => z.id === id); if (s2) s2.c++; else o.store.push({ id, c: 1 }); } } }
 }
@@ -1709,6 +1714,10 @@ Object.assign(ENEMY, {
   frostSlime: { n: '얼음 말랑이', hp: 90, dmg: 18, spd: 2.9, r: 0.36, hop: 1, drops: [['gel', 1, 2, 0.8], ['frostShard', 1, 1, 0.35]], col: '#9fd8f0' },
   snowling: { n: '눈뭉치', hp: 85, dmg: 18, spd: 2.3, r: 0.32, hop: 0, drops: [['frostShard', 1, 1, 0.35], ['fiber', 1, 2, 0.4]], col: '#e8f4ff' },
 });
+// tougher monsters everywhere (bloom critters stay gentle); deeper places notice you from farther away
+Object.assign(ENEMY.slimeG, { hp: 18, dmg: 7 }); Object.assign(ENEMY.slimeO, { hp: 40, dmg: 12, aggro: 8.5 }); Object.assign(ENEMY.slimeP, { hp: 75, dmg: 18, aggro: 9 }); Object.assign(ENEMY.shroomy, { hp: 34, dmg: 11, spd: 2.3, aggro: 8.5 });
+Object.assign(ENEMY.magmaSlime, { hp: 120, dmg: 24, aggro: 10 }); Object.assign(ENEMY.cinder, { hp: 105, dmg: 22, spd: 2.7, aggro: 10 }); Object.assign(ENEMY.frostSlime, { hp: 115, dmg: 22, aggro: 10 }); Object.assign(ENEMY.snowling, { hp: 110, dmg: 22, spd: 2.5, aggro: 10 });
+const SPAWN_CAP = [6, 8, 9, 10, 10], SPAWN_EVERY = [2.6, 2.3, 2.0, 1.6, 1.6], SPAWN_PACK = [0, .2, .3, .4, .4];
 CATCH[3] = CATCH[2]; CATCH[4] = [['smelt', 50], ['shrimp', 26], ['crucian', 10], ['boot', 6], ['koi', 8]];
 // deep gear (영웅) and legendary (전설)
 const GEAR2 = {
@@ -1807,7 +1816,7 @@ function farmHarvest(i, o, auto) { const x = i % W, y = (i / W) | 0;
   const got = farmYield(); o.p = G.time; o.why = ''; G.stats.farmed = (G.stats.farmed || 0) + got[0][1];
   for (const [id, c] of got) { let left = c; for (const ch of chests) { if (!left) break; left = moveInto(ch.items, { id, c: left }); } if (left) { o.store = o.store || []; const n = o.store.reduce((a, s2) => a + s2.c, 0), add = Math.min(left, FARM_CAP - n); if (add > 0) { const s2 = o.store.find(z => z.id === id); if (s2) s2.c += add; else o.store.push({ id, c: add }); } } }
   if (Math.hypot(x + 1 - G.p.x, y + 1 - G.p.y) < 14) { puff(x + 1, y + 1, '#7fbf6a', 8, 2); SFX.brk(); } return true; }
-const farmTree = (A, x, yb, st) => { const s = [0.55, 1.1, 1.65, 2.2][st]; if (st === 0) { A.line(x, yb, x, yb - 3, C.woodD); A.e(x - 1, yb - 3, 1.4, .9, C.leaf); A.e(x + 1.2, yb - 3.6, 1.4, .9, C.leafL); return; }
+const farmTree = (A, x, yb, st) => { const s = [0.55, 1.1, 1.65, 2.2][st]; if (st === 0) { A.e(x, yb, 3, 1.2, '#4a3428'); A.line(x, yb, x, yb - 5, C.woodD); A.e(x - 2, yb - 4.5, 2.2, 1.4, C.leaf); A.e(x + 2, yb - 5.5, 2.2, 1.4, C.leafL); A.e(x, yb - 6.5, 1.6, 1.2, '#9be37a'); A.p(x - 2, yb - 5, '#c8f58a'); return; }
   A.r(x - 1, Math.round(yb - 4 * s), 2, Math.round(4 * s), C.wood); A.r(x - 1, Math.round(yb - 4 * s), 1, Math.round(4 * s), C.woodL); A.e(x, yb - 4 * s - 2.4 * s, 2.8 * s + 1, 2.4 * s + 1, C.leafD); A.e(x - .6, yb - 4 * s - 2.8 * s, 2.1 * s + .6, 1.8 * s + .6, C.leaf); A.p(Math.round(x - 1.5 * s), Math.round(yb - 4 * s - 3.8 * s), C.leafL); if (st === 3) { A.p(Math.round(x + s), Math.round(yb - 5.5 * s), '#ffd36b'); } };
 const farmSpr = st => [32, 40, A => { A.r(1, 10, 30, 29, '#6b4838'); for (let y = 13; y < 38; y += 5) A.r(2, y, 28, 1, '#5a3a2c'); for (let k = 0; k < 8; k++) A.p(3 + k * 3.5 | 0, 37 - (k % 3) * 9, '#62ad62');
   A.r(0, 9, 32, 2, C.woodD); A.r(0, 37, 32, 2, C.woodD); A.r(0, 9, 2, 30, C.woodD); A.r(30, 9, 2, 30, C.woodD); for (const x of [0, 10, 20, 30]) { A.r(x, 7, 2, 4, C.wood); A.r(x, 36, 2, 4, C.wood); } A.r(0, 9, 32, 1, C.woodL);
@@ -1922,6 +1931,7 @@ let G = null;
 let TP = 48, Z = 3, DPR = 1;
 const cam = { x: CX + .5, y: CY + 2 };
 let shake = 0, paused = true, started = false, soundOn = true;
+const beat = k => !!(G && ((G.bossDead || {})[k] || (G.stats && G.stats.beaten || {})[k]));
 const freshStats = () => ({ wood: 0, bench: 0, torch: 0, copperOre: 0, copperBar: 0, seedsFound: 0 });
 const BOSSES = {
   slime: { n: '말랑대왕', hp: 720, home: () => ({ x: BX + .5, y: BY + .5 }), wake: 8.5, hr: .95, col: '#86d96b', spr: 'boss', scale: 1.25 },
@@ -1973,6 +1983,7 @@ function deserialize(s) {
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
   G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []);
   G.rpg = cleanRpg(s.rpg); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = Number.isFinite(s.p.mp) ? Math.min(s.p.mp, maxMp()) : maxMp(); G.p.hp = Math.min(G.p.hp, maxHp());
+  G.stats.beaten = G.stats.beaten || {}; for (const k of BKEYS) if (G.bossDead[k]) G.stats.beaten[k] = 1;
   fixParts(); grantUniques(); ensureDeepAltars();
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
@@ -2187,8 +2198,8 @@ const TERRAIN = {
   2: { n: '흙', item: 'gDirt', base: true },
   1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
   10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
-  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => G.bossDead.queen },
-  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => G.bossDead.golem },
+  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
+  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
 };
 const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terrain[f])));
 function checkUnlocks() {
@@ -2308,6 +2319,7 @@ function decide() {
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
+  if (it && it.kind === 'summon') return summonDecide(it, s);
   // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
   if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
   if (it && it.kind === 'roof' && i >= 0 && G.roof.has(i)) return { k: 'unroof', lbl: '지붕 걷기', icon: s.id, t };
@@ -2378,6 +2390,7 @@ function perform(a) {
     case 'eat': eat(G.sel); actCd = 0.4; break;
     case 'insert': insertSeeds(); actCd = 0.4; break;
     case 'tree': openPanel('tree'); actCd = 0.3; break;
+    case 'summon': summonBoss(a.boss); actCd = 0.6; break;
     case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); SFX.seed(); puff(a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); toast('빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
     case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
     case 'fish': startFish(a.t); actCd = 0.4; break;
@@ -2473,6 +2486,7 @@ function hitBoss(b, dmg, crit, fx) {
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; ftext(b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); puff(b.x, b.y - .3, def.col, 6, 3); SFX.hit(); shake = Math.max(shake, 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
     G.bossDead[b.k] = true; gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; $('#bossbar').hidden = true; G.shots.length = 0; puff(b.x, b.y, def.col, 40, 5, 0.6); puff(b.x, b.y, '#ffc861', 16, 4, 1); SFX.win(); shake = 0.5;
+    G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { G.stats.uniq[b.k] = 1; spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); toast('용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -2482,6 +2496,29 @@ function hitBoss(b, dmg, crit, fx) {
     if (b.k === 'golem') { spawnDrop('crystal', 12, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); toast('수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
   }
 }
+// ---- calling a beaten boss back for another fight ----
+const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 10], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
+function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && Math.random() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
+  toast(`${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
+const SUMMON = {
+  queenIdol: ['포자 여왕 부름 버섯', 'queen', [['shroomCap', 10], ['glowcap', 6], ['spore', 4]], '#b673de', '#fbe7ff'],
+  slimeIdol: ['말랑 왕관 조각상', 'slime', [['gel', 30], ['copperBar', 6]], '#86d96b', '#ffd25c'],
+  golemIdol: ['수정 심장 조각상', 'golem', [['crystal', 20], ['ironBar', 6]], '#9d7fe0', '#7ff0e6'],
+  turtleIdol: ['용암 등껍질 조각상', 'turtle', [['obsidian', 8], ['goldBar', 4], ['fireBerry', 4]], '#ff8a3d', '#ffc861'],
+  spiritIdol: ['서리 결정 조각상', 'spirit', [['frostShard', 16], ['goldBar', 4]], '#9fd8f0', '#ffffff'],
+};
+for (const id in SUMMON) { const [n, k, req, c1, c2] = SUMMON[id];
+  ITEMS[id] = { n, kind: 'summon', boss: k, d: `${BOSSES[k].n}을 물리친 뒤 보스방에서 쓰면 ${BOSSES[k].n}이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 전용 장비가 떨어져요.` };
+  ICON[id] = A => { A.r(4, 12, 8, 3, '#625d78'); A.r(4, 12, 8, 1, '#8f8aa3'); A.e(8, 8, 4, 4.6, c1); A.e(7, 6.6, 1.8, 1.6, c2); A.p(6, 6, '#ffffff'); A.p(10, 10, '#00000033'); };
+  RECIPES.push(Rc(id, 1, req, 'forge', 'tool')); }
+function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
+  if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
+  if (!G.bossDead[k]) return { k: 'info', lbl: '깨어 있음', icon: 'dots', msg: `${BOSSES[k].n}이 이미 보스방에 있어요`, t };
+  if (d > 9) return { k: 'info', lbl: '보스방에서', icon: 'dots', msg: `${BOSSES[k].n}의 보스방 안에서 써요`, t };
+  return { k: 'summon', lbl: '소환', icon: s0.id, t, boss: k }; }
+function summonBoss(k) { const s0 = selItem(); if (!s0 || ITEMS[s0.id].boss !== k || !G.bossDead[k]) return;
+  s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } invDirty = true;
+  G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; puff(b.x, b.y, BOSSES[k].col, 30, 4, .8); shake = .4; SFX.boss(); toast(`${BOSSES[k].n}이 다시 나타났어요!`, 'warn', 'summon'); }
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k++) G.texts.push({ x: x + (Math.random() - .5) * .9, y: y - .2 - Math.random() * .5, txt: ch, col, life: .8 + Math.random() * .5, vy: -1.2 - Math.random() }); }
 function useObj(a) {
@@ -2656,7 +2693,7 @@ function update(dt) {
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
   regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; $('#fade').hidden = false; } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0) p.hp = Math.min(maxHp(), p.hp + 1); }
   updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt);
-  spawnT += dt; if (spawnT > 2.6) { spawnT = 0; trySpawn(); }
+  spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
   zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
   growT += dt; if (growT > 2) { growT = 0; growTick(); }
@@ -2677,7 +2714,7 @@ function updateEnemies(dt) {
     if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); continue; }
     dotTick(e, dt); if (!G.enemies.includes(e)) continue; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
     if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-    const chase = d < 8 && p.dead <= 0 && (!def.calm || e.angry > 0);
+    const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
     if (def.hop) {
       if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
       else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = Math.random() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + Math.random() * 0.6; } }
@@ -2774,7 +2811,7 @@ function updateShots(dt) {
 }
 function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: Math.random(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
 function trySpawn() {
-  const p = G.p; if (p.dead > 0) return; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= 7) return;
+  const p = G.p; if (p.dead > 0) return; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= (SPAWN_CAP[pb] || 7)) return;
   for (let k = 0; k < 10; k++) {
     const a = Math.random() * 6.283, r = 10 + Math.random() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
     if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y))) continue;
@@ -2782,7 +2819,9 @@ function trySpawn() {
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
     const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (Math.random() < .55 ? 'slimeO' : 'shroomy') : b === 3 ? (Math.random() < .55 ? 'magmaSlime' : 'cinder') : b === 4 ? (Math.random() < .55 ? 'frostSlime' : 'snowling') : (Math.random() < .75 ? 'slimeP' : 'shroomy');
-    G.enemies.push(mkEnemy(kk, x + .5, y + .6)); return;
+    G.enemies.push(mkEnemy(kk, x + .5, y + .6));
+    if (Math.random() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(mkEnemy(kk, x + dx + .5, y + dy + .6)); break; } }
+    return;
   }
 }
 function updateDrops(dt) {
@@ -2815,15 +2854,15 @@ const GUIDE = [
   { t: () => '화로를 놓고 구리괴 만들기', h: '작업대에서 화로를 만든 뒤 설치하고, 화로를 열어 구리괴를 만들어요.', done: () => G.stats.copperBar >= 1 },
   { t: () => '작업대에서 구리 제작대 만들어 놓기', h: '구리·철·수정으로 된 도구와 무기는 구리 제작대 근처에서만 만들 수 있어요. 송진은 뿌리기둥을 베면 가끔 나와요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '구리 곡괭이 만들기', h: '구리 제작대 근처에서 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
-  { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비를 먼저 정리해요.', done: () => G.bossDead.queen, target: () => BOSSES.queen.home() },
-  { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼해요. 음식을 넉넉히 챙기고, 점프 후 착지할 때 멀리 떨어져요.', done: () => G.bossDead.slime, target: () => BOSSES.slime.home() },
-  { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '빨간 점선이 보이면 옆으로 피해요! 벽에 부딪혀 기절했을 때 때리면 더 아파요. 수정벽은 철 곡괭이로 캘 수 있어요.', done: () => G.bossDead.golem, target: () => BOSSES.golem.home() },
+  { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비를 먼저 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
+  { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼해요. 음식을 넉넉히 챙기고, 점프 후 착지할 때 멀리 떨어져요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
+  { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '빨간 점선이 보이면 옆으로 피해요! 벽에 부딪혀 기절했을 때 때리면 더 아파요. 수정벽은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
   { t: () => `빛씨앗 모으기 (${Math.min(3, G.stats.seedsFound)}/3)`, h: '봉인이 풀린 두 제단의 씨앗과, 말랑대왕이 남긴 씨앗을 모아요.', done: () => G.stats.seedsFound >= 3,
     target: () => { const p = G.p; const c = [SA, SB].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
   { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/3)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 3, target: () => ({ x: CX + .5, y: CY + .5 }) },
-  { t: () => '수정 핵으로 수정 곡괭이 만들기', h: '수정골렘이 남긴 수정 핵으로 구리 제작대에서 만들어요. 남쪽 용암 동굴과 서쪽 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.', done: () => ['pickCrystal', 'pickGold', 'pickStar'].some(hasItem) || G.bossDead.turtle || G.bossDead.spirit },
-  { t: () => '남쪽 용암 동굴의 용암 거북 물리치기', h: '등껍질에 숨어 굴러올 때는 거의 다치지 않아요. 벽에 튕기다 멈추면 그때 공격해요! 바닥이 주황색으로 반짝이면 곧 용암이 고여요.', done: () => G.bossDead.turtle, target: () => BOSSES.turtle.home() },
-  { t: () => '서쪽 얼음 동굴의 서리 정령 물리치기', h: '얼음 고리는 빈틈 쪽으로 빠져나가요. 정령이 사라지면 곁에 다시 나타나 얼음을 터뜨려요. 점선 원 밖으로 피해요!', done: () => G.bossDead.spirit, target: () => BOSSES.spirit.home() },
+  { t: () => '수정 핵으로 수정 곡괭이 만들기', h: '수정골렘이 남긴 수정 핵으로 구리 제작대에서 만들어요. 남쪽 용암 동굴과 서쪽 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.', done: () => ['pickCrystal', 'pickGold', 'pickStar'].some(hasItem) || beat('turtle') || beat('spirit') },
+  { t: () => '남쪽 용암 동굴의 용암 거북 물리치기', h: '등껍질에 숨어 굴러올 때는 거의 다치지 않아요. 벽에 튕기다 멈추면 그때 공격해요! 바닥이 주황색으로 반짝이면 곧 용암이 고여요.', done: () => beat('turtle'), target: () => BOSSES.turtle.home() },
+  { t: () => '서쪽 얼음 동굴의 서리 정령 물리치기', h: '얼음 고리는 빈틈 쪽으로 빠져나가요. 정령이 사라지면 곁에 다시 나타나 얼음을 터뜨려요. 점선 원 밖으로 피해요!', done: () => beat('spirit'), target: () => BOSSES.spirit.home() },
   { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.max(0, Math.min(2, G.stats.seedsFound - 3))}/2)`, h: '용암 거북과 서리 정령이 쓰러지면 빛씨앗을 떨어뜨려요. 예전 세이브라면 보스방 가운데 제단에 놓여 있을 수도 있어요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
     target: () => { const p = G.p; const c = [SL, SI].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
   { t: () => `등불나무의 마지막 등불 밝히기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 5, target: () => ({ x: CX + .5, y: CY + .5 }) },
@@ -2848,6 +2887,7 @@ const QSIDE = [
   { id: 's_gold', t: () => `금괴 10개 만들기 (${Math.min(10, (G.stats.made || {}).goldBar || 0)}/10)`, h: '용암 동굴의 금 광맥에서 금광석을 캐서 화로에서 녹여요.', done: () => ((G.stats.made || {}).goldBar || 0) >= 10, rw: [['obsidian', 3], ['fireBerry', 3]], xp: 80 },
   { id: 's_epic', t: () => `영웅 장비 3가지 모으기 (${Math.min(3, epicOwned())}/3)`, h: '보스 전용 무기나 황금·흑요석·서리 장비가 영웅 등급이에요.', done: () => epicOwned() >= 3, rw: [['goldBar', 4], ['stew', 3]], xp: 120 },
   { id: 's_legend', t: '전설 장비 만들기', h: '용암 핵과 서리 핵을 모아 구리 제작대에서 새벽빛 검이나 별빛 곡괭이를 만들어요.', done: () => ['swordDawn', 'pickStar'].some(id => hasItem(id) || ((G.stats.made || {})[id] || 0) > 0), rw: [['stew', 5], ['goldBar', 4]], xp: 300 },
+  { id: 's_rematch', t: '보스 한 마리 다시 불러서 물리치기', h: '보스를 물리친 뒤 구리 제작대에서 소환 조각상을 만들어 보스방에서 써요. 다시 잡으면 재료와 함께 가끔 전용 장비가 떨어져요.', done: () => (G.stats.rematch || 0) > 0, rw: [['stew', 3], ['goldBar', 2]], xp: 120 },
   { id: 's_gen', t: '발전기 돌리기', h: '발전기를 만들고 연료(나무·젤·송진)를 넣으면 건전지 없이 전기를 계속 써요.', done: () => !!G.stats.genRun, rw: [['ironBar', 4], ['resin', 4]], xp: 60 },
 ];
 const MULTI = {
@@ -3244,6 +3284,7 @@ function drawEntity(it, t) {
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && img.height > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
     drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : sx, flip: flipX });
+    if (o.t === 'treeFarm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / FARM_GROW, 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
     if (o.t === 'treeFarm' && ((o.store || []).length || farmStage(o) >= 3)) { ctx.fillStyle = (o.store || []).length ? '#ffd25c' : `rgba(255,241,214,${.5 + Math.sin(t * 5) * .3})`; ctx.fillRect(Math.round((it.x + 1.8) * T - camX), Math.round((it.y - .3) * T - camY), 3, 3); }
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }
     if (o.t === 'generator' && o.lit && CIRC.pRoots.size) { const fl = (t * 8) % 1; ctx.fillStyle = fl < .5 ? '#ff8a3d' : '#ffc861'; ctx.fillRect(Math.round(wx * T - camX) - 3, Math.round((it.y + 1) * T - camY) - 8, 6, 3); }
@@ -3266,7 +3307,7 @@ function drawEntity(it, t) {
   if (it.k === 'p') {
     const p = G.p; if (p.dead > 0) { drawImg(SPR.player.down[0], p.x, p.y + .15, { alpha: .5, sy: .6 }); return; }
     if (p.sleep) return;
-    if (p.sit) { const sd = p.sit.dir || 0; if (sd) { drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[sd === 2 ? 'up' : 'side'][0], p.x, p.y + .15, { flip: sd === 3 }); return; } drawImg(p.hurt > 0 ? whiten(SPR.playerSit) : SPR.playerSit, p.x, p.sit.y + .78); return; }
+    if (p.sit) { const sd = p.sit.dir || 0; if (sd) { drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[sd === 2 ? 'up' : 'side'][0], p.x, p.y + .15, { flip: sd === 3 }); if (sd === 2) { const so = G.objs.get(idx(p.sit.x, p.sit.y)); if (so && SPR.obj[so.t + 'Ub']) drawImg(SPR.obj[so.t + 'Ub'], p.sit.x + .5, p.sit.y + 1 - 1 / 16); } return; } drawImg(p.hurt > 0 ? whiten(SPR.playerSit) : SPR.playerSit, p.x, p.sit.y + .78); return; }
     if (p.inv > 0 && p.inv < 0.7 && Math.floor(performance.now() / 70) % 2) return;
     shadow(p.x, p.y + .1, .3); const fr = p.moving ? Math.floor(p.anim * 7) % 2 : 0; const bob = p.moving ? (fr ? 1 / 16 : 0) : Math.sin(t * 2) > .7 ? 1 / 16 : 0;
     drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[p.dir][fr], p.x, p.y + .15 - bob, { flip: p.flip });

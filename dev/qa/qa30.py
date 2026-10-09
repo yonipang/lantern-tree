@@ -1,0 +1,51 @@
+import asyncio, sys
+sys.argv=['x']
+exec(open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'qa2.py')).read().split('async def main():')[0])
+H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,hitBoss,freshBoss,updateBosses,circuitTick,trySpawn,mkEnemy,updateEnemies,GUIDE,checkGuide,refreshHotbar,ENEMY,SL}")
+ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
+async def main():
+    mkpage(SRC,'qa.html',H2)
+    async with async_playwright() as p:
+        b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+        # ---- boss rematch ----
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);const first=G.drops.map(d=>d.id);G.drops.length=0;
+          for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'queenIdol',c:1};G.sel=0;const h=T.BOSSES.queen.home();G.p.x=h.x+20;G.p.y=h.y;const far=T.decide();G.p.x=h.x;G.p.y=h.y+5;const a=T.decide();T.perform(a);return [first.includes('daggerQueen'),far.k,a.k,G.bossDead.queen,T.countItem('queenIdol')]}""")
+        rec('재도전','보스를 잡은 뒤 보스방에서 소환 조각상 사용 → 다시 나타남 (멀면 안내)', r==[True,'info','summon',False,0], str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=0;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;T.addItem('pickCopper',1,false);T.checkGuide();return T.GUIDE[G.guide].id}""")
+        rec('재도전','보스가 다시 살아나도 이야기 진행이 되돌아가지 않음', r!='queen', r)
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G;return [G2.bossDead.queen,G2.stats.beaten.queen]}""")
+        rec('재도전','다시 불러낸 상태로 저장·불러오기 유지', r==[False,1], str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const k0=T.countItem('lightSeed');let got=0;for(let n=0;n<40;n++){G.bossDead.queen=false;G.bosses.queen=T.freshBoss('queen');const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);}const ids=G.drops.map(d=>d.id);return [ids.filter(i=>i==='daggerQueen').length,ids.includes('shroomCap'),ids.includes('lightSeed'),G.stats.rematch]}""")
+        rec('재도전','다시 잡으면 재료 + 가끔(약 35%) 전용 장비, 빛씨앗은 안 나옴', 4<=r[0]<=26 and r[1] and not r[2] and r[3]>=40, str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;G.stats.beaten.slime=1;G.bossDead.slime=false;G.bosses.slime=T.freshBoss('slime');const b=G.bosses.slime;b.st='fight';b.hp=1;T.hitBoss(b,5,false);return G.drops.map(d=>d.id).includes('lightSeed')}""")
+        rec('재도전','말랑대왕 재도전에서도 빛씨앗이 또 나오지 않음', r is False, str(r))
+        r=await ev(pg,"()=>['queenIdol','slimeIdol','golemIdol','turtleIdol','spiritIdol'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
+        rec('재도전','보스 5종 소환 조각상 레시피 (구리 제작대)', r=='forge,forge,forge,forge,forge', r)
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'spiritIdol',c:1};G.sel=0;G.bossDead.spirit=false;G.stats.beaten.spirit=0;const h=T.BOSSES.spirit.home();G.p.x=h.x;G.p.y=h.y;return T.decide().msg}""")
+        rec('재도전','아직 안 잡은 보스는 소환 불가 안내', '물리친 뒤' in (r or ''), r)
+        # ---- usability fixes ----
+        await ev(pg,ARENA)
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const ai=T.idx(110,104);const o={t:'drillGold',dir:{x:1,y:0}};G.objs.set(ai,o);G.wall[T.idx(111,104)]=10;G.objs.set(T.idx(110,106),{t:'battery',e:600});G.wire.set(T.idx(110,105),1);for(let k=0;k<30;k++)T.circuitTick(.2);return [o.why,(o.store||[]).map(s=>s.id+':'+s.c).join(','),T.RECIPES.some(r=>r.out==='drillGold')]}""")
+        rec('채굴기','황금 채굴기: 금 광맥에서 금광석을 캠', 'goldOre' in r[1] and r[2], str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillFe',dir:{x:1,y:0}};const ai=T.idx(110,108);G.objs.set(ai,o);G.wall[T.idx(111,108)]=10;G.objs.set(T.idx(110,110),{t:'battery',e:600});G.wire.set(T.idx(110,109),1);for(let k=0;k<5;k++)T.circuitTick(.2);return o.why}""")
+        rec('채굴기','철 채굴기로는 금 광맥 불가 (tier)', r=='tier', r)
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillGold',dir:{x:1,y:0}};const ai=T.idx(110,112);G.objs.set(ai,o);G.wall[T.idx(111,112)]=11;G.objs.set(T.idx(110,114),{t:'battery',e:6000});G.wire.set(T.idx(110,113),1);for(let k=0;k<25*40;k++)T.circuitTick(.2);return (o.store||[]).reduce((a,s)=>a+s.c,0)}""")
+        rec('채굴기','얼음벽에서는 가끔만 서리 결정 (확률 반영, 40번 중 약 6개)', 1<=r<=16, r)
+        await ev(pg,ARENA)
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.objs.set(T.idx(105,108),{t:'chair',dir:2});G.p.x=105.5;G.p.y=109.6;G.p.face={x:0,y:-1};const a=T.decide();T.perform(a);return [a.u,G.p.sit&&G.p.sit.dir]}""")
+        rec('의자','위를 보는 의자에 앉기', r==['sit',2], str(r))
+        await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'qa30_chair.png')
+        await ev(pg,"()=>{const G=__T.G;G.p.sit=null;G.p.x=104.5;G.p.y=108.5}")
+        await ev(pg,"()=>{const T=__T,G=T.G;const i=T.idx(106,104);const o={t:'treeFarm',p:G.time};G.objs.set(i,o);for(const j of [i+1,i+200,i+201])G.objs.set(j,{t:'_part',a:i});G.p.x=105.5;G.p.y=107.5}")
+        await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'qa30_farm.png')
+        # ---- region difficulty ----
+        r=await ev(pg,"()=>{const E=__T.ENEMY;return [E.slimeG.hp,E.slimeP.hp,E.magmaSlime.hp,E.snowling.dmg,E.magmaSlime.aggro,E.bloomR.hp]}")
+        rec('난이도','몬스터 체력·공격력 상향 (꽃망울은 그대로)', r==[18,75,120,22,10,18], str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;let i=-1;for(let k=0;k<40000;k++){if(G.biome[k]===3&&!G.wall[k]&&G.floor[k]===18&&Math.hypot(k%200-T.SL.x,((k/200)|0)-T.SL.y)>14){i=k;break}}const x=i%200,y=(i/200)|0;for(let dy=-16;dy<=16;dy++)for(let dx=-16;dx<=16;dx++){const j=T.idx(x+dx,y+dy);if(x+dx>2&&y+dy>2&&x+dx<197&&y+dy<197&&G.wall[j]!==8){G.wall[j]=0;G.floor[j]=18;G.objs.delete(j);G.biome[j]=3}}G.p.x=x+.5;G.p.y=y+.5;G.enemies.length=0;for(let k=0;k<60;k++)T.trySpawn();return G.enemies.length}""")
+        rec('난이도','용암 동굴은 한 번에 더 많이 몰려옴 (최대 10, 무리 지어 등장)', 9<=r<=11, r)
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const e=T.mkEnemy('magmaSlime',G.p.x+9.4,G.p.y);G.enemies.push(e);const x0=e.x;for(let k=0;k<60;k++)T.updateEnemies(1/30);return +(x0-e.x).toFixed(2)}""")
+        rec('난이도','깊은 동굴 몬스터는 더 멀리서(10칸) 알아채고 쫓아옴', r>0.5, r)
+        rec('기능','콘솔 오류 없음', not errs, errs[:4])
+        await ctx.close(); await b.close()
+    print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+asyncio.run(main())

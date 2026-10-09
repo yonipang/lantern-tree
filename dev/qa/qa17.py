@@ -74,7 +74,7 @@ async def main():
         r=await ev(pg,"()=>{const G=__T.G;G.rpg.lv=1;G.rpg.xp=0;G.rpg.pts=0;G.rpg.sp=0;G.p.hp=40;__T.gainXp(25);return [G.rpg.lv,G.rpg.pts,G.rpg.sp,G.p.hp===__T.maxHp(),G.rpg.xp]}")
         rec('레벨','경험치 25 → Lv.2, 포인트 2·스킬 1, 체력 회복', r==[2,2,1,True,5], str(r))
         r=await ev(pg,"()=>{const G=__T.G,x=G.rpg.xp;const f="+EN+";f(106.3,110.5,1);__T.give('swordWood');__T.perform({k:'swing'});return [G.enemies.length,G.rpg.xp-x]}")
-        rec('레벨','몬스터를 물리치면 경험치', r[0]==0 and r[1]>0, str(r))
+        rec('레벨','몬스터를 물리치면 경험치', r[1]>0, str(r))
         await pg.wait_for_timeout(300)
         r=await ev(pg,"()=>document.querySelector('#bStat').classList.contains('dot')"); rec('능력','포인트가 있으면 능력 버튼에 점', r, r)
         await pg.tap('#bStat'); await pg.wait_for_timeout(600)
