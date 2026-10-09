@@ -2051,7 +2051,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; buildPlayer(0);
+  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.roof = new Map(); roofVer++; G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2059,7 +2059,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof], run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {} };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, roof: [...G.roof], run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [] };
 }
 function deserialize(s) {
   const N = W * H;
@@ -2088,6 +2088,7 @@ function deserialize(s) {
   G.playTEst = !Number.isFinite(s.playT) || !!s.playTEst; G.playT = Number.isFinite(s.playT) ? s.playT : Math.max(0, Math.round(+s.time || 0));
   G.qt = {}; if (s.qt && typeof s.qt === 'object') for (const k in s.qt) if (Number.isFinite(s.qt[k])) G.qt[k] = s.qt[k];
   fixParts(); grantUniques(); ensureDeepAltars();
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
@@ -2101,6 +2102,47 @@ function ensureDeepAltars() { let w = null; G.stats.deepSeed = G.stats.deepSeed 
 function grantUniques() {
   G.stats.uniq = G.stats.uniq || {};
   for (const k in UNIQ_OF) if (G.bossDead[k] && !G.stats.uniq[k]) { G.stats.uniq[k] = 1; const l = moveInto(G.inv, { id: UNIQ_OF[k], c: 1 }); if (l) spawnDrop(UNIQ_OF[k], 1, G.p.x, G.p.y); if (k === 'golem') { const l2 = addItem('golemCore', 1, false); if (l2) spawnDrop('golemCore', 1, G.p.x, G.p.y); } }
+}
+// ---- hidden rooms: small walled rooms behind a cracked wall, one or two per region, each with a treasure chest ----
+// placed on untouched rock only (compared with the world as first generated), so old saves get them too without touching anything the player built
+const ROOM_N = [2, 2, 2, 1, 1], ROOM_DECO = ['mossLantern', 'sporeChime', 'cryVase', 'emberBowl', 'iceSwan'];
+const ROOM_LOOT = [
+  [[['berrySeed', 4], ['glowSpore', 2], ['copperBar', 4], ['rope', 3]], [['mossSpore', 3], ['resin', 3], ['gel', 5], ['berryS', 3]]],
+  [[['glowSpore', 3], ['spore', 4], ['shroomCap', 4], ['ironBar', 2]], [['glowcapS', 3], ['gShroom', 6], ['gel', 6], ['copperBar', 5]]],
+  [[['cbeanSeed', 3], ['crystal', 8], ['ironBar', 3]], [['cbeanS', 3], ['gCrystal', 6], ['crystal', 6], ['goldBar', 1]]],
+  [[['obsidian', 4], ['goldBar', 2], ['fireBerry', 4], ['crystal', 4]]],
+  [[['frostShard', 6], ['goldBar', 2], ['ironBar', 3], ['crystal', 4]]]];
+let DOORS = new Set();
+const refreshDoors = () => { DOORS = new Set((G.rooms || []).filter(r => !r.found).map(r => idx(r.dx, r.dy))); };
+function placeRooms(w0) {
+  const rooms = [], safe = [[CX, CY], [BX, BY], [SA.x, SA.y], [SB.x, SB.y], [SL.x, SL.y], [SI.x, SI.y]], cand = [[], [], [], [], []];
+  for (let y = 4; y < H - 8; y += 2) for (let x = 4; x < W - 8; x += 2) { const b = G.biome[idx(x + 1, y + 1)]; if (b <= 4) cand[b].push([x, y, hash2(x, y, (G.seed | 0) + 77)]); }
+  const natural = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.roof.has(i) && !G.under.has(i);
+  for (let b = 0; b < 5; b++) { cand[b].sort((a, c) => a[2] - c[2]); let n = 0;
+    for (const [x, y] of cand[b]) { if (n >= ROOM_N[b]) break;
+      if (safe.some(([sx, sy]) => Math.hypot(x + 2 - sx, y + 1 - sy) < 16) || rooms.some(r => Math.hypot(r.x - x, r.y - y) < 24)) continue;
+      let ok = true; for (let yy = y - 1; yy <= y + 3 && ok; yy++) for (let xx = x - 1; xx <= x + 4; xx++) { const i = idx(xx, yy); if (!natural(i) || G.biome[i] !== b) { ok = false; break; } }
+      if (!ok) continue;
+      const dx = x + 1 + (hash2(x, y, 5) < .5 ? 0 : 1), below = idx(dx, y + 4); // the cracked wall faces an open tunnel
+      if (G.wall[below] || G.floor[below] === WATER || G.floor[below] === LAVA || G.objs.get(below)) continue;
+      for (let yy = y; yy <= y + 2; yy++) for (let xx = x; xx <= x + 3; xx++) { const i = idx(xx, yy); G.wall[i] = 0; G.floor[i] = 6; G.wdmg.delete(i); }
+      const cx = dx === x + 1 ? x + 2 : x + 1; G.objs.set(idx(cx, y), { t: 'tchest', hid: 1 }); // stays dark until the room is found
+      rooms.push({ id: 'r' + b + n, b, k: n, x, y, dx, dy: y + 3, cx, cy: y, found: 0, open: 0, hint: 0 }); n++; } }
+  return rooms;
+}
+const cleanRooms = a => a.filter(r => r && Number.isInteger(r.x) && Number.isInteger(r.y) && Number.isInteger(r.b) && r.b >= 0 && r.b < 5).map(r => ({ id: String(r.id || ''), b: r.b, k: r.k | 0, x: r.x, y: r.y, dx: r.dx | 0, dy: r.dy | 0, cx: r.cx | 0, cy: r.cy | 0, found: r.found ? 1 : 0, open: r.open ? 1 : 0, hint: r.hint ? 1 : 0 }));
+function roomTick() {
+  const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let ch = false;
+  for (const r of G.rooms || []) { if (r.found) continue;
+    if ((px >= r.x && px <= r.x + 3 && py >= r.y && py <= r.y + 2) || !G.wall[idx(r.dx, r.dy)]) { r.found = 1; ch = true; const tc = G.objs.get(idx(r.cx, r.cy)); if (tc) delete tc.hid; G.stats.rooms = (G.stats.rooms || 0) + 1; toast('숨은 방을 찾았어요! 보물상자를 열어 봐요', 'good', 'room'); SFX.seed(); continue; }
+    if (!r.hint && Math.hypot(p.x - r.dx - .5, p.y - r.dy - .5) < 3.2) { r.hint = 1; toast('금 간 벽 틈으로 바람이 새어 나와요… 이 벽 너머에 뭔가 있는 것 같아요', null, 'roomhint'); } }
+  if (ch) { refreshDoors(); lightDirty = true; }
+}
+function openTreasure(t, o) {
+  if (o.open) return; o.open = 1; const r = (G.rooms || []).find(q => q.cx === t.x && q.cy === t.y); const loot = r ? (ROOM_LOOT[r.b][r.k] || ROOM_LOOT[r.b][0]).slice() : [['crystal', 3], ['gel', 3]];
+  delete o.hid; if (r) { r.open = 1; if (!r.found) { r.found = 1; refreshDoors(); } if (r.k === 0) loot.push([ROOM_DECO[r.b], 1]); }
+  for (const [id, c] of loot) spawnDrop(id, c, t.x + .5, t.y + .9);
+  G.stats.chests = (G.stats.chests || 0) + 1; SFX.win(); puff(t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); toast('보물상자를 열었어요!', 'good'); lightDirty = true; checkGuide();
 }
 let saveFailWarned = false;
 function saveLocal(silent) {
@@ -2496,6 +2538,7 @@ function decide() {
       if (st < 0) return { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t };
       return { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t }; }
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
+    if (d.tchest) return o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '보물상자 열기', icon: 'hand', t, o };
     if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
     if (d.crop) { const cs = Math.max(0, cropStage(o));
       if (cs >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
@@ -2559,6 +2602,7 @@ function perform(a) {
     case 'unroof': { const i = idx(a.t.x, a.t.y), m = G.roof.get(i); if (m) { G.roof.delete(i); roofVer++; const l = addItem(ROOF_ITEM[m], 1, false); if (l) spawnDrop(ROOF_ITEM[m], 1, a.t.x + .5, a.t.y + .5); SFX.pick(); } actCd = 0.18; break; }
     case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
+    case 'treasure': openTreasure(a.t, a.o); actCd = 0.4; break;
     case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); actCd = 0.35; break;
     case 'water': waterCrop(a.t, a.o); actCd = 0.25; break;
     case 'fert': fertCrop(a.t, a.o); actCd = 0.3; break;
@@ -2961,7 +3005,7 @@ function update(dt) {
   growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
   circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
-  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); }
+  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); roomTick(); }
   saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
   snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
   cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
@@ -3268,6 +3312,29 @@ OBJ.cluster.drops.push(['cbeanSeed', 1, 1, 0.1]); OBJ.glow.drops.push(['glowSpor
 RECIPES.push(Object.assign(Rc('fertCry', 2, [['gCrystal', 1], ['crystal', 1]], 'forge', 'farm'), { need: () => beat('golem') }));
 QSIDE.push({ id: 's_crop4', t: () => `별 작물 5개 거두기 (${Math.min(5, G.stats.starH || 0)}/5)`, h: '수정골렘을 물리친 뒤, 작물을 맞는 흙에 심으면 가끔 별 작물로 자라요. 베리는 이끼, 버섯·빛버섯은 버섯흙, 수정 콩은 수정 모래예요.', done: () => (G.stats.starH || 0) >= 5, rw: [['crystal', 8]], xp: 60 });
 TIPS.push('맞는 흙에 심은 작물은 가끔 별 작물이 돼요. 다 자라면 작은 별이 반짝여요.', '수정 결정을 캐면 가끔 수정 콩 씨앗이 나와요.');
+// ---- hidden-room treasure chest and the one-of-a-kind decorations found in them ----
+OBJ.tchest = { n: '보물상자', solid: 1, tchest: 1, light: [2.2, '#ffd25c'] };
+const ROOM_DECO_DEF = {
+  mossLantern: ['이끼 석등', '이끼 동굴 숨은 방에서 찾은 오래된 석등. 따뜻하게 빛나요.', [4.5, '#ffd27a'], [16, 22, A => { A.r(4, 19, 8, 2, '#6f6a86'); A.r(5, 18, 6, 1, '#8e89a3'); A.r(6, 12, 4, 6, '#8e89a3'); A.r(6, 12, 1, 6, '#a29db6'); A.r(3, 6, 10, 6, '#8e89a3'); A.r(3, 6, 10, 1, '#a29db6'); A.r(5, 8, 6, 3, '#ffd27a'); A.p(6, 8, '#fff1c0'); A.r(5, 11, 6, 1, '#6f6a86');
+    A.poly([[1, 6], [8, 1], [15, 6]], '#6f6a86'); A.e(8, 3.6, 3.4, 1.3, '#62ad62'); A.p(3, 5, '#7cc271'); A.p(12, 5, '#62ad62'); A.p(6, 18, '#62ad62'); A.p(10, 19, '#7cc271'); }]],
+  sporeChime: ['포자 풍경', '버섯숲 숨은 방에서 찾은 풍경. 보랏빛 포자 방울이 은은하게 빛나요.', [3, '#d59bff'], [16, 22, A => { A.e(8, 21, 4, 1, '#7a5aa0'); A.r(7, 5, 2, 16, C.woodD); A.r(7, 5, 1, 16, C.wood); A.r(2, 4, 12, 2, C.wood); A.r(2, 4, 12, 1, C.woodL);
+    for (const [x, l, c] of [[3, 5, '#b673de'], [8, 0, null], [13, 4, '#d59bff']]) { if (!c) continue; A.line(x, 6, x, 6 + l, '#e8d8c0'); A.e(x, 7.5 + l, 1.8, 1.3, c); A.p(x, 7 + l, '#fbe7ff'); } A.line(10, 6, 10, 12, '#e8d8c0'); A.e(10, 13.5, 1.6, 1.2, '#c79ae8'); A.p(10, 13, '#fbe7ff'); }]],
+  cryVase: ['수정 꽃병', '수정 동굴 숨은 방에서 찾은 꽃병. 꽂힌 수정이 보랏빛으로 빛나요.', [3, '#b99bff'], [16, 18, A => { A.e(8, 13.5, 4.4, 3.8, '#4a4290'); A.e(8, 13, 4, 3.4, '#6a62b8'); A.e(6.6, 12, 1.6, 2, '#a99cf0'); A.r(6, 7, 4, 3, '#6a62b8'); A.r(5, 7, 6, 1, '#a99cf0');
+    A.poly([[5, 8], [3, 2], [7, 7]], C.cry); A.poly([[7, 7], [8, 0], [10, 7]], C.cryL); A.poly([[9, 8], [13, 3], [11, 8]], C.cry); A.p(8, 2, '#ffffff'); A.p(4, 4, C.cryL); }]],
+  emberBowl: ['흑요석 화로', '용암 동굴 숨은 방에서 찾은 흑요석 화로. 꺼지지 않는 불씨가 타올라요.', [4, '#ff9b4a'], [16, 16, A => { A.line(4, 11, 3, 15, '#2a2238'); A.line(12, 11, 13, 15, '#2a2238'); A.line(8, 12, 8, 15, '#2a2238'); A.e(8, 10.5, 6, 2.8, '#2a2238'); A.e(8, 9.6, 5.2, 1.8, '#4a3f5c'); A.p(4, 10, '#8a7aa6');
+    A.e(8, 7, 3.2, 3, '#ff8a3d'); A.e(8, 6.2, 2.2, 2.6, '#ffc861'); A.p(8, 3, '#fff1b0'); A.p(6, 5, '#ffe0a0'); A.p(10, 6, '#ff8a3d'); }]],
+  iceSwan: ['얼음 백조', '얼음 동굴 숨은 방에서 찾은 얼음 조각. 녹지 않고 반짝여요.', [2.5, '#9fd8f0'], [16, 16, A => { A.e(8, 14, 6.4, 1.6, '#9ab0c8'); A.e(9, 11, 5, 2.8, '#d8e8f5'); A.e(10, 10, 3.2, 1.6, '#ffffff'); A.p(12, 9, '#9fd8f0'); A.line(5, 11, 4, 5, '#e8f8ff', 2); A.e(4.6, 4, 1.8, 1.4, '#ffffff'); A.p(2, 4, '#9fd8f0'); A.p(4, 3, '#5a88b0'); }]],
+};
+for (const id in ROOM_DECO_DEF) { const [n, d, light, spr] = ROOM_DECO_DEF[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = { n, solid: 1, item: id, light }; OSPR[id] = spr; }
+OBJ.emberBowl.flick = 1;
+Object.assign(OSPR, {
+  tchest: [16, 16, A => { A.r(2, 6, 12, 8, '#8a5a34'); A.r(2, 3, 12, 4, '#a86a3c'); A.r(2, 3, 12, 1, '#d09058'); A.r(2, 6, 12, 1, '#6a4428'); A.r(4, 3, 1, 11, '#ffd25c'); A.r(11, 3, 1, 11, '#ffd25c'); A.r(2, 8, 12, 1, '#e8a33a');
+    A.r(7, 7, 2, 3, '#ffd25c'); A.p(7, 8, '#7a4a1a'); A.r(2, 13, 12, 1, '#5a3a24'); A.p(4, 3, '#fff1b0'); A.p(13, 2, '#fff1b0'); }],
+  tchestOpen: [16, 16, A => { A.r(2, 0, 12, 4, '#a86a3c'); A.r(2, 0, 12, 1, '#d09058'); A.r(4, 0, 1, 4, '#ffd25c'); A.r(11, 0, 1, 4, '#ffd25c'); A.r(2, 4, 12, 2, '#2a1a14'); A.r(2, 6, 12, 8, '#8a5a34'); A.r(2, 6, 12, 1, '#b8784a');
+    A.r(4, 6, 1, 8, '#ffd25c'); A.r(11, 6, 1, 8, '#ffd25c'); A.r(2, 8, 12, 1, '#e8a33a'); A.r(2, 13, 12, 1, '#5a3a24'); }],
+});
+QSIDE.push({ id: 's_rooms', t: () => `숨은 방 보물상자 3개 열기 (${Math.min(3, G.stats.chests || 0)}/3)`, h: '벽에 금이 가 있고 틈으로 빛이 새어 나오면 그 너머에 숨은 방이 있어요. 지역마다 한두 곳씩 숨어 있어요.', done: () => (G.stats.chests || 0) >= 3, rw: [['glowSpore', 3], ['cbeanSeed', 2]], xp: 50 });
+TIPS.push('벽에 금이 가 있고 틈으로 빛이 새어 나오면, 그 너머에 숨은 방이 있을지도 몰라요.');
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
 function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: (q.rw && q.rw.length) || q.xp }; }
@@ -3310,7 +3377,7 @@ function computeLight() {
   for (let y = y0 - 8; y <= y1 + 8; y++) for (let x = x0 - 8; x <= x1 + 8; x++) {
     if (!inB(x, y)) continue; if (G.floor[idx(x, y)] === LAVA && !G.wall[idx(x, y)] && (x * 7 + y * 3) % 4 === 0) lights.push({ x: x + .5, y: y + .5, r: 3.4, c: [1, .5, .2], k: .9 });
     const o = G.objs.get(idx(x, y)); if (!o) continue; const d = OBJ[o.t];
-    let L = d.light; if (o.t === 'shrine' && o.has) L = [4.5, '#ffd97a']; if (o.t === 'cropGlow') { const cs = cropStage(o); L = cs >= 3 ? [2.6, '#6ff2e6'] : cs >= 2 ? [1.4, '#6ff2e6'] : null; } if (!L || o.off) continue;
+    let L = d.light; if (o.t === 'shrine' && o.has) L = [4.5, '#ffd97a']; if (o.t === 'tchest' && (o.open || o.hid)) L = null; if (o.t === 'cropGlow') { const cs = cropStage(o); L = cs >= 3 ? [2.6, '#6ff2e6'] : cs >= 2 ? [1.4, '#6ff2e6'] : null; } if (!L || o.off) continue;
     const fl = d.flick ? 1 + Math.sin(t * 9 + x * 3) * 0.05 + Math.sin(t * 23 + y) * 0.03 : 1;
     lights.push({ x: x + (d.sz ? fpOf(o)[0] / 2 : .5), y: y + (d.sz ? fpOf(o)[1] / 2 : .5), r: L[0] * fl, c: hexRgb(L[1]), k: 1, col: L[1], tall: SPR.obj[o.t] && SPR.obj[o.t].height > 20 });
   }
@@ -3494,6 +3561,7 @@ function renderWorld(cw, ch) {
       if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, T);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
       const dm = G.wdmg.get(i); if (dm) ctx.drawImage(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))], sx, sy - L);
+      if (DOORS.has(i)) { if (!dm) ctx.drawImage(SPR.crack[0], sx, sy - L); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, sy + T - L, 1, 2); ctx.fillRect(sx + 8, sy + T - L + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, sy + T - L + 2, 1, 2); ctx.fillRect(sx + 6, sy + T - L + 1, 1, 1); } }
     }
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
     for (const it of list) drawEntity(it, t);
@@ -3609,6 +3677,7 @@ function drawEntity(it, t) {
     if (fpD && o.rot && d.rotV && SPR.obj[o.t + 'V']) img = SPR.obj[o.t + 'V']; if (o.t === 'treeFarm') img = SPR.obj['treeFarm' + (farmStage(o) || '')] || img; if (d.dir4 && o.dir) { img = SPR.obj[o.t + (o.dir === 2 ? 'U' : 'S')] || img; flipX = o.dir === 3; }
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))][(o.w ? 1 : 0) + (o.f ? 2 : 0)];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
+    if (o.t === 'tchest' && o.open) img = SPR.obj.tchestOpen;
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
@@ -3787,7 +3856,7 @@ function renderPanel() {
     h += head('보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
     h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="menu-two stash"><button class="btn" data-a="stash" data-i="all" type="button">가방 → 모두 넣기</button><button class="btn ghost" data-a="stash" data-i="same" type="button">같은 것만 넣기</button></div><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'cin', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'cin', i + HOT)).join('')}</div></div>`;
   } else if (k === 'map') {
-    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span></div></div>`;
+    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span><span><i style="background:#ffd25c"></i>찾은 보물상자</span></div></div>`;
   } else if (k === 'tree') {
     h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
   } else if (k === 'menu') {
@@ -3861,6 +3930,7 @@ function drawMap() {
   for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) dot(z.x + .5, z.y + .5, FLOWERS[z.c][2], 4);
   for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
   for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
+  for (const r of G.rooms || []) if (r.found && !r.open) dot(r.cx + .5, r.cy + .5, '#ffd25c', 5);
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
 }
 function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) set.add(OBJ[o.t].station); } return set; }
