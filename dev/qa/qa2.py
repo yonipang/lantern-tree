@@ -69,10 +69,10 @@ async def main():
         # ---------- B. functional (mobile) ----------
         ctx,pg,errs=await new_ctx(b,390,844,True)
         CX,CY=100,100
-        r=await ev(pg,"()=>[__T.G.sel, __T.G.inv.filter(x=>x).map(s=>s.id).join(','), !!document.querySelector('#toolbelt')]")
-        rec('되돌림','시작 아이템: 베리·씨앗·나무 곡괭이·나무 검, 도구 칸 없음', r[0]==0 and r[1]=='berry,berrySeed,pickWood,swordWood' and not r[2], str(r))
-        recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/axe|rodCrystal/.test(k)).join(',')")
-        rec('되돌림','도끼·수정 낚싯대 항목 제거됨 (구리 낫은 v33 농사에서 다시 생김)', recipes=='', recipes or '-')
+        r=await ev(pg,"()=>[__T.G.sel, __T.G.inv.filter(x=>x).map(s=>s.id).join(','), !!document.querySelector('#toolbelt'), __T.G.equip.weapon&&__T.G.equip.weapon.id]")
+        rec('되돌림','시작 아이템: 베리·씨앗·나무 곡괭이 + 무기 칸에 나무 검(v42), 도구 칸 없음', r[0]==0 and r[1]=='berry,berrySeed,pickWood' and r[3]=='swordWood' and not r[2], str(r))
+        recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/^axeWood$|rodCrystal/.test(k)||__T.ITEMS[k].kind==='axe').join(',')")
+        rec('되돌림','도구 도끼·수정 낚싯대 항목 제거됨 (도끼는 v42에서 무기로 다시 생김, 구리 낫은 v33)', recipes=='', recipes or '-')
         # bare hand chop
         await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&s.id==='pickWood'?null:s)}")
         await stand(pg,CX+6.5,CY-0.4,1,0)
@@ -181,7 +181,7 @@ async def main():
             mkpage(src,'old_'+name[:2]+'.html',hook)
             p2=await ctx.new_page(); await p2.goto('file://'+SP+'old_'+name[:2]+'.html'); await p2.wait_for_timeout(300); await p2.click("#btnNew"); await p2.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await p2.wait_for_timeout(300)
             old=await p2.evaluate("()=>{const G=__T.G;try{G.sel=G.sel}catch(e){};return JSON.stringify(__T.serialize())}"); await p2.close()
-            r=await ev(pg,"(s)=>{__T.deserialize(JSON.parse(s));const G=__T.G;return [G.sel, G.inv.filter(x=>x).map(x=>x.id).join(','), [...G.objs.values()].every(o=>__T.OBJ[o.t])]}", old)
+            r=await ev(pg,"(s)=>{__T.deserialize(JSON.parse(s));const G=__T.G;return [G.sel, G.inv.filter(x=>x).map(x=>x.id).concat(G.equip.weapon?[G.equip.weapon.id]:[]).join(','), [...G.objs.values()].every(o=>__T.OBJ[o.t])]}", old)
             await pg.wait_for_timeout(600)
             rec('저장',f'{name} 세이브 불러오기 정상', r[0]<9 and all(i in r[1] for i in ['pickWood','swordWood']) and 'axe' not in r[1] and 'sickle' not in r[1] and r[2] and not errs, str(r[:2]))
         await ev(pg,"()=>{const T=__T;T.deserialize(JSON.parse(JSON.stringify(T.serialize())))}")

@@ -149,7 +149,7 @@ async def main():
             await ev(pg,"()=>{document.body.classList.add('touch');const G=__T.G;G.rpg.sk.dash=1;G.rpg.slot=['dash',null];G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1};for(let k=0;k<3;k++)window.__toast&&0}")
             await pg.wait_for_timeout(500)
             r=await ev(pg,"""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
-              const E={craft:q('#bCraft'),stat:q('#bStat'),map:q('#bMap'),menu:q('#bMenu'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),hot:q('#hotbar'),bars:q('#hud .bars'),joy:q('#joy')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+              const E={craft:q('#bCraft'),equip:q('#bEquip'),quest:q('#bQuest'),stat:q('#bStat'),map:q('#bMap'),menu:q('#bMenu'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),hot:q('#hotbar'),bars:q('#hud .bars'),joy:q('#joy')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
               const bad=[];const ks=Object.keys(E);for(let a=0;a<ks.length;a++)for(let b=a+1;b<ks.length;b++)if(ov(E[ks[a]],E[ks[b]]))bad.push(ks[a]+'/'+ks[b]);
               const out=ks.filter(k=>E[k]&&k!=='joy'&&(E[k].x<0||E[k].y<0||E[k].r>innerWidth+1||E[k].b>innerHeight+1));
               return {bad,out,low:E.craft?[0,Math.round(E.craft.y),Math.round(E.sub.y),Math.round(E.act.y)]:null,right:E.craft?innerWidth-E.craft.r:null}}""")

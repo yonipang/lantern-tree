@@ -45,7 +45,7 @@ async def main():
             rec('마우스',f'{W}x{H} 단축칸 위에 커서 → 화면 조준 해제', r==False, str(r))
             # 4) placement far away goes to the highlighted tile
             await pg.evaluate("()=>{__T.addItem('torch',3);const G=__T.G;G.sel=G.inv.findIndex(s=>s&&s.id==='torch');}")
-            await pg.mouse.move(W-30,H*0.45); await pg.wait_for_timeout(100)
+            await pg.mouse.move(W-30,H*0.62); await pg.wait_for_timeout(100)  # v42: the side column has one more button (장비)
             t=await pg.evaluate("()=>__T.decide().t")
             await pg.screenshot(path=SP+f'qa4_far_{W}.png')
             await pg.mouse.down(); await pg.wait_for_timeout(80); await pg.mouse.up(); await pg.wait_for_timeout(250)

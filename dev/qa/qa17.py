@@ -67,8 +67,8 @@ async def main():
         await ev(pg,ARENA); await ev(pg,"()=>{__T.give('hammerCopper');__T.G.sel=0;const f="+EN+";f(106.3,110.5);f(105.5,111.4)}")
         r=await ev(pg,"()=>{__T.perform(__T.decide());return __T.G.enemies.map(e=>e.hp<999)}")
         rec('무기','망치: 넓게 휘둘러 두 적 모두 맞힘', r==[True,True], str(r))
-        r=await ev(pg,"()=>{__T.G.inv[0]=null;__T.give('swordCopper');__T.give('spearIron');for(let i=0;i<6;i++)if(!__T.G.inv[i]){__T.G.sel=i;break}return __T.curWeapon().id}")
-        rec('무기','아무것도 안 들면 검을 자동으로 사용', r=='swordCopper', r)
+        r=await ev(pg,"()=>{__T.G.inv[0]=null;__T.G.equip.weapon={id:'swordCopper',c:1};__T.give('spearIron');for(let i=0;i<6;i++)if(!__T.G.inv[i]){__T.G.sel=i;break}return __T.curWeapon().id}")
+        rec('무기','아무것도 안 들면 무기 칸의 무기를 사용 (v42)', r=='swordCopper', r)
         # ---- level & stats ----
         await ev(pg,ARENA)
         r=await ev(pg,"()=>{const G=__T.G;G.rpg.lv=1;G.rpg.xp=0;G.rpg.pts=0;G.rpg.sp=0;G.p.hp=40;__T.gainXp(25);return [G.rpg.lv,G.rpg.pts,G.rpg.sp,G.p.hp===__T.maxHp(),G.rpg.xp]}")

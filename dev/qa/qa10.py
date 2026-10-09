@@ -1,7 +1,7 @@
 import asyncio, sys
 sys.argv=['x']
 exec(open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'qa2.py')).read().split('async def main():')[0])
-H2=HOOK.replace("computeLight}","computeLight,checkGuide,bestPick,bestWeapon,get panelKind(){return panel&&panel.kind}}")
+H2=HOOK.replace("computeLight}","computeLight,checkGuide,bestPick,curWeapon,get panelKind(){return panel&&panel.kind}}")
 async def main():
     mkpage(SRC,'qa.html',H2)
     async with async_playwright() as p:
@@ -26,7 +26,7 @@ async def main():
         r=await ev(pg,"()=>{const i=__T.G.inv.findIndex(s=>s&&s.id==='pickWood');__T.openPanel('inv');const el=document.querySelector(`#sheet .slot[data-i=\"${i}\"]`);const c=el.className;__T.closePanel();return c}")
         rec('표시','망가진 도구 칸 표시', 'broken' in r, r)
         # sword wears only on hit
-        sw="__T.G.inv.find(s=>s&&s.id==='swordWood')"
+        sw="(__T.G.equip.weapon||__T.G.inv.find(s=>s&&s.id==='swordWood'))"  # v42: the starting sword sits in the weapon slot
         await setup()
         d0=await ev(pg,f"()=>{sw}.dur"); await tap(pg,2,400); d1=await ev(pg,f"()=>{sw}.dur")
         rec('내구도','허공에 휘두르면 안 닳음', d0==d1, f'{d0} {d1}')
@@ -39,7 +39,7 @@ async def main():
         rec('내구도','망가진 낚싯대 → 낚시 불가 안내', r==['info','낚싯대 고장'], str(r))
         # chest keeps durability
         await setup("const o={t:'chest',items:Array(18).fill(null)};G.objs.set(__T.idx(111,110),o);")
-        r=await ev(pg,"""()=>{const G=__T.G,i=G.inv.findIndex(s=>s&&s.id==='swordWood');G.inv[i].dur=37;__T.openPanel('chest',{i:__T.idx(111,110)});return i}""")
+        r=await ev(pg,"""()=>{const G=__T.G;if(G.equip.weapon){G.inv[20]=G.equip.weapon;G.equip.weapon=null}const i=G.inv.findIndex(s=>s&&s.id==='swordWood');G.inv[i].dur=37;__T.openPanel('chest',{i:__T.idx(111,110)});return i}""")
         await pg.wait_for_timeout(500)
         await pg.click(f'#sheet [data-a=cin][data-i="{r}"]'); await pg.wait_for_timeout(200)
         await pg.click('#sheet [data-a=cout][data-i="0"]'); await pg.wait_for_timeout(200)
@@ -56,7 +56,7 @@ async def main():
         await pg.click(f'#sheet [data-a=fix][data-i="{pi}"]'); await pg.wait_for_timeout(300)
         r=await ev(pg,f"()=>[{pick}.dur, __T.countItem('wood')]")
         rec('수리','망가진 곡괭이 수리: 나무 3개 → 내구도 200', r==[200,w0-3], f'{r} (wood before {w0})')
-        r=await ev(pg,"()=>{const s=__T.G.inv.find(s=>s&&s.id==='swordWood');return [s.dur, document.querySelector('#sheet .sh-body').innerText.includes('나무 1/1')||document.querySelector('#sheet .sh-body').innerText.includes('/2')]}")
+        r=await ev(pg,"()=>{const s=__T.G.equip.weapon||__T.G.inv.find(s=>s&&s.id==='swordWood');return [s.dur, document.querySelector('#sheet .sh-body').innerText.includes('나무 1/1')||document.querySelector('#sheet .sh-body').innerText.includes('/2')]}")
         rec('수리','덜 닳은 도구는 재료가 적게 듦', r[1], str(r))
         await pg.screenshot(path=SP+'qa10_fix.png')
         await ev(pg,"()=>__T.closePanel()")
