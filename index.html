@@ -107,6 +107,9 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 #subBtn span{font-size:13px}
 #subBtn:active{transform:translateY(2px);box-shadow:none}
 body:not(.touch) #subBtn, body.intro #subBtn{display:none}
+#rotBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 110px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 164px);width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #7fe0b5;box-shadow:0 4px 0 rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;touch-action:none;color:var(--text)}
+#rotBtn b{font-size:22px;line-height:1;font-weight:400}#rotBtn span{font-size:12px}#rotBtn:active{transform:translateY(2px);box-shadow:none}
+body:not(.touch) #rotBtn, body.intro #rotBtn{display:none}
 #fade.sleep{color:var(--amber);background:rgba(14,10,30,.9)}
 #actBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 48px);width:100px;height:100px;border-radius:50%;
   background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:3px solid var(--amber);box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 24px rgba(255,200,97,.25);
@@ -163,7 +166,7 @@ body.touch #pcHint{display:none}
 .grid .slot{width:100%;height:auto;aspect-ratio:1}
 .hint{flex:none;font-size:14px;color:var(--muted);line-height:1.5;margin:2px 2px 8px}
 .detail{display:grid;grid-template-columns:60px 1fr;gap:12px;align-items:center;background:var(--panel2);border-radius:18px;padding:12px;margin-top:12px}
-.detail img{width:56px;height:56px}
+.detail img{width:56px;height:56px;object-fit:contain}
 .detail h3{margin:0 0 3px;font-weight:400;font-size:19px}
 .detail p{margin:0;font-size:14px;color:var(--muted);line-height:1.45}
 .detail .st{color:var(--amber);font-size:14px;margin-top:3px}
@@ -308,8 +311,9 @@ body.touch #pcHint{display:none}
   <button id="actBtn" type="button" aria-label="행동"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
   <div id="hotbar"><div id="hbSlots"></div><button class="sbtn" id="bInv" type="button" aria-label="가방"><img class="px" alt=""></button></div>
   <div id="skBar" hidden><button class="skb" type="button" data-n="0"><img class="px" alt=""><i class="cd"></i><span class="k">F</span></button><button class="skb" type="button" data-n="1"><img class="px" alt=""><i class="cd"></i><span class="k">G</span></button></div>
+  <button id="rotBtn" type="button" hidden aria-label="방향 바꾸기"><b>↻</b><span>방향</span></button>
   <button id="subBtn" type="button" hidden aria-label="회수"><img class="px" id="subIcon" alt=""><span id="subLbl">회수</span></button>
-  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–9 단축칸 · R 회수 · I 가방 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
+  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="fade" hidden>기절했어요…</div>
   <input type="file" id="fileIn" hidden>
@@ -899,6 +903,7 @@ function buildSprites() {
   SPR.item = {}; for (const k in ICON) SPR.item[k] = mk(16, 16, ICON[k]);
   SPR.ui = {}; for (const k in UICON) SPR.ui[k] = mk(16, 16, UICON[k]);
   SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
+  for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
   SPR.roof = {}; for (const m in BMAT) { SPR.roof[m] = [roofTile(m, 0), roofTile(m, 1)]; SPR.item[ROOF_ITEM[m]] = roofIcon(m); }
   SPR.bush = [bushSpr(false), bushSpr(true)]; SPR.obj.bush = SPR.bush[1];
@@ -1493,11 +1498,12 @@ function growTick() {
   const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0)) continue; const x = i % W, y = (i / W) | 0;
     if (inside(x, y)) { o.at = G.time + 4; continue; }
-    G.objs.set(i, { t: d.growTo === 'g' ? (OBJ[o.g] ? o.g : 'root') : d.growTo }); if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .6, '#9be37a', 8, 2, .3); lightDirty = true; }
+    const nt = d.growTo === 'g' ? (OBJ[o.g] ? o.g : 'root') : d.growTo;
+    if (OBJ[nt].sz) { const no = { t: nt }; G.objs.delete(i); if (!fpFree(x, y, fpOf(no), true)) { G.objs.set(i, o); o.at = G.time + 10; continue; } G.objs.set(i, no); setParts(i, no); } else G.objs.set(i, { t: nt }); if (Math.hypot(x - p.x, y - p.y) < 20) puff(x + .5, y + .6, '#9be37a', 8, 2, .3); lightDirty = true; }
   if (G.regen && G.regen.length) G.regen = G.regen.filter(([i, t, at, c]) => { if (at > G.time) return true; if (!OBJ[t] || G.wall[i] || G.objs.get(i) || ![1, 2, 3].includes(G.floor[i])) return false; const x = i % W, y = (i / W) | 0; if (inside(x, y)) return true; const o = { t }; if (c) o.c = c; G.objs.set(i, o); return false; });
 }
 function digPlant(t, o) {
-  const d = OBJ[o.t], i = idx(t.x, t.y); G.objs.delete(i);
+  const d = OBJ[o.t], i = idx(t.x, t.y); delObj(i);
   const id = d.bush ? 'berryBush' : o.t === 'sapling' ? 'sapling' : o.t === 'capSapling' ? 'capSapling' : d.stump && o.g && OBJ[o.g] && OBJ[o.g].ntree && ITEMS[o.g] ? o.g : 'wood';
   const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
   SFX.pick(); puff(t.x + .5, t.y + .7, '#9be37a', 7, 2.2); invDirty = true; lightDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
@@ -1641,7 +1647,7 @@ function circuitTick(dt) {
   const rs = new Map();
   for (const [i, o, d] of comps) { if (!d.src) continue; const ok = d.src === 'cgen' || (d.src === 'gen' && (o.fuel || 0) > 0) || (d.src === 'batt' && (o.e || 0) > 0); o.lit = ok; if (!ok) continue;
     for (const n of adj(i, true)) { const r = find(n); let e = rs.get(r); if (!e) rs.set(r, e = { inf: false, b: [], g: [], load: 0 }); if (d.src === 'cgen') e.inf = true; else if (d.src === 'gen') { if (!e.g.includes(o)) e.g.push(o); } else if (!e.b.includes(o)) e.b.push(o); } }
-  for (const [i, o, d] of comps) { if (!d.dev) continue; let pr = null; for (const n of adj(i, true)) { const r = find(n); if (rs.has(r)) { pr = r; break; } }
+  for (const [i, o, d] of comps) { if (!d.dev) continue; let pr = null; for (const n of (d.sz ? [...new Set(fpTiles(i, o).flatMap(j => adj(j, true)))] : adj(i, true))) { const r = find(n); if (rs.has(r)) { pr = r; break; } }
     deviceStep(i, o, d, pr != null, dt); if (pr != null) rs.get(pr).load += (o.work ? (d.draw || 0) : (d.idle || 0)) * dt; }
   for (const [, e] of rs) { if (!e.load || e.inf) continue; if (e.g.length) { for (const g of e.g) { g.fuel = Math.max(0, g.fuel - dt); G.stats.genRun = 1; } continue; } if (e.b.length) { const per = e.load / e.b.length; for (const b of e.b) b.e = Math.max(0, b.e - per); } }
   CIRC.net = net; CIRC.pRoots = new Set(rs.keys()); CIRC.find = find;
@@ -1649,6 +1655,7 @@ function circuitTick(dt) {
 function deviceStep(i, o, d, on, dt) {
   const x = i % W, y = (i / W) | 0;
   if (d.dev === 'lamp') { if (o.off !== !on) { o.off = !on; lightDirty = true; } o.work = on; if (on) G.stats.litLamp = 1; return; }
+  if (d.dev === 'farm') { const ready = farmStage(o) >= 3; o.work = on && ready; if (on && ready) farmHarvest(i, o, true); return; }
   if (d.dev === 'door') { if (!!o.open !== on) { if (!on && occupied(x, y)) return; o.open = on; SFX.place(); } o.work = false; return; }
   if (d.dev === 'drill') { const dir = o.dir || { x: 0, y: -1 }, tx = x + dir.x, ty = y + dir.y, w = inB(tx, ty) ? G.wall[idx(tx, ty)] : 0, cnt = (o.store || []).reduce((a, s2) => a + s2.c, 0);
     const can = on && w && WALLS[w] && WALLS[w].tier <= d.tier && w !== 6 && w !== 7 && w !== 8 && cnt < DRILL_CAP; o.work = !!can; o.why = !on ? 'power' : !w || w === 6 || w === 7 || w === 8 ? 'wall' : WALLS[w].tier > d.tier ? 'tier' : cnt >= DRILL_CAP ? 'full' : '';
@@ -1755,6 +1762,56 @@ function drawHazards(T, camX, camY) {
     if (h.k === 'lava') { const a = warn ? .25 + .25 * Math.sin(t * 20) : Math.min(1, (h.life - h.t) * 1.5); ctx.globalAlpha = a; ctx.fillStyle = warn ? '#ff8a3d' : '#e8501f'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); if (!warn) { ctx.fillStyle = '#ffc861'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * .55, h.r * T * .32, 0, 0, 6.283); ctx.fill(); } ctx.globalAlpha = 1; }
     else if (warn) { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(191,230,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(191,230,255,${pr * .25})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } }
 }
+
+// ---- multi-tile objects (2×1, 2×2, 3×2 …): the top-left tile holds the object, the other tiles hold {t:'_part', a: anchor} ----
+OBJ._part = { n: '', part: 1 };
+const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.rotV ? [d.sz[1], d.sz[0]] : d.sz; };
+function fpTiles(i, o, fp) { fp = fp || fpOf(o); const x = i % W, y = (i / W) | 0, out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push(idx(x + dx, y + dy)); return out; }
+function setParts(i, o) { for (const j of fpTiles(i, o)) if (j !== i) G.objs.set(j, { t: '_part', a: i }); }
+function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i) continue; const q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); } }
+function delObj(i) { const o = G.objs.get(i); if (o && OBJ[o.t] && OBJ[o.t].sz) clearParts(i, o); G.objs.delete(i); }
+function anchorAt(i) { const o = G.objs.get(i); if (o && o.t === '_part') { const a = G.objs.get(o.a); return a && a.t !== '_part' ? o.a : -1; } return o ? i : -1; }
+function fpFree(x, y, fp, solid, own) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA) return false; const q = G.objs.get(j); if (q && !(own != null && (j === own || (q.t === '_part' && q.a === own)))) return false; if (solid && occupied(tx, ty)) return false; } return true; }
+function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math.abs(f.x) >= Math.abs(f.y)) { if (f.x < 0) x -= fp[0] - 1; y -= Math.floor((fp[1] - 1) / 2); } else { if (f.y < 0) y -= fp[1] - 1; x -= Math.floor((fp[0] - 1) / 2); } return { x, y }; }
+let placeRot = 0, placeRotFor = null;
+const pRot = () => { const s0 = G && selItem(); return s0 && s0.id === placeRotFor ? placeRot : 0; };
+const DIRN = ['아래', '오른쪽', '위', '왼쪽'];
+const canRotObj = t => { const d = OBJ[t]; return !!(d && d.item && !d.tw && !d.dev && !d.src && !d.sw && !d.chest && !(d.sz && !d.rotV && d.sz[0] === d.sz[1])); };
+const placeFp = d => d.sz ? (pRot() % 2 && d.rotV ? [d.sz[1], d.sz[0]] : d.sz) : [1, 1];
+function rotateObjAt(i) { const o = G.objs.get(i); if (!o || !canRotObj(o.t)) return false; const d = OBJ[o.t];
+  if (d.sz && d.rotV) { const nf = o.rot ? d.sz : [d.sz[1], d.sz[0]], x = i % W, y = (i / W) | 0; if (!fpFree(x, y, nf, !!d.solid, i)) { toast('돌릴 자리가 부족해요', null, 'norot'); return false; } clearParts(i, o); o.rot = o.rot ? 0 : 1; setParts(i, o); }
+  else if (d.dir4) o.dir = ((o.dir || 0) + 1) % 4;
+  else o.flip = !o.flip;
+  SFX.place(); puff((i % W) + .5, ((i / W) | 0) + .6, '#e8d8c0', 4, 1.4); lightDirty = true; return true; }
+function rotateAction() {
+  if (!started || paused || !G || G.p.dead > 0) return; const s = selItem(), it = s && ITEMS[s.id];
+  if (it && it.kind === 'place' && canRotObj(it.obj)) { const d = OBJ[it.obj]; if (placeRotFor !== s.id) { placeRotFor = s.id; placeRot = 0; } placeRot = d.dir4 ? (placeRot + 1) % 4 : (placeRot % 2 ? 0 : 1);
+    toast(d.sz && d.rotV ? (placeRot % 2 ? '세로로 놓아요' : '가로로 놓아요') : d.dir4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : (placeRot % 2 ? '반대 방향으로 놓아요' : '원래 방향으로 놓아요'), null, 'prot'); SFX.click(); return; }
+  const a = G.act; if (a && a.o && a.t && inB(a.t.x, a.t.y)) { const ai = anchorAt(idx(a.t.x, a.t.y)); if (ai >= 0 && canRotObj(G.objs.get(ai).t)) { rotateObjAt(ai); return; } }
+  toast('돌릴 수 있는 가구를 들거나 바라봐 주세요', null, 'norot2'); }
+const rotTarget = () => { if (!G) return false; const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'place' && canRotObj(it.obj)) return true; const a = G.act; return !!(a && a.o && a.t && inB(a.t.x, a.t.y) && anchorAt(idx(a.t.x, a.t.y)) >= 0 && canRotObj((G.objs.get(anchorAt(idx(a.t.x, a.t.y))) || {}).t)); };
+function fixParts() {
+  for (const [i, o] of [...G.objs]) { if (o.t !== '_part') continue; const a = G.objs.get(o.a); if (!a || a.t === '_part' || !OBJ[a.t] || !OBJ[a.t].sz || !fpTiles(o.a, a).includes(i)) G.objs.delete(i); }
+  for (const [i, o] of [...G.objs]) { const d = OBJ[o.t]; if (!d || !d.sz) continue; for (const j of fpTiles(i, o)) { if (j !== i && !G.objs.get(j)) G.objs.set(j, { t: '_part', a: i }); } }
+}
+function rot90(c) { const k = document.createElement('canvas'); k.width = c.height; k.height = c.width; const g = k.getContext('2d'); g.imageSmoothingEnabled = false; g.translate(k.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0); return k; }
+// ---- tree workshop: a 2×2 plot of saplings; chop when grown, or power it to chop by itself into a chest next to it ----
+const FARM_GROW = 90, FARM_CAP = 60;
+const farmStage = o => Math.max(0, Math.min(3, Math.floor((G.time - (o.p || 0)) / FARM_GROW * 3)));
+const farmLbl = o => (o.store || []).length ? '꺼내기' : farmStage(o) >= 3 ? '베기' : '살펴보기';
+function farmYield() { const out = [['wood', 5 + (Math.random() * 3 | 0)]]; if (Math.random() < .35) out.push(['resin', 1]); if (Math.random() < .12) out.push(['sapling', 1]); if (Math.random() < .5) out.push(['fiber', 1 + (Math.random() * 2 | 0)]); return out; }
+function farmHarvest(i, o, auto) { const x = i % W, y = (i / W) | 0;
+  if (!auto) { const got = farmYield(); o.p = G.time; G.stats.farmed = (G.stats.farmed || 0) + got[0][1]; for (const [id, c] of got) spawnDrop(id, c, x + 1, y + 1.2); SFX.brk(); puff(x + 1, y + 1, '#7fbf6a', 10, 2.5); gainXp(2); return true; }
+  const chests = []; for (const j of fpTiles(i, o)) { const jx = j % W, jy = (j / W) | 0; for (const [dx, dy] of D4) { if (!inB(jx + dx, jy + dy)) continue; const c = G.objs.get(idx(jx + dx, jy + dy)); if (c && c.t === 'chest' && c.items && !chests.includes(c)) chests.push(c); } }
+  const stN = (o.store || []).reduce((a, s2) => a + s2.c, 0); if (stN >= FARM_CAP && !chests.some(c => c.items.some(z => !z))) { o.why = 'full'; return false; }
+  const got = farmYield(); o.p = G.time; o.why = ''; G.stats.farmed = (G.stats.farmed || 0) + got[0][1];
+  for (const [id, c] of got) { let left = c; for (const ch of chests) { if (!left) break; left = moveInto(ch.items, { id, c: left }); } if (left) { o.store = o.store || []; const n = o.store.reduce((a, s2) => a + s2.c, 0), add = Math.min(left, FARM_CAP - n); if (add > 0) { const s2 = o.store.find(z => z.id === id); if (s2) s2.c += add; else o.store.push({ id, c: add }); } } }
+  if (Math.hypot(x + 1 - G.p.x, y + 1 - G.p.y) < 14) { puff(x + 1, y + 1, '#7fbf6a', 8, 2); SFX.brk(); } return true; }
+const farmTree = (A, x, yb, st) => { const s = [0.55, 1.1, 1.65, 2.2][st]; if (st === 0) { A.line(x, yb, x, yb - 3, C.woodD); A.e(x - 1, yb - 3, 1.4, .9, C.leaf); A.e(x + 1.2, yb - 3.6, 1.4, .9, C.leafL); return; }
+  A.r(x - 1, Math.round(yb - 4 * s), 2, Math.round(4 * s), C.wood); A.r(x - 1, Math.round(yb - 4 * s), 1, Math.round(4 * s), C.woodL); A.e(x, yb - 4 * s - 2.4 * s, 2.8 * s + 1, 2.4 * s + 1, C.leafD); A.e(x - .6, yb - 4 * s - 2.8 * s, 2.1 * s + .6, 1.8 * s + .6, C.leaf); A.p(Math.round(x - 1.5 * s), Math.round(yb - 4 * s - 3.8 * s), C.leafL); if (st === 3) { A.p(Math.round(x + s), Math.round(yb - 5.5 * s), '#ffd36b'); } };
+const farmSpr = st => [32, 40, A => { A.r(1, 10, 30, 29, '#6b4838'); for (let y = 13; y < 38; y += 5) A.r(2, y, 28, 1, '#5a3a2c'); for (let k = 0; k < 8; k++) A.p(3 + k * 3.5 | 0, 37 - (k % 3) * 9, '#62ad62');
+  A.r(0, 9, 32, 2, C.woodD); A.r(0, 37, 32, 2, C.woodD); A.r(0, 9, 2, 30, C.woodD); A.r(30, 9, 2, 30, C.woodD); for (const x of [0, 10, 20, 30]) { A.r(x, 7, 2, 4, C.wood); A.r(x, 36, 2, 4, C.wood); } A.r(0, 9, 32, 1, C.woodL);
+  farmTree(A, 9, 23, st); farmTree(A, 23, 23, st); farmTree(A, 16, 35, st); }];
 
 // ================= world gen =================
 function wallFor(b, x, y, s) {
@@ -1916,9 +1973,17 @@ function deserialize(s) {
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
   G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []);
   G.rpg = cleanRpg(s.rpg); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = Number.isFinite(s.p.mp) ? Math.min(s.p.mp, maxMp()) : maxMp(); G.p.hp = Math.min(G.p.hp, maxHp());
-  grantUniques();
+  fixParts(); grantUniques(); ensureDeepAltars();
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
+// the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
+function deepSeedDrop(k, S, b) { G.stats.deepSeed = G.stats.deepSeed || {}; if (G.stats.deepSeed[k]) return; G.stats.deepSeed[k] = 1; const sh = G.objs.get(idx(S.x, S.y)); if (sh && sh.t === 'shrine') sh.has = 0; spawnDrop('lightSeed', 1, b.x, b.y); }
+// saves from before the deep regions: if the altar room was never built (the area had been explored), build it now, or hand over the seed if its boss is already gone
+function ensureDeepAltars() { let w = null; G.stats.deepSeed = G.stats.deepSeed || {};
+  for (const [S, k] of [[SL, 'turtle'], [SI, 'spirit']]) { const o = G.objs.get(idx(S.x, S.y)); if (o && o.t === 'shrine') { if (G.bossDead[k] && !o.has) G.stats.deepSeed[k] = 1; continue; }
+    if (G.bossDead[k]) { if (!G.stats.deepSeed[k]) { G.stats.deepSeed[k] = 1; const l = addItem('lightSeed', 1); if (l) spawnDrop('lightSeed', 1, G.p.x, G.p.y); } continue; }
+    w = w || genWorld(G.seed);
+    for (let y = S.y - 10; y <= S.y + 10; y++) for (let x = S.x - 10; x <= S.x + 10; x++) { if (!inB(x, y) || Math.hypot(x - S.x - .5, y - S.y - .5) > 9.6) continue; const j = idx(x, y), q = G.objs.get(j); if (q && q.t !== 'shrine' && OBJ[q.t] && !OBJ[q.t].nat && q.t !== 'bush') continue; G.wall[j] = w.wall[j]; G.floor[j] = w.floor[j]; G.biome[j] = w.biome[j]; const no = w.objs.get(j); if (no) G.objs.set(j, { ...no }); else G.objs.delete(j); } } }
 function grantUniques() {
   G.stats.uniq = G.stats.uniq || {};
   for (const k in UNIQ_OF) if (G.bossDead[k] && !G.stats.uniq[k]) { G.stats.uniq[k] = 1; const l = moveInto(G.inv, { id: UNIQ_OF[k], c: 1 }); if (l) spawnDrop(UNIQ_OF[k], 1, G.p.x, G.p.y); if (k === 'golem') { const l2 = addItem('golemCore', 1, false); if (l2) spawnDrop('golemCore', 1, G.p.x, G.p.y); } }
@@ -2097,7 +2162,7 @@ const selItem = () => G.inv[G.sel];
 
 // ================= world helpers =================
 const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
-function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; const o = G.objs.get(i); return !!(o && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
+function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
 function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
 function moveEnt(e, dx, dy, r) {
   const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.15)); let bx = false, by = false;
@@ -2143,6 +2208,7 @@ function digGround(t) {
   mapPixel(t.x, t.y); invDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
 function canPlace(tx, ty, it) {
+  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid); }
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (it.kind === 'roof') return !G.roof.has(i); if (G.wall[i]) return false; const o = G.objs.get(i);
   if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && (!o || !OBJ[o.t].tree);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
@@ -2237,6 +2303,7 @@ function decide() {
   if (p.sit) return { k: 'stand', lbl: '일어나기', icon: 'hand' };
   if (G.fish) return { k: 'reel', lbl: G.fish.st === 'bite' ? '당기기!' : '거두기', icon: 'rod' };
   let t = targetTile(), i = inB(t.x, t.y) ? idx(t.x, t.y) : -1, o = i >= 0 ? G.objs.get(i) : null;
+  if (o && o.t === '_part') { const ai = anchorAt(i); if (ai >= 0) { i = ai; t = { x: ai % W, y: (ai / W) | 0, far: t.far }; o = G.objs.get(ai); } else o = null; }
   const s = selItem(), it = s && ITEMS[s.id];
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it));
@@ -2257,7 +2324,7 @@ function decide() {
       return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
     if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
     if (d.item && !(it && it.kind === 'floor')) {
-      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (o.open ? '닫기' : '열기') : USE_LBL[u], icon: 'hand', t, o, sub: true };
+      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? 'wood' : 'hand', t, o, sub: true };
       if (it && ['place', 'wall', 'roof'].includes(it.kind)) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: true };
       return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
     }
@@ -2279,7 +2346,7 @@ const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed'
 const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
-  G.objs.delete(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
+  delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   returnObj(o, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
 function subAction() { const a = G.act; if (!started || paused || !a || !a.sub || G.p.dead > 0) return; ensureAudio(); if (a.sub === 'dig') digGround(a.t); else pickupObj(a.t, a.o); }
@@ -2312,7 +2379,7 @@ function perform(a) {
     case 'insert': insertSeeds(); actCd = 0.4; break;
     case 'tree': openPanel('tree'); actCd = 0.3; break;
     case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); SFX.seed(); puff(a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); toast('빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
-    case 'pickup': { const d = OBJ[a.o.t]; G.objs.delete(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
+    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
     case 'fish': startFish(a.t); actCd = 0.4; break;
     case 'stand': standUp(); actCd = 0.25; break;
     case 'use': useObj(a); actCd = 0.4; break;
@@ -2408,8 +2475,8 @@ function hitBoss(b, dmg, crit, fx) {
     G.bossDead[b.k] = true; gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; $('#bossbar').hidden = true; G.shots.length = 0; puff(b.x, b.y, def.col, 40, 5, 0.6); puff(b.x, b.y, '#ffc861', 16, 4, 1); SFX.win(); shake = 0.5;
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { G.stats.uniq[b.k] = 1; spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
-    if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); toast('용암 거북을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
-    if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); toast('서리 정령을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
+    if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); toast('용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
+    if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); toast('서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'slime') { spawnDrop('lightSeed', 1, b.x, b.y); spawnDrop('gel', 8, b.x, b.y); spawnDrop('copperBar', 5, b.x, b.y); spawnDrop('ironOre', 4, b.x, b.y); toast('말랑대왕을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'queen') { spawnDrop('shroomCap', 10, b.x, b.y); spawnDrop('glowcap', 6, b.x, b.y); spawnDrop('ironBar', 4, b.x, b.y); spawnDrop('spore', 3, b.x, b.y); toast('버섯 여왕을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
     if (b.k === 'golem') { spawnDrop('crystal', 12, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); toast('수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
@@ -2420,6 +2487,10 @@ function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k
 function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
+    case 'farm': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); SFX.pick(); toast(o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `나무 작업장에서 ${n}개를 꺼냈어요`, 'good', 'farm'); invDirty = true; break; }
+      if (farmStage(o) >= 3) { farmHarvest(idx(t.x, t.y), o, false); toast('나무를 베었어요! 묘목이 다시 자라요', null, 'farm'); break; }
+      toast(`나무가 자라는 중이에요 (${Math.round(Math.min(1, (G.time - (o.p || 0)) / FARM_GROW) * 100)}%) · 건전지·발전기와 전선으로 이으면 다 자랄 때마다 저절로 베어 옆 상자에 담아요`, null, 'farm'); break; }
     case 'lever': o.on = !o.on; SFX.click(); toast(o.on ? '레버를 켰어요' : '레버를 껐어요', null, 'lever'); break;
     case 'timer': { const L = [1, 2, 4, 8], k = (L.indexOf(o.per || 2) + 1) % L.length; o.per = L[k]; SFX.click(); toast(`타이머 간격: ${o.per}초마다 켜고 꺼요`, null, 'timer'); break; }
     case 'batt': toast(`건전지 ${Math.round((o.e || 0) / BATT_MAX * 100)}% 남았어요${(o.e || 0) <= 0 ? ' · 회수해서 작업대 [수리]로 충전해요' : ''}`, null, 'batt'); break;
@@ -2430,7 +2501,7 @@ function useObj(a) {
       const d2 = OBJ[o.t]; toast(o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? '이 채굴기로는 못 캐는 벽이에요' : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
     case 'cinfo': { const d2 = OBJ[o.t]; toast(d2.src === 'cgen' ? '수정 발전기 · 연료 없이 계속 전기를 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 전선을 이어 줘요' : d2.dev === 'door' ? (o.open ? '전기 문 · 전기가 들어와 열려 있어요' : '전기 문 · 전기가 들어오면 열려요') : (o.off === false ? '전기 램프 · 켜져 있어요' : '전기 램프 · 전기가 들어오면 켜져요'), null, 'cinfo'); break; }
     case 'door': if (o.open && occupied(t.x, t.y)) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; } o.open = !o.open; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break;
-    case 'sit': p.sit = { x: t.x, y: t.y, px: p.x, py: p.y }; p.x = x; p.y = t.y + .62; p.face = { x: 0, y: 1 }; p.dir = 'down'; p.flip = false; G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
+    case 'sit': { const sd = OBJ[o.t].dir4 ? (o.dir || 0) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
     case 'pet': hearts(x, t.y, 5); SFX.purr(); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); ftext(p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } toast(pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
     case 'lamp': o.off = !o.off; lightDirty = true; SFX.click(); break;
@@ -2487,7 +2558,7 @@ function hitObj(t, o) {
   if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
   o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power) * mineMul()); if (d.nat !== 'pick') wear(pk.slot);
   SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
-  if (o.dmg >= d.hp) { G.objs.delete(i); rollDrops(d.drops, t.x + .5, t.y + .5); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
+  if (o.dmg >= d.hp) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
 }
 function placeItem(t) {
   const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
@@ -2497,7 +2568,9 @@ function placeItem(t) {
   else if (it.kind === 'roof') { G.roof.set(i, it.roof); roofVer++; }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time });
-  else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); G.objs.set(i, o);
+  else { const o = { t: it.obj }; if (it.obj === 'bush') o.r = G.time + 150; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'treeFarm') o.p = G.time; const dd = OBJ[it.obj];
+    const pr = pRot(); if (dd.sz) { if (pr % 2 && dd.rotV) o.rot = 1; const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
+    else { if (pr && canRotObj(it.obj)) { if (dd.dir4) o.dir = pr % 4; else if (pr % 2) o.flip = true; } G.objs.set(i, o); }
     if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'forge') G.stats.forge = 1; if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
   s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
   SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);
@@ -2751,7 +2824,7 @@ const GUIDE = [
   { t: () => '수정 핵으로 수정 곡괭이 만들기', h: '수정골렘이 남긴 수정 핵으로 구리 제작대에서 만들어요. 남쪽 용암 동굴과 서쪽 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.', done: () => ['pickCrystal', 'pickGold', 'pickStar'].some(hasItem) || G.bossDead.turtle || G.bossDead.spirit },
   { t: () => '남쪽 용암 동굴의 용암 거북 물리치기', h: '등껍질에 숨어 굴러올 때는 거의 다치지 않아요. 벽에 튕기다 멈추면 그때 공격해요! 바닥이 주황색으로 반짝이면 곧 용암이 고여요.', done: () => G.bossDead.turtle, target: () => BOSSES.turtle.home() },
   { t: () => '서쪽 얼음 동굴의 서리 정령 물리치기', h: '얼음 고리는 빈틈 쪽으로 빠져나가요. 정령이 사라지면 곁에 다시 나타나 얼음을 터뜨려요. 점선 원 밖으로 피해요!', done: () => G.bossDead.spirit, target: () => BOSSES.spirit.home() },
-  { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.max(0, Math.min(2, G.stats.seedsFound - 3))}/2)`, h: '봉인이 풀린 용암 동굴과 얼음 동굴 제단에서 빛씨앗을 꺼내요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
+  { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.max(0, Math.min(2, G.stats.seedsFound - 3))}/2)`, h: '용암 거북과 서리 정령이 쓰러지면 빛씨앗을 떨어뜨려요. 예전 세이브라면 보스방 가운데 제단에 놓여 있을 수도 있어요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
     target: () => { const p = G.p; const c = [SL, SI].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
   { t: () => `등불나무의 마지막 등불 밝히기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 5, target: () => ({ x: CX + .5, y: CY + .5 }) },
   { t: () => '낚시하고 지역 가구로 꾸미기', h: '물가에서 낚시를 하고, 제작에서 이끼·버섯·수정 세트 가구를 만들어 나만의 아지트를 꾸며 보세요.', done: () => false },
@@ -2777,6 +2850,55 @@ const QSIDE = [
   { id: 's_legend', t: '전설 장비 만들기', h: '용암 핵과 서리 핵을 모아 구리 제작대에서 새벽빛 검이나 별빛 곡괭이를 만들어요.', done: () => ['swordDawn', 'pickStar'].some(id => hasItem(id) || ((G.stats.made || {})[id] || 0) > 0), rw: [['stew', 5], ['goldBar', 4]], xp: 300 },
   { id: 's_gen', t: '발전기 돌리기', h: '발전기를 만들고 연료(나무·젤·송진)를 넣으면 건전지 없이 전기를 계속 써요.', done: () => !!G.stats.genRun, rw: [['ironBar', 4], ['resin', 4]], xp: 60 },
 ];
+const MULTI = {
+  bedDouble: ['포근한 2인 침대', '둘이 누워도 넉넉한 커다란 침대 (2×2).', [['wood', 14], ['fiber', 10], ['rope', 3]], 'bench', 'furn', [2, 2], { solid: 1, bed: 1 }, 'sleep'],
+  longTable: ['긴 식탁', '여럿이 둘러앉는 긴 식탁 (2×1). 가로·세로로 돌릴 수 있어요.', [['wood', 10], ['resin', 1]], 'bench', 'furn', [2, 1], { solid: 1, rotV: 1 }],
+  sofa2: ['2인 소파', '폭신한 민트색 소파 (2×1). 가로·세로로 돌릴 수 있어요.', [['wood', 8], ['fiber', 10], ['rope', 2]], 'bench', 'furn', [2, 1], { solid: 1, rotV: 1 }, 'sit'],
+  bookcase2: ['큰 책장', '책이 빼곡한 큰 책장 (2×1).', [['wood', 14], ['resin', 2]], 'bench', 'furn', [2, 1], { solid: 1 }, 'read'],
+  kitchenSet: ['부엌 조리대', '싱크대와 화구가 붙은 조리대 (3×1).', [['copperBar', 4], ['stone', 8], ['wood', 6]], 'forge', 'furn', [3, 1], { solid: 1 }],
+  fountainBig: ['큰 분수', '물소리가 졸졸 흐르는 큰 분수 (2×2).', [['stone', 20], ['gWater', 2], ['crystal', 2]], 'forge', 'furn', [2, 2], { solid: 1, light: [3.5, '#9fd8f0'] }, 'wish'],
+  rugBig: ['큰 꽃 러그', '가운데 노란 꽃이 핀 러그 (2×2). 위로 걸어 다닐 수 있어요.', [['fiber', 12], ['petalR', 2]], 'bench', 'furn', [2, 2], { flat: 1 }],
+  rugLong: ['긴 줄무늬 러그', '복도에 깔기 좋은 긴 러그 (3×2). 가로·세로로 돌릴 수 있어요.', [['fiber', 14], ['rope', 2]], 'bench', 'furn', [3, 2], { flat: 1, rotV: 1 }],
+  rugRound: ['둥근 엮음 러그', '알록달록 엮은 큰 원형 러그 (3×3).', [['fiber', 18], ['petalY', 2], ['petalB', 2]], 'bench', 'furn', [3, 3], { flat: 1 }],
+  bigTree: ['큰 고목', '굵은 줄기의 커다란 나무 (2×2). 베면 그루터기가 남고 다시 자라요.', [['dirt', 8], ['gMoss', 8], ['wood', 16], ['sapling', 2]], 'bench', 'nature', [2, 2], { solid: 1, ntree: 1, nat: 'cut', hp: 10, drops: [['wood', 6, 9, 1], ['resin', 1, 2, 0.6], ['sapling', 1, 1, 0.4]] }],
+  bigRock: ['이끼 바위', '이끼가 살짝 덮인 큰 바위 (2×1).', [['stone', 16], ['gMoss', 2]], 'bench', 'nature', [2, 1], { solid: 1 }],
+  flowerField: ['큰 꽃밭', '온갖 색 꽃이 가득한 꽃밭 (3×2). 위로 걸어 다닐 수 있어요.', [['dirt', 3], ['gMoss', 3], ['petalR', 2], ['petalY', 2], ['petalB', 2], ['petalW', 2]], 'bench', 'nature', [3, 2], { flat: 1, rotV: 1 }],
+  pondBig: ['작은 연못', '연잎이 떠 있는 작은 연못 (2×2).', [['gWater', 4], ['stone', 8], ['gMoss', 2]], 'bench', 'nature', [2, 2], { flat: 1, solid: 1 }],
+  treeFarm: ['나무 작업장', '묘목을 심어 둔 2×2 벌목장이에요. 나무가 다 자라면 베어요. 전기를 이으면 다 자랄 때마다 저절로 베어 옆 상자에 담아요.', [['wood', 20], ['dirt', 10], ['sapling', 2], ['rope', 2]], 'bench', 'nature', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05 }, 'farm'],
+};
+for (const id in MULTI) { const [n, d, req, at, cat, sz, ex, use] = MULTI[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = Object.assign({ n, item: id, sz }, ex); if (use) USE[id] = use; RECIPES.push(Rc(id, 1, req, at, cat)); }
+for (const id of ['chair', 'cryChair', 'mossSofa']) if (OBJ[id]) OBJ[id].dir4 = 1;
+const flowerDots = (A, w, h, seed) => { const R = rng(seed); const cs = ['#ff6b81', '#6fa8ff', '#ffd25c', '#ffffff', '#f49ab8']; for (let k = 0; k < w * h / 10; k++) { const x = 1 + R() * (w - 3) | 0, y = 2 + R() * (h - 4) | 0; A.e(x, y + 1, 1.6, .8, C.leafD); const c = cs[k % cs.length]; A.p(x - 1, y, c); A.p(x + 1, y, c); A.p(x, y - 1, c); A.p(x, y + 1, c); A.p(x, y, '#fff1d6'); } };
+Object.assign(OSPR, {
+  bedDouble: [32, 34, A => { A.r(1, 2, 30, 9, C.woodD); A.r(2, 3, 28, 7, C.wood); A.r(2, 3, 28, 2, C.woodL); A.r(2, 10, 28, 22, '#f3e2c4'); A.e(9, 13.5, 5.2, 2.8, '#e8e0f0'); A.e(23, 13.5, 5.2, 2.8, '#e8e0f0'); A.e(9, 13, 4.4, 2, '#ffffff'); A.e(23, 13, 4.4, 2, '#ffffff');
+    A.r(2, 17, 28, 14, '#f49ab8'); A.r(2, 17, 28, 2, '#f7b8cf'); for (let y = 21; y < 30; y += 4) for (let x = 5 + (y % 8 ? 0 : 3); x < 29; x += 6) { A.p(x, y, '#ffd0de'); A.p(x + 1, y, '#ffd0de'); A.p(x, y + 1, '#ffd0de'); } A.r(2, 30, 28, 2, '#d9607d'); A.r(1, 31, 3, 3, C.woodD); A.r(28, 31, 3, 3, C.woodD); }],
+  longTable: [32, 22, A => { A.r(1, 4, 30, 10, C.woodL); A.r(1, 4, 30, 1, '#e8b97a'); A.r(1, 12, 30, 3, C.wood); A.r(5, 6, 22, 5, '#9be37a'); A.r(5, 6, 22, 1, '#c8f58a'); A.r(3, 15, 3, 6, C.woodD); A.r(26, 15, 3, 6, C.woodD); A.e(11, 8, 2.6, 1.5, '#ffffff'); A.e(11, 8, 1.4, .8, '#ffb15c'); A.r(20, 4, 3, 4, '#d9774a'); A.e(21.5, 3, 2, 1.5, '#ff9ab0'); }],
+  longTableV: [16, 38, A => { A.r(2, 4, 12, 26, C.woodL); A.r(2, 4, 12, 1, '#e8b97a'); A.r(2, 28, 12, 3, C.wood); A.r(5, 6, 6, 20, '#9be37a'); A.r(5, 6, 1, 20, '#c8f58a'); A.r(3, 31, 3, 6, C.woodD); A.r(10, 31, 3, 6, C.woodD); A.e(8, 12, 2.6, 1.6, '#ffffff'); A.e(8, 12, 1.4, .8, '#ffb15c'); A.r(7, 19, 3, 4, '#d9774a'); A.e(8.5, 18, 2, 1.5, '#ff9ab0'); }],
+  sofa2: [32, 24, A => { A.r(1, 3, 30, 10, '#5fbf93'); A.r(1, 3, 30, 2, '#7fe0b5'); A.r(1, 12, 30, 8, '#4f9f7a'); A.r(3, 12, 12, 6, '#7fe0b5'); A.r(17, 12, 12, 6, '#7fe0b5'); A.r(3, 12, 12, 1, '#a8f0cf'); A.r(17, 12, 12, 1, '#a8f0cf'); A.r(0, 8, 4, 13, '#3f8a68'); A.r(28, 8, 4, 13, '#3f8a68'); A.r(0, 8, 4, 1, '#5fbf93'); A.r(28, 8, 4, 1, '#5fbf93'); A.r(2, 21, 2, 3, C.woodD); A.r(28, 21, 2, 3, C.woodD); A.e(9, 7, 3, 2.4, '#ffd36b'); A.p(8, 6, '#fff1b0'); }],
+  sofa2V: [16, 40, A => { A.r(9, 3, 6, 32, '#5fbf93'); A.r(9, 3, 1, 32, '#7fe0b5'); A.r(2, 9, 8, 26, '#4f9f7a'); A.r(3, 10, 6, 11, '#7fe0b5'); A.r(3, 23, 6, 11, '#7fe0b5'); A.r(3, 10, 6, 1, '#a8f0cf'); A.r(3, 23, 6, 1, '#a8f0cf'); A.r(1, 5, 14, 5, '#3f8a68'); A.r(1, 34, 14, 4, '#3f8a68'); A.r(1, 5, 14, 1, '#5fbf93'); A.r(2, 38, 2, 2, C.woodD); A.r(12, 38, 2, 2, C.woodD); }],
+  bookcase2: [32, 34, A => { A.r(1, 1, 30, 32, C.woodD); A.r(3, 3, 26, 28, '#3a2a26'); const R = rng(321), cs = ['#ff8fa3', '#7fb8ff', '#ffd25c', '#7fe0b5', '#c89aff', '#ff9b4a', '#f4f0f8']; for (const y of [3, 12, 21]) { let x = 4; while (x < 27) { const w = 2 + (R() * 2 | 0), h = 6 + (R() * 2 | 0); if (x + w > 28) break; A.r(x, y + 8 - h, w, h, cs[(R() * cs.length) | 0]); A.p(x, y + 8 - h, '#ffffff'); x += w + (R() < .2 ? 1 : 0); } A.r(3, y + 8, 26, 2, C.wood); } A.r(1, 1, 30, 1, C.woodL); }],
+  kitchenSet: [48, 28, A => { A.r(0, 0, 48, 9, '#f4f0f8'); for (let x = 0; x < 48; x += 4) A.r(x, 0, 1, 9, '#d9d0e2'); A.r(0, 4, 48, 1, '#d9d0e2'); A.r(0, 10, 48, 17, '#e8e2d8'); A.r(0, 8, 48, 4, '#bab5cb'); A.r(0, 8, 48, 1, '#d9d0e2');
+    for (const x of [1, 17, 33]) { A.r(x, 14, 14, 11, '#d8cfc2'); A.r(x + 6, 18, 2, 2, C.woodD); } A.r(5, 8, 11, 4, '#8fd0f0'); A.r(5, 8, 11, 1, '#5b9bd0'); A.line(10, 7, 10, 3, '#a29db6'); A.line(10, 3, 13, 3, '#a29db6'); A.r(19, 8, 8, 3, C.woodL); A.r(21, 8, 3, 1, '#ff9b4a'); A.p(24, 8, C.leaf);
+    A.r(30, 8, 14, 4, '#3a3340'); A.e(34, 10, 2.2, 1.1, '#ff8a3d'); A.e(40, 10, 2.2, 1.1, '#ff8a3d'); A.e(40, 7, 3, 1.6, '#8e89a3'); A.r(37, 5, 6, 2, '#a29db6'); A.r(0, 26, 48, 2, '#bab5cb'); }],
+  fountainBig: [32, 34, A => { A.e(16, 25, 15.5, 8.5, '#6f6a86'); A.e(16, 24, 15, 8, '#8e89a3'); A.e(16, 24, 12, 6, '#3a78b0'); A.e(13, 22.5, 6, 2, '#5b9bd0'); A.p(9, 24, '#bfe6ff'); A.p(22, 26, '#bfe6ff'); A.r(14, 9, 4, 15, '#a29db6'); A.r(14, 9, 1, 15, '#bab5cb'); A.e(16, 10, 7, 3, '#8e89a3'); A.e(16, 9.5, 5.5, 2, '#5b9bd0'); A.e(16, 5, 2, 3, '#bfe6ff'); A.p(16, 2, '#ffffff'); A.line(10, 11, 8, 20, '#bfe6ff'); A.line(22, 11, 24, 20, '#bfe6ff'); }],
+  rugBig: [32, 32, A => { A.r(2, 1, 28, 30, '#d9607d'); A.r(1, 2, 30, 28, '#d9607d'); A.r(4, 4, 24, 24, '#f49ab8'); for (let k = 3; k < 29; k += 3) { A.p(k, 2, '#ffd0de'); A.p(k, 29, '#ffd0de'); A.p(2, k, '#ffd0de'); A.p(29, k, '#ffd0de'); }
+    for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; A.e(16 + Math.cos(a) * 5, 16 + Math.sin(a) * 5, 2.6, 2.6, '#ffffff'); } A.e(16, 16, 3.4, 3.4, '#ffd25c'); A.p(15, 15, '#fff1b0'); for (const [x, y] of [[7, 7], [25, 7], [7, 25], [25, 25]]) { A.e(x, y, 1.6, 1.6, '#ffd25c'); A.p(x - 2, y, C.leaf); A.p(x + 2, y, C.leaf); } }],
+  rugLong: [48, 32, A => { A.r(2, 2, 44, 28, '#6fa8ff'); for (let y = 4; y < 28; y += 6) { A.r(2, y, 44, 2, '#c2dcff'); A.r(2, y + 2, 44, 1, '#4a78d0'); } A.r(2, 2, 44, 1, '#4a78d0'); A.r(2, 29, 44, 1, '#4a78d0'); for (let y = 3; y < 30; y += 2) { A.p(0, y, '#f4f0f8'); A.p(1, y, '#e3d4ff'); A.p(46, y, '#e3d4ff'); A.p(47, y, '#f4f0f8'); } }],
+  rugRound: [48, 48, A => { for (const [r, c] of [[23, '#b8742a'], [20, '#e8a33a'], [16.5, '#d9774a'], [13, '#f2b83a'], [9.5, '#e8915f'], [6, '#ffd98a'], [2.5, '#e8a33a']]) A.e(24, 24, r, r, c); for (let k = 0; k < 24; k++) { const a = k / 24 * 6.283; A.p(24 + Math.cos(a) * 18.3 | 0, 24 + Math.sin(a) * 18.3 | 0, '#fff1d6'); } }],
+  bigTree: [32, 52, A => { A.poly([[6, 51], [12, 40], [20, 40], [26, 51]], C.woodD); A.r(11, 26, 10, 22, C.wood); A.r(11, 26, 3, 22, C.woodL); A.line(16, 30, 16, 46, C.woodD); A.line(19, 34, 19, 44, C.woodD); A.e(16, 48, 9, 2.6, '#4a3428');
+    A.e(16, 18, 15.5, 14, '#2f6e33'); A.e(15, 16, 14, 12, C.leafD); A.e(10, 13, 8, 7, C.leaf); A.e(21, 12, 8, 7, C.leaf); A.e(15, 7, 8, 5.5, C.leaf); A.e(9, 10, 3, 2, C.leafL); A.e(19, 6, 3, 1.8, C.leafL); A.e(24, 15, 2.4, 1.6, C.leafL); for (const [x, y] of [[6, 18], [25, 21], [14, 23], [20, 9]]) A.p(x, y, '#ffd36b'); }],
+  bigRock: [32, 22, A => { A.e(16, 15, 15.5, 7, '#57507a'); A.e(15, 13, 14, 8, '#8e89a3'); A.e(19, 15, 8, 4, '#7f7a92'); A.e(11, 9, 6, 3, '#a29db6'); A.p(9, 8, '#bab5cb'); A.e(22, 7.5, 5.5, 2.2, '#62ad62'); A.e(21, 7, 3, 1.2, '#7cc271'); A.e(7, 16, 3, 1.4, '#62ad62'); A.p(25, 12, '#6f6a86'); A.p(13, 17, '#6f6a86'); }],
+  flowerField: [48, 32, A => { A.r(1, 1, 46, 30, '#4f8f57'); A.r(0, 3, 48, 26, '#4f8f57'); for (let k = 0; k < 40; k++) { const R = rng(900 + k); A.p(R() * 46 | 0, R() * 30 | 0, '#62ad62'); } flowerDots(A, 48, 32, 77); }],
+  pondBig: [32, 32, A => { A.e(16, 16, 15.5, 14.5, '#6f6a86'); A.e(16, 16, 14.5, 13.5, '#8e89a3'); for (let k = 0; k < 12; k++) { const a = k / 12 * 6.283; A.e(16 + Math.cos(a) * 13.5, 16 + Math.sin(a) * 12.5, 2.2, 1.8, k % 2 ? '#a29db6' : '#8e89a3'); } A.e(16, 16, 11.5, 10.5, '#3a78b0'); A.r(9, 12, 6, 1, '#5b9bd0'); A.r(17, 20, 7, 1, '#5b9bd0'); A.e(11, 19, 3.4, 2.2, '#4f9a5e'); A.e(21, 12, 3, 2, '#4f9a5e'); A.e(21, 11, 1.4, 1.1, '#ffb3c6'); A.p(21, 10, '#ffe0ea'); A.p(14, 14, '#bfe6ff'); }],
+  treeFarm: farmSpr(0), treeFarm1: farmSpr(1), treeFarm2: farmSpr(2), treeFarm3: farmSpr(3),
+  chairS: [16, 16, A => { A.r(4, 2, 2, 10, C.wood); A.r(4, 2, 2, 1, C.woodL); A.r(4, 9, 9, 3, C.woodL); A.r(6, 9, 7, 2, '#f2a1b6'); A.p(7, 9, '#ffd1dd'); A.r(4, 11, 9, 1, C.woodD); A.r(4, 12, 1, 3, C.woodD); A.r(12, 12, 1, 3, C.woodD); }],
+  chairU: [16, 16, A => { A.r(4, 12, 1, 3, C.woodD); A.r(11, 12, 1, 3, C.woodD); A.r(3, 9, 10, 3, C.woodL); A.r(4, 2, 8, 9, C.wood); A.r(4, 2, 8, 2, C.woodL); A.r(6, 4, 1, 6, C.woodD); A.r(9, 4, 1, 6, C.woodD); A.r(3, 11, 10, 1, C.woodD); }],
+  cryChairS: [16, 16, A => { A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); A.poly([[3, 10], [4, 2], [7, 1], [7, 10]], C.cry); A.poly([[3, 10], [4, 2], [5, 2], [5, 10]], C.cryL); A.r(4, 9, 9, 3, C.iron); A.r(4, 9, 9, 1, C.ironL); A.r(6, 10, 6, 1, '#d9c8ff'); }],
+  cryChairU: [16, 16, A => { A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); A.r(3, 9, 10, 3, C.iron); A.poly([[4, 12], [5, 3], [8, 1], [11, 3], [12, 12]], C.cryD); A.poly([[5, 11], [6, 4], [8, 2.5], [10, 4], [11, 11]], C.cry); A.p(8, 5, C.cryL); }],
+  mossSofaS: [16, 16, A => { A.r(2, 8, 12, 6, C.woodD); A.r(2, 2, 4, 11, '#6fae5f'); A.r(2, 2, 4, 1, '#8fd07a'); A.r(5, 8, 9, 4, '#7dbd6b'); A.r(5, 8, 9, 1, '#a5dc8a'); A.r(2, 13, 1, 2, C.woodD); A.r(13, 13, 1, 2, C.woodD); A.p(3, 4, '#ffd36b'); }],
+  mossSofaU: [16, 16, A => { A.r(1, 5, 14, 9, C.woodD); A.r(2, 9, 12, 3, '#7dbd6b'); A.r(1, 3, 14, 9, '#5e9a50'); A.r(1, 3, 14, 1, '#8fd07a'); A.r(4, 5, 8, 5, '#6fae5f'); A.r(1, 7, 2, 6, '#4e8a42'); A.r(13, 7, 2, 6, '#4e8a42'); A.r(2, 13, 1, 2, C.woodD); A.r(13, 13, 1, 2, C.woodD); }],
+});
+QSIDE.push({ id: 's_farm', t: () => `나무 작업장으로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '작업대에서 나무 작업장을 만들어 놓고, 다 자라면 베어요. 건전지와 전선으로 전기를 이으면 저절로 베어 옆 상자에 담아요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
 function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: (q.rw && q.rw.length) || q.xp }; }
@@ -2821,7 +2943,7 @@ function computeLight() {
     const o = G.objs.get(idx(x, y)); if (!o) continue; const d = OBJ[o.t];
     let L = d.light; if (o.t === 'shrine' && o.has) L = [4.5, '#ffd97a']; if (!L || o.off) continue;
     const fl = d.flick ? 1 + Math.sin(t * 9 + x * 3) * 0.05 + Math.sin(t * 23 + y) * 0.03 : 1;
-    lights.push({ x: x + .5, y: y + .5, r: L[0] * fl, c: hexRgb(L[1]), k: 1, col: L[1], tall: SPR.obj[o.t] && SPR.obj[o.t].height > 20 });
+    lights.push({ x: x + (d.sz ? fpOf(o)[0] / 2 : .5), y: y + (d.sz ? fpOf(o)[1] / 2 : .5), r: L[0] * fl, c: hexRgb(L[1]), k: 1, col: L[1], tall: SPR.obj[o.t] && SPR.obj[o.t].height > 20 });
   }
   for (const k of BKEYS) { const b = G.bosses[k]; if (!G.bossDead[k] && b.st === 'fight') lights.push({ x: b.x, y: b.y - .5, r: 5, c: hexRgb(BOSSES[k].col), k: 1 }); }
   for (const h of G.hz || []) if (h.k === 'lava' && h.t >= h.warn) lights.push({ x: h.x, y: h.y, r: 2.6, c: [1, .55, .2], k: .9 });
@@ -2967,18 +3089,22 @@ function renderWorld(cw, ch) {
     }
     if (G.floor[i] === LAVA) { const ph = (t * .7 + hash2(x, y, 6)) % 1; if (hash2(x, y, 8) < .5) { ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = '#ffe0a0'; const bx = sx + 3 + ((hash2(x, y, 7) * 9) | 0), by = sy + 3 + ((hash2(x, y, 9) * 9) | 0); ctx.fillRect(bx, by, 2 + Math.round(ph * 2), 2); ctx.globalAlpha = 1; } }
     if (WFLOOR.has(G.floor[i])) { const ph = (t * .5 + hash2(x, y, 6)) % 1; ctx.globalAlpha = Math.sin(ph * Math.PI) * .55; ctx.fillStyle = '#e8f8ff'; ctx.fillRect(sx + 3 + ((hash2(x, y, 7) * 8) | 0), sy + 3 + Math.floor(ph * 9), 3, 1); ctx.globalAlpha = 1; }
-    if (G.wire.has(i)) { const pw = wirePowered(i), c1 = pw ? '#ffd25c' : '#8a5a34', c2 = pw ? '#fff1b0' : '#b8784a', hw = (dx, dy) => { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) return false; const j = idx(nx, ny), oo = G.objs.get(j); return G.wire.has(j) || !!(oo && OBJ[oo.t] && (OBJ[oo.t].src || OBJ[oo.t].sw || OBJ[oo.t].dev)); };
+    if (G.wire.has(i)) { const pw = wirePowered(i), c1 = pw ? '#ffd25c' : '#8a5a34', c2 = pw ? '#fff1b0' : '#b8784a', hw = (dx, dy) => { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) return false; const j = idx(nx, ny), oo0 = G.objs.get(j), oo = oo0 && oo0.t === '_part' ? G.objs.get(oo0.a) : oo0; return G.wire.has(j) || !!(oo && OBJ[oo.t] && (OBJ[oo.t].src || OBJ[oo.t].sw || OBJ[oo.t].dev)); };
       ctx.fillStyle = 'rgba(20,12,30,.45)'; ctx.fillRect(sx + 6, sy + 7, 4, 4); ctx.fillStyle = c1; ctx.fillRect(sx + 6, sy + 6, 4, 4);
       if (hw(1, 0)) ctx.fillRect(sx + 10, sy + 7, 6, 2); if (hw(-1, 0)) ctx.fillRect(sx, sy + 7, 6, 2); if (hw(0, 1)) ctx.fillRect(sx + 7, sy + 10, 2, 6); if (hw(0, -1)) ctx.fillRect(sx + 7, sy, 2, 6);
       ctx.fillStyle = c2; ctx.fillRect(sx + 7, sy + 7, 1, 1); }
-    const o = G.objs.get(i); if (o && OBJ[o.t].flat) ctx.drawImage(o.t === 'plate' && o.lit ? SPR.obj.plateOn : SPR.obj[o.t], sx, sy);
+    const o = G.objs.get(i); if (o && OBJ[o.t].flat && !OBJ[o.t].sz) ctx.drawImage(o.t === 'plate' && o.lit ? SPR.obj.plateOn : SPR.obj[o.t], sx, sy);
   }
+  for (let y = y0 - 3; y <= y1; y++) for (let x = x0 - 3; x <= x1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o || o.t === '_part') continue; const d = OBJ[o.t]; if (!d || !d.sz || !d.flat) continue; const img = o.rot && d.rotV ? SPR.obj[o.t + 'V'] : SPR.obj[o.t]; if (img) ctx.drawImage(img, x * T - camX, y * T - camY); }
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i]) continue; const o = G.objs.get(i); if (o && isGround(o)) drawEntity({ k: 'o', x, y, o }, t); }
   // rows: walls interleaved with everything that stands
   const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
   const push = (y, item) => { const r = Math.floor(y) - y0; if (r >= 0 && r < rows.length) rows[r].push(item); };
   visibleShakers.clear();
-  for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
+  const seenA = new Set();
+  for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; let ii = idx(x, y), o = G.objs.get(ii); if (o && o.t === '_part') { ii = o.a; o = G.objs.get(ii); if (!o || o.t === '_part') continue; }
+    if (o && OBJ[o.t] && OBJ[o.t].sz) { if (seenA.has(ii)) continue; seenA.add(ii); if (OBJ[o.t].flat) continue; const ax = ii % W, ay = (ii / W) | 0, by = ay + fpOf(o)[1] - 1; push(Math.min(by, y1), { k: 'o', x: ax, y: ay, o, s: OBJ[o.t].solid ? by + 1 : by + .01 }); if (o.shake) visibleShakers.add(o); continue; }
+    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
   push(CY, { k: 'tree', s: CY + 1 });
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
@@ -3079,7 +3205,11 @@ function renderWorld(cw, ch) {
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
     const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse})`;
     for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + T, hy, -1, 1], [hx, hy + T, 1, -1], [hx + T, hy + T, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
-    if (k === 'place') { const s = selItem(); if (s) { ctx.globalAlpha = 0.45; const it = ITEMS[s.id]; const img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id); ctx.drawImage(img, hx + T / 2 - img.width / 2, hy + T - img.height); ctx.globalAlpha = 1; } }
+    if (k === 'place') { const s = selItem(); if (s) { const it = ITEMS[s.id], d = it.kind === 'place' ? OBJ[it.obj] : null; ctx.globalAlpha = 0.45;
+      if (d && d.sz) { const fp = placeFp(d), a = placeAnchor(tt, fp), img = pRot() % 2 && d.rotV && SPR.obj[it.obj + 'V'] ? SPR.obj[it.obj + 'V'] : SPR.obj[it.obj], X = a.x * T - camX, Y = a.y * T - camY; if (d.flat) ctx.drawImage(img, X, Y); else ctx.drawImage(img, X + fp[0] * T / 2 - img.width / 2, Y + fp[1] * T - img.height); ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(127,224,181,.85)'; ctx.lineWidth = 1; ctx.strokeRect(X + .5, Y + .5, fp[0] * T - 1, fp[1] * T - 1); }
+      else { let img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id), fl = false; const pr = pRot(); if (d && pr && canRotObj(it.obj)) { if (d.dir4) { img = SPR.obj[it.obj + (pr % 4 === 2 ? 'U' : 'S')] || img; fl = pr % 4 === 3; } else fl = !!(pr % 2); }
+        if (fl) { ctx.save(); ctx.translate(hx + T / 2, 0); ctx.scale(-1, 1); ctx.drawImage(img, -img.width / 2, hy + T - img.height); ctx.restore(); } else ctx.drawImage(img, hx + T / 2 - img.width / 2, hy + T - img.height); }
+      ctx.globalAlpha = 1; } }
   }
 }
 function renderOverlay(cw, ch) {
@@ -3103,7 +3233,8 @@ function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
     const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), !!o.open), it.x + .5, it.y + 1); return; }
-    let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const wx = it.x + .5, wy = it.y + 1 - 1 / 16;
+    let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const fpD = d.sz ? fpOf(o) : null, wx = it.x + (fpD ? fpD[0] / 2 : .5), wy = it.y + (fpD ? fpD[1] : 1) - 1 / 16; let flipX = !!o.flip;
+    if (fpD && o.rot && d.rotV && SPR.obj[o.t + 'V']) img = SPR.obj[o.t + 'V']; if (o.t === 'treeFarm') img = SPR.obj['treeFarm' + (farmStage(o) || '')] || img; if (d.dir4 && o.dir) { img = SPR.obj[o.t + (o.dir === 2 ? 'U' : 'S')] || img; flipX = o.dir === 3; }
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
@@ -3111,8 +3242,9 @@ function drawEntity(it, t) {
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo && !d.stump && SPR.obj[o.t + 'B'] && G.time > (o.at || 0) - GROW_TIME / 2) img = SPR.obj[o.t + 'B'];
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
-    if (d.solid && img.height > 17) shadow(wx, wy - .08, .38, .25);
-    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : sx });
+    if (d.solid && img.height > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
+    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : sx, flip: flipX });
+    if (o.t === 'treeFarm' && ((o.store || []).length || farmStage(o) >= 3)) { ctx.fillStyle = (o.store || []).length ? '#ffd25c' : `rgba(255,241,214,${.5 + Math.sin(t * 5) * .3})`; ctx.fillRect(Math.round((it.x + 1.8) * T - camX), Math.round((it.y - .3) * T - camY), 3, 3); }
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }
     if (o.t === 'generator' && o.lit && CIRC.pRoots.size) { const fl = (t * 8) % 1; ctx.fillStyle = fl < .5 ? '#ff8a3d' : '#ffc861'; ctx.fillRect(Math.round(wx * T - camX) - 3, Math.round((it.y + 1) * T - camY) - 8, 6, 3); }
     if ((o.t === 'timer' || o.t === 'crystalGen') && o.lit) { ctx.fillStyle = '#7fe0b5'; ctx.fillRect(Math.round(wx * T - camX) - 1, Math.round((it.y + 1) * T - camY) - (o.t === 'timer' ? 14 : 6), 2, 2); }
@@ -3134,7 +3266,7 @@ function drawEntity(it, t) {
   if (it.k === 'p') {
     const p = G.p; if (p.dead > 0) { drawImg(SPR.player.down[0], p.x, p.y + .15, { alpha: .5, sy: .6 }); return; }
     if (p.sleep) return;
-    if (p.sit) { drawImg(p.hurt > 0 ? whiten(SPR.playerSit) : SPR.playerSit, p.x, p.sit.y + .78); return; }
+    if (p.sit) { const sd = p.sit.dir || 0; if (sd) { drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[sd === 2 ? 'up' : 'side'][0], p.x, p.y + .15, { flip: sd === 3 }); return; } drawImg(p.hurt > 0 ? whiten(SPR.playerSit) : SPR.playerSit, p.x, p.sit.y + .78); return; }
     if (p.inv > 0 && p.inv < 0.7 && Math.floor(performance.now() / 70) % 2) return;
     shadow(p.x, p.y + .1, .3); const fr = p.moving ? Math.floor(p.anim * 7) % 2 : 0; const bob = p.moving ? (fr ? 1 / 16 : 0) : Math.sin(t * 2) > .7 ? 1 / 16 : 0;
     drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[p.dir][fr], p.x, p.y + .15 - bob, { flip: p.flip });
@@ -3201,6 +3333,7 @@ function updateHud() {
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
   if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
   const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
+  { const rb = $('#rotBtn'), rv = rotTarget(); if (rb && rb.hidden === rv) rb.hidden = !rv; }
   const sb = $('#subBtn'), sv = !!(a.sub); if (sb.hidden === sv) sb.hidden = !sv; if (sv) { const sk = subLabel(a); if (sb.dataset.k !== sk) { sb.dataset.k = sk; $('#subIcon').src = iconURL(sk === '걷기' ? 'shovel' : 'hand'); $('#subLbl').textContent = sk; sb.setAttribute('aria-label', sk); } }
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
@@ -3219,7 +3352,9 @@ function updateSkBar() {
     b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
 }
 function openPanel(kind, data = {}) { if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft' && data.st) UIS.tab = 'here'; else if (kind === 'craft') UIS.tab = 'all'; $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
-function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; }
+function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; actQ = 0; refocusGame(); }
+// hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
+function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it, s) { const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
 function itemStat0(it) { if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '수정벽', '현무암·얼음벽'][it.tier]}까지`; return ''; }
@@ -3284,7 +3419,7 @@ function renderPanel() {
   } else if (k === 'map') {
     h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span></div></div>`;
   } else if (k === 'tree') {
-    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴과 서쪽 얼음 동굴 깊은 곳의 제단에 마지막 빛씨앗이 잠들어 있대요.</p>' : ''}</div>`;
+    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
   } else if (k === 'menu') {
     const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:14px">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
     const marks = G.marks || [];
@@ -3293,7 +3428,7 @@ function renderPanel() {
       <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:16px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–9 단축칸 · R 회수 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
@@ -3431,7 +3566,7 @@ function onSheetClick(e) {
     SFX.craft(); craftNote(r.out, total); gainXp(Math.min(8, q * (r.at === 'forge' ? 3 : r.at ? 1 : 0)));
     invDirty = true; checkGuide(); renderPanel(); return;
   }
-  if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; G.objs.delete(panel.i); returnObj(o, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
+  if (a === 'retrieve') { const o = G.objs.get(panel.i); if (o) { const d = OBJ[o.t]; delObj(panel.i); returnObj(o, G.p.x, G.p.y); SFX.pick(); lightDirty = true; } closePanel(); return; }
   if (a === 'cout' || a === 'cin') { const o = G.objs.get(panel.i); if (!o) return; const src = a === 'cout' ? o.items : G.inv, dst = a === 'cout' ? G.inv : o.items; const s = src[i]; if (!s) return; const left = moveInto(dst, s); if (left === s.c) { toast(a === 'cout' ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return; } if (left) s.c = left; else src[i] = null; SFX.pick(); invDirty = true; renderPanel(); return; }
   if (a === 'qTab') { UIS.qTab = i; renderPanel(); return; }
   if (a === 'qClaim') { claimQuest(i); renderPanel(); return; }
@@ -3553,7 +3688,8 @@ function setupInput() {
   ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
   const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
   window.addEventListener('keydown', e => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    const tf = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+    if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
     if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
     ensureAudio();
     if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
@@ -3564,12 +3700,16 @@ function setupInput() {
     if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
+    if (e.code === 'KeyT') { rotateAction(); return; }
     if (e.code === 'KeyQ') { const s = selItem(); if (s && ITEMS[s.id].kind === 'food') eat(G.sel); return; }
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     if (['Space', 'KeyJ', 'KeyE'].includes(e.code)) actQ = 0.3;
     keys.add(e.code);
   });
   window.addEventListener('keyup', e => keys.delete(e.code));
+  // buttons never keep keyboard focus after a mouse click; any click outside a text field brings focus back to the game
+  document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button') && !e.target.closest('input,textarea')) e.preventDefault(); }, true);
+  document.addEventListener('pointerdown', e => { if (!(e.target.closest && e.target.closest('input,textarea,select'))) refocusGame(); }, true);
   window.addEventListener('blur', () => { keys.clear(); btnHeld = false; mouse.down = false; joyEnd(); padEnd(); });
   const dp = $('#dpad');
   const padMove = e => { if (dpad.id !== e.pointerId) return; const r = dp.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
@@ -3583,6 +3723,7 @@ function setupInput() {
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
+  $('#rotBtn').addEventListener('click', () => rotateAction());
   $('#sheet').addEventListener('click', onSheetClick);
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
