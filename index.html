@@ -2243,6 +2243,7 @@ function deserialize(s) {
   fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
+  unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
@@ -3172,7 +3173,7 @@ function respawn() {
   if (sp) { p.x = sp.x + .5; p.y = sp.y + 1.6; if (boxHits(p.x, p.y, .28)) { p.x = sp.x + 1.5; p.y = sp.y + .5; } } else { p.x = CX + .5; p.y = CY + 1.7; }
   p.hp = Math.round(maxHp() * .7); p.mp = maxMp(); p.dash = null; p.hunger = Math.max(p.hunger, 45); p.inv = 2; p.dead = 0; G.enemies.length = 0; G.pshots.length = 0;
   for (const k of BKEYS) if (!G.bossDead[k]) G.bosses[k] = freshBoss(k); G.shots.length = 0; G.hz = []; G.fish = null; $('#bossbar').hidden = true;
-  cam.x = p.x; cam.y = p.y; toast(sp ? '침대에서 깨어났어요' : '등불나무 곁에서 깨어났어요'); if (lostN) setTimeout(() => toast(`쓰러진 자리에 재료 ${lostN}개를 떨어뜨렸어요 · 지도에 꾸러미가 표시돼요`, 'warn', 'lostdrop'), 1200);
+  cam.x = p.x; cam.y = p.y; toast(sp ? '침대에서 깨어났어요' : '등불나무 곁에서 깨어났어요'); unstick(p, '사방이 막혀 있어서 바로 바깥에서 깨어났어요'); if (lostN) setTimeout(() => toast(`쓰러진 자리에 재료 ${lostN}개를 떨어뜨렸어요 · 지도에 꾸러미가 표시돼요`, 'warn', 'lostdrop'), 1200);
 }
 
 // ================= update =================
@@ -3971,6 +3972,19 @@ ITEMS.homeStone = { n: '귀환석', kind: 'recall', stack: 1, d: `들고 누른 
 ICON.homeStone = A => { A.e(8, 9, 5.4, 5.8, '#4a4290'); A.e(8, 8.6, 4.6, 5, '#6a62b8'); A.e(7, 7, 2.4, 2.6, '#a99cf0'); A.e(8, 9, 2, 2, '#ffd27a'); A.p(8, 8, '#fff1c0'); A.p(5, 5, '#e3d4ff'); A.p(11, 12, '#3a3270'); };
 RECIPES.push(Rc('homeStone', 1, [['crystal', 6], ['glowcap', 3], ['copperBar', 2]], 'forge', 'tool'));
 { const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat([['homeStone', 1]]); }
+// bug fix: a home point (the lantern tree or a bed) fenced in on every side left you stuck after fainting or recalling;
+// if the spot is closed in (no way out within 16 tiles, doors count as a way out), you wake up just outside instead
+function closedIn(x, y, lim = 900, far = 16) { const sx = Math.floor(x), sy = Math.floor(y); if (!inB(sx, sy) || isSolid(sx, sy)) return null; /* only a free spot can be fenced in */ const seen = new Set([idx(sx, sy)]), st = [[sx, sy]];
+  while (st.length) { const [cx, cy] = st.pop(); if (Math.hypot(cx - sx, cy - sy) > far || seen.size > lim) return null;
+    for (const [dx, dy] of D4) { const nx = cx + dx, ny = cy + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o);
+      if (isSolid(nx, ny) && !(a && OBJ[a.t] && OBJ[a.t].door)) continue; seen.add(j); st.push([nx, ny]); } }
+  return seen; }
+function safeSpot(x, y) { const inside = closedIn(x, y); if (!inside) return null; const sx = Math.floor(x), sy = Math.floor(y);
+  for (let r = 1; r <= 40; r++) { let best = null, bd = 1e9; for (let ty = sy - r; ty <= sy + r; ty++) for (let tx = sx - r; tx <= sx + r; tx++) { if (Math.max(Math.abs(tx - sx), Math.abs(ty - sy)) !== r || !inB(tx, ty) || inside.has(idx(tx, ty)) || isSolid(tx, ty) || boxHits(tx + .5, ty + .6, .28)) continue;
+      const d = Math.hypot(tx - sx, ty - sy); if (d < bd && !closedIn(tx + .5, ty + .6)) { bd = d; best = { x: tx + .5, y: ty + .6 }; } }
+    if (best) return best; }
+  return null; }
+function unstick(p, why) { const to = safeSpot(p.x, p.y); if (!to) return false; p.x = to.x; p.y = to.y; cam.x = p.x; cam.y = p.y; lightDirty = true; if (why) setTimeout(() => toast(why, 'warn', 'unstick'), 900); return true; }
 function homePt() { const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); if (so && OBJ[so.t].bed) { const x = G.spawnPt.x + .5, y = G.spawnPt.y + 1.6; return boxHits(x, y, .28) ? { x: G.spawnPt.x + 1.5, y: G.spawnPt.y + .5 } : { x, y }; } return { x: CX + .5, y: CY + 1.7 }; }
 const nearHome = () => { const h = homePt(); return Math.hypot(G.p.x - h.x, G.p.y - h.y) < 12; };
 function recallDecide(s) { const cd = (G.recallCd || 0) - G.time; if (cd > 0) return { k: 'info', lbl: `쉬는 중 ${Math.ceil(cd)}초`, icon: s.id, msg: `귀환석이 쉬고 있어요 · ${Math.ceil(cd)}초 뒤에 다시 쓸 수 있어요` };
@@ -3983,7 +3997,7 @@ function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
   R.t -= dt; if (Math.random() < .5) puff(p.x + (Math.random() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
   if (R.t > 0) return; G.recall = null; G.recallCd = G.time + RECALL_CD;
   let to; if (R.mode === 'back' && G.backPt) { to = G.backPt; G.backPt = null; } else { G.backPt = { x: p.x, y: p.y }; to = homePt(); }
-  puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
+  puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
   toast(R.mode === 'back' ? '표지가 있던 곳으로 돌아왔어요' : '집으로 돌아왔어요 · 집 근처에서 귀환석을 다시 쓰면 떠난 자리로 갈 수 있어요', 'good', 'recall'); }
 // fainting drops a quarter of each material stack in a bundle where you fell; walk back to pick it up (not during the first steps of the story)
 const LOST_SHARE = .25, LOST_MAX = 5;
