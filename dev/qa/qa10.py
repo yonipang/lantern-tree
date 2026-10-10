@@ -28,6 +28,7 @@ async def main():
         # sword wears only on hit
         sw="(__T.G.equip.weapon||__T.G.inv.find(s=>s&&s.id==='swordWood'))"  # v42: the starting sword sits in the weapon slot
         await setup()
+        await ev(pg,"()=>{const G=__T.G;G.sel=G.inv.findIndex(s=>s&&s.id==='swordWood')}")  # v48: the weapon is used while held
         d0=await ev(pg,f"()=>{sw}.dur"); await tap(pg,2,400); d1=await ev(pg,f"()=>{sw}.dur")
         rec('내구도','허공에 휘두르면 안 닳음', d0==d1, f'{d0} {d1}')
         await ev(pg,"()=>{const G=__T.G;G.enemies.push({k:'slimeG',x:111.2,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:9,anim:0})}")

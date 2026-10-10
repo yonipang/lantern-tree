@@ -42,3 +42,4 @@ pip install playwright --break-system-packages   # 이미 있으면 생략
 - 저장 구조를 바꾸면 반드시 옛 세이브 불러오기 테스트를 추가해요
 - 지도 모양 두 가지 (v47부터): 새 게임은 600×600 고리 지도(`mapV: 2`, `LAY 2`), v47 전 세이브는 200×200 원래 지도(`mapV` 없음 → `LAY 1`) 그대로. `setLayout()`이 W·H·CX·CY·보스 위치를 바꿔요
 - 테스트의 `mkpage()`는 새 게임을 원래 지도(layout 1)로 고정해요 (`localStorage 'lantern-tree-layout'`). 고리 지도는 `mkpage(..., layout=2)`로 따로 테스트해요 (qa49)
+- 손에 든 물건 (v48부터): `decide()`는 `holdMode()`로 든 물건의 일만 해요(`heldDecide`: 가구·씨앗=놓기, 삽=파기, 무기=공격, 곡괭이=캐기 …). 빈손·재료는 `handDecide`(예전처럼 다 함). 장비에 무기 칸 없음 — `curWeapon()`은 든 무기, 없으면 주먹. 옛 세이브의 `equip.weapon`은 빈 단축칸으로(`unslotWeapon`). 장비 칸·펫은 가방 패널 안(`openPanel('equip')`은 가방을 열어요)

@@ -72,7 +72,7 @@ async def main():
         ctx,pg,errs=await new_ctx(b,390,844,True)
         CX,CY=100,100
         r=await ev(pg,"()=>[__T.G.sel, __T.G.inv.filter(x=>x).map(s=>s.id).join(','), !!document.querySelector('#toolbelt'), __T.G.equip.weapon&&__T.G.equip.weapon.id]")
-        rec('되돌림','시작 아이템: 베리·씨앗·나무 곡괭이 + 무기 칸에 나무 검(v42), 도구 칸 없음', r[0]==0 and r[1]=='berry,berrySeed,pickWood' and r[3]=='swordWood' and not r[2], str(r))
+        rec('되돌림','시작 아이템: 베리·씨앗·나무 검(단축칸 3번, v48) + 가방에 나무 곡괭이, 빈손(4번 칸)으로 시작, 도구 칸 없음', r[0]==3 and r[1]=='berry,berrySeed,swordWood,pickWood' and r[3] is None and not r[2], str(r))
         recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/^axeWood$|rodCrystal/.test(k)||__T.ITEMS[k].kind==='axe').join(',')")
         rec('되돌림','도구 도끼·수정 낚싯대 항목 제거됨 (도끼는 v42에서 무기로 다시 생김, 구리 낫은 v33)', recipes=='', recipes or '-')
         # bare hand chop
@@ -95,7 +95,7 @@ async def main():
         await tap(pg,1)
         d2=await ev(pg,f"()=>__T.G.wdmg.get(__T.idx({wall[0]},{wall[1]}))||0")
         rec('도구 강화','나무 곡괭이는 맨손의 2배, 구리 곡괭이는 4배 피해 (자동 적용)', d1==1 and d2==2, f'맨손 0.5 / 나무 {d1} / 구리 {d2}')
-        rec('도구 강화','단축칸에서 고르지 않아도 가방의 가장 좋은 곡괭이 사용', await ev(pg,"()=>__T.bestPick().id")=='pickCopper' and await ev(pg,"()=>__T.G.sel")==0, '')
+        rec('도구 강화','단축칸에서 고르지 않아도 가방의 가장 좋은 곡괭이 사용', await ev(pg,"()=>__T.bestPick().id")=='pickCopper' and await ev(pg,"()=>{const s=__T.G.inv[__T.G.sel];return !s||!/^pick/.test(s.id)}"), '')
         await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&/^pick/.test(s.id)?null:s)}")
         await ev(pg,f"()=>{{__T.G.wall[__T.idx({wall[0]},{wall[1]})]=2;__T.G.wdmg.clear()}}"); await tap(pg,1)
         rec('도구 강화','돌벽은 맨손으로 안 캐짐(구리 곡괭이 필요 안내)', not await ev(pg,f"()=>__T.G.wdmg.get(__T.idx({wall[0]},{wall[1]}))"), '')
@@ -188,7 +188,7 @@ async def main():
             rec('저장',f'{name} 세이브 불러오기 정상', r[0]<9 and all(i in r[1] for i in ['pickWood','swordWood']) and 'axe' not in r[1] and 'sickle' not in r[1] and r[2] and not errs, str(r[:2]))
         await ev(pg,"()=>{const T=__T;T.deserialize(JSON.parse(JSON.stringify(T.serialize())))}")
         for bk in ['slime','queen','golem']:
-            await ev(pg,f"()=>{{const T=__T,G=T.G;T.addItem('swordIron',1);const h=T.BOSSES.{bk}.home();G.p.x=h.x;G.p.y=h.y+5;G.p.hp=100;G.p.sit=null}}")
+            await ev(pg,f"()=>{{const T=__T,G=T.G;T.addItem('swordIron',1);const k=G.inv.findIndex(s=>s&&s.id==='swordIron'),t0=G.inv[0];G.inv[0]=G.inv[k];G.inv[k]=t0;G.sel=0;/* v48: hold the weapon */const h=T.BOSSES.{bk}.home();G.p.x=h.x;G.p.y=h.y+5;G.p.hp=100;G.p.sit=null}}")
             await pg.wait_for_timeout(1800)
             st=await ev(pg,f"()=>__T.G.bosses.{bk}.st")
             for _ in range(8):

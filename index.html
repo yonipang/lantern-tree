@@ -34,7 +34,7 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 @media (orientation:portrait){#envFx.hot{background:radial-gradient(farthest-side ellipse at center,rgba(255,110,50,0) 82%,rgba(255,90,40,.55) 93%,rgba(255,70,30,.9) 100%)}#envFx.cold{-webkit-mask-image:radial-gradient(farthest-side ellipse at center,transparent 80%,#000 97%);mask-image:radial-gradient(farthest-side ellipse at center,transparent 80%,#000 97%)}}
 @keyframes envHaze{0%,100%{transform:scale(1) skewX(0)}50%{transform:scale(1.02) skewX(.6deg)}}
 #wearAsk{position:absolute;left:50%;top:44%;transform:translateX(-50%);z-index:6;min-height:52px;padding:0 18px;font-size:17px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
-.rmat{display:grid;gap:8px;margin-bottom:8px}.rmat>div{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:14px}.rmat b{min-width:78px;font-size:15px}.rmat span{display:inline-flex;align-items:center;gap:4px;color:var(--muted)}.rmat img{width:22px;height:22px}.skcat{margin:14px 0 6px;font-size:15px;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:4px}.eqlist{display:grid;gap:8px;margin:2px 0 12px}.eqr{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.04);border:2px solid var(--line)}.eqr>div{min-width:0}.eqr b{display:block;font-size:16px}.eqr small{display:block;color:var(--muted);font-size:14px;line-height:1.35}.slot.eq.empty span{font-size:13px;color:var(--muted)}
+.rmat{display:grid;gap:8px;margin-bottom:8px}.rmat>div{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:14px}.rmat b{min-width:78px;font-size:15px}.rmat span{display:inline-flex;align-items:center;gap:4px;color:var(--muted)}.rmat img{width:22px;height:22px}.skcat{margin:14px 0 6px;font-size:15px;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:4px}.eqlist{display:grid;gap:8px;margin:2px 0 12px}.eqlist.eq2{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}.eq2 .eqr{padding:6px 8px;gap:8px}.eq2 .slot{flex:none}.eq2 .eqr b{font-size:15px}.eq2 .eqr small{font-size:13px}.eqr{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.04);border:2px solid var(--line)}.eqr>div{min-width:0}.eqr b{display:block;font-size:16px}.eqr small{display:block;color:var(--muted);font-size:14px;line-height:1.35}.slot.eq.empty span{font-size:13px;color:var(--muted)}
 #bossbar .track{position:relative}#bossbar .tk{display:none;position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:rgba(255,255,255,.75)}#bossbar.phased .tk{display:block}
 .rc .rn small.bfx{color:#9fe0c8}.rc.lockd{opacity:.62}.dbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.dbook .dk{position:relative;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}.dbook .dk img{width:40px;height:40px}.dbook .dk b{font-weight:400;font-size:14px}.dbook .dk small{font-size:11px;color:var(--muted);line-height:1.25}.dbook .dk.unk img{opacity:.45}.dbook .dk.done{background:rgba(255,210,92,.12);box-shadow:inset 0 0 0 2px rgba(255,210,92,.5)}.dbook .dk i{position:absolute;top:4px;right:6px;font-style:normal;color:#ffd25c}
 .bars{display:grid;gap:6px;width:min(250px,60vw)}
@@ -61,7 +61,6 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .slot.dropT{border-color:var(--mint);background:#3c4a55}
 #dragGhost{position:fixed;z-index:60;width:56px;height:56px;margin:-28px 0 0 -28px;pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
 @media (min-height:521px){body.touch #bCraft{position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);z-index:2;bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px)}}
-@media (min-height:521px){body.touch #bEquip{position:fixed;right:calc(env(safe-area-inset-right,0px) + 86px);z-index:2;bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px)}}
 .goal{position:relative}.goal.dot::after{content:'';position:absolute;top:6px;right:8px;width:12px;height:12px;border-radius:50%;background:#7fe0b5;border:2px solid #241b2f}
 .qrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid #3a2f4d}.qrow.lock{opacity:.45}
 .qrow .st{font-size:12px;border-radius:10px;padding:3px 8px;white-space:nowrap}.qrow .st.done{background:#2f5a46;color:#a5ecc9}.qrow .st.cur{background:#5a4a20;color:#ffd25c}.qrow .st.lock{background:#2a2139;color:var(--muted)}
@@ -317,7 +316,6 @@ body.touch #pcHint{display:none}
     </div>
     <div class="side">
       <button class="sbtn" id="bCraft" type="button"><img class="px" alt="">제작</button>
-      <button class="sbtn" id="bEquip" type="button"><img class="px" alt="">장비</button>
       <button class="sbtn" id="bQuest" type="button"><img class="px" alt="">퀘스트</button>
       <button class="sbtn" id="bStat" type="button"><img class="px" alt="">능력</button>
       <button class="sbtn" id="bMap" type="button"><img class="px" alt="">지도</button>
@@ -332,7 +330,7 @@ body.touch #pcHint{display:none}
   <div id="skBar" hidden><button class="skb" type="button" data-n="0"><img class="px" alt=""><i class="cd"></i><span class="k">F</span></button><button class="skb" type="button" data-n="1"><img class="px" alt=""><i class="cd"></i><span class="k">G</span></button></div>
   <button id="rotBtn" type="button" hidden aria-label="방향 바꾸기"><b>↻</b><span>방향</span></button>
   <button id="subBtn" type="button" hidden aria-label="회수"><img class="px" id="subIcon" alt=""><span id="subLbl">회수</span></button>
-  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방 · U 장비 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
+  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방(장비) · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="fade" hidden>기절했어요…</div>
   <input type="file" id="fileIn" hidden>
@@ -1105,7 +1103,7 @@ const ITEMS = {
   pickWood: { n: '나무 곡괭이', kind: 'pick', power: 1, tier: 0, stack: 1, d: '흙벽과 구리 광맥을 캘 수 있어요.' },
   pickCopper: { n: '구리 곡괭이', kind: 'pick', power: 2, tier: 1, stack: 1, d: '돌벽과 철 광맥도 캘 수 있어요.' },
   pickIron: { n: '철 곡괭이', kind: 'pick', power: 3, tier: 2, stack: 1, d: '수정 동굴의 단단한 화강암 벽과 석영 광맥까지 캘 수 있어요.' },
-  swordWood: { n: '나무 검', kind: 'sword', dmg: 6, stack: 1, d: '처음부터 무기 칸에 끼워져 있는 검. [장비]에서 다른 무기로 바꿀 수 있어요.' },
+  swordWood: { n: '나무 검', kind: 'sword', dmg: 6, stack: 1, d: '처음부터 가진 검. 단축칸에서 골라 들면 이 검으로 싸워요.' },
   swordCopper: { n: '구리 검', kind: 'sword', dmg: 11, stack: 1, d: '가볍고 튼튼한 검.' },
   swordIron: { n: '철 검', kind: 'sword', dmg: 17, stack: 1, d: '묵직한 한 방.' },
   swordCrystal: { n: '수정 검', kind: 'sword', dmg: 26, stack: 1, d: '보랏빛으로 반짝이는 검.' },
@@ -1213,7 +1211,7 @@ const USE = { chair: 'sit', stumpStool: 'sit', shroomStool: 'sit', cryChair: 'si
   torch: 'lamp', lampShroom: 'lamp', lampCrystal: 'lamp', sproutLamp: 'lamp', sporeLamp: 'lamp', fishTank: 'feed', shelf: 'read', cryMirror: 'mirror',
   shroomWardrobe: 'dress', cryFountain: 'wish', plant: 'water', vase: 'water', bootPlanter: 'water', table: 'tea', shroomTable: 'tea', cryTable: 'tea' };
 const USE_LBL = { sit: '앉기', sleep: '잠자기', pet: '쓰다듬기', feed: '밥 주기', read: '책 읽기', mirror: '거울 보기', dress: '꾸미기', wish: '소원 빌기', water: '물 주기', tea: '차 마시기' };
-const TIPS = ['곡괭이는 가방에 있기만 하면 가장 좋은 것을 자동으로 써요. 무기는 [장비]의 무기 칸에 껴요.', '활을 쓸 때 가방에 광물 화살이 있으면 좋은 화살부터 써서 더 세게 쏴요.', '도끼를 무기 칸에 끼우면 나무를 더 빨리 베요.', '횃불이나 램프로 밝힌 곳에는 몬스터가 생기지 않아요.', '침대에서 자면 체력이 가득 차고, 그 침대에서 다시 깨어나요.',
+const TIPS = ['무기·도구·가구는 단축칸에서 골라 들면 그 일만 해요. 빈손이면 앞에 있는 것에 맞춰 열기·줍기·캐기를 해요.', '활을 쓸 때 가방에 광물 화살이 있으면 좋은 화살부터 써서 더 세게 쏴요.', '도끼를 들고 나무를 베면 더 빨리 베요.', '횃불이나 램프로 밝힌 곳에는 몬스터가 생기지 않아요.', '침대에서 자면 체력이 가득 차고, 그 침대에서 다시 깨어나요.',
   '말랑대왕은 착지할 때 충격파를 내요. 점프하면 멀리 떨어져요.', '버섯 여왕의 포자는 둥글게 퍼져요. 포자 사이 틈으로 빠져나가요.', '수정골렘이 벽에 부딪혀 기절하면 1.5배 피해를 줄 수 있어요.',
   '수정 분수에서 소원을 빌면 잠시 희귀 물고기가 잘 낚여요.', '구리 낫이 가방에 있으면 작물을 하나씩 더 얻어요. 꾹 누르면 주변 3×3을 한 번에 거둬요.', '바닥 타일을 물 위에 깔면 다리가 돼요.', '찌가 쏙 들어가고 느낌표가 뜨면 바로 당겨요!', '의자에 앉아 있으면 체력이 조금씩 차올라요.'];
 const COMPLIMENTS = ['오늘도 귀여워요!', '반짝반짝, 멋진 모험가예요', '새싹이 생기 있어 보여요', '웃는 얼굴이 제일 예뻐요'];
@@ -1460,7 +1458,7 @@ const WEAPONS = {
   bowIron: ['사냥꾼의 활', 'bow', 11, [['ironBar', 3], ['wood', 4], ['rope', 3], ['gel', 2]], 450, [['ironBar', 1], ['rope', 1]], bowIcon(C.woodD, C.wood, C.iron), '팽팽한 시위로 빠른 화살을 쏴요.'],
   staffCrystal: ['수정 지팡이', 'staff', 17, [['crystal', 10], ['ironBar', 4], ['glowcap', 4]], 700, [['crystal', 3]], staffIcon(C.cry, C.cryL), '보랏빛 구슬이 적 여럿을 꿰뚫어요.', '#d6c2ff'],
   bowCrystal: ['별빛 활', 'bow', 18, [['crystal', 10], ['ironBar', 4], ['rope', 4], ['glowcap', 2]], 800, [['crystal', 3]], bowIcon(C.cry, C.cryL, C.cryL), '별빛처럼 반짝이는 화살을 쏴요.'],
-  axeStone: ['돌 도끼', 'axe', 8, [['stone', 4], ['wood', 3], ['rope', 1]], 200, [['stone', 2]], axeIcon(C.stone, C.stoneL), '묵직하게 내려찍어요. 무기 칸에 끼우거나 들고 있으면 나무를 더 빨리 베요.'],
+  axeStone: ['돌 도끼', 'axe', 8, [['stone', 4], ['wood', 3], ['rope', 1]], 200, [['stone', 2]], axeIcon(C.stone, C.stoneL), '묵직하게 내려찍어요. 들고 있으면 나무도 더 빨리 베요.'],
   axeCopper: ['구리 도끼', 'axe', 15, [['copperBar', 4], ['wood', 2], ['rope', 1]], 350, [['copperBar', 2]], axeIcon(C.copper, C.copperL), '단단한 구리 도끼. 적을 멀리 밀어내고 나무도 잘 베요.'],
   axeIron: ['철 도끼', 'axe', 23, [['ironBar', 4], ['wood', 2], ['resin', 1]], 550, [['ironBar', 2]], axeIcon(C.iron, C.ironL), '날이 선 철 도끼. 한 번에 크게 찍어요.'],
 };
@@ -1531,7 +1529,7 @@ const SKILLS = {
 Object.assign(SKILLS, {
   stomp: { n: '땅울림', act: 1, lv: 7, max: 3, mp: () => 16, cd: l => 8 - l, d: l => `발을 쿵 굴러 둘레 2.5칸의 적을 멀리 밀쳐내고 느리게 해요. 무기 피해의 ${70 + 20 * l}%` },
   warrior: { n: '전사의 기술', lv: 8, max: 3, d: l => `근접 무기 피해 +${6 * l}% · 근접 공격 속도 +${3 * l}%` },
-  volley: { n: '화살비', act: 1, lv: 9, max: 3, mp: () => 20, cd: l => 7 - l, d: l => `활로 화살 ${3 + 2 * l}발을 부채꼴로 쏴요. 한 발에 활 피해의 ${50 + 10 * l}% (활을 들거나 무기 칸에 껴야 해요)` },
+  volley: { n: '화살비', act: 1, lv: 9, max: 3, mp: () => 20, cd: l => 7 - l, d: l => `활로 화살 ${3 + 2 * l}발을 부채꼴로 쏴요. 한 발에 활 피해의 ${50 + 10 * l}% (활을 들고 있어야 해요)` },
   hawk: { n: '매의 눈', lv: 10, max: 3, d: l => `활 피해 +${8 * l}% · 활 사거리 +${15 * l}%` },
   frostRing: { n: '서리 고리', act: 1, lv: 11, max: 3, mp: () => 24, cd: () => 8, d: l => `둘레 3칸에 서리를 퍼뜨려 피해 ${12 + 8 * l}를 주고 꽁꽁 얼려요 (지혜로 강해져요)` },
   arcane: { n: '마력 순환', lv: 12, max: 3, d: l => `최대 기력 +${8 * l} · 마법 피해 +${6 * l}%` },
@@ -2231,7 +2229,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 0; G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); migrateWeapon(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
+  G.sel = 3; /* v48: start with an empty hand (berries · seeds · wooden sword sit in slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2257,7 +2255,7 @@ function deserialize(s) {
   if (!G.stats.qv) { addQuartzVeins(); G.stats.qv = 1; } // v43: older crystal caves get the new quartz veins inside their granite
   G.equip = freshEquip(); const se = s.equip && typeof s.equip === 'object' ? s.equip : {}; // v42: the old 'acc' slot moves to the slot that fits (turtle charm → neck, snow brooch → head)
   for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = { id: e.id, c: 1 }; }
-  if (se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword') G.equip.weapon = eqCopy(se.weapon);
+  const oldWp = se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword' ? eqCopy(se.weapon) : null; // v48: no weapon slot any more
   G.pets = {}; if (s.pets && typeof s.pets === 'object') for (const k in s.pets) if (ANIMALS[k] && ANIMALS[k].pet && s.pets[k]) G.pets[k] = 1; G.petOn = G.pets[s.petOn] ? s.petOn : null; G.wild = []; G.petE = null; // v45 pets
   G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null;
@@ -2268,7 +2266,7 @@ function deserialize(s) {
   if (!(G.sel >= 0 && G.sel < HOT)) G.sel = 0; G.newIds = {};
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   { const DRILL_TO = { drillStone: 'quarry', drillCu: 'pitCu', drillFe: 'pitFe', drillGold: 'pitGold' }, conv = x => { if (x && DRILL_TO[x.id]) x.id = DRILL_TO[x.id]; }; G.inv.forEach(conv); for (const o of G.objs.values()) if (o.items) o.items.forEach(conv); } // v46: old stone drills become stone pits
-  if (!('weapon' in se) && migrateWeapon()) { const wn = ITEMS[G.equip.weapon.id].n; setTimeout(() => { if (G && started) toast(`이제 무기는 [장비]의 무기 칸에 껴서 써요 · ${josa(wn, '을', '를')} 껴 두었어요`, 'good', 'eqmove'); }, 1600); }
+  if (oldWp) { const wn = ITEMS[oldWp.id].n, where = unslotWeapon(oldWp); setTimeout(() => { if (G && started) toast(`이제 무기는 단축칸에서 골라 들면 써요 · 무기 칸에 있던 ${josa(wn, '을', '를')} ${where}에 넣어 두었어요`, 'good', 'eqmove'); }, 1600); }
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); refundRoofTiles(s.roof, roofBack); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
@@ -2544,7 +2542,7 @@ function addItem(id, c, count = true) {
   for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; G.newIds = G.newIds || {}; G.newIds[id] = 1; } }
   const got = c - left;
   if (got > 0 && rarOf(id) >= 3 && (ITEMS[id].kind === 'sword' || ITEMS[id].kind === 'pick')) { G.stats.epicSeen = G.stats.epicSeen || {}; G.stats.epicSeen[id] = 1; }
-  if (got > 0 && ITEMS[id].kind === 'sword') autoEquipWeapon(id);
+  if (got > 0 && ITEMS[id].kind === 'sword') autoHotWeapon(id);
   if (count && got > 0) { const S = G.stats; if (id === 'wood') S.wood += got; if (id === 'copperOre') S.copperOre += got; if (id === 'copperBar') S.copperBar += got; if (id === 'lightSeed') S.seedsFound += got; }
   invDirty = true; return left;
 }
@@ -2583,12 +2581,13 @@ function upgListHTML(ok) {
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
   return h + `</div></div>`; }
 const usableItem = id => G.inv.some(s => s && s.id === id && !isBroken(s));
-function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; for (const s of G.inv) { if (!s || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; const pw = ITEMS[s.id].power * (1 + UPG_POW * lvOf(s)); if (pw > b.power) b = { ...ITEMS[s.id], id: s.id, slot: s, power: pw }; } return b; }
-// v42: the weapon in the weapon slot is used; a weapon held in the hotbar is used first while it is held; with neither, the fist
+function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; const h = G.inv[G.sel]; // v48: a pickaxe held in the hotbar is the one used
+  if (h && ITEMS[h.id] && ITEMS[h.id].kind === 'pick' && !isBroken(h)) return { ...ITEMS[h.id], id: h.id, slot: h, power: ITEMS[h.id].power * (1 + UPG_POW * lvOf(h)) };
+  for (const s of G.inv) { if (!s || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; const pw = ITEMS[s.id].power * (1 + UPG_POW * lvOf(s)); if (pw > b.power) b = { ...ITEMS[s.id], id: s.id, slot: s, power: pw }; } return b; }
+// v48: the weapon held in the hotbar is the weapon (there is no weapon slot any more); otherwise the fist
 const FIST = { n: '주먹', dmg: 3, id: 'hand', wt: 'fist' };
 const wpOf = s => { const it = ITEMS[s.id]; return { ...it, id: s.id, slot: s, dmg: it.dmg * (1 + UPG_DMG * lvOf(s)) }; }; // v43: each upgrade level adds 8% damage
-function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'sword' && !isBroken(s)) return wpOf(s);
-  const e = G.equip && G.equip.weapon; if (e && ITEMS[e.id] && !isBroken(e)) return wpOf(e); return FIST; }
+function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; return it && it.kind === 'sword' && !isBroken(s) ? wpOf(s) : FIST; }
 const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1); // v44 매의 눈
 const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.ranged ? 1 : 1 - skl('warrior') * .03); };
 const selItem = () => G.inv[G.sel];
@@ -2727,72 +2726,122 @@ function nearestEnemy(range) {
   for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.8) continue; const d = Math.hypot(b.x - p.x, b.y - p.y) - BOSSES[k].hr; if (d < range && d < bd) { bd = d; best = b; } }
   return best;
 }
-function decide() {
-  const p = G.p; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
-  const sw = curWeapon(), pk = bestPick(), WT = wtOf(sw);
+// v48: what you hold decides what the button does. Holding a tool, a weapon, food or something to build only does that
+// item's own job; an empty hand (or a plain material) does everything else as before (open, pick up, gather, mine …).
+const HOLD_MODE = { sword: 'weapon', pick: 'pick', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
+const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
+function fightDecide(sw) { const p = G.p, WT = wtOf(sw);
   let en = nearestEnemy(WT.ranged ? wRange(WT) : WT.reach - 0.1);
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
   if (en && aimMouse()) { const m = mouseWorld(), a1 = Math.atan2(m.y - p.y, m.x - p.x), a2 = Math.atan2(en.y - p.y, en.x - p.x); let da = Math.abs(a1 - a2); if (da > Math.PI) da = 2 * Math.PI - da; if (da > 1.1) en = null; }
-  if (en) return { k: 'attack', lbl: WT.ranged ? '쏘기' : '공격', icon: sw.id === 'hand' ? 'hand' : sw.id, en };
+  return en ? { k: 'attack', lbl: WT.ranged ? '쏘기' : '공격', icon: sw.id === 'hand' ? 'hand' : sw.id, en } : null; }
+const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
+function natAct(d, o, t, pk) { return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o }; }
+function decide() {
+  const p = G.p; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
+  const s = selItem(), it = s && ITEMS[s.id], md = holdMode(it);
+  if (md === 'hand' || md === 'weapon' || md === 'pick') { const f = fightDecide(curWeapon()); if (f && !(md === 'pick' && pickTarget())) return f; }
   if (p.sit) return { k: 'stand', lbl: '일어나기', icon: 'hand' };
   if (G.fish) return { k: 'reel', lbl: G.fish.st === 'bite' ? '당기기!' : '거두기', icon: 'rod' };
   let t = targetTile(), i = inB(t.x, t.y) ? idx(t.x, t.y) : -1, o = i >= 0 ? G.objs.get(i) : null;
   if (o && o.t === '_part') { const ai = anchorAt(i); if (ai >= 0) { i = ai; t = { x: ai % W, y: (ai / W) | 0, far: t.far }; o = G.objs.get(ai); } else o = null; }
-  const s = selItem(), it = s && ITEMS[s.id];
-  if (it && it.kind === 'lasso') { const wa = wildNear(2.8); if (wa) return { k: 'lasso', lbl: '포획', icon: 'lasso', w: wa }; }
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
-    const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it));
+    const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (md === 'build' && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
-  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3') && hasItem('sickle')) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list }; }
-  if (it && it.kind === 'summon') return summonDecide(it, s);
-  if (it && it.kind === 'recall') return recallDecide(s); // holding the homestone means you want to use it, whatever is in front
-  // building comes first: a selected floor/wall/furniture/ground is placed before opening or using what is in front
-  if (it && it.kind !== 'seed' && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
-  if (it && it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
+  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3') && (md === 'hand' || md === 'sickle') && hasItem('sickle')) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list }; }
+  if (o && OBJ[o.t] && OBJ[o.t].lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold
+  if (md !== 'hand') return heldDecide(md, s, it, t, i, o);
+  return handDecide(t, i, o);
+}
+// the target the held pickaxe would work on (a wall, or a rock / tree / plant to gather)
+function pickTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return false; let i = idx(t.x, t.y), o = G.objs.get(i); if (o && o.t === '_part') { const ai = anchorAt(i); o = ai >= 0 ? G.objs.get(ai) : null; }
+  return !!((G.wall[i] && G.wall[i] !== 8) || (o && OBJ[o.t].nat)); }
+function heldDecide(md, s, it, t, i, o) {
+  const d = o && OBJ[o.t], water = i >= 0 && !G.wall[i] && G.floor[i] === WATER, no = (lbl, msg) => ({ k: 'info', lbl, icon: s.id, msg, t });
+  const crop = d && d.crop ? Math.max(0, cropStage(o)) : -1;
+  switch (md) {
+    case 'summon': return summonDecide(it, s);
+    case 'recall': return recallDecide(s);
+    case 'lasso': { const wa = wildNear(2.8); return wa ? { k: 'lasso', lbl: '포획', icon: 'lasso', w: wa } : no('포획', '올가미 밧줄을 든 채 동물에게 다가가서 눌러요'); }
+    case 'build': {
+      if (canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
+      if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
+      if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
+      if (d && d.item) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
+      return no(it.kind === 'seed' ? '심을 수 없음' : '놓을 수 없음', it.kind === 'seed' ? '여기엔 심을 수 없어요 · 빈 흙·이끼·버섯흙·수정 모래를 바라보고 눌러요' : '여기엔 놓을 수 없어요 · 빈 곳을 바라보고 눌러요'); }
+    case 'shovel': {
+      if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 작업대에서 고칠 수 있어요');
+      if (d && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
+      if (i >= 0 && !G.wall[i] && !o) { const f = G.floor[i];
+        if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
+        if (f === 2) return no('흙 땅', '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요');
+        if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
+      return no('팔 수 없음', '삽으로는 깔아 둔 바닥·배운 지형·덤불·묘목만 떠요'); }
+    case 'wcan':
+      if (crop >= 0 && crop < 3) return o.w ? { k: 'info', lbl: `자라는 중 ${crop + 1}/4`, icon: 'dots', msg: cropMsg(o, crop, i), t } : (s.w || 0) > 0 ? { k: 'water', lbl: '물 주기', icon: 'wcan', t, o } : no('물 없음', '물뿌리개가 비었어요 · 물가를 바라보고 눌러 채워요');
+      if (water) return (s.w || 0) >= WCAN_MAX ? no('가득 참', '물뿌리개에 물이 가득해요') : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
+      return no('물 주기', '자라는 작물에 물을 주거나, 물가를 바라보고 눌러 채워요');
+    case 'fert':
+      if (crop >= 0 && crop < 3) return o.f ? { k: 'info', lbl: `자라는 중 ${crop + 1}/4`, icon: 'dots', msg: cropMsg(o, crop, i), t } : { k: 'fert', lbl: '비료 주기', icon: s.id, t, o };
+      return no('비료 주기', '자라는 작물을 바라보고 눌러요');
+    case 'sickle':
+      if (crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
+      if (d && d.giant) return { k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o };
+      if (d && d.bush && (o.r || 0) <= G.time) return { k: 'harvest', lbl: '따기', icon: 'berry', t, o };
+      return no('거두기', '다 자란 작물 앞에서 눌러요 · 꾹 누르면 둘레 3×3을 한 번에 거둬요');
+    case 'rod':
+      if (water) return isBroken(s) ? no('낚싯대 고장', '낚싯대가 망가졌어요. 작업대에서 고칠 수 있어요') : { k: 'fish', lbl: '낚시', icon: 'rod', t };
+      return no('낚시', '물을 바라보고 눌러 찌를 던져요');
+    case 'food':
+      if (it.cake && o && CAKE_TABLES.includes(o.t) && !o.cake) return { k: 'cakeOn', lbl: '올리기', icon: 'festCake', t, o };
+      return { k: 'eat', lbl: '먹기', icon: s.id };
+    case 'wear': return { k: 'wear', lbl: it.slot === 'body' ? '입기' : '달기', icon: s.id };
+    case 'key': return d && d.tree ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
+    case 'pick': {
+      if (isBroken(s)) return no('곡괭이 고장', `${josa(it.n, '이', '가')} 망가졌어요. 작업대에서 고칠 수 있어요`);
+      const pk = bestPick();
+      if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: s.id, t };
+      if (d && d.nat) return natAct(d, o, t, pk);
+      return swingAct(curWeapon()); }
+    case 'weapon': {
+      if (isBroken(s)) return no('무기 고장', `${josa(it.n, '이', '가')} 망가졌어요. 작업대에서 고칠 수 있어요`);
+      if (d && d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe) return natAct(d, o, t, bestPick()); // an axe also chops trees
+      return swingAct(curWeapon()); }
+  }
+  return handDecide(t, i, o);
+}
+// empty hand (or a plain material): everything in front, as before v48
+function handDecide(t, i, o) {
+  const p = G.p, pk = bestPick();
   if (o) {
     const d = OBJ[o.t];
-    if (it && it.kind === 'shovel' && !isBroken(s) && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
     if (d.growTo) { const st = treeStep(o), into = d.stump && OBJ[o.g] ? OBJ[o.g].n : d.into, mins = s2 => Math.max(1, Math.ceil(s2 / 60)), r = (o.at || 0) - G.time;
       if (st < 0) return { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t };
       return { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t }; }
     if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
     if (d.giant) return { k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o };
     if (o.cake) return { k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o };
-    if (it && it.cake && CAKE_TABLES.includes(o.t)) return { k: 'cakeOn', lbl: '올리기', icon: 'festCake', t, o };
     if (d.lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o };
     if (d.tchest) return o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o };
     if (d.ranch) return ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t, sub: true };
     if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
     if (d.crop) { const cs = Math.max(0, cropStage(o));
       if (cs >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
-      if (it && it.kind === 'wcan' && !o.w) return (s.w || 0) > 0 ? { k: 'water', lbl: '물 주기', icon: 'wcan', t, o } : { k: 'info', lbl: '물 없음', icon: 'wcan', msg: '물뿌리개가 비었어요 · 물가를 바라보고 눌러 채워요', t };
-      if (it && it.kind === 'fert' && !o.f) return { k: 'fert', lbl: '비료 주기', icon: s.id, t, o };
       return { k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs, i), t }; }
     if (d.bush) return (o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t };
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) return { k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t };
       return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
-    if (d.nat) return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o };
-    if (d.item && !(it && it.kind === 'floor')) {
+    if (d.nat) return natAct(d, o, t, pk);
+    if (d.item) {
       const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o, sub: true };
-      if (it && ['place', 'wall'].includes(it.kind)) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: true };
       return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
     }
   }
-  if (it && BUILD_KINDS.includes(it.kind) && canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
-  if (it && it.kind === 'shovel' && isBroken(s) && i >= 0 && !G.wall[i]) return { k: 'info', lbl: '삽 고장', icon: 'shovel', msg: '삽이 망가졌어요. 작업대에서 고칠 수 있어요', t };
-  if (it && it.kind === 'shovel' && i >= 0 && !G.wall[i]) { const f = G.floor[i];
-    if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
-    if (f === 2) return { k: 'info', lbl: '흙 땅', icon: 'dots', msg: '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요', t };
-    if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
-  if (it && it.kind === 'wcan' && i >= 0 && !G.wall[i] && G.floor[i] === WATER) return (s.w || 0) >= WCAN_MAX ? { k: 'info', lbl: '가득 참', icon: 'wcan', msg: '물뿌리개에 물이 가득해요', t } : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
   if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return usableItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : hasItem('rod') ? { k: 'info', lbl: '낚싯대 고장', icon: 'rod', msg: '낚싯대가 망가졌어요. 작업대에서 고칠 수 있어요', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (제작 → 낚싯대)', t };
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
-  if (it && it.kind === 'wear') return { k: 'wear', lbl: ITEMS[s.id].slot === 'body' ? '입기' : '달기', icon: s.id };
-  if (it && it.kind === 'food') return { k: 'eat', lbl: '먹기', icon: s.id };
-  if (it && it.kind === 'key') return { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
   if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) return { k: 'petpet', lbl: '쓰다듬기', icon: 'hand' };
   { const wa = wildNear(1.8); if (wa) return { k: 'info', lbl: ANIMALS[wa.k].n, icon: 'dots', msg: `${ANIMALS[wa.k].n}예요 · 올가미 밧줄(작업대)을 들고 다가가면 데려갈 수 있어요`, t: { x: Math.floor(wa.x), y: Math.floor(wa.y) } }; }
-  return { k: 'swing', lbl: WT.ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id };
+  return swingAct(curWeapon());
 }
 const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
 const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
@@ -2812,11 +2861,13 @@ function tryAct(edge) {
   perform(a);
 }
 function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
+let fistTip = 0; // v48: one hint per session when fighting bare-handed with a weapon in the bag
 function perform(a) {
   const p = G.p;
   switch (a.k) {
     case 'attack': {
       if (!aimMouse()) faceTo(a.en.x - p.x, a.en.y - p.y);
+      if (!fistTip && curWeapon() === FIST) { const k = G.inv.findIndex(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x)); if (k >= 0) { fistTip = 1; toast(`주먹으로 싸우는 중이에요 · ${k < HOT ? `단축칸 ${k + 1}번` : '가방'}의 ${josa(ITEMS[G.inv[k].id].n, '을', '를')} 골라 들면 더 세요`, null, 'fisttip'); } }
       actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     }
     case 'swing': actCd = swingAttack() === false ? 0.3 : atkCd(); break;
@@ -2915,7 +2966,7 @@ const SK_FN = {
     for (const e of G.enemies.slice()) if (Math.hypot(e.x - p.x, e.y - p.y) < R + ENEMY[e.k].r) { const [d, c] = roll(); hitEnemy(e, d, c, 18, 'slow'); landed = true; }
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < R + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c, 'slow'); landed = true; } }
     if (landed) wear(w.slot); },
-  volley(l) { const p = G.p, w = curWeapon(), W = wtOf(w); if (W.ranged !== 'arrow') { toast('화살비는 활을 들거나 무기 칸에 껴야 쓸 수 있어요', null, 'novolley'); return false; }
+  volley(l) { const p = G.p, w = curWeapon(), W = wtOf(w); if (W.ranged !== 'arrow') { toast('화살비는 활을 들고 있어야 쓸 수 있어요', null, 'novolley'); return false; }
     if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } else { const en = nearestEnemy(wRange(W)); if (en) faceTo(en.x - p.x, en.y - p.y); }
     const ang = Math.atan2(p.face.y, p.face.x), n = 3 + 2 * l, spread = .9;
     for (let k = 0; k < n; k++) { const a = ang + (k / (n - 1) - .5) * spread, crit = Math.random() < .1; shootP(a, { k: 'arrow', dmg: Math.max(1, Math.round(w.dmg * (.5 + .1 * l) * rangeMul() * (crit ? 1.6 : 1))), crit, spd: W.spd, range: wRange(W), pierce: 0, col: '#bff7ef', kb: 3, fx: w.fx }); }
@@ -3073,7 +3124,7 @@ function hitObj(t, o) {
   faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y);
   G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' ? null : d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? curWeapon().id : pk.id === 'hand' ? null : pk.id };
   if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
-  const axe = d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? WTYPE.axe.chop : 1; // an axe in the weapon slot (or held) chops trees faster
+  const axe = d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? WTYPE.axe.chop : 1; // a held axe chops trees faster
   o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power) * mineMul() * axe); if (d.nat !== 'pick') wear(pk.slot);
   SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
   const yg = isYoung(o);
@@ -3774,21 +3825,25 @@ Object.assign(ICON, {
   snowBrooch: A => { for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; A.line(8, 8, 8 + Math.cos(a) * 5.4, 8 + Math.sin(a) * 5.4, '#9fd8f0'); } A.e(8, 8, 2.2, 2.2, '#ffffff'); A.p(8, 8, '#7fc0e0'); },
 });
 RECIPES.push(Rc('obsCoat', 1, [['obsidian', 4], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'), Rc('frostRobe', 1, [['frostShard', 6], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'));
-// v42: five slots in their own 「장비」 menu — weapon · clothes · head · neck · ring (rings arrive with the smelter in v43)
-const EQ_SLOTS = [['weapon', '무기'], ['body', '옷'], ['head', '머리장식'], ['neck', '목걸이'], ['ring', '반지']], EQ_N = Object.fromEntries(EQ_SLOTS);
-const freshEquip = () => ({ weapon: null, body: null, head: null, neck: null, ring: null });
-const eqSlotOf = id => { const it = ITEMS[id]; return !it ? null : it.kind === 'sword' ? 'weapon' : it.kind === 'wear' ? it.slot : null; };
+// v42: slots in their own 「장비」 menu — clothes · head · neck · ring (rings arrive with the smelter in v43); v48: the weapon slot is gone (the held weapon is used)
+const EQ_SLOTS = [['body', '옷'], ['head', '머리장식'], ['neck', '목걸이'], ['ring', '반지']], EQ_N = Object.fromEntries(EQ_SLOTS);
+const freshEquip = () => ({ body: null, head: null, neck: null, ring: null });
+const eqSlotOf = id => { const it = ITEMS[id]; return !it ? null : it.kind === 'wear' ? it.slot : null; };
 const wearing = id => !!(G && G.equip && EQ_SLOTS.some(([sl]) => G.equip[sl] && G.equip[sl].id === id));
 const eqCopy = s => { const c = { id: s.id, c: 1 }; if (s.dur != null) c.dur = s.dur; if (s.lv) c.lv = s.lv; return c; };
 function wearItem(i) { const s = G.inv[i], it = s && ITEMS[s.id], sl = s && eqSlotOf(s.id); if (!sl) return; const old = G.equip[sl];
   G.equip[sl] = eqCopy(s);
-  if (sl === 'weapon') { G.inv[i] = null; if (old) { const l = moveInto(G.inv, old); if (l) { G.inv[i] = eqCopy(old); } } } // the old weapon goes into the bag, so the hotbar slot does not keep holding it
-  else G.inv[i] = old ? eqCopy(old) : null; // the clothes taken off go where the new ones were
+  G.inv[i] = old ? eqCopy(old) : null; // the clothes taken off go where the new ones were
   if (sl === 'body') buildPlayer(G.outfit || 0); SFX.craft(); puff(G.p.x, G.p.y - .5, sl === 'body' ? (WEAR_PAL[s.id] || ['#fff'])[0] : '#ffe9a8', 12, 2.2, .5);
-  toast(sl === 'weapon' ? `${josa(it.n, '을', '를')} 무기 칸에 꼈어요` : `${josa(it.n, '을', '를')} ${sl === 'body' ? '입었어요' : '달았어요'}`, 'good', 'wear'); invDirty = true; }
+  toast(`${josa(it.n, '을', '를')} ${sl === 'body' ? '입었어요' : '달았어요'}`, 'good', 'wear'); invDirty = true; }
 function unwear(slot) { const s = G.equip[slot]; if (!s) return; const left = moveInto(G.inv, eqCopy(s)); if (left) { toast('가방이 가득 찼어요', null, 'full'); return; } G.equip[slot] = null; if (slot === 'body') buildPlayer(G.outfit || 0); SFX.place(); invDirty = true; }
-// a weapon picked up or made while the weapon slot is empty goes straight into it
-function autoEquipWeapon(id) { if (!G || !G.equip || G.equip.weapon || ITEMS[id].kind !== 'sword') return; const k = G.inv.findIndex(s => s && s.id === id && !isBroken(s)); if (k < 0 || k === G.sel) return; G.equip.weapon = eqCopy(G.inv[k]); G.inv[k] = null; invDirty = true; toast(`${josa(ITEMS[id].n, '을', '를')} 무기 칸에 꼈어요 · [장비]에서 바꿀 수 있어요`, 'good', 'wear'); }
+// v48: a weapon picked up or made while no weapon sits in the hotbar goes into an empty hotbar slot, ready to hold
+function autoHotWeapon(id) { if (!G || ITEMS[id].kind !== 'sword') return; for (let k = 0; k < HOT; k++) { const x = G.inv[k]; if (x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword') return; }
+  const to = G.inv.slice(0, HOT).findIndex(x => !x), k = G.inv.findIndex((x, j) => j >= HOT && x && x.id === id); if (to < 0 || k < 0) return;
+  G.inv[to] = G.inv[k]; G.inv[k] = null; invDirty = true; if (started) toast(`${josa(ITEMS[id].n, '을', '를')} 단축칸에 넣었어요 · 골라 들면 그 무기로 싸워요`, 'good', 'wphot'); }
+// v48: the weapon from an old save's weapon slot goes into an empty hotbar slot (or the bag, or onto the ground)
+function unslotWeapon(w) { const to = G.inv.slice(0, HOT).findIndex(x => !x); if (to >= 0) { G.inv[to] = w; return '단축칸'; }
+  if (!moveInto(G.inv, w)) return '가방'; spawnDrop(w.id, 1, G.p.x, G.p.y); const d = G.drops[G.drops.length - 1]; d.dur = w.dur; d.lv = w.lv; return '발밑'; }
 // ---- v43 smelter 「용광로」: upgrade gear (+1 … +5) and break it down; rings are made here too ----
 ITEMS.smelter = { n: '용광로', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요.' };
 OBJ.smelter = { n: '용광로', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
@@ -3877,7 +3932,7 @@ const inZone = (a, c) => { let d = Math.abs(a - c.za) % 6.283; if (d > Math.PI) 
 function catchThrow() { const c = panel && panel.kind === 'catch' ? panel : null; if (!c || (c.cool || 0) > performance.now()) return; c.cool = performance.now() + 250; const w = c.w, a = catchAng(c);
   if (inZone(a, c)) { c.hits++; SFX.pick(); if (c.hits >= 3 && ANIMALS[w.k].ranch) { G.wild = G.wild.filter(x => x !== w); const l = addItem(w.k, 1); if (l) spawnDrop(w.k, l, G.p.x, G.p.y); G.stats.ranchK = G.stats.ranchK || {}; G.stats.ranchK[w.k] = 1; closePanel(); hearts(w.x, w.y - .5, 6); SFX.seed(); toast(`${ANIMALS[w.k].n}${josa(ANIMALS[w.k].n, '을', '를').slice(ANIMALS[w.k].n.length)} 데려왔어요! 원하는 곳에 내려놓으면 ${ANIMALS[w.k].verb.split(' ')[0]}${ANIMALS[w.k].ranch === 'wool' ? '을' : '를'} 줘요`, 'good'); invDirty = true; return; }
     if (c.hits >= 3) { G.pets = G.pets || {}; G.pets[w.k] = 1; G.wild = G.wild.filter(x => x !== w); if (!G.petOn) { G.petOn = w.k; G.petE = { x: w.x, y: w.y, flip: false, anim: 0, moving: false }; } G.stats.pets = Object.keys(G.pets).length;
-      closePanel(); hearts(w.x, w.y - .5, 8); SFX.seed(); toast(`${ANIMALS[w.k].n} ${ANIMALS[w.k].pn}${josa(ANIMALS[w.k].pn, '이', '가').slice(ANIMALS[w.k].pn.length)} 친구가 됐어요! [장비]에서 함께 다닐 펫을 골라요`, 'good'); return; }
+      closePanel(); hearts(w.x, w.y - .5, 8); SFX.seed(); toast(`${ANIMALS[w.k].n} ${ANIMALS[w.k].pn}${josa(ANIMALS[w.k].pn, '이', '가').slice(ANIMALS[w.k].pn.length)} 친구가 됐어요! [가방]에서 함께 다닐 펫을 골라요`, 'good'); return; }
     c.za = Math.random() * 6.283; c.zw *= .78; c.spd *= 1.18; }
   else { c.miss++; SFX.clink(); if (c.miss >= 2) { G.wild = G.wild.filter(x => x !== w); closePanel(); toast(`${ANIMALS[w.k].n}${josa(ANIMALS[w.k].n, '이', '가').slice(ANIMALS[w.k].n.length)} 놀라서 도망갔어요`, null, 'flee'); return; } }
   renderPanel(); }
@@ -3928,10 +3983,6 @@ QSIDE.push({ id: 's_ranch', t: () => `목장 동물 세 종류 데려오기 (${O
 function petHTML() { const own = Object.keys(ANIMALS).filter(k => ANIMALS[k].pet && (G.pets || {})[k]);
   if (!own.length) return `<div class="lbl">펫</div><p class="prose" style="color:var(--muted)">아직 펫이 없어요 · 올가미 밧줄(작업대)을 들고 강아지(이끼 동굴)·토끼(버섯숲)·고양이(수정 동굴)에게 다가가 포획해요</p>`;
   return `<div class="lbl">펫 <span style="color:var(--muted);font-size:13px">한 마리만 함께 다녀요</span></div><div class="eqlist">${own.map(k => `<div class="eqr"><button type="button" class="slot eq ${G.petOn === k ? 'pick' : ''}" data-a="petOn" data-i="${k}" aria-label="${ANIMALS[k].pn}"><img class="px" src="${animalImg(k).toDataURL()}" alt=""></button><div><b>${ANIMALS[k].n} ${ANIMALS[k].pn}${G.petOn === k ? ' · 함께 다니는 중' : ''}</b><small>${ANIMALS[k].fx}</small></div></div>`).join('')}</div>`; }
-// pre-v42 saves: the bag's best melee weapon (the one that used to be picked automatically) moves into the weapon slot
-function migrateWeapon() { let b = null, bk = -1, alt = null, ak = -1;
-  G.inv.forEach((s, k) => { if (!s || !ITEMS[s.id] || ITEMS[s.id].kind !== 'sword' || isBroken(s)) return; const it = ITEMS[s.id], wt = it.wt || 'sword'; if (wt === 'sword') { if (!b || it.dmg > b.dmg) { b = it; bk = k; } } else if (!WTYPE[wt].ranged && (!alt || it.dmg / WTYPE[wt].cd > alt.dmg / WTYPE[alt.wt || 'sword'].cd)) { alt = it; ak = k; } });
-  const k = bk >= 0 ? bk : ak; if (k < 0) return false; G.equip.weapon = eqCopy(G.inv[k]); G.inv[k] = null; return true; }
 function grantAccs() { G.stats.accGot = G.stats.accGot || {}; for (const k in ACC_OF) if (beat(k) && !G.stats.accGot[k]) { G.stats.accGot[k] = 1; const l = moveInto(G.inv, { id: ACC_OF[k], c: 1 }); if (l) spawnDrop(ACC_OF[k], 1, G.p.x, G.p.y); } }
 // ---- dishes for the deep caves: cold / heat protection and the tier-3 dishes made with fire berries and frost radishes ----
 Object.assign(EFF, { cold: { n: '추위 대비', v: [.75, .5, 0], t: v => v ? `추위 게이지 ${pct(v)} 속도` : '추위 게이지 안 오름' }, heat: { n: '더위 대비', v: [.75, .5, 0], t: v => v ? `더위 게이지 ${pct(v)} 속도` : '더위 게이지 안 오름' } });
@@ -3994,17 +4045,13 @@ const REGION_MAT = [['dirt', 'copperOre', 'fiber'], ['stone', 'ironOre', 'shroom
 function regionMatHTML() { const seen = new Set(); for (let i = 0; i < G.explored.length; i++) if (G.explored[i]) seen.add(G.biome[i]);
   return `<div class="lbl">지역 재료</div><div class="rmat">${REGION_MAT.map((m, b) => `<div><b>${seen.has(b) ? BIOME[b] : '???'}</b>${seen.has(b) ? ['지형', '광물', '고유'].map((t, k) => `<span><img class="px" src="${iconURL(m[k])}" alt="">${t} · ${ITEMS[m[k]].n}</span>`).join('') : '<span>아직 가 보지 않은 곳</span>'}</div>`).join('')}</div>`; }
 function eqEffect(sl, s) {
-  if (sl === 'weapon') { if (!s) return '비어 있어요 · 주먹으로 싸워요 (공격력 3)'; const it = ITEMS[s.id]; let t = itemStat(it, s);
-    if (wtOf(it).ranged === 'arrow') { const k = bestArrow(); t += k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; } return t; }
-  if (!s) return sl === 'ring' ? '비어 있어요 · 반지는 용광로에서 만들어요' : '비어 있어요';
+  if (!s) return sl === 'ring' ? '비어 있어요 · 용광로에서 만들어요' : '비어 있어요';
   return (s.lv ? `강화 +${s.lv} · ` : '') + upgText(s.id, lvOf(s)); }
-function eqPanelHTML() {
-  let h = `<div class="sh-body"><p class="hint">칸을 누르면 벗어서 가방에 넣어요. 아래 가방 속 장비를 누르면 맞는 칸에 껴요.</p><div class="eqlist">`;
+// v48: the equipment rows sit at the top of the bag (no separate menu); pets at the bottom
+function eqRowHTML() {
+  let h = `<div class="lbl">장비 <span style="color:var(--muted);font-size:13px">칸을 누르면 벗어요 · 가방에서 옷·장신구를 고르고 [입기]·[달기]</span></div><div class="eqlist eq2">`;
   for (const [sl, n] of EQ_SLOTS) { const s = G.equip[sl];
     h += `<div class="eqr">${slotHTML(s, 'eqSlot', sl, 'eq' + (s ? '' : ' empty')).replace(/<\/button>$/, s ? '</button>' : `<span>${{ head: '머리', neck: '목' }[sl] || n}</span></button>`)}<div><b>${n}${s ? ' · ' + rarName(s.id) + (s.lv ? ` +${s.lv}` : '') : ''}</b><small>${eqEffect(sl, s)}</small></div></div>`; }
-  h += `</div>`; const held = selItem(); if (held && ITEMS[held.id].kind === 'sword' && !isBroken(held)) h += `<p class="hint">지금은 단축칸에서 든 ${josa(ITEMS[held.id].n, '을', '를')} 먼저 써요</p>`;
-  const list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && eqSlotOf(s.id));
-  h += petHTML() + `<div class="lbl">가방 속 장비</div>` + (list.length ? `<div class="grid">${list.map(({ s, i }) => slotHTML(s, 'eqPick', i, UIS.invSel === i ? 'pick' : '')).join('')}</div>` : `<p class="prose" style="color:var(--muted)">낄 수 있는 장비가 가방에 없어요</p>`);
   return h + `</div>`; }
 let wearAskT = 0;
 function suggestWear(b) { const need = b === 3 ? 'hot' : b === 4 ? 'cold' : null, el = $('#wearAsk'); if (!need || !started) return; const cur = G.equip.body;
@@ -4150,7 +4197,7 @@ const CAKE_TABLES = ['table', 'shroomTable', 'cryTable', 'longTable'];
 TIPS.push('수정 발전기를 만들면 스프링클러와 자동 수확기로 밭을 자동으로 돌볼 수 있어요.', '같은 작물 네 개를 2×2로 맞는 흙에 심으면 가끔 거대 작물이 자라요.');
 TIPS.push('버프 요리는 세 가지까지 함께 효과가 있어요. 같은 효과는 가장 좋은 것 하나만 적용돼요.', '레시피 쪽지는 몬스터·채집·낚시·숨은 방·보스에서 찾을 수 있어요.', '별 작물을 넣어 만든 요리는 효과가 1.5배 오래가요.');
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
-const epicOwned = () => { const got = new Set(); for (const s2 of [...G.inv, G.equip && G.equip.weapon]) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
+const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
 function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: (q.rw && q.rw.length) || q.xp }; }
 const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has; });
 function claimQuest(id) {
@@ -4622,12 +4669,13 @@ function updateSkBar() {
   bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
     b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
 }
-function openPanel(kind, data = {}) { if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft') UIS.tab = data.st === 'smelter' ? 'upg' : 'all'; /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; if (kind === 'craft') UIS.tab = data.st === 'smelter' ? 'upg' : 'all'; /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; actQ = 0; refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
-function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up; }
+function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up + (s && it.kind === 'sword' && wtOf(it).ranged === 'arrow' ? arrowInfo() : ''); }
+const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; };
 function itemStat1(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
 function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; return ''; }
 function renderPanel() {
@@ -4636,22 +4684,20 @@ function renderPanel() {
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
   if (k === 'inv') {
     h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:46px;padding:0 14px;font-size:15px">정렬</button>`);
-    h += `<div class="sh-body"><p class="hint">칸을 끌어다 놓거나, 칸을 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 도구는 가방에 있기만 하면 가장 좋은 것을 자동으로 써요. 무기는 [장비]의 무기 칸에 낀 것을 쓰고, 단축칸에서 무기를 골라 들면 그 무기를 먼저 써요.</p><div class="lbl">단축칸</div><div class="grid">`;
+    h += `<div class="sh-body"><p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 단축칸에서 고른 물건을 손에 들어요: 무기·도구·가구는 그 일만 하고, 빈손(또는 재료)이면 앞에 있는 것에 맞춰 열기·줍기·캐기를 해요.</p><div class="lbl">단축칸</div><div class="grid">`;
     const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && G.newIds && G.newIds[s0.id] && i >= HOT) c += ' new'; return c; };
-    h = h.replace(`<div class="lbl">단축칸</div>`, `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
+    h = h.replace(`<div class="lbl">단축칸</div>`, eqRowHTML() + `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
     for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(제작 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
     h += `</div>`;
     const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
     if (s) { const it = ITEMS[s.id]; const st = itemStat(it, s);
       h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''} <span style="color:var(--muted);font-size:15px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${rarOf(s.id) >= 0 && (it.kind === 'sword' || it.kind === 'pick' || rarOf(s.id) >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, rarOf(s.id))][1]}">★ ${RARITY[Math.max(0, rarOf(s.id))][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
       if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
-      if (it.kind === 'wear' || it.kind === 'sword') h += `<button class="btn" data-a="wearOn" type="button">${it.kind === 'sword' ? '무기 칸에 끼기' : it.slot === 'body' ? '입기' : '달기'}</button>`;
+      if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;
       if (UIS.invSel >= HOT) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
       h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
-    h += `</div>`;
+    h += petHTML() + `</div>`;
   } else if (k === 'catch') { h += catchHTML();
-  } else if (k === 'equip') {
-    h += head('장비', 'swordWood') + eqPanelHTML();
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; POOL = null; POOL = linkedChests(); const nCh = POOL.length;
     h += head(st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
@@ -4673,11 +4719,11 @@ function renderPanel() {
       h += `<div class="sh-body"><p class="hint">만들어 본 요리에 도장이 찍혀요 · 만든 요리 ${nMade}/${all.length} · 아는 레시피 ${nKnown}/${all.length}</p><div class="dbook">${all.map(id => { const k = knows(id), m = made(id), it = ITEMS[id];
         return `<div class="dk ${m ? 'done' : ''} ${k ? '' : 'unk'}"><img class="px" src="${iconURL(k ? id : 'rn_' + (DISH[id] ? id : 'skewer'))}" alt=""><b>${k ? it.n : '???'}</b><small>${k ? (it.buff ? buffText(it) : '회복 요리') : escHTML(noteHint(DISH[id]))}</small>${m ? '<i>✓</i>' : ''}</div>`; }).join('')}</div></div>`;
     } else if (UIS.tab === 'fix') {
-      const nb = benchy && benchNear(near), list = [{ s: G.equip.weapon, i: 'w' }, ...G.inv.map((s, i) => ({ s, i }))].filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
+      const nb = benchy && benchNear(near), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
       h += `<div class="sh-body"><p class="hint">${nb ? '닳은 도구를 새것처럼 고쳐요. 많이 닳을수록 재료가 더 들어요.' : '작업대 근처에서 고칠 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">고칠 도구가 없어요</p>`;
       for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => availCount(id) >= c), mx = DUR[s.id][0];
-        h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri" style="position:relative"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${i === 'w' ? '<small>무기 칸</small>' : ''}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="fixbar"><i style="width:${Math.round(durOf(s) / mx * 100)}%"></i></div><div class="ings"><span class="ing">내구도 ${durOf(s)}/${mx}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="fix" data-i="${i}" ${ok ? '' : 'disabled'}>수리</button></div>`; }
+        h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri" style="position:relative"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="fixbar"><i style="width:${Math.round(durOf(s) / mx * 100)}%"></i></div><div class="ings"><span class="ing">내구도 ${durOf(s)}/${mx}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="fix" data-i="${i}" ${ok ? '' : 'disabled'}>수리</button></div>`; }
       h += `</div></div>`;
     } else {
     // order is fixed while the panel stays on this tab, so the list does not jump after crafting
@@ -4711,7 +4757,7 @@ function renderPanel() {
       <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:16px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 앞에 있는 것에 맞춰 캐기/공격/놓기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 손에 든 물건의 일을 해요(무기=공격, 삽=파기, 가구=놓기 …). 빈손이면 앞에 있는 것에 맞춰 캐기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방 · C 제작 · M 지도</span></div>
       <div class="menu-list"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
@@ -4839,7 +4885,7 @@ function onSheetClick(e) {
     toast(r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : i === 'same' ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) SFX.place(); invDirty = true; renderPanel(); return; }
   if (a === 'sortBag') { sortBag(); SFX.place(); toast('가방을 정리했어요', null, 'sortbag'); renderPanel(); return; }
   if (a === 'wearOn') { const k = UIS.invSel; if (k != null && G.inv[k]) wearItem(k); UIS.invSel = null; renderPanel(); return; }
-  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) unwear(sl); else toast(`${EQ_N[sl]} 칸에 낄 장비를 아래 "가방 속 장비"에서 골라요`, null, 'eq'); renderPanel(); return; }
+  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) unwear(sl); else toast(`${EQ_N[sl]} 칸에 낄 장비는 가방에서 고르고 [입기]·[달기]를 눌러요`, null, 'eq'); renderPanel(); return; }
   if (a === 'catchThrow') { catchThrow(); return; }
   if (a === 'petOn') { if (!(G.pets || {})[i]) return; if (G.petOn === i) { G.petOn = null; G.petE = null; toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '은', '는').slice(ANIMALS[i].pn.length)} 집에서 쉬어요`, null, 'peton'); } else { G.petOn = i; G.petE = { x: G.p.x - .6, y: G.p.y + .2, flip: false, anim: 0, moving: false }; hearts(G.p.x, G.p.y - .5, 4); toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '과', '와').slice(ANIMALS[i].pn.length)} 함께 다녀요 · ${ANIMALS[i].fx}`, 'good', 'peton'); } SFX.pick(); renderPanel(); return; }
   if (a === 'eqPick') { if (G.inv[i]) wearItem(i); renderPanel(); return; }
@@ -4853,7 +4899,7 @@ function onSheetClick(e) {
     if (UIS.salvAsk !== i) { UIS.salvAsk = i; renderPanel(); return; }
     UIS.salvAsk = null; G.inv[i] = null; for (const [id, c] of got) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
     SFX.brk(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, c]) => ITEMS[id].n + ' ' + c + '개').join(', ')}`, 'good'); invDirty = true; renderPanel(); return; }
-  if (a === 'fix') { const s = i === 'w' ? G.equip.weapon : G.inv[i]; if (!s || !DUR[s.id] || !benchNear(nearStations())) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
+  if (a === 'fix') { const s = G.inv[i]; if (!s || !DUR[s.id] || !benchNear(nearStations())) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
     for (const [id, c] of cost) takeAvail(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, maxCraft(r)), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
   if (a === 'mapChest') { mapChestPref = !mapChestOn(); try { localStorage.setItem('lantern-tree-map-chest', mapChestPref ? '1' : '0'); } catch (_) { } renderPanel(); return; }
@@ -4963,7 +5009,7 @@ function sortBag() { // merge stacks and order the bag by kind; the hotbar stays
 }
 function hotClick(i) {
   ensureAudio();
-  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && (ITEMS[s.id].kind === 'wear' || ITEMS[s.id].kind === 'sword')) wearItem(i); }
+  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
   G.sel = i; invDirty = true;
 }
 
@@ -5000,9 +5046,9 @@ function setupInput() {
     if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
-    if (panel) { if ((e.code === 'KeyI' || e.code === 'Tab') && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'equip') closePanel(); return; }
+    if (panel) { if ((e.code === 'KeyI' || e.code === 'Tab') && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'inv') closePanel(); return; }
     if (e.code === 'KeyI' || e.code === 'Tab' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
-    if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('equip'); return; }
+    if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
     if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
@@ -5035,7 +5081,6 @@ function setupInput() {
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
-  $('#bEquip').addEventListener('click', () => started && openPanel('equip'));
   $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); useSkill(+b.dataset.n); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
@@ -5096,7 +5141,7 @@ function start(data) {
   try { soundOn = localStorage.getItem('lantern-tree-sound') !== '0'; } catch (e) { }
   if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   $('#icHp').src = iconURL('heart'); $('#icHu').src = iconURL('food');
-  ['bInv', 'bCraft', 'bEquip', 'bQuest', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'swordWood', 'quest', 'star', 'map', 'gear'][k]); });
+  ['bInv', 'bCraft', 'bQuest', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'quest', 'star', 'map', 'gear'][k]); });
   if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
   for (const ev of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) window.addEventListener(ev, () => { lastInputAt = performance.now(); }, { capture: true, passive: true });

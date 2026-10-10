@@ -20,7 +20,7 @@ async def main():
         rec('건축 우선','작업대는 그대로, 아래에 바닥이 깔리고 창은 안 열림', r==[5,True,True], str(r))
         await setup("G.objs.set(__T.idx(111,110),{t:'bench'});__T.addItem('chair',1);"+sel.format('chair'))
         r=await ev(pg,"()=>__T.decide().k")
-        rec('건축 우선','가구 들고 작업대 앞(놓을 수 없음) → 열기로 대체', r=='open', r)
+        rec('건축 우선','가구 들고 작업대 앞(놓을 수 없음) → 열지 않고 안내 (v48: 든 물건의 일만)', r=='info', r)
         # 2. bug fix: set floors return
         await setup("__T.addItem('floorMoss',1);__T.addItem('floorWood',1);"+sel.format('floorMoss'))
         await tap(pg,1); await ev(pg,"()=>{const G=__T.G;"+sel.format('floorWood')+"}"); await pg.wait_for_timeout(150); await tap(pg,1); await pg.wait_for_timeout(900)

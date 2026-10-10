@@ -24,7 +24,7 @@ async def main():
         rec('장비 칸','옷을 들고 누르면 입기 → 옷 칸으로, 캐릭터 겉모습이 바뀜', r[0]=='wear' and r[1]=='입기' and r[2]==['obsCoat',None] and r[3] is True, str(r))
         rec('장비 칸','다른 옷을 입으면 벗은 옷은 그 칸으로, 벗으면 가방으로 (겉모습도 원래대로)', r[4]==['frostRobe','obsCoat'] and r[5][0] is None and r[5][1]=='frostRobe,obsCoat' and r[6] is True, str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;T.openPanel('equip');const h=document.querySelector('#sheet').innerText;const n=document.querySelectorAll('#sheet [data-a=eqSlot]').length;T.closePanel();return [h.includes('장비'),n]}""")
-        rec('장비 칸','장비 메뉴에 옷 칸 (v42: 장비 칸 5개는 [장비] 메뉴로 옮김)', r==[True,5], str(r))
+        rec('장비 칸','가방 맨 위 장비에 옷 칸 (v48: 무기 칸 없이 4칸, 가방 안으로)', r==[True,4], str(r))
         # charms
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.beaten={};G.stats.accGot={};const k='turtle';const b=G.bosses[k];Object.assign(b,T.freshBoss(k));b.st='fight';G.drops.length=0;T.hitBoss(b,99999,false);const first=G.drops.some(d=>d.id==='turtleCharm');
           let again=0;const mr=Math.random;for(let n=0;n<20;n++){Object.assign(b,T.freshBoss(k));b.st='fight';G.bossDead[k]=false;G.drops.length=0;T.hitBoss(b,99999,false);if(G.drops.some(d=>d.id==='turtleCharm'))again++}G.drops.length=0;return [first,again]}""")
@@ -71,7 +71,7 @@ async def main():
         rec('쪽지','용암·얼음 숨은 방에 불꽃 열매 젤리·불꽃 꽃잎 파이 쪽지 (방이 없으면 그 지역 보스가 줌)', ('fireJelly' in (r[0].get('r30','') if r[3][0] else r[1])) and ('firePie' in (r[0].get('r40','') if r[3][1] else r[2])), str(r))
         r=await ev(pg,"""()=>{const T=__T;const sv=JSON.parse(JSON.stringify(T.serialize()));sv.recipes={skewer:1};sv.rooms.forEach(r=>{r.open=r.b===3?1:0});for(const k in sv.bossDead)sv.bossDead[k]=false;sv.stats.beaten={};sv.qclaim={cpick:1};delete sv.equip;delete sv.env;
           T.deserialize(sv);const G=T.G;return [T.knows('skewer'),T.knows('fireJelly')||!G.rooms.some(r=>r.b===3),T.knows('hotTea')&&T.knows('coolPunch'),JSON.stringify(G.equip),G.env.k]}""")
-        rec('옛 세이브','v36 세이브: 이미 연 용암 방·받은 퀘스트의 새 쪽지를 바로 해금, 장비 칸은 비어서 시작 (v42: 5칸)', r==[True,True,True,'{"weapon":null,"body":null,"head":null,"neck":null,"ring":null}',None], str(r))
+        rec('옛 세이브','v36 세이브: 이미 연 용암 방·받은 퀘스트의 새 쪽지를 바로 해금, 장비 칸은 비어서 시작 (v48: 4칸)', r==[True,True,True,'{"body":null,"head":null,"neck":null,"ring":null}',None], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.equip.body={id:'frostRobe',c:1};G.equip.neck={id:'turtleCharm',c:1};G.env={k:'hot',v:63,lv:1,t:0};const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const G2=T.G;return [G2.equip.body.id,G2.equip.neck.id,G2.env.k,G2.env.v]}""")
         rec('세이브','장비와 게이지가 저장·불러오기 뒤에도 그대로', r==['frostRobe','turtleCharm','hot',63], str(r))
         # screenshots: hot at 100, and the bag with the equipment row

@@ -11,7 +11,7 @@ async def main():
         # trees
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'cherryTree'});G.inv[0]={id:'shovel',c:1};G.sel=0;const a=T.decide();
           G.inv[0]={id:'pickIron',c:1};for(let k=0;k<12&&G.objs.get(i)&&G.objs.get(i).t==='cherryTree';k++)T.hitObj({x:105,y:106},G.objs.get(i));const o=G.objs.get(i);return [a.k,o&&o.t,o&&o.g,G.drops.some(d=>d.id==='wood')]}""")
-        rec('나무','다 자란 벚꽃나무는 삽으로 못 퍼고 베어야 함 → 그루터기', r[0]=='chop' and r[1]=='stump' and r[2]=='cherryTree' and r[3], str(r))
+        rec('나무','다 자란 벚꽃나무는 삽으로 못 퍼고(안내) 베어야 함 → 그루터기', r[0]=='info' and r[1]=='stump' and r[2]=='cherryTree' and r[3], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.inv[0]={id:'shovel',c:1};G.sel=0;const a=T.decide();T.perform(a);return [a.k,G.objs.get(i)||null,T.countItem('cherryTree')]}""")
         rec('나무','그루터기는 삽으로 뽑히고 나무 아이템으로 돌아옴', r[0]=='dig' and r[1] is None and r[2]==1, str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'stump',g:'roundTree',at:G.time-1});G.p.x=102.5;T.growTick();const t=G.objs.get(i).t;G.p.x=104.5;return t}""")

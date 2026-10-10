@@ -52,7 +52,7 @@ async def main():
             placed=await pg.evaluate(f"()=>__T.G.objs.get(__T.idx({t['x']},{t['y']}))?.t")
             rec('마우스',f'{W}x{H} 멀리 클릭 → 표시된 칸에 정확히 설치', placed=='torch', f"{t} → {placed}")
             # 5) lifted wall top picks the wall
-            await pg.evaluate("()=>{const G=__T.G;G.wall[__T.idx(97,106)]=1;G.sel=0}")
+            await pg.evaluate("()=>{const G=__T.G;G.wall[__T.idx(97,106)]=1;G.sel=G.inv.slice(0,9).findIndex(x=>!x)}")
             info=await pg.evaluate("()=>{const T=__T.TP,V=__T.VIEW,D=__T.DPR;return [((97+.5)*T-V.camX)/D,((106-0.12)*T-V.camY)/D]}")
             await pg.mouse.move(info[0],info[1]); await pg.wait_for_timeout(80)
             t=await pg.evaluate("()=>({t:__T.targetTile(),k:__T.decide().k})")

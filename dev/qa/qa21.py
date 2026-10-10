@@ -30,7 +30,7 @@ async def main():
         rec('드래그','브라우저 기본 이미지 끌기 차단 (원본 이미지가 따라오지 않음)', r[0] and r[1]=='none', str(r))
         # placing new items
         r=await ev(pg,"()=>{const G=__T.G;__T.addItem('torch',3);__T.addItem('berry',2);return [G.inv.slice(0,9).filter(Boolean).map(s=>s.id+':'+s.c).join(','),G.inv.findIndex(s=>s&&s.id==='torch')]}")
-        rec('단축칸','새 아이템은 가방으로, 이미 단축칸에 있는 건 거기에 합쳐짐', r[0]=='berry:6,berrySeed:2' and r[1]>=9, str(r))
+        rec('단축칸','새 아이템은 가방으로, 이미 단축칸에 있는 건 거기에 합쳐짐 (v48: 나무 검은 처음부터 단축칸)', r[0]=='berry:6,berrySeed:2,swordWood:1' and r[1]>=9, str(r))
         r=await ev(pg,"()=>[__T.stackMax('wood'),__T.stackMax('dirt'),__T.stackMax('berry'),__T.stackMax('torch')]")
         rec('겹치기','재료는 999개까지, 음식·가구는 99개', r==[999,999,99,99], str(r))
         r=await ev(pg,"()=>{__T.addItem('wood',1500);return __T.G.inv.filter(s=>s&&s.id==='wood').map(s=>s.c)}")
