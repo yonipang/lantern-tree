@@ -17,7 +17,7 @@ body{margin:0;overflow:hidden;font-family:var(--font);word-break:keep-all;touch-
 button{font-family:var(--font);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
 button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 [hidden]{display:none!important}
-img.px{image-rendering:pixelated;image-rendering:crisp-edges}
+img.px{image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain}
 #game{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(10,6,18,0) 55%,rgba(10,6,18,.5) 100%)}
@@ -393,6 +393,13 @@ let MKDEF = null;
 function softShadow(c) {
   const w = c.width, h = c.height, g = c.getContext('2d'), d = g.getImageData(0, 0, w, h), s = d.data, o = new Uint8ClampedArray(s);
   for (let y = 1; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; if (s[i + 3] || !s[i - w * 4 + 3]) continue; o[i] = 18; o[i + 1] = 10; o[i + 2] = 28; o[i + 3] = 80; }
+  g.putImageData(new ImageData(o, w, h), 0, 0);
+}
+function outlineHD(c) { // for 32px art: a darker, half see-through edge in the colour of the picture itself
+  const w = c.width, h = c.height, g = c.getContext('2d'), d = g.getImageData(0, 0, w, h), s = d.data, o = new Uint8ClampedArray(s);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; if (s[i + 3]) continue; let r = 0, gg = 0, b = 0, n = 0;
+    for (const j of [x > 0 ? i - 4 : -1, x < w - 1 ? i + 4 : -1, y > 0 ? i - w * 4 : -1, y < h - 1 ? i + w * 4 : -1]) if (j >= 0 && s[j + 3]) { r += s[j]; gg += s[j + 1]; b += s[j + 2]; n++; }
+    if (!n) continue; o[i] = r / n * .45; o[i + 1] = gg / n * .5; o[i + 2] = b / n * .55; o[i + 3] = 140; }
   g.putImageData(new ImageData(o, w, h), 0, 0);
 }
 function outlineSel(c) {
@@ -1028,6 +1035,10 @@ function buildSprites() {
   SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
   for (const k in OBJ) if (OBJ[k].tw) { SPR.obj[k] = twSprite(k, OBJ[k].tw.type === 'pillar' ? 0 : 10, false); SPR.item[k] = twIcon(k); }
   SPR.bush = [bushSpr(false), bushSpr(true)];
+  // v50 placeholders until drawn art arrives: grown stations are the old picture at 2×, benches twice as wide, beds longer;
+  // trees are drawn bigger (they still only block their trunk tile). The picture is scaled before its outline is added.
+  for (const k in GROW_SPR) if (OSPR[k]) { const [w, h, f, o] = OSPR[k], [sx, sy, bed] = GROW_SPR[k], raw = mk(w, h, f, null), W2 = Math.round(w * sx), H2 = Math.round(h * sy);
+    SPR.obj[k] = mk(W2, H2, A => { A.g.imageSmoothingEnabled = false; if (bed) { const top = Math.round(h * .42), bot = 4, mid = h - top - bot, mid2 = H2 - top - bot; A.g.drawImage(raw, 0, 0, w, top, 0, 0, w, top); A.g.drawImage(raw, 0, top, w, mid, 0, top, w, mid2); A.g.drawImage(raw, 0, h - bot, w, bot, 0, H2 - bot, w, bot); } else A.g.drawImage(raw, 0, 0, W2, H2); }, o); }
   SPR.crop = {}; for (const k of ['berry', 'shroom', 'moss', 'glow', 'bean', 'fire', 'radish']) SPR.crop[k] = [0, 1, 2, 3].map(s => [0, 1, 2, 3].map(v => cropSpr(k, s, v)));
   SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
@@ -1042,9 +1053,11 @@ function buildSprites() {
   SPR.obj.bush = SPR.bush[1];
   SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
   SPR.giant = {}; for (const k in SPR.crop) SPR.giant[k] = giantSpr(k);
-  SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
+  SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
   applyArt();
+  SPR.fp = {}; for (const id in GREW) if (SPR.obj[id] && OSPR[id]) { const [w, h, f, o] = OSPR[id]; SPR.fp[id] = { big: SPR.obj[id], bigV: SPR.obj[id + 'V'] || (GREW[id][2] ? rot90(SPR.obj[id]) : null), small: ARTC['obj/' + id] ? SPR.obj[id] : mk(w, h, f, o) }; }
+  setFootprints(FPV);
   buildTerrain();
   MKDEF = null;
 }
@@ -1054,7 +1067,7 @@ const ART_SEL = new Set(['item', 'ui', 'obj', 'objOff', 'crop', 'giant', 'young'
 const artSeg = path => { const s = path.split('/'); if (s[0] === 'mon' || s[0] === 'etc') s.shift(); return s; }; // mon/slimeG → SPR.slimeG
 function artPaint(path, ol) { // the drawn picture plus the outline the old sprite had (ol), unless it was packed as .raw
   const key = path + '|' + ol; if (ARTP[key]) return ARTP[key]; const src = ARTC[path], c = document.createElement('canvas'); c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src, 0, 0); c.hd = true;
-  if (!ART[path][1]) ol = null; if (ol === 'sel') outlineSel(c); else if (ol === 'soft') softShadow(c); else if (ol) outline(c, ol);
+  if (!ART[path][1]) ol = null; if (ol === 'soft') softShadow(c); else if (ol) outlineHD(c); // any outline of the old sprite becomes the soft 32px one
   c.ol = ol; return ARTP[key] = c; }
 const olOf = v => { if (v instanceof HTMLCanvasElement) return v.ol; if (v && typeof v === 'object') for (const k in v) { const o = olOf(v[k]); if (o !== undefined) return o; } return undefined; };
 function setArt(o, key, c) { const v = o[key]; if (v == null || v instanceof HTMLCanvasElement) o[key] = c; else if (typeof v === 'object') for (const k in v) setArt(v, k, c); }
@@ -2262,7 +2275,7 @@ const freshBosses = () => Object.fromEntries(BKEYS.map(k => [k, freshBoss(k)]));
 const freshDead = () => Object.fromEntries(BKEYS.map(k => [k, false]));
 const guardOf = (x, y) => (x === SA.x && y === SA.y) ? 'queen' : (x === SB.x && y === SB.y) ? 'golem' : (x === SL.x && y === SL.y) ? 'turtle' : (x === SI.x && y === SI.y) ? 'spirit' : null;
 function newGame(seed) {
-  setLayout(devLayout() || 2); const w = genWorld(seed);
+  setLayout(devLayout() || 2); setFootprints(2); const w = genWorld(seed);
   G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
@@ -2275,10 +2288,11 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: LAY, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: LAY, fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
 function deserialize(s) {
   setLayout(s.mapV === 2 ? 2 : 1); // saves from before v47 keep the original 200×200 map
+  setFootprints(s.fpV === 2 ? 2 : 1); // saves from before v50 keep one-tile workbenches, beds and benches
   const N = W * H;
   G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: s.sel || 0,
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
@@ -3885,6 +3899,17 @@ function unslotWeapon(w) { const to = G.inv.slice(0, HOT).findIndex(x => !x); if
 // ---- v43 smelter 「용광로」: upgrade gear (+1 … +5) and break it down; rings are made here too ----
 ITEMS.smelter = { n: '용광로', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요.' };
 OBJ.smelter = { n: '용광로', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
+const GROW_SPR = { bench: [2, 2], forge: [2, 2], smelter: [2, 2], furnace: [2, 2], logBench: [2, 1], stoneBench: [2, 1], bed: [1, 40 / 24, 1], mossBed: [1, 40 / 24, 1],
+  roundTree: [1.75, 1.75], root: [1.75, 1.75], bigShroom: [1.75, 1.75], cherryTree: [1.4, 1.4], bigTree: [1.5, 1.5] };
+// v50: workstations, beds and benches take as many tiles as in other games (stations 2×1, beds 1×2, benches 2×1) — in games
+// started from v50 on (save fpV: 2). Saves from before keep them at one tile. Beds and benches can be turned; stations only flip.
+const GREW = { bench: [2, 1], forge: [2, 1], smelter: [2, 1], furnace: [2, 1], logBench: [2, 1, 1], stoneBench: [2, 1, 1], bed: [1, 2, 1], mossBed: [1, 2, 1] };
+let FPV = 2;
+function setFootprints(v) { FPV = v === 2 ? 2 : 1;
+  for (const id in GREW) { const d = OBJ[id]; if (!d) continue; const [w, h, rv] = GREW[id];
+    if (FPV === 2) { d.sz = [w, h]; if (rv) d.rotV = 1; } else { delete d.sz; delete d.rotV; }
+    const f = SPR.fp && SPR.fp[id]; if (f) { SPR.obj[id] = FPV === 2 ? f.big : f.small; if (FPV === 2 && f.bigV) SPR.obj[id + 'V'] = f.bigV; else delete SPR.obj[id + 'V']; delete ICONURL[id]; } } }
+setFootprints(2);
 OSPR.smelter = [16, 22, A => { A.r(2, 9, 12, 12, '#5a5468'); A.r(2, 9, 12, 2, '#8d97a8'); A.r(2, 9, 1, 12, '#787090'); A.r(13, 9, 1, 12, '#36334a'); for (const [x, y] of [[4, 13], [9, 12], [6, 17], [11, 16]]) A.r(x, y, 2, 1, '#46405a');
   A.r(5, 3, 6, 7, '#46405a'); A.r(5, 3, 6, 1, '#8d97a8'); A.r(6, 1, 4, 2, '#36334a'); A.r(5, 14, 6, 5, '#2a1810'); A.e(8, 16.5, 2.4, 1.8, '#ff8a3d'); A.e(8, 17, 1.4, 1, '#ffe08a'); A.r(3, 20, 10, 1, '#24222e'); A.p(4, 11, '#ffd25c'); }];
 STN.smelter = '용광로';
@@ -4119,7 +4144,7 @@ function safeSpot(x, y) { const inside = closedIn(x, y); if (!inside) return nul
     if (best) return best; }
   return null; }
 function unstick(p, why) { const to = safeSpot(p.x, p.y); if (!to) return false; p.x = to.x; p.y = to.y; cam.x = p.x; cam.y = p.y; lightDirty = true; if (why) setTimeout(() => toast(why, 'warn', 'unstick'), 900); return true; }
-function homePt() { const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); if (so && OBJ[so.t].bed) { const x = G.spawnPt.x + .5, y = G.spawnPt.y + 1.6; return boxHits(x, y, .28) ? { x: G.spawnPt.x + 1.5, y: G.spawnPt.y + .5 } : { x, y }; } return { x: CX + .5, y: CY + 1.7 }; }
+function homePt() { const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); if (so && OBJ[so.t].bed) { const fp = fpOf(so), x = G.spawnPt.x + .5, y = G.spawnPt.y + fp[1] + .6; return boxHits(x, y, .28) ? { x: G.spawnPt.x + fp[0] + .5, y: G.spawnPt.y + .5 } : { x, y }; } return { x: CX + .5, y: CY + 1.7 }; }
 const nearHome = () => { const h = homePt(); return Math.hypot(G.p.x - h.x, G.p.y - h.y) < 12; };
 function recallDecide(s) { const cd = (G.recallCd || 0) - G.time; if (cd > 0) return { k: 'info', lbl: `쉬는 중 ${Math.ceil(cd)}초`, icon: s.id, msg: `귀환석이 쉬고 있어요 · ${Math.ceil(cd)}초 뒤에 다시 쓸 수 있어요` };
   if (G.recall) return { k: 'none', lbl: '돌아가는 중…', icon: s.id };
@@ -4596,7 +4621,8 @@ function drawEntity(it, t) {
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && effH(img) > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
-    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX });
+    let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
+    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
     if (d.dev === 'farm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / growOf(o), 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
     if (d.dev === 'farm' && ((o.store || []).length || farmStage(o) >= 3)) { ctx.fillStyle = (o.store || []).length ? '#ffd25c' : `rgba(255,241,214,${.5 + Math.sin(t * 5) * .3})`; ctx.fillRect(Math.round((it.x + 1.8) * T - camX), Math.round((it.y - .3) * T - camY), 3, 3); }
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }
@@ -4884,7 +4910,7 @@ let POOL = null;
 function linkedChests() {
   if (POOL) return POOL;
   const p = G.p, seen = new Set(), out = [], q = [];
-  for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) q.push([x, y]); }
+  for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) for (const j of fpTiles(idx(x, y), o)) q.push([j % W, (j / W) | 0]); }
   while (q.length && out.length < 80) { const [x, y] = q.shift();
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j); if (o && o.t === 'chest' && o.items) { seen.add(j); out.push(o); q.push([nx, ny]); } } }
   return out;

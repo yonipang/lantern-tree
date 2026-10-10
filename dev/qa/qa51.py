@@ -55,7 +55,7 @@ async def main():
         mkpage(SRC,'qa.html',H2)
         ctx,pg,errs=await new_ctx(b,390,844,True)
         r=await ev(pg,"()=>{const T=__T,S=T.SPR;return [Object.keys(T.ARTC).length,!!S.obj.roundTree.hd,S.obj.roundTree.width,T.effW(S.obj.roundTree),!!S.slimeGW.hd,T.lowCv.width%T.HD]}")
-        rec('기본','손그림이 없으면 지금 그림 그대로 (2배 캔버스에 2×2로 그림)', r==[0,False,24,24,False,0], str(r))
+        rec('기본','손그림이 없으면 지금 그림 그대로 (2배 캔버스, v50부터 나무는 1.75배)', r==[0,False,42,42,False,0], str(r))
         rec('기능','콘솔 오류 없음 (그림 없음)', not errs, errs[:4])
         await ctx.close(); await b.close()
     print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

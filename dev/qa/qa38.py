@@ -20,7 +20,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.time+=61;const a=T.decide();T.startRecall(a.mode);T.recallTick(.3);G.p.x+=1;T.recallTick(.3);const c=[G.recall,document.body.innerText.includes('귀환을 멈췄어요')];G.p.x=__T.CX+.5;G.p.y=__T.CY+2;G.backPt=null;G.recallCd=0;const n=T.decide();return [c,n.k,n.lbl]}""")
         rec('귀환석','움직이면 멈춤', r[0][0] is None and r[0][1] is True, str(r))
         rec('귀환석','집 근처인데 표지가 없으면 안내만', r[1]=='info' and r[2]=='집 근처', str(r))
-        r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=__T.CX+6,y=__T.CY+6;for(let yy=y-1;yy<=y+2;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}G.objs.set(T.idx(x,y),{t:'bed'});G.spawnPt={x,y};const h=T.homePt();G.spawnPt=null;G.objs.delete(T.idx(x,y));return [Math.floor(h.x)===x||Math.floor(h.x)===x+1,Math.abs(h.y-y)<2]}""")
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=__T.CX+6,y=__T.CY+6;for(let yy=y-1;yy<=y+2;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}G.objs.set(T.idx(x,y),{t:'bed'});G.spawnPt={x,y};const h=T.homePt();G.spawnPt=null;G.objs.delete(T.idx(x,y));return [Math.floor(h.x)===x||Math.floor(h.x)===x+1,Math.abs(h.y-y)<3]}""")
         rec('귀환석','침대가 있으면 침대로', r==[True,True], str(r))
         # faint drop
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=6;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[0]={id:'pickCopper',c:1};G.inv[1]={id:'berry',c:8};G.inv[12]={id:'wood',c:40};G.inv[13]={id:'stone',c:9};G.inv[14]={id:'gel',c:3};G.inv[15]={id:'lightSeed',c:1};
