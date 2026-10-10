@@ -42,7 +42,7 @@ async def main():
         r=await ev(pg,"()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_rooms');G.stats.chests=2;const a=T.questState(q).done;G.stats.chests=3;return [a,T.questState(q).done,JSON.stringify(q.rw),q.xp]}")
         rec('도전','숨은 방 보물상자 3개 열기', r[0] is False and r[1] is True, str(r))
         # map
-        r=await ev(pg,"()=>{const T=__T,G=T.G;const rm=G.rooms[G.rooms.length-1];rm.found=1;rm.open=0;T.openPanel('map');const t=document.querySelector('#sheet').innerText;T.closePanel();return t.includes('찾은 보물상자')}")
+        r=await ev(pg,"()=>{const T=__T,G=T.G;const rm=G.rooms[G.rooms.length-1];rm.found=1;rm.open=0;T.openPanel('map');const t=document.querySelector('#sheet').innerText;T.closePanel();return t.includes('찾았지만 안 연 보물상자')}")
         rec('지도','찾았지만 안 연 보물상자가 지도에 표시 (범례 포함)', r is True, r)
         # save round trip
         r=await ev(pg,"""()=>{const T=__T;const a=JSON.stringify(T.G.rooms);const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);return [JSON.stringify(T.G.rooms)===a,T.G.rooms.length]}""")

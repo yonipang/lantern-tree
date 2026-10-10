@@ -4,7 +4,7 @@
 #         bash dev/qa/run_all.sh 23 24  → 일부만 실행
 cd "$(dirname "$0")"
 node syn.js ../index.html || exit 1
-list=${@:-$(seq 2 46)}
+list=${@:-$(seq 2 47)}
 fail=0
 for n in $list; do
   out=out/log_qa$n.txt; mkdir -p out

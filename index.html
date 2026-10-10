@@ -218,7 +218,7 @@ body.touch #pcHint{display:none}
 .mk{min-width:76px}
 #mapCv{width:100%;aspect-ratio:1;border-radius:16px;background:#0c0a12;display:block;image-rendering:pixelated}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin-top:10px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.lgchk{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:2px 8px 2px 4px;border:1px solid var(--line);border-radius:10px;color:var(--text);cursor:pointer}.lgchk input{width:20px;height:20px;margin:0;accent-color:#ffd25c}.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .seeds{display:flex;gap:14px;justify-content:center;margin:12px 0 16px}
 .seeds div{width:76px;height:76px;border-radius:22px;background:var(--panel2);display:grid;place-items:center;border:2px solid var(--line)}
 .seeds div.lit{border-color:var(--amber);box-shadow:0 0 22px rgba(255,200,97,.4)}
@@ -4633,7 +4633,7 @@ function renderPanel() {
     h += head('보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
     h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="menu-two stash"><button class="btn" data-a="stash" data-i="all" type="button">가방 → 모두 넣기</button><button class="btn ghost" data-a="stash" data-i="same" type="button">같은 것만 넣기</button></div><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'cin', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'cin', i + HOT)).join('')}</div></div>`;
   } else if (k === 'map') {
-    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span><span><i style="background:#ffd25c"></i>찾은 보물상자</span><span><i style="background:#ff9b4a"></i>잃어버린 꾸러미</span><span><i style="background:#b99bff"></i>귀환 표지</span></div>${regionMatHTML()}</div>`;
+    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:46px;padding:0 12px;font-size:15px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span><label class="lgchk"><input type="checkbox" data-a="mapChest" ${mapChestOn() ? 'checked' : ''} aria-label="찾았지만 안 연 보물상자 표시"><i style="background:#ffd25c"></i>찾았지만 안 연 보물상자</label><span><i style="background:#ff9b4a"></i>잃어버린 꾸러미</span><span><i style="background:#b99bff"></i>귀환 표지</span></div>${regionMatHTML()}</div>`;
   } else if (k === 'tree') {
     h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
   } else if (k === 'menu') {
@@ -4698,6 +4698,9 @@ function renderPanel() {
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
 }
+// the map's unopened-treasure markers can be hidden; a per-viewer setting kept in this browser
+let mapChestPref = null;
+function mapChestOn() { if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
 function drawMap() {
   const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
   if (mapDirty) { mapCtx.putImageData(mapImg, 0, 0); mapDirty = false; }
@@ -4709,7 +4712,7 @@ function drawMap() {
   for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) dot(z.x + .5, z.y + .5, FLOWERS[z.c][2], 4);
   for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
   for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
-  for (const r of G.rooms || []) if (r.found && !r.open) dot(r.cx + .5, r.cy + .5, '#ffd25c', 5);
+  if (mapChestOn()) for (const r of G.rooms || []) if (r.found && !r.open) dot(r.cx + .5, r.cy + .5, '#ffd25c', 5);
   for (const [i, o] of G.objs) if (o.t === 'lostBag') dot(i % W + .5, ((i / W) | 0) + .5, '#ff9b4a', 5);
   if (G.backPt) dot(G.backPt.x, G.backPt.y, '#b99bff', 5);
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
@@ -4786,6 +4789,7 @@ function onSheetClick(e) {
   if (a === 'fix') { const s = i === 'w' ? G.equip.weapon : G.inv[i]; if (!s || !DUR[s.id] || !benchNear(nearStations())) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
     for (const [id, c] of cost) takeAvail(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, maxCraft(r)), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
+  if (a === 'mapChest') { mapChestPref = !mapChestOn(); try { localStorage.setItem('lantern-tree-map-chest', mapChestPref ? '1' : '0'); } catch (_) { } renderPanel(); return; }
   if (a === 'mapzoom') { UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
   if (a === 'craft') {
     const r = RECIPES[i], near = nearStations(); POOL = null; if (!canCraft(r, near)) return;
