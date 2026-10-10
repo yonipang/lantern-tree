@@ -26,7 +26,7 @@ async def main():
         # ---- usability fixes ----
         await ev(pg,ARENA)
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const ai=T.idx(110,104);const o={t:'drillGold',dir:{x:1,y:0}};G.objs.set(ai,o);G.wall[T.idx(111,104)]=10;G.objs.set(T.idx(110,106),{t:'battery',e:600});G.wire.set(T.idx(110,105),1);for(let k=0;k<30;k++)T.circuitTick(.2);return [o.why,(o.store||[]).map(s=>s.id+':'+s.c).join(','),T.RECIPES.some(r=>r.out==='drillGold')]}""")
-        rec('채굴기','황금 채굴기: 금 광맥에서 금광석을 캠', 'goldOre' in r[1] and r[2], str(r))
+        rec('채굴기','황금 채굴기: 이미 놓인 것은 금 광맥에서 금광석을 캠 (v46부터 새로 만드는 건 황금 채굴장)', 'goldOre' in r[1] and not r[2], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillFe',dir:{x:1,y:0}};const ai=T.idx(110,108);G.objs.set(ai,o);G.wall[T.idx(111,108)]=10;G.objs.set(T.idx(110,110),{t:'battery',e:600});G.wire.set(T.idx(110,109),1);for(let k=0;k<5;k++)T.circuitTick(.2);return o.why}""")
         rec('채굴기','철 채굴기로는 금 광맥 불가 (tier)', r=='tier', r)
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillGold',dir:{x:1,y:0}};const ai=T.idx(110,112);G.objs.set(ai,o);G.wall[T.idx(111,112)]=11;G.objs.set(T.idx(110,114),{t:'battery',e:6000});G.wire.set(T.idx(110,113),1);for(let k=0;k<25*40;k++)T.circuitTick(.2);return (o.store||[]).reduce((a,s)=>a+s.c,0)}""")

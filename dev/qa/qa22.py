@@ -79,7 +79,7 @@ async def main():
         r=await ev(pg,"()=>{W([120,121],110);const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.wire.size>=3,__T.G.objs.get(__T.idx(110,105)).dir.y]}")
         rec('저장','전선·기계 상태가 저장됨', r==[True,-1], str(r))
         r=await ev(pg,"()=>__T.RECIPES.filter(r=>r.cat==='circuit').map(r=>r.out+'@'+r.at).join(',')")
-        rec('제작','회로 탭 레시피 (구리 제작대)', all(x in r for x in ['wire@forge','battery@forge','drillCu@forge','generator@forge','crystalGen@forge']), r)
+        rec('제작','회로 탭 레시피 (구리 제작대, v46: 벽 앞 채굴기는 채굴장으로 바뀌어 빠짐)', all(x in r for x in ['wire@forge','battery@forge','generator@forge','crystalGen@forge']) and 'drillCu@forge' not in r, r)
         # visual
         await ev(pg,ARENA)
         await ev(pg,"()=>{const G=__T.G;G.treeSeeds=3;O('battery',103,113,{e:400});W([104,105],113);O('lever',106,113,{on:true});W([107,108,109],113);O('eLamp',110,113,{off:true});W([109],112);W([109],111);O('eDoor',109,110);W([104],114);W([104],115);O('plate',105,115);W([106,107],115);O('eLamp',108,115,{off:true});G.wall[__T.idx(113,111)]=5;O('drillCu',113,112,{dir:{x:0,y:-1}});W([111,112],113);W([113],113);O('chest',114,112,{items:Array(18).fill(null)});G.p.x=107.5;G.p.y=117.5;TK(3)}")
