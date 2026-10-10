@@ -2,7 +2,7 @@ import asyncio, sys
 sys.argv=['x']
 exec(open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'qa2.py')).read().split('async def main():')[0])
 # v47: 600x600 고리 지도 (새 게임), 옛 세이브는 200x200 그대로, 지형 재료 2배
-H2=HOOK.replace("computeLight}","computeLight,newGame,GUIDE,QSIDE,RECIPES,rebuildMap,genFlowerZones,get L(){return {LAY,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
+H2=HOOK.replace("computeLight}","computeLight,LAVA,newGame,GUIDE,QSIDE,RECIPES,rebuildMap,genFlowerZones,get L(){return {LAY,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
 async def main():
     mkpage(SRC,'qa.html',H2,layout=2)
     async with async_playwright() as p:
@@ -18,6 +18,8 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.L;const out={};for(const [k,s] of [['slime',{x:L.BX,y:L.BY}],['queen',L.SA],['golem',L.SB],['turtle',L.SL],['spirit',L.SI]]){let w=0;for(let dy=-5;dy<=5;dy++)for(let dx=-5;dx<=5;dx++)if(Math.hypot(dx,dy)<5&&G.wall[T.idx(s.x+dx,s.y+dy)])w++;out[k]=[w,G.biome[T.idx(s.x,s.y)]]}
           return [out,['queen','golem','turtle','spirit'].map(k=>{const h=T.BOSSES[k].home();return Math.round(Math.hypot(h.x-L.CX,h.y-L.CY))}),G.rooms.length]}""")
         rec('보스','보스방 5곳이 맞는 지역에 열려 있고 거리가 알맞음, 숨은 방 8개', all(v[0]==0 for v in r[0].values()) and [r[0][k][1] for k in ['slime','queen','golem','turtle','spirit']]==[0,1,2,3,4] and all(60<=d<=180 for d in r[1]) and r[2]==8, str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.L;const bad={};for(let y=L.CY-100;y<=L.CY+100;y++)for(let x=L.CX-100;x<=L.CX+100;x++){if(Math.hypot(x-L.CX,y-L.CY)>=100)continue;const i=T.idx(x,y);const b=G.biome[i],w=G.wall[i],f=G.floor[i];if(b>1)bad.b=(bad.b||0)+1;if([3,9,10,11,12,13].includes(w))bad.w=(bad.w||0)+1;if([18,19,20,4].includes(f)||f===T.LAVA)bad.f=(bad.f||0)+1}return JSON.stringify(bad)}""")
+        rec('배치','가운데 1·2 지역(반지름 100칸 안)에는 수정·용암·얼음 지형(땅·벽·광맥)이 없음', r=='{}', r)
         r=await ev(pg,"()=>{const z=__T.G.fzones;return [z.length,new Set(z.map(q=>q.c)).size]}")
         rec('지도','꽃망울 구역도 생김', r[0]>=8 and r[1]==5, str(r))
         r=await ev(pg,"()=>{const T=__T;const g=T.GUIDE.map(q=>typeof q.t==='function'?q.t():q.t).join('|')+T.GUIDE.map(q=>typeof q.h==='function'?q.h():q.h).join('|');return [g.includes('남서쪽 버섯숲'),g.includes('북동쪽 이끼 동굴의 말랑대왕'),g.includes('북쪽 수정동굴'),g.includes('남동쪽 용암 동굴'),g.includes('남서쪽 얼음 동굴'),g.includes('서쪽 버섯숲의')&&!g.includes('남서쪽 버섯숲의')]}")
