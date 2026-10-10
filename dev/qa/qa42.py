@@ -97,7 +97,7 @@ async def main():
         rec('저장','v42 세이브의 빈 무기 칸은 그대로 (가방 무기를 멋대로 끼지 않음)', r==[None,1], str(r))
         # ---- stone drill ----
         r=await ev(pg,"()=>{const T=__T,rc=T.RECIPES.find(r=>r.out==='drillStone');return [rc&&rc.at,rc&&rc.cat,rc&&rc.req.map(x=>x[0]).join(','),!!T.SPR.obj.drillStoneU,!!T.SPR.obj.drillStoneR]}")
-        rec('돌 채굴기','구리 제작대 회로 탭에서 돌·구리괴·끈으로 만듦, 방향별 그림', r==['forge','circuit','stone,copperBar,rope',True,True], str(r))
+        rec('돌 채굴기','v46: 벽 앞 돌 채굴기는 제작법 없음 (돌 채굴장으로 바뀜), 이미 놓인 것은 그대로 동작·방향별 그림', r==[None,None,None,True,True], str(r))
         await ev(pg,"()=>{const T=__T,G=T.G;const [x,y]=__clear();G.objs.set(T.idx(x+2,y),{t:'drillStone',dir:{x:1,y:0}});G.wall[T.idx(x+3,y)]=2;G.p.x=x+.5}")
         r=await ev(pg,"()=>{const T=__T,G=T.G,x=T.CX+8,y=T.CY+8,o=G.objs.get(T.idx(x+2,y));T.circuitTick(9);return [o.work,o.why,(o.store||[]).length]}")
         rec('돌 채굴기','전기가 없으면 멈춤', r==[False,'power',0], str(r))

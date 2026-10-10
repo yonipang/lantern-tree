@@ -1,5 +1,5 @@
 // 오프라인 실행용: 첫 접속 때 게임 파일을 저장해 두고, 인터넷 없이도 열려요.
-const CACHE='lantern-61ecfcc1';
+const CACHE='lantern-5116b525';
 const FILES=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
