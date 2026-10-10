@@ -2158,7 +2158,8 @@ function genWorld(seed) {
   const circ = (cx, cy, r, fn) => { for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) continue; const d = Math.hypot(x - cx, y - cy); if (d <= r) fn(x, y, idx(x, y), d); } };
   const carve = (x, y) => { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) return; const i = idx(x, y); if (wall[i] !== 8) wall[i] = 0; };
   const walk = (sx, sy, tx, ty, s) => { const R = rng(s); let x = sx, y = sy, n = 0; while ((Math.abs(x - tx) + Math.abs(y - ty)) > 1 && n++ < 5000) { if (R() < 0.6) { if (Math.abs(tx - x) > Math.abs(ty - y)) x += Math.sign(tx - x); else y += Math.sign(ty - y); } else { const k = R() * 4 | 0; x += [1, -1, 0, 0][k]; y += [0, 0, 1, -1][k]; } carve(x, y); carve(x + 1, y); carve(x, y + 1); carve(x + 1, y + 1); } };
-  if (LAY === 2) { walk(CX + 6, CY - 4, BX - 6, BY + 5, seed + 5); walk(CX - 6, CY + 4, SA.x + 6, SA.y - 4, seed + 6); walk(BX, BY - 9, SB.x, SB.y + 9, seed + 8); walk(CX + 5, CY + 9, SL.x - 7, SL.y - 5, seed + 9); walk(SA.x - 4, SA.y + 8, SI.x + 7, SI.y - 4, seed + 10); }
+  const walks2 = () => { walk(CX + 6, CY - 4, BX - 6, BY + 5, seed + 5); walk(CX - 6, CY + 4, SA.x + 6, SA.y - 4, seed + 6); for (let k = 6; k <= 10; k++) { carve(BX, BY - k); carve(BX + 1, BY - k); } walk(BX, BY - 9, SB.x, SB.y + 9, seed + 8); };
+  if (LAY === 2) { walks2(); walk(CX + 5, CY + 9, SL.x - 7, SL.y - 5, seed + 9); walk(SA.x - 4, SA.y + 8, SI.x + 7, SI.y - 4, seed + 10); }
   else { walk(CX + 8, CY, BX - 9, BY, seed + 5); walk(CX - 8, CY + 2, SA.x + 5, SA.y, seed + 6); }
   circ(CX + .5, CY + .5, 8.5, (x, y, i) => { wall[i] = 0; floor[i] = 1; biome[i] = 0; });
   circ(BX + .5, BY + .5, 9.6, (x, y, i, d) => { biome[i] = 0; if (d < 7.6 || (x < BX && Math.abs(y - BY) <= 1)) { wall[i] = 0; floor[i] = d < 3 ? 6 : 2; } else wall[i] = (x * 7 + y * 3) % 5 === 0 ? 4 : 1; });
@@ -2167,6 +2168,8 @@ function genWorld(seed) {
   // the deep regions are sealed by a band of hard rock, so you need a crystal pickaxe to get in
   if (LAY === 1) for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (biome[i] < 3 || wall[i] === 8 || Math.hypot(x - SL.x - .5, y - SL.y - .5) <= 9.6 || Math.hypot(x - SI.x - .5, y - SI.y - .5) <= 9.6) continue; let edge = false; for (let dy = -2; dy <= 2 && !edge; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; if (biome[idx(xx, yy)] < 3) { edge = true; break; } } if (edge) wall[i] = wallFor(biome[i], x, y, seed); }
   for (const [S, b, fl] of [[SL, 3, 18], [SI, 4, 19]]) circ(S.x + .5, S.y + .5, 9.6, (x, y, i, d) => { if (wall[i] === 8) return; biome[i] = b; if (d < 7.6) { wall[i] = 0; floor[i] = d < 3 ? 6 : fl; } else wall[i] = b === 3 ? 9 : 11; });
+  // bug fix (v49.1): on the ring map the slime king's rock ring was drawn over the tunnels, so his room (and the golem's tunnel, which starts there) was often sealed — carve them through again
+  if (LAY === 2) walks2();
   // natural objects
   const nearSafe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5 || Math.hypot(x - SL.x, y - SL.y) < 10.5 || Math.hypot(x - SI.x, y - SI.y) < 10.5;
   addWater({ wall, floor, objs }, seed, nearSafe, null);
@@ -4128,7 +4131,7 @@ function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
   R.t -= dt; if (Math.random() < .5) puff(p.x + (Math.random() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
   if (R.t > 0) return; G.recall = null; G.recallCd = G.time + RECALL_CD;
   let to; if (R.mode === 'back' && G.backPt) { to = G.backPt; G.backPt = null; } else { G.backPt = { x: p.x, y: p.y }; to = homePt(); }
-  puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
+  puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; if (R.mode !== 'back') unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); /* bug fix (v49.1): going back to the marker (a spot you stood on) never moves you out of a closed cave pocket */ cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
   toast(R.mode === 'back' ? '표지가 있던 곳으로 돌아왔어요' : '집으로 돌아왔어요 · 집 근처에서 귀환석을 다시 쓰면 떠난 자리로 갈 수 있어요', 'good', 'recall'); }
 // fainting drops a quarter of each material stack in a bundle where you fell; walk back to pick it up (not during the first steps of the story)
 const LOST_SHARE = .25, LOST_MAX = 5;
