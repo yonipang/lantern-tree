@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack hand-drawn 32px art from dev/art/ into dev/index.html.
+"""Pack hand-drawn 16px art (one tile = 16×16 since v53) from dev/art/ into dev/index.html.
 
 dev/art/<path>.png      -> ART["<path>"]  (automatic outline, like the old sprite)
 dev/art/<path>.raw.png  -> ART["<path>"]  (kept exactly as drawn, no outline)
