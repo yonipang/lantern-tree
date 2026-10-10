@@ -36,7 +36,7 @@ def main():
                 if not sz:
                     warn.append(f'{rel}.png: PNG 파일이 아니에요 (건너뜀)')
                     continue
-                if sz[0] % 2 or sz[1] % 2:
+                if (sz[0] % 2 or sz[1] % 2) and not rel.startswith('wfront/'):  # a wall front is 16×5 by design
                     warn.append(f'{rel}.png: 크기 {sz[0]}×{sz[1]} — 가로·세로가 짝수여야 칸에 딱 맞아요')
                 art[key] = ['data:image/png;base64,' + base64.b64encode(b).decode(), 0 if raw else 1]
     s = open(SRC, encoding='utf-8').read()

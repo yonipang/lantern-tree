@@ -12,7 +12,7 @@ async def main():
         r=await ev(pg,"()=>{const T=__T,f=T.SPR.fp;return [T.iconURL('logBench')===f.logBench.small.toDataURL(),T.iconURL('smelter')===f.smelter.small.toDataURL(),f.logBench.small.width,f.logBench.big.width]}")
         rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양', r==[True,True,16,32], str(r))
         r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
-        rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이)', r==['32x32','32x40','32x16','16x24',False,'42x56','28x49',33], str(r))
+        rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림)', r==['48x40','32x40','32x16','16x24',False,'32x48','28x49',25], str(r))
         # saves from before v50 keep one-tile furniture; games started from v50 use the new sizes
         r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));const fpNew=s.fpV;
           const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,y);G.wall[i]=0;G.objs.delete(i)}
