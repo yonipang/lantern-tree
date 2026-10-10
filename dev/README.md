@@ -11,8 +11,19 @@
 | `dev/qa/` | 회귀 테스트 (Playwright). `run_all.sh`로 한 번에 실행 |
 | `dev/old/` | 옛 버전(v1~v3). 예전 세이브를 불러오는 테스트에 써요 |
 | `dev/character-parts/` | 캐릭터 부위 그리기 템플릿 |
+| `dev/art/` | 직접 그린 32px 그림 (아래 「32px 그림」) |
+| `dev/art_pack.py` | `dev/art/`의 그림을 `dev/index.html` 안에 넣는 도구 |
 
-> 픽셀 밀도(HD) 작업은 2026-10-09에 폐기했어요. 16px 칸 밀도를 유지해요. 작업본 `dev/index.hdwip.html`은 지웠고, 필요하면 깃 기록에서 꺼낼 수 있어요.
+## 32px 그림 (v49부터)
+
+- 한 칸 = 32px. 세계를 2배 해상도로 그려서, 옛 16px 그림은 지금 모습 그대로(2×2) 나오고 손그림은 1px까지 보여요
+- 그린 PNG는 게임 안 경로 그대로 `dev/art/`에 넣어요. 예) `dev/art/obj/roundTree.png`, `dev/art/item/berry.png`, `dev/art/crop/berry/3.png`, `dev/art/mon/slimeG.png`, `dev/art/animal/dog.png`, `dev/art/etc/bush/1.png`
+- 넣은 뒤 `python3 dev/art_pack.py` → `dev/index.html`의 `/*@@ART*/ … /*@@ARTEND*/` 부분이 바뀌어요. 그다음 평소처럼 테스트·배포
+- 외곽선은 원래 그림과 같은 방식으로 게임이 자동으로 붙여요. 그린 그대로 쓰려면 파일 이름 끝을 `.raw.png`로
+- 작물은 식물만 그려요 (흙은 게임이 깔아 줌). 하얀 번쩍임·꺼진 램프·세로 가구·어린 나무·거대 작물은 원본 그림에서 자동으로 만들어요
+- 아직 손그림을 못 넣는 것: 바닥·벽(다음 업데이트, 32px 바닥 템플릿), 캐릭터(부위별 템플릿 예정), 등불나무, 얇은 벽·문
+- 일부 모니터(배율 1, 화면 크기에 따라 칸이 48px인 경우)에서는 32px 그림의 픽셀 폭이 1~2px로 살짝 고르지 않을 수 있어요 (옛 그림은 영향 없음)
+- 2026-10-09에 한 번 폐기했다가 10-10에 다시 시작했어요. 예전 작업본(v29 기준 `dev/index.hdwip.html`)은 깃 기록 `c41c68b`에 있어요
 
 ## 작업 순서
 
