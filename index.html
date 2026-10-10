@@ -1043,8 +1043,19 @@ function glowSprite(col) {
 }
 
 // ================= data =================
-const W = 200, H = 200, CX = 100, CY = 100;
-const BX = CX + 44, BY = CY + 2, SA = { x: CX - 46, y: CY + 18 }, SB = { x: CX + 6, y: CY - 76 }, SL = { x: CX - 4, y: CY + 84 }, SI = { x: CX - 84, y: CY + 4 };
+// v47: two map layouts. 1 = the original 200×200 map (every save made before v47 keeps it); 2 = the 600×600 ring map for new games:
+// the lantern tree in the middle, a ring split into the moss cave (north) and mushroom forest (south), then a wide ring split into
+// the crystal cave (north), lava cave (south-east) and ice cave (south-west), a sea ring, and hard rock at the edge
+let LAY = 1, W = 200, H = 200, CX = 100, CY = 100, BX = 144, BY = 102, SA = { x: 54, y: 118 }, SB = { x: 106, y: 24 }, SL = { x: 96, y: 184 }, SI = { x: 16, y: 104 };
+const L2 = { r1: 34, r2: 100, r3: 250, r4: 272 }; // ring radii of layout 2 (start · moss/mushroom · crystal/lava/ice · sea; rock beyond)
+function setLayout(v) { LAY = v === 2 ? 2 : 1;
+  if (LAY === 2) { W = H = 600; CX = CY = 300; const at = (deg, r) => ({ x: Math.round(CX + Math.cos(deg * Math.PI / 180) * r), y: Math.round(CY + Math.sin(deg * Math.PI / 180) * r) });
+    const b = at(-35, 64); BX = b.x; BY = b.y; SA = at(140, 66); SB = at(-90, 172); SL = at(30, 172); SI = at(150, 172); }
+  else { W = H = 200; CX = CY = 100; BX = CX + 44; BY = CY + 2; SA = { x: CX - 46, y: CY + 18 }; SB = { x: CX + 6, y: CY - 76 }; SL = { x: CX - 4, y: CY + 84 }; SI = { x: CX - 84, y: CY + 4 }; }
+  layoutTexts(); }
+const devLayout = () => { try { const v = +localStorage.getItem('lantern-tree-layout'); return v === 1 || v === 2 ? v : 0; } catch (_) { return 0; } }; // tests pin the old layout
+const DIR8 = ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'];
+const dirKo = (x, y) => DIR8[((Math.round(Math.atan2(y - CY, x - CX) / (Math.PI / 4)) % 8) + 8) % 8];
 const LAVA = 17;
 const idx = (x, y) => y * W + x;
 const CRYGEM_P = 0.35; // a crystal cluster gives one 수정결정 this often, otherwise one 석영
@@ -2070,9 +2081,29 @@ function deepRegion(x, y, dd, seed) {
   return ang > 0.75 && ang < 2.4 ? 3 : (ang > 2.55 || ang < -2.75) ? 4 : 0;
 }
 const ddOf = (x, y, seed) => Math.hypot(x - CX, y - CY) + (vn(x * 0.05, y * 0.05, seed + 7) - 0.5) * 18;
+// layout 2: which region a tile belongs to — start (moss) · moss north / mushroom south · crystal north, lava south-east, ice south-west
+function region2(x, y, seed) { const dx = x - CX, dy = y - CY, d = Math.hypot(dx, dy), dd = d + (vn(x * .03, y * .03, seed + 7) - .5) * 26;
+  if (dd < L2.r1) return 0; const ang = Math.atan2(dy, dx) + (vn(x * .02, y * .02, seed + 13) - .5) * .6;
+  if (dd < L2.r2) return Math.sin(ang + .35) < 0 ? 0 : 1;
+  let deg = ang * 180 / Math.PI; if (deg < -150) deg += 360; return deg < -30 ? 2 : deg < 90 ? 3 : 4; }
+// layout 2 walls: plenty of plain dirt and stone in every region, with that region's own rock and ore veins in between
+function wallFor2(b, x, y, s) { const v22 = k => vn(x * .22, y * .22, s + k), v06 = k => vn(x * .06, y * .06, s + k);
+  if (b === 0) return v22(21) > .72 ? 4 : v06(33) > .62 ? 2 : 1;
+  if (b === 1) return v22(41) > .73 ? 5 : v22(21) > .79 ? 4 : v06(35) > .6 ? 1 : 2;
+  if (b === 2) return v06(51) > .55 ? (quartzAt(x, y, s) ? 13 : 3) : v22(41) > .74 ? 5 : v06(37) > .62 ? 1 : 2;
+  if (b === 3) return v22(61) > .74 ? 10 : v06(63) > .55 ? 9 : v06(65) > .62 ? 1 : 2;
+  return v22(71) > .74 ? 12 : v06(73) > .55 ? 11 : v06(75) > .6 ? 1 : 2; }
 function genWorld(seed) {
   const wall = new Uint8Array(W * H), floor = new Uint8Array(W * H), biome = new Uint8Array(W * H), objs = new Map();
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  if (LAY === 2) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { // the ring map
+    const i = idx(x, y), d = Math.hypot(x - CX, y - CY), b = region2(x, y, seed), sea = d + (vn(x * .04, y * .04, seed + 17) - .5) * 10 >= L2.r3; biome[i] = b;
+    floor[i] = b === 0 ? (vn(x * .16, y * .16, seed + 3) > 0.66 ? 2 : 1) : b === 1 ? 3 : b === 3 ? 18 : b === 4 ? 19 : 4;
+    if (d >= L2.r4 || x < 2 || y < 2 || x > W - 3 || y > H - 3) { wall[i] = 8; continue; }
+    if (sea) { floor[i] = WATER; if (vn(x * .11, y * .11, seed + 19) > .8) wall[i] = 2; continue; }
+    const open = fbm(x * 0.085, y * 0.085, seed) > 0.6 || Math.abs(vn(x * 0.035, y * 0.035, seed + 11) - 0.5) < 0.024;
+    if (!open) wall[i] = wallFor2(b, x, y, seed);
+  }
+  else for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = idx(x, y), dx = x - CX, dy = y - CY, d = Math.hypot(dx, dy);
     const dd = d + (vn(x * 0.05, y * 0.05, seed + 7) - 0.5) * 18, ca = d > 0 ? dx / d : 1;
     let b = dd < 30 ? 0 : dd > 66 ? 2 : (ca + (vn(x * .04, y * .04, seed + 9) - 0.5) * 0.6 > 0.3 ? 0 : 1);
@@ -2086,19 +2117,19 @@ function genWorld(seed) {
   const circ = (cx, cy, r, fn) => { for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) continue; const d = Math.hypot(x - cx, y - cy); if (d <= r) fn(x, y, idx(x, y), d); } };
   const carve = (x, y) => { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) return; const i = idx(x, y); if (wall[i] !== 8) wall[i] = 0; };
   const walk = (sx, sy, tx, ty, s) => { const R = rng(s); let x = sx, y = sy, n = 0; while ((Math.abs(x - tx) + Math.abs(y - ty)) > 1 && n++ < 5000) { if (R() < 0.6) { if (Math.abs(tx - x) > Math.abs(ty - y)) x += Math.sign(tx - x); else y += Math.sign(ty - y); } else { const k = R() * 4 | 0; x += [1, -1, 0, 0][k]; y += [0, 0, 1, -1][k]; } carve(x, y); carve(x + 1, y); carve(x, y + 1); carve(x + 1, y + 1); } };
-  walk(CX + 8, CY, BX - 9, BY, seed + 5);
-  walk(CX - 8, CY + 2, SA.x + 5, SA.y, seed + 6);
+  if (LAY === 2) { walk(CX + 6, CY - 4, BX - 6, BY + 5, seed + 5); walk(CX - 6, CY + 4, SA.x + 6, SA.y - 4, seed + 6); walk(BX, BY - 9, SB.x, SB.y + 9, seed + 8); walk(CX + 5, CY + 9, SL.x - 7, SL.y - 5, seed + 9); walk(SA.x - 4, SA.y + 8, SI.x + 7, SI.y - 4, seed + 10); }
+  else { walk(CX + 8, CY, BX - 9, BY, seed + 5); walk(CX - 8, CY + 2, SA.x + 5, SA.y, seed + 6); }
   circ(CX + .5, CY + .5, 8.5, (x, y, i) => { wall[i] = 0; floor[i] = 1; biome[i] = 0; });
   circ(BX + .5, BY + .5, 9.6, (x, y, i, d) => { biome[i] = 0; if (d < 7.6 || (x < BX && Math.abs(y - BY) <= 1)) { wall[i] = 0; floor[i] = d < 3 ? 6 : 2; } else wall[i] = (x * 7 + y * 3) % 5 === 0 ? 4 : 1; });
   circ(SA.x + .5, SA.y + .5, 8.2, (x, y, i, d) => { wall[i] = 0; biome[i] = 1; floor[i] = d < 4.6 ? 6 : 3; });
   circ(SB.x + .5, SB.y + .5, 8.2, (x, y, i, d) => { wall[i] = 0; biome[i] = 2; floor[i] = d < 4.6 ? 6 : 4; });
   // the deep regions are sealed by a band of hard rock, so you need a crystal pickaxe to get in
-  for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (biome[i] < 3 || wall[i] === 8 || Math.hypot(x - SL.x - .5, y - SL.y - .5) <= 9.6 || Math.hypot(x - SI.x - .5, y - SI.y - .5) <= 9.6) continue; let edge = false; for (let dy = -2; dy <= 2 && !edge; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; if (biome[idx(xx, yy)] < 3) { edge = true; break; } } if (edge) wall[i] = wallFor(biome[i], x, y, seed); }
+  if (LAY === 1) for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (biome[i] < 3 || wall[i] === 8 || Math.hypot(x - SL.x - .5, y - SL.y - .5) <= 9.6 || Math.hypot(x - SI.x - .5, y - SI.y - .5) <= 9.6) continue; let edge = false; for (let dy = -2; dy <= 2 && !edge; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; if (biome[idx(xx, yy)] < 3) { edge = true; break; } } if (edge) wall[i] = wallFor(biome[i], x, y, seed); }
   for (const [S, b, fl] of [[SL, 3, 18], [SI, 4, 19]]) circ(S.x + .5, S.y + .5, 9.6, (x, y, i, d) => { if (wall[i] === 8) return; biome[i] = b; if (d < 7.6) { wall[i] = 0; floor[i] = d < 3 ? 6 : fl; } else wall[i] = b === 3 ? 9 : 11; });
   // natural objects
   const nearSafe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5 || Math.hypot(x - SL.x, y - SL.y) < 10.5 || Math.hypot(x - SI.x, y - SI.y) < 10.5;
   addWater({ wall, floor, objs }, seed, nearSafe, null);
-  for (let i = 0; i < W * H; i++) if (floor[i] === WATER) { if (biome[i] === 3) floor[i] = LAVA; else if (biome[i] === 4 && hash2(i % W, (i / W) | 0, seed + 3) < .7) floor[i] = 20; }
+  for (let i = 0; i < W * H; i++) if (floor[i] === WATER && !(LAY === 2 && Math.hypot(i % W - CX, ((i / W) | 0) - CY) > L2.r3 - 12)) { if (biome[i] === 3) floor[i] = LAVA; else if (biome[i] === 4 && hash2(i % W, (i / W) | 0, seed + 3) < .7) floor[i] = 20; }
   for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
     const i = idx(x, y), dT = Math.hypot(x - CX, y - CY), home = dT < 9.5; if (wall[i] || floor[i] === WATER || (nearSafe(x, y) && !home)) continue;
     if (home && (dT < 3.2 || (y >= CY + 1 && y <= CY + 5 && x >= CX - 5 && x <= CX + 5))) continue; // keep the tree and the starter deck clear
@@ -2187,7 +2218,7 @@ const freshBosses = () => Object.fromEntries(BKEYS.map(k => [k, freshBoss(k)]));
 const freshDead = () => Object.fromEntries(BKEYS.map(k => [k, false]));
 const guardOf = (x, y) => (x === SA.x && y === SA.y) ? 'queen' : (x === SB.x && y === SB.y) ? 'golem' : (x === SL.x && y === SL.y) ? 'turtle' : (x === SI.x && y === SI.y) ? 'spirit' : null;
 function newGame(seed) {
-  const w = genWorld(seed);
+  setLayout(devLayout() || 2); const w = genWorld(seed);
   G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
@@ -2200,9 +2231,10 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 function serialize() {
   if (!G) return null; const p = G.p;
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: LAY, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
 function deserialize(s) {
+  setLayout(s.mapV === 2 ? 2 : 1); // saves from before v47 keep the original 200×200 map
   const N = W * H;
   G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: s.sel || 0,
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
@@ -3384,6 +3416,15 @@ const visibleShakers = new Set();
 // ================= guide =================
 function nearestObjOf(t, rad = 24) { const p = G.p; let best = null, bd = 1e9; for (let y = Math.floor(p.y - rad); y <= p.y + rad; y++) for (let x = Math.floor(p.x - rad); x <= p.x + rad; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === t) { const d = Math.hypot(x - p.x, y - p.y); if (d < bd) { bd = d; best = { x: x + .5, y: y + .5 }; } } } return best; }
 const hasItem = id => countItem(id) > 0 || wearing(id);
+// v47: quest texts name directions from the old map; on the ring map they are rewritten from where things really are
+function dirFix() { if (LAY !== 2) return null; const d = (x, y) => dirKo(x, y);
+  return { '서쪽 버섯숲': `${d(SA.x, SA.y)} 버섯숲`, '동쪽 동굴의 말랑대왕': `${d(BX, BY)} 이끼 동굴의 말랑대왕`, '화살표를 따라 서쪽으로!': `화살표를 따라 ${d(SA.x, SA.y)}으로!`, '화살표를 따라 동쪽으로!': `화살표를 따라 ${d(BX, BY)}으로!`,
+    '북쪽 수정동굴': `${d(SB.x, SB.y)} 수정동굴`, '남쪽 용암 동굴': `${d(SL.x, SL.y)} 용암 동굴`, '서쪽 얼음 동굴': `${d(SI.x, SI.y)} 얼음 동굴`,
+    '아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.': '벽이 아주 단단해서 수정 곡괭이가 있어야 캘 수 있어요. 열린 굴로 걸어 들어갈 수는 있지만 덥고 추우니 준비해서 가요.',
+    '수정 곡괭이로 남쪽·서쪽 깊은 곳의 단단한 벽을 뚫어요.': `바깥 고리의 ${d(SL.x, SL.y)} 용암 동굴과 ${d(SI.x, SI.y)} 얼음 동굴로 가 봐요.` }; }
+function dirText(str) { const m = dirFix(); if (!m || typeof str !== 'string') return str; const re = new RegExp(Object.keys(m).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g'); return str.replace(re, a => m[a]); }
+function layoutTexts() { if (typeof GUIDE === 'undefined') return; for (const q of [...GUIDE, ...QSIDE]) { if (!('_t0' in q)) { q._t0 = q.t; q._h0 = q.h; }
+  q.t = typeof q._t0 === 'function' ? (() => dirText(q._t0())) : dirText(q._t0); q.h = typeof q._h0 === 'function' ? (() => dirText(q._h0())) : dirText(q._h0); } }
 const GUIDE = [
   { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 큰 버튼을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
   { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [제작] → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
@@ -4123,6 +4164,9 @@ function checkBiome() {
 }
 function checkBiome0() { const p = G.p, b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))]; if (b !== G.biomeNow) { G.biomeNow = b; if (b >= 3) G.stats['seen' + b] = 1; if (started) { toast(BIOME[b] || '', null, 'biome' + b); suggestWear(b); } } }
 
+// v47: the map is far bigger, so recipes ask for twice as much terrain (dirt, stone, granite, basalt, ice)
+const TERRAIN_MATS = new Set(['dirt', 'stone', 'granite', 'basalt', 'iceBlock']);
+for (const r of RECIPES) r.req = r.req.map(([id, c]) => [id, TERRAIN_MATS.has(id) ? c * 2 : c]);
 // ================= lighting =================
 let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
 function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
@@ -4172,7 +4216,7 @@ let mapCv = null, mapCtx = null, mapImg = null;
 const MAPF = { 7: '#6fb36a', 8: '#7f6191', 9: '#958ccf', 10: '#3f7fb5', 1: '#4f8f57', 2: '#7a5442', 3: '#6a5272', 4: '#4a5378', 5: '#c08a58', 6: '#8f8aa3' };
 Object.assign(MAPF, { 21: '#7a6a3a', 17: '#ff6a2a', 18: '#4a3f48', 19: '#c8dcef', 20: '#a8e0f8', 11: '#6fb6e0', 12: '#3f7fb5', 13: '#5b9bd0', 14: '#8a7ad0', 15: '#7fb0d8', 16: '#e8a8c0' });
 const MAPW = { 13: '#8a72d0', 9: '#2e2832', 10: '#c9a03a', 11: '#9cc8e8', 12: '#5ad8f0', 1: '#3a2a25', 2: '#38364a', 3: '#4a3a78', 4: '#a85f32', 5: '#8d97a8', 6: '#8a5a32', 7: '#6f6a86', 8: '#0b0910' };
-function rebuildMap() { chunks.clear(); AMB.length = 0; if (!mapCv) { mapCv = document.createElement('canvas'); mapCv.width = W; mapCv.height = H; mapCtx = mapCv.getContext('2d'); } mapImg = mapCtx.createImageData(W, H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (G.explored[idx(x, y)]) mapPixel(x, y, true); mapCtx.putImageData(mapImg, 0, 0); }
+function rebuildMap() { chunks.clear(); AMB.length = 0; if (!mapCv || mapCv.width !== W) { mapCv = document.createElement('canvas'); mapCv.width = W; mapCv.height = H; mapCtx = mapCv.getContext('2d'); } mapImg = mapCtx.createImageData(W, H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (G.explored[idx(x, y)]) mapPixel(x, y, true); mapCtx.putImageData(mapImg, 0, 0); }
 function mapPixel(x, y, bulk) {
   const i = idx(x, y); if (!G.explored[i] || !mapImg) return; const w = G.wall[i]; const col = w ? MAPW[w] : MAPF[G.floor[i]] || '#555';
   const [r, g, b] = hexRgb(col); const k = i * 4; mapImg.data[k] = r * 255; mapImg.data[k + 1] = g * 255; mapImg.data[k + 2] = b * 255; mapImg.data[k + 3] = 255; if (!bulk) mapDirty = true;
@@ -4707,6 +4751,7 @@ function renderPanel() {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요.</p><p class="prose" style="color:var(--amber)">그런데… 나무 꼭대기에 아직 불 꺼진 등불이 두 개 남아 있어요. 수정 곡괭이를 만들어 남쪽 용암 동굴과 서쪽 얼음 동굴로 떠나 보세요!</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
   POOL = null;
+  if (LAY === 2 && (k === 'tree' || k === 'win' || k === 'win2')) h = dirText(h);
   sh.innerHTML = h; sh.dataset.key = key;
   if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }

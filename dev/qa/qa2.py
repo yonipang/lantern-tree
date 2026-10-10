@@ -3,9 +3,11 @@ from playwright.async_api import async_playwright
 SP=__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'out')+'/'; __import__('os').makedirs(SP, exist_ok=True)
 SRC=sys.argv[1] if len(sys.argv)>1 else __import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','index.html')
 HOOK="window.__T={get G(){return G},CX,CY,BX,BY,SA,SB,idx,addItem,openPanel,closePanel,decide,serialize,deserialize,WATER,BOSSES,bestPick,lightAt,countItem,OBJ,ITEMS,computeLight};window.claude?.hot?.snapshot"
-def mkpage(src,out,hook=None):
+def mkpage(src,out,hook=None,layout=1):
     html=open(src).read().replace("window.claude?.hot?.snapshot",hook or HOOK,1)
-    open(SP+out,'w').write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>'+html+'</body></html>')
+    # v47: new games get the 600x600 ring map; the older tests pin the original 200x200 map (layout 1) unless they ask for 2
+    pin='<script>try{localStorage.setItem("lantern-tree-layout","%d")}catch(e){}</script>' % layout
+    open(SP+out,'w').write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+pin+'</head><body>'+html+'</body></html>')
 RES=[]
 def rec(area,name,ok,detail=''):
     RES.append((area,name,bool(ok),detail)); print(('PASS' if ok else 'FAIL'),area,'|',name,'|',detail)

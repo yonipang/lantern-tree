@@ -33,7 +33,7 @@ async def main():
         r=await ev(pg,"()=>{const G=__T.G,o=G.objs.get(__T.idx(111,110)).items;return [__T.countItem('wood'),o[0]&&o[0].c,__T.countItem('resin'),G.objs.get(__T.idx(112,110)).items[0]&&G.objs.get(__T.idx(112,110)).items[0].c]}")
         rec('상자 연결','가방 재료부터 쓰고 모자란 만큼 상자에서', r==[0,9,0,1], str(r))
         # anyFish from chest
-        r=await ev(pg,"()=>{const G=__T.G;G.objs.get(__T.idx(116,110)).items[0]=null;G.objs.get(__T.idx(111,110)).items[1]={id:'stone',c:3};const R=__T.RECIPES.find(r=>r.out==='fishTank');return [R.at,__T.canCraft(R,__T.nearStations())]}")
+        r=await ev(pg,"()=>{const G=__T.G;G.objs.get(__T.idx(116,110)).items[0]=null;G.objs.get(__T.idx(111,110)).items[1]={id:'stone',c:10};const R=__T.RECIPES.find(r=>r.out==='fishTank');return [R.at,__T.canCraft(R,__T.nearStations())]}")
         rec('상자 연결','물고기(아무 물고기) 재료도 상자에서 찾음', r[1]==True, str(r))
         # far away → nothing
         r=await ev(pg,"()=>{const G=__T.G;G.p.x=118.5;G.p.y=116.5;const n=__T.linkedChests().length;G.p.x=110.5;G.p.y=112.5;return n}")

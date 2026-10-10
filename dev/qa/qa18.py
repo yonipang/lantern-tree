@@ -71,7 +71,7 @@ async def main():
         # ---------- nature decorations ----------
         r=await ev(pg,"()=>{const R=id=>__T.RECIPES.find(r=>r.out===id);const ids=r=>r.req.map(x=>x[0]).sort().join(',');const tot=r=>r.req.reduce((a,x)=>a+x[1],0);return {cherry:ids(R('cherryTree')),cherryN:tot(R('cherryTree')),tile:ids(R('floorCherry')),tileN:tot(R('floorCherry')),tree:ids(R('roundTree')),shrub:ids(R('shrub')),bed:ids(R('flowerBed')),water:__T.RECIPES.filter(r=>r.out.startsWith('water')).length}}")
         rec('꾸미기','벚꽃나무: 흙·이끼·나무·흰·빨간 꽃잎 (재료 많음)', r['cherry']=='dirt,gMoss,petalR,petalW,wood' and r['cherryN']>=30, str(r))
-        rec('꾸미기','벚꽃 타일: 흙·이끼·흰·빨간 꽃잎 (재료 적음)', r['tile']=='dirt,gMoss,petalR,petalW' and r['tileN']<=4, str(r))
+        rec('꾸미기','벚꽃 타일: 흙·이끼·흰·빨간 꽃잎 (재료 적음)', r['tile']=='dirt,gMoss,petalR,petalW' and r['tileN']<=5, str(r))  # v47: terrain materials x2
         rec('꾸미기','나무·덤불: 흙·이끼', r['tree']=='dirt,gMoss' and r['shrub']=='dirt,gMoss', str(r))
         rec('꾸미기','꽃밭: 흙·이끼·빨·파·노 꽃잎', r['bed']=='dirt,gMoss,petalB,petalR,petalY', str(r))
         rec('꾸미기','물 타일 여러 종류', r['water']>=5, str(r))

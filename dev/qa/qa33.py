@@ -61,7 +61,7 @@ async def main():
         # ---- fertilizer ----
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.bossDead.queen=false;(G.stats.beaten||{}).queen=0;const f=T.RECIPES.find(x=>x.out==='fert'),fs=T.RECIPES.find(x=>x.out==='fertShroom');const before=[T.recipeOn(f),T.recipeOn(fs)];G.bossDead.queen=true;return [before,T.recipeOn(f),T.recipeOn(fs),f.n,JSON.stringify(f.req),f.at,JSON.stringify(fs.req)]}""")
         rec('비료','버섯 여왕을 물리치기 전엔 비료 레시피가 안 보임', r[0]==[False,False], str(r))
-        rec('비료','처치 뒤 작업대에서 흙 3 + 말랑 젤 1 → 비료 2개, 버섯흙 한 삽 + 포자 1 → 버섯 비료 2개', r[1] and r[2] and r[3]==2 and r[4]=='[["dirt",3],["gel",1]]' and r[5]=='bench' and r[6]=='[["gShroom",1],["spore",1]]', str(r))
+        rec('비료','처치 뒤 작업대에서 흙 3 + 말랑 젤 1 → 비료 2개, 버섯흙 한 삽 + 포자 1 → 버섯 비료 2개', r[1] and r[2] and r[3]==2 and r[4]=='[["dirt",6],["gel",1]]' and r[5]=='bench' and r[6]=='[["gShroom",1],["spore",1]]', str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const t=T.targetTile();T.addItem('fert',3);const k=G.inv.findIndex((x,j)=>j>0&&x&&x.id==='fert');const s=G.inv[k];G.inv[k]=null;G.inv[0]=s;G.sel=0;
           const o=__crop(t.x,t.y,'cropBerry',10);const a=T.decide();const rem0=110-(G.time-o.p);T.fertCrop(t,o);const rem1=110-(G.time-o.p);const a2=T.decide();T.fertCrop(t,o);return [a.k,a.lbl,+rem0.toFixed(1),+rem1.toFixed(1),o.f,G.inv[0].c,a2.k,G.stats.fert]}""")
         rec('비료','"비료 주기" → 남은 시간이 바로 40% 줄어듦 (100초 → 60초)', r[0]=='fert' and r[2]==100 and r[3]==60, str(r))
