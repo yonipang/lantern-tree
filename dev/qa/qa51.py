@@ -52,7 +52,9 @@ async def main():
         rec('기능','콘솔 오류 없음', not errs, errs[:4])
         await ctx.close()
         # without art the game looks exactly as before: 16px sprites, no hd flags, same world size
-        mkpage(SRC,'qa.html',H2)
+        empty=SP+'art_empty'; shutil.rmtree(empty,ignore_errors=True); os.makedirs(empty); plain=SP+'art_none.html'; shutil.copy(SRC,plain)
+        subprocess.run([sys.executable,os.path.join(DEV,'art_pack.py'),empty,plain],capture_output=True)  # the game with no drawn art at all
+        mkpage(plain,'qa.html',H2)
         ctx,pg,errs=await new_ctx(b,390,844,True)
         r=await ev(pg,"()=>{const T=__T,S=T.SPR;return [Object.keys(T.ARTC).length,!!S.obj.roundTree.hd,S.obj.roundTree.width,T.effW(S.obj.roundTree),!!S.slimeGW.hd,T.lowCv.width%T.HD]}")
         rec('기본','손그림이 없으면 지금 그림 그대로 (2배 캔버스, v50부터 나무는 1.75배)', r==[0,False,42,42,False,0], str(r))
