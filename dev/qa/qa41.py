@@ -71,7 +71,7 @@ async def main():
         rec('양문','다시 누르면 함께 닫힘', r==[False,False], str(r))
         # ---- auto sliding door ----
         r=await ev(pg,"()=>{const r=__T.RECIPES.find(r=>r.out==='slideDoor');return r&&[r.at,r.cat,JSON.stringify(r.req),__T.ITEMS.slideDoor.n]}")
-        rec('자동 미닫이문','구리 제작대·건축 탭 (구리괴 3·철괴 2·수정 조각 1)', r==['forge','build','[["copperBar",3],["ironBar",2],["crystal",1]]','자동 미닫이문'], str(r))
+        rec('자동 미닫이문','석영 작업대·건축 탭 (구리괴 3·철괴 2·수정 조각 1)', r==['bench','build','[["copperBar",3],["ironBar",2],["crystal",1]]','자동 미닫이문'], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x0,y0]=__room();const sx=x0+4;G.objs.set(T.idx(sx,y0),{t:'slideDoor'});G.p.x=sx+.5;G.p.y=y0+1.5;G.p.face={x:0,y:-1};return [T.decide().k,T.decide().lbl]}""")
         await pg.keyboard.press('Space'); await pg.wait_for_timeout(450)
         r2=await ev(pg,"()=>{const T=__T,G=T.G;return !!G.objs.get(T.idx(T.CX+18,T.CY+6)).open}")

@@ -11,7 +11,7 @@ async def main():
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
         await ev(pg,"()=>{"+SET+"__T.G.enemies.length=0}")
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=T.RECIPES.find(r=>r.out==='sprinkler'),h=T.RECIPES.find(r=>r.out==='harvester');const a=[T.recipeOn(s),T.recipeOn(h)];G.stats.made=G.stats.made||{};G.stats.made.crystalGen=1;return [a,T.recipeOn(s),T.recipeOn(h),s.at,JSON.stringify(s.req),JSON.stringify(h.req)]}""")
-        rec('자동화','수정 발전기를 만든 뒤 구리 제작대에 스프링클러·자동 수확기', r[0]==[False,False] and r[1] and r[2] and r[3]=='forge', str(r))
+        rec('자동화','수정 발전기를 만든 뒤 작업대에 스프링클러·자동 수확기', r[0]==[False,False] and r[1] and r[2] and r[3]=='bench', str(r))
         rec('자동화','재료: 스프링클러 철괴4·구리괴2·물 한 동이2 / 수확기 철괴6·수정 조각4·전선4', r[4]=='[["ironBar",4],["copperBar",2],["gWater",2]]' and r[5]=='[["ironBar",6],["crystal",4],["wire",4]]', str(r))
         # sprinkler
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=__T.CX+20,y=__T.CY+20;__area(x-4,y-4,12,10);G.objs.set(T.idx(x,y),{t:'crystalGen'});G.wire.set(T.idx(x+1,y),1);G.objs.set(T.idx(x+2,y),{t:'sprinkler'});

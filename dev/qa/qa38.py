@@ -9,7 +9,7 @@ async def main():
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
         await ev(pg,"()=>{__T.G.enemies.length=0}")
         r=await ev(pg,"()=>{const T=__T;const rc=T.RECIPES.find(r=>r.out==='homeStone');const g=T.GUIDE.find(q=>q.id==='cpick');return [rc.at,JSON.stringify(rc.req),g.rw.some(([id])=>id==='homeStone'),T.ITEMS.homeStone.stack]}")
-        rec('귀환석','구리 제작대에서 만들고, 「수정 곡괭이」 퀘스트 보상으로도 하나', r==['forge','[["crystal",6],["glowcap",3],["copperBar",2]]',True,1], str(r))
+        rec('귀환석','석영 작업대에서 만들고, 「수정 곡괭이」 퀘스트 보상으로도 하나', r==['bench','[["crystal",6],["glowcap",3],["copperBar",2]]',True,1], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.spawnPt=null;G.backPt=null;G.recallCd=0;G.recall=null;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[0]={id:'homeStone',c:1};G.sel=0;
           const far={x:__T.SB.x+.5,y:__T.SB.y+2.5};G.p.x=far.x;G.p.y=far.y;const a=T.decide();T.startRecall(a.mode);T.recallTick(.5);const mid=[!!G.recall,Math.round(G.p.x)];T.recallTick(.6);T.recallTick(.6);const h=T.homePt();
           return [a.k,a.lbl,mid,+(G.p.x-h.x).toFixed(2),+(G.p.y-h.y).toFixed(2),G.backPt&&Math.round(G.backPt.x)===Math.round(far.x),T.decide().k,T.decide().lbl]}""")

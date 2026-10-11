@@ -23,8 +23,8 @@ async def main():
         rec('단계 표시','누르면 단계 이름과 남은 시간 안내', '새싹 (2/4단계)' in r[4] and '남았어요' in r[4], r[4])
         # ---- sickle ----
         r=await ev(pg,"()=>{const T=__T;const rc=T.RECIPES.find(x=>x.out==='sickle'),wc=T.RECIPES.find(x=>x.out==='wcan');return [rc.at,JSON.stringify(rc.req),wc.at,JSON.stringify(wc.req),T.ITEMS.sickle.stack]}")
-        rec('구리 낫','구리 제작대에서 구리괴 3 + 나무 2 + 이끼 끈 1', r[0]=='forge' and r[1]=='[["copperBar",3],["wood",2],["rope",1]]', str(r))
-        rec('물뿌리개','구리 제작대에서 구리괴 2 + 송진 1', r[2]=='forge' and r[3]=='[["copperBar",2],["resin",1]]', str(r))
+        rec('구리 낫','구리 작업대에서 구리괴 3 + 나무 2 + 이끼 끈 1', r[0]=='bench' and r[1]=='[["copperBar",3],["wood",2],["rope",1]]', str(r))
+        rec('물뿌리개','구리 작업대에서 구리괴 2 + 송진 1', r[2]=='bench' and r[3]=='[["copperBar",2],["resin",1]]', str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const mr=Math.random;Math.random=()=>0;const cnt=()=>{let n=0;for(const d of G.drops)if(d.id==='berry')n+=d.c;return n};
           G.drops.length=0;let o=__crop(G.p.x+5|0,G.p.y|0,'cropBerry',200);T.harvest({x:G.p.x+5|0,y:G.p.y|0},o);const a=cnt();
           T.addItem('sickle',1);G.drops.length=0;o=__crop(G.p.x+5|0,G.p.y|0,'cropBerry',200);T.harvest({x:G.p.x+5|0,y:G.p.y|0},o);const b2=cnt();Math.random=mr;G.drops.length=0;return [a,b2]}""")

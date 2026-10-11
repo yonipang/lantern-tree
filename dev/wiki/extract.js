@@ -28,7 +28,7 @@ async () => {
   const stn = Object.assign({ hand: '손 제작' }, STN);
   const lockText = r => { if (!r.need) return ''; const s = String(r.need); const m = s.match(/beat\('(\w+)'\)/); if (m && BOSSES[m[1]]) return BOSSES[m[1]].n + ' 처치 후';
     if (/hasCgen/.test(s)) return '수정 발전기를 만든 뒤'; if (/knows/.test(s)) return '별 작물이 있을 때'; return '조건이 맞으면'; };
-  const recipes = RECIPES.filter(r => ITEMS[r.out]).map(r => ({ out: r.out, n: r.n, req: r.req.map(([id, c]) => [id, c]), at: r.at || 'hand', cat: r.cat || '', dish: r.dish || null, star: r.star || null, lock: lockText(r) }));
+  const recipes = RECIPES.filter(r => ITEMS[r.out]).map(r => ({ out: r.out, n: r.n, req: r.req.map(([id, c]) => [id, c]), at: r.at || 'hand', tier: r.tier || 0, cat: r.cat || '', dish: r.dish || null, star: r.star || null, lock: lockText(r) }));
   for (const [id, n, req, at] of BAG_UPS || []) if (!recipes.some(r => r.out === id)) recipes.push({ out: id, n: 1, req, at, cat: 'tool' });
 
   // ---- 요리 ----
@@ -81,7 +81,7 @@ async () => {
   const rings = {}; for (const id in RINGS) { const [n, k, b, per, req, rar] = RINGS[id]; rings[id] = { n, k, b, per, req, rar }; }
   const catchT = {}; for (const b in CATCH) catchT[b] = CATCH[b];
 
-  return { ver: T.VER || '', items, recipes, stn, dishes, eff, buffDur: BUFF_DUR, walls, objs, crops, enemies, bosses, story, side, skills, skcat, stats, maxLv: MAX_LV,
+  return { ver: T.VER || '', benchN: T.BENCH_N || [], items, recipes, stn, dishes, eff, buffDur: BUFF_DUR, walls, objs, crops, enemies, bosses, story, side, skills, skcat, stats, maxLv: MAX_LV,
     tips: (TIPS || []).map(strip), known0: KNOWN0 || [],
     animals, rings, regionMat: REGION_MAT, biome: BIOME, catch: catchT, rarity: RARITY, tierN: TIERNAME, star: STAR_OF };
 }

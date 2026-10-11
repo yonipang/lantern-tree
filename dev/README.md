@@ -40,7 +40,7 @@
 
 1. **원본 수정**: `dev/index.html`
 2. **문법 확인**: `node dev/qa/syn.js dev/index.html` → `ok`가 나와야 해요
-3. **테스트**: `bash dev/qa/run_all.sh` (qa2~qa56 전체, 약 25분 — 백그라운드로 돌리고 결과 확인) 또는 `bash dev/qa/run_all.sh 23 24`처럼 일부만
+3. **테스트**: `bash dev/qa/run_all.sh` (qa2~qa57 전체, 약 25분 — 백그라운드로 돌리고 결과 확인) 또는 `bash dev/qa/run_all.sh 23 24`처럼 일부만
    - 새 기능을 넣으면 `dev/qa/qa29.py`처럼 테스트를 새로 추가해요 (`qa28.py`를 본보기로)
    - 스크린샷과 로그는 `dev/qa/out/`에 생겨요 (저장소에는 안 올라가요)
    - `qa15`(클라우드 충돌), `qa16`(클릭 방향)은 타이밍 때문에, `qa29`(지팡이·활 한 발 피해)는 치명타(10%)가 터지면, `qa18`의 꽃망울 구역·`qa24`의 용암 웅덩이·`qa45`의 쓰다듬기는 세계 모양·몬스터 등장에 따라, `qa47`은 가끔 한 번 떨어져요. 다시 돌려서 통과하면 정상이에요
@@ -69,3 +69,4 @@ pip install playwright --break-system-packages   # 이미 있으면 생략
 - 테스트의 `mkpage()`는 새 게임을 원래 지도(layout 1)로 고정해요 (`localStorage 'lantern-tree-layout'`). 고리 지도는 `mkpage(..., layout=2)`로 따로 테스트해요 (qa49)
 - 손에 든 물건 (v48부터): `decide()`는 `holdMode()`로 든 물건의 일만 해요(`heldDecide`: 가구·씨앗=놓기, 삽=파기, 무기=공격, 곡괭이=캐기 …). 빈손·재료는 `handDecide`(예전처럼 다 함). 장비에 무기 칸 없음 — `curWeapon()`은 든 무기, 없으면 주먹. 옛 세이브의 `equip.weapon`은 빈 단축칸으로(`unslotWeapon`). 장비 칸·펫은 가방 패널 안(`openPanel('equip')`은 가방을 열어요)
 - 긴급 탈출 (v57): 메뉴 「갇혔을 때 → 긴급 탈출」(두 번 눌러 확인, 30초에 한 번). `regionOf()`로 지금 자리가 막혔는지(3000칸·60칸 안에서 끝나면 막힘, 문은 통로) 보고, 막혔으면 바깥의 가장 가까운 트인 곳(`openSpotNear`), 아니면 집으로 — 집이 막혀 있으면 집 바깥으로. 기절·귀환·불러오기의 `closedIn`(16칸)은 그대로 (qa54)
+- 제작 장소 (v58~v60): 화로 → 용광로(`furnace`, 제련), 옛 용광로 → 장비제작대(`smelter`). 용광로·요리솥은 넣어 두고 꺼내기(`o.job`, 실제 시간, v59). 세이브의 `at`으로 꺼 둔 시간만큼 `G.time`을 넘겨 작물 등이 자람(`advanceOffline`). 작업대는 `o.lv` 0~5 단계(`BENCH_N`), 레시피는 재료로 `r.tier`가 정해지고 모두 `at: 'bench'`. 옛 구리 제작대(`forge`)는 불러올 때 2칸 작업대 1단계로(`convertForges`)

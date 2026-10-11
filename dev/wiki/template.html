@@ -307,7 +307,7 @@ R.home = () => {
   <section class="panel"><h3>알아 두면 좋은 팁</h3><ul class="tips" style="margin-top:.6rem">${D.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>
   </div>`;
 };
-const BLURB = { items: '모든 아이템. 누르면 만드는 법·얻는 곳·쓰이는 곳', craft: '작업대·구리 제작대·용광로·요리솥·장비제작대별 제작법', cook: '버프 요리 효과와 레시피 쪽지 찾는 곳', farm: '작물 성장 시간·맞는 흙·비료·별 작물', mon: '지역별 몬스터 체력·피해·떨어뜨리는 것', boss: '다섯 보스의 체력·보상·공략', world: '광맥과 필요한 곡괭이, 지역 재료', fish: '지역별 잡히는 물고기 확률', quest: '이야기 퀘스트 순서와 도전 퀘스트 보상', gear: '무기·곡괭이·옷·반지와 용광로 강화', skill: '능력치와 레벨별 스킬', animal: '펫 버프와 목장 동물' };
+const BLURB = { items: '모든 아이템. 누르면 만드는 법·얻는 곳·쓰이는 곳', craft: '작업대(6단계)·용광로·요리솥·장비제작대별 제작법', cook: '버프 요리 효과와 레시피 쪽지 찾는 곳', farm: '작물 성장 시간·맞는 흙·비료·별 작물', mon: '지역별 몬스터 체력·피해·떨어뜨리는 것', boss: '다섯 보스의 체력·보상·공략', world: '광맥과 필요한 곡괭이, 지역 재료', fish: '지역별 잡히는 물고기 확률', quest: '이야기 퀘스트 순서와 도전 퀘스트 보상', gear: '무기·곡괭이·옷·반지와 용광로 강화', skill: '능력치와 레벨별 스킬', animal: '펫 버프와 목장 동물' };
 
 let itemGroup = 'all', showStar = false;
 R.items = () => {
@@ -321,13 +321,14 @@ const cardGrid = list => list.length ? `<div class="cards">${list.map(id => `<bu
 
 let craftAt = 'bench';
 R.craft = () => {
-  const order = ['hand', 'bench', 'forge', 'furnace', 'pot', 'smelter'];
+  const order = ['hand', 'bench', 'furnace', 'pot', 'smelter'];
   const rs = D.recipes.filter(r => r.at === craftAt && !r.star);
   const cats = [...new Set(rs.map(r => r.cat))];
-  return `<div class="sec-head"><h2>제작법</h2><p>제작은 장소마다 따로예요. 그 장소 가까이에서 열어야 그곳의 레시피가 보여요. 작업대·구리 제작대는 붙어 있는 상자의 재료도 써요.</p></div>
+  return `<div class="sec-head"><h2>제작법</h2><p>제작은 장소마다 따로예요. 그 장소 가까이에서 열어야 그곳의 레시피가 보여요. 작업대 같은 제작 장소는 붙어 있는 상자의 재료도 써요.</p></div>
   <div class="tabs">${order.map(a => `<button class="tab" data-at="${a}" aria-pressed="${a === craftAt}">${esc(D.stn[a])}<span class="badge num">${D.recipes.filter(r => r.at === a && !r.star).length}</span></button>`).join('')}</div>
   ${craftAt === 'pot' ? '<p class="note" style="margin:-.3rem 0 1rem">처음에는 베리 파이·버섯 스튜·생선 스튜만 알아요. 나머지는 레시피 쪽지를 주워야 목록에 나타나요 (찾는 곳은 「요리」). 별 작물이 있으면 별 요리도 만들 수 있어요.</p>' : ''}
-  ${cats.map(c => `<div class="cat-title">${esc(CAT[c] || c || '기타')}</div><div class="recipes">${rs.filter(r => r.cat === c).map(rcpRow).join('')}</div>`).join('')}`;
+  ${craftAt === 'bench' && D.benchN && D.benchN.length ? `<p class="note" style="margin:-.3rem 0 1rem">작업대는 재료를 넣어 ${D.benchN.join(' → ')} 순서로 올려요. 높은 단계 작업대에서는 아래 단계 물건도 모두 만들어요.</p>` + D.benchN.map((bn, t) => { const rt = rs.filter(r => (r.tier || 0) === t); return rt.length ? `<div class="cat-title">${esc(bn)}</div><div class="recipes">${rt.map(rcpRow).join('')}</div>` : ''; }).join('')
+    : cats.map(c => `<div class="cat-title">${esc(CAT[c] || c || '기타')}</div><div class="recipes">${rs.filter(r => r.cat === c).map(rcpRow).join('')}</div>`).join('')}`;
 };
 const rcpRow = r => `<div class="rcp"><div class="out">${rowName(r.out)}${r.n > 1 ? `<span class="x num">×${r.n}</span>` : ''}</div><div class="reqs">${chips(r.req)}</div><div>${r.lock ? `<span class="badge lamp">${esc(r.lock)}</span>` : ''}</div></div>`;
 
@@ -397,7 +398,7 @@ const BOSS_TIP = {
 };
 R.boss = () => {
   const order = ['queen', 'slime', 'golem', 'turtle', 'spirit'];
-  return `<div class="sec-head"><h2>보스</h2><p>이야기 순서대로예요. 물리친 보스는 구리 제작대에서 소환 조각상을 만들어 보스방에서 다시 부를 수 있어요.</p></div>
+  return `<div class="sec-head"><h2>보스</h2><p>이야기 순서대로예요. 물리친 보스는 작업대에서 소환 조각상을 만들어 보스방에서 다시 부를 수 있어요.</p></div>
   <div class="stack">${order.map(k => { const b = D.bosses[k], q = D.story.find(s => s.id === k), t = BOSS_TIP[k];
     const idol = Object.keys(I).find(id => I[id].kind === 'summon' && (MAKE[id] || []).length && id.startsWith(k));
     return `<article class="panel boss"><div class="pic">${sprImg(b.img, 3, b.n)}</div><div style="min-width:0">

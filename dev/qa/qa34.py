@@ -42,7 +42,7 @@ async def main():
         # ---- crystal fertilizer ----
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const f=T.RECIPES.find(x=>x.out==='fertCry');G.bossDead.golem=false;(G.stats.beaten||{}).golem=0;const a=T.recipeOn(f);G.bossDead.golem=true;
           const [x,y]=__spot(6,6);const o=__crop(x,y,'cropBean',10,4);G.inv[0]={id:'fertCry',c:2};G.sel=0;T.fertCrop({x,y},o);G.objs.delete(T.idx(x,y));return [a,T.recipeOn(f),f.at,JSON.stringify(f.req),f.n,o.f]}""")
-        rec('수정 비료','수정골렘 처치 뒤 구리 제작대: 수정 모래 한 삽 + 수정 조각 1 → 2개', r[0] is False and r[1] is True and r[2]=='forge' and r[3]=='[["gCrystal",1],["crystal",1]]' and r[4]==2, str(r))
+        rec('수정 비료','수정골렘 처치 뒤 석영 작업대: 수정 모래 한 삽 + 수정 조각 1 → 2개', r[0] is False and r[1] is True and r[2]=='bench' and r[3]=='[["gCrystal",1],["crystal",1]]' and r[4]==2, str(r))
         rec('수정 비료','뿌리면 수정 비료 표시 (별 확률 35%)', r[5]==3, str(r))
         # ---- soil hint ----
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]=null;G.p.face={x:0,y:1};const tt=T.targetTile();__crop(tt.x,tt.y,'cropBerry',10,2);const a=T.decide().msg;__crop(tt.x,tt.y,'cropBerry',10,1);const b2=T.decide().msg;G.bossDead.golem=false;(G.stats.beaten||{}).golem=0;const c=T.decide().msg;G.bossDead.golem=true;G.objs.delete(T.idx(tt.x,tt.y));return [a,b2,c]}""")

@@ -23,7 +23,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();G.inv[9]={id:'pickIron',c:1};G.objs.set(T.idx(x+1,y),{t:'cluster'});const o=G.objs.get(T.idx(x+1,y));for(let k=0;k<6&&G.objs.get(T.idx(x+1,y));k++)T.hitObj({x:x+1,y},o);const m=__drops();return [(m.cryGem||0)+(m.crystal||0),!G.objs.get(T.idx(x+1,y))]}""")
         rec('재료','수정 결정을 캐면 결정/석영 딱 1개', r==[1,True], str(r))
         r=await ev(pg,"""()=>{const T=__T,f=id=>{const r=T.RECIPES.find(q=>q.out===id);return r.at+':'+r.req.map(x=>x[0]).join(',')};return ['swordCrystal','staffCrystal','bowCrystal','pickCrystal','swordDawn','arrowCrystal','lampCrystal'].map(f)}""")
-        rec('재료','수정 무기·상위 도구는 정제 석영+수정결정 (석영만으로는 못 만듦)', r[0]=='forge:quartzR,cryGem,ironBar' and all('quartzR' in x for x in r[:6]) and 'cryGem' in r[6] and not any(',crystal' in x or ':crystal' in x for x in r[:6]), str(r))
+        rec('재료','수정 무기·상위 도구는 정제 석영+수정결정 (석영만으로는 못 만듦)', r[0]=='bench:quartzR,cryGem,ironBar' and all('quartzR' in x for x in r[:6]) and 'cryGem' in r[6] and not any(',crystal' in x or ':crystal' in x for x in r[:6]), str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const b=G.bosses.golem;Object.assign(b,T.freshBoss('golem'));b.st='fight';G.bossDead.golem=false;G.drops.length=0;T.hitBoss(b,999999,false);const m=__drops();return [m.crystal||0,m.cryGem||0]}""")
         rec('재료','수정골렘 보상: 석영 8 + 수정결정 3', r==[8,3], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();G.inv[0]={id:'granite',c:5};G.sel=0;G.p.face={x:1,y:0};const d=T.decide();return [d.k,d.lbl,T.ITEMS.granite.n]}""")

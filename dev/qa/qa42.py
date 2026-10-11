@@ -43,14 +43,14 @@ async def main():
         await pg.wait_for_timeout(100); await pg.screenshot(path=SP+'qa42_fist.png')
         # ---- axes ----
         r=await ev(pg,"()=>{const T=__T;return ['axeStone','axeCopper','axeIron'].map(id=>{const it=T.ITEMS[id],rc=T.RECIPES.find(r=>r.out===id);return [it.kind,it.wt,rc&&rc.at,rc&&rc.cat]})}")
-        rec('도끼','돌·구리·철 도끼 (무기 탭, 돌 도끼는 작업대, 금속은 구리 제작대)', r==[['sword','axe','bench','weapon'],['sword','axe','forge','weapon'],['sword','axe','forge','weapon']], str(r))
+        rec('도끼','돌·구리·철 도끼 (무기 탭, 돌 도끼는 작업대, 금속은 구리·철 작업대(v60))', r==[['sword','axe','bench','weapon'],['sword','axe','bench','weapon'],['sword','axe','bench','weapon']], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();const t={x:x+1,y};const chop=w=>{G.inv[0]=w?{id:w,c:1}:null;G.sel=0;const o={t:'root'};G.objs.set(T.idx(t.x,t.y),o);T.hitObj(t,o);const d=o.dmg;G.objs.delete(T.idx(t.x,t.y));return d};
           G.inv[9]={id:'pickWood',c:1};const a=chop('swordWood'),b2=chop('axeStone');G.inv[0]={id:'axeCopper',c:1};const e=T.mkEnemy('slimeG',G.p.x+1.1,G.p.y);e.hp=999;G.enemies.push(e);T.swingAttack();return [a,b2,999-e.hp,G.swing.icon]}""")
         rec('도끼','도끼를 들면 나무를 1.6배 빨리 베요', abs(r[1]-r[0]*1.6)<1e-6 and r[0]>0, str(r))
         rec('도끼','도끼로 공격 (구리 도끼 공격력 15 안팎)', 12<=r[2]<=30 and r[3]=='axeCopper', str(r))
         # ---- arrows ----
         r=await ev(pg,"()=>{const T=__T;return ['arrowStone','arrowCopper','arrowIron','arrowCrystal','arrowGold'].map(id=>{const rc=T.RECIPES.find(r=>r.out===id);return [T.ITEMS[id].kind,rc&&rc.n,rc&&rc.at]})}")
-        rec('화살','광물 화살 5종 (한 번에 10개, 돌은 작업대)', r==[['arrow',10,'bench'],['arrow',10,'forge'],['arrow',10,'forge'],['arrow',10,'forge'],['arrow',10,'forge']], str(r))
+        rec('화살','광물 화살 5종 (한 번에 10개, 돌은 작업대)', r==[['arrow',10,'bench'],['arrow',10,'bench'],['arrow',10,'bench'],['arrow',10,'bench'],['arrow',10,'bench']], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.sel=0;const shot=()=>{G.pshots.length=0;T.swingAttack();return G.pshots[0]};
           let plain=0;for(let k=0;k<40;k++)plain+=shot().dmg;const p0=shot();
           G.inv[12]={id:'arrowStone',c:5};G.inv[13]={id:'arrowIron',c:3};const s1=shot();const left=[T.countItem('arrowIron'),T.countItem('arrowStone')];

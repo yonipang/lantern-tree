@@ -38,7 +38,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T;const ats=new Set();document.querySelectorAll('#sheet .rc [data-a=craft]').forEach(b=>ats.add(T.RECIPES[+b.dataset.i].at||'hand'));const ok=[...document.querySelectorAll('#sheet .rc [data-a=craft]:not([disabled])')].map(b=>T.RECIPES[+b.dataset.i].at||'hand');return [[...ats].join(','),[...new Set(ok)].join(','),[...document.querySelectorAll('#sheet .tab')].map(t=>t.textContent).join(',')]}""")
         rec('제작','손 제작 창에는 손 제작만 (작업대·솥·구리 제작대가 근처여도)', r[0]=='hand' and r[1]=='hand' and '수리' not in r[2], str(r))
         await ev(pg,"()=>__T.closePanel()"); await pg.wait_for_timeout(300)
-        for st in ['bench','pot','forge']:
+        for st in ['bench','pot']:
             await ev(pg,f"()=>__T.openPanel('craft',{{st:'{st}'}})"); await pg.wait_for_timeout(450)
             r=await ev(pg,"""()=>{const T=__T;const ats=new Set();document.querySelectorAll('#sheet .rc [data-a=craft]').forEach(b=>ats.add(T.RECIPES[+b.dataset.i].at||'hand'));return [[...ats].join(','),document.querySelectorAll('#sheet .rc [data-a=craft]:not([disabled])').length,[...document.querySelectorAll('#sheet .tab')].map(t=>t.textContent).join(',')]}""")
             rec('제작',f'{st} 창에는 {st} 제작품만', r[0]==st and r[1]>0, str(r))

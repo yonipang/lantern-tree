@@ -10,7 +10,7 @@ ROOT = os.path.dirname(DEV)
 OUT = os.path.join(DEV, 'qa', 'out'); os.makedirs(OUT, exist_ok=True)
 
 NAMES = ('ITEMS,OBJ,RECIPES,ENEMY,BOSSES,GUIDE,QSIDE,SKILLS,SK_CAT,STATN,ANIMALS,RINGS,REGION_MAT,WALLS,BIOME,CATCH,STN,RARITY,RAR,'
-         'TIERNAME,DISH,EFF,BUFF_DUR,REMATCH,UNIQ_OF,ACC_OF,SPR,CROP_SOIL,SOIL_N,STAR_OF,MAX_LV,BAG_UPS,MULTI,iconURL,buffText,noteHint,animalImg,TIPS,KNOWN0')
+         'TIERNAME,BENCH_N,DISH,EFF,BUFF_DUR,REMATCH,UNIQ_OF,ACC_OF,SPR,CROP_SOIL,SOIL_N,STAR_OF,MAX_LV,BAG_UPS,MULTI,iconURL,buffText,noteHint,animalImg,TIPS,KNOWN0')
 HOOK = 'window.__W=()=>({%s});window.claude?.hot?.snapshot' % NAMES
 
 def version():
