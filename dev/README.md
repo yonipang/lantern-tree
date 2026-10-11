@@ -55,7 +55,7 @@ pip install playwright --break-system-packages   # 이미 있으면 생략
 - 저장 키: `lantern-tree-save-v1`, 현재 세이브 버전 `v: 3`
 - 예전 세이브는 불러올 때 고쳐서 이어지게 해요 (`migrateV2`, `migrateV3`, `fixParts`, `grantUniques`, `ensureDeepAltars`)
 - 저장 구조를 바꾸면 반드시 옛 세이브 불러오기 테스트를 추가해요
-- 가구 칸 크기 두 가지 (v50부터): 새 판은 작업대·구리 제작대·용광로·화로 2×1, 침대·이끼 침대 1×2, 통나무·돌 벤치 2×1(`fpV: 2`). v50 전 세이브는 1칸 그대로(`fpV` 없음). `setFootprints()`가 OBJ의 sz와 그림(`SPR.fp`의 big/small)을 바꿔요. 커진 가구는 손그림이 들어오기 전까지 옛 그림을 늘린 임시 그림
+- 가구 칸 크기 두 가지 (v50부터): 새 판은 작업대 2×1, 통나무·돌 벤치 2×1(`fpV: 2`). 침대는 v51부터, 구리 제작대·화로·용광로는 v55부터 다시 1칸 (전에 놓은 남는 칸은 `fixParts`가 지움). v50 전 세이브는 1칸 그대로(`fpV` 없음). `setFootprints()`가 OBJ의 sz와 그림(`SPR.fp`의 big/small)을 바꿔요. 커진 가구는 손그림이 들어오기 전까지 옛 그림을 늘린 임시 그림. 가방·단축칸 아이콘은 길쭉한 그림도 정사각형 칸에 넣어 1칸으로 보여요(`squareIcon`, v55)
 - 지도 모양 두 가지 (v47부터): 새 게임은 600×600 고리 지도(`mapV: 2`, `LAY 2`), v47 전 세이브는 200×200 원래 지도(`mapV` 없음 → `LAY 1`) 그대로. `setLayout()`이 W·H·CX·CY·보스 위치를 바꿔요
 - 테스트의 `mkpage()`는 새 게임을 원래 지도(layout 1)로 고정해요 (`localStorage 'lantern-tree-layout'`). 고리 지도는 `mkpage(..., layout=2)`로 따로 테스트해요 (qa49)
 - 손에 든 물건 (v48부터): `decide()`는 `holdMode()`로 든 물건의 일만 해요(`heldDecide`: 가구·씨앗=놓기, 삽=파기, 무기=공격, 곡괭이=캐기 …). 빈손·재료는 `handDecide`(예전처럼 다 함). 장비에 무기 칸 없음 — `curWeapon()`은 든 무기, 없으면 주먹. 옛 세이브의 `equip.weapon`은 빈 단축칸으로(`unslotWeapon`). 장비 칸·펫은 가방 패널 안(`openPanel('equip')`은 가방을 열어요)
