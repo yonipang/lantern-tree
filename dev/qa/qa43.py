@@ -13,7 +13,7 @@ async def main():
         await ev(pg,"()=>{"+CLEAR+"}")
         # ---- crystal cave materials ----
         r=await ev(pg,"""()=>{const T=__T,I=T.ITEMS,W=T.WALLS,q=T.RECIPES.find(r=>r.out==='quartzR');return [I.crystal.n,W[3].n,W[3].drop[0][0],W[13].n,W[13].drop.map(d=>d[0]).join(','),I.granite.kind,I.granite.wall,q&&q.at,q&&JSON.stringify(q.req),I.cryGem.n,I.quartzR.n]}""")
-        rec('재료','수정 조각 → 석영, 수정벽 → 화강암 벽, 새 석영 광맥, 정제 석영(화로: 석영 2), 수정결정', r==['석영','화강암 벽','granite','석영 광맥','crystal,granite','wall',3,'furnace','[["crystal",2]]','수정결정','정제 석영'], str(r))
+        rec('재료','수정 조각 → 석영, 수정벽 → 화강암 벽, 새 석영 광맥, 정제 석영(용광로(v58 전 화로): 석영 2), 수정결정', r==['석영','화강암 벽','granite','석영 광맥','crystal,granite','wall',3,'furnace','[["crystal",2]]','수정결정','정제 석영'], str(r))
         r=await ev(pg,"()=>{const G=__T.G;let g=0,q=0,qOut=0;for(let i=0;i<G.wall.length;i++){if(G.wall[i]===3)g++;if(G.wall[i]===13){q++;if(G.biome[i]!==2)qOut++}}return [g,q,qOut,G.stats.qv]}")
         rec('재료','새 세계: 수정 동굴 화강암 사이에 석영 광맥', r[0]>200 and r[1]>20 and r[2]==0 and r[3]==1, str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();const out=[];for(const w of [3,13,9,11]){G.wall[T.idx(x+2,y)]=w;T.breakWall(x+2,y);out.push(Object.keys(__drops()).sort().join('+'))}return out}""")
@@ -41,7 +41,7 @@ async def main():
         rec('옛 세이브','가방의 수정 조각은 그대로 석영이 됨', r==[42,'석영'], str(r))
         # ---- smelter: upgrades ----
         r=await ev(pg,"()=>{const T=__T,rc=T.RECIPES.find(r=>r.out==='smelter');return [rc.at,rc.cat,T.STN.smelter,!!T.SPR.obj.smelter]}")
-        rec('용광로','구리 제작대에서 만드는 「용광로」', r==['forge','furn','용광로',True], str(r))
+        rec('용광로','작업대에서 나무·돌로 만드는 「장비제작대」 (v58: 옛 용광로)', r==['bench','furn','장비제작대',True], str(r))
         await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();G.objs.set(T.idx(x,y+1),{t:'smelter'});G.inv[0]={id:'swordCopper',c:1,dur:200};G.sel=0;G.inv[9]={id:'copperBar',c:20};G.inv[10]={id:'glowcap',c:6};T.openPanel('craft',{st:'smelter'})}"""); await pg.wait_for_timeout(500)
         r=await ev(pg,"()=>[...document.querySelectorAll('#sheet [data-a=tab]')].map(b=>b.textContent+(b.classList.contains('on')?'*':'')).join(',')")
         rec('용광로','용광로 탭: 전체·반지·강화(기본)·분해 (수리 없음)', '강화*' in r and '반지' in r and '분해' in r and '수리' not in r, r)

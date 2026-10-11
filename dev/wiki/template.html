@@ -307,7 +307,7 @@ R.home = () => {
   <section class="panel"><h3>알아 두면 좋은 팁</h3><ul class="tips" style="margin-top:.6rem">${D.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>
   </div>`;
 };
-const BLURB = { items: '모든 아이템. 누르면 만드는 법·얻는 곳·쓰이는 곳', craft: '작업대·구리 제작대·화로·요리솥·용광로별 제작법', cook: '버프 요리 효과와 레시피 쪽지 찾는 곳', farm: '작물 성장 시간·맞는 흙·비료·별 작물', mon: '지역별 몬스터 체력·피해·떨어뜨리는 것', boss: '다섯 보스의 체력·보상·공략', world: '광맥과 필요한 곡괭이, 지역 재료', fish: '지역별 잡히는 물고기 확률', quest: '이야기 퀘스트 순서와 도전 퀘스트 보상', gear: '무기·곡괭이·옷·반지와 용광로 강화', skill: '능력치와 레벨별 스킬', animal: '펫 버프와 목장 동물' };
+const BLURB = { items: '모든 아이템. 누르면 만드는 법·얻는 곳·쓰이는 곳', craft: '작업대·구리 제작대·용광로·요리솥·장비제작대별 제작법', cook: '버프 요리 효과와 레시피 쪽지 찾는 곳', farm: '작물 성장 시간·맞는 흙·비료·별 작물', mon: '지역별 몬스터 체력·피해·떨어뜨리는 것', boss: '다섯 보스의 체력·보상·공략', world: '광맥과 필요한 곡괭이, 지역 재료', fish: '지역별 잡히는 물고기 확률', quest: '이야기 퀘스트 순서와 도전 퀘스트 보상', gear: '무기·곡괭이·옷·반지와 용광로 강화', skill: '능력치와 레벨별 스킬', animal: '펫 버프와 목장 동물' };
 
 let itemGroup = 'all', showStar = false;
 R.items = () => {
@@ -465,9 +465,9 @@ R.gear = () => {
     ${picks.map(id => `<tr><td>${rowName(id)}</td><td class="n">${I[id].power}</td><td><small>${Object.values(D.walls).filter(w => w.tier === I[id].tier && w.drop.length).map(w => esc(w.n)).join(', ') || '모든 벽'}</small></td></tr>`).join('')}</tbody></table></div>
     <p class="note">위 곡괭이로 캘 수 있는 벽은 모두 캘 수 있어요.</p></div>
     <div class="panel"><h3>옷·장신구</h3><div class="stack" style="gap:.6rem;margin-top:.6rem">${wears.map(id => `<div>${rowName(id, `${SLOT[I[id].slot] || ''}`)}<p class="note" style="margin-top:.2rem">${esc(I[id].d)}</p></div>`).join('')}</div></div>
-    <div class="panel"><h3>반지</h3><p class="note">용광로에서 만들어요.</p><div class="wrapx"><table style="margin-top:.4rem"><thead><tr><th>반지</th><th>효과</th><th>강화마다</th></tr></thead><tbody>
+    <div class="panel"><h3>반지</h3><p class="note">장비제작대에서 만들어요.</p><div class="wrapx"><table style="margin-top:.4rem"><thead><tr><th>반지</th><th>효과</th><th>강화마다</th></tr></thead><tbody>
     ${Object.keys(D.rings).map(id => { const r = D.rings[id]; return `<tr><td>${rowName(id)}</td><td class="n">${RK[r.k]} ${r.k === 'def' ? '-' : '+'}${Math.round(r.b * 100)}%</td><td class="n">+${Math.round(r.per * 100)}%</td></tr>`; }).join('')}</tbody></table></div></div>
-    <div class="panel"><h3>용광로 강화</h3><ul class="tips" style="margin-top:.5rem">
+    <div class="panel"><h3>장비제작대 강화</h3><ul class="tips" style="margin-top:.5rem">
       <li>무기·곡괭이·옷·장신구·반지를 +5까지 강화해요.</li>
       <li>무기 공격력 +8%, 곡괭이 캐는 힘 +10% (단계마다).</li>
       <li>재료: 일반 구리괴, 고급 철괴, 희귀 정제 석영, 영웅 이상 금괴를 단계마다 2·4·6·8·10개.</li>

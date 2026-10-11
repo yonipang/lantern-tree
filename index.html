@@ -1130,13 +1130,13 @@ const ITEMS = {
   stone: { n: '돌', d: '돌벽을 캐면 나와요. 구리 곡괭이가 필요해요.' },
   fiber: { n: '이끼 섬유', d: '이끼풀을 베면 얻는 부드러운 실.' },
   gel: { n: '말랑 젤', d: '말랑이들이 남기는 말랑말랑한 젤.' },
-  copperOre: { n: '구리광석', d: '화로에서 녹이면 구리괴가 돼요.' },
-  ironOre: { n: '철광석', d: '화로에서 녹이면 철괴가 돼요.' },
-  crystal: { n: '석영', d: '수정 동굴의 석영 광맥을 캐면 나와요. 가구·회로·귀환석 등 여러 곳에 쓰여요. 화로에서 정제 석영으로 만들어요.' },
+  copperOre: { n: '구리광석', d: '용광로에서 녹이면 구리괴가 돼요.' },
+  ironOre: { n: '철광석', d: '용광로에서 녹이면 철괴가 돼요.' },
+  crystal: { n: '석영', d: '수정 동굴의 석영 광맥을 캐면 나와요. 가구·회로·귀환석 등 여러 곳에 쓰여요. 용광로에서 정제 석영으로 만들어요.' },
   granite: { n: '화강암', kind: 'wall', wall: 3, mat: 1, d: '수정 동굴의 화강암 벽을 캐면 나와요. 들고 있으면 화강암 벽을 쌓을 수 있어요.' },
   basalt: { n: '현무암', kind: 'wall', wall: 9, mat: 1, d: '용암 동굴의 현무암벽을 캐면 나와요. 들고 있으면 현무암벽을 쌓을 수 있어요.' },
   iceBlock: { n: '얼음 덩이', kind: 'wall', wall: 11, mat: 1, d: '얼음 동굴의 얼음벽을 캐면 나와요. 들고 있으면 얼음벽을 쌓을 수 있어요.' },
-  quartzR: { n: '정제 석영', d: '화로에서 석영 2개를 녹여 만든 맑은 석영. 수정 무기와 상위 도구에 들어가요.' },
+  quartzR: { n: '정제 석영', d: '용광로에서 석영 2개를 녹여 만든 맑은 석영. 수정 무기와 상위 도구에 들어가요.' },
   cryGem: { n: '수정결정', d: '수정 동굴의 빛나는 수정 결정에서 가끔 나오는 귀한 결정. 무기·상위 도구·빛나는 장식의 핵심 재료예요.' },
   copperBar: { n: '구리괴', d: '구리 도구와 요리솥을 만들어요.' },
   ironBar: { n: '철괴', d: '튼튼한 철 도구를 만들어요.' },
@@ -1157,7 +1157,7 @@ const ITEMS = {
   swordIron: { n: '철 검', kind: 'sword', dmg: 17, stack: 1, d: '묵직한 한 방.' },
   swordCrystal: { n: '수정 검', kind: 'sword', dmg: 26, stack: 1, d: '보랏빛으로 반짝이는 검.' },
   bench: { n: '작업대', kind: 'place', obj: 'bench', d: '도구와 가구를 만드는 곳.' },
-  furnace: { n: '화로', kind: 'place', obj: 'furnace', d: '광석을 녹이고 버섯을 구워요.' },
+  furnace: { n: '용광로', kind: 'place', obj: 'furnace', d: '광석을 녹여 구리괴·철괴·금괴·정제 석영을 만들어요. (v58 전 이름: 화로)' },
   pot: { n: '요리솥', kind: 'place', obj: 'pot', d: '든든한 요리를 만들어요.' },
   chest: { n: '보관상자', kind: 'place', obj: 'chest', d: '물건을 18칸 보관해요.' },
   torch: { n: '횃불', kind: 'place', obj: 'torch', d: '주변을 밝혀요. 밝은 곳엔 몬스터가 생기지 않아요.' },
@@ -1178,7 +1178,7 @@ const ITEMS = {
 };
 const OBJ = {
   bench: { n: '작업대', solid: 1, station: 'bench', item: 'bench' },
-  furnace: { n: '화로', solid: 1, station: 'furnace', item: 'furnace', light: [3.4, '#ff9a4d'] },
+  furnace: { n: '용광로', solid: 1, station: 'furnace', item: 'furnace', light: [3.4, '#ff9a4d'] },
   pot: { n: '요리솥', solid: 1, station: 'pot', item: 'pot' },
   chest: { n: '보관상자', solid: 1, chest: 1, item: 'chest' },
   torch: { n: '횃불', item: 'torch', light: [6.5, '#ffb860'], flick: 1 },
@@ -1266,7 +1266,7 @@ const TIPS = ['무기·도구·가구는 단축칸에서 골라 들면 그 일�
 const COMPLIMENTS = ['오늘도 귀여워요!', '반짝반짝, 멋진 모험가예요', '새싹이 생기 있어 보여요', '웃는 얼굴이 제일 예뻐요'];
 OBJ.bigShroom.drops.push(['shroomCap', 1, 2, 1]);
 const SETN = { moss: '이끼 세트', shroom: '버섯 세트', crystal: '수정 세트' };
-const STN = { bench: '작업대', furnace: '화로', pot: '요리솥' };
+const STN = { bench: '작업대', furnace: '용광로', pot: '요리솥' }; // v58: 화로 → 용광로 (the old 용광로 is now 장비제작대)
 const Rc = (out, n, req, at, cat) => ({ out, n, req, at, cat });
 // recipes people usually make many of at once get a quantity picker
 const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat', 'fert'].includes(ITEMS[r.out].kind);
@@ -1298,7 +1298,7 @@ const RECIPES = [
   Rc('floorStone', 4, [['stone', 2]], 'bench', 'build'),
   Rc('copperBar', 1, [['copperOre', 2]], 'furnace', 'mat'),
   Rc('ironBar', 1, [['ironOre', 2]], 'furnace', 'mat'),
-  Rc('grilled', 1, [['mushroom', 1]], 'furnace', 'food'),
+  Rc('grilled', 1, [['mushroom', 1]], 'pot', 'food'), // v58: grilling moved from the furnace to the pot
   Rc('pie', 1, [['berry', 3], ['mushroom', 1]], 'pot', 'food'),
   Rc('stew', 1, [['mushroom', 3], ['glowcap', 1]], 'pot', 'food'),
 ];
@@ -1439,7 +1439,7 @@ RECIPES.push(
   Rc('gDirt', 2, [['dirt', 1]], null, 'build'),
   Rc('fishTank', 1, [['stone', 3], ['anyFish', 1]], 'bench', 'furn'),
   Rc('bootPlanter', 1, [['boot', 1], ['dirt', 2]], 'bench', 'furn'),
-  Rc('grilledFish', 1, [['anyFish', 1]], 'furnace', 'food'),
+  Rc('grilledFish', 1, [['anyFish', 1]], 'pot', 'food'),
   Rc('fishStew', 1, [['anyFish', 2], ['mushroom', 1]], 'pot', 'food'),
   Rc('stumpStool', 1, [['wood', 3], ['fiber', 1]], 'bench', 'moss'),
   Rc('mossSofa', 1, [['wood', 6], ['fiber', 6]], 'bench', 'moss'),
@@ -1921,7 +1921,7 @@ function wirePowered(i) { const n = CIRC.net.get(i); return n != null && CIRC.pR
 
 // ---- deep regions: lava cave (south) and ice cave (west) ----
 Object.assign(ITEMS, {
-  goldOre: { n: '금광석', d: '용암 동굴의 금 광맥에서 나와요. 화로에서 녹여요.' },
+  goldOre: { n: '금광석', d: '용암 동굴의 금 광맥에서 나와요. 용광로에서 녹여요.' },
   goldBar: { n: '금괴', d: '반짝이는 금괴. 깊은 동굴 장비를 만들어요.' },
   obsidian: { n: '흑요석', d: '현무암벽을 캐면 가끔 나오는 검은 돌. 아주 날카로워요.' },
   frostShard: { n: '서리 결정', d: '얼음 동굴의 서리 광맥에서 나오는 차가운 결정.' },
@@ -2293,7 +2293,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.sel = 3; /* v48: start with an empty hand (berries · seeds · wooden sword sit in slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
+  G.stats.nm58 = 1; G.sel = 3; /* v48: start with an empty hand (berries · seeds · wooden sword sit in slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2332,6 +2332,7 @@ function deserialize(s) {
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   { const DRILL_TO = { drillStone: 'quarry', drillCu: 'pitCu', drillFe: 'pitFe', drillGold: 'pitGold' }, conv = x => { if (x && DRILL_TO[x.id]) x.id = DRILL_TO[x.id]; }; G.inv.forEach(conv); for (const o of G.objs.values()) if (o.items) o.items.forEach(conv); } // v46: old stone drills become stone pits
   if (oldWp) { const wn = ITEMS[oldWp.id].n, where = unslotWeapon(oldWp); setTimeout(() => { if (G && started) toast(`이제 무기는 단축칸에서 골라 들면 써요 · 무기 칸에 있던 ${josa(wn, '을', '를')} ${where}에 넣어 두었어요`, 'good', 'eqmove'); }, 1600); }
+  if (!G.stats.nm58) { G.stats.nm58 = 1; const has = [...G.objs.values()].some(o => o.t === 'furnace' || o.t === 'smelter') || G.inv.some(x => x && (x.id === 'furnace' || x.id === 'smelter')); if (has) setTimeout(() => { if (G && started) toast('이름이 바뀌었어요: 화로 → 용광로, 용광로 → 장비제작대', 'good', 'nm58'); }, 2600); } // v58 rename notice for older saves
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); refundRoofTiles(s.roof, roofBack); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
@@ -2640,7 +2641,7 @@ const canSalv = near => benchNear(near) || near.has('smelter');
 const upgSlot = i => typeof i === 'string' && i.startsWith('e:') ? G.equip[i.slice(2)] : G.inv[i];
 function upgListHTML(ok) {
   const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...G.inv.map((s, i) => ({ s, i, tag: '' }))].filter(({ s }) => s && upgOk(s.id));
-  let h = `<div class="sh-body"><p class="hint">${ok ? `재료를 넣어 장비를 강화해요 (최대 +${UPG_MAX}). 무기는 공격력, 곡괭이는 캐는 힘, 옷·장신구·반지는 효과가 좋아져요.` : '용광로 근처에서 강화할 수 있어요.'}</p><div class="list">`;
+  let h = `<div class="sh-body"><p class="hint">${ok ? `재료를 넣어 장비를 강화해요 (최대 +${UPG_MAX}). 무기는 공격력, 곡괭이는 캐는 힘, 옷·장신구·반지는 효과가 좋아져요.` : '장비제작대 근처에서 강화할 수 있어요.'}</p><div class="list">`;
   if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">강화할 장비가 없어요</p>`;
   for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && cost.every(([id, c]) => availCount(id) >= c);
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
@@ -3553,8 +3554,8 @@ const GUIDE = [
   { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 큰 버튼을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
   { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [제작] → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
   { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '횃불은 어디서나 만들 수 있어요. 밝은 곳에는 몬스터가 생기지 않아요.', done: () => G.stats.torch > 0 },
-  { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽을 찾아 캐요. 흙은 화로 재료가 돼요.', done: () => G.stats.copperOre >= 6 },
-  { t: () => '화로를 놓고 구리괴 만들기', h: '작업대에서 화로를 만든 뒤 설치하고, 화로를 열어 구리괴를 만들어요.', done: () => G.stats.copperBar >= 1 },
+  { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽을 찾아 캐요. 흙은 용광로 재료가 돼요.', done: () => G.stats.copperOre >= 6 },
+  { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만든 뒤 설치하고, 용광로를 열어 구리괴를 만들어요.', done: () => G.stats.copperBar >= 1 },
   { t: () => '작업대에서 구리 제작대 만들어 놓기', h: '구리·철·수정으로 된 도구와 무기는 구리 제작대 근처에서만 만들 수 있어요. 송진은 뿌리기둥을 베면 가끔 나와요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '구리 곡괭이 만들기', h: '구리 제작대 근처에서 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비를 먼저 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
@@ -3587,7 +3588,7 @@ const QSIDE = [
   { id: 's_lamp', t: '전기 램프에 불 켜기', h: '건전지 → 전선 → 전기 램프를 이어 놓아요. 모두 구리 제작대에서 만들어요.', done: () => !!G.stats.litLamp, rw: [['wire', 10], ['battery', 1]], xp: 40 },
   { id: 's_drill', t: () => `채굴장에서 광물 20개 얻기 (${Math.min(20, G.stats.drilled || 0)}/20)`, h: '구리 제작대에서 구리·철 채굴장을 만들어 놓으면 광석이 계속 차올라요. 전기를 이으면 저절로 캐요. 예전 채굴기를 광맥 벽 앞에 놓고 전기를 연결하면 계속 캐요. 옆에 상자가 있으면 거기에 담아요.', done: () => (G.stats.drilled || 0) >= 20, rw: [['battery', 2], ['copperBar', 6]], xp: 60 },
   { id: 's_deep', t: '용암 동굴과 얼음 동굴에 발 들이기', h: '수정 곡괭이로 남쪽·서쪽 깊은 곳의 단단한 벽을 뚫어요.', done: () => !!(G.stats.seen3 && G.stats.seen4), rw: [['fireBerry', 4], ['torch', 6]], xp: 60 },
-  { id: 's_gold', t: () => `금괴 10개 만들기 (${Math.min(10, (G.stats.made || {}).goldBar || 0)}/10)`, h: '용암 동굴의 금 광맥에서 금광석을 캐서 화로에서 녹여요.', done: () => ((G.stats.made || {}).goldBar || 0) >= 10, rw: [['obsidian', 3], ['fireBerry', 3]], xp: 80 },
+  { id: 's_gold', t: () => `금괴 10개 만들기 (${Math.min(10, (G.stats.made || {}).goldBar || 0)}/10)`, h: '용암 동굴의 금 광맥에서 금광석을 캐서 용광로에서 녹여요.', done: () => ((G.stats.made || {}).goldBar || 0) >= 10, rw: [['obsidian', 3], ['fireBerry', 3]], xp: 80 },
   { id: 's_epic', t: () => `영웅 장비 3가지 모으기 (${Math.min(3, epicOwned())}/3)`, h: '보스 전용 무기나 황금·흑요석·서리 장비가 영웅 등급이에요.', done: () => epicOwned() >= 3, rw: [['goldBar', 4], ['stew', 3]], xp: 120 },
   { id: 's_legend', t: '전설 장비 만들기', h: '용암 핵과 서리 핵을 모아 구리 제작대에서 새벽빛 검이나 별빛 곡괭이를 만들어요.', done: () => ['swordDawn', 'pickStar'].some(id => hasItem(id) || ((G.stats.made || {})[id] || 0) > 0), rw: [['stew', 5], ['goldBar', 4]], xp: 300 },
   { id: 's_rematch', t: '보스 한 마리 다시 불러서 물리치기', h: '보스를 물리친 뒤 구리 제작대에서 소환 조각상을 만들어 보스방에서 써요. 다시 잡으면 재료와 함께 가끔 전용 장비가 떨어져요.', done: () => (G.stats.rematch || 0) > 0, rw: [['stew', 3], ['goldBar', 2]], xp: 120 },
@@ -3909,9 +3910,9 @@ function autoHotWeapon(id) { if (!G || ITEMS[id].kind !== 'sword') return; for (
 // v48: the weapon from an old save's weapon slot goes into an empty hotbar slot (or the bag, or onto the ground)
 function unslotWeapon(w) { const to = G.inv.slice(0, HOT).findIndex(x => !x); if (to >= 0) { G.inv[to] = w; return '단축칸'; }
   if (!moveInto(G.inv, w)) return '가방'; spawnDrop(w.id, 1, G.p.x, G.p.y); const d = G.drops[G.drops.length - 1]; d.dur = w.dur; d.lv = w.lv; return '발밑'; }
-// ---- v43 smelter 「용광로」: upgrade gear (+1 … +5) and break it down; rings are made here too ----
-ITEMS.smelter = { n: '용광로', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요.' };
-OBJ.smelter = { n: '용광로', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
+// ---- v43 smelter 「용광로」 (v58: renamed 「장비제작대」): upgrade gear (+1 … +5) and break it down; rings are made here too ----
+ITEMS.smelter = { n: '장비제작대', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요. (v58 전 이름: 용광로)' };
+OBJ.smelter = { n: '장비제작대', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
 const GROW_SPR = { bench: [2, 2], logBench: [2, 1], stoneBench: [2, 1],
   roundTree: [1.75, 1.75], root: [1.35, 1.35], bigShroom: [1.75, 1.75], cherryTree: [1.4, 1.4], bigTree: [1.5, 1.5] };
 // v50: workstations and benches take as many tiles as in other games (stations 2×1, benches 2×1) — in games started
@@ -3927,8 +3928,8 @@ function setFootprints(v) { FPV = v === 2 ? 2 : 1;
 setFootprints(2);
 OSPR.smelter = [16, 22, A => { A.r(2, 9, 12, 12, '#5a5468'); A.r(2, 9, 12, 2, '#8d97a8'); A.r(2, 9, 1, 12, '#787090'); A.r(13, 9, 1, 12, '#36334a'); for (const [x, y] of [[4, 13], [9, 12], [6, 17], [11, 16]]) A.r(x, y, 2, 1, '#46405a');
   A.r(5, 3, 6, 7, '#46405a'); A.r(5, 3, 6, 1, '#8d97a8'); A.r(6, 1, 4, 2, '#36334a'); A.r(5, 14, 6, 5, '#2a1810'); A.e(8, 16.5, 2.4, 1.8, '#ff8a3d'); A.e(8, 17, 1.4, 1, '#ffe08a'); A.r(3, 20, 10, 1, '#24222e'); A.p(4, 11, '#ffd25c'); }];
-STN.smelter = '용광로';
-RECIPES.push(Rc('smelter', 1, [['ironBar', 6], ['stone', 16], ['copperBar', 4], ['resin', 2]], 'forge', 'furn'));
+STN.smelter = '장비제작대';
+RECIPES.push(Rc('smelter', 1, [['wood', 10], ['stone', 8], ['resin', 2]], 'bench', 'furn')); // v58: made early at the workbench from wood and stone
 // rings: [name, effect, base, per level, recipe, rarity, band, gem]
 const RINGS = {
   ringCu: ['구리 반지', 'atk', .04, .01, [['copperBar', 4], ['gel', 2]], 0, C.copper, '#ff8fa3'],
@@ -3940,7 +3941,7 @@ const RINGS = {
 const RING_TXT = { atk: v => `공격력 +${pct2(v)}`, def: v => `받는 피해 -${pct2(v)}`, mp: v => `기력 회복 +${pct2(v)}`, xp: v => `경험치 +${pct2(v)}`, mine: v => `채굴 속도 +${pct2(v)}` };
 const pct2 = v => Math.round(v * 100) + '%';
 for (const id in RINGS) { const [n, k, b, per, req, rar, band, gem] = RINGS[id];
-  ITEMS[id] = { n, kind: 'wear', slot: 'ring', stack: 1, ring: k, d: `반지 칸에 끼면 ${RING_TXT[k](b)}. 용광로에서 강화할 때마다 ${Math.round(per * 100)}%씩 더 좋아져요.` }; RAR[id] = rar;
+  ITEMS[id] = { n, kind: 'wear', slot: 'ring', stack: 1, ring: k, d: `반지 칸에 끼면 ${RING_TXT[k](b)}. 장비제작대에서 강화할 때마다 ${Math.round(per * 100)}%씩 더 좋아져요.` }; RAR[id] = rar;
   ICON[id] = A => { A.e(8, 10, 5.2, 4.6, band); A.e(8, 10.4, 3.4, 2.8, 'rgba(0,0,0,0)'); A.g.globalCompositeOperation = 'destination-out'; A.e(8, 10.6, 3.2, 2.6, '#000'); A.g.globalCompositeOperation = 'source-over'; A.p(5, 8, '#ffffff'); A.poly([[8, 1.5], [11, 4.5], [8, 7.5], [5, 4.5]], gem); A.p(7, 3, '#ffffff'); };
   RECIPES.push(Rc(id, 1, req, 'smelter', 'ring')); }
 const lvOf = s => (s && s.lv) || 0;
@@ -4035,7 +4036,7 @@ for (const k of ['cow', 'chicken', 'sheep']) { const A2 = ANIMALS[k];
   OBJ[k] = { n: A2.n, solid: 1, item: k, ranch: A2.ranch, every: A2.every }; OSPR[k] = [16, 16, ANIM_DRAW[k]]; }
 Object.assign(ITEMS, {
   milk: { n: '우유', kind: 'food', food: 12, heal: 8, d: '소에게서 짠 고소한 우유. 그냥 마셔도 되고 팬케이크에도 들어가요.' },
-  egg: { n: '달걀', d: '닭이 낳은 따끈한 달걀. 화로에서 부치거나 팬케이크를 만들어요.' },
+  egg: { n: '달걀', d: '닭이 낳은 따끈한 달걀. 요리솥에서 부치거나 팬케이크를 만들어요.' },
   wool: { n: '양모', d: '양에게서 깎은 폭신한 털. 털모자와 양털 러그를 만들어요.' },
   friedEgg: { n: '달걀 프라이', kind: 'food', food: 20, heal: 12, d: '노른자가 반짝이는 달걀 프라이.' },
   pancake: { n: '베리 팬케이크', kind: 'food', food: 36, heal: 24, d: '우유와 달걀로 구운 폭신한 팬케이크에 베리를 올렸어요.' },
@@ -4052,7 +4053,7 @@ Object.assign(ICON, {
   pancake: A => { A.e(8, 12, 6.6, 2.4, '#d9d2e6'); for (const y of [10, 8, 6]) { A.e(8, y, 5.4, 2, '#d9944a'); A.e(8, y - .6, 4.8, 1.3, '#f0b870'); } A.e(8, 4.6, 2.4, 1.2, '#fff4e0'); A.p(6, 4, '#ff7aa2'); A.p(10, 4, '#ff7aa2'); A.p(8, 3, '#ff7aa2'); },
   woolHat: A => { A.e(8, 10, 6, 4.4, '#ff8fa3'); A.r(2, 10, 12, 3, '#d9607d'); for (const x of [3, 6, 9, 12]) A.p(x, 11, '#ffb3c6'); A.e(8, 4, 2.2, 2.2, '#fff4e0'); A.p(7, 3, '#ffffff'); A.p(6, 8, '#ffb3c6'); },
 });
-RECIPES.push(Rc('friedEgg', 1, [['egg', 1]], 'furnace', 'food'), Rc('pancake', 1, [['egg', 1], ['milk', 1], ['berry', 2]], 'furnace', 'food'), Rc('woolHat', 1, [['wool', 4], ['fiber', 2]], 'bench', 'tool'), Rc('woolRug', 1, [['wool', 3]], 'bench', 'furn'));
+RECIPES.push(Rc('friedEgg', 1, [['egg', 1]], 'pot', 'food'), Rc('pancake', 1, [['egg', 1], ['milk', 1], ['berry', 2]], 'pot', 'food'), Rc('woolHat', 1, [['wool', 4], ['fiber', 2]], 'bench', 'tool'), Rc('woolRug', 1, [['wool', 3]], 'bench', 'furn'));
 const hatMul = () => wearing('woolHat') ? .85 - .03 * eqLv('woolHat') : 1;
 function ranchReady(o) { return G.time >= (o.p || 0); }
 function ranchCollect(t, o) { const d = OBJ[o.t]; if (!ranchReady(o)) return; o.p = G.time + d.every; const l = addItem(d.ranch, 1); if (l) spawnDrop(d.ranch, l, t.x + .5, t.y + .5);
@@ -4123,7 +4124,7 @@ const REGION_MAT = [['dirt', 'copperOre', 'fiber'], ['stone', 'ironOre', 'shroom
 function regionMatHTML() { const seen = new Set(); for (let i = 0; i < G.explored.length; i++) if (G.explored[i]) seen.add(G.biome[i]);
   return `<div class="lbl">지역 재료</div><div class="rmat">${REGION_MAT.map((m, b) => `<div><b>${seen.has(b) ? BIOME[b] : '???'}</b>${seen.has(b) ? ['지형', '광물', '고유'].map((t, k) => `<span><img class="px" src="${iconURL(m[k])}" alt="">${t} · ${ITEMS[m[k]].n}</span>`).join('') : '<span>아직 가 보지 않은 곳</span>'}</div>`).join('')}</div>`; }
 function eqEffect(sl, s) {
-  if (!s) return sl === 'ring' ? '비어 있어요 · 용광로에서 만들어요' : '비어 있어요';
+  if (!s) return sl === 'ring' ? '비어 있어요 · 장비제작대에서 만들어요' : '비어 있어요';
   return (s.lv ? `강화 +${s.lv} · ` : '') + upgText(s.id, lvOf(s)); }
 // v48: the equipment rows sit at the top of the bag (no separate menu); pets at the bottom
 function eqRowHTML() {
@@ -4812,11 +4813,11 @@ function renderPanel() {
     const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['farm', '농사'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['mine', '채굴장'], ['upg', '강화'], ['ring', '반지'], ['fix', '수리'], ['salv', '분해'], ['book', '요리 도감']].filter(([id]) => id === 'all' || (id === 'book' ? st === 'pot' : id === 'upg' ? smel : id === 'fix' ? benchy : id === 'salv' ? benchy || smel : hereR.some(r => r.cat === id)));
     if (!tabs.some(([id]) => id === UIS.tab)) UIS.tab = 'all';
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`;
-    h += `<div class="stations"><span class="chip on">${st ? STN[st] + '에서 만들기' : '손 제작'}</span>${nCh ? `<span class="chip on">연결된 상자 ${nCh}개</span>` : ''}</div>${st ? '' : `<p class="hint">여기선 손으로 만들 수 있는 것만 보여요. 작업대·구리 제작대·화로·요리솥을 바라보고 [열기]를 누르면 그곳에서 만드는 것들이 나와요.</p>`}${nCh ? `<p class="hint">작업대·화로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함) ${nCh}개의 재료도 함께 써요. 가방에 있는 것부터 써요.</p>` : ''}`;
+    h += `<div class="stations"><span class="chip on">${st ? STN[st] + '에서 만들기' : '손 제작'}</span>${nCh ? `<span class="chip on">연결된 상자 ${nCh}개</span>` : ''}</div>${st ? '' : `<p class="hint">여기선 손으로 만들 수 있는 것만 보여요. 작업대·구리 제작대·용광로·요리솥을 바라보고 [열기]를 누르면 그곳에서 만드는 것들이 나와요.</p>`}${nCh ? `<p class="hint">작업대·용광로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함) ${nCh}개의 재료도 함께 써요. 가방에 있는 것부터 써요.</p>` : ''}`;
     if (UIS.tab === 'upg') { h += upgListHTML(near.has('smelter')); } else
     if (UIS.tab === 'salv') {
       const nb = (benchy || smel) && canSalv(near), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && (DUR[s.id] || (smel && upgOk(s.id))));
-      h += `<div class="sh-body"><p class="hint">${nb ? '장비를 분해하면 만들 때 든 재료의 70%와 강화에 쓴 재료의 절반을 돌려받아요. 분해한 장비는 사라져요.' : '작업대나 용광로 근처에서 분해할 수 있어요.'}</p><div class="list">`;
+      h += `<div class="sh-body"><p class="hint">${nb ? '장비를 분해하면 만들 때 든 재료의 70%와 강화에 쓴 재료의 절반을 돌려받아요. 분해한 장비는 사라져요.' : '작업대나 장비제작대 근처에서 분해할 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">분해할 장비가 없어요</p>`;
       for (const { s, i } of list) { const got = salvGet2(s), ok = nb && !!got, mx = DUR[s.id] ? DUR[s.id][0] : 0, ask = UIS.salvAsk === i;
         h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lvOf(s) ? ` +${s.lv}` : ''}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="ings">${mx ? `<span class="ing">내구도 ${durOf(s)}/${mx}</span>` : ''}${got ? got.map(([id, c]) => `<span class="ing gain"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} +${c}</span>`).join('') : '<span class="ing">돌려받을 재료가 없어요</span>'}</div></div><button type="button" class="btn mk ${ask ? 'warn' : ''}" data-a="salv" data-i="${i}" ${ok ? '' : 'disabled'}>${ask ? '정말?' : '분해'}</button></div>`; }

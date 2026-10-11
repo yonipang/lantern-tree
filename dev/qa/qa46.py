@@ -12,7 +12,7 @@ async def main():
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
         await ev(pg,"()=>{"+CLEAR+"}")
         r=await ev(pg,"""()=>{const T=__T,A=T.ANIMALS,I=T.ITEMS,f=id=>{const r=T.RECIPES.find(q=>q.out===id);return r&&r.at};return [['cow','chicken','sheep'].map(k=>k+':'+A[k].biome+':'+A[k].ranch+':'+I[k].kind).join(','),['friedEgg','pancake','woolHat','woolRug'].map(f).join(','),I.milk.kind,I.woolHat.slot,!!T.SPR.obj.cow&&!!T.SPR.obj.sheep&&!!T.SPR.obj.chicken]}""")
-        rec('목장','소·닭(이끼 동굴)·양(버섯숲), 우유·달걀·양모, 달걀 프라이·팬케이크(화로)·털모자·양털 러그(작업대)', r==['cow:0:milk:place,chicken:0:egg:place,sheep:1:wool:place','furnace,furnace,bench,bench','food','head',True], str(r))
+        rec('목장','소·닭(이끼 동굴)·양(버섯숲), 우유·달걀·양모, 달걀 프라이·팬케이크(요리솥, v58)·털모자·양털 러그(작업대)', r==['cow:0:milk:place,chicken:0:egg:place,sheep:1:wool:place','pot,pot,bench,bench','food','head',True], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear(1);const seen=new Set();for(let k=0;k<300;k++){T.wildTick(6.1);for(const w of G.wild)seen.add(w.k);G.wild=[]}return [...seen].sort().join(',')}""")
         rec('야생','버섯숲에 양과 토끼가 나타남', r=='rabbit,sheep', r)
         # catch a cow
