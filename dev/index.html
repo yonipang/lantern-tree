@@ -1912,6 +1912,7 @@ function deviceStep(i, o, d, on, dt) {
       if (!put) { o.store = o.store || []; const s2 = o.store.find(z => z.id === id); if (s2) s2.c++; else o.store.push({ id, c: 1 }); } } }
 }
 function returnObj(o, x, y) {
+  if (o.job) cancelJob(o, x, y); // v59: a furnace / pot picked up mid-job gives back the finished items and the unused materials
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
   if (DUR[d.item]) { const it = { id: d.item, c: 1, dur: Math.round(o.e != null ? o.e : DUR[d.item][0]) }; if (moveInto(G.inv, it)) { spawnDrop(d.item, 1, x, y); G.drops[G.drops.length - 1].dur = it.dur; } }
   else { const l = addItem(d.item, 1, false); if (l) spawnDrop(d.item, 1, x, y); }
@@ -2348,6 +2349,7 @@ function deserialize(s) {
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
+  if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
@@ -2890,6 +2892,7 @@ function handDecide(t, i, o) {
     if (d.lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o };
     if (d.tchest) return o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o };
     if (d.ranch) return ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t, sub: true };
+    if (d.station && o.job && jobDone(o.job) > 0) return { k: 'jobTake', lbl: '꺼내기', icon: o.job.out, t, o, sub: true }; // v59
     if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
     if (d.crop) { const cs = Math.max(0, cropStage(o));
       if (cs >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
@@ -2967,6 +2970,7 @@ function perform(a) {
     case 'reel': reel(); actCd = 0.35; break;
     case 'lasso': openCatch(a.w); actCd = .4; break;
     case 'ranch': ranchCollect(a.t, a.o); actCd = .4; break;
+    case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); actCd = .4; break;
     case 'petpet': { const e = G.petE; hearts(e.x, e.y - .4, 4); SFX.purr ? SFX.purr() : SFX.pick(); toast(`${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); actCd = .6; break; }
     case 'info': if (a.msg) toast(a.msg, null, 'info' + a.msg); actCd = 0.4; break;
   }
@@ -3787,6 +3791,39 @@ function noteHint(d) { const s = d.src; if (s === 'mon') return '이끼 동굴·
   if (s.startsWith('room:')) return `${REGION_N[+s[6]]} 숨은 방 어딘가`; if (s.startsWith('boss:')) return `${BOSSES[s.slice(5)].n}을(를) 물리치면`; if (s.startsWith('guide:')) { const q = GUIDE.find(x => x.id === s.slice(6)); return q ? `이야기 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '이야기 퀘스트 보상'; } if (s.startsWith('quest:')) { const q = QSIDE.find(x => x.id === s.slice(6)); return q ? `도전 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '도전 퀘스트 보상'; } return ''; }
 const knows = id => !DISH[id] || !!(G && G.recipes && G.recipes[id]);
 const DISH_FOOD = [[60, 60], [20, 6], [28, 10], [36, 14]];
+// ================= v59: smelting and cooking take time — put the materials in, come back for the result =================
+// one recipe per furnace / pot at a time (up to 30). It runs on real time, so it keeps going while a panel is open and while the game is closed.
+const JOB_MAX = 30, TIMED = { furnace: 1, pot: 1 };
+const SMELT_T = { copperBar: 5, ironBar: 10, quartzR: 20, goldBar: 20 }; // anything else smelted later (frost …) takes 30 s
+const COOK_T = [6, 10, 30, 50]; // by dish tier: recovery dishes · basic · special · legendary (plain foods 6 s)
+function jobTime(r) { if (r.at === 'furnace') return SMELT_T[r.out] || 30; const d = DISH[r.dish || r.out]; return d ? COOK_T[d.tier] || 10 : COOK_T[0]; }
+const nowS = () => Date.now() / 1000;
+const jobDone = j => j ? clamp(Math.floor((nowS() - j.t0) / j.per), 0, j.q) : 0;
+const jobLeft = j => j ? Math.max(0, j.t0 + j.q * j.per - nowS()) : 0;
+const fmtT = sec => { sec = Math.ceil(sec); return sec >= 60 ? `${Math.floor(sec / 60)}분${sec % 60 ? ` ${sec % 60}초` : ''}` : `${sec}초`; };
+function stockMap() { const m = {}, add = s => { if (s && s.id) m[s.id] = (m[s.id] || 0) + s.c; }; G.inv.forEach(add); for (const o of linkedChests()) (o.items || []).forEach(add); return m; }
+function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; const d = jobDone(j); if (!d) return 0; const total = d * j.n;
+  const left = addItem(j.out, total); if (left) spawnDrop(j.out, left, x, y);
+  G.stats.made = G.stats.made || {}; G.stats.made[j.out] = (G.stats.made[j.out] || 0) + d; gainXp(Math.min(8, d));
+  if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - Math.floor(c * d / j.q)]); j.q -= d; j.t0 += d * j.per; }
+  if (!quiet) { SFX.craft(); craftNote(j.out, total); } invDirty = true; checkGuide(); return total; }
+// cancelling hands back what is finished and the materials of everything not started yet
+function cancelJob(o, x, y) { if (!o || !o.job) return; takeJob(o, x, y, true); const j = o.job; if (!j) return; const rest = j.q - jobDone(j);
+  for (const [id, c] of j.used) { const back = Math.floor(c * rest / j.q); if (back > 0 && ITEMS[id]) { const l = addItem(id, back, false); if (l) spawnDrop(id, l, x, y); } }
+  delete o.job; invDirty = true; }
+function jobHTML(o) { const j = o.job; if (!j) return ''; const d = jobDone(j), it = ITEMS[j.out], prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1);
+  return `<div class="rc ok jobcard" data-done="${d}"><div class="ri"><img class="px" src="${iconURL(j.out)}" alt=""></div><div class="rn">${it.n} ${j.q * j.n}개 ${d >= j.q ? '· 다 됐어요!' : TIMED && o.t === 'furnace' ? '녹이는 중' : '만드는 중'}<div class="fixbar" style="max-width:none"><i id="jobBar" style="width:${Math.round(prog * 100)}%"></i></div><div class="ings"><span class="ing" id="jobTxt">${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}</span></div></div>
+    <div class="btns" style="grid-column:auto;flex-direction:column"><button type="button" class="btn mk" data-a="jobTake" ${d ? '' : 'disabled'}>꺼내기${d ? ` ${d * j.n}` : ''}</button><button type="button" class="btn ghost mk ${UIS.jobAsk ? 'warn' : ''}" data-a="jobCancel">${UIS.jobAsk ? '정말?' : '취소'}</button></div></div>`; }
+// the job card updates itself while the panel is open
+let jobUiT = 0;
+function jobPanelTick(dt) { if (!panel || panel.kind !== 'craft' || !TIMED[panel.st]) return; jobUiT -= dt; if (jobUiT > 0) return; jobUiT = .25;
+  const o = panel.i != null && G.objs.get(panel.i), j = o && o.job, card = document.querySelector('#sheet .jobcard');
+  if (!j) { if (card) renderPanel(); return; } if (!card || +card.dataset.done !== jobDone(j)) { renderPanel(); return; }
+  const bar = document.getElementById('jobBar'), tx = document.getElementById('jobTxt'), d = jobDone(j);
+  if (bar) bar.style.width = Math.round(clamp((nowS() - j.t0) / (j.q * j.per), 0, 1) * 100) + '%'; if (tx) tx.textContent = `${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}`; }
+// v59: the world (crops, trees, animals, pits …) keeps growing while the game is closed or the tab is in the background
+const OFF_MAX = 30 * 86400;
+function advanceOffline(sec) { if (!G || !(sec > 1)) return 0; sec = Math.min(sec, OFF_MAX); G.time += sec; for (const b of G.buffs || []) b.end += sec; return sec; } // food buffs wait for you
 const buffText = it => { if (!it.buff) return ''; const [ef, tier] = it.buff, E = EFF[ef], m = BUFF_DUR[tier - 1] * (it.star ? 1.5 : 1) / 60; return `${E.n} ${E.t(E.v[tier - 1])} · ${Number.isInteger(m) ? m : m.toFixed(1)}분`; };
 const dishIcon = (shape, c) => A => {
   const [a, b, d] = c;
@@ -4657,6 +4694,9 @@ function drawEntity(it, t) {
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && effH(img) > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
+    if (o.job) { const j = o.job, prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1), top = wy - effH(img) / 16 - .2, bx = Math.round(wx * T - camX) - 10, by = Math.round(top * T - camY);
+      ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = prog >= 1 ? '#ffd25c' : '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * prog), 2);
+      if (jobDone(j) > 0) drawImg(iconCanvas(j.out), wx, top - .1 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 }); }
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
     let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
     drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
@@ -4838,12 +4878,13 @@ function renderPanel() {
     const okey = UIS.tab + '|' + (st || '');
     if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => recipeOn(r) && (r.at || null) === (st || null) && (UIS.tab === 'all' || r.cat === UIS.tab)); l.sort((a, b) => canCraft(b.r, near) - canCraft(a.r, near)); UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
     const list = UIS.craftOrder.ids.map(i => ({ r: RECIPES[i], i }));
-    h += `<div class="sh-body">${st === 'pot' ? '<p class="hint">버프 요리는 세 가지까지 함께 효과가 있어요. 모르는 요리는 레시피 쪽지를 찾으면 만들 수 있어요.</p>' : ''}<div class="list">`;
+    const so = TIMED[st] && panel.i != null ? G.objs.get(panel.i) : null, busy = !!(so && so.job);
+    h += `<div class="sh-body">${so ? `<p class="hint">재료를 넣어 두면 시간이 지나 완성돼요 (한 번에 한 가지, ${JOB_MAX}개까지). 창을 닫거나 게임을 꺼도 계속 만들어요. 다 되면 ${STN[st]} 앞에서 [꺼내기].</p>` : ''}${st === 'pot' ? '<p class="hint">버프 요리는 세 가지까지 함께 효과가 있어요. 모르는 요리는 레시피 쪽지를 찾으면 만들 수 있어요.</p>' : ''}${busy ? `<div class="list" style="margin-bottom:10px">${jobHTML(so)}</div>` : ''}<div class="list">`;
     for (const { r, i } of list) {
       if (r.dish && !knows(r.dish)) { h += `<div class="rc no lockd"><div class="ri"><img class="px" src="${iconURL('rn_' + r.dish)}" alt=""></div><div class="rn">???<div class="at">${escHTML(noteHint(DISH[r.dish]))}</div></div></div>`; continue; }
-      const ok = canCraft(r, near), it = ITEMS[r.out], stn = r.at && !near.has(r.at), multi = isMulti(r), mx = multi ? maxCraft(r) : 1, q = multi ? clamp(UIS.qty[i] || 1, 1, Math.max(1, mx)) : 1;
+      const ok = canCraft(r, near) && !busy, it = ITEMS[r.out], stn = r.at && !near.has(r.at), multi = isMulti(r), mx = multi ? Math.min(so ? JOB_MAX : 99, maxCraft(r)) : 1, q = multi ? clamp(UIS.qty[i] || 1, 1, Math.max(1, mx)) : 1;
       const qty = multi && ok ? `<div class="qty"><button type="button" data-a="qty" data-i="${i}:-1" ${q <= 1 ? 'disabled' : ''} aria-label="하나 덜">−</button><b>${q * r.n}개</b><button type="button" data-a="qty" data-i="${i}:1" ${q >= mx ? 'disabled' : ''} aria-label="하나 더">+</button><button type="button" class="qmax" data-a="qty" data-i="${i}:max" ${q >= mx ? 'disabled' : ''}>최대</button></div>` : '';
-      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${rarName(r.out)}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.buff ? `<small class="bfx">${buffText(it)}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c * q}</span>`; }).join('')}</div>${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>만들기</button>${qty}</div>`;
+      h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(r.out)}" alt=""></div><div class="rn">${rarName(r.out)}${r.n > 1 ? `<small>× ${r.n}</small>` : ''}${it.buff ? `<small class="bfx">${buffText(it)}</small>` : ''}${it.set && UIS.tab !== it.set ? `<small>${SETN[it.set]}</small>` : ''}<div class="ings">${r.req.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c * q}</span>`; }).join('')}</div>${so ? `<small>⏱ ${fmtT(jobTime(r))}</small>` : ''}${stn ? `<div class="at">${STN[r.at]} 근처에서 만들 수 있어요</div>` : ''}</div><button type="button" class="btn mk" data-a="craft" data-i="${i}" ${ok ? '' : 'disabled'}>${so ? '넣기' : '만들기'}</button>${qty}</div>`;
     }
     h += `</div></div>`;
     }
@@ -5010,13 +5051,20 @@ function onSheetClick(e) {
     SFX.brk(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, c]) => ITEMS[id].n + ' ' + c + '개').join(', ')}`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'fix') { const s = G.inv[i]; if (!s || !DUR[s.id] || !benchNear(nearStations())) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
     for (const [id, c] of cost) takeAvail(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
-  if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, maxCraft(r)), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
+  if (a === 'jobTake') { const o = panel && G.objs.get(panel.i); if (o) takeJob(o, G.p.x, G.p.y); renderPanel(); return; }
+  if (a === 'jobCancel') { if (!UIS.jobAsk) { UIS.jobAsk = true; renderPanel(); return; } UIS.jobAsk = false; const o = panel && G.objs.get(panel.i); if (o) { cancelJob(o, G.p.x, G.p.y); SFX.click(); toast('취소하고 재료를 돌려받았어요', null, 'jobcancel'); } renderPanel(); return; }
+  if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, Math.min(TIMED[r.at] ? JOB_MAX : 99, maxCraft(r))), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
   if (a === 'mapChest') { mapChestPref = !mapChestOn(); try { localStorage.setItem('lantern-tree-map-chest', mapChestPref ? '1' : '0'); } catch (_) { } renderPanel(); return; }
   if (a === 'mapzoom') { UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
   if (a === 'craft') {
     const r = RECIPES[i], near = nearStations(); POOL = null; if (!canCraft(r, near)) return;
-    const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, maxCraft(r))) : 1, total = r.n * q;
+    const so = TIMED[r.at] && panel.i != null ? G.objs.get(panel.i) : null; // v59: the furnace / pot being used
+    if (so && so.job) { toast(`${STN[r.at]}에서 만드는 게 끝나면 넣을 수 있어요`, null, 'jobbusy'); return; }
+    const q = isMulti(r) ? clamp(UIS.qty[i] || 1, 1, Math.max(1, Math.min(so ? JOB_MAX : 99, maxCraft(r)))) : 1, total = r.n * q;
+    const before = so ? stockMap() : null;
     for (const [id, c] of r.req) takeAvail(id, c * q);
+    if (so) { const after = stockMap(), used = Object.keys(before).map(id => [id, before[id] - (after[id] || 0)]).filter(([, c]) => c > 0), per = jobTime(r);
+      so.job = { out: r.out, n: r.n, q, per, t0: nowS(), used }; SFX.place(); toast(`${STN[r.at]}에 넣었어요 · ${fmtT(q * per)} 뒤에 다 돼요`, 'good', 'jobput'); UIS.craftOrder = null; invDirty = true; renderPanel(); return; }
     G.stats.made = G.stats.made || {}; G.stats.made[r.out] = (G.stats.made[r.out] || 0) + q;
     if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); SFX.craft(); craftNote(r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); UIS.craftOrder = null; invDirty = true; renderPanel(); return; }
     const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
@@ -5222,7 +5270,7 @@ function setupInput() {
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
   $('#impAsk').addEventListener('click', e => { const b = e.target.closest('[data-imp]'); if (!b) return; if (b.dataset.imp === 'yes') applyImport(); else { pendingImp = null; $('#impAsk').hidden = true; } });
   window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && started) { saveLocal(true); cloudUpload(false); } });
+  let hiddenAt = 0; document.addEventListener('visibilitychange', () => { if (document.hidden && started) { hiddenAt = Date.now(); saveLocal(true); cloudUpload(false); } else if (!document.hidden && hiddenAt) { if (G && started) advanceOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; } });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
 }
 // ---- character picker (title + menu) ----
@@ -5239,7 +5287,7 @@ function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { co
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
-  if (G) { if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
+  if (G) { jobPanelTick(dt); if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
   if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);
