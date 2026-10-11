@@ -2079,6 +2079,18 @@ function rotateAction() {
   const a = G.act; if (a && a.o && a.t && inB(a.t.x, a.t.y)) { const ai = anchorAt(idx(a.t.x, a.t.y)); if (ai >= 0 && canRotObj(G.objs.get(ai).t)) { rotateObjAt(ai); return; } }
   toast('돌릴 수 있는 가구를 들거나 바라봐 주세요', null, 'norot2'); }
 const rotTarget = () => { if (!G) return false; const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'place' && canRotObj(it.obj)) return true; const a = G.act; return !!(a && a.o && a.t && inB(a.t.x, a.t.y) && anchorAt(idx(a.t.x, a.t.y)) >= 0 && canRotObj((G.objs.get(anchorAt(idx(a.t.x, a.t.y))) || {}).t)); };
+// v56: in saves from before v50 the workbench and benches stood on one tile. Grow each one to its 2×1 size where it stands
+// (into the tile on its right, or else on its left); if both are taken it goes back to the bag as an item.
+function growFootprints() {
+  let back = 0;
+  for (const [i, o] of [...G.objs]) { if (!GREW[o.t] || !OBJ[o.t].sz) continue;
+    if (fpTiles(i, o).every(j => { if (j === i) return true; const q = G.objs.get(j); return q && q.t === '_part' && q.a === i; })) continue;
+    const fp = fpOf(o), x = i % W, y = (i / W) | 0; G.objs.delete(i); let ok = false;
+    for (const [ax, ay] of [[x, y], [x - fp[0] + 1, y]]) if (inB(ax, ay) && fpFree(ax, ay, fp, false, null)) { const ni = idx(ax, ay); G.objs.set(ni, o); setParts(ni, o); ok = true; break; }
+    if (!ok) { returnObj(o, x + .5, y + .5); back++; } }
+  if (back) setTimeout(() => { try { toast(`작업대·벤치가 2칸으로 커졌어요. 옆자리가 막힌 ${back}개는 가방으로 돌려받았어요`, 'good', 'grewback'); } catch (e) { } }, 1400);
+  return back;
+}
 function fixParts() {
   for (const [i, o] of [...G.objs]) { if (o.t !== '_part') continue; const a = G.objs.get(o.a); if (!a || a.t === '_part' || !OBJ[a.t] || !OBJ[a.t].sz || !fpTiles(o.a, a).includes(i)) G.objs.delete(i); }
   for (const [i, o] of [...G.objs]) { const d = OBJ[o.t]; if (!d || !d.sz) continue; for (const j of fpTiles(i, o)) { if (j !== i && !G.objs.get(j)) G.objs.set(j, { t: '_part', a: i }); } }
@@ -2293,7 +2305,7 @@ function serialize() {
 }
 function deserialize(s) {
   setLayout(s.mapV === 2 ? 2 : 1); // saves from before v47 keep the original 200×200 map
-  setFootprints(s.fpV === 2 ? 2 : 1); // saves from before v50 keep one-tile workbenches, beds and benches
+  setFootprints(2); const oldFp = s.fpV !== 2; // v56: saves from before v50 get the 2×1 workbench and benches too (growFootprints below)
   const N = W * H;
   G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: s.sel || 0,
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
@@ -2331,7 +2343,7 @@ function deserialize(s) {
   G.playTEst = !Number.isFinite(s.playT) || !!s.playTEst; G.playT = Number.isFinite(s.playT) ? s.playT : Math.max(0, Math.round(+s.time || 0));
   G.qt = {}; if (s.qt && typeof s.qt === 'object') for (const k in s.qt) if (Number.isFinite(s.qt[k])) G.qt[k] = s.qt[k];
   for (const [i, o] of [...G.objs]) if (o.t === 'icePillar') G.objs.delete(i); // ice pillars only last for one fight
-  fixParts(); grantUniques(); ensureDeepAltars();
+  if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
