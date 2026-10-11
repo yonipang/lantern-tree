@@ -29,6 +29,13 @@
 - v54: 구매한 Fantasyville 에셋(동굴·대장간·식료품점·마을·실내)에서 잘라 넣은 그림 목록은 `dev/art/FANTASYVILLE.md`
 - 기록: v49(10-10)에 세계를 2배 해상도(한 칸 32px, `HD = 2`)로 바꾸고 v51에 32px 손그림 15장을 넣었다가, v53(10-11)에 16px 타일셋을 쓰기로 하면서 16px로 되돌렸어요. 32px 그림은 `dev/art_32px/obj/`, 2배 해상도 코드는 `HD` 값과 `outlineHD`로 남아 있어요 (`HD = 2`로 바꾸면 다시 32px)
 
+## 그림 자동 반영 (GitHub Actions)
+
+- `dev/art/`에 PNG를 올리면(깃허브 웹사이트에서 「Add file → Upload files」도 됨) `.github/workflows/art.yml`이 `art_pack.py` → `build_web.py`를 돌리고 `dev/index.html`·`index.html`·`sw.js`를 커밋해요. GitHub Pages 게임이 1~2분 뒤 바뀌어요.
+- 그림만 넣는 작업이라 회귀 테스트는 돌리지 않아요. Claude 게임 페이지(아티팩트)는 다음에 Claude가 배포할 때 함께 반영돼요.
+- 다른 세션이 배포하는 중에는 올리지 않기 (배포 파일이 겹칠 수 있어요). Claude 세션은 작업 전·커밋 전에 늘 `git pull`.
+- 수동으로 다시 돌리려면 깃허브 Actions 탭 → 「그림 자동 반영」 → Run workflow.
+
 ## 작업 순서
 
 1. **원본 수정**: `dev/index.html`
