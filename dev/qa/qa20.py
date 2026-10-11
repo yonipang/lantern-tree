@@ -39,7 +39,7 @@ async def main():
         r=await ev(pg,"()=>{const G=__T.G;G.p.x=118.5;G.p.y=116.5;const n=__T.linkedChests().length;G.p.x=110.5;G.p.y=112.5;return n}")
         rec('상자 연결','작업대에서 멀어지면 연결 안 됨', r==0, r)
         # repair from chest
-        r=await ev(pg,"()=>{const G=__T.G;for(let i=0;i<30;i++)G.inv[i]=null;G.inv[0]={id:'pickWood',c:1,dur:10};__T.openPanel('craft',{st:'bench'});return 1}")
+        r=await ev(pg,"()=>{const G=__T.G;for(let i=0;i<30;i++)G.inv[i]=null;G.inv[0]={id:'pickWood',c:1,dur:10};const bi=__T.idx(110,110);G.objs.set(bi,{t:'smelter'});__T.openPanel('craft',{st:'smelter',i:bi});return 1}  /* v61: repair at the 장비제작대 */")
         await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=fix]'); await pg.wait_for_timeout(250)
         await pg.tap('[data-a=fix][data-i="0"]'); await pg.wait_for_timeout(250)
         r=await ev(pg,"()=>[__T.G.inv[0].dur,__T.G.objs.get(__T.idx(111,110)).items[0].c]")

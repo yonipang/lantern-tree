@@ -23,8 +23,8 @@ async def main():
         rec('단계 표시','누르면 단계 이름과 남은 시간 안내', '새싹 (2/4단계)' in r[4] and '남았어요' in r[4], r[4])
         # ---- sickle ----
         r=await ev(pg,"()=>{const T=__T;const rc=T.RECIPES.find(x=>x.out==='sickle'),wc=T.RECIPES.find(x=>x.out==='wcan');return [rc.at,JSON.stringify(rc.req),wc.at,JSON.stringify(wc.req),T.ITEMS.sickle.stack]}")
-        rec('구리 낫','구리 작업대에서 구리괴 3 + 나무 2 + 이끼 끈 1', r[0]=='bench' and r[1]=='[["copperBar",3],["wood",2],["rope",1]]', str(r))
-        rec('물뿌리개','구리 작업대에서 구리괴 2 + 송진 1', r[2]=='bench' and r[3]=='[["copperBar",2],["resin",1]]', str(r))
+        rec('구리 낫','구리 장비제작대에서 구리괴 3 + 나무 2 + 이끼 끈 1', r[0]=='smelter' and r[1]=='[["copperBar",3],["wood",2],["rope",1]]', str(r))
+        rec('물뿌리개','구리 장비제작대에서 구리괴 2 + 송진 1', r[2]=='smelter' and r[3]=='[["copperBar",2],["resin",1]]', str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const mr=Math.random;Math.random=()=>0;const cnt=()=>{let n=0;for(const d of G.drops)if(d.id==='berry')n+=d.c;return n};
           G.drops.length=0;let o=__crop(G.p.x+5|0,G.p.y|0,'cropBerry',200);T.harvest({x:G.p.x+5|0,y:G.p.y|0},o);const a=cnt();
           T.addItem('sickle',1);G.drops.length=0;o=__crop(G.p.x+5|0,G.p.y|0,'cropBerry',200);T.harvest({x:G.p.x+5|0,y:G.p.y|0},o);const b2=cnt();Math.random=mr;G.drops.length=0;return [a,b2]}""")
@@ -106,8 +106,8 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.berryH=0;const x=Math.floor(G.p.x)+8,y=Math.floor(G.p.y)+10;const o=__crop(x,y,'cropBerry',200);o.w=1;const w0=G.stats.wetH;T.harvest({x,y},o);G.drops.length=0;return [G.stats.berryH,G.stats.wetH-w0]}""")
         rec('도전','베리를 거두면 개수가 쌓이고, 물 준 작물도 따로 셈', r==[1,1], str(r))
         # craft panel tab
-        r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x),y=Math.floor(G.p.y);const i=T.idx(x+1,y);G.wall[i]=0;G.objs.set(i,{t:'forge'});T.openPanel('craft',{st:'forge'});const h=document.querySelector('#sheet').innerText;T.closePanel();G.objs.delete(i);return [h.includes('농사'),h.includes('구리 낫'),h.includes('물뿌리개')]}""")
-        rec('제작','구리 제작대에 농사 탭 (구리 낫·물뿌리개)', r==[True,True,True], str(r))
+        r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x),y=Math.floor(G.p.y);const i=T.idx(x+1,y);G.wall[i]=0;G.objs.set(i,{t:'smelter',lv:1});T.openPanel('craft',{st:'smelter',i});document.querySelector('#sheet [data-a=tab][data-i=tool]').click();const h=document.querySelector('#sheet').innerText;T.closePanel();G.objs.delete(i);return [h.includes('도구'),h.includes('구리 낫'),h.includes('물뿌리개')]}""")
+        rec('제작','구리 장비제작대 도구 탭에 구리 낫·물뿌리개 (v61)', r==[True,True,True], str(r))
         # screenshot: a little field
         await ev(pg,"""()=>{const T=__T,G=T.G;G.p.x=Math.floor(G.p.x)+.5;G.p.y=Math.floor(G.p.y)+.5;const x=Math.floor(G.p.x),y=Math.floor(G.p.y);__clr(x-6,y-6,13,13);
           [0,40,80,200].forEach((age,k)=>{__crop(x-4+k,y+2,'cropBerry',age);__crop(x-4+k,y+3,'cropShroom',age*1.2);__crop(x-4+k,y+4,'cropMoss',age*.8)});

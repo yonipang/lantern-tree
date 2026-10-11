@@ -6,8 +6,8 @@ async def main():
     async with async_playwright() as p:
         b=await p.chromium.launch()
         ctx,pg,errs=await new_ctx(b,390,844,True)
-        await ev(pg,"()=>{const G=__T.G;G.inv.fill(null);['pickCopper','swordCopper','shovel','rod','pickWood','swordCrystal'].forEach(k=>__T.addItem(k,1));G.inv.find(s=>s&&s.id==='swordCopper').dur=0;G.objs.set(__T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),{t:'bench'})}")
-        await ev(pg,"()=>__T.openPanel('craft',{st:'bench'})"); await pg.wait_for_timeout(500)
+        await ev(pg,"()=>{const G=__T.G;G.inv.fill(null);['pickCopper','swordCopper','shovel','rod','pickWood','swordCrystal'].forEach(k=>__T.addItem(k,1));G.inv.find(s=>s&&s.id==='swordCopper').dur=0;G.objs.set(__T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),{t:'smelter'})}")
+        await ev(pg,"()=>__T.openPanel('craft',{st:'smelter'})"); await pg.wait_for_timeout(500)
         await pg.click('#sheet [data-a=tab][data-i=salv]'); await pg.wait_for_timeout(300)
         txt=await ev(pg,"()=>document.querySelector('#sheet .sh-body').innerText.replace(/\\n/g,' / ')")
         rec('분해','분해 탭에 장비 6개 + 돌려받을 재료 표시', await ev(pg,"()=>document.querySelectorAll('#sheet [data-a=salv]').length")==6 and '구리괴 +3' in txt and '나무 +1' in txt, txt[:160])
@@ -38,7 +38,7 @@ async def main():
         await ev(pg,"()=>__T.closePanel()")
         # away from bench
         await ev(pg,"()=>{const G=__T.G;G.p.x=60.5;G.p.y=60.5}"); await pg.wait_for_timeout(100)
-        await ev(pg,"()=>__T.openPanel('craft',{st:'bench'})"); await pg.wait_for_timeout(500); await pg.click('#sheet [data-a=tab][data-i=salv]'); await pg.wait_for_timeout(200)
+        await ev(pg,"()=>__T.openPanel('craft',{st:'smelter'})"); await pg.wait_for_timeout(500); await pg.click('#sheet [data-a=tab][data-i=salv]'); await pg.wait_for_timeout(200)
         r=await ev(pg,"()=>[document.querySelector('#sheet .sh-body').innerText.includes('근처에서 분해할 수 있어요'), [...document.querySelectorAll('#sheet [data-a=salv]')].every(b=>b.disabled)]")
         rec('분해','작업대 없으면 분해 불가', r==[True,True], str(r))
         rec('기능','콘솔 오류 없음', not errs, errs[:3])

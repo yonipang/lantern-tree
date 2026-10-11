@@ -51,7 +51,7 @@ async def main():
         rec('보스','서리 정령 처치: 전용 활 + 서리 핵 2', r[0] is True and 'bowFrost' in r[1] and 'frostCore:2' in r[1], str(r))
         # legendary recipes
         r=await ev(pg,"()=>{const T=__T;return ['swordDawn','pickStar','swordGold','pickGold','staffFrost','goldBar'].map(id=>{const R=T.RECIPES.find(r=>r.out===id);return R?R.at+':'+T.rarOf(id):'none'})}")
-        rec('장비','전설·영웅 장비와 금괴 레시피', r==['bench:4','bench:4','bench:3','bench:3','bench:3','furnace:2'], str(r))
+        rec('장비','전설·영웅 장비와 금괴 레시피', r==['smelter:4','smelter:4','smelter:3','smelter:3','smelter:3','furnace:2'], str(r))
         # story act 2
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.bossDead.queen=G.bossDead.slime=G.bossDead.golem=true;G.stats.seedsFound=3;G.treeSeeds=3;G.won=true;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;
           for(let i=0;i<G.inv.length;i++)G.inv[i]=null;T.addItem('pickCopper',1,false);G.guide=0;T.checkGuide();const a=T.GUIDE[G.guide].id;T.addItem('pickCrystal',1,false);T.checkGuide();const b2=T.GUIDE[G.guide].id;return [a,b2,G.bossDead.turtle,G.bossDead.spirit]}""")

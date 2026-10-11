@@ -163,12 +163,12 @@ async def main():
         rec('상호작용','작업대 → 열기 + 회수 버튼', r==['open',True], str(r))
         # crafting list order and format
         await ev(pg,"()=>{__T.addItem('wood',14);__T.addItem('fiber',6);__T.addItem('rope',2);__T.addItem('gel',2)}")
-        await pg.tap('#bCraft'); await pg.wait_for_timeout(600); await pg.tap('[data-a=tab][data-i=tool]'); await pg.wait_for_timeout(200)
+        await pg.tap('#bCraft'); await pg.wait_for_timeout(600); await pg.tap('[data-a=tab][data-i=all]'); await pg.wait_for_timeout(200)  # v61: tools moved to the 장비제작대
         await pg.screenshot(path=SP+'qa2_craft.png')
         r=await ev(pg,"()=>[[...document.querySelectorAll('.rc .rn')].map(e=>e.childNodes[0].textContent).slice(0,3).join(','), document.querySelector('.ing').textContent]")
         import re
         rec('제작','재료 표기 "나무 14/4" 형식', re.search(r'\d+/\d+$', r[1]) is not None, r[1])
-        rec('제작','만들 수 있는 항목이 위로 (이전 정렬)', r[0].startswith('낚싯대'), r[0])
+        rec('제작','만들 수 있는 항목이 위로 (이전 정렬, v61: 낚싯대는 장비제작대로 가서 작업대가 맨 위)', r[0].startswith('작업대'), r[0])
         await ev(pg,"()=>__T.closePanel()")
         # PC R key pickup
         p3=await (await b.new_context(viewport={'width':1280,'height':800})).new_page()

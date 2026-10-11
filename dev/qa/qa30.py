@@ -20,7 +20,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;G.stats.beaten.slime=1;G.bossDead.slime=false;G.bosses.slime=T.freshBoss('slime');const b=G.bosses.slime;b.st='fight';b.hp=1;T.hitBoss(b,5,false);return G.drops.map(d=>d.id).includes('lightSeed')}""")
         rec('재도전','말랑대왕 재도전에서도 빛씨앗이 또 나오지 않음', r is False, str(r))
         r=await ev(pg,"()=>['queenIdol','slimeIdol','golemIdol','turtleIdol','spiritIdol'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
-        rec('재도전','보스 5종 소환 조각상 레시피 (구리 제작대)', r=='forge,forge,forge,forge,forge', r)
+        rec('재도전','보스 5종 소환 조각상 레시피 (작업대, v60)', r=='bench,bench,bench,bench,bench', r)
         r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'spiritIdol',c:1};G.sel=0;G.bossDead.spirit=false;G.stats.beaten.spirit=0;const h=T.BOSSES.spirit.home();G.p.x=h.x;G.p.y=h.y;return T.decide().msg}""")
         rec('재도전','아직 안 잡은 보스는 소환 불가 안내', '물리친 뒤' in (r or ''), r)
         # ---- usability fixes ----

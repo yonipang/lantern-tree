@@ -23,7 +23,7 @@ async def main():
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();G.inv[9]={id:'pickIron',c:1};G.objs.set(T.idx(x+1,y),{t:'cluster'});const o=G.objs.get(T.idx(x+1,y));for(let k=0;k<6&&G.objs.get(T.idx(x+1,y));k++)T.hitObj({x:x+1,y},o);const m=__drops();return [(m.cryGem||0)+(m.crystal||0),!G.objs.get(T.idx(x+1,y))]}""")
         rec('재료','수정 결정을 캐면 결정/석영 딱 1개', r==[1,True], str(r))
         r=await ev(pg,"""()=>{const T=__T,f=id=>{const r=T.RECIPES.find(q=>q.out===id);return r.at+':'+r.req.map(x=>x[0]).join(',')};return ['swordCrystal','staffCrystal','bowCrystal','pickCrystal','swordDawn','arrowCrystal','lampCrystal'].map(f)}""")
-        rec('재료','수정 무기·상위 도구는 정제 석영+수정결정 (석영만으로는 못 만듦)', r[0]=='bench:quartzR,cryGem,ironBar' and all('quartzR' in x for x in r[:6]) and 'cryGem' in r[6] and not any(',crystal' in x or ':crystal' in x for x in r[:6]), str(r))
+        rec('재료','수정 무기·상위 도구는 정제 석영+수정결정 (석영만으로는 못 만듦)', r[0]=='smelter:quartzR,cryGem,ironBar' and all('quartzR' in x for x in r[:6]) and 'cryGem' in r[6] and not any(',crystal' in x or ':crystal' in x for x in r[:6]), str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const b=G.bosses.golem;Object.assign(b,T.freshBoss('golem'));b.st='fight';G.bossDead.golem=false;G.drops.length=0;T.hitBoss(b,999999,false);const m=__drops();return [m.crystal||0,m.cryGem||0]}""")
         rec('재료','수정골렘 보상: 석영 8 + 수정결정 3', r==[8,3], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();G.inv[0]={id:'granite',c:5};G.sel=0;G.p.face={x:1,y:0};const d=T.decide();return [d.k,d.lbl,T.ITEMS.granite.n]}""")
@@ -43,8 +43,9 @@ async def main():
         r=await ev(pg,"()=>{const T=__T,rc=T.RECIPES.find(r=>r.out==='smelter');return [rc.at,rc.cat,T.STN.smelter,!!T.SPR.obj.smelter]}")
         rec('용광로','작업대에서 나무·돌로 만드는 「장비제작대」 (v58: 옛 용광로)', r==['bench','furn','장비제작대',True], str(r))
         await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();G.objs.set(T.idx(x,y+1),{t:'smelter'});G.inv[0]={id:'swordCopper',c:1,dur:200};G.sel=0;G.inv[9]={id:'copperBar',c:20};G.inv[10]={id:'glowcap',c:6};T.openPanel('craft',{st:'smelter'})}"""); await pg.wait_for_timeout(500)
+        await ev(pg,"()=>document.querySelector('#sheet [data-a=tab][data-i=upg]').click()"); await pg.wait_for_timeout(300)  # v61: 제작 is the first tab
         r=await ev(pg,"()=>[...document.querySelectorAll('#sheet [data-a=tab]')].map(b=>b.textContent+(b.classList.contains('on')?'*':'')).join(',')")
-        rec('용광로','용광로 탭: 전체·반지·강화(기본)·분해 (수리 없음)', '강화*' in r and '반지' in r and '분해' in r and '수리' not in r, r)
+        rec('용광로','장비제작대 탭: 제작·수리·분해·강화 (v61)', r.startswith('제작,수리,분해,강화*'), r)
         d0=await ev(pg,"()=>__T.curWeapon().dmg")
         await pg.click('#sheet [data-a=upg][data-i="0"]'); await pg.wait_for_timeout(300)
         r=await ev(pg,"()=>{const T=__T,G=T.G;return [G.inv[0].lv,T.countItem('copperBar'),+(T.curWeapon().dmg).toFixed(2),G.inv[0].dur,document.querySelector('#toasts').innerText.includes('+1')]}")
@@ -67,7 +68,7 @@ async def main():
         rec('강화','장신구·옷도 강화 (부적 +5: 불 피해 -50%, 외투 +2: 추위 게이지 40% 속도)', r==[28,20,'불·용암 피해 -50%','추위 게이지 40% 속도'], str(r))
         # ---- rings ----
         r=await ev(pg,"()=>{const T=__T;return ['ringCu','ringFe','ringQ','ringGem','ringGold'].map(id=>{const r=T.RECIPES.find(q=>q.out===id);return [T.ITEMS[id].slot,r&&r.at,r&&r.cat]})}")
-        rec('반지','반지 5종 (용광로 · 반지 탭)', all(x==['ring','smelter','ring'] for x in r), str(r))
+        rec('반지','반지 5종 (장비제작대 · 장신구 탭, v61)', all(x==['ring','smelter','acc'] for x in r), str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G,p=G.p;const base=T.meleeMul(),mb=T.mineMul();G.equip.ring={id:'ringCu',c:1};const a=T.meleeMul()/base;G.equip.ring.lv=3;const a3=T.meleeMul()/base;
           G.equip.ring={id:'ringFe',c:1};p.hp=100;p.inv=0;T.hurtPlayer(100,p.x+1,p.y);const def=100-p.hp;p.hp=100;p.inv=0;
           G.equip.ring={id:'ringGold',c:1};const mi=T.mineMul()/mb;G.equip.ring={id:'ringGem',c:1};const R=G.rpg,lv=R.lv,xp=R.xp;R.lv=1;R.xp=0;T.gainXp(10);const gx=R.xp+(R.lv-1)*1000;R.lv=lv;R.xp=xp;

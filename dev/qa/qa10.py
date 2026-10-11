@@ -47,8 +47,8 @@ async def main():
         r=await ev(pg,f"()=>{sw}.dur"); await ev(pg,"()=>__T.closePanel()")
         rec('내구도','상자에 넣었다 빼도 내구도 유지', r==37, r)
         # repair
-        await setup("G.objs.set(__T.idx(111,111),{t:'bench'});__T.addItem('wood',10);")
-        await ev(pg,"()=>{__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500)
+        await setup("G.objs.set(__T.idx(111,111),{t:'smelter'});__T.addItem('wood',10);")  # v61: repair at the 장비제작대
+        await ev(pg,"()=>{__T.openPanel('craft',{st:'smelter'})}"); await pg.wait_for_timeout(500)
         await pg.click('#sheet [data-a=tab][data-i=fix]'); await pg.wait_for_timeout(300)
         txt=await ev(pg,"()=>document.querySelector('#sheet .sh-body').innerText")
         rec('수리','수리 탭에 닳은 도구 목록', '나무 곡괭이' in txt and '망가짐' in txt and '나무 검' in txt, txt[:120].replace('\n',' / '))
@@ -63,9 +63,9 @@ async def main():
         await ev(pg,"()=>__T.closePanel()")
         # away from bench
         await setup("__T.G.inv.find(s=>s&&s.id==='pickWood').dur=5;")
-        await ev(pg,"()=>{__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500); await pg.click('#sheet [data-a=tab][data-i=fix]'); await pg.wait_for_timeout(300)
-        r=await ev(pg,"()=>[document.querySelector('#sheet .sh-body').innerText.includes('작업대 근처에서'), [...document.querySelectorAll('#sheet [data-a=fix]')].every(b=>b.disabled)]")
-        rec('수리','작업대 없으면 수리 불가 안내', r==[True,True], str(r)); await ev(pg,"()=>__T.closePanel()")
+        await ev(pg,"()=>{__T.openPanel('craft',{st:'smelter'})}"); await pg.wait_for_timeout(500); await pg.click('#sheet [data-a=tab][data-i=fix]'); await pg.wait_for_timeout(300)
+        r=await ev(pg,"()=>[document.querySelector('#sheet .sh-body').innerText.includes('장비제작대 근처에서'), [...document.querySelectorAll('#sheet [data-a=fix]')].every(b=>b.disabled)]")
+        rec('수리','장비제작대 없으면 수리 불가 안내 (v61)', r==[True,True], str(r)); await ev(pg,"()=>__T.closePanel()")
         # save
         r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);const a=__T.G.inv.find(x=>x&&x.id==='pickWood').dur;s.inv.forEach(x=>{if(x)delete x.dur});__T.deserialize(s);const b=__T.G.inv.find(x=>x&&x.id==='pickWood');return [a,b.dur==null, __T.bestPick().id]}")
         rec('저장','내구도 저장 / 예전 세이브는 새것 취급', r==[5,True,'pickWood'], str(r))

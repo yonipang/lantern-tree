@@ -81,7 +81,7 @@ async () => {
   const rings = {}; for (const id in RINGS) { const [n, k, b, per, req, rar] = RINGS[id]; rings[id] = { n, k, b, per, req, rar }; }
   const catchT = {}; for (const b in CATCH) catchT[b] = CATCH[b];
 
-  return { ver: T.VER || '', benchN: T.BENCH_N || [], items, recipes, stn, dishes, eff, buffDur: BUFF_DUR, walls, objs, crops, enemies, bosses, story, side, skills, skcat, stats, maxLv: MAX_LV,
+  return { ver: T.VER || '', benchN: T.BENCH_N || [], gearN: T.GEAR_N || [], items, recipes, stn, dishes, eff, buffDur: BUFF_DUR, walls, objs, crops, enemies, bosses, story, side, skills, skcat, stats, maxLv: MAX_LV,
     tips: (TIPS || []).map(strip), known0: KNOWN0 || [],
     animals, rings, regionMat: REGION_MAT, biome: BIOME, catch: catchT, rarity: RARITY, tierN: TIERNAME, star: STAR_OF };
 }

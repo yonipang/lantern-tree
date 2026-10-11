@@ -18,7 +18,7 @@ async def main():
         rec('작물','불꽃풀에서 불꽃 열매 씨앗 25%, 눈뭉치에서 서리 무 씨앗 20%', r[7]==0.25 and r[8]==0.2, str(r))
         # wear
         r=await ev(pg,"""()=>{const T=__T;const c=T.RECIPES.find(r=>r.out==='obsCoat'),f=T.RECIPES.find(r=>r.out==='frostRobe');return [c.at,JSON.stringify(c.req),f.at,JSON.stringify(f.req)]}""")
-        rec('옷','금 작업대: 흑요석 외투(흑요석4·섬유10·금괴1), 서리 비단옷(서리 결정6·섬유10·금괴1)', r==['bench','[["obsidian",4],["fiber",10],["goldBar",1]]','bench','[["frostShard",6],["fiber",10],["goldBar",1]]'], str(r))
+        rec('옷','금 장비제작대: 흑요석 외투(흑요석4·섬유10·금괴1), 서리 비단옷(서리 결정6·섬유10·금괴1)', r==['smelter','[["obsidian",4],["fiber",10],["goldBar",1]]','smelter','[["frostShard",6],["fiber",10],["goldBar",1]]'], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;const before=T.SPR.player.down[0].toDataURL();G.inv[2]={id:'obsCoat',c:1};G.inv[3]={id:'frostRobe',c:1};G.sel=2;const a=T.decide();T.wearItem(2);const s1=[G.equip.body&&G.equip.body.id,G.inv[2]];const after=T.SPR.player.down[0].toDataURL();
           T.wearItem(3);const s2=[G.equip.body.id,G.inv[3]&&G.inv[3].id];T.unwear('body');const s3=[G.equip.body,G.inv.filter(Boolean).map(s=>s.id).sort().join(',')];return [a.k,a.lbl,s1,before!==after,s2,s3,T.SPR.player.down[0].toDataURL()===before]}""")
         rec('장비 칸','옷을 들고 누르면 입기 → 옷 칸으로, 캐릭터 겉모습이 바뀜', r[0]=='wear' and r[1]=='입기' and r[2]==['obsCoat',None] and r[3] is True, str(r))

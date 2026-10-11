@@ -12,7 +12,7 @@ async def main():
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
         await ev(pg,"()=>{"+CLEAR+"}")
         r=await ev(pg,"()=>{const T=__T,rc=T.RECIPES.find(r=>r.out==='lasso'),A=T.ANIMALS;return [rc&&rc.at,rc&&rc.cat,Object.keys(A).filter(k=>A[k].pet).map(k=>k+':'+A[k].biome).join(','),!!T.animalImg('dog'),!!T.animalImg('cat'),!!T.animalImg('rabbit'),T.QSIDE.some(q=>q.id==='s_pet')]}")
-        rec('펫','올가미 밧줄(작업대·도구), 강아지(이끼)·토끼(버섯숲)·고양이(수정 동굴), 도전 퀘스트', r==['bench','tool','dog:0,rabbit:1,cat:2',True,True,True,True], str(r))
+        rec('펫','올가미 밧줄(작업대·도구), 강아지(이끼)·토끼(버섯숲)·고양이(수정 동굴), 도전 퀘스트', r==['smelter','tool','dog:0,rabbit:1,cat:2',True,True,True,True], str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.pets={};let n=0;for(let k=0;k<300&&!G.wild.length;k++){T.wildTick(6.1);n++}const w=G.wild[0];return [w&&w.k,G.wild.length,w?Math.round(Math.hypot(w.x-G.p.x,w.y-G.p.y)):0]}""")
         rec('야생','이끼 동굴에서 강아지(v46부터 소·닭도)가 7~13칸 떨어진 곳에 나타남', r[0] in ('dog','cow','chicken') and r[1]==1 and 5<=r[2]<=14, str(r))
         r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.pets={dog:1};let dog=0,n=0;for(let k=0;k<200;k++){T.wildTick(6.1);if(G.wild.some(w=>w.k==='dog'))dog++;n+=G.wild.length;G.wild=[]}return [dog,n>0]}""")

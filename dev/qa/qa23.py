@@ -20,7 +20,7 @@ async def main():
         rec('레어도','가방 상세에 등급 이름 색 + ★영웅 등급 + 효과 설명', r[0]!='' and '영웅 등급' in r[1] and '독' in r[1], str(r))
         await pg.screenshot(path=SP+'qa23_detail.png'); await ev(pg,"()=>__T.closePanel()")
         r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='pickCrystal');return [R.at,R.req.map(x=>x[0]).join(','),__T.ITEMS.pickCrystal.tier]}")
-        rec('장비','수정 곡괭이: 석영 작업대(v60) + 수정 핵 필요, 3단계', r[0]=='bench' and 'golemCore' in r[1] and r[2]==3, str(r))
+        rec('장비','수정 곡괭이: 석영 장비제작대(v61) + 수정 핵 필요, 3단계', r[0]=='smelter' and 'golemCore' in r[1] and r[2]==3, str(r))
         # poison
         await ev(pg,ARENA)
         r=await ev(pg,"()=>{const G=__T.G,e=__T.mkEnemy('slimeP',104.5,110.5);e.hp=500;G.enemies.push(e);__T.hitEnemy(e,20,false,0,'poison');const h0=e.hp;for(let k=0;k<60;k++)__T.updateEnemies(1/30);return [h0,e.hp,!!e.poison]}")

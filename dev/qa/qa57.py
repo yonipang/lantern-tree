@@ -13,7 +13,7 @@ async def main():
         b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
         await ev(pg,"()=>{"+SET+"}")
         r=await ev(pg,"()=>{const T=__T,t=id=>{const r=T.RECIPES.find(q=>q.out===id);return r?r.at+r.tier:'-'};return [T.BENCH_N.join(','),['chest','pot','pickCopper','pickIron','lampCrystal','swordCrystal','pickGold','swordDawn','forge'].map(t).join(','),T.RECIPES.some(r=>r.at==='forge')]}")
-        rec('단계','작업대 6단계, 레시피는 재료로 단계가 정해짐 (구리 작업대 레시피는 없어짐)', r==['작업대,구리 작업대,철 작업대,석영 작업대,금 작업대,서리 작업대','bench0,bench1,bench1,bench2,bench3,bench3,bench5,bench5,-',False], str(r))
+        rec('단계','작업대 6단계, 레시피는 재료로 단계가 정해짐 (구리 작업대 레시피는 없어짐)', r==['작업대,구리 작업대,철 작업대,석영 작업대,금 작업대,서리 작업대','bench0,bench1,smelter1,smelter2,bench3,smelter3,smelter5,smelter5,-',False], str(r))
         await ev(pg,"()=>{const T=__T,bi=__set();T.openPanel('craft',{st:'bench',i:bi})}"); await pg.wait_for_timeout(500)
         r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;const T=__T;return [document.querySelector('#sheet h2').innerText.trim(),!!document.querySelector('#sheet .benchup'),t.includes('구리 작업대로 올리기'),t.includes('구리괴 0/8'),t.includes('돌 0/20'),document.querySelector('#sheet [data-a=benchUp]').disabled,__rows().every(t=>t===0)]}")
         rec('창','작업대 창 맨 위에 「구리 작업대로 올리기」(구리괴 8·돌 20), 재료 없으면 못 누름, 목록은 작업대 물건만', r==['작업대',True,True,True,True,True,True], str(r))
