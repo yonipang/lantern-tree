@@ -41,7 +41,7 @@ async def main():
         for st in ['bench','pot']:
             await ev(pg,f"()=>__T.openPanel('craft',{{st:'{st}'}})"); await pg.wait_for_timeout(450)
             r=await ev(pg,"""()=>{const T=__T;const ats=new Set();document.querySelectorAll('#sheet .rc [data-a=craft]').forEach(b=>ats.add(T.RECIPES[+b.dataset.i].at||'hand'));return [[...ats].join(','),document.querySelectorAll('#sheet .rc [data-a=craft]:not([disabled])').length,[...document.querySelectorAll('#sheet .tab')].map(t=>t.textContent).join(',')]}""")
-            rec('제작',f'{st} 창에는 {st} 제작품만', r[0]==st and r[1]>0, str(r))
+            rec('제작',f'{st} 창에는 {st} 제작품만 (v62: 작업대는 손 제작도)', (r[0] in ('bench,hand','hand,bench') if st=='bench' else r[0]==st) and r[1]>0, str(r))
             if st=='bench': await pg.screenshot(path=SP+'qa25_bench.png')
             await ev(pg,"()=>__T.closePanel()"); await pg.wait_for_timeout(300)
         r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='gMoss');return JSON.stringify(R.req)+R.at}")
