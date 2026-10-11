@@ -14,6 +14,7 @@
 | `dev/art/` | 직접 그린 16px 그림 (아래 「16px 그림」) |
 | `dev/art_32px/` | v49~v52에 쓰던 32px 손그림 보관 (게임에는 안 들어감) |
 | `dev/art_pack.py` | `dev/art/`의 그림을 `dev/index.html` 안에 넣는 도구 |
+| `dev/wiki/` | 게임 위키 만들기. `python3 dev/wiki/build_wiki.py` → 저장소 맨 위 `wiki.html` (게임 데이터·아이콘을 코드에서 바로 뽑아요. 게임을 고친 뒤 다시 돌리면 위키도 맞춰져요) |
 
 ## 16px 그림 (v53부터 다시 16px)
 

@@ -1,0 +1,567 @@
+<title>등불나무 위키</title>
+<meta name="description" content="「등불나무 아래」 게임 데이터에서 자동으로 만든 도감">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 레이아웃: 왼쪽 길잡이(모바일은 위쪽 칩 줄) + 가운데 본문 + 오른쪽(모바일은 아래) 아이템 상세 패널 */
+:root {
+  --bg: #eef1e8; --surface: #fafcf6; --sunk: #e3e8db; --ink: #271f33; --muted: #686275; --line: #d3d9c9;
+  --moss: #3f7a3d; --moss-soft: #dcebd3; --lamp: #b8720f; --lamp-soft: #fbe7bf; --danger: #b23a4a;
+  --r0: #7d7590; --r1: #2f8f64; --r2: #2f6fc0; --r3: #8a4fd0; --r4: #b8720f;
+  --shadow: 0 10px 30px rgba(39, 31, 51, .16);
+  --f-display: 'Jua', 'Gowun Dodum', system-ui, sans-serif;
+  --f-body: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --nav-w: 13.5rem; --sheet-w: 24rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #16131d; --surface: #201b2a; --sunk: #1a1623; --ink: #ece6d8; --muted: #a39cae; --line: #342d40;
+  --moss: #93cf7c; --moss-soft: #263623; --lamp: #ffc35a; --lamp-soft: #3a2c16; --danger: #ff8a96;
+  --r0: #d9d0e2; --r1: #7fe0b5; --r2: #7fb8ff; --r3: #c89aff; --r4: #ffc35a;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #16131d; --surface: #201b2a; --sunk: #1a1623; --ink: #ece6d8; --muted: #a39cae; --line: #342d40;
+  --moss: #93cf7c; --moss-soft: #263623; --lamp: #ffc35a; --lamp-soft: #3a2c16; --danger: #ff8a96;
+  --r0: #d9d0e2; --r1: #7fe0b5; --r2: #7fb8ff; --r3: #c89aff; --r4: #ffc35a;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6; margin: 0 }
+img.px { image-rendering: pixelated; image-rendering: crisp-edges; width: 32px; height: 32px; flex: none }
+img.px.s { width: 20px; height: 20px }
+img.px.l { width: 64px; height: 64px }
+img.spr { image-rendering: pixelated; image-rendering: crisp-edges; flex: none }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.25 }
+h2 { font-size: 1.85rem }
+h3 { font-size: 1.25rem }
+a { color: var(--moss) }
+button { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; border-radius: 6px }
+.num { font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+.lbl { font-size: .74rem; letter-spacing: .06em; color: var(--muted) }
+
+/* ---- 머리 ---- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line) }
+.top-in { display: flex; align-items: center; gap: 1rem; padding: .7rem 16px; max-width: 90rem; margin: 0 auto }
+.brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); flex: none }
+.brand img { width: 36px; height: 36px }
+.brand b { font-family: var(--f-display); font-weight: 400; font-size: 1.35rem; line-height: 1 }
+.brand small { display: block; font-size: .72rem; color: var(--muted); margin-top: .2rem }
+.search { flex: 1; min-width: 0; max-width: 30rem; margin-left: auto; position: relative }
+.search input { width: 100%; padding: .55rem .9rem .55rem 2.3rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit }
+.search input::placeholder { color: var(--muted) }
+.search svg { position: absolute; left: .8rem; top: 50%; translate: 0 -50%; width: 16px; height: 16px; stroke: var(--muted) }
+
+.shell { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr); gap: 2rem; max-width: 90rem; margin: 0 auto; padding: 0 16px }
+nav.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 4rem); align-self: start; max-height: calc(100vh - 5rem); overflow: auto; padding-block: 1.2rem }
+nav.side a { display: flex; align-items: center; gap: .6rem; padding: .38rem .6rem; border-radius: 10px; color: var(--ink); text-decoration: none }
+nav.side a img { width: 24px; height: 24px }
+nav.side a:hover { background: var(--sunk) }
+nav.side a[aria-current="page"] { background: var(--moss-soft); color: var(--moss); font-weight: 700 }
+nav.side .grp { margin: 1rem .6rem .3rem }
+main { min-width: 0; padding-block: 1.6rem 5rem }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; gap: .4rem 1rem; margin-bottom: 1.1rem }
+.sec-head p { margin: 0; color: var(--muted); max-width: 44rem }
+
+/* ---- 공통 조각 ---- */
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .5rem .12rem .2rem; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; line-height: 1.4; font-size: .9rem; white-space: nowrap; vertical-align: middle; margin: .1rem 0 }
+.chip:hover { border-color: var(--moss); background: var(--moss-soft) }
+.chip .x { color: var(--muted); font-size: .82rem }
+.chip.plain { cursor: default; padding-left: .5rem }
+.chip.plain:hover { border-color: var(--line); background: var(--surface) }
+.chips { display: flex; flex-wrap: wrap; gap: .3rem }
+.badge { display: inline-block; font-size: .74rem; padding: .05rem .5rem; border-radius: 999px; background: var(--sunk); color: var(--muted); white-space: nowrap }
+.badge.lamp { background: var(--lamp-soft); color: var(--lamp) }
+.badge.moss { background: var(--moss-soft); color: var(--moss) }
+.tabs { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1rem }
+.tab { padding: .35rem .85rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: .9rem }
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.tab .badge { margin-left: .3rem }
+.tab[aria-pressed="true"] .badge { background: transparent; color: inherit; opacity: .7 }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.1rem }
+.stack { display: grid; gap: 1rem }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 1rem; align-items: start }
+.note { font-size: .9rem; color: var(--muted); margin: .4rem 0 0 }
+.wrapx { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: .92rem }
+th { text-align: left; font-weight: 400; font-size: .76rem; letter-spacing: .05em; color: var(--muted); padding: .4rem .55rem; border-bottom: 1px solid var(--line); white-space: nowrap }
+td { padding: .45rem .55rem; border-bottom: 1px solid var(--line); vertical-align: middle }
+tr:last-child td { border-bottom: 0 }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap }
+.rowname { display: flex; align-items: center; gap: .5rem; cursor: pointer; background: none; border: 0; padding: 0; text-align: left }
+.rowname:hover b { text-decoration: underline; text-decoration-color: var(--moss) }
+.rowname b { font-weight: 700 }
+.r0 { color: var(--r0) } .r1 { color: var(--r1) } .r2 { color: var(--r2) } .r3 { color: var(--r3) } .r4 { color: var(--r4) }
+h3 + .chips, h3 + p, h3 + table, h3 + .wrapx { margin-top: .5rem }
+
+/* ---- 도감 ---- */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .5rem }
+.card { display: flex; align-items: center; gap: .6rem; padding: .5rem .6rem; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; min-width: 0 }
+.card:hover { border-color: var(--moss) }
+.card span { min-width: 0; display: grid }
+.card b { font-weight: 400; font-size: .92rem; line-height: 1.3 }
+.card small { color: var(--muted); font-size: .74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.slotbox { width: 40px; height: 40px; display: grid; place-items: center; background: var(--sunk); border-radius: 9px; border: 1.5px solid transparent; flex: none }
+.slotbox.rb0 { border-color: var(--r0) } .slotbox.rb1 { border-color: var(--r1) } .slotbox.rb2 { border-color: var(--r2) } .slotbox.rb3 { border-color: var(--r3) } .slotbox.rb4 { border-color: var(--r4) }
+.toggle { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; color: var(--muted); margin-left: auto }
+
+/* ---- 제작 ---- */
+.recipes { display: grid; gap: .4rem }
+.rcp { display: grid; grid-template-columns: minmax(10rem, 15rem) 1fr auto; align-items: center; gap: .4rem 1rem; padding: .5rem .7rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--line) }
+.rcp .arrow { color: var(--muted); font-size: .8rem }
+.rcp .out { display: flex; align-items: center; gap: .5rem; min-width: 0 }
+.rcp .out .x { color: var(--muted) }
+.cat-title { margin: 1.3rem 0 .5rem; font-family: var(--f-display); font-size: 1.05rem; color: var(--muted) }
+
+/* ---- 몬스터·보스 ---- */
+.mon { display: grid; grid-template-columns: 72px 1fr; gap: .4rem 1rem; align-items: start }
+.mon .pic { width: 72px; height: 72px; display: grid; place-items: center; background: var(--sunk); border-radius: 12px }
+.stats { display: flex; flex-wrap: wrap; gap: .25rem .9rem; font-size: .88rem }
+.stats span b { font-weight: 700; font-variant-numeric: tabular-nums }
+.boss { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 1.2rem; padding: 1.2rem }
+.boss .pic { background: radial-gradient(circle at 50% 60%, var(--lamp-soft), var(--sunk) 70%); border-radius: 14px; display: grid; place-items: center; min-height: 9rem }
+.boss dl { display: grid; grid-template-columns: 6.5rem 1fr; gap: .45rem .8rem; margin: .7rem 0 0 }
+.boss dt { color: var(--muted); font-size: .85rem; padding-top: .15rem }
+.boss dd { margin: 0; min-width: 0 }
+.tip { margin: .7rem 0 0; padding: .6rem .8rem; border-radius: 10px; background: var(--lamp-soft); color: var(--ink); font-size: .92rem }
+.tip b { color: var(--lamp); font-weight: 700 }
+
+/* ---- 퀘스트 ---- */
+.quests { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem }
+.quests li { display: grid; grid-template-columns: 2.2rem 1fr; gap: .2rem .8rem; padding: .7rem .9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px }
+.quests .no { font-family: var(--f-display); font-size: 1.15rem; color: var(--lamp); text-align: center; line-height: 1.5 }
+.quests b { font-weight: 700 }
+.quests p { margin: .1rem 0 .35rem; color: var(--muted); font-size: .9rem }
+.quests .rw { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center }
+
+/* ---- 처음 화면 ---- */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem; align-items: center; padding: 1.5rem 1.6rem; border-radius: 18px; background: linear-gradient(160deg, var(--surface), var(--sunk)); border: 1px solid var(--line); margin-bottom: 1.6rem }
+.hero h1 { font-size: clamp(1.9rem, 4vw, 2.7rem) }
+.hero p { margin: .5rem 0 0; max-width: 40rem; color: var(--muted) }
+.hero .tree { display: flex; gap: .3rem; align-items: end }
+.hero .tree img { width: 48px; height: 48px }
+.hero .tree img.big { width: 72px; height: 72px }
+.counts { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin-top: .9rem; font-size: .9rem }
+.counts b { font-family: var(--f-display); font-weight: 400; font-size: 1.15rem; color: var(--moss); margin-right: .2rem }
+.links { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .6rem }
+.links a { display: grid; grid-template-columns: 40px 1fr; gap: .1rem .8rem; align-items: center; padding: .75rem .9rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none }
+.links a:hover { border-color: var(--moss) }
+.links img { grid-row: span 2; width: 40px; height: 40px }
+.links b { font-family: var(--f-display); font-weight: 400; font-size: 1.1rem }
+.links small { color: var(--muted); font-size: .8rem; line-height: 1.35 }
+.tips { margin: 0; padding-left: 1.2rem; display: grid; gap: .35rem; max-width: 50rem }
+.region-strip { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .3rem }
+
+/* ---- 상세 패널 ---- */
+.sheet-bg { position: fixed; inset: 0; background: rgba(20, 15, 28, .35); z-index: 40 }
+.sheet { position: fixed; z-index: 41; top: 0; right: 0; bottom: 0; width: min(var(--sheet-w), 100%); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow); overflow: auto; padding: calc(env(safe-area-inset-top, 0px) + 1rem) 1.2rem calc(env(safe-area-inset-bottom, 0px) + 2rem) }
+.sheet-bar { display: flex; gap: .4rem; justify-content: space-between; margin-bottom: .6rem }
+.icon-btn { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: .25rem .8rem; cursor: pointer; font-size: .88rem }
+.icon-btn:hover { border-color: var(--moss) }
+.sheet .head { display: grid; grid-template-columns: 76px 1fr; gap: 1rem; align-items: center }
+.sheet .head .slotbox { width: 76px; height: 76px; border-radius: 14px; border-width: 2px }
+.sheet h2 { font-size: 1.6rem }
+.sheet .desc { margin: .9rem 0 0 }
+.sheet section { margin-top: 1.2rem }
+.sheet section > .lbl { display: block; margin-bottom: .35rem }
+.sheet ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .25rem }
+.sheet .mini { display: grid; gap: .45rem }
+.sheet .mini > div { padding: .5rem .6rem; border-radius: 10px; background: var(--bg) }
+.statgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: .4rem; margin-top: .9rem }
+.statgrid div { background: var(--bg); border-radius: 10px; padding: .4rem .6rem }
+.statgrid small { display: block; color: var(--muted); font-size: .72rem }
+.statgrid b { font-weight: 700; font-variant-numeric: tabular-nums }
+
+.empty { padding: 2rem; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 14px }
+.foot { margin-top: 3rem; font-size: .82rem; color: var(--muted) }
+
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0 }
+  nav.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 3.6rem); z-index: 15; background: var(--bg); display: flex; gap: .3rem; overflow-x: auto; max-height: none; margin: 0 -16px; padding: .5rem 16px; border-bottom: 1px solid var(--line); scrollbar-width: none }
+  nav.side .grp { display: none }
+  nav.side a { white-space: nowrap; flex: none; padding: .3rem .65rem; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; font-size: .9rem }
+  nav.side a img { width: 20px; height: 20px }
+  .top-in { flex-wrap: nowrap }
+  .brand small { display: none }
+}
+@media (max-width: 40rem) {
+  .brand b { font-size: 1.1rem } .brand img { width: 30px; height: 30px }
+  .rcp { grid-template-columns: minmax(0, 1fr) auto }
+  .rcp .reqs { grid-column: 1 / -1; grid-row: 2 }
+  .boss { grid-template-columns: minmax(0, 1fr) }
+  .boss .pic { min-height: 7rem }
+  .hero { grid-template-columns: minmax(0, 1fr) }
+  .hero .tree { display: none }
+  .sheet { top: auto; width: 100%; max-height: 85vh; border-left: 0; border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; padding-top: 1rem }
+  h2 { font-size: 1.55rem }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: slidein .18s ease-out }
+  @keyframes slidein { from { translate: 2rem 0; opacity: .4 } }
+}
+</style>
+
+<header class="top"><div class="top-in">
+  <a class="brand" href="#home"><img class="px" id="brandIcon" alt=""><span><b>등불나무 위키</b><small id="verLine"></small></span></a>
+  <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+    <input id="q" type="search" placeholder="아이템·몬스터·퀘스트 찾기" autocomplete="off" aria-label="위키 검색"></label>
+</div></header>
+
+<div class="shell">
+  <nav class="side" id="nav" aria-label="위키 목차"></nav>
+  <main id="main"></main>
+</div>
+<div class="sheet-bg" id="sheetBg" hidden></div>
+<aside class="sheet" id="sheet" hidden aria-label="상세 정보"></aside>
+
+<script>
+const D = /*@@DATA*/null;
+const I = D.items, $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const nm = id => (I[id] ? I[id].n : id);
+const ico = (id, cls = '') => I[id] && I[id].icon ? `<img class="px ${cls}" src="${I[id].icon}" alt="">` : '';
+const pct = p => Math.round(p * 1000) / 10 + '%';
+const BIOME = D.biome;
+const RAR = D.rarity.map(r => r[0]);
+const WT = { sword: '검', bow: '활', dagger: '단검', spear: '창', hammer: '망치', staff: '지팡이', axe: '도끼' };
+const SLOT = { body: '옷', head: '머리장식', neck: '목걸이', ring: '반지' };
+const CAT = { furn: '가구', build: '건축', tool: '도구', weapon: '무기', mat: '재료', food: '요리', nature: '자연 꾸미기', circuit: '회로·전기', farm: '농사', moss: '이끼 세트', shroom: '버섯 세트', crystal: '수정 세트', ring: '반지', mine: '채굴장' };
+const KINDN = { sword: '무기', pick: '곡괭이', wear: '장비', food: '음식', seed: '씨앗', mat: '재료', place: '설치물', wire: '전선', wall: '벽', floor: '바닥', ground: '땅', arrow: '화살', summon: '소환 조각상', fert: '비료', key: '열쇠 아이템', shovel: '삽', rod: '낚싯대', sickle: '낫', wcan: '물뿌리개', lasso: '올가미', recall: '귀환석' };
+const GROUPS = [
+  ['all', '전체', () => true],
+  ['weapon', '무기', i => i.kind === 'sword'],
+  ['tool', '도구', i => ['pick', 'shovel', 'rod', 'sickle', 'wcan', 'lasso', 'recall', 'fert', 'summon', 'arrow'].includes(i.kind) || i.bagUp],
+  ['wear', '장비', i => i.kind === 'wear'],
+  ['food', '음식', i => i.kind === 'food'],
+  ['seed', '씨앗', i => i.kind === 'seed'],
+  ['mat', '재료', i => (i.kind === 'mat' || i.kind === 'key') && !i.bagUp],
+  ['place', '가구·설치', i => i.kind === 'place' || i.kind === 'wire'],
+  ['build', '벽·바닥', i => ['wall', 'floor', 'ground'].includes(i.kind)],
+];
+const realItems = Object.keys(I).filter(id => !I[id].virtual);
+
+// ---------- 얻는 곳·쓰이는 곳 색인 ----------
+const MAKE = {}, USE = {}, GET = {};
+const add = (m, id, v) => (m[id] = m[id] || []).push(v);
+for (const r of D.recipes) { add(MAKE, r.out, r); if (!r.star) for (const [id] of r.req) if (!(USE[id] || []).some(x => x.out === r.out)) add(USE, id, r); }
+const qty = (a, b) => a === b ? `${a}개` : `${a}~${b}개`;
+const chance = p => p >= 1 ? '' : ` · ${pct(p)}`;
+for (const k in D.walls) { const w = D.walls[k]; for (const [id, a, b, p] of w.drop) add(GET, id, { t: `「${w.n}」 캐기`, s: qty(a, b) + chance(p), go: 'world' }); }
+for (const k in D.objs) { const o = D.objs[k]; for (const [id, a, b, p] of o.drops) add(GET, id, { t: `「${o.n}」`, s: qty(a, b) + chance(p), go: 'world' }); }
+for (const k in D.crops) { const c = D.crops[k]; for (const [id, a, b, p] of c.yield) add(GET, id, { t: `${c.n} 작물 거두기`, s: qty(a, b) + chance(p), go: 'farm' }); }
+for (const base in D.star) add(GET, D.star[base], { t: `별 작물로 거두기 (${nm(base)})`, s: '맞는 흙 · 수정골렘 처치 후', go: 'farm' });
+for (const k in D.enemies) { const e = D.enemies[k]; for (const [id, a, b, p] of e.drops) add(GET, id, { t: `${e.n} 물리치기`, s: qty(a, b) + chance(p), go: 'mon' }); }
+for (const k in D.bosses) { const b = D.bosses[k];
+  for (const [id, c] of b.first) add(GET, id, { t: `${b.n} 첫 처치`, s: `${c}개`, go: 'boss' });
+  for (const [id, c] of b.rematch) add(GET, id, { t: `${b.n} 다시 물리치기`, s: `${c}개`, go: 'boss' });
+  if (b.uniq) add(GET, b.uniq, { t: `${b.n} 전용 장비`, s: '첫 처치 확정 · 재도전 35%', go: 'boss' });
+  if (b.acc) add(GET, b.acc, { t: `${b.n} 장신구`, s: '첫 처치 확정 · 재도전 35%', go: 'boss' }); }
+for (const b in D.catch) { const tot = D.catch[b].reduce((a, x) => a + x[1], 0); for (const [id, w] of D.catch[b]) add(GET, id, { t: `${BIOME[b]} 낚시`, s: pct(w / tot), go: 'fish' }); }
+D.story.forEach((q, k) => { for (const [id, c] of q.rw) add(GET, id, { t: `이야기 퀘스트 ${k + 1} 「${q.t}」`, s: `${c}개`, go: 'quest' }); });
+for (const q of D.side) for (const [id, c] of q.rw) add(GET, id, { t: `도전 퀘스트 「${q.t}」`, s: `${c}개`, go: 'quest' });
+for (const k in D.animals) { const a = D.animals[k]; if (a.ranch) add(GET, a.ranch, { t: `목장의 ${a.n}`, s: `${Math.round(a.every / 60)}분마다`, go: 'animal' }); }
+if (I.cryGem) add(GET, 'cryGem', { t: '「수정 결정」 캐기', s: '35% (아니면 석영)', go: 'world' });
+
+// ---------- 그리기 도우미 ----------
+const chip = (id, c) => I[id] ? `<button class="chip" data-item="${id}">${ico(id, 's')}${esc(nm(id))}${c != null ? ` <span class="x num">×${c}</span>` : ''}</button>` : `<span class="chip plain">${esc(id)}${c != null ? ` ×${c}` : ''}</span>`;
+const chips = (list) => `<span class="chips">${list.map(([id, c]) => chip(id, c)).join('')}</span>`;
+const dropChips = drops => `<span class="chips">${drops.map(([id, a, b, p]) => `<button class="chip" data-item="${id}">${ico(id, 's')}${esc(nm(id))} <span class="x num">${a === b ? a : a + '~' + b}${p < 1 ? ' · ' + pct(p) : ''}</span></button>`).join('')}</span>`;
+const rowName = (id, sub) => `<button class="rowname" data-item="${id}">${ico(id)}<span><b class="${I[id] && I[id].rar != null ? 'r' + I[id].rar : ''}">${esc(nm(id))}</b>${sub ? `<br><small class="muted">${sub}</small>` : ''}</span></button>`;
+const slot = id => `<span class="slotbox ${I[id] && I[id].rar != null ? 'rb' + I[id].rar : ''}">${ico(id)}</span>`;
+const sprImg = (src, k, alt = '') => src ? `<img class="spr" data-k="${k}" src="${src}" alt="${esc(alt)}">` : '';
+function sizeSprites(root) { root.querySelectorAll('img.spr').forEach(im => { const f = () => { const k = +im.dataset.k; im.style.width = im.naturalWidth * k + 'px'; im.style.height = im.naturalHeight * k + 'px'; }; im.complete ? f() : im.addEventListener('load', f, { once: true }); }); }
+const kindLabel = i => i.kind === 'sword' ? (WT[i.wt] || '무기') : i.kind === 'wear' ? (SLOT[i.slot] || '장비') : i.bagUp ? '가방 늘리기' : (KINDN[i.kind] || '재료');
+const stnBadge = r => `<span class="badge${r.at === 'hand' ? ' moss' : ''}">${esc(D.stn[r.at] || r.at)}</span>`;
+const fmtSec = s => s >= 60 ? (s % 60 ? `${Math.floor(s / 60)}분 ${s % 60}초` : `${s / 60}분`) : `${s}초`;
+
+// ---------- 섹션 ----------
+const SECTIONS = [
+  ['home', '처음', 'lightSeed', null],
+  ['items', '아이템 도감', 'berry', '도감'],
+  ['craft', '제작법', 'bench', null],
+  ['cook', '요리', 'pot', null],
+  ['farm', '농사', 'berrySeed', null],
+  ['mon', '몬스터', 'gel', '모험'],
+  ['boss', '보스', 'golemCore', null],
+  ['world', '지역·광맥', 'pickCopper', null],
+  ['fish', '낚시', 'rod', null],
+  ['quest', '퀘스트', 'torch', null],
+  ['gear', '무기·장비', 'swordCrystal', '성장'],
+  ['skill', '능력·스킬', 'glowcap', null],
+  ['animal', '펫·목장', 'lasso', null],
+];
+const R = {};
+
+R.home = () => {
+  const tree = ['berrySeed', 'lightSeed', 'glowcap'];
+  const n = { items: realItems.length, recipes: D.recipes.filter(r => !r.star).length, mon: Object.keys(D.enemies).length, boss: Object.keys(D.bosses).length, quest: D.story.length + D.side.length };
+  return `<div class="hero"><div><span class="lbl">코어키퍼풍 픽셀 생존·채굴·건축·농사</span><h1>등불나무 아래</h1>
+    <p>꺼진 등불나무에 빛씨앗 다섯 개를 심어 동굴에 빛을 되찾는 모험이에요. 이 위키는 게임 코드에서 바로 뽑아 만들어서, 숫자와 제작법이 지금 게임과 같아요.</p>
+    <div class="counts num"><span><b>${n.items}</b>아이템</span><span><b>${n.recipes}</b>제작법</span><span><b>${n.mon}</b>몬스터</span><span><b>${n.boss}</b>보스</span><span><b>${n.quest}</b>퀘스트</span></div></div>
+    <div class="tree">${tree.map((id, k) => `<img class="px${k === 1 ? ' big' : ''}" src="${I[id].icon}" alt="">`).join('')}</div></div>
+  <div class="stack">
+  <section><h3>어디로 갈까요</h3><div class="links" style="margin-top:.6rem">${SECTIONS.slice(1).map(([id, t, icon]) => `<a href="#${id}">${ico(icon)}<b>${t}</b><small>${esc(BLURB[id] || '')}</small></a>`).join('')}</div></section>
+  <section class="panel"><h3>다섯 지역</h3><p class="note">가운데 등불나무에서 시작해 바깥쪽 깊은 동굴로 갈수록 몬스터가 강해지고, 더 좋은 곡괭이가 있어야 벽을 캘 수 있어요.</p>
+    <div class="region-strip">${BIOME.map((b, k) => `<a class="chip plain" href="#world" style="text-decoration:none;color:inherit">${ico(D.regionMat[k][2], 's')}${esc(b)}</a>`).join('')}</div></section>
+  <section class="panel"><h3>알아 두면 좋은 팁</h3><ul class="tips" style="margin-top:.6rem">${D.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>
+  </div>`;
+};
+const BLURB = { items: '모든 아이템. 누르면 만드는 법·얻는 곳·쓰이는 곳', craft: '작업대·구리 제작대·화로·요리솥·용광로별 제작법', cook: '버프 요리 효과와 레시피 쪽지 찾는 곳', farm: '작물 성장 시간·맞는 흙·비료·별 작물', mon: '지역별 몬스터 체력·피해·떨어뜨리는 것', boss: '다섯 보스의 체력·보상·공략', world: '광맥과 필요한 곡괭이, 지역 재료', fish: '지역별 잡히는 물고기 확률', quest: '이야기 퀘스트 순서와 도전 퀘스트 보상', gear: '무기·곡괭이·옷·반지와 용광로 강화', skill: '능력치와 레벨별 스킬', animal: '펫 버프와 목장 동물' };
+
+let itemGroup = 'all', showStar = false;
+R.items = () => {
+  const list = realItems.filter(id => GROUPS.find(g => g[0] === itemGroup)[2](I[id]) && (showStar || !I[id].star));
+  return `<div class="sec-head"><h2>아이템 도감</h2><p>누르면 만드는 법, 얻는 곳, 쓰이는 곳이 나와요. 테두리 색은 장비 등급이에요.</p></div>
+  <div class="tabs">${GROUPS.map(([g, t, f]) => `<button class="tab" data-group="${g}" aria-pressed="${g === itemGroup}">${t}<span class="badge num">${realItems.filter(id => f(I[id]) && (showStar || !I[id].star)).length}</span></button>`).join('')}
+  <label class="toggle"><input type="checkbox" id="starToggle" ${showStar ? 'checked' : ''}> 별 작물·별 요리도 보기</label></div>
+  ${cardGrid(list)}`;
+};
+const cardGrid = list => list.length ? `<div class="cards">${list.map(id => `<button class="card" data-item="${id}">${slot(id)}<span><b class="${I[id].rar != null ? 'r' + I[id].rar : ''}">${esc(I[id].n)}</b><small>${esc(kindLabel(I[id]))}</small></span></button>`).join('')}</div>` : '<div class="empty">찾는 것이 없어요.</div>';
+
+let craftAt = 'bench';
+R.craft = () => {
+  const order = ['hand', 'bench', 'forge', 'furnace', 'pot', 'smelter'];
+  const rs = D.recipes.filter(r => r.at === craftAt && !r.star);
+  const cats = [...new Set(rs.map(r => r.cat))];
+  return `<div class="sec-head"><h2>제작법</h2><p>제작은 장소마다 따로예요. 그 장소 가까이에서 열어야 그곳의 레시피가 보여요. 작업대·구리 제작대는 붙어 있는 상자의 재료도 써요.</p></div>
+  <div class="tabs">${order.map(a => `<button class="tab" data-at="${a}" aria-pressed="${a === craftAt}">${esc(D.stn[a])}<span class="badge num">${D.recipes.filter(r => r.at === a && !r.star).length}</span></button>`).join('')}</div>
+  ${craftAt === 'pot' ? '<p class="note" style="margin:-.3rem 0 1rem">처음에는 베리 파이·버섯 스튜·생선 스튜만 알아요. 나머지는 레시피 쪽지를 주워야 목록에 나타나요 (찾는 곳은 「요리」). 별 작물이 있으면 별 요리도 만들 수 있어요.</p>' : ''}
+  ${cats.map(c => `<div class="cat-title">${esc(CAT[c] || c || '기타')}</div><div class="recipes">${rs.filter(r => r.cat === c).map(rcpRow).join('')}</div>`).join('')}`;
+};
+const rcpRow = r => `<div class="rcp"><div class="out">${rowName(r.out)}${r.n > 1 ? `<span class="x num">×${r.n}</span>` : ''}</div><div class="reqs">${chips(r.req)}</div><div>${r.lock ? `<span class="badge lamp">${esc(r.lock)}</span>` : ''}</div></div>`;
+
+R.cook = () => {
+  const effs = Object.keys(D.eff);
+  const dishOf = (ef, t) => Object.keys(D.dishes).filter(id => D.dishes[id].ef === ef && D.dishes[id].tier === t);
+  const rec = id => D.recipes.find(r => r.out === id && !r.star);
+  const recovery = [...D.known0, ...Object.keys(D.dishes).filter(id => !D.dishes[id].ef)];
+  const dishCell = id => { const r = rec(id), d = D.dishes[id]; return `<div style="display:grid;gap:.3rem">${rowName(id)}${r ? chips(r.req) : ''}<small class="muted">쪽지: ${esc(d.hint)}</small></div>`; };
+  return `<div class="sec-head"><h2>요리</h2><p>요리솥에서 만들어요. 버프 요리는 효과가 하나씩 있고, 서로 다른 효과를 3개까지 동시에 받아요.</p></div>
+  <div class="grid2" style="margin-bottom:1rem">
+    <div class="panel"><h3>버프 규칙</h3><ul class="tips" style="margin-top:.5rem">
+      <li>지속 시간: 1단계 ${fmtSec(D.buffDur[0])}, 2단계 ${fmtSec(D.buffDur[1])}, 3단계 ${fmtSec(D.buffDur[2])}</li>
+      <li>같은 효과는 가장 높은 단계 하나만 남아요. 같거나 높은 단계를 먹으면 시간이 새로 시작해요.</li>
+      <li>칸이 다 차 있을 때 새 효과를 먹으면 한 번 알려 주고, 5초 안에 다시 먹으면 남은 시간이 가장 짧은 효과와 바꿔요.</li>
+      <li>별 작물로 만든 요리는 버프 시간 1.5배, 배 채움 1.2배.</li>
+      <li>배가 불러도 버프 요리는 먹을 수 있어요.</li></ul></div>
+    <div class="panel"><h3>회복 요리</h3><p class="note">버프 칸을 쓰지 않아요.</p><div class="stack" style="gap:.5rem;margin-top:.6rem">${recovery.map(id => { const r = rec(id); return `<div style="display:grid;gap:.3rem">${rowName(id, `배 ${I[id].food} · 체력 ${I[id].heal}`)}${r ? chips(r.req) : ''}${D.dishes[id] ? `<small class="muted">쪽지: ${esc(D.dishes[id].hint)}</small>` : '<small class="muted">처음부터 알아요</small>'}</div>`; }).join('')}</div></div>
+  </div>
+  <div class="panel wrapx"><table><thead><tr><th>효과</th><th>1단계</th><th>2단계</th><th>3단계</th></tr></thead><tbody>
+  ${effs.map(ef => `<tr><td style="min-width:7rem"><b>${esc(D.eff[ef].n)}</b><br><small class="muted num">${D.eff[ef].t.map(esc).join(' / ')}</small></td>${[1, 2, 3].map(t => `<td style="min-width:13rem">${dishOf(ef, t).map(dishCell).join('') || '<span class="muted">—</span>'}</td>`).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  <p class="note">추위·더위 대비 요리는 용암·얼음 동굴의 더위·추위 게이지가 오르는 속도를 늦춰요. 게이지가 100이 되면 5초마다 체력이 2씩 줄어요.</p>`;
+};
+
+R.farm = () => {
+  const cs = Object.keys(D.crops);
+  const farmR = D.recipes.filter(r => r.cat === 'farm');
+  return `<div class="sec-head"><h2>농사</h2><p>씨앗을 들고 바닥을 바라보며 눌러 심어요. 다 자라면 반짝이고, 씨앗을 든 채 누르면 거둬요.</p></div>
+  <div class="panel wrapx"><table><thead><tr><th>작물</th><th>다 자라는 시간</th><th>맞는 흙</th><th>거두면</th></tr></thead><tbody>
+  ${cs.map(k => { const c = D.crops[k]; return `<tr><td>${c.seed ? rowName(c.seed, esc(c.n)) : esc(c.n)}</td><td class="n">${fmtSec(c.grow)}<br><small class="muted">최소 ${fmtSec(Math.round(c.grow / 2))}</small></td><td>${c.soil ? `<span class="badge moss">${esc(c.soil)}</span>` : '<span class="muted">없음</span>'}</td><td>${dropChips(c.yield)}</td></tr>`; }).join('')}
+  </tbody></table></div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="panel"><h3>빨리 키우기</h3><ul class="tips" style="margin-top:.5rem">
+      <li>물뿌리개로 물 준 작물은 25% 빨리 자라요. 한 번 채우면 10번 줘요.</li>
+      <li>비료는 남은 성장 시간을 바로 40% 줄여요 (작물마다 한 번).</li>
+      <li>빛씨앗을 3개 심으면 등불나무 둘레 12칸, 5개면 18칸 안의 작물이 20% 빨리 자라요.</li>
+      <li>다 겹쳐도 원래 시간의 절반보다 빨라지지는 않아요.</li>
+      <li>스프링클러는 전기가 들어오면 둘레 5×5에 물을 주고, 자동 수확기는 둘레 3×3을 거둬 옆 상자에 담아요.</li></ul></div>
+    <div class="panel"><h3>별 작물·거대 작물</h3><ul class="tips" style="margin-top:.5rem">
+      <li>수정골렘을 물리친 뒤 맞는 흙에 심으면 다 자랄 때 15% 확률로 별 작물이 돼요. 수정 비료를 주면 35%.</li>
+      <li>별 작물로 만든 요리는 버프 시간 1.5배.</li>
+      <li>같은 작물 2×2가 모두 맞는 흙에서 다 자라면 3% 확률로 거대 작물이 돼요. 수확량 6배, 씨앗 3개.</li>
+      <li>구리 낫이 가방에 있으면 하나씩 더 거두고, 꾹 누르면 주변 3×3을 한 번에 거둬요.</li></ul></div>
+  </div>
+  <div class="cat-title">농사 도구·비료</div><div class="recipes">${farmR.map(rcpRow).join('')}</div>`;
+};
+
+const SPAWN_NOTE = ['', '', '체력 ×1.2 · 피해 ×1.1', '체력 ×1.15 · 피해 ×1.1', '체력 ×1.15 · 피해 ×1.1'];
+const monCard = (k, w) => { const e = D.enemies[k]; return `<div class="panel mon"><div class="pic">${sprImg(e.img, 3, e.n)}</div><div style="min-width:0">
+  <h3>${esc(e.n)}${e.calm ? ' <span class="badge moss">먼저 공격하지 않음</span>' : ''}</h3>
+  <div class="stats num"><span>체력 <b>${e.hp}</b></span><span>피해 <b>${e.dmg}</b></span><span>빠르기 <b>${e.spd}</b></span>${w != null && w < 100 ? `<span>나오는 비율 <b>${w}%</b></span>` : ''}</div>
+  <div style="margin-top:.4rem">${e.drops.length ? dropChips(e.drops) : '<span class="muted">없음</span>'}</div></div></div>`; };
+R.mon = () => {
+  const blooms = Object.keys(D.enemies).filter(k => D.enemies[k].calm);
+  return `<div class="sec-head"><h2>몬스터</h2><p>밝은 곳(횃불·램프 둘레)과 등불나무 가까이에는 몬스터가 생기지 않아요. 깊은 지역은 더 멀리서 알아채요.</p></div>
+  <div class="stack">${BIOME.map((b, k) => { const sp = Object.keys(D.enemies).filter(e => D.enemies[e].where.some(w => w[0] === k));
+    const extra = k === 0 ? blooms : [];
+    return `<section><div class="sec-head" style="margin:1rem 0 .6rem"><h3>${esc(b)}</h3>${SPAWN_NOTE[k] ? `<span class="badge lamp">${SPAWN_NOTE[k]}</span>` : ''}</div>
+      <div class="grid2">${sp.map(e => monCard(e, D.enemies[e].where.find(w => w[0] === k)[1])).join('')}${extra.map(e => monCard(e)).join('')}</div>
+      ${k === 0 ? '<p class="note">꽃망울은 이끼 동굴 곳곳의 꽃 구역에서만 나와요. 때리기 전에는 얌전해요.</p>' : ''}</section>`; }).join('')}</div>`;
+};
+
+const BOSS_TIP = {
+  turtle: ['2단계 (체력 66%)', '굴러오다 벽에 튕길 때마다 불덩이 2개를 쏴요.', '3단계 (체력 33%)', '가끔 멈춰서 분화해요. 바닥의 경고 원을 피하고, 분화 뒤 3초 동안 등껍질이 열리면 피해가 1.5배 들어가요.'],
+  spirit: ['2단계 (체력 66%)', '방 네 구석에 얼음 기둥이 생겨요. 서리 정령의 탄을 막아 주는 엄폐물로 써요.', '3단계 (체력 33%)', '반투명 분신 2개가 나와요. 한 대 맞으면 사라지고, 진짜만 얼음 고리를 쏴요.'],
+};
+R.boss = () => {
+  const order = ['queen', 'slime', 'golem', 'turtle', 'spirit'];
+  return `<div class="sec-head"><h2>보스</h2><p>이야기 순서대로예요. 물리친 보스는 구리 제작대에서 소환 조각상을 만들어 보스방에서 다시 부를 수 있어요.</p></div>
+  <div class="stack">${order.map(k => { const b = D.bosses[k], q = D.story.find(s => s.id === k), t = BOSS_TIP[k];
+    const idol = Object.keys(I).find(id => I[id].kind === 'summon' && (MAKE[id] || []).length && id.startsWith(k));
+    return `<article class="panel boss"><div class="pic">${sprImg(b.img, 3, b.n)}</div><div style="min-width:0">
+      <span class="lbl">${esc(BIOME[b.region])}</span><h2>${esc(b.n)}</h2>
+      <div class="stats num" style="margin-top:.3rem"><span>체력 <b>${b.hp.toLocaleString()}</b></span><span>경험치 <b>${b.xp}</b></span></div>
+      <dl><dt>첫 처치</dt><dd>${chips(b.first)}</dd>
+      <dt>다시 물리치면</dt><dd>${chips(b.rematch)}</dd>
+      ${b.uniq || b.acc ? `<dt>전용 장비</dt><dd>${[b.uniq, b.acc].filter(Boolean).map(id => chip(id)).join(' ')} <small class="muted">첫 처치 확정, 재도전 35%</small></dd>` : ''}
+      ${b.notes.length ? `<dt>레시피 쪽지</dt><dd>${b.notes.map(id => chip(id)).join(' ')}</dd>` : ''}
+      ${idol ? `<dt>다시 부르기</dt><dd>${chip(idol)}</dd>` : ''}</dl>
+      ${q ? `<p class="tip"><b>공략</b> ${esc(q.h)}</p>` : ''}
+      ${t ? `<p class="tip"><b>${t[0]}</b> ${t[1]}<br><b>${t[2]}</b> ${t[3]}</p>` : ''}</div></article>`; }).join('')}</div>`;
+};
+
+R.world = () => {
+  const ws = Object.keys(D.walls).filter(k => D.walls[k].drop.length).sort((a, b) => D.walls[a].tier - D.walls[b].tier);
+  const picks = realItems.filter(id => I[id].kind === 'pick').sort((a, b) => I[a].power - I[b].power);
+  const pickFor = t => picks.find(id => I[id].tier >= t);
+  return `<div class="sec-head"><h2>지역·광맥</h2><p>지역마다 지형 벽, 광물, 그 지역에서만 나는 재료가 하나씩 있어요.</p></div>
+  <div class="panel wrapx"><table><thead><tr><th>지역</th><th>지형</th><th>광물</th><th>지역 재료</th><th>보스</th></tr></thead><tbody>
+  ${BIOME.map((b, k) => `<tr><td><b>${esc(b)}</b></td>${D.regionMat[k].map(id => `<td>${chip(id)}</td>`).join('')}<td>${Object.values(D.bosses).filter(x => x.region === k).map(x => `<a href="#boss">${esc(x.n)}</a>`).join('')}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="cat-title">벽과 광맥</div>
+  <div class="panel wrapx"><table><thead><tr><th>벽</th><th>필요한 곡괭이</th><th>단단함</th><th>캐면</th></tr></thead><tbody>
+  ${ws.map(k => { const w = D.walls[k], p = pickFor(w.tier); return `<tr><td><b>${esc(w.n)}</b></td><td>${p ? chip(p) : esc(w.tierN)}</td><td class="n">${w.hp}</td><td>${dropChips(w.drop)}</td></tr>`; }).join('')}
+  </tbody></table></div>
+  <p class="note">용암 동굴과 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어가요. 두 동굴에서는 더위·추위 게이지가 올라요. 얼음 동굴은 빛나는 설치물, 용암 동굴은 물웅덩이 3칸 안에서 게이지가 내려가요.</p>
+  <div class="cat-title">나무·풀·바위</div>
+  <div class="grid2">${Object.keys(D.objs).map(k => { const o = D.objs[k]; return `<div class="panel mon"><div class="pic">${sprImg(o.img, 2, o.n)}</div><div style="min-width:0"><h3>${esc(o.n)}</h3><div style="margin-top:.4rem">${dropChips(o.drops)}</div></div></div>`; }).join('')}</div>`;
+};
+
+R.fish = () => {
+  const ids = [...new Set(Object.values(D.catch).flat().map(x => x[0]))];
+  return `<div class="sec-head"><h2>낚시</h2><p>낚싯대를 들고 물을 바라보며 눌러 찌를 던져요. 찌가 쏙 들어가면 당겨요. 지역마다 잡히는 것이 달라요.</p></div>
+  <div class="panel wrapx"><table><thead><tr><th>잡히는 것</th>${BIOME.map(b => `<th>${esc(b)}</th>`).join('')}</tr></thead><tbody>
+  ${ids.map(id => `<tr><td>${rowName(id)}</td>${BIOME.map((b, k) => { const t = D.catch[k] || [], tot = t.reduce((a, x) => a + x[1], 0), e = t.find(x => x[0] === id); return `<td class="n">${e ? pct(e[1] / tot) : '<span class="muted">—</span>'}</td>`; }).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  <div class="panel" style="margin-top:1rem"><h3>낚시 운</h3><p class="note">낚시 운 요리, 수정 분수 소원(2단계), 고양이 펫(1단계)으로 별빛 잉어가 잘 잡히고 장화가 덜 걸려요. 가끔 병 속 쪽지나 작은 보물상자가 걸려요.</p>
+  <div class="wrapx"><table style="margin-top:.5rem"><thead><tr><th></th><th>별빛 잉어</th><th>낡은 장화</th><th>병 속 쪽지·보물상자</th></tr></thead><tbody>
+  ${[['기본', '그대로', '그대로', '1%'], ['1단계', '1.5배', '0.7배', '2%'], ['2단계', '2배', '0.5배', '4%'], ['3단계', '3배', '0.25배', '6%']].map(r => `<tr>${r.map((c, i) => i ? `<td class="n">${c}</td>` : `<td><b>${c}</b></td>`).join('')}</tr>`).join('')}
+  </tbody></table></div></div>`;
+};
+
+R.quest = () => `<div class="sec-head"><h2>퀘스트</h2><p>이야기 퀘스트는 순서대로 하나씩 열려요. 화면의 「지금 할 일」과 화살표가 길을 알려 줘요.</p></div>
+  <div class="grid2">
+  <section><h3 style="margin-bottom:.6rem">이야기 퀘스트</h3><ol class="quests">${D.story.map((q, k) => questRow(q, k + 1)).join('')}</ol></section>
+  <section><h3 style="margin-bottom:.6rem">도전 퀘스트 <small class="muted" style="font-family:var(--f-body);font-size:.85rem">언제든, 어떤 순서로든</small></h3><ul class="quests">${D.side.map(q => questRow(q)).join('')}</ul></section></div>`;
+const questRow = (q, no) => `<li><span class="no num">${no || '◆'}</span><div style="min-width:0"><b>${esc(q.t)}</b><p>${esc(q.h)}</p>
+  <div class="rw">${q.rw.length ? chips(q.rw) : ''}${q.xp ? `<span class="badge lamp num">경험치 ${q.xp}</span>` : ''}</div></div></li>`;
+
+R.gear = () => {
+  const weapons = realItems.filter(id => I[id].kind === 'sword');
+  const types = [...new Set(weapons.map(id => I[id].wt))];
+  const picks = realItems.filter(id => I[id].kind === 'pick').sort((a, b) => I[a].power - I[b].power);
+  const wears = realItems.filter(id => I[id].kind === 'wear' && I[id].slot !== 'ring');
+  const where = id => { const r = (MAKE[id] || [])[0]; return r ? esc(D.stn[r.at]) : (GET[id] || [])[0] ? esc(GET[id][0].t) : ''; };
+  const RK = { atk: '공격력', def: '받는 피해', mp: '기력 회복', xp: '경험치', mine: '채굴 속도' };
+  return `<div class="sec-head"><h2>무기·장비</h2><p>무기는 단축칸에서 골라 들면 그 무기로 싸워요. 아무것도 들지 않으면 주먹이에요. 장비 칸은 옷·머리장식·목걸이·반지 네 칸이에요.</p></div>
+  <div class="tabs" aria-hidden="true">${D.rarity.map(([n], k) => `<span class="badge"><b class="r${k}">●</b> ${esc(n)}</span>`).join('')}</div>
+  <div class="panel wrapx"><table><thead><tr><th>무기</th><th>종류</th><th>피해</th><th>등급</th><th>얻는 곳</th></tr></thead><tbody>
+  ${types.map(t => weapons.filter(id => I[id].wt === t).sort((a, b) => I[a].dmg - I[b].dmg).map(id => `<tr><td>${rowName(id)}</td><td>${WT[t] || t}</td><td class="n">${I[id].dmg}</td><td class="r${I[id].rar || 0}">${RAR[I[id].rar || 0]}</td><td>${where(id)}</td></tr>`).join('')).join('')}
+  </tbody></table></div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="panel"><h3>곡괭이</h3><div class="wrapx"><table><thead><tr><th>곡괭이</th><th>캐는 힘</th><th>캘 수 있는 벽</th></tr></thead><tbody>
+    ${picks.map(id => `<tr><td>${rowName(id)}</td><td class="n">${I[id].power}</td><td><small>${Object.values(D.walls).filter(w => w.tier === I[id].tier && w.drop.length).map(w => esc(w.n)).join(', ') || '모든 벽'}</small></td></tr>`).join('')}</tbody></table></div>
+    <p class="note">위 곡괭이로 캘 수 있는 벽은 모두 캘 수 있어요.</p></div>
+    <div class="panel"><h3>옷·장신구</h3><div class="stack" style="gap:.6rem;margin-top:.6rem">${wears.map(id => `<div>${rowName(id, `${SLOT[I[id].slot] || ''}`)}<p class="note" style="margin-top:.2rem">${esc(I[id].d)}</p></div>`).join('')}</div></div>
+    <div class="panel"><h3>반지</h3><p class="note">용광로에서 만들어요.</p><div class="wrapx"><table style="margin-top:.4rem"><thead><tr><th>반지</th><th>효과</th><th>강화마다</th></tr></thead><tbody>
+    ${Object.keys(D.rings).map(id => { const r = D.rings[id]; return `<tr><td>${rowName(id)}</td><td class="n">${RK[r.k]} ${r.k === 'def' ? '-' : '+'}${Math.round(r.b * 100)}%</td><td class="n">+${Math.round(r.per * 100)}%</td></tr>`; }).join('')}</tbody></table></div></div>
+    <div class="panel"><h3>용광로 강화</h3><ul class="tips" style="margin-top:.5rem">
+      <li>무기·곡괭이·옷·장신구·반지를 +5까지 강화해요.</li>
+      <li>무기 공격력 +8%, 곡괭이 캐는 힘 +10% (단계마다).</li>
+      <li>재료: 일반 구리괴, 고급 철괴, 희귀 정제 석영, 영웅 이상 금괴를 단계마다 2·4·6·8·10개.</li>
+      <li>+3부터 빛버섯(일반·고급) 또는 수정결정(희귀 이상)이 더 들어요.</li>
+      <li>분해하면 제작 재료 70%와 강화 재료 절반을 돌려받아요.</li></ul></div>
+  </div>`;
+};
+
+R.skill = () => {
+  const St = D.stats;
+  return `<div class="sec-head"><h2>능력·스킬</h2><p>최고 레벨은 ${D.maxLv}. 레벨이 오를 때마다 능력 점수 2개와 스킬 포인트 1개를 받아요. 스킬 다시 배우기는 무료예요.</p></div>
+  <div class="panel"><h3>능력치</h3><div class="statgrid">${Object.keys(St).map(k => `<div><small>${esc(St[k].n)}</small>${esc(St[k].d)}</div>`).join('')}</div></div>
+  ${D.skcat.map(c => `<div class="cat-title">${esc(c.n)}</div><div class="grid2">${c.ks.filter(k => D.skills[k]).map(k => { const s = D.skills[k];
+    return `<div class="panel"><div style="display:flex;gap:.7rem;align-items:center">${s.icon ? `<img class="px" src="${s.icon}" alt="">` : ''}<div><h3>${esc(s.n)}</h3><span class="badge ${s.act ? 'lamp' : 'moss'}">${s.act ? '쓰는 스킬' : '늘 켜짐'}</span> <span class="badge num">Lv.${s.lv}부터</span></div></div>
+    <ol class="tips num" style="margin-top:.6rem">${s.steps.map(st => `<li>${esc(st.d)}${st.mp != null ? ` <small class="muted">· 기력 ${st.mp}${st.cd != null ? ` · ${Math.round(st.cd * 10) / 10}초` : ''}</small>` : ''}</li>`).join('')}</ol></div>`; }).join('')}</div>`).join('')}`;
+};
+
+R.animal = () => {
+  const A = D.animals, pets = Object.keys(A).filter(k => A[k].pet), ranch = Object.keys(A).filter(k => A[k].ranch);
+  const card = k => { const a = A[k]; return `<div class="panel mon"><div class="pic">${sprImg(a.img, 3, a.n)}</div><div style="min-width:0"><h3>${esc(a.n)}${a.pn ? ` <small class="muted" style="font-family:var(--f-body);font-size:.85rem">${esc(a.pn)}</small>` : ''}</h3>
+    <div class="stats"><span>사는 곳 <b>${esc(BIOME[a.biome])}</b></span>${a.every ? `<span><b>${Math.round(a.every / 60)}분</b>마다</span>` : ''}</div>
+    <p class="note">${a.ranch ? chip(a.ranch) : esc(a.fx)}</p></div></div>`; };
+  return `<div class="sec-head"><h2>펫·목장</h2><p>올가미 밧줄을 들고 동물 가까이에서 [포획]을 눌러요. 빙글 도는 밧줄이 초록 구간에 왔을 때 던지기를 세 번 성공하면 친구가 돼요. 두 번 놓치면 도망가요.</p></div>
+  <div style="margin-bottom:1rem">${chip('lasso')}</div>
+  <h3>펫</h3><p class="note" style="margin-bottom:.6rem">한 마리가 따라다니며 버프를 줘요. 가방의 장비 칸 옆에서 바꿔요.</p><div class="grid2">${pets.map(card).join('')}</div>
+  <h3 style="margin-top:1.4rem">목장 동물</h3><p class="note" style="margin-bottom:.6rem">원하는 곳에 내려놓으면 시간마다 거둘 것이 생겨요. 머리 위 표시가 뜨면 눌러 거둬요.</p><div class="grid2">${ranch.map(card).join('')}</div>`;
+};
+
+R.search = q => {
+  const s = q.trim().toLowerCase(); if (!s) return R.items();
+  const has = t => String(t).toLowerCase().includes(s);
+  const its = realItems.filter(id => has(I[id].n) || has(id));
+  const mons = Object.keys(D.enemies).filter(k => has(D.enemies[k].n)), bos = Object.keys(D.bosses).filter(k => has(D.bosses[k].n));
+  const qs = [...D.story.map((x, k) => [x, k + 1]), ...D.side.map(x => [x])].filter(([x]) => has(x.t) || has(x.h));
+  const sks = Object.keys(D.skills).filter(k => has(D.skills[k].n));
+  const total = its.length + mons.length + bos.length + qs.length + sks.length;
+  return `<div class="sec-head"><h2>「${esc(q)}」 찾기</h2><p class="num">${total}개 찾았어요.</p></div>
+  ${its.length ? `<div class="cat-title">아이템</div>${cardGrid(its)}` : ''}
+  ${mons.length || bos.length ? `<div class="cat-title">몬스터·보스</div><div class="chips">${mons.map(k => `<a class="chip plain" href="#mon">${esc(D.enemies[k].n)}</a>`).join('')}${bos.map(k => `<a class="chip plain" href="#boss">${esc(D.bosses[k].n)}</a>`).join('')}</div>` : ''}
+  ${sks.length ? `<div class="cat-title">스킬</div><div class="chips">${sks.map(k => `<a class="chip plain" href="#skill">${esc(D.skills[k].n)}</a>`).join('')}</div>` : ''}
+  ${qs.length ? `<div class="cat-title">퀘스트</div><ul class="quests">${qs.map(([x, n]) => questRow(x, n)).join('')}</ul>` : ''}
+  ${total ? '' : '<div class="empty">찾는 것이 없어요. 다른 이름으로 찾아보세요.</div>'}`;
+};
+
+// ---------- 아이템 상세 ----------
+let trail = [];
+function openItem(id, push = true) {
+  const it = I[id]; if (!it) return;
+  if (push) trail.push(id);
+  const sh = $('#sheet'), mk = MAKE[id] || [], get = GET[id] || [], use = USE[id] || [];
+  const st = [];
+  if (it.dmg != null) st.push(['피해', it.dmg]); if (it.power != null) st.push(['캐는 힘', it.power]);
+  if (it.food) st.push(['배 채움', it.food]); if (it.heal) st.push(['체력 회복', it.heal]);
+  if (it.rar != null) st.push(['등급', `<span class="r${it.rar}">${RAR[it.rar]}</span>`]);
+  if (it.slot) st.push(['장비 칸', SLOT[it.slot] || it.slot]);
+  const dish = D.dishes[id] || (it.star && D.dishes[id.replace(/S$/, '')]);
+  const crop = it.kind === 'seed' ? Object.values(D.crops).find(c => c.seed === id) : null;
+  sh.innerHTML = `<div class="sheet-bar"><button class="icon-btn" id="sheetBack" ${trail.length > 1 ? '' : 'hidden'}>← 뒤로</button><span></span><button class="icon-btn" id="sheetClose">닫기</button></div>
+    <div class="head"><span class="slotbox ${it.rar != null ? 'rb' + it.rar : ''}">${ico(id, 'l')}</span><div><span class="lbl">${esc(kindLabel(it))}</span><h2 class="${it.rar != null ? 'r' + it.rar : ''}">${esc(it.n)}</h2></div></div>
+    ${it.d ? `<p class="desc">${esc(it.d)}</p>` : ''}
+    ${it.buffT ? `<p class="tip"><b>버프</b> ${esc(it.buffT)}</p>` : ''}
+    ${st.length ? `<div class="statgrid">${st.map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('')}</div>` : ''}
+    ${crop ? `<section><span class="lbl">작물</span><div class="mini"><div>${esc(crop.n)} · ${fmtSec(crop.grow)}에 다 자람${crop.soil ? ` · 맞는 흙 ${esc(crop.soil)}` : ''}<div style="margin-top:.3rem">${dropChips(crop.yield)}</div></div></div></section>` : ''}
+    ${mk.length ? `<section><span class="lbl">만드는 법</span><div class="mini">${mk.map(r => `<div>${stnBadge(r)} ${r.n > 1 ? `<small class="muted num">${r.n}개 만들어짐</small>` : ''}${r.lock ? ` <span class="badge lamp">${esc(r.lock)}</span>` : ''}<div style="margin-top:.3rem">${chips(r.req)}</div></div>`).join('')}</div></section>` : ''}
+    ${dish && dish.hint && !D.known0.includes(id) ? `<section><span class="lbl">레시피 쪽지</span><p style="margin:0">${esc(dish.hint)}</p></section>` : ''}
+    ${get.length ? `<section><span class="lbl">얻는 곳</span><ul>${get.map(g => `<li><a href="#${g.go}">${esc(g.t)}</a> <small class="muted num">${esc(g.s)}</small></li>`).join('')}</ul></section>` : ''}
+    ${use.length ? `<section><span class="lbl">쓰이는 곳 (${use.length})</span><div class="chips">${use.map(r => chip(r.out)).join('')}</div></section>` : ''}
+    ${!mk.length && !get.length && !use.length ? '<p class="note">숨은 방 보물상자나 특별한 곳에서 얻어요.</p>' : ''}`;
+  sh.hidden = false; $('#sheetBg').hidden = false; sh.scrollTop = 0;
+  $('#sheetClose').onclick = closeItem; $('#sheetBack').onclick = () => { trail.pop(); openItem(trail[trail.length - 1], false); };
+  $('#sheetClose').focus({ preventScroll: true });
+}
+function closeItem() { $('#sheet').hidden = true; $('#sheetBg').hidden = true; trail = []; }
+
+// ---------- 화면 전환 ----------
+let cur = 'home';
+function render() {
+  const q = $('#q').value;
+  $('#main').innerHTML = cur === 'search' ? R.search(q) : (R[cur] || R.home)() + `<p class="foot">${esc(D.ver || '')} 게임 데이터에서 자동으로 만든 페이지예요. 게임이 바뀌면 다시 만들어요.</p>`;
+  document.querySelectorAll('#nav a').forEach(a => a.setAttribute('aria-current', a.dataset.sec === cur ? 'page' : 'false'));
+  sizeSprites($('#main'));
+}
+function route() { const h = location.hash.slice(1); cur = R[h] && h !== 'search' ? h : 'home'; if (cur !== 'search') $('#q').value = ''; render(); window.scrollTo(0, 0); closeItem(); }
+$('#nav').innerHTML = SECTIONS.map(([id, t, icon, grp]) => `${grp ? `<div class="grp lbl">${grp}</div>` : ''}<a href="#${id}" data-sec="${id}">${I[icon] ? `<img class="px" src="${I[icon].icon}" alt="">` : ''}${t}</a>`).join('');
+$('#brandIcon').src = I.lightSeed.icon; $('#verLine').textContent = `${D.ver ? D.ver + ' 기준 · ' : ''}등불나무 아래 도감`;
+document.addEventListener('click', e => {
+  const it = e.target.closest('[data-item]'); if (it) { e.preventDefault(); if (!$('#sheet').contains(it)) trail = []; openItem(it.dataset.item); return; }
+  const g = e.target.closest('[data-group]'); if (g) { itemGroup = g.dataset.group; render(); return; }
+  const a = e.target.closest('[data-at]'); if (a) { craftAt = a.dataset.at; render(); return; }
+  if (e.target.id === 'sheetBg') closeItem();
+});
+document.addEventListener('change', e => { if (e.target.id === 'starToggle') { showStar = e.target.checked; render(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeItem(); if (e.key === '/' && document.activeElement !== $('#q')) { e.preventDefault(); $('#q').focus(); } });
+let qt; $('#q').addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { if ($('#q').value.trim()) { cur = 'search'; render(); } else { cur = 'items'; render(); } }, 120); });
+addEventListener('hashchange', route);
+route();
+</script>
