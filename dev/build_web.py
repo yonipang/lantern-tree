@@ -36,3 +36,10 @@ self.addEventListener('fetch',e=>{{
 }});
 """)
 print('ok',ver)
+# 위키도 같은 원본으로 다시 만들어요 (dev/wiki/build_wiki.py → 저장소 맨 위 wiki.html). 실패해도 게임 배포는 그대로
+import subprocess, sys as _sys, os as _os
+_wk = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'wiki', 'build_wiki.py')
+try:
+    _r = subprocess.run([_sys.executable, _wk], capture_output=True, text=True, timeout=300)
+    print((_r.stdout.strip().splitlines() or ['wiki ?'])[-1] if _r.returncode == 0 else '위키 만들기 실패: ' + (_r.stderr.strip().splitlines() or ['?'])[-1])
+except Exception as e: print('위키 만들기 실패:', e)
