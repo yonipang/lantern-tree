@@ -23,7 +23,8 @@ def png_size(b):
 def main():
     art, warn = {}, []
     if os.path.isdir(ART_DIR):
-        for root, _, files in os.walk(ART_DIR):
+        for root, dirs, files in os.walk(ART_DIR):
+            dirs.sort()  # same order on every computer (GitHub Actions too), so packing twice changes nothing
             for f in sorted(files):
                 if not f.lower().endswith('.png'):
                     continue
