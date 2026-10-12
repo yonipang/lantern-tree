@@ -27,7 +27,7 @@ EXP_DECL = re.compile(r'^export\s+(?=(?:async\s+)?function\b|class\b|const\b|let
 DECL = re.compile(r'^(?:export\s+)?(?:async\s+)?(?:function\*?\s*([A-Za-z_$][\w$]*)|class\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+(.*))', re.M)
 WORD = re.compile(r'(?<![\w$.])[A-Za-z_$][\w$]*')
 # 규칙 파일 (화면·소리를 바로 부르지 않는 곳) — 보이기·소리는 engine/·ui/·render, 저장 파일 다루기는 save/storage.js
-RULES = ('js/sim/', 'js/world/', 'js/game/', 'js/features/', 'js/content/', 'js/data/', 'js/save/state.js', 'js/save/migrations.js')
+RULES = ('js/sim/', 'js/world/', 'js/data/', 'js/save/state.js', 'js/save/migrations.js')
 # 규칙 파일은 키보드·마우스·조이스틱을 직접 읽지 않고 조작 의도 ctlOf(p)와 명령(defineCmd)으로 받아요 (7단계, sim/commands.js)
 RAW_INPUT = {'keys', 'mouse', 'joy', 'dpad', 'btnHeld', 'atkBtnHeld', 'aimMouse', 'mouseWorld', 'mouseTile', 'readCtl'}
 DIRECT_FX = re.compile(r'(?<![\w$.])(SFX\s*[.\[]|(?:toast|puff|ftext|hearts|splash|mapPixel|craftNote)\s*\(|shake\s*=(?!=))')

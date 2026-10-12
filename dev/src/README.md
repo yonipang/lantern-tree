@@ -14,9 +14,9 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 - **순서가 중요해요.** `function`은 어디서든 부를 수 있지만, 맨 위에서 바로 실행되는 줄(`const …`, `Object.assign(ITEMS, …)`, `RECIPES.push(…)`, `TIPS.push(…)` 등)은 `shell.html`에 적힌 순서대로 실행돼요.
   - 앞 파일에서 만든 `const`·`let`을 뒤 파일이 쓰는 건 괜찮고, 반대는 안 돼요 (불러오자마자 오류).
   - `RECIPES`·`QSIDE`·`TIPS`에 넣는 순서가 제작 창·퀘스트 목록의 순서예요. 파일 순서를 바꾸면 화면 순서도 바뀌어요.
-- **새 기능**은 비슷한 `js/features/` 파일(데이터는 같은 이름의 `js/data/` 파일) 끝에 덧붙이거나, 크면 새 파일을 만들고 `shell.html`의 `js/features/automation-tiers.js` 다음(그림·데이터·게임 규칙이 다 만들어진 뒤, `js/render.js` 앞)에 `// @include …` 한 줄을 넣어요. `shell.html`에 안 적은 파일은 `build.py`가 ⚠로 알려 줘요.
-- **데이터(밸런스)는 `js/data/`** (구조 변경 2단계): 아이템·물체·레시피·몬스터·퀘스트·요리 수치와 이름·설명은 `js/data/<이름>.js`에, 그 기능의 동작은 같은 이름의 규칙 파일(`content/`·`features/`·`game/`)에, **그림(아이콘 `ICON`·물체 그림 `OSPR`·몬스터 그림)은 `js/art/`**(기능별 아이콘은 `art/content.js`)에 있어요.
-  - 데이터 파일은 `shell.html`에서 같은 이름의 규칙 파일 **바로 앞**에 와요 (예전과 같은 실행 순서). 새 아이템·레시피는 데이터 파일에, 아이콘·물체 그림은 `art/content.js`에 넣어요 (그림은 게임을 시작할 때 한꺼번에 만들어져서 어디에 두어도 순서 문제가 없어요).
+- **새 기능**은 그 기능의 `js/sim/` 파일(농사 → `sim/farming.js`, 전투 → `sim/combat.js` …, 데이터는 `js/data/`)에 덧붙이거나, 크면 새 `js/sim/` 파일을 만들고 `shell.html`의 `js/sim/loop.js` 다음(데이터·규칙이 다 만들어진 뒤, `js/art/content.js` 앞)에 `// @include …` 한 줄을 넣어요. 창 HTML·HUD는 `js/ui/`에. `shell.html`에 안 적은 파일은 `build.py`가 ⚠로 알려 줘요.
+- **데이터(밸런스)는 `js/data/`** (구조 변경 2단계): 아이템·물체·레시피·몬스터·퀘스트·요리 수치와 이름·설명은 `js/data/<이름>.js`에, 그 기능의 동작은 `js/sim/`의 기능별 파일에 (9단계에서 버전별 `content/`·`game/`·`features/` → 기능별로), **그림(아이콘 `ICON`·물체 그림 `OSPR`·몬스터 그림)은 `js/art/`**(기능별 아이콘은 `art/content.js`)에 있어요.
+  - 데이터 파일은 예전 버전 묶음 이름 그대로예요(`data/farming-cooking.js` …). 모두 규칙 파일(`js/sim/`)보다 앞에 와요. 새 아이템·레시피는 데이터 파일에, 아이콘·물체 그림은 `art/content.js`에 넣어요 (그림은 게임을 시작할 때 한꺼번에 만들어져서 어디에 두어도 순서 문제가 없어요).
   - 데이터 파일 안의 순서도 중요해요: `RECIPES`에 넣는 순서 = 제작 창 순서, 「지형 재료 2배」(`data/automation-tiers.js`) 같은 일괄 보정은 그 줄보다 앞에서 만든 레시피에만 적용돼요.
 - CSS도 같은 규칙: 적힌 순서대로 하나의 `<style>`에 들어가요 (뒤에 있는 규칙이 이겨요).
 - 옛 세이브를 고치는 코드는 `js/save/migrations.js`에만 둬요. 코드를 정리하거나 옮긴 뒤에는 `python3 dev/qa/snapshot.py`(비교 테스트)가 그대로 통과해야 해요.
@@ -42,36 +42,46 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/art/characters.js` | (모듈) 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
 | `js/art/world.js` | (모듈) 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |
 | `js/data/items.js` | (모듈) **기본 데이터**: 벽·아이템·물체·레시피(`Rc`)·장식·무기·고유 무기·희귀도·가방, 얇은 벽 조각 만들기, 레시피 일괄 보정(REQ_FIX·금속 → 구리 제작대) |
-| `js/content/items.js` | 얇은 벽·문·울타리 그리기와 잇기, 희귀도 함수, 제작 수량 |
 | `js/data/rpg-nature.js` | (모듈) 레벨·능력치 이름·스킬, 낚시 표, 몬스터(`ENEMY`)·**보스(`BOSSES`·재도전 보상 `REMATCH`)**, 꽃, 나무 자라는 시간, 자연 꾸미기 |
-| `js/content/rpg-nature.js` | 능력치 계산·경험치, 꽃잎 구역·어린나무 자라기 |
 | `js/data/circuits-regions.js` | (모듈) 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출, **모든 장비 내구도(`DUR`)·분해** |
-| `js/content/circuits-regions.js` | 회로·전력 계산, 바닥 위험, 가구 회전·나무 작업장·채굴장 동작 |
 | `js/world/gen.js` | (모듈) 지도 만들기(`genWorld`) — 지역·벽·물·연못·석영 광맥, 숨은 방 |
 | `js/world/tiles.js` | (모듈) 막힌 칸·충돌·움직이기(`isSolid`·`boxHits`·`moveEnt`), 여러 칸 가구 발자리(`fpOf`·`delObj` …), 땅 파기·지형 배우기, 놓을 수 있는지(`canPlace`) |
 | `js/save/state.js` | (모듈) `G`·새 게임·`serialize`/`deserialize`, **세이브 나누기 `splitSave`·`joinSave`** (세계·캐릭터·세계 안 플레이어별 — `SAVE_ORDER`·`CHAR_KEYS`·`PLAYER_KEYS`) |
 | `js/save/migrations.js` | (모듈) **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
 | `js/save/storage.js` | (모듈) 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |
-| `js/game/actions.js` | 가방·내구도·분해, 버튼이 하는 일(`decide`·`perform`), 명령 `ctl`·`hot`·`sel` |
-| `js/game/bag.js` | **창 버튼 명령**: 가방 옮기기·정렬·입기·먹기·버리기, 상자, 강화·분해·수리·작업대 올리기, 제작(`craft`, 제작 자리 `craftable`), 퀘스트 보상·능력치·스킬·꾸미기 · 제작대 옆 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가까운 제작대(`nearStations`) |
-| `js/game/combat.js` | 스킬·피해·몬스터 처치, 보스 재도전, 물체 쓰기·잠·낚시·캐기·놓기·수확·먹기 |
-| `js/game/update.js` | 등불나무 연출, 매 프레임 진행(`update` → 순서표), 움직이기·배고픔·몬스터·보스 AI·생성·빛 |
 | `js/data/quests.js` | (모듈) 길잡이 퀘스트(`GUIDE`)·보상(`Q_META`)·곁가지 퀘스트(`QSIDE`), 여러 칸 가구(`MULTI`) |
-| `js/game/quests.js` | 퀘스트 진행·보상 받기·지역 알림 |
 | `js/data/farming-cooking.js` | (모듈) 낫·물뿌리개·비료, 맞는 흙·별 작물, **숨은 방**(개수·장식·보물), 버프·요리·레시피 쪽지, 용광로·요리솥 시간, 낚시 운 |
-| `js/features/farming-cooking.js` | 농사, 숨은 방 보물상자, 요리, 용광로·요리솥 시간 작업(꺼 둔 동안 자라기), 레시피 쪽지·버프·낚시 운 |
 | `js/data/gear-animals.js` | (모듈) 불꽃·서리 작물, 옷·장신구, 장비제작대, 반지, 강화 비용·효과, 동물·목장 |
-| `js/features/gear-animals.js` | 불꽃 열매·서리 무·옷·장신구·장비 칸, 장비제작대 강화·반지·가구 칸 크기, 펫·올가미·목장 |
 | `js/data/deep-survival.js` | (모듈) 더위·추위 대비 요리·문구, 지역 재료, 귀환석, 잃어버린 꾸러미, 깊은 보스 단계 문구 |
-| `js/features/deep-survival.js` | 더위·추위 요리와 게이지·지역 재료, 귀환석·긴급 탈출·기절, 깊은 보스 3단계 |
 | `js/data/automation-tiers.js` | (모듈) 스프링클러·자동 수확기, 거대 작물, 축제 케이크, **「지형 재료 2배」**, 작업대·장비제작대 단계와 레시피 단계 나누기 |
-| `js/features/automation-tiers.js` | 농사 자동화·거대 작물 동작, 작업대·장비제작대 단계 올리기 |
 | `js/data/controls.js` | (모듈) 도구 종류, 도끼 → 나무 베기 도구, 쳐서 회수(몇 번·몇 초) |
-| `js/features/controls.js` | v65 조작: 공격 버튼(`doAttack`)·쳐서 회수, 도구 주머니·도구 칸·도구 줄, 작은 버튼(`curAlt`·`cycleAlt`), 버튼 표시(`updateCtrlHud`) |
+| `js/sim/inventory.js` | 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도(`addItem`·`removeItem`·`countItem`·`moveInto`), 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가방·상자·도구 명령 |
+| `js/sim/gear.js` | 장비·옷·장신구·반지(`wearItem`·`wearing`·`ringV`), 강화 단계와 효과(`upgCost`·`upgText`), 무기 종류·희귀도(`wtOf`·`rarOf`) |
+| `js/sim/crafting.js` | 제작: 가까운 제작대(`nearStations`)·제작 자리(`craftable`·`stationTier`), 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업(`takeJob`) |
+| `js/sim/building.js` | 건축: 얇은 벽·문·자동문 잇기(`twMask`·`doorGroup`), 가구 돌리기(`rotatePlace`)·발자리 크기(`setFootprints`), 놓기(`placeItem`)·줍기 |
+| `js/sim/gathering.js` | 모으기: 벽 캐기(`mineWall`)·나무 베기(`hitObj`)·수확(`harvest`), 쳐서 회수(공격 버튼으로 가구 떼기) |
+| `js/sim/player.js` | 플레이어: 능력치·스킬·경험치(`gainXp`·`maxHp`), 매 프레임 움직이기·배고픔, 다치기·기절·깨어나기(`hurtPlayer`·`respawn`), 앉기·자기·먹기, 능력치·스킬·꾸미기 명령 |
+| `js/sim/survival.js` | 생존: 더위·추위(`envTick`), 귀환석(`startRecall`), 긴급 탈출·갇힘 풀기(`emergencyEscape`·`unstick`), 잃어버린 꾸러미 |
+| `js/sim/actions.js` | 상호작용 버튼: 목표 칸(`targetTile`), 무엇을 할지 고르기(`decide`)·하기(`perform`), 물체 쓰기(`useObj`), 작은 버튼(`curAlt`·`doAlt`), 명령 `ctl`·`tap`·`alt` |
+| `js/sim/combat.js` | 전투: 무기(`curWeapon`)·휘두르기·쏘기, 스킬(`useSkill`), 피해·상태 이상·몬스터 처치(`hitEnemy`), 화살, 공격 버튼(`doAttack`) |
+| `js/sim/enemies.js` | 몬스터: 움직이기·쫓기(가장 가까운 플레이어, `enemyStep`), 만들기·생기기(`mkEnemy`·`trySpawn`) |
+| `js/sim/bosses.js` | 보스: 깨우기·패턴(`BOSS_AI`)·단계·탄환·위험 지대, 맞기(`hitBoss`), 재도전 보상·소환 |
+| `js/sim/nature.js` | 자연: 꽃잎 구역(`zoneTick`), 작물·어린나무 자라기(`growTick`), 베고 남기기·파내기, 풀·뿌리 다시 자라기(`regrow`) |
+| `js/sim/farming.js` | 농사: 물·비료·별 작물·주변 수확, 자동화(스프링클러·자동 수확기)·거대 작물, 나무 작업장·채굴장 |
+| `js/sim/cooking.js` | 요리: 배운 요리·레시피 쪽지(`learnRecipe`·`maybeNote`), 음식 버프·행운(`applyBuff`·`bval`·`luckTier`) |
+| `js/sim/fishing.js` | 낚시: 던지기·입질·거두기(`startFish`·`updateFish`·`reel`), 낚시 표·병 편지 |
+| `js/sim/animals.js` | 동물: 펫(함께 다니기·따라오기), 들짐승(`wildTick`), 올가미 포획(`catchThrow`), 목장 |
+| `js/sim/circuits.js` | 회로: 전선·전력 계산(`circuitTick`), 기계 작동(`deviceStep`) |
+| `js/sim/quests.js` | 퀘스트: 길잡이·곁가지 진행과 보상(`checkGuide`·`claimQuest`), 목표 글·화살표, 지역 알림 |
+| `js/sim/tree.js` | 등불나무: 자라는 단계(`treeStage`), 빛씨앗 넣기(`insertSeeds`) |
+| `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
 | `js/art/content.js` | (모듈) **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render.js` | 빛·지도 픽셀, 카메라·바닥 조각·세계·캐릭터 그리기, 아이템 아이콘(`iconURL`) |
+| `js/render/parts.js` | 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행(`updateFx`), 동물 그림, 회수 막대 (10단계에서 `render/`로 정리) |
 | `js/ui/feedback.js` | (모듈) **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
 | `js/ui/panels.js` | HUD 갱신·`openPanel`·`renderPanel`·지도·제작 알림 |
+| `js/ui/hud.js` | HUD: 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시(`updateCtrlHud`) |
+| `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |
 | `js/ui/panel-actions.js` | 창 안 버튼(`onSheetClick`) → 명령 보내기, 창 안 고르기·확인 묻기(`UIS`), 칸 끌어 옮기기 |
 | `js/ui/input.js` | 입력 상태(`keys`·`mouse`·`joy`·`dpad`)와 **조작 의도 만들기(`readCtl`)·명령 보내기(`command`)**, 키보드·터치·조이스틱 연결, 캐릭터 고르기 |
 | `js/main.js` | 게임 루프와 시작(`start`) |

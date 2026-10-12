@@ -1,3 +1,8 @@
+// ================= 퀘스트: 길잡이·곁가지 진행과 보상, 목표 글·화살표, 지역 알림 =================
+// (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+// ---- 퀘스트 보상·능력치·스킬 ----
+defineCmd('claim', c => claimQuest(c.id));
+defineCmd('claimAll', () => { for (const q of [...GUIDE, ...QSIDE]) claimQuest(q.id); emit('toast', '보상을 모두 받았어요', 'good'); });
 // ================= guide =================
 function nearestObjOf(t, rad = 24) { const p = G.p; let best = null, bd = 1e9; for (let y = Math.floor(p.y - rad); y <= p.y + rad; y++) for (let x = Math.floor(p.x - rad); x <= p.x + rad; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === t) { const d = Math.hypot(x - p.x, y - p.y); if (d < bd) { bd = d; best = { x: x + .5, y: y + .5 }; } } } return best; }
 const hasItem = id => countItem(id) > 0 || wearing(id);
