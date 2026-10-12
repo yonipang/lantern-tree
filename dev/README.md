@@ -70,7 +70,7 @@ pip install playwright --break-system-packages   # 이미 있으면 생략
 ## 세이브 호환 규칙
 
 - 저장 키: `lantern-tree-save-v1`, 현재 세이브 버전 `v: 3`
-- 예전 세이브는 불러올 때 고쳐서 이어지게 해요 (`migrateV2`, `migrateV3`, `fixParts`, `grantUniques`, `ensureDeepAltars`)
+- 예전 세이브는 불러올 때 고쳐서 이어지게 해요. 고치는 코드는 모두 `dev/src/js/save/migrations.js`에 있고, `deserialize()`가 정해진 순서로 불러요 (`migrateV2`, `migrateV3`, `fixParts`, `grantUniques`, `ensureDeepAltars` …)
 - 저장 구조를 바꾸면 반드시 옛 세이브 불러오기 테스트를 추가해요
 - 가구 칸 크기 (v50부터): 작업대 2×1, 통나무·돌 벤치 2×1. 침대는 v51부터, 구리 제작대·화로·용광로는 v55부터 다시 1칸 (전에 놓은 남는 칸은 `fixParts`가 지움). v56부터 v50 전 세이브(`fpV` 없음)도 같은 크기 — 불러올 때 `growFootprints()`가 작업대·벤치를 오른쪽(막히면 왼쪽) 칸으로 넓히고, 양옆이 막히면 아이템으로 돌려줘요. 커진 가구는 손그림이 들어오기 전까지 옛 그림을 늘린 임시 그림. 가방·단축칸 아이콘은 길쭉한 그림도 정사각형 칸에 넣어 1칸으로 보여요(`squareIcon`, v55)
 - 지도 모양 두 가지 (v47부터): 새 게임은 600×600 고리 지도(`mapV: 2`, `LAY 2`), v47 전 세이브는 200×200 원래 지도(`mapV` 없음 → `LAY 1`) 그대로. `setLayout()`이 W·H·CX·CY·보스 위치를 바꿔요
