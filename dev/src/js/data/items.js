@@ -4,6 +4,7 @@
 // 이 파일은 shell.html에서 content/items.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { rand } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
+import { shovelDesc } from '../world/tiles.js';
 
 export const CRYGEM_P = 0.35; // a crystal cluster gives one 수정결정 this often, otherwise one 석영
 export const WALLS = {

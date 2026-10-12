@@ -346,7 +346,8 @@ def test_boss_rematch():
             rec('난이도','몬스터 체력·공격력 상향 (꽃망울은 그대로)', r==[18,75,120,22,10,18], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;let i=-1;for(let k=0;k<40000;k++){if(G.biome[k]===3&&!G.wall[k]&&G.floor[k]===18&&Math.hypot(k%200-T.SL.x,((k/200)|0)-T.SL.y)>14){i=k;break}}const x=i%200,y=(i/200)|0;for(let dy=-16;dy<=16;dy++)for(let dx=-16;dx<=16;dx++){const j=T.idx(x+dx,y+dy);if(x+dx>2&&y+dy>2&&x+dx<197&&y+dy<197&&G.wall[j]!==8){G.wall[j]=0;G.floor[j]=18;G.objs.delete(j);G.biome[j]=3}}G.p.x=x+.5;G.p.y=y+.5;G.enemies.length=0;for(let k=0;k<60;k++)T.trySpawn();return G.enemies.length}""")
             rec('난이도','용암 동굴은 한 번에 더 많이 몰려옴 (최대 10, 무리 지어 등장)', 9<=r<=11, r)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const e=T.mkEnemy('magmaSlime',G.p.x+9.4,G.p.y);G.enemies.push(e);const x0=e.x;for(let k=0;k<60;k++)T.updateEnemies(1/30);return +(x0-e.x).toFixed(2)}""")
+            # 앞 단계에서 생긴 몬스터들이 잠깐 사이에 플레이어를 때리거나 쓰러뜨릴 수 있어요(쓰러지면 집으로) → 여기서 상태와 길을 직접 맞춰요
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;G.p.dead=0;G.p.hp=999;G.p.hurt=0;G.p.inv=0;const px=Math.floor(G.p.x),py=Math.floor(G.p.y);for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=12;dx++){const j=T.idx(px+dx,py+dy);if(G.wall[j]!==8){G.wall[j]=0;G.objs.delete(j);if(G.floor[j]===T.WATER||G.floor[j]===17)G.floor[j]=18}}const e=T.mkEnemy('magmaSlime',G.p.x+9.4,G.p.y);G.enemies.push(e);const x0=e.x;for(let k=0;k<60;k++)T.updateEnemies(1/30);return +(x0-e.x).toFixed(2)}""")
             rec('난이도','깊은 동굴 몬스터는 더 멀리서(10칸) 알아채고 쫓아옴', r>0.5, r)
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()

@@ -2,6 +2,8 @@
 // 레벨·능력치 이름·스킬·낚시 표·몬스터 수치·꽃·나무 자라는 시간·자연 꾸미기 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
 // 이 파일은 shell.html에서 content/rpg-nature.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { ITEMS, OBJ, RECIPES, Rc } from './items.js';
+import { BX, BY, SA, SB, SI, SL, W } from '../world/map.js';
+import { G, beat } from '../save/state.js';
 
 // ---- level, stats and skills ----
 export const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
@@ -89,3 +91,17 @@ export const BOSSES = {
 export const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
 // ---- calling a beaten boss back for another fight ----
 export const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
+
+// ---- 바닥 타일 → 아이템, 삽으로 뜰 수 있는 지형과 배우는 조건 (구조 변경 5단계: world.js에서 옮김) ----
+// ---- terrain: ground you can dig with a shovel and lay elsewhere, unlocked one by one ----
+export const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
+for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
+FLOOR_ITEM[21] = 'meadow';
+// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
+export const TERRAIN = {
+  2: { n: '흙', item: 'gDirt', base: true },
+  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
+  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
+  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
+  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
+};
