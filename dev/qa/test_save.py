@@ -402,3 +402,30 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_tools_migration():
+    import asyncio, sys
+    # v65: 옛 세이브의 도구(곡괭이·도끼·삽·낚싯대 …)는 불러올 때 도구 주머니로. 손에 들고 있던 도구는 그대로 들고, 안내가 한 번 떠요
+    H2=HOOK.replace("computeLight}","computeLight,heldTool,curWeapon,selItem}")
+    OLD="""(sel)=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.tools;delete s.tsel;delete s.tHand;delete s.lastW;delete s.stats.nm65;s.inv=s.inv.map(()=>null);
+  s.inv[0]={id:'berry',c:3};s.inv[1]={id:'axeStone',c:1,dur:90};s.inv[2]={id:'pickCopper',c:1,dur:120};s.inv[3]={id:'swordCopper',c:1};s.inv[12]={id:'shovel',c:2};s.inv[13]={id:'rod',c:1,dur:5};s.inv[14]={id:'swordIron',c:1,lv:2};s.inv[15]={id:'pickWood',c:1,dur:200};s.sel=sel;return s}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{window.__old="+OLD+"}")
+            r=await ev(pg,"()=>{const T=__T;T.deserialize(__old(2));const G=T.G;return [G.tools.map(x=>x.id+':'+(x.dur==null?'-':x.dur)).join(','),G.inv.filter(Boolean).map(x=>x.id).join(','),G.sel,T.heldTool()&&T.heldTool().id,G.tHand,G.stats.nm65]}")
+            rec('옛 세이브','도구는 주머니로 (내구도 그대로, 겹친 삽 2개는 2개로), 다른 건 그대로', r[0]=='axeStone:90,pickCopper:120,shovel:-,shovel:-,rod:5,pickWood:200' and r[1]=='berry,swordCopper,swordIron' and r[5]==1, str(r))
+            rec('옛 세이브','들고 있던 곡괭이는 도구 칸에 든 채로 (일부러 든 것으로)', r[2:5]==[-1,'pickCopper',True], str(r))
+            await wait_until(pg,"()=>document.querySelector('#toasts').innerText.includes('조작이 바뀌었어요')",5000)
+            r=await ev(pg,"()=>document.querySelector('#toasts').innerText"); rec('옛 세이브','조작이 바뀐 안내 + 옮긴 도구 개수', '조작이 바뀌었어요' in r and '도구 6개' in r, r[:120])
+            r=await ev(pg,"()=>{const T=__T;T.deserialize(__old(3));const G=T.G;return [G.sel,T.selItem().id,G.lastW,T.curWeapon().id]}")
+            rec('옛 세이브','무기를 들고 있었으면 그 무기를 마지막 무기로 기억', r==[3,'swordCopper','swordCopper','swordCopper'], str(r))
+            r=await ev(pg,"()=>{const T=__T;T.deserialize(__old(0));const G=T.G;return [G.sel,G.lastW,T.curWeapon().id]}")
+            rec('옛 세이브','무기를 안 들고 있었으면 가장 센 무기로 공격', r[0]==0 and r[1] is None and r[2]=='swordIron', str(r))
+            r=await ev(pg,"()=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G=T.G;return [G.tools.length,G.inv.filter(x=>x&&__T.ITEMS[x.id]&&['pick','axe','shovel','rod'].includes(__T.ITEMS[x.id].kind)).length]}")
+            rec('옛 세이브','한 번 옮긴 뒤 다시 불러와도 두 번 옮기지 않음', r==[6,0], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

@@ -66,6 +66,8 @@ LEGACY = {
     'old_stations': "delete s.fpV;delete s.stats.nm61;s.objs=s.objs.filter(([i])=>i!==I(4,6)&&i!==I(5,6)&&i!==I(8,6));s.objs.push([I(4,6),{t:'bench'}],[I(8,6),{t:'forge'}]);s.inv[8]={id:'forge',c:1}",
     'bosses_beaten': "s.bossDead={slime:true,queen:true,golem:true,turtle:true,spirit:true};s.treeSeeds=3",
     'no_mapV': "delete s.mapV",
+    # v65 전 세이브: 도구가 가방·단축칸에 있고 곡괭이를 들고 있음 → 도구 주머니로 옮겨짐
+    'old_tools_in_bag': "for(const k of ['tools','tsel','tHand','lastW'])delete s[k];delete s.stats.nm65;s.inv[3]={id:'pickCopper',c:1,dur:120};s.inv[4]={id:'axeStone',c:1};s.inv[12]={id:'shovel',c:2};s.inv[13]={id:'rod',c:1,dur:5};s.inv[14]={id:'swordIron',c:1};s.inv[15]={id:'pickWood',c:1,dur:200};s.sel=3",
 }
 
 

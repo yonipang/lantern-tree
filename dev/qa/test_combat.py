@@ -42,7 +42,7 @@ def test_balance():
 def test_skills():
     import asyncio, sys
     # 스킬 (v44): 일반·마법·활 스킬 2개씩 + 분류 표시 + 스킬 다시 배우기
-    H2=HOOK.replace("computeLight}","computeLight,SKILLS,SK_CAT,useSkill,wRange,atkCd,meleeMul,rangeMul,magicMul,maxMp,mkEnemy,WTYPE,curWeapon}")
+    H2=HOOK.replace("computeLight}","computeLight,SKILLS,SK_CAT,useSkill,wRange,atkCd,meleeMul,rangeMul,magicMul,maxMp,mkEnemy,WTYPE,curWeapon,doAttack}")
     CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+22;y++)for(let x=T.CX+2;x<T.CX+22;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i)}
   G.enemies.length=0;G.pshots.length=0;G.drops.length=0;G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.hp=100;G.p.mp=999;G.fish=null;G.inv.fill(null);G.sel=0;G.buffs=[];G.skcd={};
   const R=G.rpg;R.lv=30;R.sk={};R.slot=[null,null];R.str=R.dex=R.vit=R.int=0;return [T.CX+8,T.CY+8]};
@@ -71,9 +71,9 @@ def test_skills():
             rec('화살비','활이 없으면 안 나가고 기력도 그대로', r[0]==[0,0,False] and r[3], str(r))
             rec('화살비','활: 화살 5발(3단계 9발), 한 발에 활 피해 60%, 기력 20, 화살은 안 씀', r[1][0]==5 and r[1][1] and 5<=r[1][2]<=8 and r[1][3]==20 and r[1][4]==5 and r[2]==9, str(r))
             # hawk
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.sel=0;const W=T.WTYPE.bow;const r0=T.wRange(W),m0=T.rangeMul();__en(7.6,0);const d0=T.decide().k;G.rpg.sk.hawk=2;const r2=T.wRange(W),m2=T.rangeMul();const d2=T.decide().k;
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.sel=0;const W=T.WTYPE.bow;const r0=T.wRange(W),m0=T.rangeMul();__en(7.6,0);G.p.face={x:0,y:-1};T.doAttack();const d0=G.p.face.x;G.rpg.sk.hawk=2;const r2=T.wRange(W),m2=T.rangeMul();G.p.face={x:0,y:-1};T.doAttack();const d2=G.p.face.x;
           G.pshots.length=0;T.swingAttack&&0;return [r0,+r2.toFixed(2),+(m2/m0).toFixed(2),d0,d2,+T.wRange(T.WTYPE.staff).toFixed(2)]}""")
-            rec('매의 눈','2단계: 활 사거리 +30%·활 피해 +16% (지팡이 사거리는 그대로) → 7.6칸 적도 자동 조준', r==[6.5,8.45,1.16,'swing','attack',6.5], str(r))
+            rec('매의 눈','2단계: 활 사거리 +30%·활 피해 +16% (지팡이 사거리는 그대로) → 7.6칸 적도 자동 조준', r==[6.5,8.45,1.16,0,1,6.5], str(r))
             # frost ring
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.rpg.sk.frostRing=1;G.rpg.slot=[null,'frostRing'];const a=__en(2.5,0),b2=__en(0,2),c=__en(5,0);const mm=T.magicMul();const m0=G.p.mp;T.useSkill(1);return [999-a.hp,Math.round(20*mm),!!a.chill,999-b2.hp,999-c.hp,m0-G.p.mp]}""")
             rec('서리 고리','둘레 3칸 적에게 피해 20(1단계)·얼림, 5칸 밖은 안 맞음, 기력 24', r[0]==r[1] and r[2] and r[3]==r[1] and r[4]==0 and r[5]==24, str(r))
@@ -111,9 +111,9 @@ def test_boss_effects_rarity():
             # rarity data
             r=await ev(pg,"()=>{const T=__T;const bad=[];for(const id in T.ITEMS){const it=T.ITEMS[id];if((it.kind==='sword'||it.kind==='pick')&&T.rarOf(id)<0)bad.push(id)}return [bad,T.rarOf('swordWood'),T.rarOf('pickIron'),T.rarOf('bowCrystal'),T.rarOf('daggerQueen'),T.rarOf('wood')]}")
             rec('레어도','모든 무기·곡괭이에 등급이 있음', r[0]==[] and r[1:]==[0,1,2,3,-1], str(r))
-            await ev(pg,"()=>{const G=__T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'daggerQueen',c:1};G.inv[1]={id:'pickIron',c:1};G.inv[2]={id:'swordWood',c:1};G.inv[9]={id:'bowCrystal',c:1};__T.refreshHotbar()}")
+            await ev(pg,"()=>{const G=__T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'daggerQueen',c:1};G.inv[1]={id:Object.keys(__T.ITEMS).find(k=>__T.ITEMS[k].kind==='sword'&&__T.rarOf(k)===1),c:1};G.inv[2]={id:'swordWood',c:1};G.inv[9]={id:'bowCrystal',c:1};__T.refreshHotbar()}")  # v65: pickaxes live in the pouch, so a 고급 weapon here
             await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>{const s=[...document.querySelectorAll('#hbSlots .slot')];return [s[0].className,s[1].className,s[2].className,getComputedStyle(s[0]).borderTopColor]}")
+            r=await ev(pg,"()=>{const s=[...document.querySelectorAll('#hbSlots .slot:not(.tslot)')];return [s[0].className,s[1].className,s[2].className,getComputedStyle(s[0]).borderTopColor]}")
             rec('레어도','단축칸 테두리 색 (영웅/고급/일반)', 'r3' in r[0] and 'r1' in r[1] and 'r' not in r[2].replace('slot','').replace('sel','').replace('broken','').strip(), str(r))
             await ev(pg,"()=>__T.openPanel('inv')"); await pg.wait_for_timeout(500)
             await pg.tap('#sheet .slot[data-a=inv][data-i="0"]'); await pg.wait_for_timeout(200)
@@ -312,7 +312,7 @@ def test_boss_rematch():
             # ---- boss rematch ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);const first=G.drops.map(d=>d.id);G.drops.length=0;
           for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'queenIdol',c:1};G.sel=0;const h=T.BOSSES.queen.home();G.p.x=h.x+20;G.p.y=h.y;const far=T.decide();G.p.x=h.x;G.p.y=h.y+5;const a=T.decide();T.perform(a);return [first.includes('daggerQueen'),far.k,a.k,G.bossDead.queen,T.countItem('queenIdol')]}""")
-            rec('재도전','보스를 잡은 뒤 보스방에서 소환 조각상 사용 → 다시 나타남 (멀면 안내)', r==[True,'info','summon',False,0], str(r))
+            rec('재도전','보스를 잡은 뒤 보스방에서 소환 조각상 사용 → 다시 나타남 (멀면 소환 안 함, v65: 앞에 다른 할 일이 있으면 그걸 추천)', r[0] is True and r[1]!='summon' and r[2:]==['summon',False,0], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=0;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;T.addItem('pickCopper',1,false);T.checkGuide();return T.GUIDE[G.guide].id}""")
             rec('재도전','보스가 다시 살아나도 이야기 진행이 되돌아가지 않음', r!='queen', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G;return [G2.bossDead.queen,G2.stats.beaten.queen]}""")

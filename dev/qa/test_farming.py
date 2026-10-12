@@ -33,7 +33,7 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
           G.drops.length=0;let o=__crop(G.p.x+5|0,G.p.y|0,'cropBerry',200);T.harvest({x:G.p.x+5|0,y:G.p.y|0},o);const a=cnt();
           T.addItem('sickle',1);G.drops.length=0;o=__crop(G.p.x+5|0,G.p.y|0,'cropBerry',200);T.harvest({x:G.p.x+5|0,y:G.p.y|0},o);const b2=cnt();Math.random=mr;G.drops.length=0;return [a,b2]}""")
             rec('구리 낫','가방에 있으면 거둘 때 하나 더 (베리 2 → 3)', r==[2,3], str(r))
-            r=await ev(pg,"()=>{const T=__T;const s=T.G.inv.find(x=>x&&x.id==='sickle');return [s.dur==null,!T.ITEMS.sickle.dur]}")
+            r=await ev(pg,"()=>{const T=__T;const s=T.G.tools.find(x=>x.id==='sickle');return [s.dur==null,!T.ITEMS.sickle.dur]}")
             rec('구리 낫','내구도 없음', r==[True,True], str(r))
             # hold to harvest 3x3
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.p.x=Math.floor(G.p.x)+.5;G.p.y=Math.floor(G.p.y)+.5;__clr(Math.floor(G.p.x)-4,Math.floor(G.p.y)-4,9,9);G.p.face={x:0,y:1};G.inv[0]=null;G.sel=0;
@@ -44,23 +44,23 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
             r2=await ev(pg,"()=>{const T=__T,G=T.G,t=__tt;let n=0;for(let dy=0;dy<=2;dy++)for(let dx=-1;dx<=1;dx++)if(G.objs.get(T.idx(t.x+dx,t.y+dy)))n++;return n}")
             rec('구리 낫','한 번 누르면 하나만 거둠', r[2]=='harvest' and r1==8, f'{r} {r1}')
             rec('구리 낫','꾹 누르고 있으면 주변 3×3을 한 번에 거둠', r2<=3, f'{r1}→{r2}')
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=G.inv.findIndex(x=>x&&x.id==='sickle');G.inv[i]=null;const t=__tt;__clr(t.x-1,t.y,3,3);for(let dx=-1;dx<=1;dx++)__crop(t.x+dx,t.y+1,'cropBerry',200);__crop(t.x,t.y,'cropBerry',200);return T.decide().k}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.tools=G.tools.filter(x=>x.id!=='sickle');G.tsel=0;const t=__tt;__clr(t.x-1,t.y,3,3);for(let dx=-1;dx<=1;dx++)__crop(t.x+dx,t.y+1,'cropBerry',200);__crop(t.x,t.y,'cropBerry',200);return T.decide().k}""")
             await pg.keyboard.down('Space'); await pg.wait_for_timeout(1000); await pg.keyboard.up('Space')
             r2=await ev(pg,"()=>{const T=__T,G=T.G,t=__tt;let n=0;for(let dx=-1;dx<=1;dx++)if(G.objs.get(T.idx(t.x+dx,t.y+1)))n++;return n}")
             rec('구리 낫','낫이 없으면 꾹 눌러도 주변을 한꺼번에 거두지 않음', r2==3, f'{r} {r2}')
             # ---- watering can ----
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x0=Math.floor(G.p.x),y0=Math.floor(G.p.y);__clr(x0-4,y0-4,9,9);T.addItem('wcan',1);const k=G.inv.findIndex(x=>x&&x.id==='wcan');const s=G.inv[k];const w0=s.w||0;G.inv[k]=null;G.inv[0]=s;G.sel=0;G.p.face={x:0,y:1};
-          const t=T.targetTile();const wi=T.idx(t.x,t.y);G.floor[wi]=T.WATER;const a1=T.decide();T.fillCan(t);const wf=G.inv[0].w;const a2=T.decide();G.floor[wi]=2;const o=__crop(t.x,t.y,'cropBerry',10);const a3=T.decide();T.waterCrop(t,o);const a4=T.decide();
-          return [w0,a1.k,a1.lbl,wf,a2.lbl,a3.k,a3.lbl,o.w,G.inv[0].w,a4.k,a4.msg]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x0=Math.floor(G.p.x),y0=Math.floor(G.p.y);__clr(x0-4,y0-4,9,9);T.addItem('wcan',1);const k=G.tools.findIndex(x=>x.id==='wcan');const s=G.tools[k];const w0=s.w||0;G.tsel=k;G.sel=-1;G.tHand=true;G.p.face={x:0,y:1};
+          const t=T.targetTile();const wi=T.idx(t.x,t.y);G.floor[wi]=T.WATER;const a1=T.decide();T.fillCan(t);const wf=s.w;const a2=T.decide();G.floor[wi]=2;const o=__crop(t.x,t.y,'cropBerry',10);const a3=T.decide();T.waterCrop(t,o);const a4=T.decide();
+          return [w0,a1.k,a1.lbl,wf,a2.lbl,a3.k,a3.lbl,o.w,s.w,a4.k,a4.msg]}""")
             rec('물뿌리개','새로 만들면 비어 있고, 물가를 보면 "물 채우기"', r[0]==0 and r[1]=='fill' and r[2]=='물 채우기', str(r))
             rec('물뿌리개','한 번 채우면 10번', r[3]==10 and r[4]=='가득 참', str(r))
             rec('물뿌리개','자라는 작물에 "물 주기" → 한 번 쓰고 물 준 표시', r[5]=='water' and r[7]==1 and r[8]==9, str(r))
             rec('물뿌리개','이미 물 준 작물은 단계 안내에 "물 줌"', r[9]=='info' and '물 줌' in r[10], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+20,y=Math.floor(G.p.y)+20;const a=__crop(x,y,'cropBerry',0),b=__crop(x+1,y,'cropBerry',0);b.w=1;G.treeSeeds=0;T.growTick(3);return [+(G.time-a.p).toFixed(2),+(G.time-b.p).toFixed(2)]}""")
             rec('물뿌리개','물 준 작물은 25% 빨리 자람 (3초에 4초만큼)', r==[0,1], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0].w=0;const t=T.targetTile();const o=__crop(t.x,t.y,'cropBerry',10);const a=T.decide();return [a.k,a.lbl,a.msg]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.tools.find(x=>x.id==='wcan').w=0;const t=T.targetTile();const o=__crop(t.x,t.y,'cropBerry',10);const a=T.decide();return [a.k,a.lbl,a.msg]}""")
             rec('물뿌리개','비었으면 물을 줄 수 없고 채우라는 안내', r[0]=='info' and r[1]=='물 없음' and '채워요' in r[2], str(r))
-            r=await ev(pg,"()=>{const T=__T,G=T.G;G.inv[0].w=7;T.openPanel('inv');const h=document.querySelector('#sheet').innerHTML;T.closePanel();const arr=Array(4).fill(null);T.moveInto(arr,G.inv[0]);return [h.includes('#6fb8ff'),arr[0].w]}")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const wc=G.tools.find(x=>x.id==='wcan');wc.w=7;T.openPanel('inv');const h=document.querySelector('#sheet').innerHTML;T.closePanel();const arr=Array(4).fill(null);T.moveInto(arr,{...wc});return [h.includes('#6fb8ff'),arr[0].w]}")
             rec('물뿌리개','남은 물이 칸에 파란 막대로 보이고, 상자로 옮겨도 그대로', r==[True,7], str(r))
             # ---- fertilizer ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.bossDead.queen=false;(G.stats.beaten||{}).queen=0;const f=T.RECIPES.find(x=>x.out==='fert'),fs=T.RECIPES.find(x=>x.out==='fertShroom');const before=[T.recipeOn(f),T.recipeOn(fs)];G.bossDead.queen=true;return [before,T.recipeOn(f),T.recipeOn(fs),f.n,JSON.stringify(f.req),f.at,JSON.stringify(fs.req)]}""")
@@ -99,8 +99,8 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
           s.objs=s.objs.filter(([k])=>![i1,i2,i3,i4].includes(k));s.objs.push([i1,{t:'sapling',at:s.time-30}],[i2,{t:'cropBerry',p:s.time-50}],[i3,{t:'stump',g:'root',at:s.time+200}],[i4,{t:'root'}]);for(const k of [i1,i2,i3,i4]){s.wall[0]}
           T.deserialize(s);const G2=T.G;for(const k of [i1,i2,i3,i4]){G2.wall[k]=0}G2.p.y-=30;T.growTick(2);G2.p.y+=30;const a=G2.objs.get(i1),c=G2.objs.get(i2),d=G2.objs.get(i3),e=G2.objs.get(i4);return [a.t,T.isYoung(a),T.cropStage(c),T.treeStep(d),T.isYoung(e),T.treeStep(e)]}""")
             rec('세이브','옛 세이브: 이미 다 자랄 시간이 지난 묘목은 바로 다 자란 나무, 작물·그루터기도 맞는 단계', r==['root',False,1,-1,False,3], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+8,y=Math.floor(G.p.y)+9;const o=__crop(x,y,'cropShroom',20);o.w=1;o.f=2;T.addItem('wcan',1);const s0=G.inv.find(z=>z&&z.id==='wcan');s0.w=4;
-          const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const n=T.G.objs.get(T.idx(x,y));const s1=T.G.inv.find(z=>z&&z.id==='wcan'&&z.w===4);return [n.w,n.f,n.p0!=null,!!s1]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+8,y=Math.floor(G.p.y)+9;const o=__crop(x,y,'cropShroom',20);o.w=1;o.f=2;T.addItem('wcan',1);const s0=G.tools.find(z=>z.id==='wcan');s0.w=4;
+          const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const n=T.G.objs.get(T.idx(x,y));const s1=T.G.tools.find(z=>z.id==='wcan'&&z.w===4);return [n.w,n.f,n.p0!=null,!!s1]}""")
             rec('세이브','물·비료 표시와 물뿌리개의 물이 저장·불러오기 뒤에도 그대로', r==[1,2,True,True], str(r))
             # ---- quests ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=id=>T.QSIDE.find(x=>x.id===id);G.stats.berryH=0;G.stats.wetH=0;G.stats.fert=0;const a=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);

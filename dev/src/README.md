@@ -44,6 +44,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/features/gear-animals.js` | 불꽃 열매·서리 무·옷·장신구·장비 칸, 장비제작대 강화·반지·가구 칸 크기, 펫·올가미·목장 |
 | `js/features/deep-survival.js` | 더위·추위 요리와 게이지·지역 재료, 귀환석·긴급 탈출·기절, 깊은 보스 3단계 |
 | `js/features/automation-tiers.js` | 농사 자동화·거대 작물·축제 케이크, 지형 재료 2배, 작업대·장비제작대 단계 |
+| `js/features/controls.js` | v65 조작: 공격 버튼(`doAttack`)·쳐서 회수, 도구 주머니·도구 칸·도구 줄, 작은 버튼(`curAlt`·`cycleAlt`), 버튼 표시(`updateCtrlHud`) |
 | `js/render.js` | 빛·지도 픽셀, 카메라·바닥 조각·세계·캐릭터 그리기, 아이템 아이콘(`iconURL`) |
 | `js/ui/panels.js` | HUD 갱신·`openPanel`·`renderPanel`·지도·제작 알림 |
 | `js/ui/panel-actions.js` | 제작대 옆 상자 재료 함께 쓰기, 창 안 버튼 처리(`onSheetClick`), 칸 끌어 옮기기·정렬 |

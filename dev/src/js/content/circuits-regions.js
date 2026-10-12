@@ -240,7 +240,7 @@ function drawHazards(T, camX, camY) {
 
 // ---- multi-tile objects (2×1, 2×2, 3×2 …): the top-left tile holds the object, the other tiles hold {t:'_part', a: anchor} ----
 OBJ._part = { n: '', part: 1 };
-const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.rotV ? [d.sz[1], d.sz[0]] : d.sz; };
+const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.sz[0] !== d.sz[1] ? [d.sz[1], d.sz[0]] : d.sz; };
 function fpTiles(i, o, fp) { fp = fp || fpOf(o); const x = i % W, y = (i / W) | 0, out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push(idx(x + dx, y + dy)); return out; }
 function setParts(i, o) { for (const j of fpTiles(i, o)) if (j !== i) G.objs.set(j, { t: '_part', a: i }); }
 function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i) continue; const q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); } }
@@ -251,20 +251,25 @@ function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math
 let placeRot = 0, placeRotFor = null;
 const pRot = () => { const s0 = G && selItem(); return s0 && s0.id === placeRotFor ? placeRot : 0; };
 const DIRN = ['아래', '오른쪽', '위', '왼쪽'];
-const canRotObj = t => { const d = OBJ[t]; return !!(d && d.item && !d.tw && !d.dev && !d.src && !d.sw && !d.chest && !(d.sz && !d.rotV && d.sz[0] === d.sz[1])); };
-const placeFp = d => d.sz ? (pRot() % 2 && d.rotV ? [d.sz[1], d.sz[0]] : d.sz) : [1, 1];
-function rotateObjAt(i) { const o = G.objs.get(i); if (!o || !canRotObj(o.t)) return false; const d = OBJ[o.t];
-  if (d.sz && d.rotV) { const nf = o.rot ? d.sz : [d.sz[1], d.sz[0]], x = i % W, y = (i / W) | 0; if (!fpFree(x, y, nf, !!d.solid, i)) { toast('돌릴 자리가 부족해요', null, 'norot'); return false; } clearParts(i, o); o.rot = o.rot ? 0 : 1; setParts(i, o); }
-  else if (d.dir4) o.dir = ((o.dir || 0) + 1) % 4;
-  else o.flip = !o.flip;
-  SFX.place(); puff((i % W) + .5, ((i / W) | 0) + .6, '#e8d8c0', 4, 1.4); lightDirty = true; return true; }
-function rotateAction() {
-  if (!started || paused || !G || G.p.dead > 0) return; const s = selItem(), it = s && ITEMS[s.id];
-  if (it && it.kind === 'place' && canRotObj(it.obj)) { const d = OBJ[it.obj]; if (placeRotFor !== s.id) { placeRotFor = s.id; placeRot = 0; } placeRot = d.dir4 ? (placeRot + 1) % 4 : (placeRot % 2 ? 0 : 1);
-    toast(d.sz && d.rotV ? (placeRot % 2 ? '세로로 놓아요' : '가로로 놓아요') : d.dir4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : (placeRot % 2 ? '반대 방향으로 놓아요' : '원래 방향으로 놓아요'), null, 'prot'); SFX.click(); return; }
-  const a = G.act; if (a && a.o && a.t && inB(a.t.x, a.t.y)) { const ai = anchorAt(idx(a.t.x, a.t.y)); if (ai >= 0 && canRotObj(G.objs.get(ai).t)) { rotateObjAt(ai); return; } }
-  toast('돌릴 수 있는 가구를 들거나 바라봐 주세요', null, 'norot2'); }
-const rotTarget = () => { if (!G) return false; const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'place' && canRotObj(it.obj)) return true; const a = G.act; return !!(a && a.o && a.t && inB(a.t.x, a.t.y) && anchorAt(idx(a.t.x, a.t.y)) >= 0 && canRotObj((G.objs.get(anchorAt(idx(a.t.x, a.t.y))) || {}).t)); };
+// v65 (stardew-like): each piece turns 1, 2 or 4 ways, chosen before placing (to turn a placed one, pick it up and place it again).
+// Seats face 4 ways (the sitter faces the same way); other furniture 2 (front / turned 90°); front-only and round things do not turn.
+// A turned piece uses its own drawing when there is one (obj/<id>S.png side, obj/<id>U.png back), otherwise the drawing turned 90°.
+const ROT4 = new Set(['chair', 'cryChair', 'mossSofa', 'ironChair', 'shroomStool', 'stumpStool', 'sofa2', 'logBench', 'stoneBench', 'cushion']);
+const NOROT = new Set(['pictureFrame', 'vase', 'table', 'rugRound', 'cryMirror', 'cryFountain', 'fountainBig', 'fishTank', 'bootPlanter', 'torch']);
+function rotN(t) { const d = OBJ[t]; if (!d || !d.item || d.tw || d.dev || d.src || d.sw || d.chest || d.ranch || d.nat || d.crop || d.tree || d.lost || NOROT.has(t)) return 1; return ROT4.has(t) || d.dir4 ? 4 : 2; }
+const canRotObj = t => rotN(t) > 1;
+const rotSwaps = d => !!(d && d.sz && d.sz[0] !== d.sz[1]);
+const placeFp = d => d.sz ? (pRot() % 2 && rotSwaps(d) ? [d.sz[1], d.sz[0]] : d.sz) : [1, 1];
+const rotOf = o => typeof o.dir === 'number' ? o.dir : o.rot ? 1 : 0;
+const ROTC = new WeakMap(), turned = c => { let k = ROTC.get(c); if (!k) { k = rot90(c); ROTC.set(c, k); } return k; };
+function rotImg(t, r, base) { // → [image, flip]
+  if (!r || !base) return [base, false]; const main = base === SPR.obj[t];
+  if (r === 2 && rotN(t) === 4) return [(main && SPR.obj[t + 'U']) || base, false];
+  return [(main && (SPR.obj[t + 'S'] || SPR.obj[t + 'V'])) || turned(base), r === 3]; }
+function rotatePlace() { const s = selItem(), it = s && ITEMS[s.id]; if (!it || it.kind !== 'place' || rotN(it.obj) < 2) return; const n = rotN(it.obj);
+  if (placeRotFor !== s.id) { placeRotFor = s.id; placeRot = 0; } placeRot = (placeRot + 1) % n;
+  toast(n === 4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : placeRot ? '옆으로 돌려 놓아요' : '정면으로 놓아요', null, 'prot'); SFX.click(); }
+function rotateAction() { if (!started || paused || !G || G.p.dead > 0) return; rotatePlace(); }
 function rot90(c) { const k = document.createElement('canvas'); k.width = c.height; k.height = c.width; k.hd = c.hd; const g = k.getContext('2d'); g.imageSmoothingEnabled = false; g.translate(k.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0); return k; }
 // ---- tree workshop: a 2×2 plot of saplings; chop when grown, or power it to chop by itself into a chest next to it ----
 const FARM_GROW = 90, FARM_CAP = 60;

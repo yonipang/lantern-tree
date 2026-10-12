@@ -103,3 +103,9 @@ function syncNotes() {
   for (const d of DISHES) { const s = d[7]; if ((s.startsWith('quest:') || s.startsWith('guide:')) && (G.qclaim || {})[s.slice(6)]) learnRecipe(d[0], true); }
 }
 function grantAccs() { G.stats.accGot = G.stats.accGot || {}; for (const k in ACC_OF) if (beat(k) && !G.stats.accGot[k]) { G.stats.accGot[k] = 1; const l = moveInto(G.inv, { id: ACC_OF[k], c: 1 }); if (l) spawnDrop(ACC_OF[k], 1, G.p.x, G.p.y); } }
+// v65: tools move into their own pouch (the tool slot at the front of the hotbar holds one); a tool held stays in hand
+function migrateTools65() { G.stats.nm65 = 1; const held = G.sel >= 0 ? G.inv[G.sel] : null; let moved = 0;
+  for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { G.tools.push({ ...s, c: 1 }); if (s.c > 1) for (let k = 1; k < s.c; k++) G.tools.push({ id: s.id, c: 1 }); G.inv[i] = null; moved += s.c || 1; } }
+  if (held && isTool(held.id)) { G.tsel = G.tools.findIndex(x => x.id === held.id && x.dur === held.dur); if (G.tsel < 0) G.tsel = 0; G.sel = -1; G.tHand = true; } // the tool that was in hand stays in hand
+  if (!G.lastW && held && ITEMS[held.id] && ITEMS[held.id].kind === 'sword') G.lastW = held.id; // otherwise the strongest weapon is used
+  setTimeout(() => { if (G && started) toast('조작이 바뀌었어요 · 칼 버튼은 공격, 손 버튼은 열기·캐기·놓기예요' + (moved ? ` · 도구 ${moved}개는 도구 주머니로 옮겼어요 (단축칸 맨 앞 도구 칸)` : ''), 'good', 'nm65'); }, 1600); }

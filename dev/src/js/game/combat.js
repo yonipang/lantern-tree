@@ -129,7 +129,7 @@ function useObj(a) {
       const grp = doorGroup(t.x, t.y), nv = !o.open; // a double door opens and closes together
       if (!nv && grp.some(([j]) => occupied(j % W, (j / W) | 0))) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; }
       for (const [, g] of grp) g.open = nv; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break; }
-    case 'sit': { const sd = OBJ[o.t].dir4 ? (o.dir || 0) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
+    case 'sit': { const sd = rotN(o.t) === 4 ? rotOf(o) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
     case 'pet': hearts(x, t.y, 5); SFX.purr(); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); ftext(p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } toast(pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
     case 'lamp': o.off = !o.off; lightDirty = true; SFX.click(); break;
@@ -167,7 +167,7 @@ function reel() {
   const seen = G.stats.fishSeen || (G.stats.fishSeen = {});
   if (id === 'bottle') { } else if (!seen[id]) { seen[id] = 1; toast(`처음 낚았어요: ${ITEMS[id].n}!`, 'good'); } else ftext(G.p.x, G.p.y - 1.5, ITEMS[id].n, '#bfe6ff');
   G.stats.fishCaught = (G.stats.fishCaught || 0) + 1; gainXp(id === 'koi' ? 12 : id === 'boot' ? 1 : 4, G.p.x, G.p.y);
-  wear(G.inv.find(s => s && s.id === 'rod' && !isBroken(s)));
+  wear(bestTool('rod'));
 }
 function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
@@ -180,12 +180,11 @@ function mineWall(t) {
   } else G.wdmg.set(i, dm);
 }
 function hitObj(t, o) {
-  const d = OBJ[o.t], pk = bestPick(), i = idx(t.x, t.y);
+  const d = OBJ[o.t], tl = natTool(d), i = idx(t.x, t.y), tier = tl ? ITEMS[tl.id].tier || 0 : 0; // v65: an axe (or else a pickaxe) from the tool pouch
   faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y);
-  G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' ? null : d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? curWeapon().id : pk.id === 'hand' ? null : pk.id };
-  if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
-  const axe = d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? WTYPE.axe.chop : 1; // a held axe chops trees faster
-  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power) * mineMul() * axe); if (d.nat !== 'pick') wear(pk.slot);
+  G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' || !tl ? null : tl.id };
+  if ((d.tier || 0) > tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
+  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, tl ? toolPow(tl) : 0.5) * mineMul()); if (d.nat !== 'pick' && tl) wear(tl);
   SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
   const yg = isYoung(o);
   if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
@@ -198,8 +197,9 @@ function placeItem(t) {
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
   else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
-    const pr = pRot(); if (dd.sz) { if (pr % 2 && dd.rotV) o.rot = 1; const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
-    else { if (pr && canRotObj(it.obj)) { if (dd.dir4) o.dir = pr % 4; else if (pr % 2) o.flip = true; } G.objs.set(i, o); }
+    const pr = pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
+    if (dd.sz) { const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
+    else G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
   s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
   SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);

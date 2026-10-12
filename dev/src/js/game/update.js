@@ -146,6 +146,7 @@ function update(dt) {
   if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
   if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
   holdT = held ? holdT + dt : 0;
+  attackTick(dt); // v65: the attack button
   // survival
   buffTick(dt); envTick(dt); recallTick(dt);
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
