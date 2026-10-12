@@ -1,9 +1,9 @@
-# 건축·지형·회로: 삽·지형, 문, 회로·채굴기, 여러 칸 가구·회전, 건축 정리, 칸 크기
-# 실행: python3 dev/qa/run.py building   (테스트 하나만: python3 dev/qa/run.py qa7)
+# 건축·지형·회로: 삽·지형, 문, 여러 칸 가구·회전, 가구 칸 크기, 건축 정리, 회로·채굴기
+# 실행: python3 dev/qa/run.py building   (테스트 하나만: python3 dev/qa/run.py terrain_shovel)
 from harness import *
 
 
-def qa7_terrain_shovel():
+def test_terrain_shovel():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,checkGuide,subAction:()=>subAction(),get act(){return G.act},canPlace,RECIPES}")
     async def main():
@@ -95,14 +95,14 @@ def qa7_terrain_shovel():
             # old save without new fields
             r=await ev(pg,"()=>{const s=__T.serialize();delete s.under;delete s.terrain;__T.deserialize(s);return [__T.G.under.size, typeof __T.G.terrain]}")
             rec('저장','예전 세이브(새 항목 없음)도 정상 로드', r==[0,'object'], str(r))
-            await pg.screenshot(path=SP+'qa7.png')
+            await pg.screenshot(path=SP+'terrain_shovel.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
 
-def qa12_doors():
+def test_doors():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES}")
     async def main():
@@ -147,111 +147,21 @@ def qa12_doors():
             await setup("G.objs.set(__T.idx(111,110),{t:'bDoorWood',open:1});G.p.x=110.85;")
             await tap(pg,1); r=await ev(pg,"()=>[!!__T.G.objs.get(__T.idx(111,110)).open, document.querySelector('#toasts').innerText.includes('문 사이에')]")
             rec('문','문턱에 걸쳐 서 있으면 닫히지 않음', r==[True,True], str(r))
-            # save (roofs were removed in v41 — see qa41)
+            # save (roofs were removed in v41 — see building_cleanup)
             r=await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(111,110),{t:'bDoorStone',open:1});const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);const o=__T.G.objs.get(__T.idx(111,110));return [o.t,!!o.open,'roof' in s]}")
             rec('저장','문 저장/불러오기 (지붕 항목 없음)', r==['bDoorStone',True,False], str(r))
             # icons are 16x16
             r=await ev(pg,"()=>{__T.openPanel('craft');return 1}"); await pg.wait_for_timeout(400)
             await pg.click('#sheet [data-a=tab][data-i=build]'); await pg.wait_for_timeout(300)
             await pg.evaluate("()=>{document.querySelector('#sheet .sh-body').scrollTop=500}"); await pg.wait_for_timeout(200)
-            await pg.screenshot(path=SP+'qa12_craft.png')
+            await pg.screenshot(path=SP+'craft.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
 
-def qa22_circuits():
-    import asyncio, sys
-    H2=HOOK.replace("computeLight}","computeLight,RECIPES,checkGuide,circuitTick,isSolid,perform,decide,GUIDE,QSIDE,wirePowered,refreshHotbar}")
-    ARENA="()=>{const G=__T.G;for(let y=100;y<120;y++)for(let x=100;x<124;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=101.5;G.p.y=118.5;G.p.face={x:1,y:0}}"
-    W="(xs,y)=>xs.forEach(x=>__T.G.wire.set(__T.idx(x,y),1))"
-    O="(t,x,y,ex)=>{const o=Object.assign({t},ex||{});__T.G.objs.set(__T.idx(x,y),o);return o}"
-    TICK="(n,dt)=>{for(let k=0;k<n;k++)__T.circuitTick(dt||.2)}"
-    async def main():
-        mkpage(SRC,'qa.html',H2)
-        async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
-            await ev(pg,f"()=>{{window.W={W};window.O={O};window.TK={TICK}}}")
-            # ---------- quests ----------
-            r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='gMoss');return [R.at,JSON.stringify(R.req)]}")
-            rec('이끼','이끼 섬유 3개로 이끼 한 삽 (손 제작)', r==[None,'[["fiber",1]]'], str(r))
-            await pg.tap('#goal'); await pg.wait_for_timeout(600)
-            r=await ev(pg,"()=>[document.querySelector('.sh-head h2').textContent,[...document.querySelectorAll('.qrow .st')].map(e=>e.textContent).join(','),document.querySelectorAll('.qrow h4')[1]&&document.querySelectorAll('.qrow h4')[1].textContent]")
-            rec('퀘스트','지금 할 일을 누르면 퀘스트 창 · 진행 중/잠김(???) 표시', '퀘스트' in r[0] and r[1].startswith('진행 중') and r[2]=='???', str(r))
-            await ev(pg,"()=>__T.closePanel()")
-            r=await ev(pg,"()=>{const G=__T.G;G.stats.wood=6;__T.checkGuide();return document.querySelector('#goal').classList.contains('dot')}")
-            await pg.wait_for_timeout(700); r=await ev(pg,"()=>document.querySelector('#goal').classList.contains('dot')"); rec('퀘스트','받을 보상이 있으면 지금 할 일에 점', r, r)
-            await pg.tap('#bQuest'); await pg.wait_for_timeout(600)
-            r=await ev(pg,"()=>{const row=document.querySelector('.qrow');return [row.querySelector('.st').textContent,!!row.querySelector('[data-a=qClaim]'),row.querySelector('.qrw').textContent]}")
-            rec('퀘스트','완료 + 보상 표시 + 보상 받기 버튼', r[0]=='완료' and r[1] and '이끼 섬유 5' in r[2] and '경험치 10' in r[2], str(r))
-            f0=await ev(pg,"()=>__T.countItem('fiber')")
-            await pg.tap('.qrow [data-a=qClaim]'); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>[__T.countItem('fiber'),document.querySelector('.qrow .got')&&document.querySelector('.qrow .got').textContent,!!__T.G.qclaim.wood]")
-            rec('퀘스트','보상 받으면 아이템 지급 + 받음 ✓', r[0]==f0+5 and r[1]=='받음 ✓' and r[2], str(r))
-            await pg.screenshot(path=SP+'qa22_quest.png')
-            await pg.tap('[data-a=qTab][data-i=side]'); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>document.querySelectorAll('.qrow').length"); rec('퀘스트','도전 탭에 부가 퀘스트 목록', r>=8, r)
-            await ev(pg,"()=>{__T.G.stats.made={gMoss:1};__T.closePanel();__T.openPanel('quest');}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=qTab][data-i=side]'); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>{const row=document.querySelector('.qrow');return [row.querySelector('h4').textContent,!!row.querySelector('[data-a=qClaim]')]}")
-            rec('퀘스트','완료한 도전이 맨 위에 + 보상 받기', '이끼 한 삽' in r[0] and r[1], str(r))
-            await pg.tap('[data-a=qClaimAll]'); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [!!__T.G.qclaim.s_moss,!!__T.G.qclaim.wood]}")
-            rec('퀘스트','받은 기록이 저장됨', r==[True,True], str(r)); await ev(pg,"()=>__T.closePanel()")
-            # ---------- circuits ----------
-            await ev(pg,ARENA)
-            r=await ev(pg,"()=>{O('battery',102,105,{e:600});W([103,104,105,106],105);const L=O('eLamp',107,105,{off:true});TK(2);return [L.off,__T.wirePowered(__T.idx(104,105)),!!__T.G.stats.litLamp]}")
-            rec('회로','건전지 → 전선 → 전기 램프가 켜짐', r==[False,True,True], str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.wire.delete(__T.idx(105,105));const L=G.objs.get(__T.idx(107,105));TK(2);return [L.off,__T.wirePowered(__T.idx(106,105))]}")
-            rec('회로','전선이 끊기면 꺼짐', r==[True,False], str(r))
-            r=await ev(pg,"()=>{const lv=O('lever',105,105);const L=__T.G.objs.get(__T.idx(107,105));TK(2);const a=L.off;lv.on=true;TK(2);const b=L.off;return [a,b]}")
-            rec('회로','레버: 꺼져 있으면 끊고 켜면 이어 줌', r==[True,False], str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(105,105));O('plate',105,105);const L=G.objs.get(__T.idx(107,105));G.p.x=101.5;G.p.y=118.5;TK(2);const a=L.off;G.p.x=105.5;G.p.y=105.5;TK(2);const b=L.off;G.p.x=101.5;G.p.y=118.5;return [a,b]}")
-            rec('회로','압력판: 올라서 있는 동안만 켜짐', r==[True,False], str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(105,105));O('timer',105,105,{per:1});const L=G.objs.get(__T.idx(107,105));const seen=new Set();for(let k=0;k<20;k++){TK(1,.2);seen.add(L.off)}return seen.size}")
-            rec('회로','타이머: 켜졌다 꺼졌다 반복', r==2, r)
-            # door
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(105,105));G.wire.set(__T.idx(105,105),1);G.objs.delete(__T.idx(107,105));const D=O('eDoor',107,105);TK(2);const a=[D.open,__T.isSolid(107,105)];G.wire.delete(__T.idx(105,105));TK(2);return [a,[!!D.open,__T.isSolid(107,105)]]}")
-            rec('회로','전기 문: 전기 들어오면 열리고 끊기면 닫힘', r==[[True,False],[False,True]], str(r))
-            # drill + chest + battery drain
-            await ev(pg,ARENA)
-            r=await ev(pg,"()=>{const G=__T.G;G.wall[__T.idx(110,104)]=4;O('battery',108,108,{e:600});W([109],108);W([110],108);const Dr=O('drillCu',110,105,{dir:{x:0,y:-1}});W([110,111],106);W([110],107);const C=O('chest',111,105,{items:Array(18).fill(null)});TK(65,.2);return [C.items.filter(Boolean).map(s=>s.id+':'+s.c).join(','),G.wall[__T.idx(110,104)],Math.round(G.objs.get(__T.idx(108,108)).e)]}")
-            rec('채굴기','구리 광맥 앞 채굴기가 12초마다 광석을 옆 상자에 담음', r[0]=='copperOre:1' and r[1]==4 and r[2]<600, str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(111,105));TK(130,.2);const Dr=G.objs.get(__T.idx(110,105));return [(Dr.store||[]).map(s=>s.id+':'+s.c).join(','),__T.G.stats.drilled]}")
-            rec('채굴기','상자가 없으면 채굴기 안에 모아 둠', r[0].startswith('copperOre:') and r[1]>=2, str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.p.x=110.5;G.p.y=106.5;G.p.face={x:0,y:-1};const d=__T.decide();const before=__T.countItem('copperOre');__T.perform(d);return [d.k,d.lbl,__T.countItem('copperOre')-before]}")
-            rec('채굴기','채굴기를 누르면 꺼내기', r[0]=='use' and r[1]=='꺼내기' and r[2]>=2, str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.wall[__T.idx(110,104)]=3;TK(3);const Dr=G.objs.get(__T.idx(110,105));return [Dr.work,Dr.why]}")
-            rec('채굴기','구리 채굴기는 수정벽을 못 캠', r==[False,'tier'], str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.wall[__T.idx(110,104)]=4;const B=G.objs.get(__T.idx(108,108));B.e=1;TK(20,.2);const Dr=G.objs.get(__T.idx(110,105));return [Math.round(B.e),Dr.work,Dr.why]}")
-            rec('건전지','건전지가 다 닳으면 멈춤', r==[0,False,'power'], str(r))
-            # generator
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(108,108));const g=O('generator',108,108);__T.addItem('wood',5);G.p.x=108.5;G.p.y=109.5;G.p.face={x:0,y:-1};const d=__T.decide();__T.perform(d);const f0=g.fuel;TK(10,.2);const Dr=G.objs.get(__T.idx(110,105));return [d.lbl,f0,Math.round(g.fuel),Dr.work,!!G.stats.genRun,__T.countItem('wood')]}")
-            rec('발전기','연료 넣기 → 전기 공급, 일할 때만 연료 사용', r[0]=='연료 넣기' and r[1]==150 and r[2]==148 and r[3] and r[4] and r[5]==0, str(r))
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(108,108));O('crystalGen',108,108);TK(5);return G.objs.get(__T.idx(110,105)).work}")
-            rec('발전기','수정 발전기는 연료 없이 작동', r, r)
-            # battery pickup keeps charge, recharge with repair
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(108,108));O('battery',108,108,{e:123});G.p.x=108.5;G.p.y=109.5;G.p.face={x:0,y:-1};__T.perform({k:'pickup',t:{x:108,y:108},o:G.objs.get(__T.idx(108,108))});const s=G.inv.find(s=>s&&s.id==='battery');return [s&&s.dur,!!G.objs.get(__T.idx(108,108))]}")
-            rec('건전지','회수해도 남은 전기가 유지됨', r==[123,False], str(r))
-            r=await ev(pg,"()=>{const G=__T.G;const k=G.inv.findIndex(s=>s&&s.id==='battery');const tmp=G.inv[0];G.inv[0]=G.inv[k];G.inv[k]=tmp;G.sel=0;const d=__T.decide();__T.perform(d);const o=G.objs.get(__T.idx(108,108));return [d.k,o&&o.t,o&&o.e]}")
-            rec('건전지','다시 놓으면 그 전기 그대로', r==['place','battery',123], str(r))
-            # wires: place & pick up with the wire item
-            r=await ev(pg,"()=>{const G=__T.G;for(let i=0;i<9;i++)G.inv[i]=null;G.inv[0]={id:'wire',c:5};G.sel=0;G.p.x=114.5;G.p.y=112.5;G.p.face={x:1,y:0};const d1=__T.decide();__T.perform(d1);const a=G.wire.has(__T.idx(115,112));const d2=__T.decide();__T.perform(d2);return [d1.lbl,a,d2.lbl,G.wire.has(__T.idx(115,112)),__T.countItem('wire')]}")
-            rec('전선','전선 깔기 / 같은 칸에서 전선 걷기', r==['전선 깔기',True,'전선 걷기',False,5], str(r))
-            r=await ev(pg,"()=>{W([120,121],110);const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.wire.size>=3,__T.G.objs.get(__T.idx(110,105)).dir.y]}")
-            rec('저장','전선·기계 상태가 저장됨', r==[True,-1], str(r))
-            r=await ev(pg,"()=>__T.RECIPES.filter(r=>r.cat==='circuit').map(r=>r.out+'@'+r.at).join(',')")
-            rec('제작','회로 탭 레시피 (작업대 단계(v60), v46: 벽 앞 채굴기는 채굴장으로 바뀌어 빠짐)', all(x in r for x in ['wire@bench','battery@bench','generator@bench','crystalGen@bench']) and 'drillCu@bench' not in r, r)
-            # visual
-            await ev(pg,ARENA)
-            await ev(pg,"()=>{const G=__T.G;G.treeSeeds=3;O('battery',103,113,{e:400});W([104,105],113);O('lever',106,113,{on:true});W([107,108,109],113);O('eLamp',110,113,{off:true});W([109],112);W([109],111);O('eDoor',109,110);W([104],114);W([104],115);O('plate',105,115);W([106,107],115);O('eLamp',108,115,{off:true});G.wall[__T.idx(113,111)]=5;O('drillCu',113,112,{dir:{x:0,y:-1}});W([111,112],113);W([113],113);O('chest',114,112,{items:Array(18).fill(null)});G.p.x=107.5;G.p.y=117.5;TK(3)}")
-            await pg.wait_for_timeout(1200); await pg.screenshot(path=SP+'qa22_circuit.png')
-            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
-        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
-    return main
-
-
-def qa26_multi_tile_rotation():
+def test_multi_tile_rotation():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,growTick,refreshHotbar,isSolid,placeItem,hitObj,circuitTick,rotateAction,rotateObjAt,fixParts,fpOf,farmStage,FARM_GROW,useObj:typeof useObj!=='undefined'?useObj:null}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
@@ -276,7 +186,7 @@ def qa26_multi_tile_rotation():
             rec('여러 칸','자리가 모자라면 못 놓음 (3×3 러그 옆 벽)', r[0]!='place' and r[1]=='place', str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.perform(T.decide());let a=null;for(const[i,o]of G.objs)if(o.t==='rugRound')a=i;const x=a%200,y=(a/200)|0;return [T.isSolid(x+1,y+1),a!=null]}""")
             rec('여러 칸','러그는 위로 걸어 다닐 수 있음', r==[False,True], str(r))
-            await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'qa26_rug.png')
+            await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'rug.png')
             # rotation of a 2x1 table
             await ev(pg,ARENA)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('longTable');G.p.face={x:1,y:0};T.rotateAction();const a=T.decide();T.perform(a);let ai=null;for(const[i,o]of G.objs)if(o.t==='longTable')ai=i;const o=G.objs.get(ai);return [o.rot,T.fpOf(o).join('x'),[...G.objs.values()].filter(q=>q.t==='_part').length]}""")
@@ -287,7 +197,7 @@ def qa26_multi_tile_rotation():
             rec('회전','막혀 있으면 안 돌아감', r==[False,0], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.objs.clear;for(const[i,o]of [...G.objs])if(o.t==='longTable'||o.t==='_part')G.objs.delete(i);GIVE('chair');G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};T.rotateAction();T.rotateAction();T.perform(T.decide());const ch=G.objs.get(T.idx(105,108));T.rotateObjAt(T.idx(105,108));const d2=ch.dir;G.inv[0]=null;const a=T.decide();T.perform(a);return [d2,a.u,G.p.dir,G.p.sit&&G.p.sit.dir]}""")
             rec('회전','의자: 4방향 (위를 보게 놓고 한 번 더 → 왼쪽, 앉으면 그쪽을 봄)', r[0]==3 and r[1]=='sit' and r[2]=='side' and r[3]==3, str(r))
-            await pg.wait_for_timeout(400); await pg.screenshot(path=SP+'qa26_chair.png')
+            await pg.wait_for_timeout(400); await pg.screenshot(path=SP+'chair.png')
             r=await ev(pg,"()=>{const G=__T.G;G.p.sit=null;return document.querySelector('#rotBtn').hidden}")
             # big tree: chop -> stump -> regrow, dig stump -> item
             await ev(pg,ARENA)
@@ -308,7 +218,7 @@ def qa26_multi_tile_rotation():
             rec('나무 작업장','전기가 끊기면 자동으로 베지 않음', r[2]==3, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=null;for(const[i,o]of G.objs)if(o.t==='treeFarm')ai=i;const o=G.objs.get(ai);const x=ai%200,y=(ai/200)|0;G.objs.delete(T.idx(x+2,y+1));G.wire.set(T.idx(x,y+2),1);for(let k=0;k<3;k++){o.p=G.time-T.FARM_GROW-1;T.circuitTick(.2)}const n=(o.store||[]).reduce((a,s)=>a+s.c,0);G.p.x=x-0.5;G.p.y=y+.5;G.p.face={x:1,y:0};G.inv[0]=null;const a=T.decide();T.perform(a);return [n>0,a.lbl,(o.store||[]).length,T.countItem('wood')>0]}""")
             rec('나무 작업장','상자가 없으면 안에 모아 두고 [꺼내기]', r[0] and r[1]=='꺼내기' and r[2]==0 and r[3], str(r))
-            await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'qa26_farm.png')
+            await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'farm.png')
             # save / load keeps parts; orphan cleanup
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));s.objs.push([T.idx(118,116),{t:'_part',a:T.idx(1,1)}]);T.deserialize(s);const G2=T.G;let farm=0,parts=0,orph=G2.objs.get(T.idx(118,116));for(const[i,o]of G2.objs){if(o.t==='treeFarm')farm++;if(o.t==='_part')parts++}return [farm,parts>=3,orph||null]}""")
             rec('저장','저장 → 불러오기 후에도 여러 칸 가구 유지 · 떨어진 부속 칸 정리', r[0]==1 and r[1] and r[2] is None, str(r))
@@ -320,7 +230,7 @@ def qa26_multi_tile_rotation():
             await ev(pg,"()=>{GIVE('sofa2')}"); await pg.wait_for_timeout(400)
             r=await ev(pg,"()=>!document.querySelector('#rotBtn').hidden")
             await pg.tap('#rotBtn'); await pg.wait_for_timeout(200)
-            await pg.screenshot(path=SP+'qa26_rotbtn.png')
+            await pg.screenshot(path=SP+'rotbtn.png')
             r2=await ev(pg,"()=>{const T=__T,G=T.G;T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='sofa2')ai=i;return G.objs.get(ai).rot}")
             rec('회전','터치: 가구를 들면 ↻ 방향 버튼 → 누르면 세로 소파', r and r2==1, f'{r} {r2}')
             # visual gallery
@@ -328,14 +238,71 @@ def qa26_multi_tile_rotation():
             await ev(pg,"""()=>{const T=__T,G=T.G;const put=(t,x,y,ex)=>{const o=Object.assign({t},ex||{});const i=T.idx(x,y);G.objs.set(i,o);if(T.OBJ[t].sz){for(let dy=0;dy<T.fpOf(o)[1];dy++)for(let dx=0;dx<T.fpOf(o)[0];dx++)if(dx||dy)G.objs.set(T.idx(x+dx,y+dy),{t:'_part',a:i})}};
           put('bedDouble',101,101);put('longTable',104,102);put('sofa2',107,102);put('sofa2',110,101,{rot:1});put('bookcase2',112,101);put('kitchenSet',101,104);put('fountainBig',105,104);put('rugLong',108,104);put('rugRound',101,109);put('bigTree',105,108);put('bigRock',108,108);put('flowerField',110,107,{rot:1});put('pondBig',113,108);put('treeFarm',101,113,{p:G.time-200});put('rugBig',105,112);put('longTable',109,112,{rot:1});put('chair',111,112,{dir:1});put('chair',112,112,{dir:2});put('chair',113,112,{dir:3});put('chair',114,112);
           G.p.x=108.5;G.p.y=111.6;}""")
-            await pg.wait_for_timeout(900); await pg.screenshot(path=SP+'qa26_gallery.png')
+            await pg.wait_for_timeout(900); await pg.screenshot(path=SP+'gallery.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
 
-def qa41_building_cleanup():
+def test_furniture_size():
+    import asyncio, sys
+    # v50: 다른 게임처럼 칸 크기 — 제작대·화로 2×1, 침대 1×2, 벤치 2×1 / 옛 세이브는 그 자리에서 넓힘 / 나무 크게 / 뒤로 가면 반투명 / 32px 그림 부드러운 테두리
+    H2=HOOK.replace("computeLight}","computeLight,SPR,fpOf,homePt,effH,effW,iconURL,get W(){return W},get V(){return VIEW},get lowCv(){return lowCv},lc(){POOL=null;return linkedChests().length},newGame}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const O=__T.OBJ;return ['bench','logBench','stoneBench'].map(k=>O[k].sz.join('x')+(O[k].rotV?'r':'')).concat([!!O.forge.sz,!!O.furnace.sz,!!O.smelter.sz,!!O.bed.sz,!!O.mossBed.sz])}")
+            rec('칸 크기','작업대 2×1, 벤치 2×1(돌림), 구리 제작대·화로·용광로·침대는 1칸 (v55)', r==['2x1','2x1r','2x1r',False,False,False,False,False], str(r))
+            r=await ev(pg,"""async()=>{const T=__T,f=T.SPR.fp,sz=u=>new Promise(res=>{const i=new Image();i.onload=()=>res(i.width+'x'+i.height);i.src=u});
+          return [await sz(T.iconURL('logBench')),await sz(T.iconURL('smelter')),await sz(T.iconURL('plant')),await sz(T.iconURL('chair')),f.logBench.small.width,f.logBench.big.width]}""")
+            rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','22x22','20x20','16x16',16,32], str(r))
+            r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
+            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배)', r==['32x27','16x20','32x16','16x24',False,'32x48','22x38',25], str(r))
+            # v56: saves from before v50 get the 2×1 workbench too — it grows into the free tile next to it, or comes back to the bag
+            r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const fpNew=JSON.parse(JSON.stringify(T.serialize())).fpV;
+          const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y;yy<=y+2;yy+=2)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
+          G.objs.set(T.idx(x,y),{t:'bench'});G.objs.set(T.idx(x+1,y),{t:'chest',items:Array(18).fill(null)});
+          G.objs.set(T.idx(x-1,y+2),{t:'chest',items:Array(18).fill(null)});G.objs.set(T.idx(x,y+2),{t:'bench'});G.objs.set(T.idx(x+1,y+2),{t:'chest',items:Array(18).fill(null)});
+          const before=T.countItem('bench');const old=JSON.parse(JSON.stringify(T.serialize()));delete old.fpV;T.deserialize(old);const G2=T.G,O=T.OBJ,S=T.SPR.obj,g=(dx,dy)=>{const o=G2.objs.get(T.idx(x+dx,y+dy));return o?o.t:'-'};
+          return [fpNew,O.bench.sz.join('x'),S.bench===T.SPR.fp.bench.big,g(-1,0),g(0,0),g(1,0),g(0,2),T.countItem('bench')-before,JSON.parse(JSON.stringify(T.serialize())).fpV]}""")
+            rec('옛 세이브','v50 전 세이브도 작업대 2×1: 오른쪽이 막히면 왼쪽으로 넓어지고(옆 상자 그대로), 양옆이 막히면 가방으로 (v56)', r==[2,'2x1',True,'bench','_part','chest','-',1,2], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y-1;yy<=y+3;yy++)for(let xx=x-1;xx<=x+1;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
+          G.objs.set(T.idx(x,y),{t:'bed'});G.objs.set(T.idx(x,y+1),{t:'_part',a:T.idx(x,y)});G.spawnPt={x,y};const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-']}""")
+            rec('침대','v50 때 1×2로 놓은 침대는 불러오면 1칸으로 (아래 칸 비워짐)', r==['bed','-'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)-3;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
+          G.objs.set(T.idx(x,y),{t:'forge'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'furnace'});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y+1)});
+          const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x+1,y)),o2=T.G.objs.get(T.idx(x+1,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-',T.G.objs.get(T.idx(x,y+1)).t,o2?o2.t:'-']}""")
+            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 1칸으로(v55), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','-'], str(r))
+            r=await ev(pg,"""async()=>{const T=__T,bad=[];for(const id in T.ITEMS){const u=T.iconURL(id);const d=await new Promise(res=>{const i=new Image();i.onload=()=>res([i.width,i.height]);i.src=u});if(d[0]!==d[1])bad.push(id+' '+d.join('x'))}return bad}""")
+            rec('아이콘','모든 아이템 아이콘이 정사각형 (가방에서 1칸, 횃불·화분 포함, v55)', r==[], str(r[:6]))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)-3;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
+          G.objs.set(T.idx(x,y),{t:'forge'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'furnace'});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y+1)});
+          const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x+1,y)),o2=T.G.objs.get(T.idx(x+1,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-',T.G.objs.get(T.idx(x,y+1)).t,o2?o2.t:'-']}""")
+            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 1칸으로(v55), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','-'], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;G.wall[T.idx(G.spawnPt.x,G.spawnPt.y+2)]=0;const h=T.homePt();return [h.x-G.spawnPt.x,Math.round((h.y-G.spawnPt.y)*10)/10]}")
+            rec('침대','기절·잠에서 깨면 침대 바로 아래에 섬', r==[0.5,1.6], str(r))
+            # a chest touching only the right tile of a 2×1 workbench is still linked
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x),y=Math.floor(G.p.y)+2;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+4;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
+          G.objs.set(T.idx(x,y),{t:'bench'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x+2,y),{t:'chest',items:Array(18).fill(null)});return T.lc()}""")
+            rec('상자 연결','2칸 작업대의 오른쪽 칸에 붙은 상자도 재료로 씀', r==1, r)
+            # see-through: the canopy of a big tree fades while the player stands behind it
+            r=await ev(pg,"""async()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)+4;for(let yy=y-5;yy<=y+1;yy++)for(let xx=x-3;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}
+          G.objs.set(T.idx(x,y),{t:'roundTree',hp:3});G.enemies.length=0;const wait=()=>new Promise(r=>setTimeout(r,250));
+          const g=T.lowCv.getContext('2d'),orig=g.drawImage,seen=[];g.drawImage=function(img,...a){if(img===T.SPR.obj.roundTree)seen.push(Math.round(g.globalAlpha*100)/100);return orig.call(this,img,...a)};
+          const look=async(px,py)=>{G.p.x=px;G.p.y=py;await wait();seen.length=0;await wait();return seen.length?Math.min(...seen):-1};
+          const a=await look(x+3.5,y-1.5),b2=await look(x+.5,y-.6),c=await look(x+.5,y+1.6);g.drawImage=orig;return [a,b2,c]}""")
+            rec('반투명','큰 나무 뒤로 들어가면 반투명, 옆이나 앞에 있으면 그대로', r==[1,0.45,1], str(r))
+            r=await ev(pg,"()=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));const n=[...T.G.objs.values()].filter(o=>o.t==='_part').length;T.deserialize(s);return [s.fpV,n===[...T.G.objs.values()].filter(o=>o.t==='_part').length,T.OBJ.bench.sz.join('x')]}")
+            rec('새 판','새 판 세이브를 다시 불러와도 커진 크기 그대로', r==[2,True,'2x1'], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_building_cleanup():
     import asyncio, sys
     # 건축 정리 (v41): 지붕 삭제, 얇은 벽 높이·바닥선, 바닥 벽선 맞춤, 양문·긴 창, 자동 미닫이문 + 최고 레벨 스킬 포인트
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,twSprite,twMask,getChunk,hash2,SPR,circuitTick,gainXp,cleanRpg,MAX_LV,SKILLS,LIFT,cam}")
@@ -426,7 +393,7 @@ def qa41_building_cleanup():
           G.p.x=sx+1.5;G.p.y=y0+1.4;for(let k=0;k<2;k++)T.circuitTick(.2);return [m,!!G.objs.get(T.idx(sx,y0)).open,!!G.objs.get(T.idx(sx+1,y0)).open]}""")
             rec('자동 미닫이문','두 칸을 붙이면 함께 열림', r==[[32,16],True,True], str(r))
             await ev(pg,"()=>{const T=__T,G=T.G;G.p.x=T.CX+19;G.p.y=T.CY+7.4;G.p.face={x:0,y:-1};T.circuitTick(.2)}")
-            await pg.wait_for_timeout(700); await pg.screenshot(path=SP+'qa41_room.png',clip={'x':340,'y':120,'width':600,'height':560})
+            await pg.wait_for_timeout(700); await pg.screenshot(path=SP+'room.png',clip={'x':340,'y':120,'width':600,'height':560})
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const sx=T.CX+18,y0=T.CY+6;const o=G.objs.get(T.idx(sx,y0));const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o2=T.G.objs.get(T.idx(sx,y0));return [o2.t,Object.keys(o2).sort().join(',')]}""")
             rec('저장','자동 미닫이문 저장/불러오기 (움직임 상태는 저장 안 함)', r[0]=='slideDoor' and 'sl' not in r[1].split(','), str(r))
             # ---- skill points at the top level ----
@@ -441,58 +408,91 @@ def qa41_building_cleanup():
     return main
 
 
-def qa53_furniture_size():
+def test_circuits():
     import asyncio, sys
-    # v50: 다른 게임처럼 칸 크기 — 제작대·화로 2×1, 침대 1×2, 벤치 2×1 / 옛 세이브는 그 자리에서 넓힘 / 나무 크게 / 뒤로 가면 반투명 / 32px 그림 부드러운 테두리
-    H2=HOOK.replace("computeLight}","computeLight,SPR,fpOf,homePt,effH,effW,iconURL,get W(){return W},get V(){return VIEW},get lowCv(){return lowCv},lc(){POOL=null;return linkedChests().length},newGame}")
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,checkGuide,circuitTick,isSolid,perform,decide,GUIDE,QSIDE,wirePowered,refreshHotbar}")
+    ARENA="()=>{const G=__T.G;for(let y=100;y<120;y++)for(let x=100;x<124;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=101.5;G.p.y=118.5;G.p.face={x:1,y:0}}"
+    W="(xs,y)=>xs.forEach(x=>__T.G.wire.set(__T.idx(x,y),1))"
+    O="(t,x,y,ex)=>{const o=Object.assign({t},ex||{});__T.G.objs.set(__T.idx(x,y),o);return o}"
+    TICK="(n,dt)=>{for(let k=0;k<n;k++)__T.circuitTick(dt||.2)}"
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
-            r=await ev(pg,"()=>{const O=__T.OBJ;return ['bench','logBench','stoneBench'].map(k=>O[k].sz.join('x')+(O[k].rotV?'r':'')).concat([!!O.forge.sz,!!O.furnace.sz,!!O.smelter.sz,!!O.bed.sz,!!O.mossBed.sz])}")
-            rec('칸 크기','작업대 2×1, 벤치 2×1(돌림), 구리 제작대·화로·용광로·침대는 1칸 (v55)', r==['2x1','2x1r','2x1r',False,False,False,False,False], str(r))
-            r=await ev(pg,"""async()=>{const T=__T,f=T.SPR.fp,sz=u=>new Promise(res=>{const i=new Image();i.onload=()=>res(i.width+'x'+i.height);i.src=u});
-          return [await sz(T.iconURL('logBench')),await sz(T.iconURL('smelter')),await sz(T.iconURL('plant')),await sz(T.iconURL('chair')),f.logBench.small.width,f.logBench.big.width]}""")
-            rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','22x22','20x20','16x16',16,32], str(r))
-            r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
-            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배)', r==['32x27','16x20','32x16','16x24',False,'32x48','22x38',25], str(r))
-            # v56: saves from before v50 get the 2×1 workbench too — it grows into the free tile next to it, or comes back to the bag
-            r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const fpNew=JSON.parse(JSON.stringify(T.serialize())).fpV;
-          const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y;yy<=y+2;yy+=2)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
-          G.objs.set(T.idx(x,y),{t:'bench'});G.objs.set(T.idx(x+1,y),{t:'chest',items:Array(18).fill(null)});
-          G.objs.set(T.idx(x-1,y+2),{t:'chest',items:Array(18).fill(null)});G.objs.set(T.idx(x,y+2),{t:'bench'});G.objs.set(T.idx(x+1,y+2),{t:'chest',items:Array(18).fill(null)});
-          const before=T.countItem('bench');const old=JSON.parse(JSON.stringify(T.serialize()));delete old.fpV;T.deserialize(old);const G2=T.G,O=T.OBJ,S=T.SPR.obj,g=(dx,dy)=>{const o=G2.objs.get(T.idx(x+dx,y+dy));return o?o.t:'-'};
-          return [fpNew,O.bench.sz.join('x'),S.bench===T.SPR.fp.bench.big,g(-1,0),g(0,0),g(1,0),g(0,2),T.countItem('bench')-before,JSON.parse(JSON.stringify(T.serialize())).fpV]}""")
-            rec('옛 세이브','v50 전 세이브도 작업대 2×1: 오른쪽이 막히면 왼쪽으로 넓어지고(옆 상자 그대로), 양옆이 막히면 가방으로 (v56)', r==[2,'2x1',True,'bench','_part','chest','-',1,2], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y-1;yy<=y+3;yy++)for(let xx=x-1;xx<=x+1;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
-          G.objs.set(T.idx(x,y),{t:'bed'});G.objs.set(T.idx(x,y+1),{t:'_part',a:T.idx(x,y)});G.spawnPt={x,y};const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-']}""")
-            rec('침대','v50 때 1×2로 놓은 침대는 불러오면 1칸으로 (아래 칸 비워짐)', r==['bed','-'], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)-3;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
-          G.objs.set(T.idx(x,y),{t:'forge'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'furnace'});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y+1)});
-          const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x+1,y)),o2=T.G.objs.get(T.idx(x+1,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-',T.G.objs.get(T.idx(x,y+1)).t,o2?o2.t:'-']}""")
-            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 1칸으로(v55), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','-'], str(r))
-            r=await ev(pg,"""async()=>{const T=__T,bad=[];for(const id in T.ITEMS){const u=T.iconURL(id);const d=await new Promise(res=>{const i=new Image();i.onload=()=>res([i.width,i.height]);i.src=u});if(d[0]!==d[1])bad.push(id+' '+d.join('x'))}return bad}""")
-            rec('아이콘','모든 아이템 아이콘이 정사각형 (가방에서 1칸, 횃불·화분 포함, v55)', r==[], str(r[:6]))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)-3;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
-          G.objs.set(T.idx(x,y),{t:'forge'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'furnace'});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y+1)});
-          const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x+1,y)),o2=T.G.objs.get(T.idx(x+1,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-',T.G.objs.get(T.idx(x,y+1)).t,o2?o2.t:'-']}""")
-            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 1칸으로(v55), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','-'], str(r))
-            r=await ev(pg,"()=>{const T=__T,G=T.G;G.wall[T.idx(G.spawnPt.x,G.spawnPt.y+2)]=0;const h=T.homePt();return [h.x-G.spawnPt.x,Math.round((h.y-G.spawnPt.y)*10)/10]}")
-            rec('침대','기절·잠에서 깨면 침대 바로 아래에 섬', r==[0.5,1.6], str(r))
-            # a chest touching only the right tile of a 2×1 workbench is still linked
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x),y=Math.floor(G.p.y)+2;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+4;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
-          G.objs.set(T.idx(x,y),{t:'bench'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x+2,y),{t:'chest',items:Array(18).fill(null)});return T.lc()}""")
-            rec('상자 연결','2칸 작업대의 오른쪽 칸에 붙은 상자도 재료로 씀', r==1, r)
-            # see-through: the canopy of a big tree fades while the player stands behind it
-            r=await ev(pg,"""async()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)+4;for(let yy=y-5;yy<=y+1;yy++)for(let xx=x-3;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}
-          G.objs.set(T.idx(x,y),{t:'roundTree',hp:3});G.enemies.length=0;const wait=()=>new Promise(r=>setTimeout(r,250));
-          const g=T.lowCv.getContext('2d'),orig=g.drawImage,seen=[];g.drawImage=function(img,...a){if(img===T.SPR.obj.roundTree)seen.push(Math.round(g.globalAlpha*100)/100);return orig.call(this,img,...a)};
-          const look=async(px,py)=>{G.p.x=px;G.p.y=py;await wait();seen.length=0;await wait();return seen.length?Math.min(...seen):-1};
-          const a=await look(x+3.5,y-1.5),b2=await look(x+.5,y-.6),c=await look(x+.5,y+1.6);g.drawImage=orig;return [a,b2,c]}""")
-            rec('반투명','큰 나무 뒤로 들어가면 반투명, 옆이나 앞에 있으면 그대로', r==[1,0.45,1], str(r))
-            r=await ev(pg,"()=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));const n=[...T.G.objs.values()].filter(o=>o.t==='_part').length;T.deserialize(s);return [s.fpV,n===[...T.G.objs.values()].filter(o=>o.t==='_part').length,T.OBJ.bench.sz.join('x')]}")
-            rec('새 판','새 판 세이브를 다시 불러와도 커진 크기 그대로', r==[2,True,'2x1'], str(r))
-            rec('기능','콘솔 오류 없음', not errs, errs[:4])
-            await ctx.close(); await b.close()
+            await ev(pg,f"()=>{{window.W={W};window.O={O};window.TK={TICK}}}")
+            # ---------- quests ----------
+            r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='gMoss');return [R.at,JSON.stringify(R.req)]}")
+            rec('이끼','이끼 섬유 3개로 이끼 한 삽 (손 제작)', r==[None,'[["fiber",1]]'], str(r))
+            await pg.tap('#goal'); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>[document.querySelector('.sh-head h2').textContent,[...document.querySelectorAll('.qrow .st')].map(e=>e.textContent).join(','),document.querySelectorAll('.qrow h4')[1]&&document.querySelectorAll('.qrow h4')[1].textContent]")
+            rec('퀘스트','지금 할 일을 누르면 퀘스트 창 · 진행 중/잠김(???) 표시', '퀘스트' in r[0] and r[1].startswith('진행 중') and r[2]=='???', str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"()=>{const G=__T.G;G.stats.wood=6;__T.checkGuide();return document.querySelector('#goal').classList.contains('dot')}")
+            await pg.wait_for_timeout(700); r=await ev(pg,"()=>document.querySelector('#goal').classList.contains('dot')"); rec('퀘스트','받을 보상이 있으면 지금 할 일에 점', r, r)
+            await pg.tap('#bQuest'); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>{const row=document.querySelector('.qrow');return [row.querySelector('.st').textContent,!!row.querySelector('[data-a=qClaim]'),row.querySelector('.qrw').textContent]}")
+            rec('퀘스트','완료 + 보상 표시 + 보상 받기 버튼', r[0]=='완료' and r[1] and '이끼 섬유 5' in r[2] and '경험치 10' in r[2], str(r))
+            f0=await ev(pg,"()=>__T.countItem('fiber')")
+            await pg.tap('.qrow [data-a=qClaim]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[__T.countItem('fiber'),document.querySelector('.qrow .got')&&document.querySelector('.qrow .got').textContent,!!__T.G.qclaim.wood]")
+            rec('퀘스트','보상 받으면 아이템 지급 + 받음 ✓', r[0]==f0+5 and r[1]=='받음 ✓' and r[2], str(r))
+            await pg.screenshot(path=SP+'quest.png')
+            await pg.tap('[data-a=qTab][data-i=side]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>document.querySelectorAll('.qrow').length"); rec('퀘스트','도전 탭에 부가 퀘스트 목록', r>=8, r)
+            await ev(pg,"()=>{__T.G.stats.made={gMoss:1};__T.closePanel();__T.openPanel('quest');}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=qTab][data-i=side]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const row=document.querySelector('.qrow');return [row.querySelector('h4').textContent,!!row.querySelector('[data-a=qClaim]')]}")
+            rec('퀘스트','완료한 도전이 맨 위에 + 보상 받기', '이끼 한 삽' in r[0] and r[1], str(r))
+            await pg.tap('[data-a=qClaimAll]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [!!__T.G.qclaim.s_moss,!!__T.G.qclaim.wood]}")
+            rec('퀘스트','받은 기록이 저장됨', r==[True,True], str(r)); await ev(pg,"()=>__T.closePanel()")
+            # ---------- circuits ----------
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{O('battery',102,105,{e:600});W([103,104,105,106],105);const L=O('eLamp',107,105,{off:true});TK(2);return [L.off,__T.wirePowered(__T.idx(104,105)),!!__T.G.stats.litLamp]}")
+            rec('회로','건전지 → 전선 → 전기 램프가 켜짐', r==[False,True,True], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.wire.delete(__T.idx(105,105));const L=G.objs.get(__T.idx(107,105));TK(2);return [L.off,__T.wirePowered(__T.idx(106,105))]}")
+            rec('회로','전선이 끊기면 꺼짐', r==[True,False], str(r))
+            r=await ev(pg,"()=>{const lv=O('lever',105,105);const L=__T.G.objs.get(__T.idx(107,105));TK(2);const a=L.off;lv.on=true;TK(2);const b=L.off;return [a,b]}")
+            rec('회로','레버: 꺼져 있으면 끊고 켜면 이어 줌', r==[True,False], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(105,105));O('plate',105,105);const L=G.objs.get(__T.idx(107,105));G.p.x=101.5;G.p.y=118.5;TK(2);const a=L.off;G.p.x=105.5;G.p.y=105.5;TK(2);const b=L.off;G.p.x=101.5;G.p.y=118.5;return [a,b]}")
+            rec('회로','압력판: 올라서 있는 동안만 켜짐', r==[True,False], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(105,105));O('timer',105,105,{per:1});const L=G.objs.get(__T.idx(107,105));const seen=new Set();for(let k=0;k<20;k++){TK(1,.2);seen.add(L.off)}return seen.size}")
+            rec('회로','타이머: 켜졌다 꺼졌다 반복', r==2, r)
+            # door
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(105,105));G.wire.set(__T.idx(105,105),1);G.objs.delete(__T.idx(107,105));const D=O('eDoor',107,105);TK(2);const a=[D.open,__T.isSolid(107,105)];G.wire.delete(__T.idx(105,105));TK(2);return [a,[!!D.open,__T.isSolid(107,105)]]}")
+            rec('회로','전기 문: 전기 들어오면 열리고 끊기면 닫힘', r==[[True,False],[False,True]], str(r))
+            # drill + chest + battery drain
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{const G=__T.G;G.wall[__T.idx(110,104)]=4;O('battery',108,108,{e:600});W([109],108);W([110],108);const Dr=O('drillCu',110,105,{dir:{x:0,y:-1}});W([110,111],106);W([110],107);const C=O('chest',111,105,{items:Array(18).fill(null)});TK(65,.2);return [C.items.filter(Boolean).map(s=>s.id+':'+s.c).join(','),G.wall[__T.idx(110,104)],Math.round(G.objs.get(__T.idx(108,108)).e)]}")
+            rec('채굴기','구리 광맥 앞 채굴기가 12초마다 광석을 옆 상자에 담음', r[0]=='copperOre:1' and r[1]==4 and r[2]<600, str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(111,105));TK(130,.2);const Dr=G.objs.get(__T.idx(110,105));return [(Dr.store||[]).map(s=>s.id+':'+s.c).join(','),__T.G.stats.drilled]}")
+            rec('채굴기','상자가 없으면 채굴기 안에 모아 둠', r[0].startswith('copperOre:') and r[1]>=2, str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.p.x=110.5;G.p.y=106.5;G.p.face={x:0,y:-1};const d=__T.decide();const before=__T.countItem('copperOre');__T.perform(d);return [d.k,d.lbl,__T.countItem('copperOre')-before]}")
+            rec('채굴기','채굴기를 누르면 꺼내기', r[0]=='use' and r[1]=='꺼내기' and r[2]>=2, str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.wall[__T.idx(110,104)]=3;TK(3);const Dr=G.objs.get(__T.idx(110,105));return [Dr.work,Dr.why]}")
+            rec('채굴기','구리 채굴기는 수정벽을 못 캠', r==[False,'tier'], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.wall[__T.idx(110,104)]=4;const B=G.objs.get(__T.idx(108,108));B.e=1;TK(20,.2);const Dr=G.objs.get(__T.idx(110,105));return [Math.round(B.e),Dr.work,Dr.why]}")
+            rec('건전지','건전지가 다 닳으면 멈춤', r==[0,False,'power'], str(r))
+            # generator
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(108,108));const g=O('generator',108,108);__T.addItem('wood',5);G.p.x=108.5;G.p.y=109.5;G.p.face={x:0,y:-1};const d=__T.decide();__T.perform(d);const f0=g.fuel;TK(10,.2);const Dr=G.objs.get(__T.idx(110,105));return [d.lbl,f0,Math.round(g.fuel),Dr.work,!!G.stats.genRun,__T.countItem('wood')]}")
+            rec('발전기','연료 넣기 → 전기 공급, 일할 때만 연료 사용', r[0]=='연료 넣기' and r[1]==150 and r[2]==148 and r[3] and r[4] and r[5]==0, str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(108,108));O('crystalGen',108,108);TK(5);return G.objs.get(__T.idx(110,105)).work}")
+            rec('발전기','수정 발전기는 연료 없이 작동', r, r)
+            # battery pickup keeps charge, recharge with repair
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.delete(__T.idx(108,108));O('battery',108,108,{e:123});G.p.x=108.5;G.p.y=109.5;G.p.face={x:0,y:-1};__T.perform({k:'pickup',t:{x:108,y:108},o:G.objs.get(__T.idx(108,108))});const s=G.inv.find(s=>s&&s.id==='battery');return [s&&s.dur,!!G.objs.get(__T.idx(108,108))]}")
+            rec('건전지','회수해도 남은 전기가 유지됨', r==[123,False], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;const k=G.inv.findIndex(s=>s&&s.id==='battery');const tmp=G.inv[0];G.inv[0]=G.inv[k];G.inv[k]=tmp;G.sel=0;const d=__T.decide();__T.perform(d);const o=G.objs.get(__T.idx(108,108));return [d.k,o&&o.t,o&&o.e]}")
+            rec('건전지','다시 놓으면 그 전기 그대로', r==['place','battery',123], str(r))
+            # wires: place & pick up with the wire item
+            r=await ev(pg,"()=>{const G=__T.G;for(let i=0;i<9;i++)G.inv[i]=null;G.inv[0]={id:'wire',c:5};G.sel=0;G.p.x=114.5;G.p.y=112.5;G.p.face={x:1,y:0};const d1=__T.decide();__T.perform(d1);const a=G.wire.has(__T.idx(115,112));const d2=__T.decide();__T.perform(d2);return [d1.lbl,a,d2.lbl,G.wire.has(__T.idx(115,112)),__T.countItem('wire')]}")
+            rec('전선','전선 깔기 / 같은 칸에서 전선 걷기', r==['전선 깔기',True,'전선 걷기',False,5], str(r))
+            r=await ev(pg,"()=>{W([120,121],110);const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.wire.size>=3,__T.G.objs.get(__T.idx(110,105)).dir.y]}")
+            rec('저장','전선·기계 상태가 저장됨', r==[True,-1], str(r))
+            r=await ev(pg,"()=>__T.RECIPES.filter(r=>r.cat==='circuit').map(r=>r.out+'@'+r.at).join(',')")
+            rec('제작','회로 탭 레시피 (작업대 단계(v60), v46: 벽 앞 채굴기는 채굴장으로 바뀌어 빠짐)', all(x in r for x in ['wire@bench','battery@bench','generator@bench','crystalGen@bench']) and 'drillCu@bench' not in r, r)
+            # visual
+            await ev(pg,ARENA)
+            await ev(pg,"()=>{const G=__T.G;G.treeSeeds=3;O('battery',103,113,{e:400});W([104,105],113);O('lever',106,113,{on:true});W([107,108,109],113);O('eLamp',110,113,{off:true});W([109],112);W([109],111);O('eDoor',109,110);W([104],114);W([104],115);O('plate',105,115);W([106,107],115);O('eLamp',108,115,{off:true});G.wall[__T.idx(113,111)]=5;O('drillCu',113,112,{dir:{x:0,y:-1}});W([111,112],113);W([113],113);O('chest',114,112,{items:Array(18).fill(null)});G.p.x=107.5;G.p.y=117.5;TK(3)}")
+            await pg.wait_for_timeout(1200); await pg.screenshot(path=SP+'circuit.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
