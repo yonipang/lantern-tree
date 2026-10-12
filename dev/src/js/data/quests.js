@@ -4,6 +4,18 @@
 import { FLOWERS, BOSSES } from './rpg-nature.js';
 import { ITEMS, OBJ, RECIPES, Rc, USE } from './items.js';
 
+// ---- 보스 다시 부르는 조각상 (구조 변경 3단계: game/combat.js에서 옮김 — 레시피 순서 그대로) ----
+export const SUMMON = {
+  queenIdol: ['포자 여왕 부름 버섯', 'queen', [['shroomCap', 10], ['glowcap', 6], ['spore', 4]], '#b673de', '#fbe7ff'],
+  slimeIdol: ['말랑 왕관 조각상', 'slime', [['gel', 30], ['copperBar', 6]], '#86d96b', '#ffd25c'],
+  golemIdol: ['수정 심장 조각상', 'golem', [['crystal', 20], ['ironBar', 6]], '#9d7fe0', '#7ff0e6'],
+  turtleIdol: ['용암 등껍질 조각상', 'turtle', [['obsidian', 8], ['goldBar', 4], ['fireBerry', 4]], '#ff8a3d', '#ffc861'],
+  spiritIdol: ['서리 결정 조각상', 'spirit', [['frostShard', 16], ['goldBar', 4]], '#9fd8f0', '#ffffff'],
+};
+for (const id in SUMMON) { const [n, k, req] = SUMMON[id];
+  ITEMS[id] = { n, kind: 'summon', boss: k, d: `${BOSSES[k].n}을 물리친 뒤 보스방에서 쓰면 ${BOSSES[k].n}이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 전용 장비가 떨어져요.` };
+  RECIPES.push(Rc(id, 1, req, 'forge', 'tool')); }
+
 export const GUIDE = [
   { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 손 버튼(PC는 E)을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
   { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [제작] → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },

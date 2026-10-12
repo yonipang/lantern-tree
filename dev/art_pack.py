@@ -41,7 +41,8 @@ def main():
                     warn.append(f'{rel}.png: 크기 {sz[0]}×{sz[1]} — 가로·세로가 짝수여야 칸에 딱 맞아요')
                 art[key] = ['data:image/png;base64,' + base64.b64encode(b).decode(), 0 if raw else 1]
     s = open(SRC, encoding='utf-8').read()
-    block = '/*@@ART*/const ART = ' + (json.dumps(art, ensure_ascii=False, separators=(',', ':')) if art else '{}') + ';/*@@ARTEND*/'
+    decl = 'export const ART = ' if SRC.endswith('.js') else 'const ART = '  # 원본 art/hand-art.js는 모듈이라 export, 이미 묶은 html(테스트)에는 export 없이
+    block = '/*@@ART*/\n' + decl + (json.dumps(art, ensure_ascii=False, separators=(',', ':')) if art else '{}') + ';\n/*@@ARTEND*/'  # 표시는 따로 줄에
     new, n = re.subn(r'/\*@@ART\*/.*?/\*@@ARTEND\*/', lambda m: block, s, count=1, flags=re.S)
     if n != 1:
         sys.exit(f'{SRC} 안에 /*@@ART*/ 표시를 찾지 못했어요')

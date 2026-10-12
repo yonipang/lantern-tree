@@ -792,8 +792,8 @@ def test_hand_drawn_art():
     async def main():
         before=open(SRC,'rb').read()
         log,packed=art_page('qa.html')
-        blk=packed[packed.index('/*@@ART*/'):packed.index('/*@@ARTEND*/')]
-        art=json.loads(blk[len('/*@@ART*/const ART = '):-1])
+        import re  # 손그림 표시는 v65 다음(구조 변경 3단계)부터 따로 줄에 「export const ART = …;」
+        art=json.loads(re.search(r'/\*@@ART\*/\s*(?:export\s+)?const ART = (.*?);\s*/\*@@ARTEND\*/', packed, re.S).group(1))
         rec('그림 넣기','art_pack.py가 dev/art 그림을 원본 안에 넣음 (.raw는 테두리 없음 표시)', sorted(art)==sorted(['obj/roundTree','item/berry','mon/slimeG','crop/berry/3','animal/dog','obj/torch']) and art['obj/torch'][1]==0 and art['obj/roundTree'][1]==1, log.strip())
         rec('그림 넣기','원본 dev/index.html은 그대로 (테스트는 복사본으로)', open(SRC,'rb').read()==before, '')
         async with async_playwright() as p:

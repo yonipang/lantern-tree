@@ -8,15 +8,15 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 
 - **구조 변경 중이에요** (`dev/PLAN.md`): 파일을 하나씩 **모듈**(`import { a } from './x.js'`, `export …`)로 옮기고 있어요. 모듈과 옛 파일이 섞여 있어도 `build.py`가 한 파일로 묶어요 (import 줄은 지우고 `export` 낱말만 떼어 내요 — 이름은 그대로).
   - 모듈은 다른 모듈의 이름을 반드시 import해요. 아직 옛 파일인 곳의 이름은 import 없이 그대로 써요 (그 파일을 옮길 때 import로 바꿈).
-  - `build.py`가 확인해요: 가져오는 파일이 `shell.html`에서 앞에 있는지, 그 이름을 내보내는지, 맨 위 이름이 겹치는지. 그리고 옛 전역 이름이 몇 개 남았는지 알려 줘요.
+  - `build.py`가 확인해요: 가져오는 파일이 `shell.html`에 있는지, 그 이름을 내보내는지, 맨 위 이름이 겹치는지. 그리고 옛 전역 이름이 몇 개 남았는지 알려 줘요.
 
 - **자바스크립트는 모두 하나의 `<script>`, 하나의 함수 `(() => { … })()` 안에 차례로 들어가요.** 파일끼리 `import` 없이 서로의 이름을 그대로 써요 (예전 한 파일과 똑같아요).
 - **순서가 중요해요.** `function`은 어디서든 부를 수 있지만, 맨 위에서 바로 실행되는 줄(`const …`, `Object.assign(ITEMS, …)`, `RECIPES.push(…)`, `TIPS.push(…)` 등)은 `shell.html`에 적힌 순서대로 실행돼요.
   - 앞 파일에서 만든 `const`·`let`을 뒤 파일이 쓰는 건 괜찮고, 반대는 안 돼요 (불러오자마자 오류).
   - `RECIPES`·`QSIDE`·`TIPS`에 넣는 순서가 제작 창·퀘스트 목록의 순서예요. 파일 순서를 바꾸면 화면 순서도 바뀌어요.
 - **새 기능**은 비슷한 `js/features/` 파일(데이터는 같은 이름의 `js/data/` 파일) 끝에 덧붙이거나, 크면 새 파일을 만들고 `shell.html`의 `js/features/automation-tiers.js` 다음(그림·데이터·게임 규칙이 다 만들어진 뒤, `js/render.js` 앞)에 `// @include …` 한 줄을 넣어요. `shell.html`에 안 적은 파일은 `build.py`가 ⚠로 알려 줘요.
-- **데이터(밸런스)는 `js/data/`** (구조 변경 2단계): 아이템·물체·레시피·몬스터·퀘스트·요리 수치와 이름·설명은 `js/data/<이름>.js`에, 그 기능의 동작·그림은 같은 이름의 규칙 파일(`content/`·`features/`·`game/`)에 있어요.
-  - 데이터 파일은 `shell.html`에서 같은 이름의 규칙 파일 **바로 앞**에 와요 (예전과 같은 실행 순서). 새 아이템·레시피는 데이터 파일에, 아이콘(`ICON`)·물체 그림(`OSPR`)은 규칙 파일에 넣어요.
+- **데이터(밸런스)는 `js/data/`** (구조 변경 2단계): 아이템·물체·레시피·몬스터·퀘스트·요리 수치와 이름·설명은 `js/data/<이름>.js`에, 그 기능의 동작은 같은 이름의 규칙 파일(`content/`·`features/`·`game/`)에, **그림(아이콘 `ICON`·물체 그림 `OSPR`·몬스터 그림)은 `js/art/`**(기능별 아이콘은 `art/content.js`)에 있어요.
+  - 데이터 파일은 `shell.html`에서 같은 이름의 규칙 파일 **바로 앞**에 와요 (예전과 같은 실행 순서). 새 아이템·레시피는 데이터 파일에, 아이콘·물체 그림은 `art/content.js`에 넣어요 (그림은 게임을 시작할 때 한꺼번에 만들어져서 어디에 두어도 순서 문제가 없어요).
   - 데이터 파일 안의 순서도 중요해요: `RECIPES`에 넣는 순서 = 제작 창 순서, 「지형 재료 2배」(`data/automation-tiers.js`) 같은 일괄 보정은 그 줄보다 앞에서 만든 레시피에만 적용돼요.
 - CSS도 같은 규칙: 적힌 순서대로 하나의 `<style>`에 들어가요 (뒤에 있는 규칙이 이겨요).
 - 옛 세이브를 고치는 코드는 `js/save/migrations.js`에만 둬요. 코드를 정리하거나 옮긴 뒤에는 `python3 dev/qa/snapshot.py`(비교 테스트)가 그대로 통과해야 해요.
@@ -34,15 +34,15 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/engine/audio.js` | (모듈) 효과음 `SFX`·`ensureAudio` |
 | `js/engine/effects.js` | (모듈) 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
 | `js/sim/drops.js` | (모듈) 떨어진 아이템 `spawnDrop`·`rollDrops` |
-| `js/art/hand-art.js` | 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
-| `js/art/characters.js` | 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
-| `js/art/world.js` | 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |
+| `js/art/hand-art.js` | (모듈) 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
+| `js/art/characters.js` | (모듈) 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
+| `js/art/world.js` | (모듈) 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |
 | `js/data/items.js` | (모듈) **기본 데이터**: 벽·아이템·물체·레시피(`Rc`)·장식·무기·고유 무기·희귀도·가방, 얇은 벽 조각 만들기, 레시피 일괄 보정(REQ_FIX·금속 → 구리 제작대) |
-| `js/content/items.js` | 지도 모양(`setLayout`·`W`·`H`), 얇은 벽·문·울타리 그리기와 잇기, 아이콘 넣기, 희귀도 함수 |
+| `js/content/items.js` | 지도 모양(`setLayout`·`W`·`H`), 얇은 벽·문·울타리 그리기와 잇기, 희귀도 함수 |
 | `js/data/rpg-nature.js` | (모듈) 레벨·능력치 이름·스킬, 낚시 표, 몬스터(`ENEMY`)·**보스(`BOSSES`·재도전 보상 `REMATCH`)**, 꽃, 나무 자라는 시간, 자연 꾸미기 |
-| `js/content/rpg-nature.js` | 능력치 계산·경험치, 꽃잎 구역·어린나무 자라기, 자연 바닥 그리기 |
+| `js/content/rpg-nature.js` | 능력치 계산·경험치, 꽃잎 구역·어린나무 자라기 |
 | `js/data/circuits-regions.js` | (모듈) 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출, **모든 장비 내구도(`DUR`)·분해** |
-| `js/content/circuits-regions.js` | 회로·전력 계산, 바닥 위험, 여러 칸 가구·회전·나무 작업장·채굴장 동작과 그림 |
+| `js/content/circuits-regions.js` | 회로·전력 계산, 바닥 위험, 여러 칸 가구·회전·나무 작업장·채굴장 동작 |
 | `js/world.js` | 지도 만들기(`genWorld`), 숨은 방, 충돌·이동·땅 파기·놓을 수 있는지 |
 | `js/save/state.js` | `G`·새 게임·`serialize`/`deserialize` |
 | `js/save/migrations.js` | **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
@@ -62,6 +62,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/features/automation-tiers.js` | 농사 자동화·거대 작물 동작, 작업대·장비제작대 단계 올리기 |
 | `js/data/controls.js` | (모듈) 도구 종류, 도끼 → 나무 베기 도구, 쳐서 회수(몇 번·몇 초) |
 | `js/features/controls.js` | v65 조작: 공격 버튼(`doAttack`)·쳐서 회수, 도구 주머니·도구 칸·도구 줄, 작은 버튼(`curAlt`·`cycleAlt`), 버튼 표시(`updateCtrlHud`) |
+| `js/art/content.js` | (모듈) **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render.js` | 빛·지도 픽셀, 카메라·바닥 조각·세계·캐릭터 그리기, 아이템 아이콘(`iconURL`) |
 | `js/ui/panels.js` | HUD 갱신·`openPanel`·`renderPanel`·지도·제작 알림 |
 | `js/ui/panel-actions.js` | 제작대 옆 상자 재료 함께 쓰기, 창 안 버튼 처리(`onSheetClick`), 칸 끌어 옮기기·정렬 |

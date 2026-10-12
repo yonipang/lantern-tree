@@ -1,7 +1,3 @@
-Object.assign(OSPR, {
-  sprinkler: [16, 18, A => { A.e(8, 16.5, 5, 1.4, '#6f6a86'); A.r(5, 12, 6, 4, '#8e89a3'); A.r(5, 12, 6, 1, '#bab5cb'); A.r(7, 5, 2, 7, C.copper); A.r(7, 5, 1, 7, C.copperL); A.e(8, 4.5, 3.6, 1.8, C.copperD); A.e(8, 4, 3, 1.2, C.copperL); for (const x of [4, 8, 12]) A.p(x, 2, '#8fd0f0'); A.p(6, 1, '#bfe6ff'); A.p(10, 1, '#bfe6ff'); A.r(6, 14, 4, 1, '#3f7fb5'); }],
-  harvester: [16, 20, A => { A.r(2, 8, 12, 11, C.ironD); A.r(3, 9, 10, 9, C.iron); A.r(3, 9, 10, 1, C.ironL); A.r(5, 11, 6, 4, '#2a2238'); A.r(6, 12, 4, 2, '#7fe0b5'); A.line(2, 8, 0, 4, C.woodD); A.line(14, 8, 16, 4, C.woodD); A.e(1, 4, 2, 1.2, C.cryL); A.e(15, 4, 2, 1.2, C.cryL); A.r(4, 18, 8, 1, '#3a3270'); A.p(7, 5, C.cry); A.r(6, 5, 4, 3, C.cry); A.p(7, 5, '#ffffff'); }],
-});
 // what one ripe crop gives (star and mushroom-fertilizer rules apply, the sickle bonus does not); also counts it for the quests
 function cropYield(i, o) { const d = OBJ[o.t]; if (o.star == null) rollStar(i, o); const out = [];
   for (const [id, a, b, ch] of d.yield.map(([id, a, b, ch], k) => [!k && o.star && STAR_OF[id] ? STAR_OF[id] : id, a, b, id === 'glowcap' && o.f === 2 ? .6 : ch])) if (rand() < ch) { const c = rint(a, b); if (c > 0) out.push([id, c]); }
@@ -21,9 +17,6 @@ function giantTry(i, o) { if (o.gt || !beat('golem')) return; const x = i % W, y
   if (Math.hypot(x + 1 - G.p.x, y + 1 - G.p.y) < 16) { puff(x + 1, y + 1, '#ffe9a8', 26, 3.5, .6); SFX.win(); toast(`${josa('거대 ' + OBJ[o.t].n, '이', '가')} 자랐어요!`, 'good', 'giant'); } lightDirty = true; }
 function harvestGiant(t, o) { const base = OBJ[o.c], [id, a, b] = base.yield[0], seed = base.yield[1] && base.yield[1][0]; delObj(idx(t.x, t.y)); spawnDrop(id, rint(a * 6, b * 6), t.x + 1, t.y + 1); if (seed) spawnDrop(seed, 3, t.x + 1, t.y + 1);
   const S = G.stats; S.cropH = (S.cropH || 0) + 1; S.giantH = (S.giantH || 0) + 1; SFX.win(); puff(t.x + 1, t.y + 1, '#9be37a', 20, 3.5); gainXp(20); }
-const giantSpr = kind => { const src = SPR.crop[kind][3][0], s = src.hd ? HD : 1, c = mk(32 * s, 32 * s, A => { A.g.imageSmoothingEnabled = false; A.g.drawImage(src, 0, 0, 32 * s, 32 * s); }, null); c.hd = src.hd; return c; };
-ICON.festCake = A => { A.e(8, 12.6, 6.8, 2.4, '#e8e0f0'); A.r(3, 7, 10, 5, '#fff1d6'); A.e(8, 7, 5, 1.8, '#ffffff'); A.r(3, 9, 10, 1, '#ff9ab0'); A.e(8, 12, 5, 1.6, '#f2d38a'); for (const [x, c] of [[4, '#ff6b81'], [6, '#6fa8ff'], [8, '#ffd25c'], [10, '#f4f0f8'], [12, '#4a3f5c']]) A.p(x, 6, c); A.r(7, 2, 2, 4, '#ffd27a'); A.p(8, 1, '#fff1c0'); };
-ICON.rn_festCake = noteIcon;
 const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
 const tierNames = st => TIERED[st] || BENCH_N;
 const craftTier = () => panel && panel.kind === 'craft' && TIERED[panel.st] ? (panel.i != null ? Math.max(0, benchLv(G.objs.get(panel.i))) : panel.tier || 0) : 0;

@@ -1,10 +1,3 @@
-Object.assign(ICON, {
-  sickle: sickleIcon(C.copper, C.copperL),
-  wcan: A => { A.e(7, 5.6, 3.4, 2.6, C.copperD); A.g.globalCompositeOperation = 'destination-out'; A.e(7, 5.8, 1.9, 1.3, '#000'); A.g.globalCompositeOperation = 'source-over'; A.line(10, 11, 14, 5, C.copperD, 2); A.r(13, 3, 3, 2, C.copperL);
-    A.r(2, 7, 9, 7, C.copper); A.r(2, 7, 9, 1, C.copperL); A.r(2, 13, 9, 1, C.copperD); A.r(3, 9, 1, 3, C.copperL); A.p(15, 6, '#bfe6ff'); A.p(15, 8, '#8fd0f0'); },
-  fert: A => { A.e(8, 10.5, 5.4, 4.6, '#b8903f'); A.e(7, 9.6, 3.8, 3.2, '#d9b66a'); A.poly([[5, 6], [6, 2.5], [10, 2.5], [11, 6]], '#c9a46b'); A.r(5, 6, 6, 1, '#7a5a2a'); A.p(7, 3, '#ecd8a8'); A.e(8.5, 11, 2.2, 1.6, '#62ad62'); A.p(7, 10, '#9be37a'); A.p(10, 13, '#5a3a2c'); A.p(5, 12, '#5a3a2c'); },
-  fertShroom: A => { A.e(8, 10.5, 5.4, 4.6, '#7a5aa0'); A.e(7, 9.6, 3.8, 3.2, '#a17fc9'); A.poly([[5, 6], [6, 2.5], [10, 2.5], [11, 6]], '#8e6fb0'); A.r(5, 6, 6, 1, '#4a3468'); A.p(7, 3, '#cdb8ea'); A.r(7, 10, 2, 3, C.cream); A.e(8, 9.6, 2.6, 1.6, '#e36b6b'); A.p(7, 9, '#ffd6d6'); },
-});
 const recipeOn = r => (r.bag == null || r.bag === (G.bagLv || 0)) && (!r.need || r.need());
 function clampCrop(o) { if (o.p0 != null) o.p = Math.max(o.p, o.p0 - OBJ[o.t].grow * .5); }
 function cropMsg(o, cs, i) { const d = OBJ[o.t], rem = Math.max(0, d.grow - (G.time - o.p)), left = rem >= 90 ? `${Math.round(rem / 60)}분쯤` : `${Math.max(10, Math.ceil(rem / 10) * 10)}초쯤`;
@@ -20,21 +13,6 @@ function fertCrop(t, o) { const s = selItem(), it = s && ITEMS[s.id]; if (!it ||
 function fillCan(t) { const s = selItem(); if (!s || s.id !== 'wcan') return; s.w = WCAN_MAX; invDirty = true; SFX.pick(); puff(t.x + .5, t.y + .5, '#bfe6ff', 8, 2, .2); toast('물뿌리개를 가득 채웠어요', 'good', 'wfill'); }
 // decided once, when the crop is grown: only on its own soil, only after the golem; crystal fertilizer raises the odds
 function rollStar(i, o) { o.star = beat('golem') && CROP_SOIL[o.t] != null && CROP_SOIL[o.t] === G.floor[i] && rand() < (o.f === 3 ? .35 : .15) ? 1 : 0; }
-const starMark = A => { A.p(12, 1, '#fff1b0'); A.p(11, 2, '#ffd25c'); A.p(12, 2, '#ffffff'); A.p(13, 2, '#ffd25c'); A.p(12, 3, '#ffd25c'); A.p(14, 4, '#fff1b0'); };
-Object.assign(ICON, {
-  glowSpore: packet('#ecd6a8', A => { A.e(8, 8, 2.6, 1.6, C.glow); A.r(7, 9, 2, 2, '#e8f7f2'); A.p(7, 7, C.glowL); }),
-  cbeanSeed: packet('#ecd6a8', A => { A.e(6.5, 9, 1.4, 1.8, C.cry); A.e(9.5, 8, 1.4, 1.8, C.cryL); A.p(9, 7, '#ffffff'); }),
-  cbean: A => { A.poly([[3, 12], [6, 5], [12, 3], [13, 5], [9, 11]], C.leaf); A.line(4, 12, 12, 4, C.leafD); for (const [x, y] of [[6, 9], [8, 7], [10, 5]]) { A.e(x + .5, y + .5, 1.6, 1.6, C.cry); A.p(x, y, C.cryL); } A.p(10, 4, '#ffffff'); },
-  berryS: A => { ICON.berry(A); starMark(A); }, mushroomS: A => { ICON.mushroom(A); starMark(A); }, glowcapS: A => { ICON.glowcap(A); starMark(A); }, cbeanS: A => { ICON.cbean(A); starMark(A); },
-  fertCry: A => { A.e(8, 10.5, 5.4, 4.6, '#6a62b8'); A.e(7, 9.6, 3.8, 3.2, '#a99cf0'); A.poly([[5, 6], [6, 2.5], [10, 2.5], [11, 6]], '#8e84d8'); A.r(5, 6, 6, 1, '#3a3270'); A.p(7, 3, '#e3d4ff'); A.poly([[8, 8], [10, 11], [8, 14], [6, 11]], C.cry); A.p(7, 10, C.cryL); },
-});
-for (const id in ROOM_DECO_DEF) OSPR[id] = ROOM_DECO_DEF[id][3];
-Object.assign(OSPR, {
-  tchest: [16, 16, A => { A.r(2, 6, 12, 8, '#8a5a34'); A.r(2, 3, 12, 4, '#a86a3c'); A.r(2, 3, 12, 1, '#d09058'); A.r(2, 6, 12, 1, '#6a4428'); A.r(4, 3, 1, 11, '#ffd25c'); A.r(11, 3, 1, 11, '#ffd25c'); A.r(2, 8, 12, 1, '#e8a33a');
-    A.r(7, 7, 2, 3, '#ffd25c'); A.p(7, 8, '#7a4a1a'); A.r(2, 13, 12, 1, '#5a3a24'); A.p(4, 3, '#fff1b0'); A.p(13, 2, '#fff1b0'); }],
-  tchestOpen: [16, 16, A => { A.r(2, 0, 12, 4, '#a86a3c'); A.r(2, 0, 12, 1, '#d09058'); A.r(4, 0, 1, 4, '#ffd25c'); A.r(11, 0, 1, 4, '#ffd25c'); A.r(2, 4, 12, 2, '#2a1a14'); A.r(2, 6, 12, 8, '#8a5a34'); A.r(2, 6, 12, 1, '#b8784a');
-    A.r(4, 6, 1, 8, '#ffd25c'); A.r(11, 6, 1, 8, '#ffd25c'); A.r(2, 8, 12, 1, '#e8a33a'); A.r(2, 13, 12, 1, '#5a3a24'); }],
-});
 const pct = v => Math.round(v * 100) + '%';
 function noteHint(d) { const s = d.src; if (s === 'mon') return '이끼 동굴·버섯숲 몬스터가 가끔 떨어뜨려요'; if (s === 'gather') return '풀·작물·빛버섯을 거둘 때 가끔 나와요'; if (s === 'fish') return '낚시하다 보면 가끔 걸려요'; if (s === 'bottle') return '낚시하다 병 속 쪽지로 걸려요'; if (s === 'ending') return '다섯 등불을 모두 밝히면';
   if (s.startsWith('room:')) return `${REGION_N[+s[6]]} 숨은 방 어딘가`; if (s.startsWith('boss:')) return `${BOSSES[s.slice(5)].n}을(를) 물리치면`; if (s.startsWith('guide:')) { const q = GUIDE.find(x => x.id === s.slice(6)); return q ? `이야기 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '이야기 퀘스트 보상'; } if (s.startsWith('quest:')) { const q = QSIDE.find(x => x.id === s.slice(6)); return q ? `도전 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '도전 퀘스트 보상'; } return ''; }
@@ -66,22 +44,6 @@ function jobPanelTick(dt) { if (!panel || panel.kind !== 'craft' || !TIMED[panel
   if (bar) bar.style.width = Math.round(clamp((nowS() - j.t0) / (j.q * j.per), 0, 1) * 100) + '%'; if (tx) tx.textContent = `${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}`; }
 function advanceOffline(sec) { if (!G || !(sec > 1)) return 0; sec = Math.min(sec, OFF_MAX); G.time += sec; for (const b of G.buffs || []) b.end += sec; return sec; } // food buffs wait for you
 const buffText = it => { if (!it.buff) return ''; const [ef, tier] = it.buff, E = EFF[ef], m = BUFF_DUR[tier - 1] * (it.star ? 1.5 : 1) / 60; return `${E.n} ${E.t(E.v[tier - 1])} · ${Number.isInteger(m) ? m : m.toFixed(1)}분`; };
-const dishIcon = (shape, c) => A => {
-  const [a, b, d] = c;
-  if (shape === 'bowl') { A.e(8, 10.6, 6.2, 3.8, '#e8e0d0'); A.e(8, 9.4, 5.6, 2, a); A.p(6, 9, b); A.p(10, 10, b); A.p(8, 9, d || b); A.r(2, 9, 12, 1, '#ffffff'); A.r(6, 14, 4, 1, '#c9c0b0'); A.p(6, 6, '#ffffff'); A.p(9, 5, '#ffffff'); A.p(7, 4, '#e8e0f0'); }
-  else if (shape === 'plate') { A.e(8, 12, 7, 2.6, '#c9c0d6'); A.e(8, 11.4, 6, 1.8, '#ffffff'); A.e(8, 9.4, 4.4, 2.4, a); A.p(6, 8, '#ffffff'); A.p(10, 8, b); A.p(7, 10, b); A.p(11, 10, b); }
-  else if (shape === 'skewer') { A.line(2, 15, 14, 2, C.woodL); A.e(5.4, 11.4, 2.2, 2.2, a); A.e(8.4, 8.2, 2.2, 2.2, b); A.e(11.2, 5.2, 2, 2, a); A.p(5, 10, '#ffffff'); A.p(8, 7, '#ffffff'); }
-  else if (shape === 'dango') { A.line(8, 15, 8, 1, C.woodL); A.e(8, 4, 2.8, 2.4, c[0]); A.e(8, 8.2, 2.8, 2.4, c[1]); A.e(8, 12.2, 2.8, 2.4, c[2]); A.p(7, 3, '#ffffff'); A.p(7, 7, '#ffffff'); A.p(7, 11, '#ffffff'); }
-  else if (shape === 'cup') { A.e(13, 9.4, 2, 2.4, '#f4f0f8'); A.e(13, 9.4, 1, 1.4, '#1b142600'); A.r(4, 6, 8, 8, '#f4f0f8'); A.r(4, 6, 8, 1, '#ffffff'); A.r(5, 7, 6, 2, a); A.r(4, 13, 8, 1, '#c9c0d6'); A.p(7, 3, b); A.p(9, 4, b); A.e(8, 8, 1.2, .6, '#ffffff'); }
-  else if (shape === 'cake') { A.e(8, 11.4, 6.6, 3.4, '#c99560'); A.e(8, 10.2, 6.2, 2.8, a); for (const [x, y] of [[5, 10], [8, 9], [11, 10], [7, 11]]) A.p(x, y, b); A.p(6, 9, '#ffffff'); }
-  else { A.e(8, 14, 6, 1.2, '#e8e0f0'); A.e(8, 10, 5.4, 4.4, a); A.e(6.4, 8.2, 1.8, 1.4, '#ffffff'); A.p(10, 11, b); A.p(9, 6, b); } };
-for (const d of DISHES) ICON[d[0]] = dishIcon(d[4], d[5]);
-// recipe notes: picking one up teaches the dish (they never stay in the bag)
-const noteIcon = A => { A.r(3, 2, 10, 12, '#f3e7c8'); A.r(3, 2, 10, 1, '#d8c79c'); A.r(3, 13, 10, 1, '#d8c79c'); for (const y of [5, 7, 9]) A.r(5, y, y === 7 ? 5 : 6, 1, '#b8a47a'); A.e(11, 11.5, 1.8, 1.8, '#e36b6b'); A.p(11, 11, '#ff9ab0'); };
-for (const d of DISHES) ICON['rn_' + d[0]] = noteIcon;
-for (const r of RECIPES) if (r.star && r.at === 'pot' && r.cat === 'food' && ITEMS[r.out].base) ICON[r.out] = (f => A => { f(A); starMark(A); })(ICON[ITEMS[r.out].base]);
-ICON.anyPetal = A => { A.e(6, 8, 3.4, 2.6, '#f7b8cf'); A.e(10, 9, 3.2, 2.6, '#ffd25c'); A.e(8, 6, 2.6, 2.2, '#6fa8ff'); A.p(8, 8, '#ffffff'); };
-ICON.bottle = A => { A.r(6, 2, 4, 3, '#c9a46b'); A.e(8, 10, 4.4, 5, '#9fd8f0'); A.e(8, 10, 3.6, 4.2, '#c8eefc'); A.r(6, 8, 4, 4, '#f3e7c8'); A.r(7, 9, 2, 1, '#b8a47a'); A.p(6, 6, '#ffffff'); };
 function learnRecipe(id, quiet) { if (!DISH[id] || !G) return false; G.recipes = G.recipes || {}; if (G.recipes[id]) return false; G.recipes[id] = 1; UIS.craftOrder = null;
   if (!quiet) { toast(`새 레시피를 알게 됐어요: ${DISH[id].n}! (요리솥)`, 'good'); SFX.seed(); } return true; }
 function maybeNote(src, x, y) { if (!G || !G.recipes || rand() >= (NOTE_CH[src] || 0)) return; const pool = DISHES.filter(d => d[7] === src && !knows(d[0]) && !G.drops.some(q => q.id === 'rn_' + d[0])); if (!pool.length) return; spawnDrop('rn_' + pool[(rand() * pool.length) | 0][0], 1, x, y); }

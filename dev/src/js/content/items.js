@@ -88,20 +88,8 @@ function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.ro
 // a sliding door's panel glides open and shut (kept outside the save)
 const SLIDE = new WeakMap(), SLIDE_PW = new WeakMap(), SLIDE_NEAR = 2;
 function slideStep(o, t) { const tg = o.open ? 1 : 0; let s = SLIDE.get(o); if (!s) SLIDE.set(o, s = { v: tg, t }); const dt = clamp(t - s.t, 0, .1); s.t = t; s.v += clamp(tg - s.v, -dt * 5, dt * 5); return Math.round(s.v * 4) / 4; }
-for (const id in DECOR) OSPR[id] = DECOR[id].spr;
-
-OSPR.forge = [16, 20, A => { A.r(2, 13, 2, 6, C.woodD); A.r(12, 13, 2, 6, C.woodD); A.r(1, 10, 14, 4, C.wood); A.r(1, 10, 14, 1, C.copperL); A.r(1, 11, 14, 1, C.copper); A.r(1, 13, 14, 1, C.woodD); A.r(4, 6, 8, 3, C.iron); A.r(3, 5, 10, 1, C.ironL); A.r(12, 6, 3, 1, C.iron); A.r(6, 9, 4, 1, C.ironD); A.line(10, 1, 13, 4, C.woodD); A.r(8, 1, 4, 2, C.ironD); A.r(2, 8, 2, 2, C.copper); A.p(2, 8, C.copperL); }];
-Object.assign(ICON, {
-  resin: A => { A.poly([[8, 2], [11.6, 8.5], [4.4, 8.5]], '#e8a33a'); A.e(8, 10, 4, 4, '#e8a33a'); A.e(7, 9, 1.5, 2, '#ffd98a'); A.p(6, 8, '#fff3d0'); A.p(10, 12, '#b8742a'); A.p(9, 13, '#b8742a'); },
-  rope: A => { A.e(8, 9, 6, 4.6, '#b8903f'); A.e(8, 9, 4.6, 3.4, '#d9b66a'); A.e(8, 9, 3, 2.2, '#b8903f'); A.e(8, 9, 1.6, 1.1, '#7a5a2a'); A.line(12, 11, 15, 14, '#b8903f', 2); A.p(5, 6, '#f0d898'); A.p(9, 5, '#f0d898'); },
-});
 const wtOf = w => WTYPE[(w && w.wt) || 'sword'];
-for (const id in WEAPONS) ICON[id] = WEAPONS[id][6];
-for (const id in UNIQ) ICON[id] = UNIQ[id][5];
-ICON.golemCore = A => { A.poly([[8, 1], [14, 8], [8, 15], [2, 8]], C.cryD); A.poly([[8, 2.5], [12.5, 8], [8, 13.5], [3.5, 8]], C.cry); A.poly([[8, 2.5], [8, 8], [3.5, 8]], C.cryL); A.e(8, 8, 2, 2, '#7ff0e6'); A.p(7, 7, '#ffffff'); };
-ICON.pickCrystal = pickIcon(C.cry, C.cryL);
 const rarOf = id => RAR[id] != null ? RAR[id] : -1;
 const rarCol = id => rarOf(id) >= 1 ? RARITY[rarOf(id)][1] : null;
 const rarName = id => { const c = rarCol(id), n = ITEMS[id].n; return c ? `<span style="color:${c}">${n}</span>` : n; };
 const benchNear = near => near.has('bench') || near.has('forge');
-BAG_UPS.forEach(([id]) => { ICON[id] = A => { UICON.bag(A); A.r(10, 1, 6, 6, '#7fe0b5'); A.r(12, 2, 2, 4, '#241b2f'); A.r(11, 3, 4, 2, '#241b2f'); }; });

@@ -87,9 +87,6 @@ function updateCtrlHud() { const a = G.act || {};
   const ib = $('#actBtn'); if (ib) ib.classList.toggle('dim', a.k === 'info' || a.k === 'none');
   const alt = curAlt(), sb = $('#subBtn'); if (sb) { if (sb.hidden === !!alt) sb.hidden = !alt; const key = alt ? alt.lbl + '|' + alt.icon : ''; if (alt && sb.dataset.k !== key) { sb.dataset.k = key; $('#subIcon').src = iconURL(alt.k === 'rot' ? 'rotate' : alt.icon || 'hand'); $('#subLbl').textContent = alt.lbl; sb.setAttribute('aria-label', alt.lbl); } }
   const nx = $('#altNext'); if (nx) { const v = !!alt && G.alts.length > 1; if (nx.hidden === v) nx.hidden = !v; } }
-// an arrow icon for the 「방향」 option
-ICON.rotate = A => { for (let k = 0; k <= 20; k++) { const a = -0.4 + k / 20 * 4.6; A.r(8 + Math.cos(a) * 5 - .5, 8 + Math.sin(a) * 5 - .5, 2, 2, '#7fe0b5'); } A.poly([[10.5, 1], [15, 3.5], [10.5, 6.5]], '#7fe0b5'); };
-
 // ---- the tool pouch in the bag window ----
 function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요 · 단축칸 맨 앞 도구 칸에서 골라 들어요)</span></div><div class="grid">`;
   T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '')); });
