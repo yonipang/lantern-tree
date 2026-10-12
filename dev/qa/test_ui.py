@@ -236,12 +236,19 @@ def qa18():
                 await pg.wait_for_timeout(300)
                 async def drag(a,b2,steps=8,hold=0):
                     await pg.evaluate("([a,b])=>{const B=document.querySelector(b);if(B&&B.closest('.sh-body'))B.scrollIntoView({block:'center'});}",[a,b2]); await pg.wait_for_timeout(100)
-                    ra=await pg.locator(a).bounding_box(); rb=await pg.locator(b2).bounding_box()
+                    # 창 안의 그림이 늦게 그려지면 창이 커지면서 칸이 아래로 밀려요(컴퓨터가 바쁠수록). 칸이 멈춘 뒤 끌고, 놓기 직전에 목표 칸을 다시 재요
+                    boxes=lambda: asyncio.gather(pg.locator(a).bounding_box(),pg.locator(b2).bounding_box())
+                    ra,rb=await boxes()
+                    for _ in range(40):
+                        await pg.wait_for_timeout(50); ra2,rb2=await boxes()
+                        if ra2==ra and rb2==rb: break
+                        ra,rb=ra2,rb2
                     x0,y0=ra['x']+ra['width']/2,ra['y']+ra['height']/2; x1,y1=rb['x']+rb['width']/2,rb['y']+rb['height']/2
                     kind='touch' if touch else 'mouse'
                     await pg.dispatch_event(a,'pointerdown',{'pointerId':5,'pointerType':kind,'isPrimary':True,'clientX':x0,'clientY':y0,'button':0,'bubbles':True})
                     if hold: await pg.wait_for_timeout(hold)
                     for k in range(1,steps+1):
+                        if k==steps: rb=await pg.locator(b2).bounding_box(); x1,y1=rb['x']+rb['width']/2,rb['y']+rb['height']/2
                         await pg.evaluate("([x,y,k])=>window.dispatchEvent(new PointerEvent('pointermove',{pointerId:5,pointerType:k,clientX:x,clientY:y,bubbles:true}))",[x0+(x1-x0)*k/steps,y0+(y1-y0)*k/steps,kind]); await pg.wait_for_timeout(16)
                     await pg.evaluate("([x,y,k])=>window.dispatchEvent(new PointerEvent('pointerup',{pointerId:5,pointerType:k,clientX:x,clientY:y,bubbles:true}))",[x1,y1,kind])
                     await pg.evaluate("([x,y])=>{const el=document.elementFromPoint(x,y);if(el)el.click()}",[x1,y1]); await pg.wait_for_timeout(250)
