@@ -11,7 +11,7 @@
 | `dev/src/` | **게임 원본** (HTML 뼈대 `shell.html` + `style.css` + `js/`). 모든 수정은 여기서 해요. 파일 지도: `dev/src/README.md` |
 | `dev/build.py` | `dev/src/` → 한 파일짜리 게임 `dev/index.html` (테스트·위키·배포 도구가 시작할 때 자동으로 돌려요. 저장소에는 안 올라감) |
 | `dev/build_web.py` | 원본(묶은 `dev/index.html`) → 배포용 `index.html`·`sw.js`·`manifest.webmanifest`(저장소 맨 위) |
-| `dev/qa/` | 테스트 (Playwright). `python3 dev/qa/run.py`로 한 번에 실행. `harness.py`(공통 도구) · `test_*.py`(기능별 테스트 8개, 안의 `qa2`~`qa59`) · `snapshot.py`(비교 테스트) |
+| `dev/qa/` | 테스트 (Playwright). `python3 dev/qa/run.py`로 한 번에 실행. `harness.py`(공통 도구) · `test_*.py`(기능별 테스트 파일 8개, 안의 `def test_이름()` 58개) · `snapshot.py`(비교 테스트) |
 | `dev/old/` | 옛 버전(v1~v3). 예전 세이브를 불러오는 테스트에 써요 |
 | `dev/character-parts/` | 캐릭터 부위 그리기 템플릿 |
 | `dev/art/` | 직접 그린 16px 그림 (아래 「16px 그림」) |
@@ -35,7 +35,7 @@
 
 - `main`에 그림(`dev/art`)이나 게임 원본(`dev/src`)이 바뀌어 올라오면 `.github/workflows/deploy.yml`이 돌아요:
   1. 비교 테스트로 코드가 기록(`dev/qa/snapshot`)과 맞는지 확인 → 2. `dev/art/`의 그림을 넣고(`art_pack.py`) 바뀐 그림 지문만 기록에 반영(이때 게임이 오류 없이 켜지고 옛 세이브가 그대로 불러와지는지도 확인) → 3. 테스트 → 4. **모두 통과하면** `build_web.py`로 배포 파일을 만들어 커밋 → GitHub Pages가 1~2분 뒤 바뀌어요.
-  - **그림만 올렸을 때**(웹사이트 업로드 등, 약 3분): 3단계는 그림 관련 테스트 4개(손그림 qa51·가구 칸 qa53·등불나무 qa31·꾸미기 qa13)만
+  - **그림만 올렸을 때**(웹사이트 업로드 등, 약 3분): 3단계는 그림 관련 테스트 4개(손그림 `hand_drawn_art`·가구 칸 `furniture_size`·등불나무 `lantern_tree_growth`·꾸미기 `dress_up`)만
   - **코드도 바뀌었을 때**(Claude 세션이 올릴 때, 약 10분): 3단계는 전체 테스트
 - 테스트가 실패하면 배포하지 않아요. Actions 탭에 빨간 X가 뜨고 GitHub이 메일로 알려 줘요. 실패 내용은 그 실행의 「qa-결과」 파일(요약·로그)로 볼 수 있어요.
 - 가끔 실패하는 테스트는 혼자 한 번 더 돌려서 통과하면 통과로 봐요.
@@ -53,19 +53,21 @@
    - 게임 데이터(아이템·레시피 순서와 재료·몬스터·퀘스트·그림 지문)와 옛 세이브 불러오기 결과가 `dev/qa/snapshot/`의 기록과 같은지 봐요. 다르면 바뀐 곳(예: `data.RECIPES[0].req[0][1]: 6 → 7`)을 보여 줘요
    - 코드 정리·옮기기만 했다면 반드시 통과해야 해요. 일부러 바꾼 거라면(밸런스 조정, 새 아이템 …) 바뀐 곳이 의도와 맞는지 확인한 뒤 `python3 dev/qa/snapshot.py --update`로 기록을 갱신하고 함께 커밋해요
    - 세이브 입력(`dev/qa/snapshot/fixtures.json`: v1~v3, v62, 옛 기능이 남은 세이브)은 고정이에요. 세이브 구조를 바꾸면 옛 세이브 사례를 `snapshot.py`의 `LEGACY`에 넣고 `--fixtures`로 추가해요 (이미 있는 세이브는 안 바뀌어요)
-4. **테스트**: `python3 dev/qa/run.py` — 비교 테스트 + qa2~qa59 전체를 동시에 4개씩 돌리고 끝에 요약만 보여 줘요 (약 5분, 백그라운드로 돌리고 결과 확인)
-   - 일부만: `python3 dev/qa/run.py crafting`(파일 이름) 또는 `python3 dev/qa/run.py qa59 qa33`(번호) · `python3 dev/qa/run.py emergency_escape`(제목). 목록(번호·제목·파일)은 `--list`, 테스트마다 한 줄씩 보려면 `-v`, 동시 개수는 `-j 2`
+4. **테스트**: `python3 dev/qa/run.py` — 비교 테스트 + 기능 테스트 58개 전체를 동시에 4개씩 돌리고 끝에 요약만 보여 줘요 (약 5분, 백그라운드로 돌리고 결과 확인)
+   - 일부만: `python3 dev/qa/run.py crafting`(파일 이름) 또는 `python3 dev/qa/run.py emergency_escape cooking`(테스트 이름). 목록(이름·파일)은 `--list`, 테스트마다 한 줄씩 보려면 `-v`, 동시 개수는 `-j 2`
    - 실패한 테스트는 혼자 한 번 더 돌려요. **두 번 모두 실패한 점검만 진짜 실패**로 보고, 한 번만 실패한 건 「가끔 실패하는 테스트」로 요약에 적어요 (`--no-retry`로 끄기)
-   - 새 기능을 넣으면 알맞은 `dev/qa/test_*.py`에 `def qaNN_영어제목():` 함수를 하나 추가해요 (예: `def qa60_fishing_contest():` — 번호는 다음 번호, 제목은 무엇을 확인하는지 짧게. 요약·로그 폴더에는 `qa60`으로 나와요) (같은 파일의 다른 함수를 본보기로. 함수 안에서 `async def main()`을 만들고 `return main`)
+   - 새 기능을 넣으면 알맞은 `dev/qa/test_*.py`에 `def test_영어이름():` 함수를 하나 추가해요 (예: `def test_fishing_contest():` — 번호 없이 무엇을 확인하는지 짧게, 같은 기능 테스트 옆에. 함수 안에서 `async def main()`을 만들고 `return main`. 같은 파일의 다른 함수를 본보기로)
+   - 테스트는 서로 기대지 않아 순서와 상관없이 동시에 돌아요 (예외: `title_import`는 `save_file_dev_tools`가 내보낸 파일을 써서 늘 그 바로 다음에 — `run.py`의 `AFTER`)
+   - 옛 번호(v63까지 커밋·설명에 나오는 `qa2`~`qa59`) → 지금 이름: qa2 `core_play` · qa3 `walk_over` · qa4 `mouse_aim` · qa5 `save_file_dev_tools` · qa6 `title_import` · qa7 `terrain_shovel` · qa8 `craft_quantity` · qa9 `character_menu` · qa10 `durability_repair` · qa11 `salvage` · qa12 `doors` · qa13 `dress_up` · qa14 `backups` · qa15 `cloud_sync` · qa16 `click_direction` · qa17 `weapons_skills` · qa18 `drag_zones_layout` · qa19 `stress_performance` · qa20 `chests` · qa21 `hotbar_bag` · qa22 `circuits` · qa23 `boss_effects_rarity` · qa24 `bosses_regions` · qa25 `arrow_keys_trees` · qa26 `multi_tile_rotation` · qa27 `keyboard_focus` · qa28 `light_seeds` · qa29 `balance` · qa30 `boss_rematch` · qa31 `lantern_tree_growth` · qa32 `play_time_cloud` · qa33 `farming_basics` · qa34 `farming_advanced` · qa35 `hidden_rooms` · qa36 `cooking` · qa37 `deep_caves` · qa38 `recall_faint` · qa39 `boss_phases` · qa40 `automation_giant_crops` · qa41 `building_cleanup` · qa42 `equipment_weapons` · qa43 `materials_upgrades` · qa44 `skills` · qa45 `pets` · qa46 `ranch` · qa47 `map_markers` · qa48 `fenced_home` · qa49 `ring_map` · qa50 `held_item_actions` · qa51 `hand_drawn_art` · qa52 `ring_map_boss_room` · qa53 `furniture_size` · qa54 `emergency_escape` · qa55 `renames` · qa56 `timed_jobs` · qa57 `workbench_tiers` · qa58 `gear_bench_tiers` · qa59 `workbench_tabs`
    - 스크린샷과 로그는 `dev/qa/out/<테스트>/`, 전체 요약은 `dev/qa/out/summary.txt`에 생겨요 (저장소에는 안 올라가요)
    - **흔들리지 않는 테스트 쓰는 법** (v62 이후 흔들리던 테스트를 고치며 찾은 원인들):
      - 게임 안의 일을 기다릴 땐 실제 시계(`wait_for_timeout`) 대신 `wait_game(pg, 초)`(게임 시간 기준) 또는 `wait_until(pg, "()=>조건")`. 게임은 한 프레임에 최대 0.05초만 진행해서, 바쁘면 실제 1초에 게임은 1초가 안 지나요
      - 상태를 맞추는 것과 확인·행동은 한 번의 `ev(...)` 안에서. 사이에 프레임이 돌면 적이 움직이거나, 몬스터가 새로 생기거나, 화면(카메라)이 움직여요
      - 확률(치명타 등)에 기대는 점검은 계산하는 동안만 `Math.random`을 고정하고 끝나면 되돌려요. 지도 모양에 기대는 점검은 필요한 지형을 테스트가 직접 깔아요
-     - 마우스로 세계의 한 칸을 가리킬 땐 화면이 마우스를 따라 움직인다는 걸 기억해요 (`qa16`의 `aim_at`, 판단 순간 다시 조준)
-     - 칸·버튼 위치는 그림이 늦게 그려지면 바뀌어요. 위치가 멈춘 뒤 재고, 놓기 직전에 다시 재요 (`qa18`의 `drag`)
+     - 마우스로 세계의 한 칸을 가리킬 땐 화면이 마우스를 따라 움직인다는 걸 기억해요 (`click_direction`의 `aim_at`, 판단 순간 다시 조준)
+     - 칸·버튼 위치는 그림이 늦게 그려지면 바뀌어요. 위치가 멈춘 뒤 재고, 놓기 직전에 다시 재요 (`drag_zones_layout`의 `drag`)
      - 페이지는 `URL+'qa.html'`로 열어요 (작은 웹 서버). `file://`로 열면 바쁠 때 다시 열면서 localStorage가 사라지는 일이 있었어요
-   - 지금 상태: 다시 돌리기 없이 전체를 5번 돌려 모두 매번 통과해요 (마지막까지 남았던 `qa54`는 테스트가 아니라 게임 현상이라 v63에서 게임 쪽을 고쳤어요 — 아래 「긴급 탈출」)
+   - 지금 상태: 다시 돌리기 없이 전체를 5번 돌려 모두 매번 통과해요 (마지막까지 남았던 긴급 탈출 테스트는 테스트가 아니라 게임 현상이라 v63에서 게임 쪽을 고쳤어요 — 아래 「긴급 탈출」)
    - 테스트마다 자기 폴더(`dev/qa/out/<테스트>/`)를 써서 동시에 돌려도 서로 덮어쓰지 않아요. 단, `run.py`를 두 개 동시에 돌리지는 않아요
 5. **배포**: `main`에 올리면 GitHub Actions가 테스트 후 배포 파일을 만들어 줘요 (위 「자동 반영·배포」). 직접 만들 때는 `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
 6. **올리기**
@@ -88,9 +90,9 @@ pip install playwright --break-system-packages   # 이미 있으면 생략
 - 저장 구조를 바꾸면 반드시 옛 세이브 불러오기 테스트를 추가해요
 - 가구 칸 크기 (v50부터): 작업대 2×1, 통나무·돌 벤치 2×1. 침대는 v51부터, 구리 제작대·화로·용광로는 v55부터 다시 1칸 (전에 놓은 남는 칸은 `fixParts`가 지움). v56부터 v50 전 세이브(`fpV` 없음)도 같은 크기 — 불러올 때 `growFootprints()`가 작업대·벤치를 오른쪽(막히면 왼쪽) 칸으로 넓히고, 양옆이 막히면 아이템으로 돌려줘요. 커진 가구는 손그림이 들어오기 전까지 옛 그림을 늘린 임시 그림. 가방·단축칸 아이콘은 길쭉한 그림도 정사각형 칸에 넣어 1칸으로 보여요(`squareIcon`, v55)
 - 지도 모양 두 가지 (v47부터): 새 게임은 600×600 고리 지도(`mapV: 2`, `LAY 2`), v47 전 세이브는 200×200 원래 지도(`mapV` 없음 → `LAY 1`) 그대로. `setLayout()`이 W·H·CX·CY·보스 위치를 바꿔요
-- 테스트의 `mkpage()`는 새 게임을 원래 지도(layout 1)로 고정해요 (`localStorage 'lantern-tree-layout'`). 고리 지도는 `mkpage(..., layout=2)`로 따로 테스트해요 (qa49)
+- 테스트의 `mkpage()`는 새 게임을 원래 지도(layout 1)로 고정해요 (`localStorage 'lantern-tree-layout'`). 고리 지도는 `mkpage(..., layout=2)`로 따로 테스트해요 (`ring_map`)
 - 손에 든 물건 (v48부터): `decide()`는 `holdMode()`로 든 물건의 일만 해요(`heldDecide`: 가구·씨앗=놓기, 삽=파기, 무기=공격, 곡괭이=캐기 …). 빈손·재료는 `handDecide`(예전처럼 다 함). 장비에 무기 칸 없음 — `curWeapon()`은 든 무기, 없으면 주먹. 옛 세이브의 `equip.weapon`은 빈 단축칸으로(`unslotWeapon`). 장비 칸·펫은 가방 패널 안(`openPanel('equip')`은 가방을 열어요)
-- 긴급 탈출 (v57): 메뉴 「갇혔을 때 → 긴급 탈출」(두 번 눌러 확인, 30초에 한 번). `regionOf()`로 지금 자리가 막혔는지(3000칸·60칸 안에서 끝나면 막힘, 문은 통로) 보고, 막혔으면 바깥의 가장 가까운 트인 곳(`openSpotNear`), 아니면 집으로 — 집이 막혀 있으면 집 바깥으로. 기절·귀환·불러오기의 `closedIn`(16칸)은 그대로 (qa54)
+- 긴급 탈출 (v57): 메뉴 「갇혔을 때 → 긴급 탈출」(두 번 눌러 확인, 30초에 한 번). `regionOf()`로 지금 자리가 막혔는지(3000칸·60칸 안에서 끝나면 막힘, 문은 통로) 보고, 막혔으면 바깥의 가장 가까운 트인 곳(`openSpotNear`), 아니면 집으로 — 집이 막혀 있으면 집 바깥으로. 기절·귀환·불러오기의 `closedIn`(16칸)은 그대로 (`emergency_escape`)
   - v63: 곡괭이로 팔 수 있는 **자연 바위는 막힌 것으로 보지 않아요** — 처음 만들어진 세계에서도 바위였던 칸의 바위벽은 통로처럼 봐요(석영 광맥 포함). 나무·돌벽돌 벽, 빈 땅에 쌓은 벽(흙벽도), 울타리·가구, 단단한 암반, 물·용암은 그대로 막힘. 전에는 원래 지도 약 11%, 고리 지도 약 5%의 새 세계가 「바위로 둘러싸인 빈터」에서 시작해 갇힌 것으로 판정됐어요 (지금 190개 세계 중 0개)
 - 제작 장소 (v58~v60): 화로 → 용광로(`furnace`, 제련), 옛 용광로 → 장비제작대(`smelter`). 용광로·요리솥은 넣어 두고 꺼내기(`o.job`, 실제 시간, v59). 세이브의 `at`으로 꺼 둔 시간만큼 `G.time`을 넘겨 작물 등이 자람(`advanceOffline`). 작업대는 `o.lv` 0~5 단계(`BENCH_N`), 레시피는 재료로 `r.tier`가 정해지고 모두 `at: 'bench'`. 옛 구리 제작대(`forge`)는 불러올 때 2칸 작업대 1단계로(`convertForges`)
 - 장비제작대 (v61~): 무기·방어구·장신구·도구 레시피는 모두 `at: 'smelter'`(`gearCatOf`: weapon/armor/acc/tool), 장비제작대도 `o.lv` 0~5 단계(`GEAR_N`, `TIERED`). 수리·분해·강화도 장비제작대에서만. v61 전 세이브는 장비제작대를 가진 작업대 단계까지 올려 주고, 없으면 그 단계 장비제작대를 줘요(`nm61`)

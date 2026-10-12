@@ -4,7 +4,7 @@
 # - 코드가 바뀌었을 때(Claude 세션): 전체 테스트 → 약 10분
 #  1) 비교 테스트: 코드가 기록(dev/qa/snapshot)과 맞는지 먼저 확인 — 일부러 바꾼 데이터는 커밋할 때 기록도 같이 갱신해 두어야 해요
 #  2) dev/art/의 그림을 게임에 넣고(art_pack.py), 바뀐 그림 지문만 비교 기록에 반영
-#  3) 테스트 — 그림만: 게임이 오류 없이 켜지고 옛 세이브가 그대로 불러와지는지(2단계의 비교 테스트) + 손그림·가구 칸·등불나무·꾸미기(qa51·qa53·qa31·qa13)
+#  3) 테스트 — 그림만: 게임이 오류 없이 켜지고 옛 세이브가 그대로 불러와지는지(2단계의 비교 테스트) + 손그림·가구 칸·등불나무·꾸미기(hand_drawn_art·furniture_size·lantern_tree_growth·dress_up)
 #              코드도: 전체 테스트(python3 dev/qa/run.py). 가끔 실패하는 테스트는 혼자 한 번 더 돌려서, 다시 돌려 통과하면 통과로 봐요
 #  4) 통과하면 배포 파일을 만들어 그림·기록과 함께 커밋 → GitHub Pages
 # - 테스트가 실패하면 배포하지 않아요 (Actions 탭에 빨간 X, 결과는 「qa-결과」 파일로 내려받기, GitHub이 메일로도 알려 줘요)
@@ -57,7 +57,7 @@ jobs:
           if ! git diff --quiet -- dev/src/js/art/hand-art.js; then python3 dev/qa/snapshot.py --update; fi
       - name: 3) 테스트 (그림만이면 그림 관련 4개, 아니면 전체)
         run: |
-          if [ '${{ steps.what.outputs.art_only }}' = 1 ]; then python3 dev/qa/run.py qa51 qa53 qa31 qa13
+          if [ '${{ steps.what.outputs.art_only }}' = 1 ]; then python3 dev/qa/run.py hand_drawn_art furniture_size lantern_tree_growth dress_up
           else python3 dev/qa/run.py; fi
       - name: 테스트 결과 보관
         if: always()

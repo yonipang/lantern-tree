@@ -1,7 +1,7 @@
-# 테스트 실행: 비교 테스트(snapshot.py) + 회귀 테스트(test_*.py 안의 qa2~qa59)를 한 번에 돌리고 요약만 보여 줘요.
-# 테스트 이름은 「번호_영어 제목」(예: def qa54_emergency_escape()). 실행·요약·로그 폴더에서는 번호(qa54)로 불러요 — 제목으로 불러도 돼요.
+# 테스트 실행: 비교 테스트(snapshot.py) + 기능 테스트(test_*.py 안의 def test_이름())를 한 번에 돌리고 요약만 보여 줘요.
+# 테스트는 이름으로 불러요 (def test_emergency_escape() → emergency_escape). 실행·요약·로그 폴더 모두 이 이름이에요.
 # 사용법: python3 dev/qa/run.py               → 전부 (동시에 4개씩 — CPU가 적으면 그만큼, 약 5분)
-#         python3 dev/qa/run.py crafting      → test_crafting.py만      python3 dev/qa/run.py qa59 qa33 → 테스트 몇 개만 (emergency_escape처럼 제목도 돼요)
+#         python3 dev/qa/run.py crafting      → test_crafting.py만      python3 dev/qa/run.py emergency_escape cooking → 테스트 몇 개만
 #         -j 2  동시에 돌릴 개수 · -v  테스트마다 결과 한 줄씩 · --no-retry  실패한 테스트를 다시 돌리지 않기 · --list  목록
 # 자세한 로그·스크린샷: dev/qa/out/<테스트>/ (log.txt), 전체 요약: dev/qa/out/summary.txt
 import asyncio, importlib, json, os, re, sys, time, traceback
@@ -13,34 +13,30 @@ TIMEOUT = 900  # 테스트 하나당 최대 시간(초)
 
 
 def tests():
-    """{'qa2': ('test_basics', 'core_play'), …} — test_*.py 안의 def qaNN_제목() 순서대로 (번호 → 파일·제목)"""
+    """{'core_play': 'test_basics', …} — test_*.py 안의 def test_이름() 순서대로 (이름 → 파일)"""
     found = {}
     for f in sorted(os.listdir(QA)):
         if f.startswith('test_') and f.endswith('.py'):
-            for m in re.finditer(r'^def (qa\d+)(?:_(\w+))?\(\):', open(os.path.join(QA, f), encoding='utf-8').read(), re.M):
-                found[m.group(1)] = (f[:-3], m.group(2) or '')
+            for m in re.finditer(r'^def test_(\w+)\(\):', open(os.path.join(QA, f), encoding='utf-8').read(), re.M):
+                assert m.group(1) not in found and m.group(1) != 'snapshot', f'테스트 이름이 겹쳐요: {m.group(1)}'
+                found[m.group(1)] = f[:-3]
     return found
-
-
-def title(name, T):
-    return f"{name} {T[name][1]}" if name in T and T[name][1] else name
 
 
 def one(name):
     """자식 프로세스: 테스트 하나를 실행 (run.py가 부름)"""
     sys.path.insert(0, QA)
-    f, t = tests()[name]
-    mod = importlib.import_module(f)
+    mod = importlib.import_module(tests()[name])
     import harness
     harness.RES.clear()
     try:
-        asyncio.run(asyncio.wait_for(getattr(mod, f'{name}_{t}' if t else name)()(), TIMEOUT))
+        asyncio.run(asyncio.wait_for(getattr(mod, 'test_' + name)()(), TIMEOUT))
     except BaseException:
         traceback.print_exc(); print('ERROR 테스트가 끝까지 돌지 못했어요'); sys.exit(2)
 
 
-# qa6은 qa5가 만든 페이지·내보낸 세이브 파일을 이어서 써요 → 늘 qa5 바로 다음에, 같은 폴더에서 돌려요
-AFTER = {'qa6': 'qa5'}
+# title_import는 save_file_dev_tools가 만든 페이지·내보낸 세이브 파일을 이어서 써요 → 늘 그 바로 다음에, 같은 폴더에서 돌려요
+AFTER = {'title_import': 'save_file_dev_tools'}
 
 
 async def run1(name, d, src, verbose):
@@ -56,12 +52,12 @@ async def run1(name, d, src, verbose):
     ok = len(re.findall(r'^PASS', out, re.M)); fails = re.findall(r'^FAIL.*', out, re.M)
     err = 'ERROR' in out or not re.search(r'^TOTAL', out, re.M)
     r = {'name': name, 'pass': ok, 'fail': fails, 'more': re.findall(r'^  \S.*', out, re.M)[:10] if name == 'snapshot' else [], 'error': (out.strip().splitlines() or ['?'])[-3:] if err else None, 'sec': round(sec, 1)}
-    if verbose: print(f"{title(name, tests()):30s} {ok}개 통과" + (f", 실패 {len(fails)}" if fails else '') + (' · 오류' if err else '') + f" · {sec:.0f}초", flush=True)
+    if verbose: print(f"{name:24s} {ok}개 통과" + (f", 실패 {len(fails)}" if fails else '') + (' · 오류' if err else '') + f" · {sec:.0f}초", flush=True)
     return r
 
 
 async def job(chain, src, sem, verbose):
-    """chain: 차례로 돌릴 테스트들 (보통 하나, qa5→qa6처럼 이어지는 것은 둘). 같은 폴더를 써요"""
+    """chain: 차례로 돌릴 테스트들 (보통 하나, save_file_dev_tools→title_import처럼 이어지는 것은 둘). 같은 폴더를 써요"""
     async with sem:
         d = os.path.join(OUT, chain[0])
         return [await run1(n, d, src, verbose) for n in chain]
@@ -76,9 +72,9 @@ async def main(argv):
         elif not a.startswith('-'): picks.append(a)
     T = tests()
     if '--list' in argv:
-        for n, (f, t) in T.items(): print(f'{n:5s} {t:24s} {f}')
+        for n, f in T.items(): print(f'{n:24s} {f}')
         return 0
-    names = [n for n, (f, t) in T.items() if not picks or n in picks or f in picks or f[5:] in picks or t in picks or f'{n}_{t}' in picks]
+    names = [n for n, f in T.items() if not picks or n in picks or f in picks or f[5:] in picks]
     for n, first in AFTER.items():
         if n in names and first not in names: names.insert(names.index(n), first)
     if picks and not names: print('그런 테스트가 없어요:', ' '.join(picks)); return 1
@@ -114,18 +110,18 @@ async def main(argv):
         tag = lambda twice: '' if a is None else ' → 다시 돌려도 실패' if twice else ' → 다시 돌려 통과 (가끔 실패하는 테스트)'
         for n, f in enumerate(r['fail']):
             twice = k2 is None or key(f) in k2; real += twice
-            if n < 8: out.append(f"  {title(r['name'], T)} {f[:160]}{tag(twice)}")
+            if n < 8: out.append(f"  {r['name']} {f[:160]}{tag(twice)}")
         for f in r['more']: out.append(f'    {f.strip()[:160]}')
         if r['error']:
             twice = a is None or bool(a['error']); real += twice
-            out.append(f"  {title(r['name'], T)} 오류{tag(twice)}: " + ' / '.join(x[:120] for x in r['error']))
+            out.append(f"  {r['name']} 오류{tag(twice)}: " + ' / '.join(x[:120] for x in r['error']))
         if a:
             for f in a['fail']:
-                if key(f) not in k1: out.append(f"  {title(r['name'], T)} {f[:160]} → 다시 돌릴 때만 실패 (가끔 실패하는 테스트)")
+                if key(f) not in k1: out.append(f"  {r['name']} {f[:160]} → 다시 돌릴 때만 실패 (가끔 실패하는 테스트)")
     still = real > 0
     lines = [f"QA {'통과' if not still else '실패 있음'}: 테스트 {len(res)}개 · 점검 {n_ok + n_fail}개 중 {n_ok}개 통과" + (f" ({'두 번 모두 ' if retry else ''}실패 {real}개)" if still else '') + f" · {total // 60:.0f}분 {total % 60:.0f}초 (동시 {jobs}개)"] + out
     lines.append('로그: dev/qa/out/<테스트>/log.txt · 요약: dev/qa/out/summary.txt')
-    detail = [f"{title(r['name'], T):30s} 통과 {r['pass']:3d} 실패 {len(r['fail'])} {'오류 ' if r['error'] else ''}{r['sec']:6.0f}초" for r in sorted(res, key=lambda r: (len(r['name']), r['name']))]
+    detail = [f"{r['name']:24s} 통과 {r['pass']:3d} 실패 {len(r['fail'])} {'오류 ' if r['error'] else ''}{r['sec']:6.0f}초" for r in sorted(res, key=lambda r: (len(r['name']), r['name']))]
     open(os.path.join(OUT, 'summary.txt'), 'w', encoding='utf-8').write('\n'.join(lines + [''] + detail) + '\n')
     print('\n'.join(lines))
     return 1 if still else 0

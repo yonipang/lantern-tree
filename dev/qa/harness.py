@@ -6,7 +6,7 @@ QA=os.path.dirname(os.path.abspath(__file__))
 # 테스트마다 따로 쓰는 폴더 (run.py가 QA_OUT으로 정해 줘요). 동시에 여러 테스트를 돌려도 서로 덮어쓰지 않아요
 SP=os.environ.get('QA_OUT') or os.path.join(QA,'out')+'/'; os.makedirs(SP, exist_ok=True)
 # 테스트 페이지는 이 컴퓨터 안의 작은 웹 서버(http://127.0.0.1)로 열어요. file://로 열면 바쁠 때 다시 열거나 새 페이지를 열면서
-# 앞 페이지가 쓴 localStorage가 사라지는 일이 있었어요(저장·클라우드 테스트 qa15·qa32가 가끔 실패하던 원인). 실제 게임도 https로 돌아요
+# 앞 페이지가 쓴 localStorage가 사라지는 일이 있었어요(저장·클라우드 테스트 cloud_sync·play_time_cloud가 가끔 실패하던 원인). 실제 게임도 https로 돌아요
 import functools, http.server, threading
 class _NoCache(http.server.SimpleHTTPRequestHandler):
     def end_headers(self): self.send_header('Cache-Control', 'no-store'); super().end_headers()
