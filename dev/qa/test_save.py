@@ -451,7 +451,7 @@ def test_save_split():
                 rec('세이브 나누기',f'{name}: 나눴다 합치면 그대로 · 캐릭터/세계/플레이어별로 맞게 나뉨', r==[True,[],[],True,True], str(r))
             # 나눈 두 덩어리로 불러오기 → 다시 저장하면 같음 (시간 표시 at만 빼고)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[3]={id:'wood',c:7};G.pets={dog:1};G.petOn='dog';G.qclaim.wood=1;
-              const w=T.serializeWorld(),c=T.serializeChar(),before=T.serialize();
+              const w=T.serializeWorld(),c=T.serializeChar(),before=T.serialize();delete w.at; // 저장 시각을 빼요: 컴퓨터가 바빠 1초 넘게 걸리면 「꺼 둔 동안 흐른 시간」만큼 게임 시간이 앞당겨져 가끔 달랐어요
               T.deserializeParts(w,c);const after=T.serialize();delete before.at;delete after.at;
               return [JSON.stringify(before)===JSON.stringify(after),T.G.inv[3]&&T.G.inv[3].c,T.G.petOn,!!T.G.qclaim.wood,'pets' in w,'qclaim' in c]}""")
             rec('세이브 나누기','세계·캐릭터 두 덩어리로 불러와도 그대로 (가방·펫은 캐릭터, 퀘스트 보상은 세계)', r==[True,7,'dog',True,False,False], str(r))

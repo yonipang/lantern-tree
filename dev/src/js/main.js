@@ -2,7 +2,7 @@
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
-  if (G) { jobPanelTick(dt); if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
+  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
   if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);

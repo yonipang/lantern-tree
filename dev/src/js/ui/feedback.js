@@ -52,4 +52,5 @@ let bossName = '';
 onEvent('bossbar', on => { $('#bossbar').hidden = !on; if (on) bossName = ''; });
 onEvent('bossHp', (k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } });
 let lastGoalTxt = '';
+export function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } });

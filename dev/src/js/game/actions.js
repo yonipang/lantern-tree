@@ -62,31 +62,17 @@ const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1)
 const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.ranged ? 1 : 1 - skl('warrior') * .03); };
 const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
-// ================= input =================
-const keys = new Set();
-const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
-const dpad = { id: null, vx: 0, vy: 0 };
-let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
-const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
-let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
-const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
-const actHeld = () => btnHeld || keys.has('Space') || keys.has('KeyE'); // v65: interact (the mouse and J attack)
-function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
+let actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
-function mouseTile() {
-  const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
-  // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
-  if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
-  return { x: tx, y: ty, mx: m.x, my: m.y };
-}
 
 // ================= actions =================
 const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
-  if (aimMouse()) {
-    const m = mouseTile();
+  const aim = ctlOf(p).aim;
+  if (aim) {
+    const m = { x: aim.tx, y: aim.ty, mx: aim.x, my: aim.y };
     if (m.x !== ptx || m.y !== pty) {
       if (inReach(m.x, m.y)) return { x: m.x, y: m.y };
       let best = null, bd = 1e9;
@@ -239,7 +225,6 @@ function pickupObj(t, o) {
   delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   returnObj(o, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
-function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); doAlt(); } // v65: the small button
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
@@ -248,13 +233,21 @@ function tryAct(edge) {
   else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
   perform(a);
 }
+defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 매 프레임 화면 쪽이 보내요
+function pickHot(i) { // 단축칸 고르기 (같은 칸을 한 번 더 고르면 음식은 먹고 옷은 입어요)
+  { const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; } // v65
+  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
+  G.sel = i; invDirty = true;
+}
+defineCmd('hot', c => pickHot(c.i));
+defineCmd('sel', c => { const d = c.d, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); invDirty = true; }); // 마우스 휠
 function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
 function perform(a) {
   const p = G.p;
   if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
   switch (a.k) {
     case 'attack': {
-      if (!aimMouse()) faceTo(a.en.x - p.x, a.en.y - p.y);
+      if (!ctlOf(p).aim) faceTo(a.en.x - p.x, a.en.y - p.y);
       actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     }
     case 'rot': rotatePlace(); actCd = 0.15; break;
@@ -295,7 +288,7 @@ function perform(a) {
   }
 }
 function swingAttack() {
-  const p = G.p, w = curWeapon(), W = wtOf(w); if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
+  const p = G.p, w = curWeapon(), W = wtOf(w), aim = ctlOf(p).aim; if (aim) faceTo(aim.x - p.x, aim.y - (p.y - .45)); const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
   if (W.ranged) {
     if (W.mp && (p.mp || 0) < W.mp) { emit('toast', '기력이 부족해요. 잠깐 기다리면 다시 차요', null, 'nomp'); emit('sfx', 'clink'); return false; }
     if (W.mp) p.mp -= W.mp;
