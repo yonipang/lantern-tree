@@ -5,6 +5,18 @@ from playwright.async_api import async_playwright
 QA=os.path.dirname(os.path.abspath(__file__))
 # 테스트마다 따로 쓰는 폴더 (run.py가 QA_OUT으로 정해 줘요). 동시에 여러 테스트를 돌려도 서로 덮어쓰지 않아요
 SP=os.environ.get('QA_OUT') or os.path.join(QA,'out')+'/'; os.makedirs(SP, exist_ok=True)
+# 테스트 페이지는 이 컴퓨터 안의 작은 웹 서버(http://127.0.0.1)로 열어요. file://로 열면 바쁠 때 다시 열거나 새 페이지를 열면서
+# 앞 페이지가 쓴 localStorage가 사라지는 일이 있었어요(저장·클라우드 테스트 qa15·qa32가 가끔 실패하던 원인). 실제 게임도 https로 돌아요
+import functools, http.server, threading
+class _NoCache(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self): self.send_header('Cache-Control', 'no-store'); super().end_headers()
+    def send_head(self):
+        if 'If-Modified-Since' in self.headers: del self.headers['If-Modified-Since']  # 테스트 중에 페이지 파일을 다시 쓰기도 해서 늘 새로 읽어요
+        return super().send_head()
+    def log_message(self, *a): pass
+_srv=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(_NoCache,directory=SP))
+threading.Thread(target=_srv.serve_forever,daemon=True).start()
+URL=f'http://127.0.0.1:{_srv.server_address[1]}/'  # SP 폴더의 파일 주소: URL+'qa.html'
 # 테스트할 게임 파일: run.py가 dev/src를 묶은 dev/index.html (QA_SRC로 다른 파일을 줄 수도 있어요, 예: 옛 버전과 비교)
 SRC=os.environ.get('QA_SRC') or os.path.join(QA,'..','index.html')
 HOOK="window.__T={get G(){return G},CX,CY,BX,BY,SA,SB,idx,addItem,openPanel,closePanel,decide,serialize,deserialize,WATER,BOSSES,bestPick,lightAt,countItem,OBJ,ITEMS,computeLight};window.claude?.hot?.snapshot"
@@ -34,7 +46,7 @@ async def new_ctx(b, w, h, touch):
     pg=await ctx.new_page(); errs=[]
     pg.on('console',lambda m: errs.append(m.text) if m.type=='error' and 'TUNNEL' not in m.text and 'fonts' not in m.text else None)
     pg.on('pageerror',lambda e: errs.append(str(e)))
-    await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400)
+    await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400)
     await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
     return ctx,pg,errs
 

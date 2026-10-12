@@ -132,7 +132,7 @@ def qa2():
             # PC R key pickup
             p3=await (await b.new_context(viewport={'width':1280,'height':800})).new_page()
             p3.on('pageerror',lambda e: errs.append(str(e)))
-            await p3.goto('file://'+SP+'qa.html'); await p3.wait_for_timeout(300); await p3.click("#btnNew"); await p3.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await p3.wait_for_timeout(300)
+            await p3.goto(URL+'qa.html'); await p3.wait_for_timeout(300); await p3.click("#btnNew"); await p3.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await p3.wait_for_timeout(300)
             await p3.evaluate("()=>{const G=__T.G;G.p.x=__T.CX-0.5;G.p.y=__T.CY+3.6;G.p.face={x:-1,y:0}}"); await p3.wait_for_timeout(300)
             await p3.keyboard.press('KeyR'); await p3.wait_for_timeout(200)
             rec('PC','R 키로 가구 회수', await p3.evaluate("()=>__T.countItem('table')===1"), '')
@@ -140,7 +140,7 @@ def qa2():
             # saves from every earlier version
             for (src,name,hook) in [(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','old','index.v1.html'),'v1',"window.__T={get G(){return G},serialize};window.claude?.hot?.snapshot"),(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','old','index.v2.html'),'v2',"window.__T={get G(){return G},serialize};window.claude?.hot?.snapshot"),(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','old','index.v3.html'),'v3(전용 도구)',"window.__T={get G(){return G},serialize};window.claude?.hot?.snapshot")]:
                 mkpage(src,'old_'+name[:2]+'.html',hook)
-                p2=await ctx.new_page(); await p2.goto('file://'+SP+'old_'+name[:2]+'.html'); await p2.wait_for_timeout(300); await p2.click("#btnNew"); await p2.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await p2.wait_for_timeout(300)
+                p2=await ctx.new_page(); await p2.goto(URL+'old_'+name[:2]+'.html'); await p2.wait_for_timeout(300); await p2.click("#btnNew"); await p2.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await p2.wait_for_timeout(300)
                 old=await p2.evaluate("()=>{const G=__T.G;try{G.sel=G.sel}catch(e){};return JSON.stringify(__T.serialize())}"); await p2.close()
                 r=await ev(pg,"(s)=>{__T.deserialize(JSON.parse(s));const G=__T.G;return [G.sel, G.inv.filter(x=>x).map(x=>x.id).concat(G.equip.weapon?[G.equip.weapon.id]:[]).join(','), [...G.objs.values()].every(o=>__T.OBJ[o.t])]}", old)
                 await pg.wait_for_timeout(600)
@@ -250,7 +250,7 @@ def qa4():
             for (W,H) in [(1280,800),(1920,1080),(1024,768)]:
                 ctx=await b.new_context(viewport={'width':W,'height':H}); pg=await ctx.new_page(); errs=[]
                 pg.on('pageerror',lambda e: errs.append(str(e)))
-                await pg.goto('file://'+SP+'qa4.html'); await pg.wait_for_timeout(300); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(1500)
+                await pg.goto(URL+'qa4.html'); await pg.wait_for_timeout(300); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(1500)
                 # clear an area around the player so every tile is targetable
                 await pg.evaluate("()=>{const G=__T.G;for(let y=90;y<112;y++)for(let x=88;x<114;x++){const i=__T.idx(x,y);if(G.wall[i]!==8)G.wall[i]=0;if(!['treeP'].includes(G.objs.get(i)?.t))G.objs.delete(i);G.floor[i]=1}G.p.x=96.5;G.p.y=104.5;G.enemies.length=0}")
                 await pg.wait_for_timeout(1200)
@@ -313,7 +313,7 @@ def qa6():
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True,device_scale_factor=2)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
             await ev(pg,"()=>{__T.G.p.x=60.5;localStorage.setItem('lantern-tree-save-v1',JSON.stringify(__T.serialize()))}")
             await pg.reload(); await pg.wait_for_timeout(600)
             async with pg.expect_file_chooser() as fc: await pg.tap('#btnImport')
@@ -328,7 +328,7 @@ def qa6():
             # fresh device with no save
             ctx2=await b.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True)
             pg2=await ctx2.new_page(); pg2.on('pageerror',lambda e: errs.append(str(e)))
-            await pg2.goto('file://'+SP+'qa.html'); await pg2.wait_for_timeout(500)
+            await pg2.goto(URL+'qa.html'); await pg2.wait_for_timeout(500)
             async with pg2.expect_file_chooser() as fc: await pg2.tap('#btnImport')
             await (await fc.value).set_files(SP+'exported.json'); await pg2.wait_for_timeout(600)
             r=await ev(pg2,"()=>[document.querySelector('#title').hidden, Math.round(__T.G.p.x*10)/10]")

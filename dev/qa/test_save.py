@@ -11,7 +11,7 @@ def qa5():
             b=await p.chromium.launch()
             ctx=await b.new_context(viewport={'width':1280,'height':800},accept_downloads=True)
             pg=await ctx.new_page(); errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(600)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(600)
             # build something recognizable
             await ev(pg,"()=>{const G=__T.G;G.p.x=105.5;G.p.y=110.5;__T.addItem('stone',77);G.objs.set(__T.idx(104,112),{t:'chair'})}")
             await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
@@ -58,7 +58,7 @@ def qa5():
             # title import on a fresh context with existing save
             ctx=await b.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True,device_scale_factor=2)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400); await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
             await ev(pg,"()=>{localStorage.setItem('lantern-tree-save-v1',JSON.stringify(__T.serialize()))}")
             await pg.reload(); await pg.wait_for_timeout(600)
             await pg.screenshot(path=SP+'qa5_title.png')
@@ -83,7 +83,7 @@ def qa14():
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(400)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(200)
             rec('보호','세이브가 없으면 확인 없이 바로 캐릭터 선택', await ev(pg,"()=>!document.querySelector('#charPick').hidden"))
             await pg.tap('#charGo'); await pg.wait_for_timeout(600)
@@ -111,7 +111,7 @@ def qa14():
             ctx=await b.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True)
             await ctx.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('blocked')}})")
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append('blocked-ctx: '+str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(600)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(600)
             r=await ev(pg,"()=>[!document.querySelector('#saveWarn').hidden, document.querySelector('#saveWarn').textContent.slice(0,22)]")
             rec('경고','저장이 막힌 환경이면 첫 화면에 경고', r[0], str(r))
             await pg.screenshot(path=SP+'qa14_warn.png')
@@ -138,7 +138,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             await ctx.add_init_script(MOCK)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(500)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(200); await pg.tap('#charGo'); await pg.wait_for_timeout(600)
             await ev(pg,"()=>{__T.addItem('crystal',33)}")
             await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
@@ -163,7 +163,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             await ctx.add_init_script(MOCK); await ctx.add_init_script("if(!localStorage.getItem('mockcloud')){localStorage.setItem('mockcloud',"+json.dumps(cloud)+");localStorage.setItem('mockauth',JSON.stringify({uid:'u_juyeon@test.kr',email:'juyeon@test.kr'}))}")
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(900)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(900)
             r=await ev(pg,"()=>[!document.querySelector('#cloudAsk').hidden, document.querySelector('#cloudAsk').innerText.slice(0,30)]")
             rec('다른 기기','새 기기 첫 화면에 클라우드 세이브 불러오기 안내', r[0], str(r))
             await pg.screenshot(path=SP+'qa15_title.png')
@@ -218,7 +218,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
         init+="}"
         await ctx.add_init_script(init)
         pg=await ctx.new_page(); errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
-        await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(900)
+        await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(900)
         return ctx,pg,errs
     async def start_new(pg):
         await pg.tap('#btnNew'); await pg.wait_for_timeout(200)
@@ -267,7 +267,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             await ctx.close()
             # old save loaded through the title: already-cleared quests are NOT stamped with today's time
             old=await (await b.new_context()).new_page()
-            await old.goto('file://'+SP+'qa.html'); await old.wait_for_timeout(500)
+            await old.goto(URL+'qa.html'); await old.wait_for_timeout(500)
             olds=await old.evaluate("()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));delete s.run;delete s.playT;delete s.qt;delete s.playTEst;s.time=5000;s.stats.wood=9;s.stats.bench=1;return JSON.stringify(s)}")
             await old.context.close()
             ctx,pg,errs=await ctx_with(b, local=olds); allerr+=errs

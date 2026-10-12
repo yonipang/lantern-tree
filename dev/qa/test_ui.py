@@ -56,7 +56,7 @@ def qa9():
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(500)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>[!document.querySelector('#charPick').hidden, document.querySelectorAll('#cpGrid .cp-card').length, document.querySelector('#cpGrid .cp-card.on').dataset.c, document.querySelector('#btnNew').offsetParent===null]")
             rec('캐릭터 선택','새 모험 → 선택 화면 (8칸, 기본 새싹)', r==[True,8,'sprout',True], str(r))
@@ -102,7 +102,7 @@ def qa13():
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(500)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(300)
             rec('꾸미기','선택 화면에 직접 꾸미기 카드', await ev(pg,"()=>!!document.querySelector('#cpGrid [data-c=custom]') && document.querySelector('#cpGrid [data-c=custom] span').textContent==='직접 꾸미기'"))
             await pg.tap('#cpGrid [data-c=custom]'); await pg.tap('#charGo'); await pg.wait_for_timeout(900)
