@@ -37,7 +37,7 @@ TIPS.push('물뿌리개로 물을 준 작물은 25% 빨리 자라요. 물가에�
 const CROP_SOIL = { cropBerry: 1, cropShroom: 3, cropGlow: 3, cropBean: 4 }, SOIL_N = { 1: '이끼', 2: '흙', 3: '버섯흙', 4: '수정 모래' };
 const STAR_OF = { berry: 'berryS', mushroom: 'mushroomS', glowcap: 'glowcapS', cbean: 'cbeanS' };
 // decided once, when the crop is grown: only on its own soil, only after the golem; crystal fertilizer raises the odds
-function rollStar(i, o) { o.star = beat('golem') && CROP_SOIL[o.t] != null && CROP_SOIL[o.t] === G.floor[i] && Math.random() < (o.f === 3 ? .35 : .15) ? 1 : 0; }
+function rollStar(i, o) { o.star = beat('golem') && CROP_SOIL[o.t] != null && CROP_SOIL[o.t] === G.floor[i] && rand() < (o.f === 3 ? .35 : .15) ? 1 : 0; }
 Object.assign(OBJ, {
   cropGlow: { n: '빛버섯', crop: 'glow', grow: 150, yield: [['glowcap', 2, 3, 1], ['glowSpore', 1, 2, 1]] },
   cropBean: { n: '수정 콩', crop: 'bean', grow: 180, yield: [['cbean', 2, 3, 1], ['cbeanSeed', 1, 2, 1]] },
@@ -196,7 +196,7 @@ ITEMS.bottle = { n: '병 속 쪽지', virtual: 1 }; ICON.bottle = A => { A.r(6, 
 function learnRecipe(id, quiet) { if (!DISH[id] || !G) return false; G.recipes = G.recipes || {}; if (G.recipes[id]) return false; G.recipes[id] = 1; UIS.craftOrder = null;
   if (!quiet) { toast(`새 레시피를 알게 됐어요: ${DISH[id].n}! (요리솥)`, 'good'); SFX.seed(); } return true; }
 const NOTE_CH = { mon: .06, gather: .03, fish: .08 };
-function maybeNote(src, x, y) { if (!G || !G.recipes || Math.random() >= (NOTE_CH[src] || 0)) return; const pool = DISHES.filter(d => d[7] === src && !knows(d[0]) && !G.drops.some(q => q.id === 'rn_' + d[0])); if (!pool.length) return; spawnDrop('rn_' + pool[(Math.random() * pool.length) | 0][0], 1, x, y); }
+function maybeNote(src, x, y) { if (!G || !G.recipes || rand() >= (NOTE_CH[src] || 0)) return; const pool = DISHES.filter(d => d[7] === src && !knows(d[0]) && !G.drops.some(q => q.id === 'rn_' + d[0])); if (!pool.length) return; spawnDrop('rn_' + pool[(rand() * pool.length) | 0][0], 1, x, y); }
 function roomNotes(r) { const list = ROOM_NOTES[r.b] || [], n = (G.rooms || []).filter(q => q.b === r.b).length; return n >= list.length ? [list[r.k]].filter(Boolean) : r.k === 0 ? list.slice() : []; }
 function bossNoteIds(k) { const list = (BOSS_NOTES[k] || []).slice(), rg = BOSS_REGION[k]; if (rg != null && !(G.rooms || []).some(q => q.b === rg)) list.push(...ROOM_NOTES[rg]); return list; }
 for (const [qid, dish] of [['s_crop2', 'glowPancake'], ['s_crop4', 'beanSteam'], ['s_rooms', 'petalRiceCake'], ['s_fish', 'crucianBraise']]) { const q = QSIDE.find(x => x.id === qid); if (q) q.rw = q.rw.concat([['rn_' + dish, 1]]); }
@@ -228,5 +228,5 @@ const LUCK_KOI = [1, 1.5, 2, 3], LUCK_BOOT = [1, .7, .5, .25], LUCK_BOTTLE = [.0
 function catchTable(b) { const L = luckTier(), base = (CATCH[b] || CATCH[0]).map(([k, w]) => [k, k === 'koi' ? w * LUCK_KOI[L] : k === 'boot' ? w * LUCK_BOOT[L] : w]); const tot = base.reduce((a, x) => a + x[1], 0), pb = LUCK_BOTTLE[L]; base.push(['bottle', tot * pb / (1 - pb)]); return base; }
 function fishBottle() {
   if (!knows('koiSteam')) { learnRecipe('koiSteam', true); toast('병 속에서 쪽지가 나왔어요! 새 레시피: 별빛 잉어찜', 'good'); SFX.seed(); return; }
-  const cs = Object.keys(FLOWERS), pool = [['petal' + cs[(Math.random() * cs.length) | 0], 2], ['crystal', 2], ['gel', 2], [['glowSpore', 'cbeanSeed', 'berrySeed'][(Math.random() * 3) | 0], 2]];
-  pool.sort(() => Math.random() - .5); for (const [id, c] of pool.slice(0, 3)) { const l = addItem(id, c); if (l) spawnDrop(id, l, G.p.x, G.p.y); } toast('작은 보물상자를 낚았어요!', 'good'); }
+  const cs = Object.keys(FLOWERS), pool = [['petal' + cs[(rand() * cs.length) | 0], 2], ['crystal', 2], ['gel', 2], [['glowSpore', 'cbeanSeed', 'berrySeed'][(rand() * 3) | 0], 2]];
+  pool.sort(() => rand() - .5); for (const [id, c] of pool.slice(0, 3)) { const l = addItem(id, c); if (l) spawnDrop(id, l, G.p.x, G.p.y); } toast('작은 보물상자를 낚았어요!', 'good'); }

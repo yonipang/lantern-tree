@@ -124,7 +124,7 @@ function recallDecide(s) { const cd = (G.recallCd || 0) - G.time; if (cd > 0) re
 function startRecall(mode) { if (G.recall || (G.recallCd || 0) > G.time) return; G.recall = { t: RECALL_T, mode, x: G.p.x, y: G.p.y }; SFX.seed(); toast(mode === 'home' ? '귀환석이 빛나요… 가만히 있어요' : '표지로 돌아가요… 가만히 있어요', null, 'recall'); }
 function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
   if (p.dead > 0 || p.hurt > 0 || Math.hypot(p.x - R.x, p.y - R.y) > .25) { G.recall = null; toast('움직여서 귀환을 멈췄어요', null, 'recallStop'); return; }
-  R.t -= dt; if (Math.random() < .5) puff(p.x + (Math.random() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
+  R.t -= dt; if (fxRand() < .5) puff(p.x + (fxRand() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
   if (R.t > 0) return; G.recall = null; G.recallCd = G.time + RECALL_CD;
   let to; if (R.mode === 'back' && G.backPt) { to = G.backPt; G.backPt = null; } else { G.backPt = { x: p.x, y: p.y }; to = homePt(); }
   puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; if (R.mode !== 'back') unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); /* bug fix (v49.1): going back to the marker (a spot you stood on) never moves you out of a closed cave pocket */ cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
@@ -159,8 +159,8 @@ function phaseCheck(b) { if (!PHASE_BOSS[b.k] || b.hp <= 0) return; b.stage = b.
   if (b.k === 'spirit' && s >= 2 && !(b.pillars || []).length) spiritPillars(b); if (b.k === 'spirit' && s === 3) spiritClones(b, 2); }
 function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone'); lightDirty = true; }
 // lava turtle: stage 2 sparks off every wall bounce, stage 3 erupts around you and then opens its shell
-function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (Math.random() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
-function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = Math.random() * 6.283, r = k ? 1.3 + Math.random() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }
+function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (rand() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
+function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = rand() * 6.283, r = k ? 1.3 + rand() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }
   shake = Math.max(shake, .45); SFX.brk(); puff(b.x, b.y - .6, '#ff8a3d', 22, 4, .5); }
 // frost spirit: stage 2 raises four ice pillars to hide behind, stage 3 adds two see-through decoys and turns the gap in its rings
 OBJ.icePillar = { n: '얼음 기둥', solid: 1, light: [2.2, '#9fd8f0'] };

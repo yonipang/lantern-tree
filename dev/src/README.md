@@ -25,7 +25,12 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 |---|---|
 | `shell.html` | 페이지 뼈대: `<head>`, HUD·버튼·타이틀 화면 HTML, CSS/JS를 넣는 순서 |
 | `style.css` | 화면 모양 전부: 색·글꼴 → HUD(체력·목표·보스바·토스트) → 단축칸·터치 버튼·조이스틱 → 시트 창(제작·지도·메뉴) → 타이틀·캐릭터 고르기·능력 창, 작은 화면 규칙 |
-| `js/core.js` | 어디서나 쓰는 도구: `$`·노이즈·난수, 색(`C`)과 캔버스 붓(`mk`·외곽선), 효과음(`SFX`)·반짝임·떠오르는 글자·토스트·떨어진 아이템 |
+| `js/engine/util.js` | (모듈) 공통 도구: `$`·`clamp`·`hexRgb` |
+| `js/engine/random.js` | (모듈) 난수·노이즈: **`rand()` 게임 결과용 · `fxRand()` 보이기용** (`Math.random`은 여기서만, `build.py`가 확인), `rint`, 시드 노이즈 `hash2`·`vn`·`fbm`·`rng` |
+| `js/engine/canvas.js` | (모듈) 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |
+| `js/engine/audio.js` | (모듈) 효과음 `SFX`·`ensureAudio` |
+| `js/engine/effects.js` | (모듈) 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
+| `js/sim/drops.js` | (모듈) 떨어진 아이템 `spawnDrop`·`rollDrops` |
 | `js/art/hand-art.js` | 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
 | `js/art/characters.js` | 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
 | `js/art/world.js` | 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |

@@ -7,7 +7,7 @@
 
 ## 어디를 고치나
 
-- **게임 원본은 `dev/src/`** (`shell.html` + `style.css` + `js/` 25개). 여기만 고쳐요.
+- **게임 원본은 `dev/src/`** (`shell.html` + `style.css` + `js/` 30개). 여기만 고쳐요.
 - 저장소 맨 위 `index.html`·`sw.js`·`manifest.webmanifest`·`wiki.html`, 그리고 `dev/index.html`은 **모두 만들어지는 파일**이에요. 직접 고치지 않아요.
   - `dev/index.html`은 `python3 dev/build.py`가 `dev/src/`를 묶어 만들어요 (저장소에는 안 올라감).
 - 그림은 `dev/art/`에 PNG로 넣고 `python3 dev/art_pack.py` (→ `dev/src/js/art/hand-art.js`의 `/*@@ART*/` 부분). 그 부분은 손으로 고치지 않아요.
@@ -16,6 +16,7 @@
 
 - **JS는 `shell.html`의 `@include` 순서대로 하나의 `<script>` 안에 이어 붙여져요.** 옛 파일은 `import`/`export` 없이 전역 이름을 같이 써요.
   - 구조 변경으로 옮긴 파일은 **모듈**이에요: `import { a } from './x.js'`·`export …` (모양과 규칙은 `dev/PLAN.md` 「진행하는 동안 지킬 것」). 모듈의 이름은 반드시 import, 옛 파일의 이름은 그대로. `build.py`가 어기면 알려 줘요.
+  - **무작위는 `rand()`(게임 결과에 영향: 피해·드롭·생성·몬스터 움직임 …) 또는 `fxRand()`(반짝이·소리 등 보이기만)** — `Math.random`을 직접 쓰면 `build.py`가 멈춰요. 헷갈리면 `rand()`.
   - 맨 위에서 바로 실행되는 줄(`const …`, `Object.assign(ITEMS, …)`, `RECIPES.push(…)`, `TIPS.push(…)`)은 파일 순서대로 실행돼요. 앞 파일의 값을 뒤에서 쓰는 건 되고, 반대는 안 돼요.
   - `RECIPES`·`QSIDE`·`TIPS`에 넣는 순서가 화면 순서예요. 일괄 보정(예: `features/automation-tiers.js` 중간의 「지형 재료 2배」)은 **그 줄보다 앞에서 추가된 레시피에만** 적용돼요. 파일·줄 순서를 바꾸면 밸런스가 바뀔 수 있어요.
   - 새 기능은 비슷한 `js/features/` 파일 끝에 덧붙이거나, 크면 새 파일 + `shell.html`에 `// @include` 한 줄 (`js/features/automation-tiers.js` 다음, `js/render.js` 앞). 파일 지도는 `dev/src/README.md`.

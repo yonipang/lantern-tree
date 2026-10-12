@@ -130,6 +130,10 @@ def strip_art(s):
 def check(js, report):
     """모듈 규칙 확인 + 진행 상황(옛 전역 이름이 몇 개 남았는지)"""
     owner, seen = {}, {}
+    # 무작위는 engine/random.js의 rand()(게임 결과용)·fxRand()(보이기용)만 써요 — 멀티플레이에서 방장만 결과를 굴리게
+    for rel, s, mod in js:
+        if rel != 'js/engine/random.js' and 'Math.random' in re.sub(r'//[^\n]*', '', s):
+            raise BuildError(f'{rel}: Math.random 대신 rand()(게임 결과에 영향) 또는 fxRand()(반짝이·소리 등 보이기만)를 써요 (engine/random.js)')
     for rel, s, mod in js:
         for n in top_names(strip_art(s)):
             if n in owner and owner[n] != rel:
