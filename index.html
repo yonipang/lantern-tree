@@ -505,18 +505,21 @@ function toast(msg, cls, key) {
 // 받는 쪽은 ui/feedback.js (onEvent로 등록). 지금은 남기는 순간 바로 전해져서 예전과 똑같이 동작해요.
 // 멀티플레이(12단계~)에서는 방장이 같은 사건을 친구에게도 보내요 — 그래서 사건에는 숫자·글자 같은 단순한 값을 담아요.
 // 새 사건 이름을 쓰면 ui/feedback.js에 받는 곳도 만들어요 (build.py가 빠진 것을 알려 줘요).
+// 누구의 사건인지: 남길 때의 「지금 플레이어」(eventWho, 8단계) — 알림·창·흔들림 같은 개인 사건은 내 플레이어 것만 내 화면에 보여요 (ui/feedback.js)
+let eventWho = null;
 const handlers = new Map();
 function onEvent(type, fn) { if (!handlers.has(type)) handlers.set(type, []); handlers.get(type).push(fn); }
 function emit(type, ...args) {
   const hs = handlers.get(type);
   if (!hs) { console.error('사건을 받는 곳이 없어요: ' + type); return; }
+  eventWho = curPl ? curPl.id : null;
   for (const h of hs) h(...args);
 }
 // ================= 명령 (구조 변경 7단계): 화면·입력 → 규칙 =================
 // 화면 쪽(ui/)은 규칙을 바로 바꾸지 않고 명령을 보내요:  runCmd({ k: 'tap', b: 'act' })   runCmd({ k: 'skill', n: 0 })
 // 규칙 쪽은 defineCmd('이름', c => …)로 받는 곳을 만들어요. 지금은 보내는 순간 바로 처리돼서 예전과 똑같이 동작해요.
 // 멀티플레이(12단계~)에서는 친구가 보낸 명령을 방장이 같은 처리기로 돌려요 — 그래서 명령에는 숫자·글자 같은 단순한 값을 담아요.
-// actor: 지금 처리 중인 명령을 보낸 플레이어 (8단계에서 플레이어마다 쓰여요).
+// actor: 지금 처리 중인 명령을 보낸 플레이어 — 처리하는 동안 G.inv·G.p … 가 그 플레이어 것이 돼요 (8단계).
 //
 // 조작 의도(ctl): 매 프레임 화면 쪽이 runCmd({ k: 'ctl', … })로 보내요 — 규칙은 키보드·마우스·조이스틱을 직접 읽지 않아요 (build.py가 확인).
 //   mx·my 움직임(키·조이스틱·방향 패드를 더한 값) · stick 조이스틱 방향(쓰는 중일 때만) · act 상호작용 누르는 중 · atk 공격 누르는 중
@@ -528,7 +531,8 @@ function defineCmd(k, fn) { if (CMDS.has(k)) throw new Error('명령 이름이 �
 function runCmd(c) {
   const fn = CMDS.get(c.k);
   if (!fn) { console.error('명령을 처리하는 곳이 없어요: ' + c.k); return; }
-  actor = c.who || ME; return fn(c);
+  actor = c.who || ME; const pl = G && G.players && G.players[actor];
+  return pl ? withPlayer(pl, () => fn(c)) : fn(c); // 보낸 플레이어가 「지금 플레이어」 (save/state.js)
 }
 const IDLE = Object.freeze({ mx: 0, my: 0, stick: null, act: false, atk: false, aim: null });
 const ctlOf = p => p.ctl || IDLE;
@@ -557,13 +561,18 @@ const FRAME_ORDER = [
   'camera',   // 카메라 따라가기 (render.js)
   'shake',    // 화면 흔들림 줄이기 (ui/feedback.js)
 ];
+// 플레이어마다 한 번씩 도는 칸 (그동안 G.p·G.inv … 가 그 플레이어 것). 나머지 칸은 세계에 한 번 (화면 쪽은 내 플레이어 기준)
+const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'hunger', 'pshots', 'fish', 'spawn']);
 const SYS = new Map();
 function onFrame(name, fn) {
   if (!FRAME_ORDER.includes(name)) throw new Error('매 프레임 순서표(sim/systems.js)에 없는 이름이에요: ' + name);
   if (SYS.has(name)) throw new Error('매 프레임 이름이 겹쳐요: ' + name);
   SYS.set(name, fn);
 }
-function runFrame(dt) { for (const name of FRAME_ORDER) { const fn = SYS.get(name); if (fn) fn(dt); } }
+function runFrame(dt) {
+  for (const name of FRAME_ORDER) { const fn = SYS.get(name); if (!fn) continue;
+    if (PER_PLAYER_FRAMES.has(name)) { for (const pl of playerList()) withPlayer(pl, () => fn(dt)); } else fn(dt); }
+}
 // ================= 지도 틀 (구조 변경 5단계: content/items.js·world.js에서 옮김) =================
 // 지도 모양(1 = 처음 200×200 지도, 2 = 600×600 고리 지도)과 크기·등불나무·보스 자리, 칸 번호(idx)·지도 안인지(inB), 방향 이름.
 // v47부터 두 가지: 1은 v47 전 세이브가 그대로 쓰는 200×200, 2는 새 게임의 고리 지도
@@ -1849,8 +1858,8 @@ onFrame('grow', dt => {
   growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
 });
 function zoneTick() {
-  const p = G.p; if (p.dead > 0 || !G.fzones) return;
-  G.fzones.forEach((z, zi) => {
+  if (!G.fzones || !alivePlayers().length) return;
+  G.fzones.forEach((z, zi) => { const p = nearestPlayer(z.x + .5, z.y + .5).p; // 구역마다 가장 가까운 살아 있는 플레이어 (8단계)
     z.dead = z.dead.filter(t => t > G.time);
     if (Math.hypot(z.x + .5 - p.x, z.y + .5 - p.y) > 26 || (z.next || 0) > G.time) return;
     const alive = G.enemies.reduce((n, e) => n + (e.zone === zi ? 1 : 0), 0), cap = z.c === 'K' ? 2 : 3;
@@ -1875,7 +1884,7 @@ function growTick(dt = 2) {
   // crops: lantern-tree blessing (time ×0.8) and water (time ×0.75) add up, but never below half the normal time
   const BR = TREE_BLESS(treeStage());
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null) continue; if (G.time - o.p >= d.grow) { if (o.star == null) rollStar(i, o); giantTry(i, o); continue; } let k = 0; if (BR && Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) k += .25; if (o.w) k += 1 / 3; if (k) { o.p -= dt * k; clampCrop(o); } }
-  const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
+  const p = G.p, inside = (x, y) => playerList().some(pl => Math.abs(x + .5 - pl.p.x) < .8 && Math.abs(y + .5 - pl.p.y) < .8); // 플레이어가 서 있는 칸에서는 안 자라요
   for (const [i, o] of G.objs) { if (o.yg && G.time >= o.yg) { delete o.yg; const x = i % W, y = (i / W) | 0; if (Math.hypot(x - p.x, y - p.y) < 20) emit('puff', x + .5, y + .2, '#9be37a', 6, 2, .3); } }
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0) - YOUNG_T) continue; const x = i % W, y = (i / W) | 0;
     if (inside(x, y)) { o.at = Math.max(o.at || 0, G.time + 4 + YOUNG_T); continue; }
@@ -2041,9 +2050,9 @@ function circuitTick(dt) {
     while (st.length) { const j = st.pop(), x = j % W, y = (j / W) | 0; for (const [dx, dy] of D4) { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const k = idx(nx, ny); if (G.wire.has(k) && !net.has(k) && !swT.has(k)) { net.set(k, id); st.push(k); } } } }
   const par = Array.from({ length: nid }, (_, k) => k), find = a => { while (par[a] !== a) a = par[a] = par[par[a]]; return a; }, uni = (a, b) => { a = find(a); b = find(b); if (a !== b) par[a] = b; };
   const adj = (i, own) => { const x = i % W, y = (i / W) | 0, out = new Set(); if (own && net.has(i)) out.add(net.get(i)); for (const [dx, dy] of D4) { const nx = x + dx, ny = y + dy; if (inB(nx, ny) && net.has(idx(nx, ny))) out.add(net.get(idx(nx, ny))); } return [...out]; };
-  const px = Math.floor(G.p.x), py = Math.floor(G.p.y);
+  const onTile = (x, y) => alivePlayers().some(pl => Math.floor(pl.p.x) === x && Math.floor(pl.p.y) === y); // 발판: 살아 있는 플레이어 누구든 (8단계)
   for (const [i, o, d] of comps) { if (!d.sw) continue; let on = false; const x = i % W, y = (i / W) | 0;
-    if (d.sw === 'lever') on = !!o.on; else if (d.sw === 'plate') on = (px === x && py === y && G.p.dead <= 0) || G.enemies.some(e => Math.floor(e.x) === x && Math.floor(e.y) === y);
+    if (d.sw === 'lever') on = !!o.on; else if (d.sw === 'plate') on = onTile(x, y) || G.enemies.some(e => Math.floor(e.x) === x && Math.floor(e.y) === y);
     else { o.tt = (o.tt || 0) + dt; on = Math.floor(o.tt / (o.per || 2)) % 2 === 0; }
     o.lit = on; if (on) { const a = adj(i, false); for (let k = 1; k < a.length; k++) uni(a[0], a[k]); } }
   const rs = new Map();
@@ -2062,7 +2071,7 @@ function deviceStep(i, o, d, on, dt) {
   if (d.dev === 'door') { if (!!o.open !== on) { if (!on && occupied(x, y)) return; o.open = on; emit('sfx', 'place'); } o.work = false; return; }
   if (d.dev === 'slide') { o.work = false; if (on) SLIDE_PW.set(o, G.time); // powered (or joined to a powered leaf): opens while the player is close, closes when they walk away
     const grp = doorGroup(x, y); o.pw = grp.some(([, g]) => (SLIDE_PW.get(g) ?? -9) > G.time - .5) ? 1 : 0; if (!o.pw) return;
-    const near = G.p.dead <= 0 && grp.some(([j]) => Math.hypot(j % W + .5 - G.p.x, ((j / W) | 0) + .5 - G.p.y) < SLIDE_NEAR);
+    const near = alivePlayers().some(pl => grp.some(([j]) => Math.hypot(j % W + .5 - pl.p.x, ((j / W) | 0) + .5 - pl.p.y) < SLIDE_NEAR)); // 자동문: 살아 있는 플레이어 누구든 가까우면
     if (!!o.open !== near) { if (!near && occupied(x, y)) return; o.open = near ? 1 : 0; if (Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) < 8) emit('sfx', 'place'); } return; }
   if (d.dev === 'drill') { const dir = o.dir || { x: 0, y: -1 }, tx = x + dir.x, ty = y + dir.y, w = inB(tx, ty) ? G.wall[idx(tx, ty)] : 0, cnt = (o.store || []).reduce((a, s2) => a + s2.c, 0);
     const tierOk = w && WALLS[w] && (d.only ? d.only.includes(w) : WALLS[w].tier <= d.tier);
@@ -2086,11 +2095,11 @@ function bestArrow() { for (const id of ARROW_ORD) { const k = G.inv.findIndex(s
 function takeArrow() { const k = bestArrow(); if (k < 0) return null; const s = G.inv[k], a = ITEMS[s.id].arw; s.c--; if (s.c <= 0) G.inv[k] = null; invDirty = true; G.stats.arrows = (G.stats.arrows || 0) + 1; return a; }
 // hazards on the floor: lava pools, frost nova warnings
 function updateHazards(dt) {
-  const p = G.p; G.hz = G.hz || [];
-  for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } if (h.t < h.warn || p.dead > 0) continue;
-    const d = Math.hypot(p.x - h.x, p.y - h.y);
-    if (h.k === 'lava') { if (d < h.r) hurtPlayer(h.dmg, h.x, h.y, 'fire'); }
-    else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); if (d < h.r) { hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); } } }
+  G.hz = G.hz || [];
+  for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } const live = alivePlayers(); if (h.t < h.warn || !live.length) continue;
+    const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
+    if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
+    else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
 function drawHazards(T, camX, camY) {
   const t = performance.now() / 1000;
@@ -2307,7 +2316,7 @@ function moveEnt(e, dx, dy, r) {
   return bx || by;
 }
 function occupied(tx, ty) {
-  const p = G.p, r = 0.28; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true;
+  const r = 0.28; for (const pl of playerList()) { const p = pl.p; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true; } // 플레이어 누구든 (8단계)
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
 const isPlacedFloor = f => !!FLOOR_ITEM[f];
@@ -2373,6 +2382,7 @@ function newGame(seed) {
   G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0, tools: [], tsel: 0, lastW: null,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
+  bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
   G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
@@ -2390,8 +2400,43 @@ const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', '
 const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
-const ME = 'me'; // 멀티플레이 전에는 플레이어가 하나 (13단계에서 캐릭터마다 이름표)
+const ME = 'me'; // 내 플레이어 (13단계에서 캐릭터마다 이름표)
 const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+// ---- 플레이어 여럿 (구조 변경 8단계) ----
+// 세계(G) 안에 플레이어가 여럿: G.players[id] = { id, p: 몸, 가방·장비 … 캐릭터 칸, 지도·침대 … 플레이어별 칸, 낚시·휘두르기·고른 행동·타이머 … 지금 하는 일 }.
+// 옛 코드의 G.inv·G.p·G.actCd … (PER_PLAYER)는 「지금 플레이어」(curPl)의 것을 가리켜요:
+//   명령은 보낸 플레이어(sim/commands.js), 매 프레임 플레이어별 일은 한 명씩(sim/systems.js), 그 밖(화면·저장)은 내 플레이어(ME).
+// 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
+const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env',
+  'explored', 'spawnPt', 'backPt', // 세계 안 플레이어별 (PLAYER_KEYS)
+  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'newIds', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
+  'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
+const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0, spawnT: 0 });
+let curPl = null;
+function withPlayer(pl, fn) { const old = curPl; curPl = pl; try { return fn(); } finally { curPl = old; } }
+const playerList = () => (G && G.players ? Object.values(G.players) : []);
+const myPlayer = () => G && G.players && G.players[ME];
+// (x, y)에서 가장 가까운 살아 있는 플레이어 (모두 쓰러졌으면 가장 가까운 플레이어) — 몬스터·보스·떨어진 물건이 누구를 볼지
+function nearestPlayer(x, y) { let best = null, bd = 1e9, live = false;
+  for (const pl of playerList()) { const a = pl.p.dead <= 0, d = Math.hypot(pl.p.x - x, pl.p.y - y); if ((a && !live) || (a === live && d < bd)) { best = pl; bd = d; live = a; } }
+  return best; }
+const alivePlayers = () => playerList().filter(pl => pl.p.dead <= 0);
+let turn = 0;
+const nextTurn = () => { const L = playerList(); return L[(turn = (turn + 1) % L.length)]; }; // 세계에 한 번 하는 일을 플레이어 돌아가며 (자연 다시 자라기·들짐승 생기기)
+// G를 새로 만든 바로 뒤: G 안의 플레이어 칸을 첫 플레이어(나)에게 옮기고, G.inv 같은 이름이 지금 플레이어를 가리키게 해요
+function bindPlayers(g, id = ME) {
+  const pl = { id, ...freshTimers() }; g.players = { [id]: pl };
+  for (const k of PER_PLAYER) { if (hasOwn(g, k)) { pl[k] = g[k]; delete g[k]; } Object.defineProperty(g, k, { get: () => curPl[k], set: v => { curPl[k] = v; }, enumerable: false, configurable: true }); }
+  curPl = pl; return pl;
+}
+// 같은 세계에 플레이어 더하기 (지금은 테스트용 — 12단계 「혼자서 둘이 하기」·13단계 친구 들어오기에서 씀). 캐릭터는 새로 시작
+function addPlayer(id, x, y) {
+  const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
+    inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(),
+    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
+    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0, newIds: {} };
+  G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
+}
 function splitSave(s, id = ME) {
   const world = {}, char = { v: s.v }, pl = {};
   for (const k of Object.keys(s)) {
@@ -2415,8 +2460,8 @@ const serializeWorld = (id = ME) => { const s = serialize(); return s && splitSa
 const serializeChar = () => { const s = serialize(); return s && splitSave(s).char; };
 const deserializeParts = (world, char, id = ME) => deserialize(joinSave(world, char, id));
 function serialize() {
-  if (!G) return null; const p = G.p;
-  const { world, char } = splitSave(saveAll(p)); return joinSave(world, char); // 늘 나누기·합치기를 거쳐요 (둘이 어긋나면 바로 드러나게)
+  if (!G) return null; return withPlayer(myPlayer(), () => { const p = G.p; // 저장은 내 플레이어 기준 (다른 플레이어 저장은 13단계)
+  const { world, char } = splitSave(saveAll(p)); return joinSave(world, char); }); // 늘 나누기·합치기를 거쳐요 (둘이 어긋나면 바로 드러나게)
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
@@ -2430,6 +2475,7 @@ function deserialize(s) {
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: (s.bossDead && typeof s.bossDead === 'object') ? Object.assign(freshDead(), s.bossDead) : Object.assign(freshDead(), { slime: !!s.bossDead }), shots: [], fish: null, fishFx: null, stats: Object.assign(freshStats(), s.stats), time: s.time || 0, spawnPt: s.spawnPt, treeSeeds: s.treeSeeds || 0,
     won: !!s.won, won2: !!s.won2, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
+  bindPlayers(G);
   G.bagLv = clamp(Math.floor(+s.bagLv || 0), 0, BAG_MAX_LV);
   if ((s.invV || 1) < 2) migrateBagV2();
   while (G.inv.length < invSize()) G.inv.push(null); if (G.inv.length > invSize()) { const extra = G.inv.splice(invSize()).filter(Boolean); G.inv.push(...[]); G.__extra = extra; }
@@ -2833,15 +2879,14 @@ const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1)
 const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.ranged ? 1 : 1 - skl('warrior') * .03); };
 const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
-let actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
 onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
   const p = G.p, ctl = ctlOf(p);
-  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
-  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
-  if (p.dead > 0) actQ = 0;
-  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
-  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
-  holdT = held ? holdT + dt : 0;
+  G.act = decide(); G.actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
+  const held = ctl.act && p.dead <= 0 && !p.sleep; G.actQ = Math.max(0, G.actQ - dt);
+  if (p.dead > 0) G.actQ = 0;
+  if (G.actQ > 0 && G.actCd <= 0) { G.actQ = 0; tryAct(true); } else if (held && G.actCd <= 0) tryAct(false);
+  if (!held && G.actQ <= 0) { G.holdGroup = null; G.holdK = null; }
+  G.holdT = held ? G.holdT + dt : 0;
 });
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
@@ -2891,7 +2936,7 @@ function decide() {
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (md === 'build' && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
   if (o && OBJ[o.t] && OBJ[o.t].lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold
-  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3')) { const sk = bestTool('sickle'); if (sk) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list, tool: sk }; } }
+  if (G.holdT >= .3 && (G.holdK === 'harvest' || G.holdK === 'harvest3')) { const sk = bestTool('sickle'); if (sk) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list, tool: sk }; } }
   const main = [], alt = [], has = a => main.concat(alt).some(b => b.k === a.k && b.lbl === a.lbl), push = a => { if (a && !has(a)) (a.onlyAlt ? alt : main).push(a); };
   let h = null, hInfo = null;
   if (md !== 'hand' && md !== 'weapon') { h = heldDecide(md, s, it, t, i, o); if (!h || ['info', 'swing', 'none'].includes(h.k)) { hInfo = h && h.k === 'info' ? h : null; h = null; } }
@@ -3009,8 +3054,8 @@ const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.cro
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
   const a = G.act; const grp = GROUP[a.k] || null;
-  if (edge) { holdGroup = grp; holdK = a.k; }
-  else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
+  if (edge) { G.holdGroup = grp; G.holdK = a.k; }
+  else { if (a.k !== 'attack' && (!grp || grp !== G.holdGroup)) return; }
   perform(a);
 }
 defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 매 프레임 화면 쪽이 보내요
@@ -3028,43 +3073,43 @@ function perform(a) {
   switch (a.k) {
     case 'attack': {
       if (!ctlOf(p).aim) faceTo(a.en.x - p.x, a.en.y - p.y);
-      actCd = swingAttack() === false ? 0.3 : atkCd(); break;
+      G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     }
-    case 'rot': rotatePlace(); actCd = 0.15; break;
-    case 'swing': actCd = swingAttack() === false ? 0.3 : atkCd(); break;
-    case 'mine': mineWall(a.t); actCd = 0.27; break;
-    case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
-    case 'place': placeItem(a.t); actCd = 0.14; break;
-    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
-    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); actCd = 0.15; break; }
-    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
-    case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
-    case 'treasure': openTreasure(a.t, a.o); actCd = 0.4; break;
-    case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); actCd = 0.35; break;
-    case 'water': waterCrop(a.t, a.o); actCd = 0.25; break;
-    case 'fert': fertCrop(a.t, a.o); actCd = 0.3; break;
-    case 'fill': fillCan(a.t); actCd = 0.4; break;
-    case 'eat': eat(G.sel); actCd = 0.4; break;
-    case 'wear': wearItem(G.sel); actCd = 0.4; break;
-    case 'recall': startRecall(a.mode); actCd = 0.4; break;
-    case 'lost': pickLost(a.t, a.o); actCd = 0.3; break;
-    case 'giant': harvestGiant(a.t, a.o); actCd = 0.4; break;
-    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); actCd = .4; break; }
-    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); actCd = .4; break; }
-    case 'insert': insertSeeds(); actCd = 0.4; break;
-    case 'tree': emit('open', 'tree'); actCd = 0.3; break;
-    case 'summon': summonBoss(a.boss); actCd = 0.6; break;
-    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
-    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
-    case 'fish': startFish(a.t); actCd = 0.4; break;
-    case 'stand': standUp(); actCd = 0.25; break;
-    case 'use': useObj(a); actCd = 0.4; break;
-    case 'reel': reel(); actCd = 0.35; break;
-    case 'lasso': openCatch(a.w); actCd = .4; break;
-    case 'ranch': ranchCollect(a.t, a.o); actCd = .4; break;
-    case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); actCd = .4; break;
-    case 'petpet': { const e = G.petE; emit('hearts', e.x, e.y - .4, 4); emit('sfx', 'purr'); emit('toast', `${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); actCd = .6; break; }
-    case 'info': if (a.msg) emit('toast', a.msg, null, 'info' + a.msg); actCd = 0.4; break;
+    case 'rot': rotatePlace(); G.actCd = 0.15; break;
+    case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
+    case 'mine': mineWall(a.t); G.actCd = 0.27; break;
+    case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
+    case 'place': placeItem(a.t); G.actCd = 0.14; break;
+    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); G.actCd = 0.22; break;
+    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
+    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
+    case 'harvest': harvest(a.t, a.o); G.actCd = 0.3; break;
+    case 'treasure': openTreasure(a.t, a.o); G.actCd = 0.4; break;
+    case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); G.actCd = 0.35; break;
+    case 'water': waterCrop(a.t, a.o); G.actCd = 0.25; break;
+    case 'fert': fertCrop(a.t, a.o); G.actCd = 0.3; break;
+    case 'fill': fillCan(a.t); G.actCd = 0.4; break;
+    case 'eat': eat(G.sel); G.actCd = 0.4; break;
+    case 'wear': wearItem(G.sel); G.actCd = 0.4; break;
+    case 'recall': startRecall(a.mode); G.actCd = 0.4; break;
+    case 'lost': pickLost(a.t, a.o); G.actCd = 0.3; break;
+    case 'giant': harvestGiant(a.t, a.o); G.actCd = 0.4; break;
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); G.actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); G.actCd = .4; break; }
+    case 'insert': insertSeeds(); G.actCd = 0.4; break;
+    case 'tree': emit('open', 'tree'); G.actCd = 0.3; break;
+    case 'summon': summonBoss(a.boss); G.actCd = 0.6; break;
+    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); G.actCd = 0.4; break;
+    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); G.actCd = 0.3; lightDirty = true; break; }
+    case 'fish': startFish(a.t); G.actCd = 0.4; break;
+    case 'stand': standUp(); G.actCd = 0.25; break;
+    case 'use': useObj(a); G.actCd = 0.4; break;
+    case 'reel': reel(); G.actCd = 0.35; break;
+    case 'lasso': openCatch(a.w); G.actCd = .4; break;
+    case 'ranch': ranchCollect(a.t, a.o); G.actCd = .4; break;
+    case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); G.actCd = .4; break;
+    case 'petpet': { const e = G.petE; emit('hearts', e.x, e.y - .4, 4); emit('sfx', 'purr'); emit('toast', `${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); G.actCd = .6; break; }
+    case 'info': if (a.msg) emit('toast', a.msg, null, 'info' + a.msg); G.actCd = 0.4; break;
   }
 }
 function swingAttack() {
@@ -3527,15 +3572,16 @@ function respawn() {
   const p = G.p; emit('fade', 'hide'); const lostN = dropLost(); G.recall = null;
   const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); const sp = so && OBJ[so.t].bed ? G.spawnPt : null;
   if (sp) { p.x = sp.x + .5; p.y = sp.y + 1.6; if (boxHits(p.x, p.y, .28)) { p.x = sp.x + 1.5; p.y = sp.y + .5; } } else { p.x = CX + .5; p.y = CY + 1.7; }
-  p.hp = Math.round(maxHp() * .7); p.mp = maxMp(); p.dash = null; p.hunger = Math.max(p.hunger, 45); p.inv = 2; p.dead = 0; G.enemies.length = 0; G.pshots.length = 0;
-  for (const k of BKEYS) if (!G.bossDead[k]) G.bosses[k] = freshBoss(k); G.shots.length = 0; G.hz = []; G.fish = null; emit('bossbar', false);
+  p.hp = Math.round(maxHp() * .7); p.mp = maxMp(); p.dash = null; p.hunger = Math.max(p.hunger, 45); p.inv = 2; p.dead = 0; G.pshots.length = 0; G.fish = null;
+  if (alivePlayers().length <= 1) { G.enemies.length = 0; for (const k of BKEYS) if (!G.bossDead[k]) G.bosses[k] = freshBoss(k); G.shots.length = 0; G.hz = []; } // 혼자일 때만 세계를 가라앉혀요 (8단계)
+  emit('bossbar', false);
   cam.x = p.x; cam.y = p.y; emit('toast', sp ? '침대에서 깨어났어요' : '등불나무 곁에서 깨어났어요'); unstick(p, '사방이 막혀 있어서 바로 바깥에서 깨어났어요'); if (lostN) setTimeout(() => emit('toast', `쓰러진 자리에 재료 ${lostN}개를 떨어뜨렸어요 · 지도에 꾸러미가 표시돼요`, 'warn', 'lostdrop'), 1200);
 }
 
 // ================= update =================
 let regrowT = 0;
 function regrow() {
-  const p = G.p;
+  const p = nextTurn().p; // 플레이어를 돌아가며 그 주변에 (8단계)
   for (let k = 0; k < 14; k++) {
     const a = rand() * 6.283, d = 13 + rand() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
     if (x < 2 || y < 2 || x >= W - 2 || y >= H - 2) continue; const i = idx(x, y), f = G.floor[i], b = G.biome[i];
@@ -3547,7 +3593,7 @@ function regrow() {
     G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
   }
 }
-let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0;
+let lightDirty = true, lightT = 0, guideT = 0;
 function update(dt) {
   G.time += dt;
   runFrame(dt); // 매 프레임 순서표 (sim/systems.js): 기능마다 onFrame으로 등록해요
@@ -3571,12 +3617,12 @@ onFrame('player', dt => {
 });
 onFrame('hunger', dt => {
   const p = G.p;
-  hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
-  regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
+  G.hungerT += dt; if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
+  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
 });
 onFrame('enemies', updateEnemies); onFrame('bosses', updateBosses); onFrame('drops', updateDrops); onFrame('fx', updateFx); onFrame('tree', updateTree);
 onFrame('spawn', dt => { const p = G.p;
-  spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
+  G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
 });
 onFrame('regrow', dt => {
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
@@ -3585,34 +3631,35 @@ onFrame('light', dt => {
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
 });
 onFrame('guide', dt => {
-  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); roomTick(); }
+  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); for (const pl of playerList()) withPlayer(pl, () => { checkBiome(); roomTick(); }); }
 });
 function updateEnemies(dt) {
+  for (const e of G.enemies.slice()) withPlayer(nearestPlayer(e.x, e.y), () => enemyStep(e, dt)); // 몬스터마다 가장 가까운 플레이어를 봐요 (8단계)
+}
+function enemyStep(e, dt) {
   const p = G.p;
-  for (const e of G.enemies.slice()) {
-    const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
-    if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); continue; }
-    dotTick(e, dt); if (!G.enemies.includes(e)) continue; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
-    if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-    const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
-    if (def.hop) {
-      if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
-      else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
-    } else {
-      e.t -= dt; if (!chase && e.zone != null && G.fzones && G.fzones[e.zone]) { const z = G.fzones[e.zone], zx = z.x + .5 - e.x, zy = z.y + .5 - e.y, zd = Math.hypot(zx, zy); if (zd > 4.5) { e.vx = zx / zd * def.spd * .5; e.vy = zy / zd * def.spd * .5; e.t = .6; } }
-      if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
-      moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.anim = (e.anim || 0) + dt * sm * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
-      if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
-    }
-    if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
-    e.hurt = Math.max(0, (e.hurt || 0) - dt);
-    if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
+  const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
+  if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
+  dotTick(e, dt); if (!G.enemies.includes(e)) return; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
+  if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
+  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
+  if (def.hop) {
+    if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
+    else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
+  } else {
+    e.t -= dt; if (!chase && e.zone != null && G.fzones && G.fzones[e.zone]) { const z = G.fzones[e.zone], zx = z.x + .5 - e.x, zy = z.y + .5 - e.y, zd = Math.hypot(zx, zy); if (zd > 4.5) { e.vx = zx / zd * def.spd * .5; e.vy = zy / zd * def.spd * .5; e.t = .6; } }
+    if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
+    moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.anim = (e.anim || 0) + dt * sm * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
+    if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
   }
+  if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
+  e.hurt = Math.max(0, (e.hurt || 0) - dt);
+  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 function updateBosses(dt) {
   let active = null;
-  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }
-  if (active) emit('bossHp', active.k, active.hp, active.max);
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; withPlayer(nearestPlayer(b.x, b.y), () => { if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }); } // 보스마다 가장 가까운 플레이어 (8단계)
+  if (active) withPlayer(nearestPlayer(active.x, active.y), () => emit('bossHp', active.k, active.hp, active.max));
   updateShots(dt); updateHazards(dt);
 }
 function bossCommon(b, dt) {
@@ -3683,12 +3730,12 @@ const BOSS_AI = {
   },
 };
 function updateShots(dt) {
-  const p = G.p;
   for (let i = G.shots.length - 1; i >= 0; i--) {
     const s = G.shots[i]; if (s.spin) { const c = Math.cos(s.spin * dt), sn = Math.sin(s.spin * dt), vx = s.vx * c - s.vy * sn; s.vy = s.vx * sn + s.vy * c; s.vx = vx; } s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
     if (inB(tx, ty) && pillarBlocks(s, tx, ty)) { G.shots.splice(i, 1); continue; }
     if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { emit('puff', s.x, s.y, s.k === 'spore' ? '#d59bff' : C.cryL, 3, 1.5, .2); G.shots.splice(i, 1); continue; }
-    if (p.dead <= 0 && Math.hypot(s.x - p.x, s.y - (p.y - .3)) < 0.42) { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null); G.shots.splice(i, 1); }
+    const pl = alivePlayers().find(q => Math.hypot(s.x - q.p.x, s.y - (q.p.y - .3)) < 0.42); // 살아 있는 플레이어 누구든
+    if (pl) { withPlayer(pl, () => hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null)); G.shots.splice(i, 1); }
   }
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
@@ -3710,8 +3757,10 @@ function trySpawn() {
   }
 }
 function updateDrops(dt) {
-  const p = G.p;
-  for (const d of G.drops.slice()) {
+  for (const d of G.drops.slice()) withPlayer(nearestPlayer(d.x, d.y), () => dropStep(d, dt)); // 가장 가까운 플레이어가 끌어당겨 주워요 (8단계)
+}
+function dropStep(d, dt) {
+  const p = G.p; {
     d.t += dt; d.vz -= 12 * dt; d.z += d.vz * dt; if (d.z < 0) { d.z = 0; d.vz = Math.abs(d.vz) * 0.35; if (d.vz < 0.6) d.vz = 0; d.vx *= 0.6; d.vy *= 0.6; }
     moveEnt(d, d.vx * dt, d.vy * dt, 0.15); d.vx *= Math.pow(0.05, dt); d.vy *= Math.pow(0.05, dt);
     d.hold = Math.max(0, d.hold - dt);
@@ -4188,18 +4237,21 @@ function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/
 const wildNear = r => { const p = G.p; let best = null, bd = r; for (const w of G.wild || []) { const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w; } } return best; };
 let wildT = 0;
 onFrame('wild', dt => wildTick(dt));
-function wildTick(dt) {
-  const p = G.p; G.wild = G.wild || []; wildT -= dt;
-  G.wild = G.wild.filter(w => Math.hypot(w.x - p.x, w.y - p.y) < 30);
-  if (wildT <= 0) { wildT = 6; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0;
+let petDt = 0;
+function wildTick(dt) { petDt = dt;
+  G.wild = G.wild || []; wildT -= dt;
+  G.wild = G.wild.filter(w => playerList().some(pl => Math.hypot(w.x - pl.p.x, w.y - pl.p.y) < 30)); // 플레이어 누구에게서든 멀면 사라져요 (8단계)
+  if (wildT <= 0) { wildT = 6; const pl = nextTurn(), p = pl.p; withPlayer(pl, () => { const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0;
     const kinds = Object.keys(ANIMALS).filter(k => ANIMALS[k].biome === pb && !(ANIMALS[k].pet && (G.pets || {})[k]) && !G.wild.some(w => w.k === k));
     if (kinds.length && G.wild.length < 2 && rand() < .35) for (let tries = 0; tries < 12; tries++) { const a = rand() * 6.283, r = 7 + rand() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
       if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y)) || G.biome[idx(x, y)] !== pb || G.floor[idx(x, y)] === WATER || G.floor[idx(x, y)] === LAVA) continue;
-      G.wild.push({ k: kinds[(rand() * kinds.length) | 0], x: x + .5, y: y + .6, vx: 0, vy: 0, t: 1, flip: false, anim: 0 }); break; } }
+      G.wild.push({ k: kinds[(rand() * kinds.length) | 0], x: x + .5, y: y + .6, vx: 0, vy: 0, t: 1, flip: false, anim: 0 }); break; } }); } // 생기는 곳: 플레이어 돌아가며 (그 플레이어의 펫 종류는 빼고)
   const mdt = Math.min(dt, .1);
   for (const w of G.wild) { w.t -= dt; if (w.t <= 0) { w.t = 1.2 + rand() * 2; if (rand() < .45) { w.vx = 0; w.vy = 0; } else { const a = rand() * 6.283, sp = ANIMALS[w.k].spd; w.vx = Math.cos(a) * sp; w.vy = Math.sin(a) * sp; } }
     if (w.vx || w.vy) { moveEnt(w, w.vx * mdt, w.vy * mdt, .25); w.anim += mdt; if (w.vx) w.flip = w.vx < 0; } }
-  // the pet walks behind you, and hops over walls when it gets left too far behind
+  for (const pl of playerList()) withPlayer(pl, petFollow); }
+// the pet walks behind its owner, and hops over walls when it gets left too far behind
+function petFollow() { const p = G.p, dt = petDt;
   if (G.petOn && ANIMALS[G.petOn]) { let e = G.petE; if (!e) e = G.petE = { x: p.x - .8, y: p.y + .2, flip: false, anim: 0, moving: false };
     const dx = p.x - e.x, dy = p.y + .15 - e.y, d = Math.hypot(dx, dy);
     if (d > 10) { e.x = p.x - .6; e.y = p.y + .2; }
@@ -4535,24 +4587,23 @@ let altI = 0, altKey = '';
 function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
 // 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
-defineCmd('tap', c => { const t = c.t == null ? .3 : c.t; if (c.b === 'atk') atkQ = t; else actQ = t; });
+defineCmd('tap', c => { const t = c.t == null ? .3 : c.t; if (c.b === 'atk') G.atkQ = t; else G.actQ = t; });
 defineCmd('alt', () => doAlt());
 defineCmd('hold', c => { const s = G.tools && G.tools[c.i]; if (s) holdTool(s, true); });
-function doAlt() { const a = curAlt(); if (!a || actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
+function doAlt() { const a = curAlt(); if (!a || G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
 function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }
 
 // ---- the attack button ----
-let atkQ = 0, atkT = 0;
 onFrame('attack', dt => attackTick(dt));
-function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || ctlOf(p).atk) && atkT <= 0) { atkQ = 0; doAttack(); } }
+function attackTick(dt) { const p = G.p; G.atkT -= dt; G.atkQ = Math.max(0, G.atkQ - dt); if (p.dead > 0 || p.sleep) { G.atkQ = 0; return; } if ((G.atkQ > 0 || ctlOf(p).atk) && G.atkT <= 0) { G.atkQ = 0; doAttack(); } }
 function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
   const w = curWeapon(), WT = wtOf(w); if (w.id !== 'hand') G.lastW = w.id;
   let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
   if (en && !ctlOf(p).aim) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
-  if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); atkT = .32; return; } }
-  atkT = swingAttack() === false ? .3 : atkCd();
+  if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); G.atkT = .32; return; } }
+  G.atkT = swingAttack() === false ? .3 : atkCd();
 }
 const HITS = new Map();
 function recoverTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return null; let i = idx(t.x, t.y); const w = G.wall[i];
@@ -5439,9 +5490,12 @@ function iconURL(id) { if (ICONURL[id]) return ICONURL[id]; const c = SPR.ui[id]
 // 규칙 파일은 SFX·toast·puff·ftext를 바로 부르지 않아요 (build.py가 막아요) — 새 효과는 여기에 onEvent로 더하고 규칙에서는 emit.
 // 멀티플레이에서 친구 화면은 방장이 보낸 같은 사건으로 여기를 거쳐 보여요.
 
+// 개인 사건(소리·알림·흔들림·창·기절 화면·보스 막대 …)은 내 플레이어가 남긴 것만 보여요 — 반짝이·떠오르는 글자는 세계에 그려져서 누구 것이든 (8단계)
+const onlyMe = fn => (...a) => { if (eventWho == null || eventWho === ME) return fn(...a); };
+
 // ---- 소리·알림·반짝임 ----
-onEvent('sfx', k => SFX[k]());
-onEvent('toast', toast);
+onEvent('sfx', onlyMe(k => SFX[k]()));
+onEvent('toast', onlyMe(toast));
 onEvent('puff', puff);
 onEvent('ftext', ftext);
 function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k++) G.texts.push({ x: x + (fxRand() - .5) * .9, y: y - .2 - fxRand() * .5, txt: ch, col, life: .8 + fxRand() * .5, vy: -1.2 - fxRand() }); }
@@ -5457,30 +5511,30 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 
 // ---- 화면 흔들림: emit('shake', 세기) = 지금보다 세면 그만큼, emit('shake', 세기, true) = 그 세기로 ----
 let shake = 0;
-onEvent('shake', (v, set) => { shake = set ? v : Math.max(shake, v); });
+onEvent('shake', onlyMe((v, set) => { shake = set ? v : Math.max(shake, v); }));
 onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 
 // ---- 지도·창 ----
-onEvent('craftNote', (id, n, msg) => craftNote(id, n, msg)); // 제작 알림 (아이콘 + 글)
+onEvent('craftNote', onlyMe((id, n, msg) => craftNote(id, n, msg))); // 제작 알림 (아이콘 + 글)
 onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
-onEvent('open', (kind, data) => openPanel(kind, data));
-onEvent('close', () => closePanel());
-onEvent('refresh', kind => { if (panel && panel.kind === kind) renderPanel(); }); // 그 창이 열려 있으면 다시 그리기
-onEvent('win', kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700)); // 등불나무를 다 키움 → 조금 뒤 축하 창
+onEvent('open', onlyMe((kind, data) => openPanel(kind, data)));
+onEvent('close', onlyMe(() => closePanel()));
+onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPanel(); })); // 그 창이 열려 있으면 다시 그리기
+onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----
-onEvent('fade', mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기
+onEvent('fade', onlyMe(mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기
   const f = $('#fade');
   if (mode === 'faint') { f.textContent = '기절했어요…'; f.hidden = false; }
   else if (mode === 'show') f.hidden = false;
   else if (mode === 'hide') f.hidden = true;
   else if (mode === 'sleep') { f.textContent = '쿨쿨… 좋은 꿈 꾸는 중'; f.classList.add('sleep'); f.hidden = false; }
   else if (mode === 'wake') { f.hidden = true; f.classList.remove('sleep'); f.textContent = '기절했어요…'; }
-});
+}));
 let bossName = '';
-onEvent('bossbar', on => { $('#bossbar').hidden = !on; if (on) bossName = ''; });
-onEvent('bossHp', (k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } });
+onEvent('bossbar', onlyMe(on => { $('#bossbar').hidden = !on; if (on) bossName = ''; }));
+onEvent('bossHp', onlyMe((k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } }));
 let lastGoalTxt = '';
 function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } });
@@ -5521,7 +5575,7 @@ function updateSkBar() {
   bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
     b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
 }
-function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
