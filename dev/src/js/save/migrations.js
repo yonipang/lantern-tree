@@ -14,6 +14,10 @@ import { GEAR_IT } from '../data/automation-tiers.js';
 import { HOT, ITEMS, OBJ, UNIQ_OF } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
 import { toast } from '../engine/effects.js';
+import { BX, BY, CX, CY, H, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
+import { addPond, addWater, genWorld } from '../world/gen.js';
+import { fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
+import { josa } from '../engine/util.js';
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar

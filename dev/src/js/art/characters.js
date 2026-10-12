@@ -3,6 +3,7 @@ import { SPR } from './world.js';
 import { clamp } from '../engine/util.js';
 import { rng } from '../engine/random.js';
 import { G } from '../save/state.js';
+import { H } from '../world/map.js';
 export function playerFrame(dir, step, pal) {
   return mk(16, 19, A => {
     const { r, p, e } = A; const fy = 17;

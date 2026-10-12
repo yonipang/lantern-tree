@@ -28,22 +28,24 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 |---|---|
 | `shell.html` | 페이지 뼈대: `<head>`, HUD·버튼·타이틀 화면 HTML, CSS/JS를 넣는 순서 |
 | `style.css` | 화면 모양 전부: 색·글꼴 → HUD(체력·목표·보스바·토스트) → 단축칸·터치 버튼·조이스틱 → 시트 창(제작·지도·메뉴) → 타이틀·캐릭터 고르기·능력 창, 작은 화면 규칙 |
-| `js/engine/util.js` | (모듈) 공통 도구: `$`·`clamp`·`hexRgb` |
+| `js/engine/util.js` | (모듈) 공통 도구: `$`·`clamp`·`hexRgb`, 한국어 조사 `josa` |
 | `js/engine/random.js` | (모듈) 난수·노이즈: **`rand()` 게임 결과용 · `fxRand()` 보이기용** (`Math.random`은 여기서만, `build.py`가 확인), `rint`, 시드 노이즈 `hash2`·`vn`·`fbm`·`rng` |
 | `js/engine/canvas.js` | (모듈) 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |
 | `js/engine/audio.js` | (모듈) 효과음 `SFX`·`ensureAudio` |
 | `js/engine/effects.js` | (모듈) 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
+| `js/world/map.js` | (모듈) 지도 틀: 지도 모양(`setLayout`·`LAY`)·크기(`W`·`H`)·등불나무와 보스 자리(`CX`·`SA` …)·칸 번호(`idx`)·지도 안인지(`inB`)·방향 이름 |
 | `js/sim/drops.js` | (모듈) 떨어진 아이템 `spawnDrop`·`rollDrops` |
 | `js/art/hand-art.js` | (모듈) 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
 | `js/art/characters.js` | (모듈) 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
 | `js/art/world.js` | (모듈) 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |
 | `js/data/items.js` | (모듈) **기본 데이터**: 벽·아이템·물체·레시피(`Rc`)·장식·무기·고유 무기·희귀도·가방, 얇은 벽 조각 만들기, 레시피 일괄 보정(REQ_FIX·금속 → 구리 제작대) |
-| `js/content/items.js` | 지도 모양(`setLayout`·`W`·`H`), 얇은 벽·문·울타리 그리기와 잇기, 희귀도 함수 |
+| `js/content/items.js` | 얇은 벽·문·울타리 그리기와 잇기, 희귀도 함수, 제작 수량 |
 | `js/data/rpg-nature.js` | (모듈) 레벨·능력치 이름·스킬, 낚시 표, 몬스터(`ENEMY`)·**보스(`BOSSES`·재도전 보상 `REMATCH`)**, 꽃, 나무 자라는 시간, 자연 꾸미기 |
 | `js/content/rpg-nature.js` | 능력치 계산·경험치, 꽃잎 구역·어린나무 자라기 |
 | `js/data/circuits-regions.js` | (모듈) 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출, **모든 장비 내구도(`DUR`)·분해** |
-| `js/content/circuits-regions.js` | 회로·전력 계산, 바닥 위험, 여러 칸 가구·회전·나무 작업장·채굴장 동작 |
-| `js/world.js` | 지도 만들기(`genWorld`), 숨은 방, 충돌·이동·땅 파기·놓을 수 있는지 |
+| `js/content/circuits-regions.js` | 회로·전력 계산, 바닥 위험, 가구 회전·나무 작업장·채굴장 동작 |
+| `js/world/gen.js` | (모듈) 지도 만들기(`genWorld`) — 지역·벽·물·연못·석영 광맥, 숨은 방 |
+| `js/world/tiles.js` | (모듈) 막힌 칸·충돌·움직이기(`isSolid`·`boxHits`·`moveEnt`), 여러 칸 가구 발자리(`fpOf`·`delObj` …), 땅 파기·지형 배우기, 놓을 수 있는지(`canPlace`) |
 | `js/save/state.js` | (모듈) `G`·새 게임·`serialize`/`deserialize`, **세이브 나누기 `splitSave`·`joinSave`** (세계·캐릭터·세계 안 플레이어별 — `SAVE_ORDER`·`CHAR_KEYS`·`PLAYER_KEYS`) |
 | `js/save/migrations.js` | (모듈) **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
 | `js/save/storage.js` | (모듈) 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |

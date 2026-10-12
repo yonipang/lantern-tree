@@ -8,6 +8,8 @@ import { clamp } from '../engine/util.js';
 import { convertDrills, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, syncNotes } from './migrations.js';
 import { rand } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
+import { CX, CY, H, LAY, SA, SB, SI, SL, W, devLayout, idx, setLayout } from '../world/map.js';
+import { addQuartzVeins, cleanRooms, genWorld, placeRooms, refreshDoors } from '../world/gen.js';
 export const SAVE_KEY = 'lantern-tree-save-v1';
 // each playthrough gets its own id so cloud sync never mixes two different adventures
 export const newRunId = () => Date.now().toString(36) + rand().toString(36).slice(2, 8);
@@ -47,7 +49,7 @@ export const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'last
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 export const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
 export const ME = 'me'; // 멀티플레이 전에는 플레이어가 하나 (13단계에서 캐릭터마다 이름표)
-const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 export function splitSave(s, id = ME) {
   const world = {}, char = { v: s.v }, pl = {};
   for (const k of Object.keys(s)) {
@@ -60,10 +62,10 @@ export function joinSave(world, char, id = ME) {
   const pl = (world.players && world.players[id]) || {}, s = {};
   const extra = [...Object.keys(world), ...Object.keys(char), ...Object.keys(pl).filter(k => k !== 'x' && k !== 'y')].filter(k => k !== 'players' && !SAVE_ORDER.includes(k)); // 나중에 생긴 칸도 잃지 않게
   for (const k of [...SAVE_ORDER, ...new Set(extra)]) {
-    if (k === 'p') { if (char.p || own(pl, 'x')) s.p = { x: pl.x, y: pl.y, hp: char.p && char.p.hp, hunger: char.p && char.p.hunger, mp: char.p && char.p.mp }; }
-    else if (k === 'v') s.v = own(world, 'v') ? world.v : char.v;
-    else if (CHAR_KEYS.has(k)) { if (own(char, k)) s[k] = char[k]; } else if (PLAYER_KEYS.has(k)) { if (own(pl, k)) s[k] = pl[k]; }
-    else if (own(world, k)) s[k] = world[k]; else if (own(char, k)) s[k] = char[k]; else if (own(pl, k)) s[k] = pl[k];
+    if (k === 'p') { if (char.p || hasOwn(pl, 'x')) s.p = { x: pl.x, y: pl.y, hp: char.p && char.p.hp, hunger: char.p && char.p.hunger, mp: char.p && char.p.mp }; }
+    else if (k === 'v') s.v = hasOwn(world, 'v') ? world.v : char.v;
+    else if (CHAR_KEYS.has(k)) { if (hasOwn(char, k)) s[k] = char[k]; } else if (PLAYER_KEYS.has(k)) { if (hasOwn(pl, k)) s[k] = pl[k]; }
+    else if (hasOwn(world, k)) s[k] = world[k]; else if (hasOwn(char, k)) s[k] = char[k]; else if (hasOwn(pl, k)) s[k] = pl[k];
   }
   return s;
 }

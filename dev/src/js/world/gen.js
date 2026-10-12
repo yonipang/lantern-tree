@@ -1,37 +1,47 @@
+// ================= 지도 만들기 (구조 변경 5단계: world.js에서 옮김) =================
+// 시드로 세계 만들기(genWorld) — 지역·벽·물·연못·석영 광맥, 숨은 방(놓기·찾기·보물상자)
+import { BX, BY, CX, CY, H, L2, LAVA, LAY, SA, SB, SI, SL, W, idx, inB } from './map.js';
+import { G } from '../save/state.js';
+import { ROOM_DECO, ROOM_LOOT, ROOM_N } from '../data/farming-cooking.js';
+import { SFX } from '../engine/audio.js';
+import { fbm, hash2, rng, vn } from '../engine/random.js';
+import { puff, toast } from '../engine/effects.js';
+import { spawnDrop } from '../sim/drops.js';
+
 // ================= world gen =================
-const quartzAt = (x, y, s) => vn(x * .22, y * .22, s + 81) > 0.71; // v43: quartz veins inside the crystal cave's granite
-function wallFor(b, x, y, s) {
+export const quartzAt = (x, y, s) => vn(x * .22, y * .22, s + 81) > 0.71; // v43: quartz veins inside the crystal cave's granite
+export function wallFor(b, x, y, s) {
   if (b === 0) return vn(x * .22, y * .22, s + 21) > 0.72 ? 4 : 1;
   if (b === 1) { if (vn(x * .07, y * .07, s + 31) > 0.47) return vn(x * .22, y * .22, s + 41) > 0.73 ? 5 : 2; return vn(x * .22, y * .22, s + 21) > 0.74 ? 4 : 1; }
   if (b === 3) return vn(x * .2, y * .2, s + 61) > 0.72 ? 10 : 9;
   if (b === 4) return vn(x * .2, y * .2, s + 71) > 0.72 ? 12 : 11;
   if (vn(x * .08, y * .08, s + 51) > 0.4) return quartzAt(x, y, s) ? 13 : 3; return vn(x * .22, y * .22, s + 41) > 0.7 ? 5 : 2;
 }
-function deepRegion(x, y, dd, seed) {
+export function deepRegion(x, y, dd, seed) {
   if (dd <= 71) return 0; const ang = Math.atan2(y - CY, x - CX) + (vn(x * .03, y * .03, seed + 13) - .5) * .5;
   return ang > 0.75 && ang < 2.4 ? 3 : (ang > 2.55 || ang < -2.75) ? 4 : 0;
 }
-const ddOf = (x, y, seed) => Math.hypot(x - CX, y - CY) + (vn(x * 0.05, y * 0.05, seed + 7) - 0.5) * 18;
+export const ddOf = (x, y, seed) => Math.hypot(x - CX, y - CY) + (vn(x * 0.05, y * 0.05, seed + 7) - 0.5) * 18;
 // layout 2: which region a tile belongs to — start (moss) · moss north / mushroom south · crystal north, lava south-east, ice south-west
 // the edges only ever bulge outward: no crystal, lava or ice ground ever reaches inside the two inner rings
-function region2(x, y, seed) { const dx = x - CX, dy = y - CY, d = Math.hypot(dx, dy), n = vn(x * .018, y * .018, seed + 7) * 16;
+export function region2(x, y, seed) { const dx = x - CX, dy = y - CY, d = Math.hypot(dx, dy), n = vn(x * .018, y * .018, seed + 7) * 16;
   if (d < L2.r1 + n * .5) return 0; const ang = Math.atan2(dy, dx) + (vn(x * .012, y * .012, seed + 13) - .5) * .4;
   if (d < L2.r2 + n) return Math.sin(ang + .35) < 0 ? 0 : 1;
   let deg = ang * 180 / Math.PI; if (deg < -150) deg += 360; return deg < -30 ? 2 : deg < 90 ? 3 : 4; }
 // layout 2 walls: plenty of plain dirt and stone in every region, with that region's own rock and ore veins in between
-function wallFor2(b, x, y, s) { const v22 = k => vn(x * .1, y * .1, s + k), v06 = k => vn(x * .035, y * .035, s + k);
+export function wallFor2(b, x, y, s) { const v22 = k => vn(x * .1, y * .1, s + k), v06 = k => vn(x * .035, y * .035, s + k);
   if (b === 0) return v22(21) > .75 ? 4 : v06(33) > .62 ? 2 : 1;
   if (b === 1) return v22(41) > .75 ? 5 : v22(21) > .8 ? 4 : v06(35) > .6 ? 1 : 2;
   if (b === 2) return v06(51) > .55 ? (quartzAt(x, y, s) ? 13 : 3) : v22(41) > .76 ? 5 : v06(37) > .62 ? 1 : 2;
   if (b === 3) return v22(61) > .76 ? 10 : v06(63) > .55 ? 9 : v06(65) > .62 ? 1 : 2;
   return v22(71) > .76 ? 12 : v06(73) > .55 ? 11 : v06(75) > .6 ? 1 : 2; }
-function smoothCaves(wall, floor, biome, seed) {
+export function smoothCaves(wall, floor, biome, seed) {
   for (let pass = 0; pass < 2; pass++) { const next = wall.slice();
     for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) { const i = idx(x, y), w = wall[i]; if (w === 8 || floor[i] === WATER) continue;
       let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && wall[i + dy * W + dx]) n++;
       if (w && n <= 2) next[i] = 0; else if (!w && n >= 6) next[i] = wallFor2(biome[i], x, y, seed); }
     wall.set(next); } }
-function genWorld(seed) {
+export function genWorld(seed) {
   const wall = new Uint8Array(W * H), floor = new Uint8Array(W * H), biome = new Uint8Array(W * H), objs = new Map();
   if (LAY === 2) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { // the ring map
     const i = idx(x, y), d = Math.hypot(x - CX, y - CY), b = region2(x, y, seed), sea = d + (vn(x * .04, y * .04, seed + 17) - .5) * 10 >= L2.r3; biome[i] = b;
@@ -101,24 +111,24 @@ function genWorld(seed) {
   addPond({ wall, floor, objs }, null);
   return { wall, floor, biome, objs };
 }
-function addWater(w, seed, nearSafe, ok) {
+export function addWater(w, seed, nearSafe, ok) {
   for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) {
     const i = idx(x, y); if (w.wall[i] || nearSafe(x, y) || vn(x * .09, y * .09, seed + 77) < (LAY === 2 ? 0.76 : 0.715)) continue;
     let open = true; for (let dy = -1; dy <= 1 && open; dy++) for (let dx = -1; dx <= 1; dx++) if (w.wall[i + dy * W + dx]) { open = false; break; }
     if (!open || (ok && !ok(i))) continue; w.floor[i] = WATER; w.objs.delete(i);
   }
 }
-function addPond(w, ok) {
+export function addPond(w, ok) {
   for (let y = CY - 6; y <= CY - 2; y++) for (let x = CX + 2; x <= CX + 8; x++) {
     const dx = (x + .5 - (CX + 5)) / 2.4, dy = (y + .5 - (CY - 4.2)) / 1.5; if (dx * dx + dy * dy > 1) continue;
     const i = idx(x, y); if (ok && !ok(i)) continue; if (w.wall[i] !== 8) w.wall[i] = 0; w.floor[i] = WATER; w.objs.delete(i);
   }
 }
-function addQuartzVeins() { let n = 0; for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (G.wall[i] === 3 && G.biome[i] === 2 && quartzAt(x, y, G.seed)) { G.wall[i] = 13; n++; } } return n; }
+export function addQuartzVeins() { let n = 0; for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (G.wall[i] === 3 && G.biome[i] === 2 && quartzAt(x, y, G.seed)) { G.wall[i] = 13; n++; } } return n; }
 
-let DOORS = new Set();
-const refreshDoors = () => { DOORS = new Set((G.rooms || []).filter(r => !r.found).map(r => idx(r.dx, r.dy))); };
-function placeRooms(w0) {
+export let DOORS = new Set();
+export const refreshDoors = () => { DOORS = new Set((G.rooms || []).filter(r => !r.found).map(r => idx(r.dx, r.dy))); };
+export function placeRooms(w0) {
   const rooms = [], safe = [[CX, CY], [BX, BY], [SA.x, SA.y], [SB.x, SB.y], [SL.x, SL.y], [SI.x, SI.y]], cand = [[], [], [], [], []];
   for (let y = 4; y < H - 8; y += 2) for (let x = 4; x < W - 8; x += 2) { const b = G.biome[idx(x + 1, y + 1)]; if (b <= 4) cand[b].push([x, y, hash2(x, y, (G.seed | 0) + 77)]); }
   const natural = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.under.has(i);
@@ -138,78 +148,17 @@ function placeRooms(w0) {
       rooms.push({ id: 'r' + b + n, b, k: n, x, y, dx, dy, cx, cy, found: 0, open: 0, hint: 0 }); n++; } }
   return rooms;
 }
-const cleanRooms = a => a.filter(r => r && Number.isInteger(r.x) && Number.isInteger(r.y) && Number.isInteger(r.b) && r.b >= 0 && r.b < 5).map(r => ({ id: String(r.id || ''), b: r.b, k: r.k | 0, x: r.x, y: r.y, dx: r.dx | 0, dy: r.dy | 0, cx: r.cx | 0, cy: r.cy | 0, found: r.found ? 1 : 0, open: r.open ? 1 : 0, hint: r.hint ? 1 : 0 }));
-function roomTick() {
+export const cleanRooms = a => a.filter(r => r && Number.isInteger(r.x) && Number.isInteger(r.y) && Number.isInteger(r.b) && r.b >= 0 && r.b < 5).map(r => ({ id: String(r.id || ''), b: r.b, k: r.k | 0, x: r.x, y: r.y, dx: r.dx | 0, dy: r.dy | 0, cx: r.cx | 0, cy: r.cy | 0, found: r.found ? 1 : 0, open: r.open ? 1 : 0, hint: r.hint ? 1 : 0 }));
+export function roomTick() {
   const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let ch = false;
   for (const r of G.rooms || []) { if (r.found) continue;
     if ((px >= r.x && px <= r.x + 3 && py >= r.y && py <= r.y + 2) || !G.wall[idx(r.dx, r.dy)]) { r.found = 1; ch = true; const tc = G.objs.get(idx(r.cx, r.cy)); if (tc) delete tc.hid; G.stats.rooms = (G.stats.rooms || 0) + 1; toast('숨은 방을 찾았어요! 보물상자를 열어 봐요', 'good', 'room'); SFX.seed(); continue; }
     if (!r.hint && Math.hypot(p.x - r.dx - .5, p.y - r.dy - .5) < 3.2) { r.hint = 1; toast('금 간 벽 틈으로 바람이 새어 나와요… 이 벽 너머에 뭔가 있는 것 같아요', null, 'roomhint'); } }
   if (ch) { refreshDoors(); lightDirty = true; }
 }
-function openTreasure(t, o) {
+export function openTreasure(t, o) {
   if (o.open) return; o.open = 1; const r = (G.rooms || []).find(q => q.cx === t.x && q.cy === t.y); const loot = r ? (ROOM_LOOT[r.b][r.k] || ROOM_LOOT[r.b][0]).slice() : [['crystal', 3], ['gel', 3]];
   delete o.hid; if (r) { r.open = 1; if (!r.found) { r.found = 1; refreshDoors(); } if (r.k === 0) loot.push([ROOM_DECO[r.b], 1]); for (const id of roomNotes(r)) if (!knows(id)) loot.push(['rn_' + id, 1]); }
   for (const [id, c] of loot) spawnDrop(id, c, t.x + .5, t.y + .9);
   G.stats.chests = (G.stats.chests || 0) + 1; SFX.win(); puff(t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); toast('보물상자를 열었어요!', 'good'); lightDirty = true; checkGuide();
-}
-// ================= world helpers =================
-const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
-function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
-function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
-function moveEnt(e, dx, dy, r) {
-  const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.15)); let bx = false, by = false;
-  for (let k = 0; k < n; k++) {
-    if (!bx) { const nx = e.x + dx / n; if (!boxHits(nx, e.y, r)) e.x = nx; else bx = true; }
-    if (!by) { const ny = e.y + dy / n; if (!boxHits(e.x, ny, r)) e.y = ny; else by = true; }
-  }
-  return bx || by;
-}
-function occupied(tx, ty) {
-  const p = G.p, r = 0.28; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true;
-  for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
-}
-// ---- terrain: ground you can dig with a shovel and lay elsewhere, unlocked one by one ----
-const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
-for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
-FLOOR_ITEM[21] = 'meadow';
-const isPlacedFloor = f => !!FLOOR_ITEM[f];
-const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
-// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
-const TERRAIN = {
-  2: { n: '흙', item: 'gDirt', base: true },
-  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
-  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
-  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
-  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
-};
-const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terrain[f])));
-function checkUnlocks() {
-  if (!G.terrain) G.terrain = {};
-  for (const f in TERRAIN) { const T = TERRAIN[f]; if (T.base || G.terrain[f] || !T.when()) continue; G.terrain[f] = 1;
-    if (started) { toast(`새 지형을 배웠어요: ${T.n}! 삽을 들고 떠서 다른 곳에 옮길 수 있어요${hasItem('shovel') ? '' : ' (삽은 장비제작대에서 만들어요)'}`, 'good', 'terrain' + f); SFX.craft(); } }
-  if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => toast('이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
-}
-function shovelDesc() {
-  const ks = Object.keys(TERRAIN).map(Number), ok = ks.filter(terrainOk).map(f => TERRAIN[f].n), no = ks.filter(f => !terrainOk(f));
-  return `삽을 들고(도구 칸) 바닥을 바라보며 누르면 깔아 둔 바닥을 걷고, 땅을 누르면 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
-}
-function digGround(t) {
-  const i = idx(t.x, t.y), f = G.floor[i]; if (G.wall[i] || G.objs.get(i)) return;
-  if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
-  else { if (f === 2 || !terrainOk(f)) return; const id = TERRAIN[f].item; G.floor[i] = 2; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-    SFX.pick(); puff(t.x + .5, t.y + .7, f === WATER ? '#8fd0ff' : f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : '#b9a8ff', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
-  mapPixel(t.x, t.y); invDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
-}
-function canPlace(tx, ty, it) {
-  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid); }
-  if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
-  if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && (!o || !OBJ[o.t].tree);
-  if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
-  if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
-  if (o) return false;
-  if ((G.floor[i] === WATER || G.floor[i] === LAVA) && it.kind !== 'wall') return false;
-  if (it.kind === 'seed') return it.crop === 'cropMoss' ? G.floor[i] === 21 : [1, 2, 3, 4, 21].includes(G.floor[i]);
-  if (it.kind === 'wall') return !occupied(tx, ty);
-  if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty)); }
-  return false;
 }
