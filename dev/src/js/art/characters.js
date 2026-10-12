@@ -4,6 +4,8 @@ import { clamp } from '../engine/util.js';
 import { rng } from '../engine/random.js';
 import { G } from '../save/state.js';
 import { H } from '../world/map.js';
+import { WEAR_PAL } from '../sim/gear.js';
+import { head } from '../ui/panels.js';
 export function playerFrame(dir, step, pal) {
   return mk(16, 19, A => {
     const { r, p, e } = A; const fy = 17;

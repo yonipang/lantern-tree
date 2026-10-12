@@ -6,11 +6,10 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 
 ## 꼭 알아 둘 규칙
 
-- **구조 변경 중이에요** (`dev/PLAN.md`): 파일을 하나씩 **모듈**(`import { a } from './x.js'`, `export …`)로 옮기고 있어요. 모듈과 옛 파일이 섞여 있어도 `build.py`가 한 파일로 묶어요 (import 줄은 지우고 `export` 낱말만 떼어 내요 — 이름은 그대로).
-  - 모듈은 다른 모듈의 이름을 반드시 import해요. 아직 옛 파일인 곳의 이름은 import 없이 그대로 써요 (그 파일을 옮길 때 import로 바꿈).
-  - `build.py`가 확인해요: 가져오는 파일이 `shell.html`에 있는지, 그 이름을 내보내는지, 맨 위 이름이 겹치는지. 그리고 옛 전역 이름이 몇 개 남았는지 알려 줘요.
+- **모든 파일이 모듈이에요** (구조 변경 11단계 끝, `dev/PLAN.md`): 다른 파일의 이름은 `import { a } from './x.js'`, 밖에서 쓰는 이름은 `export`. `build.py`가 `import` 줄은 지우고 `export` 낱말만 떼어 내 한 파일로 묶어요 (이름은 그대로 — 테스트 통로 `window.__T`도 그대로).
+  - `build.py`가 확인해요: 가져오는 파일이 `shell.html`에 있는지, 그 이름을 내보내는지, 맨 위 이름이 겹치는지, 다른 모듈 이름을 import 없이 쓰는지, 가져온 값을 바꾸는지(바꿀 일은 그 모듈의 함수로 — `setPaused`·`markLight`·`resetPool` …).
 
-- **자바스크립트는 모두 하나의 `<script>`, 하나의 함수 `(() => { … })()` 안에 차례로 들어가요.** 파일끼리 `import` 없이 서로의 이름을 그대로 써요 (예전 한 파일과 똑같아요).
+- **자바스크립트는 모두 하나의 `<script>`, 하나의 함수 `(() => { … })()` 안에 차례로 들어가요.** 묶인 뒤에는 이름이 한곳에 모여서, 맨 위 이름은 파일끼리 겹치면 안 돼요.
 - **순서가 중요해요.** `function`은 어디서든 부를 수 있지만, 맨 위에서 바로 실행되는 줄(`const …`, `Object.assign(ITEMS, …)`, `RECIPES.push(…)`, `TIPS.push(…)` 등)은 `shell.html`에 적힌 순서대로 실행돼요.
   - 앞 파일에서 만든 `const`·`let`을 뒤 파일이 쓰는 건 괜찮고, 반대는 안 돼요 (불러오자마자 오류).
   - `RECIPES`·`QSIDE`·`TIPS`에 넣는 순서가 제작 창·퀘스트 목록의 순서예요. 파일 순서를 바꾸면 화면 순서도 바뀌어요.
@@ -28,33 +27,33 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 |---|---|
 | `shell.html` | 페이지 뼈대: `<head>`, HUD·버튼·타이틀 화면 HTML, CSS/JS를 넣는 순서 |
 | `style.css` | 화면 모양 전부: 색·글꼴 → HUD(체력·목표·보스바·토스트) → 단축칸·터치 버튼·조이스틱 → 시트 창(제작·지도·메뉴) → 타이틀·캐릭터 고르기·능력 창, 작은 화면 규칙 |
-| `js/engine/util.js` | (모듈) 공통 도구: `$`·`clamp`·`hexRgb`, 한국어 조사 `josa`·`roJosa`(으로/로) |
-| `js/engine/random.js` | (모듈) 난수·노이즈: **`rand()` 게임 결과용 · `fxRand()` 보이기용** (`Math.random`은 여기서만, `build.py`가 확인), `rint`, 시드 노이즈 `hash2`·`vn`·`fbm`·`rng` |
-| `js/engine/canvas.js` | (모듈) 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |
-| `js/engine/audio.js` | (모듈) 효과음 `SFX`·`ensureAudio` |
-| `js/engine/effects.js` | (모듈) 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
-| `js/sim/events.js` | (모듈) **사건** `emit`·`onEvent`: 규칙이 소리·알림·반짝임 대신 남기는 것 (받는 곳은 `ui/feedback.js`) |
-| `js/sim/commands.js` | (모듈) **명령** `runCmd`·`defineCmd`와 조작 의도 `ctlOf(p)`: 화면·입력이 규칙에 보내는 것 |
-| `js/sim/systems.js` | (모듈) **매 프레임 순서표** `FRAME_ORDER`와 `onFrame`·`runFrame` — 기능마다 이름 한 칸, 자리 = 실행 순서 |
-| `js/world/map.js` | (모듈) 지도 틀: 지도 모양(`setLayout`·`LAY`)·크기(`W`·`H`)·등불나무와 보스 자리(`CX`·`SA` …)·칸 번호(`idx`)·지도 안인지(`inB`)·방향 이름 |
-| `js/sim/drops.js` | (모듈) 떨어진 아이템 `spawnDrop`·`rollDrops` |
-| `js/art/hand-art.js` | (모듈) 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
-| `js/art/characters.js` | (모듈) 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
-| `js/art/world.js` | (모듈) 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |
-| `js/data/items.js` | (모듈) **기본 데이터**: 벽·아이템·물체·레시피(`Rc`)·장식·무기·고유 무기·희귀도·가방, 얇은 벽 조각 만들기, 레시피 일괄 보정(REQ_FIX·금속 → 구리 제작대) |
-| `js/data/rpg-nature.js` | (모듈) 레벨·능력치 이름·스킬, 낚시 표, 몬스터(`ENEMY`)·**보스(`BOSSES`·재도전 보상 `REMATCH`)**, 꽃, 나무 자라는 시간, 자연 꾸미기 |
-| `js/data/circuits-regions.js` | (모듈) 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출, **모든 장비 내구도(`DUR`)·분해** |
-| `js/world/gen.js` | (모듈) 지도 만들기(`genWorld`) — 지역·벽·물·연못·석영 광맥, 숨은 방 |
-| `js/world/tiles.js` | (모듈) 막힌 칸·충돌·움직이기(`isSolid`·`boxHits`·`moveEnt`), 여러 칸 가구 발자리(`fpOf`·`delObj` …), 땅 파기·지형 배우기, 놓을 수 있는지(`canPlace`) |
-| `js/save/state.js` | (모듈) `G`·새 게임·`serialize`/`deserialize`, **세이브 나누기 `splitSave`·`joinSave`** (세계·캐릭터·세계 안 플레이어별 — `SAVE_ORDER`·`CHAR_KEYS`·`PLAYER_KEYS`) |
-| `js/save/migrations.js` | (모듈) **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
-| `js/save/storage.js` | (모듈) 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |
-| `js/data/quests.js` | (모듈) 길잡이 퀘스트(`GUIDE`)·보상(`Q_META`)·곁가지 퀘스트(`QSIDE`), 여러 칸 가구(`MULTI`) |
-| `js/data/farming-cooking.js` | (모듈) 낫·물뿌리개·비료, 맞는 흙·별 작물, **숨은 방**(개수·장식·보물), 버프·요리·레시피 쪽지, 용광로·요리솥 시간, 낚시 운 |
-| `js/data/gear-animals.js` | (모듈) 불꽃·서리 작물, 옷·장신구, 장비제작대, 반지, 강화 비용·효과, 동물·목장 |
-| `js/data/deep-survival.js` | (모듈) 더위·추위 대비 요리·문구, 지역 재료, 귀환석, 잃어버린 꾸러미, 깊은 보스 단계 문구 |
-| `js/data/automation-tiers.js` | (모듈) 스프링클러·자동 수확기, 거대 작물, 축제 케이크, **「지형 재료 2배」**, 작업대·장비제작대 단계와 레시피 단계 나누기 |
-| `js/data/controls.js` | (모듈) 도구 종류, 도끼 → 나무 베기 도구, 쳐서 회수(몇 번·몇 초) |
+| `js/engine/util.js` | 공통 도구: `$`·`clamp`·`hexRgb`, 한국어 조사 `josa`·`roJosa`(으로/로) |
+| `js/engine/random.js` | 난수·노이즈: **`rand()` 게임 결과용 · `fxRand()` 보이기용** (`Math.random`은 여기서만, `build.py`가 확인), `rint`, 시드 노이즈 `hash2`·`vn`·`fbm`·`rng` |
+| `js/engine/canvas.js` | 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |
+| `js/engine/audio.js` | 효과음 `SFX`·`ensureAudio` |
+| `js/engine/effects.js` | 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
+| `js/sim/events.js` | **사건** `emit`·`onEvent`: 규칙이 소리·알림·반짝임 대신 남기는 것 (받는 곳은 `ui/feedback.js`) |
+| `js/sim/commands.js` | **명령** `runCmd`·`defineCmd`와 조작 의도 `ctlOf(p)`: 화면·입력이 규칙에 보내는 것 |
+| `js/sim/systems.js` | **매 프레임 순서표** `FRAME_ORDER`와 `onFrame`·`runFrame` — 기능마다 이름 한 칸, 자리 = 실행 순서 |
+| `js/world/map.js` | 지도 틀: 지도 모양(`setLayout`·`LAY`)·크기(`W`·`H`)·등불나무와 보스 자리(`CX`·`SA` …)·칸 번호(`idx`)·지도 안인지(`inB`)·방향 이름 |
+| `js/sim/drops.js` | 떨어진 아이템 `spawnDrop`·`rollDrops` |
+| `js/art/hand-art.js` | 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
+| `js/art/characters.js` | 플레이어·캐릭터 꾸미기, 몬스터·보스 그림, 도구·아이템 아이콘(`ICON`) |
+| `js/art/world.js` | 물체·작물·나무, 등불나무 모습, 바닥·벽·가장자리 타일, `SPR` 조립(`buildSprites`)과 손그림 덮어쓰기 |
+| `js/data/items.js` | **기본 데이터**: 벽·아이템·물체·레시피(`Rc`)·장식·무기·고유 무기·희귀도·가방, 얇은 벽 조각 만들기, 레시피 일괄 보정(REQ_FIX·금속 → 구리 제작대) |
+| `js/data/rpg-nature.js` | 레벨·능력치 이름·스킬, 낚시 표, 몬스터(`ENEMY`)·**보스(`BOSSES`·재도전 보상 `REMATCH`)**, 꽃, 나무 자라는 시간, 자연 꾸미기 |
+| `js/data/circuits-regions.js` | 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출, **모든 장비 내구도(`DUR`)·분해** |
+| `js/world/gen.js` | 지도 만들기(`genWorld`) — 지역·벽·물·연못·석영 광맥, 숨은 방 |
+| `js/world/tiles.js` | 막힌 칸·충돌·움직이기(`isSolid`·`boxHits`·`moveEnt`), 여러 칸 가구 발자리(`fpOf`·`delObj` …), 땅 파기·지형 배우기, 놓을 수 있는지(`canPlace`) |
+| `js/save/state.js` | `G`·새 게임·`serialize`/`deserialize`, **세이브 나누기 `splitSave`·`joinSave`** (세계·캐릭터·세계 안 플레이어별 — `SAVE_ORDER`·`CHAR_KEYS`·`PLAYER_KEYS`) |
+| `js/save/migrations.js` | **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
+| `js/save/storage.js` | 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |
+| `js/data/quests.js` | 길잡이 퀘스트(`GUIDE`)·보상(`Q_META`)·곁가지 퀘스트(`QSIDE`), 여러 칸 가구(`MULTI`) |
+| `js/data/farming-cooking.js` | 낫·물뿌리개·비료, 맞는 흙·별 작물, **숨은 방**(개수·장식·보물), 버프·요리·레시피 쪽지, 용광로·요리솥 시간, 낚시 운 |
+| `js/data/gear-animals.js` | 불꽃·서리 작물, 옷·장신구, 장비제작대, 반지, 강화 비용·효과, 동물·목장 |
+| `js/data/deep-survival.js` | 더위·추위 대비 요리·문구, 지역 재료, 귀환석, 잃어버린 꾸러미, 깊은 보스 단계 문구 |
+| `js/data/automation-tiers.js` | 스프링클러·자동 수확기, 거대 작물, 축제 케이크, **「지형 재료 2배」**, 작업대·장비제작대 단계와 레시피 단계 나누기 |
+| `js/data/controls.js` | 도구 종류, 도끼 → 나무 베기 도구, 쳐서 회수(몇 번·몇 초) |
 | `js/sim/inventory.js` | 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도(`addItem`·`removeItem`·`countItem`·`moveInto`), 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가방·상자·도구 명령 |
 | `js/sim/gear.js` | 장비·옷·장신구·반지(`wearItem`·`wearing`·`ringV`), 강화 단계와 효과(`upgCost`·`upgText`), 무기 종류·희귀도(`wtOf`·`rarOf`) |
 | `js/sim/crafting.js` | 제작: 가까운 제작대(`nearStations`)·제작 자리(`craftable`·`stationTier`), 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업(`takeJob`) |
@@ -75,7 +74,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/quests.js` | 퀘스트: 길잡이·곁가지 진행과 보상(`checkGuide`·`claimQuest`), 목표 글·화살표, 지역 알림 |
 | `js/sim/tree.js` | 등불나무: 자라는 단계(`treeStage`), 빛씨앗 넣기(`insertSeeds`) |
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
-| `js/art/content.js` | (모듈) **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
+| `js/art/content.js` | **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
 | `js/render/map.js` | 지도 그림: 칸 색(`MAPF`·`MAPW`), 지도 다시 만들기(`rebuildMap`)·한 점 고치기(`mapPixel`) |
 | `js/render/view.js` | 화면: 캔버스·배율(`resize`·`VIEW`)·카메라 따라가기, 한 장 그리기(`render`) |
@@ -83,7 +82,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/render/world.js` | 세계 그리기: 반딧불이 같은 주변 효과, 물체·몬스터·플레이어·보스 그리기(`renderWorld`·`drawEntity`), 겹쳐 그리기 |
 | `js/render/icons.js` | 아이콘: 아이템 아이콘 그림·주소(`iconURL`) |
 | `js/render/parts.js` | 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행(`updateFx`), 동물 그림, 회수 막대 |
-| `js/ui/feedback.js` | (모듈) **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
+| `js/ui/feedback.js` | **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
 | `js/ui/panels.js` | 창: `UIS`(창 안 고르기 상태)·`openPanel`·`closePanel`·`renderPanel`(가방·제작·퀘스트·능력·메뉴 …), 제작 알림, 아이템 설명 |
 | `js/ui/hud.js` | HUD: 단축칸(`refreshHotbar`, 규칙은 `emit('inv')`)·체력·배고픔·스킬 막대(`updateHud`), 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시 |
 | `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |

@@ -1,13 +1,23 @@
 // ================= 몬스터: 움직이기·쫓기(가장 가까운 플레이어), 만들기·생기기 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+import { SPAWN_CAP, SPAWN_EVERY, SPAWN_PACK } from '../data/circuits-regions.js';
+import { ENEMY } from '../data/rpg-nature.js';
+import { rand } from '../engine/random.js';
+import { lightAt } from '../render/light.js';
+import { G, nearestPlayer, withPlayer } from '../save/state.js';
+import { dotTick } from './combat.js';
+import { hurtPlayer } from './player.js';
+import { onFrame } from './systems.js';
+import { BX, BY, CX, CY, idx, inB, SA, SB, SI, SL } from '../world/map.js';
+import { isSolid, moveEnt } from '../world/tiles.js';
 onFrame('enemies', updateEnemies);
 onFrame('spawn', dt => { const p = G.p;
   G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
 });
-function updateEnemies(dt) {
+export function updateEnemies(dt) {
   for (const e of G.enemies.slice()) withPlayer(nearestPlayer(e.x, e.y), () => enemyStep(e, dt)); // 몬스터마다 가장 가까운 플레이어를 봐요 (8단계)
 }
-function enemyStep(e, dt) {
+export function enemyStep(e, dt) {
   const p = G.p;
   const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
   if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
@@ -28,10 +38,10 @@ function enemyStep(e, dt) {
   if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
-const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];
-function regionEnemy(e, b) { const m = REGION_HP[b] || 1; if (m !== 1) { e.hp = Math.round(e.hp * m); e.mh = e.hp; } if ((REGION_DMG[b] || 1) !== 1) e.dm = REGION_DMG[b]; return e; }
-function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: rand(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
-function trySpawn() {
+export const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];
+export function regionEnemy(e, b) { const m = REGION_HP[b] || 1; if (m !== 1) { e.hp = Math.round(e.hp * m); e.mh = e.hp; } if ((REGION_DMG[b] || 1) !== 1) e.dm = REGION_DMG[b]; return e; }
+export function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: rand(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
+export function trySpawn() {
   const p = G.p; if (p.dead > 0) return; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= (SPAWN_CAP[pb] || 7)) return;
   for (let k = 0; k < 10; k++) {
     const a = rand() * 6.283, r = 10 + rand() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);

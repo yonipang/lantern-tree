@@ -6,6 +6,11 @@ import { ROOM_DECO, ROOM_LOOT, ROOM_N } from '../data/farming-cooking.js';
 import { fbm, hash2, rng, vn } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
 import { emit } from '../sim/events.js';
+import { knows, roomNotes } from '../sim/cooking.js';
+import { WATER } from '../sim/nature.js';
+import { gainXp } from '../sim/player.js';
+import { checkGuide } from '../sim/quests.js';
+import { markLight } from '../sim/loop.js';
 
 // ================= world gen =================
 export const quartzAt = (x, y, s) => vn(x * .22, y * .22, s + 81) > 0.71; // v43: quartz veins inside the crystal cave's granite
@@ -130,13 +135,13 @@ export const refreshDoors = () => { DOORS = new Set((G.rooms || []).filter(r => 
 export function placeRooms(w0) {
   const rooms = [], safe = [[CX, CY], [BX, BY], [SA.x, SA.y], [SB.x, SB.y], [SL.x, SL.y], [SI.x, SI.y]], cand = [[], [], [], [], []];
   for (let y = 4; y < H - 8; y += 2) for (let x = 4; x < W - 8; x += 2) { const b = G.biome[idx(x + 1, y + 1)]; if (b <= 4) cand[b].push([x, y, hash2(x, y, (G.seed | 0) + 77)]); }
-  const natural = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.under.has(i);
+  const untouched = i => G.wall[i] && G.wall[i] !== 8 && G.wall[i] === w0.wall[i] && !G.objs.get(i) && !G.wire.has(i) && !G.under.has(i);
   const open = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && !G.objs.get(i);
   // the cracked wall faces an open tunnel on any side; a region that still has no room after that takes a door into plain rock
   for (let pass = 0; pass < 2; pass++) for (let b = 0; b < 5; b++) { cand[b].sort((a, c) => a[2] - c[2]); let n = rooms.filter(r => r.b === b).length; if (pass && n) continue;
     for (const [x, y] of cand[b]) { if (n >= ROOM_N[b]) break;
       if (safe.some(([sx, sy]) => Math.hypot(x + 2 - sx, y + 1 - sy) < 16) || rooms.some(r => Math.hypot(r.x - x, r.y - y) < 24)) continue;
-      let ok = true; for (let yy = y - 1; yy <= y + 3 && ok; yy++) for (let xx = x - 1; xx <= x + 4; xx++) { const i = idx(xx, yy); if (!natural(i) || G.biome[i] !== b) { ok = false; break; } }
+      let ok = true; for (let yy = y - 1; yy <= y + 3 && ok; yy++) for (let xx = x - 1; xx <= x + 4; xx++) { const i = idx(xx, yy); if (!untouched(i) || G.biome[i] !== b) { ok = false; break; } }
       if (!ok) continue;
       const h = hash2(x, y, 5) < .5 ? 0 : 1, sides = [[x + 1 + h, y + 3, 0, 1], [x - 1, y + 1, -1, 0], [x + 4, y + 1, 1, 0], [x + 1 + h, y - 1, 0, -1]];
       const door = sides.find(([dx, dy, ox, oy]) => inB(dx + ox, dy + oy) && open(idx(dx + ox, dy + oy))) || (pass ? sides[0] : null);
@@ -153,11 +158,11 @@ export function roomTick() {
   for (const r of G.rooms || []) { if (r.found) continue;
     if ((px >= r.x && px <= r.x + 3 && py >= r.y && py <= r.y + 2) || !G.wall[idx(r.dx, r.dy)]) { r.found = 1; ch = true; const tc = G.objs.get(idx(r.cx, r.cy)); if (tc) delete tc.hid; G.stats.rooms = (G.stats.rooms || 0) + 1; emit('toast', '숨은 방을 찾았어요! 보물상자를 열어 봐요', 'good', 'room'); emit('sfx', 'seed'); continue; }
     if (!r.hint && Math.hypot(p.x - r.dx - .5, p.y - r.dy - .5) < 3.2) { r.hint = 1; emit('toast', '금 간 벽 틈으로 바람이 새어 나와요… 이 벽 너머에 뭔가 있는 것 같아요', null, 'roomhint'); } }
-  if (ch) { refreshDoors(); lightDirty = true; }
+  if (ch) { refreshDoors(); markLight(); }
 }
 export function openTreasure(t, o) {
   if (o.open) return; o.open = 1; const r = (G.rooms || []).find(q => q.cx === t.x && q.cy === t.y); const loot = r ? (ROOM_LOOT[r.b][r.k] || ROOM_LOOT[r.b][0]).slice() : [['crystal', 3], ['gel', 3]];
   delete o.hid; if (r) { r.open = 1; if (!r.found) { r.found = 1; refreshDoors(); } if (r.k === 0) loot.push([ROOM_DECO[r.b], 1]); for (const id of roomNotes(r)) if (!knows(id)) loot.push(['rn_' + id, 1]); }
   for (const [id, c] of loot) spawnDrop(id, c, t.x + .5, t.y + .9);
-  G.stats.chests = (G.stats.chests || 0) + 1; emit('sfx', 'win'); emit('puff', t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); emit('toast', '보물상자를 열었어요!', 'good'); lightDirty = true; checkGuide();
+  G.stats.chests = (G.stats.chests || 0) + 1; emit('sfx', 'win'); emit('puff', t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); emit('toast', '보물상자를 열었어요!', 'good'); markLight(); checkGuide();
 }

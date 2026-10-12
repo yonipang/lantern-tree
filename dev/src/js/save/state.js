@@ -3,7 +3,7 @@ import { ANIMALS } from '../data/gear-animals.js';
 import { BAG0, BAG_MAX_LV, HOT, ITEMS, OBJ } from '../data/items.js';
 import { BKEYS, BOSSES } from '../data/rpg-nature.js';
 import { BUFF_MAX, DISH, EFF } from '../data/farming-cooking.js';
-import { CHARS, LOOK_DEF, buildPlayer, cleanLook, lookDef } from '../art/characters.js';
+import { CHARS, LOOK_DEF, cleanLook } from '../art/characters.js';
 import { clamp } from '../engine/util.js';
 import { convertDrills, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, syncNotes } from './migrations.js';
 import { rand } from '../engine/random.js';
@@ -11,16 +11,25 @@ import { spawnDrop } from '../sim/drops.js';
 import { CX, CY, H, LAY, SA, SB, SI, SL, W, devLayout, idx, setLayout } from '../world/map.js';
 import { addQuartzVeins, cleanRooms, genWorld, placeRooms, refreshDoors } from '../world/gen.js';
 import { emit } from '../sim/events.js';
+import { FPV, setFootprints } from '../sim/building.js';
+import { activeBuffs } from '../sim/cooking.js';
+import { advanceOffline } from '../sim/crafting.js';
+import { freshEquip } from '../sim/gear.js';
+import { addItem, invSize, isTool, moveInto } from '../sim/inventory.js';
+import { cleanZones, genFlowerZones } from '../sim/nature.js';
+import { cleanRpg, freshRpg, maxHp, maxMp } from '../sim/player.js';
+import { unstick } from '../sim/survival.js';
 export const SAVE_KEY = 'lantern-tree-save-v1';
 // each playthrough gets its own id so cloud sync never mixes two different adventures
 export const newRunId = () => Date.now().toString(36) + rand().toString(36).slice(2, 8);
 // play time: counts only while the game is open, visible and someone touched it in the last 2 minutes
 export let lastInputAt = 0; const IDLE_LIMIT = 120;
+export const noteInput = () => { lastInputAt = performance.now(); }; // 마지막으로 조작한 때 (놀고 있는 시간은 플레이 시간에서 빼요)
 export function fmtPlay(sec, est) { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); const t = h ? `${h}시간 ${m}분` : m ? `${m}분` : '1분 미만'; return (est ? '약 ' : '') + t; }
 export let G = null;
-export let TP = 48, Z = 3, DPR = 1;
 export const cam = { x: CX + .5, y: CY + 2 };
 export let paused = true, started = false, soundOn = true;
+export const setPaused = v => { paused = v; }, setStarted = v => { started = v; }, setSound = v => { soundOn = v; };
 export const beat = k => !!(G && ((G.bossDead || {})[k] || (G.stats && G.stats.beaten || {})[k]));
 export const freshStats = () => ({ wood: 0, bench: 0, torch: 0, copperOre: 0, copperBar: 0, seedsFound: 0 });
 export const freshBoss = k => { const h = BOSSES[k].home(); return { k, x: h.x, y: h.y, hp: BOSSES[k].hp, max: BOSSES[k].hp, st: 'sleep', t: 0, z: 0, air: 0, airMax: 1, vx: 0, vy: 0, lands: 0, hurt: 0, ph: 'walk', casts: 0, rot: 0, dx: 0, dy: 1, d: 99, poison: null, burn: null, stage: 1, inv: 0, pillars: [] }; };
@@ -163,7 +172,7 @@ export function deserialize(s) {
   migrateForges60(oldFp); // v60
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
-  G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
+  G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)

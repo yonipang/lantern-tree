@@ -137,6 +137,12 @@ def code_only(s):
     return s.replace('${', ' (')
 
 
+KEY = re.compile(r'([{,]\s*)[A-Za-z_$][\w$]*\s*(?=:(?!:)|\([^()]*\)\s*\{)')
+def used_words(c):
+    """이름 세기용: 물체 속 이름({ eat: … })과 메서드 이름({ head(H) { … } })은 빼요 — 다른 파일의 같은 이름이 아니에요"""
+    return set(WORD.findall(KEY.sub(r'\1', c)))
+
+
 def strip_art(s):
     return re.sub(r'/\*@@ART\*/.*?/\*@@ARTEND\*/', '', s, flags=re.S)  # 손그림 데이터 안의 글자는 이름이 아니에요
 
@@ -213,11 +219,20 @@ def check(js, report):
             if n not in mods[target][1]:
                 raise BuildError(f'{rel}: {target}은(는) {n}을(를) 내보내지 않아요 (export 확인)')
         mine = set(top_names(s)) | {n for n, _ in imports}
-        words = set(WORD.findall(code_only(s)))
+        words = used_words(code_only(s))
         for n in sorted(words - mine):
             if owner.get(n) in mods and owner[n] != rel:
                 raise BuildError(f'{rel}: {n}은(는) {owner[n]}의 이름이에요 — import {{ {n} }} from …로 가져와요')
         uses += len((words - mine) & legacy_names)
+        # 가져온 이름(다른 모듈의 값)은 바꾸지 않아요 — 진짜 모듈에서는 오류예요. 바꿀 일은 그 모듈의 함수로 (예: setPaused(true))
+        c = code_only(strip_art(s))
+        for n, target in imports:
+            for m in re.finditer(r'(?<![\w$.])' + re.escape(n) + r'\s*(?:=(?![=>])|\+\+|--|[-+*/%|&]=)|(?:\+\+|--)' + re.escape(n) + r'(?![\w$])', c):
+                before = c[max(0, m.start() - 300):m.start()]
+                stmt = re.split(r'[;{}]', before)[-1]
+                if re.search(r'\b(?:const|let|var)\b', stmt):
+                    continue  # 같은 이름의 지역 변수를 만드는 줄
+                raise BuildError(f'{rel}: {n}은(는) {target}의 값이라 여기서 바꿀 수 없어요 → {target}에 바꾸는 함수를 만들어 불러요 (예: set{n[:1].upper() + n[1:]}(…))')
     if report and mods:
         print(f'모듈 {len(mods)}개 · 옛 방식 파일 {len(js) - len(mods)}개 · 옛 전역 이름 {len(legacy_names)}개 남음'
               f' · 모듈이 아직 쓰는 옛 전역 이름 {uses}개')

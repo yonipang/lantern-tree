@@ -1,6 +1,7 @@
 // ================= 소리 (SFX.hit() 같은 효과음) =================
 import { fxRand } from './random.js';
 import { soundOn } from '../save/state.js';
+import { eat } from '../sim/player.js';
 
 let AC = null, noiseBuf = null;
 export function ensureAudio() { try { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 0.4; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = fxRand() * 2 - 1; } if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } }

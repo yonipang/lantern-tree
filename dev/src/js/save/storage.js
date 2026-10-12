@@ -2,6 +2,8 @@ import { $ } from '../engine/util.js';
 import { G, SAVE_KEY, deserialize, fmtPlay, serialize, started } from './state.js';
 import { GUIDE } from '../data/quests.js';
 import { toast } from '../engine/effects.js';
+import { closePanel, panel, renderPanel, UIS } from '../ui/panels.js';
+import { beginPlay } from '../ui/picker.js';
 export let saveFailWarned = false;
 export function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
@@ -159,6 +161,7 @@ export function plainDownload(txt, name) {
   catch (e) { toast('여기서는 파일을 저장할 수 없어요'); }
 }
 export let importFrom = 'menu', pendingImp = null;
+export const clearImport = () => { pendingImp = null; };
 export function pickSaveFile(from) { importFrom = from; const f = $('#fileIn'); f.value = ''; f.click(); }
 export function readSaveFile(file) {
   if (!file) return;
@@ -184,5 +187,6 @@ export function applyImport() {
 export let DEV = false; try { if (/[?&]dev(=1)?(&|$)/.test(location.search)) localStorage.setItem('lantern-tree-dev', '1'); DEV = localStorage.getItem('lantern-tree-dev') === '1'; } catch (e) { }
 export function canDev() { return DEV; }
 export let devTaps = 0, devTapT = 0;
+export function devTap() { const now = performance.now(); devTaps = now - devTapT < 1500 ? devTaps + 1 : 1; devTapT = now; if (devTaps >= 7) { devTaps = 0; DEV = !DEV; try { localStorage.setItem('lantern-tree-dev', DEV ? '1' : '0'); } catch (e) { } return true; } return false; } // 판 번호를 7번 누르면 개발자 모드
 export function loadLocal() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
 

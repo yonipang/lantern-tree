@@ -1,5 +1,36 @@
 // ================= 상호작용 버튼: 무엇을 할지 고르기(decide)·하기(perform)·목표 칸, 물체 쓰기, 작은 버튼 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+import { CAKE_TABLES } from '../data/automation-tiers.js';
+import { BATT_MAX, FUEL, FUEL_MAX } from '../data/circuits-regions.js';
+import { WCAN_MAX } from '../data/farming-cooking.js';
+import { ANIMALS } from '../data/gear-animals.js';
+import { COMPLIMENTS, ITEMS, OBJ, TIPS, USE, USE_LBL } from '../data/items.js';
+import { BKEYS, BOSSES, ENEMY, TERRAIN, YOUNG_T } from '../data/rpg-nature.js';
+import { fxRand } from '../engine/random.js';
+import { josa } from '../engine/util.js';
+import { G, guardOf } from '../save/state.js';
+import { openCatch, ranchCollect, ranchReady, wildNear } from './animals.js';
+import { summonBoss, summonDecide } from './bosses.js';
+import { BUILD_KINDS, doorGroup, isGround, placeItem, placeLbl, rotatePlace, rotN, rotOf } from './building.js';
+import { atkCd, swingAttack } from './combat.js';
+import { ctlOf, defineCmd } from './commands.js';
+import { jobDone, takeJob } from './crafting.js';
+import { spawnDrop } from './drops.js';
+import { emit } from './events.js';
+import { cropMsg, farmHarvest, farmLbl, farmStage, farmT, fertCrop, fillCan, growOf, harvestGiant, ripeAround, waterCrop } from './farming.js';
+import { reel, startFish } from './fishing.js';
+import { harvest, hitObj, mineWall } from './gathering.js';
+import { wearItem, wtOf } from './gear.js';
+import { addItem, bestTool, countItem, holdTool, isBroken, moveInto, refillHot, removeItem, returnObj, selItem, wear } from './inventory.js';
+import { digPlant, isYoung, treeStep, WATER } from './nature.js';
+import { eat, maxHp, sleepIn, standUp } from './player.js';
+import { pickLost, recallDecide, startRecall } from './survival.js';
+import { onFrame } from './systems.js';
+import { insertSeeds } from './tree.js';
+import { openTreasure } from '../world/gen.js';
+import { idx, inB, W } from '../world/map.js';
+import { anchorAt, canPlace, delObj, digGround, fpOf, isPlacedFloor, occupied, terrainOk } from '../world/tiles.js';
+import { markLight } from './loop.js';
 onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
   const p = G.p, ctl = ctlOf(p);
   G.act = decide(); G.actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
@@ -9,11 +40,11 @@ onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/syste
   if (!held && G.actQ <= 0) { G.holdGroup = null; G.holdK = null; }
   G.holdT = held ? G.holdT + dt : 0;
 });
-const REACH = 2.4;
-const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
+export const REACH = 2.4;
+export const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
-function targetTile() {
+export const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
+export function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   const aim = ctlOf(p).aim;
   if (aim) {
@@ -27,7 +58,7 @@ function targetTile() {
   }
   const f = p.face; if (Math.abs(f.x) > Math.abs(f.y)) return { x: ptx + Math.sign(f.x), y: pty }; return { x: ptx, y: pty + (f.y < 0 ? -1 : 1) };
 }
-function nearestEnemy(range) {
+export function nearestEnemy(range) {
   let best = null, bd = 1e9; const p = G.p;
   for (const e of G.enemies) { const d = Math.hypot(e.x - p.x, e.y - p.y) - ENEMY[e.k].r; if (d < range && d < bd) { bd = d; best = e; } }
   for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.8) continue; const d = Math.hypot(b.x - p.x, b.y - p.y) - BOSSES[k].hr; if (d < range && d < bd) { bd = d; best = b; } }
@@ -37,14 +68,14 @@ function nearestEnemy(range) {
 // thing in front: an item held on purpose comes first (seed · watering can · furniture · food …), otherwise a recommendation
 // (open · harvest · chop · mine · pick up …) that takes the right tool out of the tool pouch by itself (pickaxe · axe · sickle ·
 // shovel; the fishing rod and the watering can only from the small button or when held). Other things that fit go to the small button.
-const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
-const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
-const NOTGT = ['eat', 'wear']; // held food · clothes: after a real action in front (opening a chest, …), or first when there is nothing to do
-const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
+export const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
+export const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
+export const NOTGT = ['eat', 'wear']; // held food · clothes: after a real action in front (opening a chest, …), or first when there is nothing to do
+export const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
 // the tool a natural thing needs: trees take an axe (or a pickaxe), rocks and crystals a pickaxe; small plants the hand
-function natTool(d) { if (d.nat === 'pick') return null; if (d.nat === 'chop') return bestTool('axe') || bestTool('pick'); return bestTool('pick'); }
-function natAct(d, o, t) { const tl = natTool(d); return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: tl ? tl.id : 'hand', t, o, tool: tl }; }
-function decide() {
+export function natTool(d) { if (d.nat === 'pick') return null; if (d.nat === 'chop') return bestTool('axe') || bestTool('pick'); return bestTool('pick'); }
+export function natAct(d, o, t) { const tl = natTool(d); return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: tl ? tl.id : 'hand', t, o, tool: tl }; }
+export function decide() {
   const p = G.p; G.alts = []; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
   if (p.sit) return { k: 'stand', lbl: '일어나기', icon: 'hand' };
   if (G.fish) return { k: 'reel', lbl: G.fish.st === 'bite' ? '당기기!' : '거두기', icon: 'rod' };
@@ -71,7 +102,7 @@ function decide() {
   if (!main.length) { G.alts = alt; return info || { k: 'none', lbl: '…', icon: 'dots' }; }
   G.alts = main.slice(1).concat(alt); return main[0];
 }
-function heldDecide(md, s, it, t, i, o) {
+export function heldDecide(md, s, it, t, i, o) {
   const d = o && OBJ[o.t], water = i >= 0 && !G.wall[i] && G.floor[i] === WATER, no = (lbl, msg) => ({ k: 'info', lbl, icon: s.id, msg, t });
   const crop = d && d.crop ? Math.max(0, cropStage(o)) : -1;
   switch (md) {
@@ -124,7 +155,7 @@ function heldDecide(md, s, it, t, i, o) {
   return null;
 }
 // what fits the thing in front, best first (onlyAlt: never on the big button, only on the small one)
-function autoOptions(t, i, o) {
+export function autoOptions(t, i, o) {
   const p = G.p, L = [], A = a => { if (a) L.push(a); }, sh = bestTool('shovel'), rod = bestTool('rod'), can = bestTool('wcan');
   const dig = (lbl, oo) => sh ? { k: 'dig', lbl, icon: 'shovel', t, o: oo, tool: sh, onlyAlt: 1 } : null;
   if (o) {
@@ -163,16 +194,16 @@ function autoOptions(t, i, o) {
   { const wa = wildNear(1.8); if (wa) A({ k: 'info', lbl: ANIMALS[wa.k].n, icon: 'dots', msg: `${ANIMALS[wa.k].n}예요 · 올가미 밧줄(장비제작대)을 도구 칸에서 들고 다가가면 데려갈 수 있어요`, t: { x: Math.floor(wa.x), y: Math.floor(wa.y) } }); }
   return L;
 }
-const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
-function tryAct(edge) {
+export const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
+export function tryAct(edge) {
   const a = G.act; const grp = GROUP[a.k] || null;
   if (edge) { G.holdGroup = grp; G.holdK = a.k; }
   else { if (a.k !== 'attack' && (!grp || grp !== G.holdGroup)) return; }
   perform(a);
 }
 defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 매 프레임 화면 쪽이 보내요
-function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
-function perform(a) {
+export function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
+export function perform(a) {
   const p = G.p;
   if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
   switch (a.k) {
@@ -205,7 +236,7 @@ function perform(a) {
     case 'tree': emit('open', 'tree'); G.actCd = 0.3; break;
     case 'summon': summonBoss(a.boss); G.actCd = 0.6; break;
     case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); G.actCd = 0.4; break;
-    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); G.actCd = 0.3; lightDirty = true; break; }
+    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); G.actCd = 0.3; markLight(); break; }
     case 'fish': startFish(a.t); G.actCd = 0.4; break;
     case 'stand': standUp(); G.actCd = 0.25; break;
     case 'use': useObj(a); G.actCd = 0.4; break;
@@ -217,8 +248,8 @@ function perform(a) {
     case 'info': if (a.msg) emit('toast', a.msg, null, 'info' + a.msg); G.actCd = 0.4; break;
   }
 }
-const pickOne = a => a[Math.floor(fxRand() * a.length)];
-function useObj(a) {
+export const pickOne = a => a[Math.floor(fxRand() * a.length)];
+export function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
     case 'farm': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
@@ -245,7 +276,7 @@ function useObj(a) {
     case 'sit': { const sd = rotN(o.t) === 4 ? rotOf(o) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; emit('sfx', 'place'); emit('toast', '편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
     case 'pet': emit('hearts', x, t.y, 5); emit('sfx', 'purr'); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); emit('ftext', p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } emit('toast', pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
-    case 'lamp': o.off = !o.off; lightDirty = true; emit('sfx', 'click'); break;
+    case 'lamp': o.off = !o.off; markLight(); emit('sfx', 'click'); break;
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;
@@ -256,11 +287,11 @@ function useObj(a) {
   }
 }
 // ---- the small button: the other things that fit ----
-let altI = 0, altKey = '';
-function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
+export let altI = 0, altKey = '';
+export function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
 // 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
 defineCmd('tap', c => { const t = c.t == null ? .3 : c.t; if (c.b === 'atk') G.atkQ = t; else G.actQ = t; });
 defineCmd('alt', () => doAlt());
-function doAlt() { const a = curAlt(); if (!a || G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
-function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }
+export function doAlt() { const a = curAlt(); if (!a || G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
+export function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }

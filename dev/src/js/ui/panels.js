@@ -1,24 +1,53 @@
 // ================= UI =================
-const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
-let panel = null, panelAt = 0;
-function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
-function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
+import { CHARS, cleanLook, curChar, EYEC, HAIRC, HAIRS, HATS, lookDef, OUTC, OUTFITS2 } from '../art/characters.js';
+import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
+import { TIERED } from '../data/automation-tiers.js';
+import { DUR } from '../data/circuits-regions.js';
+import { DISH, JOB_MAX, TIMED, WCAN_MAX } from '../data/farming-cooking.js';
+import { EQ_N } from '../data/gear-animals.js';
+import { BAG_MAX_LV, FURN_D, FXN, HOT, ITEMS, OBJ, RARITY, RECIPES, SETN, STN } from '../data/items.js';
+import { GUIDE, QSIDE } from '../data/quests.js';
+import { MAX_LV, SK_CAT, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
+import { C } from '../engine/canvas.js';
+import { $, clamp, josa } from '../engine/util.js';
+import { G, setPaused, soundOn, started } from '../save/state.js';
+import { canDev, clearImport, cloudMenuHTML, escHTML, importFrom, pendingImp, playRecordHTML } from '../save/storage.js';
+import { bestArrow } from '../sim/combat.js';
+import { runCmd } from '../sim/commands.js';
+import { buffText, knows, noteHint } from '../sim/cooking.js';
+import { atHere, canSalv, craftable, fmtT, isMulti, jobTime, maxCraft, nearStations, repairCost, salvGet2, stationTier } from '../sim/crafting.js';
+import { recipeOn } from '../sim/farming.js';
+import { lvOf, rarOf, upgOk, upgText, wtOf } from '../sim/gear.js';
+import { availCount, BAG_TABS, bagCat, countItem, durOf, isBroken, linkedChests, resetPool, slotList } from '../sim/inventory.js';
+import { atkSpd, magicMul, maxHp, maxMp, meleeMul, moveMul, rangeMul } from '../sim/player.js';
+import { dirText, qText, questState } from '../sim/quests.js';
+import { treeStage } from '../sim/tree.js';
+import { slotHTML } from './hud.js';
+import { joyEnd, keys, mouse, releaseHeld } from './input.js';
+import { drawMap, mapChestOn } from './map.js';
+import { benchUpHTML, catchHTML, eqRowHTML, jobHTML, petHTML, pouchHTML, rarName, regionMatHTML, upgListHTML } from './panels-extra.js';
+import { cpCards } from './picker.js';
+import { LAY, W } from '../world/map.js';
+export const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
+export let panel = null, panelAt = 0;
+export function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(true); releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+export function closePanel() { panel = null; $('#sheetWrap').hidden = true; setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
-function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
-function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
-function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up + (s && it.kind === 'sword' && wtOf(it).ranged === 'arrow' ? arrowInfo() : ''); }
-const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; };
-function itemStat1(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
-function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; if (it.kind === 'axe') return `도구 · 나무 베는 힘 ${it.power}`; return ''; }
+export function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
+export function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
+export function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up + (s && it.kind === 'sword' && wtOf(it).ranged === 'arrow' ? arrowInfo() : ''); }
+export const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; };
+export function itemStat1(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
+export function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; if (it.kind === 'axe') return `도구 · 나무 베는 힘 ${it.power}`; return ''; }
 // v62: the workbench window — 1st row 전체/재료/도구/제작대/가구/건축/편의 (icons), 2nd row per tab. Hand recipes can be made at the workbench too
-const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['tool', '도구', 'bagUp1'], ['stn', '제작대', 'bench'], ['furn', '가구', 'chair'], ['build', '건축', 'wallBrick'], ['conv', '편의', 'lever']];
-const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], ['cook', '요리']],
+export const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['tool', '도구', 'bagUp1'], ['stn', '제작대', 'bench'], ['furn', '가구', 'chair'], ['build', '건축', 'wallBrick'], ['conv', '편의', 'lever']];
+export const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], ['cook', '요리']],
   furn: [['all', '전체'], ['seat', '의자'], ['table', '탁자'], ['bed', '침대'], ['store', '수납'], ['light', '조명'], ['deco', '장식']],
   build: [['all', '전체'], ['wall', '벽'], ['floor', '바닥'], ['fence', '울타리'], ['pillar', '기둥'], ['door', '문'], ['win', '창문'], ['nature', '자연']],
   conv: [['all', '전체'], ['circuit', '회로'], ['farm', '농사'], ['mine', '채굴장']] };
-const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
-const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
-function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
+export const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
+export const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
+export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
   if (o.station) t = ['stn', o.station === 'furnace' ? 'smelt' : o.station === 'pot' ? 'cook' : 'make'];
   else if (c === 'mat') t = ['mat'];
   else if (c === 'tool') t = ['tool'];
@@ -29,7 +58,7 @@ function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || 
   else if (c === 'build' && !FURN2_OF[id]) t = ['build', /Fence/.test(id) ? 'fence' : /Pillar/.test(id) ? 'pillar' : /Door/.test(id) ? 'door' : /Frame|Win/.test(id) ? 'win' : 'wall'];
   else t = ['furn', FURN2_OF[id] || 'deco'];
   return (r._bc = t); }
-function renderPanel() {
+export function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (UIS.tab2 || 'all') + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
@@ -50,7 +79,7 @@ function renderPanel() {
     h += petHTML() + `</div>`;
   } else if (k === 'catch') { h += catchHTML();
   } else if (k === 'craft') {
-    const near = nearStations(); const st = panel.st; POOL = null; POOL = linkedChests(); const nCh = POOL.length;
+    const near = nearStations(); const st = panel.st; resetPool(); const nCh = linkedChests().length;
     const ctier = craftTier(), bo = TIERED[st] && panel.i != null ? G.objs.get(panel.i) : null, inTier = r => !TIERED[r.at] || (r.tier || 0) <= ctier;
     h += head(TIERED[st] ? TIERED[st][ctier] : st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:46px;padding:0 12px;font-size:15px">회수</button>` : '');
     if (bo) h += benchUpHTML(bo); // v60: upgrade the workbench at the top of its window
@@ -172,22 +201,22 @@ function renderPanel() {
   } else if (k === 'win') {
     h += `<div class="sh-body" style="text-align:center;padding-top:8px"><div class="seeds">${[0, 1, 2].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:28px;color:var(--amber);margin:4px 0 10px">등불나무가 깨어났어요!</h2><p class="prose">따스한 빛이 동굴 깊은 곳까지 번져요. 이제 이곳은 당신의 아늑한 정원이에요.</p><p class="prose" style="color:var(--amber)">그런데… 나무 꼭대기에 아직 불 꺼진 등불이 두 개 남아 있어요. 수정 곡괭이를 만들어 남쪽 용암 동굴과 서쪽 얼음 동굴로 떠나 보세요!</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:56px">계속 꾸미기</button></div>`;
   }
-  POOL = null;
+  resetPool();
   if (LAY === 2 && (k === 'tree' || k === 'win' || k === 'win2')) h = dirText(h);
   sh.innerHTML = h; sh.dataset.key = key;
   if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
 }
-let craftNoteT = 0;
-function craftNote(id, n, msg) {
+export let craftNoteT = 0;
+export function craftNote(id, n, msg) {
   let el = $('#craftNote'); if (!el) { el = document.createElement('div'); el.id = 'craftNote'; el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
   const nm = ITEMS[id].n; el.innerHTML = `<img class="px" src="${iconURL(id)}" alt=""><span>${escHTML(msg || (n > 1 ? `${josa(nm, '을', '를')} ${n}개 제작했어요!` : `${josa(nm, '을', '를')} 제작했어요`))}</span>`;
   const sh = $('#sheet').getBoundingClientRect(), open = !$('#sheetWrap').hidden; el.style.top = (open ? Math.max(8, sh.top - 58) : 120) + 'px';
   if (open && sh.top < 70) el.style.top = (sh.top + 12) + 'px';
   el.classList.remove('out'); el.hidden = false; clearTimeout(craftNoteT); craftNoteT = setTimeout(() => { el.classList.add('out'); craftNoteT = setTimeout(() => { el.hidden = true; }, 400); }, 1800);
 }
-const craftCtx = () => panel && panel.kind === 'craft' ? (panel.st || null) : null;
-const craftPanel = () => panel && panel.kind === 'craft' ? panel : null;
-const craftTier = () => stationTier(craftPanel());
-function canCraft(r, near) { return craftable(r, near, craftPanel()); } // 규칙: game/bag.js
+export const craftCtx = () => panel && panel.kind === 'craft' ? (panel.st || null) : null;
+export const craftPanel = () => panel && panel.kind === 'craft' ? panel : null;
+export const craftTier = () => stationTier(craftPanel());
+export function canCraft(r, near) { return craftable(r, near, craftPanel()); } // 규칙: game/bag.js

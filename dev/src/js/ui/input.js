@@ -1,21 +1,41 @@
 // ================= input wiring =================
 // ---- 입력 상태 (구조 변경 7단계: game/actions.js에서 옮김) — 규칙은 이걸 직접 읽지 않고 매 프레임 조작 의도(ctl)를 받아요 ----
-const keys = new Set();
-const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
-const dpad = { id: null, vx: 0, vy: 0 };
-let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
-const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
-let btnHeld = false, atkBtnHeld = false;
-const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
-function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
-function mouseTile() {
+import { buildPlayer } from '../art/characters.js';
+import { ensureAudio } from '../engine/audio.js';
+import { toast } from '../engine/effects.js';
+import { rand } from '../engine/random.js';
+import { $ } from '../engine/util.js';
+import { cv, DPR, LIFT, resize, TP, VIEW } from '../render/view.js';
+import { deserialize, G, newGame, paused, SAVE_KEY, started } from '../save/state.js';
+import { applyImport, clearImport, CLOUD, cloudAuth, cloudKeepLocal, cloudTakePending, cloudTitleClick, cloudTitleRefresh, cloudUpload, escHTML, loadBackups, loadLocal, pickSaveFile, pushBackup, readSaveFile, saveLocal } from '../save/storage.js';
+import { cycleAlt } from '../sim/actions.js';
+import { catchThrow } from '../sim/animals.js';
+import { runCmd } from '../sim/commands.js';
+import { advanceOffline } from '../sim/crafting.js';
+import { wearItem } from '../sim/gear.js';
+import { toggleToolRow, toolSlotClick } from './hud.js';
+import { DRAG, hotClick, onSheetClick, setupDrag } from './panel-actions.js';
+import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
+import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
+import { idx, inB } from '../world/map.js';
+export const keys = new Set();
+export const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
+export const dpad = { id: null, vx: 0, vy: 0 };
+export let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
+export const setCtrlPref = v => { ctrlPref = v; };
+export const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
+export let btnHeld = false, atkBtnHeld = false;
+export const releaseHeld = () => { btnHeld = false; };
+export const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
+export function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
+export function mouseTile() {
   const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
   // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
   if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
   return { x: tx, y: ty, mx: m.x, my: m.y };
 }
 // 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)
-function readCtl() {
+export function readCtl() {
   let mx = 0, my = 0;
   if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
   if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
@@ -25,14 +45,14 @@ function readCtl() {
   let aim = null; if (aimMouse()) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
   return { k: 'ctl', mx, my, stick, act: btnHeld || keys.has('Space') || keys.has('KeyE'), atk: atkBtnHeld || mouse.down || keys.has('KeyJ'), aim };
 }
-function sendCtl() { if (G) runCmd(readCtl()); }
-function command(c) { sendCtl(); return runCmd(c); } // 버튼·키로 보내는 명령 — 그 순간의 조작 의도와 함께
-function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); command({ k: 'alt' }); } // v65: the small button
-function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
-function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
-function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
-function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 150)) + 'px'; }
-function setupInput() {
+export function sendCtl() { if (G) runCmd(readCtl()); }
+export function command(c) { sendCtl(); return runCmd(c); } // 버튼·키로 보내는 명령 — 그 순간의 조작 의도와 함께
+export function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); command({ k: 'alt' }); } // v65: the small button
+export function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
+export function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
+export function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
+export function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 150)) + 'px'; }
+export function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     ensureAudio(); if (paused) return;
@@ -121,13 +141,13 @@ function setupInput() {
     const cur = (() => { try { return localStorage.getItem(SAVE_KEY); } catch (err) { return null; } })();
     try { deserialize(sv); } catch (err) { toast('백업을 불러오지 못했어요'); return; }
     if (cur) pushBackup('백업 되돌리기 전', cur); $('#bkList').hidden = true; beginPlay(); toast('백업에서 되돌렸어요', 'good'); });
-  $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
+  $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; setPickSel(b.dataset.c); renderPicker(); });
   $('#charBack').addEventListener('click', () => hidePicker());
   $('#charGo').addEventListener('click', () => { hidePicker(); newGame((rand() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 손 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, E(또는 스페이스)로 뿌리기둥을 베어 보세요'), 1400); });
   $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
   $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
-  $('#impAsk').addEventListener('click', e => { const b = e.target.closest('[data-imp]'); if (!b) return; if (b.dataset.imp === 'yes') applyImport(); else { pendingImp = null; $('#impAsk').hidden = true; } });
+  $('#impAsk').addEventListener('click', e => { const b = e.target.closest('[data-imp]'); if (!b) return; if (b.dataset.imp === 'yes') applyImport(); else { clearImport(); $('#impAsk').hidden = true; } });
   window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
   let hiddenAt = 0; document.addEventListener('visibilitychange', () => { if (document.hidden && started) { hiddenAt = Date.now(); saveLocal(true); cloudUpload(false); } else if (!document.hidden && hiddenAt) { if (G && started) advanceOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; } });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });

@@ -1,9 +1,39 @@
 // ================= 세계 그리기: 반딧불이 같은 주변 효과, 물체·몬스터·플레이어·보스 그리기(renderWorld·drawEntity), 겹쳐 그리기 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ---- ambient particles: fireflies, spores, sparkles ----
-const AMB = [];
+import { glowSprite, SPR, TREE_SPREAD } from '../art/world.js';
+import { BENCH_COL, TIERED } from '../data/automation-tiers.js';
+import { BATT_MAX } from '../data/circuits-regions.js';
+import { ITEMS, OBJ, WALLS, WTYPE } from '../data/items.js';
+import { BKEYS, BOSSES, ENEMY } from '../data/rpg-nature.js';
+import { effH, effW, INK, whiten } from '../engine/canvas.js';
+import { fxRand, hash2 } from '../engine/random.js';
+import { clamp } from '../engine/util.js';
+import { CHN, getChunk } from './chunks.js';
+import { iconCanvas } from './icons.js';
+import { LH, lightCv, LIGHTS, LW, LX0, LY0 } from './light.js';
+import { animalImg, drawHazards, drawHitBars, drawSpread, drawTree, drawTreeGlow, drawTreeLeaves, rotImg, twSprite, visibleShakers } from './parts.js';
+import { ctx, drawImg, LIFT, shadow, TP, VIEW, Z } from './view.js';
+import { G, guardOf, paused } from '../save/state.js';
+import { canDev } from '../save/storage.js';
+import { cropStage, curAlt, inReach } from '../sim/actions.js';
+import { ranchReady } from '../sim/animals.js';
+import { canRotObj, isGround, placeFp, pRot, rotN, rotOf, slideStep, twMask } from '../sim/building.js';
+import { CIRC, wirePowered } from '../sim/circuits.js';
+import { jobDone, nowS } from '../sim/crafting.js';
+import { farmStage, growOf } from '../sim/farming.js';
+import { selItem } from '../sim/inventory.js';
+import { isYoung, treeStep, WATER, WFLOOR } from '../sim/nature.js';
+import { goalTarget } from '../sim/quests.js';
+import { onFrame } from '../sim/systems.js';
+import { treeStage } from '../sim/tree.js';
+import { aimMouse } from '../ui/input.js';
+import { DOORS } from '../world/gen.js';
+import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
+import { fpOf, placeAnchor } from '../world/tiles.js';
+export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
-function updateAmbient(dt) {
+export function updateAmbient(dt) {
   const p = G.p;
   for (let i = AMB.length - 1; i >= 0; i--) { const a = AMB[i]; a.t += dt; if (a.t > a.life) { AMB.splice(i, 1); continue; }
     if (a.k === 0) { a.vx += (fxRand() - .5) * dt * 3; a.vy += (fxRand() - .5) * dt * 3; a.vx = clamp(a.vx, -.6, .6); a.vy = clamp(a.vy, -.6, .6); }
@@ -14,7 +44,7 @@ function updateAmbient(dt) {
       const k = water ? 0 : b; AMB.push({ k, x, y, vx: k === 1 || k === 3 ? (fxRand() - .5) * .2 : (fxRand() - .5) * .4, vy: k === 1 ? -.25 - fxRand() * .2 : k === 3 ? -.6 - fxRand() * .4 : k === 4 ? .35 + fxRand() * .3 : (fxRand() - .5) * .4, t: 0, life: 4 + fxRand() * 5, ph: fxRand() * 6.28 }); }
   }
 }
-function renderWorld(cw, ch) {
+export function renderWorld(cw, ch) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, t = G.time;
   const x0 = Math.max(0, Math.floor(camX / T) - 1), x1 = Math.min(W - 1, Math.ceil((camX + cw) / T) + 1);
   const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(H - 1, Math.ceil((camY + ch) / T) + 3);
@@ -165,7 +195,7 @@ function renderWorld(cw, ch) {
       ctx.globalAlpha = 1; } }
   }
 }
-function renderOverlay(cw, ch) {
+export function renderOverlay(cw, ch) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT * Z; ctx.imageSmoothingEnabled = true;
   // soft vignette
   if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit) { const tt = G.act.t;
@@ -183,7 +213,7 @@ function renderOverlay(cw, ch) {
   for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); const X = tx.x * T - camX, Y = tx.y * T - camY; ctx.lineWidth = 1.6 * Z; ctx.strokeStyle = INK; ctx.strokeText(tx.txt, X, Y); ctx.fillStyle = tx.col; ctx.fillText(tx.txt, X, Y); }
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 }
-function drawEntity(it, t) {
+export function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
     const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), d.dev === 'slide' ? slideStep(o, t) : !!o.open), it.x + .5, it.y + 1); return; }
