@@ -387,6 +387,9 @@ body.touch #pcHint{display:none}
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 function hexRgb(h) { const n = parseInt(h.slice(1, 7), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
+
+// 한국어 조사 고르기: josa('나무', '을', '를') → '나무를' (구조 변경 5단계: world.js에서 옮김)
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
 // ================= 난수·노이즈 =================
 // · rand(): 게임 결과에 영향을 주는 무작위 (피해·치명타·드롭·몬스터 움직임·생성 …) — 멀티플레이에서는 방장만 굴려요
 // · fxRand(): 보이기·소리에만 쓰는 무작위 (반짝이·나뭇잎·화면 흔들림 …) — 사람마다 달라도 괜찮아요
@@ -496,6 +499,29 @@ function toast(msg, cls, key) {
   while (box.children.length > 3) box.firstChild.remove();
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, cls === 'warn' ? 6500 : 2300);
 }
+// ================= 지도 틀 (구조 변경 5단계: content/items.js·world.js에서 옮김) =================
+// 지도 모양(1 = 처음 200×200 지도, 2 = 600×600 고리 지도)과 크기·등불나무·보스 자리, 칸 번호(idx)·지도 안인지(inB), 방향 이름.
+// v47부터 두 가지: 1은 v47 전 세이브가 그대로 쓰는 200×200, 2는 새 게임의 고리 지도
+// (가운데 등불나무, 이끼 동굴(북)·버섯숲(남) 고리, 수정 동굴(북)·용암(남동)·얼음(남서) 큰 고리, 바다 고리, 가장자리 암반)
+
+// ================= data =================
+// v47: two map layouts. 1 = the original 200×200 map (every save made before v47 keeps it); 2 = the 600×600 ring map for new games:
+// the lantern tree in the middle, a ring split into the moss cave (north) and mushroom forest (south), then a wide ring split into
+// the crystal cave (north), lava cave (south-east) and ice cave (south-west), a sea ring, and hard rock at the edge
+let LAY = 1, W = 200, H = 200, CX = 100, CY = 100, BX = 144, BY = 102, SA = { x: 54, y: 118 }, SB = { x: 106, y: 24 }, SL = { x: 96, y: 184 }, SI = { x: 16, y: 104 };
+const L2 = { r1: 34, r2: 100, r3: 250, r4: 272 }; // ring radii of layout 2 (start · moss/mushroom · crystal/lava/ice · sea; rock beyond)
+function setLayout(v) { LAY = v === 2 ? 2 : 1;
+  if (LAY === 2) { W = H = 600; CX = CY = 300; const at = (deg, r) => ({ x: Math.round(CX + Math.cos(deg * Math.PI / 180) * r), y: Math.round(CY + Math.sin(deg * Math.PI / 180) * r) });
+    const b = at(-35, 64); BX = b.x; BY = b.y; SA = at(140, 66); SB = at(-90, 172); SL = at(30, 172); SI = at(150, 172); }
+  else { W = H = 200; CX = CY = 100; BX = CX + 44; BY = CY + 2; SA = { x: CX - 46, y: CY + 18 }; SB = { x: CX + 6, y: CY - 76 }; SL = { x: CX - 4, y: CY + 84 }; SI = { x: CX - 84, y: CY + 4 }; }
+  layoutTexts(); }
+const devLayout = () => { try { const v = +localStorage.getItem('lantern-tree-layout'); return v === 1 || v === 2 ? v : 0; } catch (_) { return 0; } }; // tests pin the old layout
+const DIR8 = ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'];
+const dirKo = (x, y) => DIR8[((Math.round(Math.atan2(y - CY, x - CX) / (Math.PI / 4)) % 8) + 8) % 8];
+const LAVA = 17;
+const idx = (x, y) => y * W + x;
+// ================= world helpers =================
+const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
 // ================= 떨어진 아이템 (게임 규칙: 세계에 남는 물건이라 결과용 난수 rand) =================
 
 function spawnDrop(id, c, x, y) { const a = rand() * 6.283; G.drops.push({ id, c, x, y, vx: Math.cos(a) * 1.4, vy: Math.sin(a) * 1.1, z: 0.3, vz: 2.6, t: 0, hold: 0 }); }
@@ -1520,22 +1546,6 @@ rarDefault();
 const HOT = 9, BAG0 = 24, BAG_STEP = 6, BAG_MAX_LV = 3;
 const BAG_UPS = [['bagUp1', '튼튼한 가방', [['fiber', 20], ['rope', 6], ['resin', 2]], 'bench'], ['bagUp2', '여행자의 가방', [['rope', 10], ['gel', 10], ['copperBar', 4]], 'forge'], ['bagUp3', '큰 모험가 가방', [['rope', 16], ['shroomCap', 8], ['ironBar', 4]], 'forge']];
 BAG_UPS.forEach(([id, n, req, at], k) => { ITEMS[id] = { n, bagUp: k + 1, d: `만들면 가방이 ${BAG_STEP}칸 늘어나요 (${BAG0 + BAG_STEP * k}칸 → ${BAG0 + BAG_STEP * (k + 1)}칸).` }; const r = Rc(id, 1, req, at, 'tool'); r.bag = k; RECIPES.push(r); });
-// ================= data =================
-// v47: two map layouts. 1 = the original 200×200 map (every save made before v47 keeps it); 2 = the 600×600 ring map for new games:
-// the lantern tree in the middle, a ring split into the moss cave (north) and mushroom forest (south), then a wide ring split into
-// the crystal cave (north), lava cave (south-east) and ice cave (south-west), a sea ring, and hard rock at the edge
-let LAY = 1, W = 200, H = 200, CX = 100, CY = 100, BX = 144, BY = 102, SA = { x: 54, y: 118 }, SB = { x: 106, y: 24 }, SL = { x: 96, y: 184 }, SI = { x: 16, y: 104 };
-const L2 = { r1: 34, r2: 100, r3: 250, r4: 272 }; // ring radii of layout 2 (start · moss/mushroom · crystal/lava/ice · sea; rock beyond)
-function setLayout(v) { LAY = v === 2 ? 2 : 1;
-  if (LAY === 2) { W = H = 600; CX = CY = 300; const at = (deg, r) => ({ x: Math.round(CX + Math.cos(deg * Math.PI / 180) * r), y: Math.round(CY + Math.sin(deg * Math.PI / 180) * r) });
-    const b = at(-35, 64); BX = b.x; BY = b.y; SA = at(140, 66); SB = at(-90, 172); SL = at(30, 172); SI = at(150, 172); }
-  else { W = H = 200; CX = CY = 100; BX = CX + 44; BY = CY + 2; SA = { x: CX - 46, y: CY + 18 }; SB = { x: CX + 6, y: CY - 76 }; SL = { x: CX - 4, y: CY + 84 }; SI = { x: CX - 84, y: CY + 4 }; }
-  layoutTexts(); }
-const devLayout = () => { try { const v = +localStorage.getItem('lantern-tree-layout'); return v === 1 || v === 2 ? v : 0; } catch (_) { return 0; } }; // tests pin the old layout
-const DIR8 = ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'];
-const dirKo = (x, y) => DIR8[((Math.round(Math.atan2(y - CY, x - CX) / (Math.PI / 4)) % 8) + 8) % 8];
-const LAVA = 17;
-const idx = (x, y) => y * W + x;
 // recipes people usually make many of at once get a quantity picker
 const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat', 'fert'].includes(ITEMS[r.out].kind);
 function maxCraft(r) { let m = 99; for (const [id, c] of r.req) m = Math.min(m, Math.floor(availCount(id) / c)); return Math.max(0, m); }
@@ -1705,6 +1715,20 @@ const BOSSES = {
 const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
 // ---- calling a beaten boss back for another fight ----
 const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
+
+// ---- 바닥 타일 → 아이템, 삽으로 뜰 수 있는 지형과 배우는 조건 (구조 변경 5단계: world.js에서 옮김) ----
+// ---- terrain: ground you can dig with a shovel and lay elsewhere, unlocked one by one ----
+const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
+for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
+FLOOR_ITEM[21] = 'meadow';
+// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
+const TERRAIN = {
+  2: { n: '흙', item: 'gDirt', base: true },
+  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
+  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
+  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
+  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
+};
 // skill points earned by a level: one per level up, plus a bonus one at the top level (10 skills × 3 steps = 30)
 const spDue = lv => lv - 1 + (lv >= MAX_LV ? 1 : 0);
 const freshRpg = () => ({ lv: 1, xp: 0, pts: 0, sp: 0, str: 0, dex: 0, vit: 0, int: 0, sk: {}, slot: [null, null] });
@@ -1999,14 +2023,6 @@ function drawHazards(T, camX, camY) {
     else if (warn) { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(191,230,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(191,230,255,${pr * .25})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } }
 }
 
-const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.sz[0] !== d.sz[1] ? [d.sz[1], d.sz[0]] : d.sz; };
-function fpTiles(i, o, fp) { fp = fp || fpOf(o); const x = i % W, y = (i / W) | 0, out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push(idx(x + dx, y + dy)); return out; }
-function setParts(i, o) { for (const j of fpTiles(i, o)) if (j !== i) G.objs.set(j, { t: '_part', a: i }); }
-function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i) continue; const q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); } }
-function delObj(i) { const o = G.objs.get(i); if (o && OBJ[o.t] && OBJ[o.t].sz) clearParts(i, o); G.objs.delete(i); }
-function anchorAt(i) { const o = G.objs.get(i); if (o && o.t === '_part') { const a = G.objs.get(o.a); return a && a.t !== '_part' ? o.a : -1; } return o ? i : -1; }
-function fpFree(x, y, fp, solid, own) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA) return false; const q = G.objs.get(j); if (q && !(own != null && (j === own || (q.t === '_part' && q.a === own)))) return false; if (solid && occupied(tx, ty)) return false; } return true; }
-function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math.abs(f.x) >= Math.abs(f.y)) { if (f.x < 0) x -= fp[0] - 1; y -= Math.floor((fp[1] - 1) / 2); } else { if (f.y < 0) y -= fp[1] - 1; x -= Math.floor((fp[0] - 1) / 2); } return { x, y }; }
 let placeRot = 0, placeRotFor = null;
 const pRot = () => { const s0 = G && selItem(); return s0 && s0.id === placeRotFor ? placeRot : 0; };
 const DIRN = ['아래', '오른쪽', '위', '왼쪽'];
@@ -2044,6 +2060,9 @@ function farmHarvest(i, o, auto) { const x = i % W, y = (i / W) | 0;
   const got = farmYield(o); o.p = G.time; o.why = ''; if (PIT_Y[o.t]) pitStat(o, got[0][1]); else G.stats.farmed = (G.stats.farmed || 0) + got[0][1];
   for (const [id, c] of got) { let left = c; for (const ch of chests) { if (!left) break; left = moveInto(ch.items, { id, c: left }); } if (left) { o.store = o.store || []; const n = o.store.reduce((a, s2) => a + s2.c, 0), add = Math.min(left, FARM_CAP - n); if (add > 0) { const s2 = o.store.find(z => z.id === id); if (s2) s2.c += add; else o.store.push({ id, c: add }); } } }
   if (Math.hypot(x + 1 - G.p.x, y + 1 - G.p.y) < 14) { puff(x + 1, y + 1, farmT(o)[3], 8, 2); SFX.brk(); } return true; }
+// ================= 지도 만들기 (구조 변경 5단계: world.js에서 옮김) =================
+// 시드로 세계 만들기(genWorld) — 지역·벽·물·연못·석영 광맥, 숨은 방(놓기·찾기·보물상자)
+
 // ================= world gen =================
 const quartzAt = (x, y, s) => vn(x * .22, y * .22, s + 81) > 0.71; // v43: quartz veins inside the crystal cave's granite
 function wallFor(b, x, y, s) {
@@ -2198,8 +2217,9 @@ function openTreasure(t, o) {
   for (const [id, c] of loot) spawnDrop(id, c, t.x + .5, t.y + .9);
   G.stats.chests = (G.stats.chests || 0) + 1; SFX.win(); puff(t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); toast('보물상자를 열었어요!', 'good'); lightDirty = true; checkGuide();
 }
-// ================= world helpers =================
-const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+// ================= 칸·충돌·움직임·놓기 (구조 변경 5단계: world.js와 content/circuits-regions.js에서 옮김) =================
+// 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 땅 파기·지형 배우기, 놓을 수 있는지(canPlace)
+
 function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
 function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
 function moveEnt(e, dx, dy, r) {
@@ -2214,20 +2234,7 @@ function occupied(tx, ty) {
   const p = G.p, r = 0.28; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true;
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
-// ---- terrain: ground you can dig with a shovel and lay elsewhere, unlocked one by one ----
-const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
-for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
-FLOOR_ITEM[21] = 'meadow';
 const isPlacedFloor = f => !!FLOOR_ITEM[f];
-const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
-// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
-const TERRAIN = {
-  2: { n: '흙', item: 'gDirt', base: true },
-  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
-  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
-  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
-  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
-};
 const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terrain[f])));
 function checkUnlocks() {
   if (!G.terrain) G.terrain = {};
@@ -2259,6 +2266,15 @@ function canPlace(tx, ty, it) {
   if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty)); }
   return false;
 }
+
+const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.sz[0] !== d.sz[1] ? [d.sz[1], d.sz[0]] : d.sz; };
+function fpTiles(i, o, fp) { fp = fp || fpOf(o); const x = i % W, y = (i / W) | 0, out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push(idx(x + dx, y + dy)); return out; }
+function setParts(i, o) { for (const j of fpTiles(i, o)) if (j !== i) G.objs.set(j, { t: '_part', a: i }); }
+function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i) continue; const q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); } }
+function delObj(i) { const o = G.objs.get(i); if (o && OBJ[o.t] && OBJ[o.t].sz) clearParts(i, o); G.objs.delete(i); }
+function anchorAt(i) { const o = G.objs.get(i); if (o && o.t === '_part') { const a = G.objs.get(o.a); return a && a.t !== '_part' ? o.a : -1; } return o ? i : -1; }
+function fpFree(x, y, fp, solid, own) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA) return false; const q = G.objs.get(j); if (q && !(own != null && (j === own || (q.t === '_part' && q.a === own)))) return false; if (solid && occupied(tx, ty)) return false; } return true; }
+function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math.abs(f.x) >= Math.abs(f.y)) { if (f.x < 0) x -= fp[0] - 1; y -= Math.floor((fp[1] - 1) / 2); } else { if (f.y < 0) y -= fp[1] - 1; x -= Math.floor((fp[0] - 1) / 2); } return { x, y }; }
 // ================= state =================
 const SAVE_KEY = 'lantern-tree-save-v1';
 // each playthrough gets its own id so cloud sync never mixes two different adventures
@@ -2299,7 +2315,7 @@ const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'ba
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
 const ME = 'me'; // 멀티플레이 전에는 플레이어가 하나 (13단계에서 캐릭터마다 이름표)
-const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 function splitSave(s, id = ME) {
   const world = {}, char = { v: s.v }, pl = {};
   for (const k of Object.keys(s)) {
@@ -2312,10 +2328,10 @@ function joinSave(world, char, id = ME) {
   const pl = (world.players && world.players[id]) || {}, s = {};
   const extra = [...Object.keys(world), ...Object.keys(char), ...Object.keys(pl).filter(k => k !== 'x' && k !== 'y')].filter(k => k !== 'players' && !SAVE_ORDER.includes(k)); // 나중에 생긴 칸도 잃지 않게
   for (const k of [...SAVE_ORDER, ...new Set(extra)]) {
-    if (k === 'p') { if (char.p || own(pl, 'x')) s.p = { x: pl.x, y: pl.y, hp: char.p && char.p.hp, hunger: char.p && char.p.hunger, mp: char.p && char.p.mp }; }
-    else if (k === 'v') s.v = own(world, 'v') ? world.v : char.v;
-    else if (CHAR_KEYS.has(k)) { if (own(char, k)) s[k] = char[k]; } else if (PLAYER_KEYS.has(k)) { if (own(pl, k)) s[k] = pl[k]; }
-    else if (own(world, k)) s[k] = world[k]; else if (own(char, k)) s[k] = char[k]; else if (own(pl, k)) s[k] = pl[k];
+    if (k === 'p') { if (char.p || hasOwn(pl, 'x')) s.p = { x: pl.x, y: pl.y, hp: char.p && char.p.hp, hunger: char.p && char.p.hunger, mp: char.p && char.p.mp }; }
+    else if (k === 'v') s.v = hasOwn(world, 'v') ? world.v : char.v;
+    else if (CHAR_KEYS.has(k)) { if (hasOwn(char, k)) s[k] = char[k]; } else if (PLAYER_KEYS.has(k)) { if (hasOwn(pl, k)) s[k] = pl[k]; }
+    else if (hasOwn(world, k)) s[k] = world[k]; else if (hasOwn(char, k)) s[k] = char[k]; else if (hasOwn(pl, k)) s[k] = pl[k];
   }
   return s;
 }
