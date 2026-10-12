@@ -78,7 +78,8 @@ def qa24():
                 rec('지역',f'시드 {seed}: 두 제단 + 보스방 안쪽은 막혀 있지만 넓음', r[6]=='shrine' and r[7]=='shrine' and r[8][0]>80 and r[8][1]==0 and r[9][0]>80 and r[9][1]==0, str(r[8:]))
             r=await ev(pg,"()=>{const T=__T;return [9,10,11,12].map(w=>T.WALLS[w].tier)}")
             rec('지역','새 벽은 모두 3단계(수정 곡괭이)', r==[3,3,3,3], str(r))
-            r=await ev(pg,"()=>{const T=__T,G=T.G;let n3=0;for(let i=0;i<40000;i++)if(G.biome[i]===3)n3++;const i=G.floor.indexOf(T.LAVA);return [n3>800,i>=0?T.isSolid(i%200,(i/200)|0):'none']}")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;let n3=0;for(let i=0;i<40000;i++)if(G.biome[i]===3)n3++;let i=G.floor.indexOf(T.LAVA);if(i<0){i=G.biome.indexOf(3);G.wall[i]=0;G.objs.delete(i);G.floor[i]=T.LAVA}return [n3>800,T.isSolid(i%200,(i/200)|0)]}")
+            # 지도에 따라 용암 웅덩이가 하나도 안 생기기도 해서, 없으면 용암 동굴에 용암 칸을 하나 깔고 확인해요
             rec('지역','현재 세계에도 지역 존재 · 용암은 못 지나감', r[0] and r[1] is True, str(r))
             # mining tier
             r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'pickIron',c:1};const x=T.CX+3,y=T.CY+6;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){G.objs.delete(T.idx(x+dx,y+dy));G.wall[T.idx(x+dx,y+dy)]=0}G.wall[T.idx(x,y)]=10;G.p.x=x+.5;G.p.y=y-.5;G.p.face={x:0,y:1};T.mineWall({x,y});const a=G.wdmg.get(T.idx(x,y))||0;G.inv[1]={id:'pickCrystal',c:1};T.mineWall({x,y});const b=G.wdmg.get(T.idx(x,y))||0;G.wall[T.idx(x,y)]=0;G.wdmg.clear();return [a,b]}""")

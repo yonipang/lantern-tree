@@ -363,8 +363,9 @@ def qa16():
             await aim_at(109.5,110.5)
             await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}")
             print('dbg', await ev(pg,"()=>[__T.aim(), JSON.stringify(__T.mw()),JSON.stringify(__T.cam()), __T.G.enemies.length]"))
-            # 적을 다시 놓고 바로 판단해요 (사이에 프레임이 돌면 슬라임이 움직이거나 다른 몬스터가 생길 수 있어요)
-            r=await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5;return __T.decide().k}")
+            # 적을 다시 놓고 바로 판단해요 (사이에 프레임이 돌면 슬라임이 움직이거나 다른 몬스터가 생길 수 있어요).
+            # 캐릭터가 마우스 쪽으로 돌면 화면이 조금 더 따라가서, 판단하는 순간의 화면 기준으로 마우스 좌표를 벽에 다시 맞춰요 (실제 마우스 이벤트는 위에서 보냄)
+            r=await ev(pg,"()=>{const T=__T,V=T.VIEW(),M=T.mouse();M.x=(109.5*T.TPv()-V.baseX)/T.DPR();M.y=(110.5*T.TPv()-V.baseY)/T.DPR();T.G.enemies.length=0;T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});T.G.p.x=110.5;T.G.p.y=110.5;return T.decide().k}")
             rec('클릭 방향','적이 오른쪽에 있어도 왼쪽 벽을 클릭하면 캐기', r=='mine', r)
             async def point(wx,wy): return await ev(pg,f"()=>{{const V=__T.VIEW(),T=__T.TPv(),D=__T.DPR(),M=__T.mouse();M.x=({wx}*T-V.camX)/D;M.y=({wy}*T-V.camY)/D;M.last=performance.now();return __T.decide().k}}")
             en="()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}"
