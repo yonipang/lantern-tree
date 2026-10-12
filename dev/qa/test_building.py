@@ -16,6 +16,7 @@ def test_terrain_shovel():
                 await ev(pg,"()=>{const G=__T.G;for(let y=106;y<116;y++)for(let x=104;x<118;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.fish=null;G.inv.fill(null);G.under.clear();G.p.x=110.5;G.p.y=110.5;G.p.face={x:1,y:0};"+extra+"}")
                 await pg.wait_for_timeout(150)
             sel="G.sel=G.inv.findIndex(s=>s&&s.id==='{}');"
+            tool="G.tsel=G.tools.findIndex(s=>s&&s.id==='{}');G.sel=-1;G.tHand=true;"  # v65: tools are held from the tool pouch
             # 1. build priority
             await setup("G.objs.set(__T.idx(111,110),{t:'bench'});__T.addItem('floorWood',5);"+sel.format('floorWood'))
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
@@ -24,7 +25,7 @@ def test_terrain_shovel():
             rec('건축 우선','작업대는 그대로, 아래에 바닥이 깔리고 창은 안 열림', r==[5,True,True], str(r))
             await setup("G.objs.set(__T.idx(111,110),{t:'bench'});__T.addItem('chair',1);"+sel.format('chair'))
             r=await ev(pg,"()=>__T.decide().k")
-            rec('건축 우선','가구 들고 작업대 앞(놓을 수 없음) → 열지 않고 안내 (v48: 든 물건의 일만)', r=='info', r)
+            rec('건축 우선','가구 들고 작업대 앞(놓을 수 없음) → 작업대 열기 (v65: 든 물건을 못 쓰면 자동 추천)', r=='open', r)
             # 2. bug fix: set floors return
             await setup("__T.addItem('floorMoss',1);__T.addItem('floorWood',1);"+sel.format('floorMoss'))
             await tap(pg,1); await ev(pg,"()=>{const G=__T.G;"+sel.format('floorWood')+"}"); await pg.wait_for_timeout(150); await tap(pg,1); await pg.wait_for_timeout(900)
@@ -33,16 +34,16 @@ def test_terrain_shovel():
             # 3. shovel: only in hand
             await setup("__T.addItem('floorWood',1);__T.addItem('shovel',1);"+sel.format('floorWood'))
             await tap(pg,1); await ev(pg,"()=>{__T.G.sel=5}"); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>[!!__T.decide().sub, document.querySelector('#subBtn').hidden]")
-            rec('삽','삽이 가방에만 있으면 [걷기] 없음', r==[False,True], str(r))
-            await ev(pg,"()=>{const G=__T.G;"+sel.format('shovel')+"}"); await pg.wait_for_timeout(150)
+            r=await ev(pg,"()=>[__T.decide().k,(__T.G.alts||[]).map(a=>a.lbl).join(','), document.querySelector('#subBtn').hidden]")
+            rec('삽','v65: 삽이 도구 주머니에 있으면 깔린 바닥 앞 작은 버튼이 [걷기] (큰 버튼은 아님)', r==['none','걷기',False], str(r))
+            await ev(pg,"()=>{const G=__T.G;"+tool.format('shovel')+"}"); await pg.wait_for_timeout(150)
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
             rec('삽','삽을 들면 바닥 앞 큰 버튼이 걷기', r==['dig','걷기'], str(r))
             await tap(pg,1)
             r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('floorWood')]")
             rec('삽','걷으면 원래 이끼 땅으로 + 바닥 돌려받음', r==[1,1], str(r))
             # 4. locked terrain
-            await setup("G.terrain={};__T.addItem('shovel',1);"+sel.format('shovel'))
+            await setup("G.terrain={};__T.addItem('shovel',1);"+tool.format('shovel'))
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().msg]")
             rec('지형 해금','배우기 전: 이끼 파기 막힘 + 방법 안내', r[0]=='info' and '이끼는 아직' in r[1] and '구리 곡괭이' in r[1], str(r))
             r=await ev(pg,"()=>__T.ITEMS.shovel.d")
@@ -52,7 +53,7 @@ def test_terrain_shovel():
             await pg.wait_for_timeout(200)
             r=await ev(pg,"()=>[__T.G.terrain[1], document.querySelector('#toasts').innerText.includes('새 지형을 배웠어요: 이끼')]")
             rec('지형 해금','퀘스트 「구리 곡괭이」 완료 → 이끼 해금 + 알림', r==[1,True], str(r))
-            await ev(pg,"()=>{const G=__T.G;"+sel.format('shovel')+"}"); await pg.wait_for_timeout(150)
+            await ev(pg,"()=>{const G=__T.G;"+tool.format('shovel')+"}"); await pg.wait_for_timeout(150)
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
             rec('지형 해금','배운 뒤: 삽 들고 이끼 → 파기', r==['dig','파기'], str(r))
             await tap(pg,1)
@@ -123,7 +124,7 @@ def test_doors():
             rec('설치','얇은 벽 들고 → 놓기', r==['place','놓기'], str(r))
             await tap(pg,1); r=await ev(pg,"()=>__T.G.objs.get(__T.idx(111,110))?.t")
             rec('설치','얇은 벽 설치', r=='bThinWood', r)
-            r=await ev(pg,"()=>[__T.decide().k, __T.decide().sub]")
+            r=await ev(pg,"()=>[__T.decide().k, (__T.G.alts||[]).some(a=>a.k==='pickup')]")
             rec('설치','이미 있는 칸 앞: 회수 대신 안내 + 작은 [회수] 버튼', r==['info',True], str(r))
             # door
             await setup("G.objs.set(__T.idx(111,110),{t:'bDoorWood'});")
@@ -163,7 +164,7 @@ def test_doors():
 
 def test_multi_tile_rotation():
     import asyncio, sys
-    H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,growTick,refreshHotbar,isSolid,placeItem,hitObj,circuitTick,rotateAction,rotateObjAt,fixParts,fpOf,farmStage,FARM_GROW,useObj:typeof useObj!=='undefined'?useObj:null}")
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,growTick,refreshHotbar,isSolid,placeItem,hitObj,circuitTick,rotateAction,rotN,rotOf,fixParts,fpOf,farmStage,FARM_GROW,useObj:typeof useObj!=='undefined'?useObj:null}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
     GIVE="(id,c)=>{const G=__T.G;G.inv[0]={id,c:c||1};G.sel=0;__T.refreshHotbar()}"
     async def main():
@@ -191,14 +192,14 @@ def test_multi_tile_rotation():
             await ev(pg,ARENA)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('longTable');G.p.face={x:1,y:0};T.rotateAction();const a=T.decide();T.perform(a);let ai=null;for(const[i,o]of G.objs)if(o.t==='longTable')ai=i;const o=G.objs.get(ai);return [o.rot,T.fpOf(o).join('x'),[...G.objs.values()].filter(q=>q.t==='_part').length]}""")
             rec('회전','들고 있을 때 돌리면 세로(1×2)로 놓임', r==[1,'1x2',1], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=null;for(const[i,o]of G.objs)if(o.t==='longTable')ai=i;const ok=T.rotateObjAt(ai);const o=G.objs.get(ai);const parts=[...G.objs].filter(([i,q])=>q.t==='_part').map(([i])=>i-ai);return [ok,o.rot,parts.join(',')]}""")
-            rec('회전','놓인 가구도 돌리기 → 가로(2×1)', r[0] is True and r[1]==0 and r[2]=='1', str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=null;for(const[i,o]of G.objs)if(o.t==='longTable')ai=i;G.wall[ai+200]=1;const ok=T.rotateObjAt(ai);G.wall[ai+200]=0;return [ok,G.objs.get(ai).rot]}""")
-            rec('회전','막혀 있으면 안 돌아감', r==[False,0], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.objs.clear;for(const[i,o]of [...G.objs])if(o.t==='longTable'||o.t==='_part')G.objs.delete(i);GIVE('chair');G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};T.rotateAction();T.rotateAction();T.perform(T.decide());const ch=G.objs.get(T.idx(105,108));T.rotateObjAt(T.idx(105,108));const d2=ch.dir;G.inv[0]=null;const a=T.decide();T.perform(a);return [d2,a.u,G.p.dir,G.p.sit&&G.p.sit.dir]}""")
-            rec('회전','의자: 4방향 (위를 보게 놓고 한 번 더 → 왼쪽, 앉으면 그쪽을 봄)', r[0]==3 and r[1]=='sit' and r[2]=='side' and r[3]==3, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=null;for(const[i,o]of G.objs)if(o.t==='longTable')ai=i;G.inv[0]=null;T.rotateAction();const o=G.objs.get(ai);return [o.rot,T.rotOf(o),T.fpOf(o).join('x')]}""")
+            rec('회전','v65: 놓인 가구는 돌리지 않음 (회수해서 다시 놓기)', r==[1,1,'1x2'], str(r))
+            r=await ev(pg,"()=>['longTable','bed','bench','sofa2','chair','logBench','cushion','vase','table','pictureFrame','chest','torch'].map(t=>__T.rotN(t)).join(',')")
+            rec('회전','v65 방향 수: 앉는 가구 4 · 다른 가구 2 · 꽃병·둥근 탁자·액자·상자·횃불 1', r=='2,2,2,4,4,4,4,1,1,1,1,1', r)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(const[i,o]of [...G.objs])if(o.t==='longTable'||o.t==='_part')G.objs.delete(i);GIVE('chair');G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};T.rotateAction();T.rotateAction();T.rotateAction();T.perform(T.decide());const ch=G.objs.get(T.idx(105,108));const d2=ch.dir;G.inv[0]=null;const a=T.decide();T.perform(a);return [d2,a.u,G.p.dir,G.p.sit&&G.p.sit.dir]}""")
+            rec('회전','의자: 4방향 (놓기 전에 세 번 돌리면 왼쪽, 앉으면 그쪽을 봄)', r[0]==3 and r[1]=='sit' and r[2]=='side' and r[3]==3, str(r))
             await pg.wait_for_timeout(400); await pg.screenshot(path=SP+'chair.png')
-            r=await ev(pg,"()=>{const G=__T.G;G.p.sit=null;return document.querySelector('#rotBtn').hidden}")
+            await ev(pg,"()=>{const G=__T.G;G.p.sit=null}")
             # big tree: chop -> stump -> regrow, dig stump -> item
             await ev(pg,ARENA)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('bigTree');T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='bigTree')ai=i;const x=ai%200,y=(ai/200)|0;G.inv[0]={id:'pickIron',c:1};for(let k=0;k<20&&G.objs.get(ai)&&G.objs.get(ai).t==='bigTree';k++)T.hitObj({x,y},G.objs.get(ai));const o=G.objs.get(ai);const parts=[...G.objs.values()].filter(q=>q.t==='_part').length;
@@ -228,11 +229,11 @@ def test_multi_tile_rotation():
             # touch rotate button visibility
             await ev(pg,ARENA)
             await ev(pg,"()=>{GIVE('sofa2')}"); await pg.wait_for_timeout(400)
-            r=await ev(pg,"()=>!document.querySelector('#rotBtn').hidden")
-            await pg.tap('#rotBtn'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>!document.querySelector('#subBtn').hidden&&document.querySelector('#subLbl').textContent==='방향'")
+            await pg.tap('#subBtn'); await pg.wait_for_timeout(200)
             await pg.screenshot(path=SP+'rotbtn.png')
-            r2=await ev(pg,"()=>{const T=__T,G=T.G;T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='sofa2')ai=i;return G.objs.get(ai).rot}")
-            rec('회전','터치: 가구를 들면 ↻ 방향 버튼 → 누르면 세로 소파', r and r2==1, f'{r} {r2}')
+            r2=await ev(pg,"()=>{const T=__T,G=T.G;T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='sofa2')ai=i;const o=G.objs.get(ai);return [o.rot,o.dir]}")
+            rec('회전','터치: 가구를 들면 작은 버튼 [방향] → 누르면 옆을 보는 세로 소파 (v65)', r and r2==[1,1], f'{r} {r2}')
             # visual gallery
             await ev(pg,ARENA)
             await ev(pg,"""()=>{const T=__T,G=T.G;const put=(t,x,y,ex)=>{const o=Object.assign({t},ex||{});const i=T.idx(x,y);G.objs.set(i,o);if(T.OBJ[t].sz){for(let dy=0;dy<T.fpOf(o)[1];dy++)for(let dx=0;dx<T.fpOf(o)[0];dx++)if(dx||dy)G.objs.set(T.idx(x+dx,y+dy),{t:'_part',a:i})}};

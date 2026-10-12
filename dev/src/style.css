@@ -107,25 +107,36 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 .slot.pick{border-color:var(--mint);background:#3c4a55}
 
 /* Touch controls */
-#subBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 36px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 160px);width:64px;height:64px;border-radius:50%;
-  background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #8a7aa6;box-shadow:0 4px 0 rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;touch-action:none}
-#subBtn img{width:26px;height:26px}
-#subBtn span{font-size:13px}
+/* v65: attack (bottom right) and interact (up-left of it) — two big buttons on a diagonal; skills above attack; the small button left of interact */
+#altWrap{position:absolute;right:calc(env(safe-area-inset-right,0px) + 118px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px);display:flex;align-items:center;gap:4px;pointer-events:none}
+#altWrap>*{pointer-events:auto}
+#subBtn{position:relative;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #8a7aa6;box-shadow:0 4px 0 rgba(0,0,0,.4);opacity:.92;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;touch-action:none}
+#subBtn img{width:24px;height:24px}
+#subBtn span{font-size:12px;max-width:56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#subBtn .k{display:none;position:absolute;top:-6px;right:-4px;font-style:normal;font-size:11px;background:#1b1426;color:#ffe9a8;border-radius:6px;padding:0 4px}
 #subBtn:active{transform:translateY(2px);box-shadow:none}
-body:not(.touch) #subBtn, body.intro #subBtn{display:none}
-#rotBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 110px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 164px);width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #7fe0b5;box-shadow:0 4px 0 rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;touch-action:none;color:var(--text)}
-#rotBtn b{font-size:22px;line-height:1;font-weight:400}#rotBtn span{font-size:12px}#rotBtn:active{transform:translateY(2px);box-shadow:none}
-body:not(.touch) #rotBtn, body.intro #rotBtn{display:none}
+#altNext{width:34px;height:44px;border-radius:12px;background:rgba(42,33,57,.9);border:2px solid #8a7aa6;font-size:20px;padding:0;touch-action:none}
+#altNext:active{transform:translateY(2px)}
+body.intro #altWrap{display:none}
+body:not(.touch) #altWrap{right:18px;bottom:calc(var(--slotS) + 104px)}
+body:not(.touch) #subBtn{width:auto;height:40px;border-radius:12px;flex-direction:row;gap:6px;padding:0 10px}
+body:not(.touch) #subBtn .k{display:block;position:static;order:-1}
+body:not(.touch) #subBtn span{max-width:none}
+body:not(.touch) #altNext{height:40px}
+body:not(.touch) #altNext::after{content:' Q';font-size:11px;color:#ffe9a8}
 #fade.sleep{color:var(--amber);background:rgba(14,10,30,.9)}
-#actBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 48px);width:100px;height:100px;border-radius:50%;
-  background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:3px solid var(--amber);box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 24px rgba(255,200,97,.25);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:none}
-#actBtn img{width:44px;height:44px}
-#actBtn span{font-size:15px}
-#actBtn.on{transform:translateY(3px) scale(.96);box-shadow:0 2px 0 rgba(0,0,0,.4),0 0 30px rgba(255,200,97,.45)}
-#skBar{position:absolute;right:calc(env(safe-area-inset-right,0px) + 128px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 52px);display:flex;flex-direction:column-reverse;gap:10px}
+#actBtn,#atkBtn{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:none}
+#atkBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 40px);width:96px;height:96px;
+  background:radial-gradient(circle at 50% 35%,#7a4458,#4f2b3e 70%);border:3px solid #ff8fa3;box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 22px rgba(255,143,163,.25)}
+#actBtn{right:calc(env(safe-area-inset-right,0px) + 104px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 140px);width:88px;height:88px;
+  background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:3px solid var(--amber);box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 24px rgba(255,200,97,.25)}
+#actBtn img,#atkBtn img{width:40px;height:40px}
+#actBtn span,#atkBtn span{font-size:14px;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#actBtn.dim img,#actBtn.dim span{opacity:.5}
+#actBtn.on,#atkBtn.on{transform:translateY(3px) scale(.96);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+#skBar{position:absolute;right:calc(env(safe-area-inset-right,0px) + 118px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 40px);display:flex;flex-direction:row-reverse;gap:8px}
 #skBar[hidden]{display:none}
-.skb{position:relative;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3f5a74,#2a3a52 70%);border:3px solid #8fc4f0;box-shadow:0 4px 0 rgba(0,0,0,.4);display:grid;place-items:center;padding:0;touch-action:none;overflow:hidden}
+.skb{position:relative;width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3f5a74,#2a3a52 70%);border:3px solid #8fc4f0;box-shadow:0 4px 0 rgba(0,0,0,.4);display:grid;place-items:center;padding:0;touch-action:none;overflow:hidden}
 .skb img{width:34px;height:34px}
 .skb.empty{border-style:dashed;background:rgba(42,33,57,.7)}
 .skb.empty img{opacity:.35}
@@ -136,11 +147,12 @@ body:not(.touch) #rotBtn, body.intro #rotBtn{display:none}
 body.touch .skb .k{display:none}
 body:not(.touch) #skBar{right:18px;bottom:18px;flex-direction:row}
 body:not(.touch) .skb{width:54px;height:54px}
+@media (max-width:1120px){body:not(.touch) #skBar{bottom:calc(var(--slotS) + 40px)}} /* v65: the hotbar got a tool slot, so on narrow PCs the skills sit above it */
 body.intro #skBar{display:none}
 .joy{position:absolute;width:128px;height:128px;margin:-64px 0 0 -64px;border-radius:50%;border:3px solid rgba(255,241,214,.35);background:rgba(27,20,38,.35);pointer-events:none;opacity:.55;transition:opacity .15s}
 .joy.on{opacity:.95}
 .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff1d6,#d9c3a3);box-shadow:0 3px 0 rgba(0,0,0,.35)}
-body:not(.touch) #actBtn, body:not(.touch) .joy{display:none}
+body:not(.touch) #actBtn, body:not(.touch) #atkBtn, body:not(.touch) .joy{display:none}
 #dpad{position:absolute;left:calc(env(safe-area-inset-left,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 44px);width:150px;height:150px;display:none;touch-action:none;z-index:3}
 body.touch.padmode #dpad{display:block} body.padmode .joy{display:none!important} body.intro #dpad{display:none!important}
 #dpad i{position:absolute;width:50px;height:50px;background:rgba(43,33,60,.72);border:3px solid rgba(255,241,214,.45);border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
@@ -150,7 +162,7 @@ body.touch.padmode #dpad{display:block} body.padmode .joy{display:none!important
 #dpad .l::after{border-right:12px solid #fff1d6;border-left:0;margin-left:-3px}#dpad .r::after{border-left:12px solid #fff1d6;border-right:0;margin-left:3px}
 #dpad b{position:absolute;left:56px;top:56px;width:38px;height:38px;border-radius:50%;background:rgba(43,33,60,.6)}
 #dpad i.on{background:rgba(255,200,97,.55);border-color:var(--amber)}
-body.intro #hud, body.intro #hotbar, body.intro #actBtn, body.intro .joy, body.intro #pcHint, body.intro #toasts{display:none}
+body.intro #hud, body.intro #hotbar, body.intro #actBtn, body.intro #atkBtn, body.intro #toolRow, body.intro .joy, body.intro #pcHint, body.intro #toasts{display:none}
 #pcHint{position:absolute;left:14px;bottom:calc(var(--slotS) + 44px);font-size:13px;color:var(--muted);background:rgba(27,20,38,.75);border-radius:12px;padding:8px 12px;line-height:1.6;max-width:260px}
 body.touch #pcHint{display:none}
 @media (max-width:900px){#pcHint{display:none}}
@@ -297,5 +309,14 @@ body.touch #pcHint{display:none}
 .skslots .btn{min-height:38px;padding:0 12px;font-size:14px}
 #title .ver{font-size:12px;color:var(--muted)}
 #fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:24px;color:var(--rose);text-align:center;padding:20px}
-@media (max-height:520px){:root{--slotS:44px}.side{grid-auto-flow:column}.goal{max-width:46vw;padding:4px 10px 5px;font-size:14px}.bars{gap:4px}.bar{padding:1px 8px 1px 2px;border-radius:12px}.bar img,.bar .lv{width:22px;height:22px}.bar span{font-size:13px}}
+@media (max-height:520px){:root{--slotS:44px}.side{grid-auto-flow:column}.goal{max-width:46vw;padding:4px 10px 5px;font-size:14px}.bars{gap:4px}.bar{padding:1px 8px 1px 2px;border-radius:12px}.bar img,.bar .lv{width:22px;height:22px}.bar span{font-size:13px}#atkBtn{width:88px;height:88px;bottom:calc(var(--slotS) + 22px)}#actBtn{width:88px;height:88px;right:112px;bottom:calc(var(--slotS) + 96px)}#actBtn img,#atkBtn img{width:34px;height:34px}#skBar{right:112px;bottom:calc(var(--slotS) + 40px);flex-direction:row-reverse}.skb{width:50px;height:50px}#altWrap{right:208px;bottom:calc(var(--slotS) + 120px)}#subBtn{width:52px;height:52px}}
 @media (prefers-reduced-motion:reduce){.toast,.sheet{animation:none}.fill{transition:none}}
+
+/* v65 tool slot + tool row */
+.slot.tslot{border-color:#7fe0b5;border-style:dashed}
+.slot.tslot.sel{border-style:solid}
+.slot.tslot .tup{position:absolute;left:50%;top:-2px;transform:translateX(-50%);font-size:9px;color:#7fe0b5;line-height:1}
+.slot .tnone,#toolRow .tnone{font-size:12px;color:var(--muted);padding:0 6px}
+#toolRow{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 34px);display:flex;gap:8px;padding:8px;background:rgba(27,20,38,.94);border:2px solid #7fe0b5;border-radius:18px;z-index:4;max-width:calc(100vw - 16px);overflow-x:auto}
+#toolRow[hidden]{display:none}
+#toolRow .slot{flex:none}

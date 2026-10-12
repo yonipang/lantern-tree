@@ -30,12 +30,12 @@ def test_core_play():
             # ---------- B. functional (mobile) ----------
             ctx,pg,errs=await new_ctx(b,390,844,True)
             CX,CY=100,100
-            r=await ev(pg,"()=>[__T.G.sel, __T.G.inv.filter(x=>x).map(s=>s.id).join(','), !!document.querySelector('#toolbelt'), __T.G.equip.weapon&&__T.G.equip.weapon.id]")
-            rec('되돌림','시작 아이템: 베리·씨앗·나무 검(단축칸 3번, v48) + 가방에 나무 곡괭이, 빈손(4번 칸)으로 시작, 도구 칸 없음', r[0]==3 and r[1]=='berry,berrySeed,swordWood,pickWood' and r[3] is None and not r[2], str(r))
-            recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/^axeWood$|rodCrystal/.test(k)||__T.ITEMS[k].kind==='axe').join(',')")
-            rec('되돌림','도구 도끼·수정 낚싯대 항목 제거됨 (도끼는 v42에서 무기로 다시 생김, 구리 낫은 v33)', recipes=='', recipes or '-')
+            r=await ev(pg,"()=>[__T.G.sel, __T.G.inv.filter(x=>x).map(s=>s.id).join(','), !!document.querySelector('#toolbelt'), __T.G.equip.weapon&&__T.G.equip.weapon.id, __T.G.tools.map(s=>s.id).join(',')]")
+            rec('되돌림','시작 아이템: 베리·씨앗·나무 검(단축칸 3번) + 도구 주머니에 나무 곡괭이를 든 채(v65 도구 칸) 시작', r[0]==-1 and r[1]=='berry,berrySeed,swordWood' and r[3] is None and not r[2] and r[4]=='pickWood', str(r))
+            recipes=await ev(pg,"()=>Object.keys(__T.ITEMS).filter(k=>/^axeWood$|rodCrystal/.test(k)).join(',')")
+            rec('되돌림','옛 나무 도끼·수정 낚싯대 항목 제거됨 (도끼는 v42에 돌·구리·철 도끼로, v65에 도구로)', recipes=='', recipes or '-')
             # bare hand chop
-            await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&s.id==='pickWood'?null:s)}")
+            await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&s.id==='pickWood'?null:s);G.tools=G.tools.filter(s=>s.id!=='pickWood');G.sel=5}")
             await stand(pg,CX+6.5,CY-0.4,1,0)
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().icon]")
             rec('맨손 채집','곡괭이 없이 뿌리기둥 → 베기 가능', r==['chop','hand'], str(r))
@@ -54,8 +54,8 @@ def test_core_play():
             await tap(pg,1)
             d2=await ev(pg,f"()=>__T.G.wdmg.get(__T.idx({wall[0]},{wall[1]}))||0")
             rec('도구 강화','나무 곡괭이는 맨손의 2배, 구리 곡괭이는 4배 피해 (자동 적용)', d1==1 and d2==2, f'맨손 0.5 / 나무 {d1} / 구리 {d2}')
-            rec('도구 강화','단축칸에서 고르지 않아도 가방의 가장 좋은 곡괭이 사용', await ev(pg,"()=>__T.bestPick().id")=='pickCopper' and await ev(pg,"()=>{const s=__T.G.inv[__T.G.sel];return !s||!/^pick/.test(s.id)}"), '')
-            await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&/^pick/.test(s.id)?null:s)}")
+            rec('도구 강화','고르지 않아도 도구 주머니의 가장 좋은 곡괭이를 꺼내 들고 캠 (v65)', await ev(pg,"()=>__T.bestPick().id")=='pickCopper' and await ev(pg,"()=>__T.G.sel===-1&&__T.G.tools[__T.G.tsel].id==='pickCopper'"), '')
+            await ev(pg,"()=>{const G=__T.G;G.inv=G.inv.map(s=>s&&/^pick/.test(s.id)?null:s);G.tools=G.tools.filter(s=>!/^pick/.test(s.id));G.sel=5}")
             await ev(pg,f"()=>{{__T.G.wall[__T.idx({wall[0]},{wall[1]})]=2;__T.G.wdmg.clear()}}"); await tap(pg,1)
             rec('도구 강화','돌벽은 맨손으로 안 캐짐(구리 곡괭이 필요 안내)', not await ev(pg,f"()=>__T.G.wdmg.get(__T.idx({wall[0]},{wall[1]}))"), '')
             await ev(pg,"()=>{__T.addItem('pickWood',1)}")
@@ -73,8 +73,9 @@ def test_core_play():
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
             rec('낚시','낚싯대 없이 물 → 안내', r==['info','낚싯대 필요'], str(r))
             await ev(pg,"()=>{__T.addItem('rod',1)}"); await stand(pg,CX+2.5,CY-3.6,1,0)
-            rec('낚시','낚싯대가 가방에 있으면 바로 낚시(고를 필요 없음)', await ev(pg,"()=>__T.decide().k")=='fish', '')
-            await tap(pg,1)
+            rec('낚시','v65: 낚싯대는 들어서 써요 — 물가에서 작은 버튼이 [낚시]', await ev(pg,"()=>[__T.decide().k,(__T.G.alts||[]).map(a=>a.k).join(',')]")==['info','fish'], '')
+            await pg.wait_for_timeout(150); await pg.tap('#subBtn'); await pg.wait_for_timeout(200)
+            rec('낚시','작은 버튼을 누르면 낚싯대를 꺼내 들고 찌를 던짐', await ev(pg,"()=>!!__T.G.fish&&__T.G.sel===-1&&__T.G.tools[__T.G.tsel].id==='rod'"), '')
             caught=False
             for _ in range(80):
                 if await ev(pg,"()=>__T.G.fish&&__T.G.fish.st==='bite'"):
@@ -83,7 +84,7 @@ def test_core_play():
             rec('낚시','입질 때 당기면 물고기 획득', caught and await ev(pg,"()=>__T.G.stats.fishCaught>=1"), '')
             # interactions + sub pickup
             await stand(pg,CX-0.5,CY+3.6,-1,0)
-            r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl,!!__T.decide().sub]")
+            r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl,(__T.G.alts||[]).some(a=>a.k==='pickup')]")
             await pg.wait_for_timeout(100)
             rec('상호작용','탁자 → 큰 버튼 [차 마시기], 회수 버튼 표시', r==['use','차 마시기',True] and await ev(pg,"()=>!document.querySelector('#subBtn').hidden"), str(r))
             await pg.tap('#subBtn'); await pg.wait_for_timeout(250)
@@ -115,10 +116,10 @@ def test_core_play():
             s1=await ev(pg,"()=>{__T.G.look={hair:'curly',hc:3,eye:1,outfit:'robe',oc:2,hat:'ribbon'};__T.G.char='custom';const s=JSON.stringify(__T.serialize());__T.deserialize(JSON.parse(s));return __T.G.look.hair+__T.G.char}")
             rec('저장','꾸민 모습 저장/불러오기 유지', s1=='curlycustom', str(s1))
             await ev(pg,"()=>{__T.G.objs.set(__T.idx(110,110),{t:'chest',items:[{id:'wood',c:1}].concat(Array(17).fill(null))})}"); await stand(pg,109.5,110.5,1,0)
-            r=await ev(pg,"()=>[__T.decide().k,!!__T.decide().sub]")
+            r=await ev(pg,"()=>[__T.decide().k,(__T.G.alts||[]).some(a=>a.k==='pickup')]")
             rec('상호작용','물건 든 상자 → 열기만, 회수 버튼 없음', r==['open',False], str(r))
             await ev(pg,"()=>{__T.G.objs.set(__T.idx(110,110),{t:'bench'})}")
-            r=await ev(pg,"()=>[__T.decide().k,!!__T.decide().sub]")
+            r=await ev(pg,"()=>[__T.decide().k,(__T.G.alts||[]).some(a=>a.k==='pickup')]")
             rec('상호작용','작업대 → 열기 + 회수 버튼', r==['open',True], str(r))
             # crafting list order and format
             await ev(pg,"()=>{__T.addItem('wood',14);__T.addItem('fiber',6);__T.addItem('rope',2);__T.addItem('gel',2)}")
@@ -142,7 +143,7 @@ def test_core_play():
                 mkpage(src,'old_'+name[:2]+'.html',hook)
                 p2=await ctx.new_page(); await p2.goto(URL+'old_'+name[:2]+'.html'); await p2.wait_for_timeout(300); await p2.click("#btnNew"); await p2.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await p2.wait_for_timeout(300)
                 old=await p2.evaluate("()=>{const G=__T.G;try{G.sel=G.sel}catch(e){};return JSON.stringify(__T.serialize())}"); await p2.close()
-                r=await ev(pg,"(s)=>{__T.deserialize(JSON.parse(s));const G=__T.G;return [G.sel, G.inv.filter(x=>x).map(x=>x.id).concat(G.equip.weapon?[G.equip.weapon.id]:[]).join(','), [...G.objs.values()].every(o=>__T.OBJ[o.t])]}", old)
+                r=await ev(pg,"(s)=>{__T.deserialize(JSON.parse(s));const G=__T.G;return [G.sel, G.inv.concat(G.tools).filter(x=>x).map(x=>x.id).concat(G.equip.weapon?[G.equip.weapon.id]:[]).join(','), [...G.objs.values()].every(o=>__T.OBJ[o.t])]}", old)
                 await pg.wait_for_timeout(600)
                 rec('저장',f'{name} 세이브 불러오기 정상', r[0]<9 and all(i in r[1] for i in ['pickWood','swordWood']) and 'axe' not in r[1] and 'sickle' not in r[1] and r[2] and not errs, str(r[:2]))
             await ev(pg,"()=>{const T=__T;T.deserialize(JSON.parse(JSON.stringify(T.serialize())))}")
@@ -152,7 +153,7 @@ def test_core_play():
                 st=await ev(pg,f"()=>__T.G.bosses.{bk}.st")
                 for _ in range(8):
                     await ev(pg,f"()=>{{const G=__T.G,b=G.bosses.{bk};b.hp=Math.min(b.hp,3);b.z=0;b.air=0;G.p.hp=100;G.p.x=b.x;G.p.y=b.y+1.3;G.p.face={{x:0,y:-1}}}}")
-                    await tap(pg,1,250)
+                    await atk(pg,1,250)
                     if await ev(pg,f"()=>__T.G.bossDead.{bk}"): break
                 rec('회귀',f'보스 {bk} 깨어남·처치', st=='fight' and await ev(pg,f"()=>__T.G.bossDead.{bk}"), st)
             await ev(pg,f"()=>{{const G=__T.G;G.objs.set(__T.idx({CX-6},{CY+6}),{{t:'bed'}});G.spawnPt={{x:{CX-6},y:{CY+6}}};G.wall[__T.idx({CX-6},{CY+7})]=0;G.objs.delete(__T.idx({CX-6},{CY+7}));G.p.hp=1;G.p.inv=0;G.p.hunger=0}}")
@@ -228,7 +229,7 @@ def test_walk_over():
             # standing on a rug / torch must NOT trigger pickup of the thing underfoot
             await setup("{t:'rug'}","G.p.x=110.5;G.p.y=110.5;G.p.face={x:1,y:0};G.sel=5")
             await pg.wait_for_timeout(120)
-            rec('밟고 선 채 채집','러그 위에 서 있어도 러그를 회수하지 않음', await ev(pg,"()=>__T.decide().k")=='swing', await ev(pg,"()=>__T.decide().k"))
+            rec('밟고 선 채 채집','러그 위에 서 있어도 러그를 회수하지 않음', await ev(pg,"()=>__T.decide().k")=='none', await ev(pg,"()=>__T.decide().k"))
             # visual: player on grass at several sub-positions
             shots=[]
             for k,(px,py) in enumerate([(110.5,110.3),(110.5,110.6),(110.5,110.95),(110.5,111.1)]):
@@ -242,45 +243,47 @@ def test_walk_over():
 
 def test_held_item_actions():
     import asyncio, sys
-    # v48: 손에 든 물건의 일만 함 (가구=놓기, 삽=파기, 무기=공격 …), 빈손이면 예전처럼 다 함 / 장비의 무기 칸 없앰 → 든 무기가 무기
-    H2=HOOK.replace("computeLight}","computeLight,curWeapon,holdMode,newGame,RECIPES,EQ_SLOTS,get panel(){return panel},renderPanel,HOT}")
+    # v65: 상호작용 버튼은 일부러 든 물건을 먼저 쓰고(쓸 곳이 있을 때), 아니면 앞에 있는 것에 맞춰 자동 추천. 공격은 따로(칼 버튼)
+    # (v48의 「든 물건의 일만」에서 바뀜) / 장비의 무기 칸 없음
+    H2=HOOK.replace("computeLight}","computeLight,curWeapon,holdMode,newGame,RECIPES,EQ_SLOTS,get panel(){return panel},renderPanel,HOT,selItem}")
     CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+22;y++)for(let x=T.CX+2;x<T.CX+22;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i);G.biome[i]=0}
   G.enemies.length=0;G.drops.length=0;G.wild=[];G.petE=null;G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;G.fish=null;G.inv.fill(null);G.sel=0;return [T.CX+9,T.CY+8]};
   window.__en=()=>{const G=__T.G;G.enemies.push({k:'slimeG',x:G.p.x-.9,y:G.p.y,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0})};
   window.__put=(t,o)=>{const T=__T;T.G.objs.set(T.idx(T.CX+9,T.CY+8),Object.assign({t},o||{}))};
-  window.__d=()=>{const a=__T.decide();return a.k+':'+a.lbl};"""
+  window.__d=()=>{const a=__T.decide();return a.k+':'+a.lbl};
+  window.__alts=()=>(__T.G.alts||[]).map(a=>a.k).join(',');"""
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             await ev(pg,"()=>{"+CLEAR+"}")
             # building first
-            r=await ev(pg,"""()=>{const G=__T.G;__clear();G.inv[0]={id:'torch',c:5};const a=__d();__en();const b2=__d();__put('chest',{items:Array(16).fill(null)});const c=__T.decide();G.enemies.length=0;return [a,b2,c.k,c.lbl,!!c.sub]}""")
-            rec('손에 든 것','가구를 들면 놓기가 먼저 (적이 붙어도), 상자 앞이면 열지 않고 [자리 있음] + 작은 [회수]', r==['place:놓기','place:놓기','info','자리 있음',True], str(r))
+            r=await ev(pg,"""()=>{const G=__T.G;__clear();G.inv[0]={id:'torch',c:5};const a=__d();__en();const b2=__d();__put('chest',{items:Array(16).fill(null)});const c=__T.decide();G.enemies.length=0;return [a,b2,c.k,c.lbl,__alts()]}""")
+            rec('손에 든 것','가구를 들면 놓기가 먼저 (적이 붙어도), 놓을 수 없는 상자 앞이면 열기 + 작은 [회수]', r==['place:놓기','place:놓기','open','열기','pickup'], str(r))
             r=await ev(pg,"""()=>{const G=__T.G;__clear();G.inv[0]={id:'berrySeed',c:5};const a=__d();__put('cropBerry',{p:G.time-99999});const b2=__d();__put('chest',{items:Array(16).fill(null)});const c=__d();return [a,b2,c]}""")
-            rec('손에 든 것','씨앗: 심기, 다 자란 작물은 거두기(다시 심으려고), 상자는 안 열림', r[0]=='place:심기' and r[1]=='harvest:수확' and r[2].startswith('info:'), str(r))
+            rec('손에 든 것','씨앗: 심기, 다 자란 작물은 거두기(다시 심으려고), 상자 앞이면 열기', r==['place:심기','harvest:수확','open:열기'], str(r))
             # shovel first
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'shovel',c:1,dur:250};G.floor[T.idx(T.CX+9,T.CY+8)]=6;const a=__d();__en();const b2=__d();G.enemies.length=0;
           __put('bush');const c=__d();__put('chest',{items:Array(16).fill(null)});const d=__d();__put('bench');const e=__d();G.objs.delete(T.idx(T.CX+9,T.CY+8));G.wall[T.idx(T.CX+9,T.CY+8)]=1;const f=__d();G.wall[T.idx(T.CX+9,T.CY+8)]=0;return [a,b2,c,d,e,f]}""")
-            rec('손에 든 것','삽을 들면 파기가 먼저 (적이 붙어도), 덤불은 퍼내기, 상자·작업대·벽 앞에서는 열기·캐기 대신 안내', r[0]=='dig:걷기' and r[1]=='dig:걷기' and r[2]=='dig:퍼내기' and all(x.startswith('info:') for x in r[3:]), str(r))
+            rec('손에 든 것','삽을 들면 파기가 먼저 (적이 붙어도), 덤불은 퍼내기, 상자·작업대는 열기, 벽은 곡괭이로 캐기', r==['dig:걷기','dig:걷기','dig:퍼내기','open:열기','open:열기','mine:캐기'], str(r))
             # food / wear / tools
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'berry',c:3};__put('chest',{items:Array(16).fill(null)});const a=__d();__en();const b2=__d();G.enemies.length=0;
-          G.inv[0]={id:'wcan',c:1,w:0};const c=__d();G.inv[0]={id:'rod',c:1,dur:150};const d=__d();G.inv[0]={id:'lasso',c:1};const e=__d();return [a,b2,c,d,e]}""")
-            rec('손에 든 것','음식은 먹기만, 물뿌리개·낚싯대·올가미는 상자 앞에서도 열지 않고 안내', r[0]=='eat:먹기' and r[1]=='eat:먹기' and all(x.startswith('info:') for x in r[2:]), str(r))
+          G.inv[0]={id:'wcan',c:1,w:0};const c=__d();G.inv[0]={id:'rod',c:1,dur:150};const d=__d();G.inv[0]={id:'lasso',c:1};const e=__d();G.objs.delete(T.idx(T.CX+9,T.CY+8));G.inv[0]={id:'berry',c:3};const f=__d();return [a,b2,c,d,e,f]}""")
+            rec('손에 든 것','음식: 앞에 상자가 있으면 열기(먹기는 작은 버튼), 아무것도 없으면 먹기 / 물뿌리개·낚싯대·올가미를 들어도 상자는 열림', r==['open:열기','open:열기','open:열기','open:열기','open:열기','eat:먹기'], str(r))
             # weapon held
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'swordCopper',c:1};G.inv[12]={id:'pickCopper',c:1};const t=T.idx(T.CX+9,T.CY+8);G.wall[t]=1;const a=__d();G.wall[t]=0;
           __put('chest',{items:Array(16).fill(null)});const b2=__d();__en();const c=__d();G.enemies.length=0;G.objs.delete(t);return [a,b2,c,T.curWeapon().id]}""")
-            rec('손에 든 것','무기를 들면 싸우기만: 벽·상자 앞에서도 휘두르기, 적이 오면 공격 (그 무기로)', r==['swing:휘두르기','swing:휘두르기','attack:공격','swordCopper'], str(r))
+            rec('손에 든 것','무기를 들어도 상호작용은 그대로: 벽은 캐기, 상자는 열기 (적이 와도), 공격 버튼은 든 무기', r==['mine:캐기','open:열기','open:열기','swordCopper'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'axeStone',c:1};__put('root');const a=__T.decide();G.objs.delete(T.idx(T.CX+9,T.CY+8));return [a.k,a.lbl]}""")
             rec('손에 든 것','도끼를 들면 나무는 벨 수 있음', r==['chop','베기'], str(r))
             # pick held
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'pickWood',c:1};G.inv[12]={id:'pickCopper',c:1};const t=T.idx(T.CX+9,T.CY+8);G.wall[t]=1;const a=T.decide();__en();const b2=__d();G.wall[t]=0;const c=__d();G.enemies.length=0;
           __put('chest',{items:Array(16).fill(null)});const d=__d();G.objs.delete(t);const pk=T.bestPick().id;G.sel=1;const pk2=T.bestPick().id;return [a.k,a.icon,b2,c,d,pk,pk2]}""")
-            rec('손에 든 것','곡괭이를 들면 그 곡괭이로 캐기 (앞에 벽이 있으면 적보다 먼저), 상자는 안 열림 / 빈손이면 가방 속 가장 좋은 곡괭이', r[0:3]==['mine','pickWood','mine:캐기'] and r[3]=='attack:공격' and r[4].startswith('swing') and r[5:]==['pickWood','pickCopper'], str(r))
+            rec('손에 든 것','곡괭이를 들면 그 곡괭이로 캐기 (적이 와도), 앞이 비면 안내, 상자는 열기 / 안 들면 가장 좋은 곡괭이', r==['mine','pickWood','mine:캐기','info:캐기','open:열기','pickWood','pickCopper'], str(r))
             # empty hand / material
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[12]={id:'swordIron',c:1};G.inv[13]={id:'pickCopper',c:1};G.sel=0;__put('chest',{items:Array(16).fill(null)});const a=__d();G.inv[0]={id:'stone',c:9};const b2=__d();
           G.objs.delete(T.idx(T.CX+9,T.CY+8));G.wall[T.idx(T.CX+9,T.CY+8)]=1;const c=T.decide();G.wall[T.idx(T.CX+9,T.CY+8)]=0;__en();const d=__d();const w=T.curWeapon().id;G.enemies.length=0;return [a,b2,c.k+':'+c.icon,d,w,T.holdMode(T.ITEMS.stone)]}""")
-            rec('빈손','빈손·재료를 들면 예전처럼: 상자 열기, 가방 속 좋은 곡괭이로 캐기, 적은 주먹으로 (가방 속 무기는 안 씀)', r==['open:열기','open:열기','mine:pickCopper','attack:공격','hand','hand'], str(r))
+            rec('빈손','빈손·재료: 상자 열기, 가장 좋은 곡괭이로 캐기, 앞이 비면 할 일 없음 / 무기를 안 들면 공격 버튼은 가방의 가장 센 무기', r==['open:열기','open:열기','mine:pickCopper','none:…','swordIron','hand'], str(r))
             # equipment without the weapon slot
             await ev(pg,"()=>{const G=__T.G;__clear();G.inv[0]={id:'swordCopper',c:1};G.inv[12]={id:'woolHat',c:1};G.sel=0;G.pets={dog:1};G.petOn='dog';__T.openPanel('equip')}"); await pg.wait_for_timeout(600)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [__T.panel.kind,__T.EQ_SLOTS.map(x=>x[0]).join(','),'weapon' in __T.G.equip,t.includes('무기 칸'),document.querySelectorAll('#sheet [data-a=eqSlot]').length,!!(document.querySelector('#sheet .eq2').compareDocumentPosition(document.querySelector('#sheet [data-a=inv]'))&4),t.includes('멍멍이 · 함께 다니는 중'),!!document.querySelector('#bEquip')]}")
@@ -304,16 +307,226 @@ def test_held_item_actions():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));s.inv=s.inv.map((x,i)=>i<9?{id:'stone',c:5}:x);s.equip={weapon:{id:'swordCopper',c:1}};T.deserialize(s);const k=T.G.inv.findIndex(x=>x&&x.id==='swordCopper');return [k>=9]}""")
             rec('옛 세이브','단축칸이 가득하면 가방으로', r==[True], str(r))
             # new game & first weapon
-            r=await ev(pg,"""()=>{const T=__T;T.newGame(321);const G=T.G;return [G.sel,G.inv.slice(0,4).map(x=>x?x.id:'-').join(','),G.inv.slice(T.HOT).filter(Boolean).map(x=>x.id).join(','),T.curWeapon().id,T.holdMode(G.inv[G.sel]&&T.ITEMS[G.inv[G.sel].id])]}""")
-            rec('새 게임','빈손으로 시작, 나무 검은 단축칸 3번, 나무 곡괭이는 가방', r==[3,'berry,berrySeed,swordWood,-','pickWood','hand','hand'], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'berry',c:1};T.addItem('swordCopper',1);const a=G.inv.findIndex(x=>x&&x.id==='swordCopper');T.addItem('swordIron',1);const b2=G.inv.findIndex(x=>x&&x.id==='swordIron');return [a,b2>=T.HOT]}""")
-            rec('무기','단축칸에 무기가 없을 때 얻은 무기는 빈 단축칸으로 (이미 있으면 가방)', r==[1,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T;T.newGame(321);const G=T.G;return [G.sel,G.inv.slice(0,4).map(x=>x?x.id:'-').join(','),G.inv.slice(T.HOT).filter(Boolean).map(x=>x.id).join(','),G.tools.map(x=>x.id).join(','),T.curWeapon().id,T.selItem().id]}""")
+            rec('새 게임','v65: 도구 칸에 나무 곡괭이를 든 채 시작, 나무 검은 단축칸 3번, 가방은 비어 있음', r==[-1,'berry,berrySeed,swordWood,-','','pickWood','swordWood','pickWood'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'berry',c:1};T.addItem('swordCopper',1);const a=G.inv.findIndex(x=>x&&x.id==='swordCopper');T.addItem('swordIron',1);const b2=G.inv.findIndex(x=>x&&x.id==='swordIron');return [a,b2]}""")
+            rec('무기','v65: 새로 얻은 물건은 빈 단축칸부터 (무기도)', r==[1,2], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.inv[12]={id:'swordIron',c:1};G.sel=0;const a=T.curWeapon().id;G.sel=1;return [a,T.curWeapon().id]}""")
-            rec('무기','든 활이 무기, 다른 칸을 고르면 주먹', r==['bowWood','hand'], str(r))
+            rec('무기','든 활이 무기, 다른 칸을 고르면 가방의 가장 센 무기 (마지막 무기가 없으니)', r==['bowWood','swordIron'], str(r))
             await ev(pg,"()=>{__clear();const G=__T.G;G.inv[0]={id:'swordCopper',c:1};G.inv[1]={id:'shovel',c:1};G.inv[2]={id:'torch',c:4};G.sel=2;__put('chest',{items:Array(16).fill(null)})}"); await pg.wait_for_timeout(500)
             await pg.screenshot(path=SP+'hold.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_tool_pouch():
+    import asyncio, sys
+    # v65: 도구(곡괭이·도끼·낫·삽·물뿌리개·낚싯대·올가미)는 가방 칸을 쓰지 않는 도구 주머니에. 단축칸 맨 앞 도구 칸에서 골라 들어요
+    H2=HOOK.replace("computeLight}","computeLight,holdTool,bestTool,toolRowList,toolSlotClick,heldTool,perform,selItem,newGame,refreshHotbar,curWeapon}")
+    CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+22;y++)for(let x=T.CX+2;x<T.CX+22;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i);G.biome[i]=0}
+  G.enemies.length=0;G.drops.length=0;G.wild=[];G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;G.fish=null;G.inv.fill(null);G.tools=[];G.tsel=0;G.tHand=false;G.sel=0;return T.idx(T.CX+9,T.CY+8)};"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{"+CLEAR+"}")
+            r=await ev(pg,"()=>{const G=__T.G,s=document.querySelector('#hbSlots').children[0];return [G.tools.map(x=>x.id).join(','),G.sel,__T.heldTool()&&__T.heldTool().id,s.classList.contains('tslot'),s.classList.contains('sel'),!!s.querySelector('img'),G.inv.some(x=>x&&x.id==='pickWood')]}")
+            rec('도구 칸','새 게임: 단축칸 맨 앞 도구 칸에 나무 곡괭이를 든 채 시작 (가방에는 없음)', r==['pickWood',-1,'pickWood',True,True,True,False], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'berry',c:2};const n0=G.inv.filter(Boolean).length;['pickCopper','axeStone','shovel','wcan','rod','lasso','sickle'].forEach(i=>T.addItem(i,1));return [G.inv.filter(Boolean).length-n0,G.tools.length,T.countItem('shovel')]}")
+            rec('도구 주머니','도구를 얻으면 주머니로 (가방·단축칸 칸을 쓰지 않음, 개수는 그대로 셈)', r==[0,7,1], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;G.tools.push({id:'pickWood',c:1,dur:200},{id:'pickIron',c:1,dur:0},{id:'shovel',c:1,dur:3});return T.toolRowList().map(x=>x.id+(x.dur!=null?':'+x.dur:'')).join(',')}")
+            rec('도구 줄','종류별로 가장 좋은 것 하나씩, 망가진 건 안 보임', r.split(',')[0].startswith('pickCopper') and 'pickIron' not in r and r.count('shovel')==1 and 'shovel:3' not in r and len(r.split(','))==7, r)
+            # tap the tool slot → row opens → pick one
+            await ev(pg,"()=>{__T.G.sel=0;__T.refreshHotbar()}"); await pg.wait_for_timeout(150)
+            await pg.tap('#hbSlots .tslot'); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>{const e=document.querySelector('#toolRow');return [__T.G.sel,!!e&&!e.hidden,e?e.querySelectorAll('[data-tk]').length:0]}")
+            rec('도구 줄','도구 칸을 누르면 도구를 들고 위로 도구 줄이 펼쳐짐', r==[-1,True,7], str(r))
+            await pg.screenshot(path=SP+'tool_row.png')
+            k=await ev(pg,"()=>__T.G.tools.findIndex(x=>x.id==='shovel'&&x.dur!==3)")
+            await pg.tap(f'#toolRow [data-tk="{k}"]'); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>[__T.heldTool().id,__T.G.tHand,document.querySelector('#toolRow').hidden,document.querySelector('#hbSlots .tslot img').src===__T.ITEMS&&0]")
+            rec('도구 줄','줄에서 고르면 그 도구를 들고 줄이 닫힘', r[:3]==['shovel',True,True], str(r))
+            # interact takes the right tool out by itself and keeps it in hand
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const i=__clear();['pickWood','pickCopper','axeStone','shovel'].forEach(x=>T.addItem(x,1));G.inv[0]={id:'berry',c:2};G.sel=0;G.wall[i]=1;const a=T.decide();T.perform(a);const h1=T.heldTool();G.wall[i]=0;G.objs.set(i,{t:'root'});const b2=T.decide();T.perform(b2);const h2=T.heldTool();return [a.k,a.icon,G.sel,h1&&h1.id,G.tHand,b2.k,h2&&h2.id]}")
+            rec('자동 꺼내기','벽 앞에서 누르면 가장 좋은 곡괭이를 꺼내 캐고 계속 들고 있음, 나무 앞이면 도끼로 바꿔 듦', r==['mine','pickCopper',-1,'pickCopper',False,'chop','axeStone'], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const i=T.idx(T.CX+9,T.CY+8);G.objs.delete(i);G.wall[i]=1;T.holdTool(G.tools.find(x=>x.id==='pickWood'),true);const a=T.decide();G.wall[i]=0;return [a.k,a.icon,T.bestPick().id]}")
+            rec('일부러 든 도구','도구 줄에서 고른 곡괭이는 더 좋은 게 있어도 그걸로 캐기', r==['mine','pickWood','pickWood'], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;T.addItem('swordCopper',1);T.holdTool(G.tools.find(x=>x.id==='axeStone'),true);return [T.curWeapon().id,T.ITEMS.axeStone.kind,T.ITEMS.axeStone.dmg==null]}")
+            rec('도끼','도끼는 도구: 들고 있어도 공격은 무기로 (도끼로 공격하지 않음)', r==['swordCopper','axe',True], str(r))
+            # the bag shows the pouch
+            await ev(pg,"()=>__T.openPanel('inv')"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>[document.querySelectorAll('#sheet [data-a=pouch]').length,__T.G.tools.length,document.querySelector('#sheet').innerText.includes('도구 주머니')]")
+            rec('가방','가방 창에 도구 주머니가 보임', r[0]==r[1] and r[0]>0 and r[2], str(r))
+            await ev(pg,"()=>{const k=__T.G.tools.findIndex(x=>x.id==='pickWood');document.querySelector(`#sheet [data-a=pouch][data-i=\"${k}\"]`).click()}"); await pg.wait_for_timeout(250)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=holdTool]').click()"); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>[__T.heldTool().id,__T.G.tHand]"); rec('가방','주머니에서 골라 [들기]', r==['pickWood',True], str(r))
+            await pg.screenshot(path=SP+'pouch.png'); await ev(pg,"()=>__T.closePanel()")
+            # a tool that lands in the bag (e.g. from a chest) moves to the pouch
+            r=await ev(pg,"()=>{const T=__T,G=T.G;G.inv[20]={id:'sickle',c:1};const n=G.tools.length;T.refreshHotbar();return [G.inv[20],G.tools.length-n]}")
+            rec('도구 주머니','가방에 들어온 도구는 주머니로 옮겨짐', r==[None,1], str(r))
+            # save
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const ids=G.tools.map(x=>x.id).join(','),h=T.heldTool().id;G.lastW='swordCopper';T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const G2=T.G;return [G2.tools.map(x=>x.id).join(',')===ids,T.heldTool()&&T.heldTool().id===h,G2.tHand,G2.lastW,G2.sel]}")
+            rec('저장','도구 주머니·든 도구·마지막 무기가 저장됨', r==[True,True,True,'swordCopper',-1], str(r))
+            rec('기능','콘솔 오류 없음 (모바일)', not errs, errs[:3]); await ctx.close()
+            # PC: Tab
+            ctx,pg,errs=await new_ctx(b,1280,800,False)
+            await ev(pg,"()=>{__T.G.sel=1}")
+            await pg.keyboard.press('Tab'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const e=document.querySelector('#toolRow');return [__T.G.sel,!!e&&!e.hidden]}")
+            rec('PC','Tab: 도구 칸을 들고 도구 줄 열기', r==[-1,True], str(r))
+            await pg.keyboard.press('Tab'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>document.querySelector('#toolRow').hidden"); rec('PC','Tab 한 번 더: 도구 줄 닫기', r, r)
+            rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_attack_button():
+    import asyncio, sys
+    # v65: 공격 버튼(칼)은 늘 공격. 든 무기 → 마지막에 쓴 무기 → 가장 센 무기 → 주먹. 가까운 몬스터를 스스로 조준
+    H2=HOOK.replace("computeLight}","computeLight,doAttack,curWeapon,holdTool,heldTool,mkEnemy,refreshHotbar}")
+    CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+22;y++)for(let x=T.CX+2;x<T.CX+22;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i);G.biome[i]=0}
+  G.enemies.length=0;G.drops.length=0;G.pshots.length=0;G.wild=[];G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;G.fish=null;G.inv.fill(null);G.sel=0;G.p.mp=40};
+  window.__en=(dx,dy)=>{const G=__T.G;const e=__T.mkEnemy('slimeG',G.p.x+dx,G.p.y+dy);e.hp=999;e.cd=99;G.enemies.push(e);return e};"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{"+CLEAR+"}")
+            r=await ev(pg,"()=>{const b=document.querySelector('#atkBtn');const cs=getComputedStyle(b);return [__T.G.lastW,__T.curWeapon().id,cs.display!=='none',b.dataset.w]}")
+            rec('공격 버튼','새 게임: 나무 곡괭이를 들어도 공격 버튼은 나무 검 (버튼에 무기 그림)', r==['swordWood','swordWood',True,'swordWood'], str(r))
+            # auto aim at the nearest monster
+            await ev(pg,"()=>{__clear();const G=__T.G;G.inv[0]={id:'swordCopper',c:1};G.sel=0;window.__e=__en(-.9,0);__en(3,0)}")
+            await atk(pg,1); r=await ev(pg,"()=>{const G=__T.G;return [G.p.face.x<0,999-__e.hp>0,G.lastW]}")
+            rec('공격 버튼','가까운 몬스터를 스스로 조준해 공격 (뒤에 있어도 돌아서 침), 마지막 무기 기억', r==[True,True,'swordCopper'], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;__clear();G.inv[0]={id:'swordCopper',c:1};G.sel=0;G.p.face={x:0,y:1};__T.doAttack();return [G.p.face.x,G.p.face.y,!!G.swing]}")
+            rec('공격 버튼','몬스터가 없으면 바라보는 방향으로 휘두름', r==[0,1,True], str(r))
+            # fallback chain
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'berry',c:2};G.inv[12]={id:'swordCopper',c:1};G.inv[13]={id:'spearIron',c:1};G.lastW='swordCopper';G.sel=0;const a=T.curWeapon().id;
+          T.holdTool(G.tools.find(x=>x.id==='pickWood')||G.tools[0],true);const a2=T.curWeapon().id;G.inv[12]=null;const b2=T.curWeapon().id;G.inv[13]=null;const c=T.curWeapon().id;G.inv[0]={id:'axeCopper',c:1};const d=T.curWeapon().id;return [a,a2,b2,c,d]}""")
+            rec('무기 고르기','안 들면 마지막 무기 → 없으면 가장 센 무기 → 없으면 주먹 (도끼는 무기가 아님)', r==['swordCopper','swordCopper','spearIron','hand','hand'], str(r))
+            await ev(pg,"()=>__T.refreshHotbar()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[document.querySelector('#atkBtn').dataset.w,document.querySelector('#atkLbl').textContent]")
+            rec('공격 버튼','무기가 없으면 버튼이 주먹으로 바뀜', r==['hand','주먹'], str(r))
+            # ranged auto aim · reach
+            r=await ev(pg,"()=>{const G=__T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.sel=0;G.p.face={x:0,y:-1};__en(0,4.5);__T.doAttack();return [G.pshots.length,G.p.face.y>0]}")
+            rec('공격 버튼','활은 사거리 안의 몬스터를 조준해 쏨', r==[1,True], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.sel=0;G.p.face={x:0,y:-1};__en(0,4.5);G.wall[__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+2)]=1;__T.doAttack();return [G.p.face.x,G.p.face.y]}")
+            rec('공격 버튼','벽 너머 몬스터는 조준하지 않음', r==[0,-1], str(r))
+            # interact never attacks
+            r=await ev(pg,"()=>{const G=__T.G;__clear();G.inv[0]={id:'swordCopper',c:1};G.sel=0;__en(.9,0);const d=__T.decide();return d.k}")
+            rec('상호작용','무기를 들고 몬스터 앞에서 눌러도 상호작용 버튼은 공격하지 않음', r!='attack' and r!='swing', r)
+            rec('기능','콘솔 오류 없음 (모바일)', not errs, errs[:3]); await ctx.close()
+            # PC: click and J
+            ctx,pg,errs=await new_ctx(b,1280,800,False)
+            await ev(pg,"()=>{"+CLEAR+"}")
+            await ev(pg,"()=>{__clear();const G=__T.G;G.inv[0]={id:'swordCopper',c:1};G.sel=0;window.__e=__en(.9,0)}")
+            await pg.keyboard.press('KeyJ'); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>999-__e.hp>0"); rec('PC','J 키로 공격', r, r)
+            await pg.wait_for_timeout(400); await ev(pg,"()=>{const G=__T.G;__e.hp=999;__e.x=G.p.x+.9;__e.y=G.p.y;__e.vx=__e.vy=__e.kx=__e.ky=0}"); await pg.mouse.click(700,400); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>999-__e.hp>0"); rec('PC','왼쪽 클릭으로 공격', r, r)
+            r=await ev(pg,"()=>getComputedStyle(document.querySelector('#atkBtn')).display"); rec('PC','PC에는 공격 버튼이 화면에 없음', r=='none', r)
+            rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_hit_to_recover():
+    import asyncio, sys
+    # v65: 몬스터가 없을 때 공격하면 앞에 놓은 가구·직접 쌓은 벽을 칠 수 있어요. 빨리 세 번 치면 바닥에 떨어져요 (주먹도 돼요, 무기는 안 닳아요)
+    H2=HOOK.replace("computeLight}","computeLight,doAttack,curWeapon,mkEnemy,breakWall}")
+    CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+22;y++)for(let x=T.CX+2;x<T.CX+22;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i);G.biome[i]=0}
+  G.enemies.length=0;G.drops.length=0;G.wild=[];G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;G.fish=null;G.inv.fill(null);G.sel=0;return T.idx(T.CX+9,T.CY+8)};
+  window.__hit=n=>{for(let k=0;k<n;k++)__T.doAttack()};window.__drop=id=>__T.G.drops.filter(d=>d.id===id).reduce((a,d)=>a+d.c,0);"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{"+CLEAR+"}")
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.inv[0]={id:'swordCopper',c:1,dur:100};G.sel=0;G.objs.set(i,{t:'chair'});__hit(2);const a=!!G.objs.get(i);__hit(1);return [a,!!G.objs.get(i),__drop('chair'),G.inv[0].dur]}")
+            rec('쳐서 회수','의자를 두 번 쳐도 그대로, 세 번째에 아이템으로 떨어짐 (무기는 안 닳음)', r==[True,False,1,100], str(r))
+            await ev(pg,"()=>{const G=__T.G,i=__clear();G.objs.set(i,{t:'bench'});__hit(1)}"); await pg.wait_for_timeout(150)
+            await pg.screenshot(path=SP+'hit_bar.png')
+            r=await ev(pg,"()=>{const G=__T.G,i=__T.idx(__T.CX+9,__T.CY+8);__hit(2);return [__T.curWeapon().id,!!G.objs.get(i),!!G.objs.get(i+1),__drop('bench')]}")
+            rec('쳐서 회수','주먹으로도 회수, 두 칸 가구(작업대)도 통째로', r==['hand',False,False,1], str(r))
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.wall[i]=6;__hit(3);const a=G.wall[i];G.wall[i]=1;__hit(3);return [a,G.wall[i]]}")
+            rec('쳐서 회수','직접 쌓은 벽은 세 번 치면 허물어짐, 자연 벽은 곡괭이로만', r==[0,1], str(r))
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();const it=Array(18).fill(null);it[0]={id:'wood',c:3};G.objs.set(i,{t:'chest',items:it});__hit(3);const a=!!G.objs.get(i);G.objs.get(i).items[0]=null;__hit(3);return [a,!!G.objs.get(i),document.querySelector('#toasts').innerText.includes('비워야')]}")
+            rec('쳐서 회수','물건이 든 상자는 안 떨어짐(안내), 비우면 떨어짐', r==[True,False,True], str(r))
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.objs.set(i,{t:'chair'});__hit(2);G.time+=3;__hit(2);return !!G.objs.get(i)}")
+            rec('쳐서 회수','천천히(2초 넘게 쉬며) 치면 처음부터 다시 셈', r is True, r)
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.objs.set(i,{t:'chair'});const e=__T.mkEnemy('slimeG',G.p.x-2.5,G.p.y);e.hp=999;e.cd=99;G.enemies.push(e);__hit(3);const a=!!G.objs.get(i);G.enemies.length=0;return a}")
+            rec('쳐서 회수','근처에 몬스터가 있으면 가구 대신 몬스터를 공격', r is True, r)
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.objs.set(i,{t:'root'});__hit(3);const a=G.objs.get(i)&&G.objs.get(i).t;G.objs.set(i,{t:'cropBerry',p:G.time});__hit(3);return [a,!!G.objs.get(i)]}")
+            rec('쳐서 회수','나무·작물 같은 자연물은 공격으로 회수되지 않음', r==['root',True], str(r))
+            # interact: recover when nothing else fits, holding the button does not recover
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.inv[0]={id:'stone',c:2};G.objs.set(i,{t:'pictureFrame'});const a=__T.decide();return [a.k,a.lbl]}")
+            rec('상호작용','다른 할 일이 없는 가구 앞: 큰 버튼이 [회수]', r[0]=='pickup', str(r))
+            await hold(pg,1200)
+            r=await ev(pg,"()=>{const G=__T.G,i=__T.idx(__T.CX+9,__T.CY+8);return [!!G.objs.get(i),__T.countItem('pictureFrame')]}")
+            rec('상호작용','꾹 누르고 있어도 회수는 한 번만 (꾹 누르기로 연달아 회수하지 않음)', r==[False,1], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_small_button_rotation():
+    import asyncio, sys
+    # v65: 작은 버튼은 한 번에 하나, 더 있으면 화살표로 넘김(PC R 실행·Q 넘김). 가구 방향은 놓기 전에만: 의자류 4방향, 나머지 2방향, 정면만 있는 건 그대로
+    H2=HOOK.replace("computeLight}","computeLight,perform,curAlt,cycleAlt,doAlt,rotN,rotatePlace,get placeRot(){return placeRot},updateCtrlHud}")
+    CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+22;y++)for(let x=T.CX+2;x<T.CX+22;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i);G.biome[i]=0}
+  G.enemies.length=0;G.drops.length=0;G.wild=[];G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;G.fish=null;G.inv.fill(null);G.sel=0;return T.idx(T.CX+9,T.CY+8)};"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{"+CLEAR+"}")
+            r=await ev(pg,"()=>['chair','sofa2','logBench','cushion','bed','bench','torch','pictureFrame','table','chest','root'].map(t=>__T.rotN(t))")
+            rec('방향','의자·소파·벤치·방석 4방향, 침대·작업대 2방향, 횃불·액자·탁자·상자·자연물은 돌리지 않음', r==[4,4,4,4,2,2,1,1,1,1,1], str(r))
+            # small button with two options
+            await ev(pg,"()=>{const G=__T.G,i=__clear();G.inv[0]={id:'berry',c:3};G.p.hunger=50;G.objs.set(i,{t:'chair'})}"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const a=__T.decide();return [a.k,(__T.G.alts||[]).map(x=>x.k).join(','),!document.querySelector('#subBtn').hidden,!document.querySelector('#altNext').hidden]}")
+            rec('작은 버튼','음식을 들고 의자 앞: 큰 버튼은 앉기, 작은 버튼 하나 + 다음 화살표 (먹기·회수)', r[0]=='use' and r[1] in ('eat,pickup','pickup,eat') and r[2] and r[3], str(r))
+            await pg.screenshot(path=SP+'small_button.png')
+            l0=await ev(pg,"()=>document.querySelector('#subLbl').textContent")
+            await pg.tap('#altNext'); await pg.wait_for_timeout(250)
+            l1=await ev(pg,"()=>document.querySelector('#subLbl').textContent")
+            rec('작은 버튼','화살표를 누르면 다음 선택지', l0!=l1 and {l0,l1}=={'먹기','회수'}, f'{l0} → {l1}')
+            if l1!='먹기': await pg.tap('#altNext'); await pg.wait_for_timeout(250)
+            n0=await ev(pg,"()=>__T.countItem('berry')"); await pg.tap('#subBtn'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[__T.countItem('berry'),!!__T.G.objs.get(__T.idx(__T.CX+9,__T.CY+8))]")
+            rec('작은 버튼','작은 버튼을 누르면 보이는 선택지를 실행 (먹기, 의자는 그대로)', r==[n0-1,True], f'{n0} {r}')
+            r=await ev(pg,"()=>{const G=__T.G,i=__clear();G.inv[0]={id:'stone',c:3};G.objs.set(i,{t:'pictureFrame'});__T.decide();return [(__T.G.alts||[]).length]}")
+            await pg.wait_for_timeout(250); r2=await ev(pg,"()=>[document.querySelector('#subBtn').hidden,document.querySelector('#altNext').hidden]")
+            rec('작은 버튼','다른 선택지가 없으면 작은 버튼도 화살표도 없음', r==[0] and r2==[True,True], str([r,r2]))
+            # rotation before placing
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=__clear();G.inv[0]={id:'chair',c:3};const a=T.decide();const alt=(G.alts||[]).find(x=>x.k==='rot');T.rotatePlace();T.rotatePlace();const pr=T.placeRot;T.perform(T.decide());const o=G.objs.get(i);return [a.k,!!alt,pr,o&&o.t,o&&o.dir]}""")
+            rec('방향','의자를 들면 작은 버튼 [방향], 두 번 돌리고 놓으면 그 방향(4방향)', r==['place',True,2,'chair',2], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=__clear();G.inv[0]={id:'bench',c:1};T.rotatePlace();T.perform(T.decide());const o=G.objs.get(i);return [o&&o.t,o&&o.dir,o&&o.rot,(G.objs.get(T.idx(T.CX+9,T.CY+9))||{}).t,!!G.objs.get(T.idx(T.CX+10,T.CY+8))]}""")
+            rec('방향','작업대(2×1)를 옆으로 돌려 놓으면 세로 1×2로 놓임', r[:3]==['bench',1,1] and r[3]=='_part' and r[4] is False, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=__clear();G.inv[0]={id:'torch',c:3};T.decide();const alt=(G.alts||[]).some(x=>x.k==='rot');T.rotatePlace();return [alt,T.placeRot||0]}""")
+            rec('방향','횃불처럼 정면만 있는 건 [방향]이 없음', r[0] is False, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=__clear();G.objs.set(i,{t:'chair',dir:3});const a=T.decide();return [(G.alts||[]).some(x=>x.k==='rot'),a.k]}""")
+            rec('방향','놓은 뒤에는 돌리지 않음 (회수 후 다시 놓기)', r[0] is False, str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G,i=T.idx(T.CX+9,T.CY+8);G.objs.set(i,{t:'chair',dir:3});const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);return T.G.objs.get(i).dir}")
+            rec('저장','놓은 방향이 저장됨', r==3, r)
+            rec('기능','콘솔 오류 없음 (모바일)', not errs, errs[:3]); await ctx.close()
+            # PC keys
+            ctx,pg,errs=await new_ctx(b,1280,800,False)
+            await ev(pg,"()=>{"+CLEAR+"}")
+            await ev(pg,"()=>{const G=__T.G,i=__clear();G.inv[0]={id:'berry',c:3};G.p.hunger=50;G.objs.set(i,{t:'chair'});__T.G.p.face={x:1,y:0}}"); await pg.wait_for_timeout(300)
+            a0=await ev(pg,"()=>__T.curAlt()&&__T.curAlt().k"); await pg.keyboard.press('KeyQ'); await pg.wait_for_timeout(200)
+            a1=await ev(pg,"()=>__T.curAlt()&&__T.curAlt().k")
+            rec('PC','Q로 다음 선택지', a0!=a1 and {a0,a1}=={'eat','pickup'}, f'{a0} → {a1}')
+            if a1!='eat': await pg.keyboard.press('KeyQ'); await pg.wait_for_timeout(200)
+            n0=await ev(pg,"()=>__T.countItem('berry')"); await pg.keyboard.press('KeyR'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>__T.countItem('berry')"); rec('PC','R로 작은 버튼 실행', r==n0-1, f'{n0}->{r}')
+            await ev(pg,"()=>{const G=__T.G,i=__clear();G.inv[0]={id:'chair',c:3};G.p.face={x:1,y:0}}"); await pg.wait_for_timeout(250)
+            await pg.keyboard.press('KeyR'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>__T.placeRot"); rec('PC','가구를 들고 R → 방향 바꾸기', r==1, r)
+            rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
@@ -367,9 +580,9 @@ def test_mouse_aim():
                 await pg.mouse.move(W-30,H*0.62); await pg.wait_for_timeout(100)  # v42: the side column has one more button (장비)
                 t=await pg.evaluate("()=>__T.decide().t")
                 await pg.screenshot(path=SP+f'far_{W}.png')
-                await pg.mouse.down(); await pg.wait_for_timeout(80); await pg.mouse.up(); await pg.wait_for_timeout(250)
+                await pg.keyboard.press('KeyE'); await pg.wait_for_timeout(250)  # v65: clicking attacks; E places where the mouse points
                 placed=await pg.evaluate(f"()=>__T.G.objs.get(__T.idx({t['x']},{t['y']}))?.t")
-                rec('마우스',f'{W}x{H} 멀리 클릭 → 표시된 칸에 정확히 설치', placed=='torch', f"{t} → {placed}")
+                rec('마우스',f'{W}x{H} 멀리 가리키고 E → 표시된 칸에 정확히 설치', placed=='torch', f"{t} → {placed}")
                 # 5) lifted wall top picks the wall
                 await pg.evaluate("()=>{const G=__T.G;G.wall[__T.idx(97,106)]=1;G.sel=G.inv.slice(0,9).findIndex(x=>!x)}")
                 info=await pg.evaluate("()=>{const T=__T.TP,V=__T.VIEW,D=__T.DPR;return [((97+.5)*T-V.camX)/D,((106-0.12)*T-V.camY)/D]}")
@@ -412,7 +625,7 @@ def test_click_direction():
             async def point(wx,wy): return await ev(pg,f"()=>{{const V=__T.VIEW(),T=__T.TPv(),D=__T.DPR(),M=__T.mouse();M.x=({wx}*T-V.camX)/D;M.y=({wy}*T-V.camY)/D;M.last=performance.now();return __T.decide().k}}")
             en="()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}"
             await ev(pg,en); r=await point(111.3,110.5)
-            rec('클릭 방향','적 쪽을 가리키면 공격', r=='attack', r)
+            rec('클릭 방향','v65: 적 쪽을 가리켜도 상호작용은 공격하지 않음 (공격은 클릭·칼 버튼)', r not in ('attack','swing'), r)
             await ev(pg,en); r=await point(109.5,110.5)
             rec('클릭 방향','적이 오른쪽에 있어도 벽 쪽(왼쪽)을 가리키면 캐기 (재확인)', r=='mine', r)
             # swing with nothing nearby: face follows the click
@@ -442,7 +655,7 @@ def test_arrow_keys_trees():
             # trees
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'cherryTree'});G.inv[0]={id:'shovel',c:1};G.sel=0;const a=T.decide();
           G.inv[0]={id:'pickIron',c:1};for(let k=0;k<12&&G.objs.get(i)&&G.objs.get(i).t==='cherryTree';k++)T.hitObj({x:105,y:106},G.objs.get(i));const o=G.objs.get(i);return [a.k,o&&o.t,o&&o.g,G.drops.some(d=>d.id==='wood')]}""")
-            rec('나무','다 자란 벚꽃나무는 삽으로 못 퍼고(안내) 베어야 함 → 그루터기', r[0]=='info' and r[1]=='stump' and r[2]=='cherryTree' and r[3], str(r))
+            rec('나무','다 자란 벚꽃나무는 삽으로 못 퍼고 베기를 추천(v65) → 베면 그루터기', r[0]=='chop' and r[1]=='stump' and r[2]=='cherryTree' and r[3], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.inv[0]={id:'shovel',c:1};G.sel=0;const a=T.decide();T.perform(a);return [a.k,G.objs.get(i)||null,T.countItem('cherryTree')]}""")
             rec('나무','그루터기는 삽으로 뽑히고 나무 아이템으로 돌아옴', r[0]=='dig' and r[1] is None and r[2]==1, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'stump',g:'roundTree',at:G.time-1});G.p.x=102.5;T.growTick();const t=G.objs.get(i).t;G.p.x=104.5;return t}""")

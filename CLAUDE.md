@@ -7,7 +7,7 @@
 
 ## 어디를 고치나
 
-- **게임 원본은 `dev/src/`** (`shell.html` + `style.css` + `js/` 24개). 여기만 고쳐요.
+- **게임 원본은 `dev/src/`** (`shell.html` + `style.css` + `js/` 25개). 여기만 고쳐요.
 - 저장소 맨 위 `index.html`·`sw.js`·`manifest.webmanifest`·`wiki.html`, 그리고 `dev/index.html`은 **모두 만들어지는 파일**이에요. 직접 고치지 않아요.
   - `dev/index.html`은 `python3 dev/build.py`가 `dev/src/`를 묶어 만들어요 (저장소에는 안 올라감).
 - 그림은 `dev/art/`에 PNG로 넣고 `python3 dev/art_pack.py` (→ `dev/src/js/art/hand-art.js`의 `/*@@ART*/` 부분). 그 부분은 손으로 고치지 않아요.
@@ -29,7 +29,7 @@
 1. `python3 dev/build.py && node dev/qa/syn.js dev/index.html` → `ok`
 2. **비교 테스트** `python3 dev/qa/snapshot.py` (약 20초, `run.py`도 맨 먼저 돌려요): 게임 데이터·그림 지문·옛 세이브 불러오기 결과를 `dev/qa/snapshot/`과 비교.
    일부러 바꾼 거라면 바뀐 곳이 의도와 맞는지 확인하고 `--update`로 갱신해 같이 커밋해요.
-3. 전체 테스트 `python3 dev/qa/run.py` (비교 테스트 + 기능 테스트 58개, 약 5분, 백그라운드로 돌리고 끝에 나오는 요약만 읽어요) 또는 `python3 dev/qa/run.py crafting`(파일) / `emergency_escape`(테스트 이름).
+3. 전체 테스트 `python3 dev/qa/run.py` (비교 테스트 + 기능 테스트 63개, 약 5분, 백그라운드로 돌리고 끝에 나오는 요약만 읽어요) 또는 `python3 dev/qa/run.py crafting`(파일) / `emergency_escape`(테스트 이름).
    새 기능에는 알맞은 `dev/qa/test_*.py`에 `def test_영어이름():`(예: `test_fishing_contest`, 번호 없이 무엇을 확인하는지)을 비슷한 테스트 옆에 추가해요. 실패한 테스트는 자동으로 한 번 더 돌려 요약에 적어 줘요.
    - 테스트는 흔들리지 않게: 게임 안의 일은 `wait_game`/`wait_until`로 기다리고(실제 시계 대신), 상태 맞추기와 확인은 한 번의 `ev` 안에서, 확률·지도 모양에 기대지 않기. 자세히는 `dev/README.md`의 「흔들리지 않는 테스트 쓰는 법」
    - Playwright가 깔린 브라우저와 버전이 안 맞으면 그 브라우저에 맞는 버전으로 설치 (예: `/opt/pw-browsers/chromium-1194` → `pip install playwright==1.56.0 --break-system-packages`). `playwright install`은 하지 않아요.
