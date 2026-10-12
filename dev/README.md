@@ -31,12 +31,17 @@
 - v54: 구매한 Fantasyville 에셋(동굴·대장간·식료품점·마을·실내)에서 잘라 넣은 그림 목록은 `dev/art/FANTASYVILLE.md`
 - 기록: v49(10-10)에 세계를 2배 해상도(한 칸 32px, `HD = 2`)로 바꾸고 v51에 32px 손그림 15장을 넣었다가, v53(10-11)에 16px 타일셋을 쓰기로 하면서 16px로 되돌렸어요. 32px 그림은 저장소에서 지웠고(git 기록 `1b662fd` 이전에 `dev/art_32px/obj/`로 남아 있어요), 2배 해상도 코드는 `HD` 값과 `outlineHD`로 남아 있어요 (`HD = 2`로 바꾸면 다시 32px)
 
-## 그림 자동 반영 (GitHub Actions)
+## 자동 반영·배포 (GitHub Actions)
 
-- `dev/art/`에 PNG를 올리면(깃허브 웹사이트에서 「Add file → Upload files」도 됨) `.github/workflows/art.yml`이 `art_pack.py` → `build_web.py`를 돌리고 `dev/src/js/art/hand-art.js`·`index.html`·`sw.js`를 커밋해요. GitHub Pages 게임이 1~2분 뒤 바뀌어요.
-- 그림만 넣는 작업이라 회귀 테스트는 돌리지 않아요. Claude 게임 페이지(아티팩트)는 다음에 Claude가 배포할 때 함께 반영돼요.
+- `main`에 게임 원본(`dev/src`)이나 그림(`dev/art`)이 바뀌어 올라오면 `.github/workflows/deploy.yml`이 돌아요 (약 10분):
+  1. 비교 테스트로 코드가 기록(`dev/qa/snapshot`)과 맞는지 확인 → 2. `dev/art/`의 그림을 넣고(`art_pack.py`) 바뀐 그림 지문만 기록에 반영 → 3. 전체 테스트(`run.py`) → 4. **모두 통과하면** `build_web.py`로 배포 파일을 만들어 커밋 → GitHub Pages가 1~2분 뒤 바뀌어요.
+- 테스트가 실패하면 배포하지 않아요. Actions 탭에 빨간 X가 뜨고 GitHub이 메일로 알려 줘요. 실패 내용은 그 실행의 「qa-결과」 파일(요약·로그)로 볼 수 있어요.
+- 가끔 실패하는 테스트는 혼자 한 번 더 돌려서 통과하면 통과로 봐요.
+- 일부러 데이터(아이템·레시피·밸런스)를 바꿨다면, 올릴 때 `python3 dev/qa/snapshot.py --update`로 갱신한 기록도 같이 올려야 1단계를 통과해요. 그림만 바꾼 경우는 자동으로 반영돼요.
+- 그림은 깃허브 웹사이트에서 「Add file → Upload files」로 `dev/art/`에 올려도 돼요.
+- Claude 게임 페이지·위키 페이지(아티팩트)는 바뀌지 않아요. 다음에 Claude가 게시할 때 함께 반영돼요.
 - 다른 세션이 배포하는 중에는 올리지 않기 (배포 파일이 겹칠 수 있어요). Claude 세션은 작업 전·커밋 전에 늘 `git pull`.
-- 수동으로 다시 돌리려면 깃허브 Actions 탭 → 「그림 자동 반영」 → Run workflow.
+- 수동으로 다시 돌리려면 깃허브 Actions 탭 → 「자동 반영·배포」 → Run workflow.
 
 ## 작업 순서
 
@@ -54,7 +59,7 @@
    - `qa15`(클라우드 충돌), `qa16`(클릭 방향)은 타이밍 때문에, `qa29`(지팡이·활 한 발 피해)는 치명타(10%)가 터지면, `qa18`의 꽃망울 구역·`qa24`의 용암 웅덩이·`qa45`의 쓰다듬기는 세계 모양·몬스터 등장에 따라, `qa47`, `qa54`(시작 지점·긴급 탈출, 세계 모양에 따라)는 가끔 한 번 떨어져요. 다시 돌려서 통과하면 정상이에요
    - `qa18`의 「PC 상자 → 가방 원하는 칸」 끌기도 가끔 떨어져요 (혼자 다시 돌리면 통과)
    - 테스트마다 자기 폴더(`dev/qa/out/<테스트>/`)를 써서 동시에 돌려도 서로 덮어쓰지 않아요. 단, `run.py`를 두 개 동시에 돌리지는 않아요
-5. **배포용 만들기**: `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
+5. **배포**: `main`에 올리면 GitHub Actions가 테스트 후 배포 파일을 만들어 줘요 (위 「자동 반영·배포」). 직접 만들 때는 `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
 6. **올리기**
    - 깃허브: `git add -A && git commit && git push origin main` (작성자 Juyeon / yon2pang@gmail.com)
    - Claude 게임 페이지(아티팩트): `python3 dev/build.py`로 묶은 `dev/index.html`을 기존 주소 `https://claude.ai/artifact/RBFeEeaCo7T5a6LgZCb9ga`에 다시 게시 (다운로드 기능 유지)
