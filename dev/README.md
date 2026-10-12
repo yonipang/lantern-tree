@@ -9,7 +9,6 @@
 | 경로 | 내용 |
 |---|---|
 | `dev/src/` | **게임 원본** (HTML 뼈대 `shell.html` + `style.css` + `js/`). 모든 수정은 여기서 해요. 파일 지도: `dev/src/README.md` |
-| `dev/WORKLOG.md` | 작업 기록: 날짜별로 한 일·사용자가 정한 것·다음 할 일 (새 Claude 세션이 먼저 읽어요) |
 | `dev/PLAN.md` | 구조 변경 + 멀티플레이 계획 체크리스트 |
 | `dev/build.py` | `dev/src/` → 한 파일짜리 게임 `dev/index.html` (테스트·위키·배포 도구가 시작할 때 자동으로 돌려요. 저장소에는 안 올라감) |
 | `dev/build_web.py` | 원본(묶은 `dev/index.html`) → 배포용 `index.html`·`sw.js`·`manifest.webmanifest`(저장소 맨 위) |
