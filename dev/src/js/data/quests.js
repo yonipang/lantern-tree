@@ -3,6 +3,7 @@
 // QSIDE에 넣는 순서 = 퀘스트 목록 순서. 이 파일은 shell.html에서 game/quests.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { FLOWERS, BOSSES } from './rpg-nature.js';
 import { ITEMS, OBJ, RECIPES, Rc, USE } from './items.js';
+import { G, beat, guardOf } from '../save/state.js';
 
 // ---- 보스 다시 부르는 조각상 (구조 변경 3단계: game/combat.js에서 옮김 — 레시피 순서 그대로) ----
 export const SUMMON = {

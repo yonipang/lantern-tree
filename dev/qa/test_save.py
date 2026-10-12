@@ -429,3 +429,36 @@ def test_tools_migration():
             rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_save_split():
+    import json, os
+    # 구조 변경 4단계: 세이브를 「세계」(같이 씀)와 「캐릭터」(들고 다님)로 나누고 다시 합치기 — 멀티플레이 준비
+    # 정한 것: 퀘스트 진행·기록은 세계 · 지도에서 밝힌 곳은 세계 안 플레이어마다 · 펫은 캐릭터
+    FX=json.load(open(os.path.join(QA,'snapshot','fixtures.json'),encoding='utf-8'))
+    H2=HOOK.replace("computeLight}","computeLight,splitSave,joinSave,serializeWorld,serializeChar,deserializeParts,CHAR_KEYS,PLAYER_KEYS}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # 지금 게임 + 옛 세이브 11종: 나눴다 합치면 글자까지 같음, 나뉜 쪽이 맞는지
+            for name in ['지금 게임']+sorted(FX):
+                r=await ev(pg,"""(src)=>{const T=__T;if(src)T.deserialize(JSON.parse(src));const s=T.serialize(),{world,char}=T.splitSave(s),pl=world.players.me;
+                  const same=JSON.stringify(T.joinSave(world,char))===JSON.stringify(s);
+                  const charHasWorld=['wall','objs','stats','qclaim','guide','bossDead','time','explored'].filter(k=>k in char);
+                  const worldHasChar=['inv','tools','equip','rpg','pets','recipes','look'].filter(k=>k in world);
+                  return [same,charHasWorld,worldHasChar,'explored' in pl&&Number.isFinite(pl.x)&&Number.isFinite(pl.y),!!char.p&&!('x' in char.p)]}""",FX.get(name))
+                rec('세이브 나누기',f'{name}: 나눴다 합치면 그대로 · 캐릭터/세계/플레이어별로 맞게 나뉨', r==[True,[],[],True,True], str(r))
+            # 나눈 두 덩어리로 불러오기 → 다시 저장하면 같음 (시간 표시 at만 빼고)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[3]={id:'wood',c:7};G.pets={dog:1};G.petOn='dog';G.qclaim.wood=1;
+              const w=T.serializeWorld(),c=T.serializeChar(),before=T.serialize();
+              T.deserializeParts(w,c);const after=T.serialize();delete before.at;delete after.at;
+              return [JSON.stringify(before)===JSON.stringify(after),T.G.inv[3]&&T.G.inv[3].c,T.G.petOn,!!T.G.qclaim.wood,'pets' in w,'qclaim' in c]}""")
+            rec('세이브 나누기','세계·캐릭터 두 덩어리로 불러와도 그대로 (가방·펫은 캐릭터, 퀘스트 보상은 세계)', r==[True,7,'dog',True,False,False], str(r))
+            # 모르는 새 칸도 잃지 않음 (나중에 생긴 칸)
+            r=await ev(pg,"()=>{const T=__T;const s=T.serialize();s.zzNew=5;const {world,char}=T.splitSave(s);return [T.joinSave(world,char).zzNew,Object.keys(T.joinSave(world,char)).slice(-1)[0]]}")
+            rec('세이브 나누기','표에 없는 새 칸도 합칠 때 그대로', r==[5,'zzNew'], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

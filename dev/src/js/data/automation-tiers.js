@@ -5,6 +5,7 @@
 import { DISH, DISHES } from './farming-cooking.js';
 import { ITEMS, OBJ, RECIPES, Rc, STN, TIPS, USE, USE_LBL } from './items.js';
 import { QSIDE } from './quests.js';
+import { G } from '../save/state.js';
 
 // ================= farm automation (after the crystal generator), giant crops, the festival cake =================
 export const hasCgen = () => ((G.stats.made || {}).crystalGen || 0) > 0 || [...G.objs.values()].some(o => o.t === 'crystalGen');

@@ -44,9 +44,9 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/data/circuits-regions.js` | (모듈) 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출, **모든 장비 내구도(`DUR`)·분해** |
 | `js/content/circuits-regions.js` | 회로·전력 계산, 바닥 위험, 여러 칸 가구·회전·나무 작업장·채굴장 동작 |
 | `js/world.js` | 지도 만들기(`genWorld`), 숨은 방, 충돌·이동·땅 파기·놓을 수 있는지 |
-| `js/save/state.js` | `G`·새 게임·`serialize`/`deserialize` |
-| `js/save/migrations.js` | **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
-| `js/save/storage.js` | 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |
+| `js/save/state.js` | (모듈) `G`·새 게임·`serialize`/`deserialize`, **세이브 나누기 `splitSave`·`joinSave`** (세계·캐릭터·세계 안 플레이어별 — `SAVE_ORDER`·`CHAR_KEYS`·`PLAYER_KEYS`) |
+| `js/save/migrations.js` | (모듈) **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
+| `js/save/storage.js` | (모듈) 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |
 | `js/game/actions.js` | 가방·내구도·분해, 입력 상태, 버튼이 하는 일(`decide`) |
 | `js/game/combat.js` | 스킬·피해·몬스터 처치, 보스 재도전, 물체 쓰기·잠·낚시·캐기·놓기·수확·먹기 |
 | `js/game/update.js` | 등불나무 연출, 매 프레임 세계·몬스터·보스 AI·생성 |
