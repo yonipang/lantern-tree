@@ -6,13 +6,7 @@
 // · Tools (pickaxe · axe · sickle · shovel · watering can · rod · lasso) live in their own pouch and the tool slot at the
 //   front of the hotbar holds one. Interact takes the pickaxe, axe, sickle or shovel out by itself and keeps it in hand.
 
-// ---- tools ----
-const TOOL_KINDS = ['pick', 'axe', 'sickle', 'shovel', 'wcan', 'rod', 'lasso'];
 const isTool = id => !!ITEMS[id] && TOOL_KINDS.includes(ITEMS[id].kind);
-// axes stop being weapons and become the tree-cutting tool (power = how fast they cut, like a pickaxe's power)
-const AXE_TOOL = { axeStone: [1.6, 0, '돌로 만든 도끼. 나무를 손이나 곡괭이보다 빨리 베어요.'], axeCopper: [3.2, 1, '단단한 구리 도끼. 큰 나무도 금방 베어요.'], axeIron: [4.8, 2, '날이 선 철 도끼. 어떤 나무든 몇 번이면 베어요.'] };
-for (const id in AXE_TOOL) { const it = ITEMS[id]; if (!it) continue; it.kind = 'axe'; [it.power, it.tier, it.d] = AXE_TOOL[id]; delete it.dmg; delete it.wt; }
-for (const r of RECIPES) if (AXE_TOOL[r.out]) r.cat = 'tool';
 const toolPow = s => ((ITEMS[s.id] && ITEMS[s.id].power) || 1) * (1 + UPG_POW * lvOf(s));
 const heldTool = () => (G && G.sel < 0 && G.tools && G.tools[G.tsel]) || null;
 // the tool of a kind to use: the one in hand if it is that kind, else the best working one (pouch first, then the bag)
@@ -52,8 +46,6 @@ function doAttack() {
   if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); atkT = .32; return; } }
   atkT = swingAttack() === false ? .3 : atkCd();
 }
-// ---- hit a placed piece three times and it falls on the floor ----
-const RECOVER_HITS = 3, RECOVER_GAP = 2; // hits · seconds (game time) the hits may be apart
 const HITS = new Map();
 function recoverTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return null; let i = idx(t.x, t.y); const w = G.wall[i];
   if (w === 6 || w === 7) return { t, i, wall: w }; // the wood and brick walls players build (natural walls only by pickaxe)

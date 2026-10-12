@@ -1,31 +1,4 @@
-// ---- dishes for the deep caves: cold / heat protection and the tier-3 dishes made with fire berries and frost radishes ----
-Object.assign(EFF, { cold: { n: '추위 대비', v: [.75, .5, 0], t: v => v ? `추위 게이지 ${pct(v)} 속도` : '추위 게이지 안 오름' }, heat: { n: '더위 대비', v: [.75, .5, 0], t: v => v ? `더위 게이지 ${pct(v)} 속도` : '더위 게이지 안 오름' } });
-const DEEP_DISHES = [
-  ['hotTea', '따끈 버섯차', 'cold', 1, 'cup', ['#c98a5a', '#e36b6b'], [['mushroom', 1], ['gWater', 1]], 'guide:cpick'],
-  ['hotSoup', '따끈 버섯 수프', 'cold', 2, 'bowl', ['#d9774a', '#6ff2e6'], [['mushroom', 2], ['glowcap', 1], ['gWater', 1]], 'guide:cpick'],
-  ['fireStew', '불꽃 열매 스튜', 'cold', 3, 'bowl', ['#ff6a3d', '#ffd25c'], [['fireBerry', 2], ['mushroom', 1]], 'boss:turtle'],
-  ['coolTea', '시원 베리차', 'heat', 1, 'cup', ['#ff9ab0', '#bfe6ff'], [['berry', 1], ['gWater', 1]], 'guide:cpick'],
-  ['coolPunch', '시원 베리 화채', 'heat', 2, 'bowl', ['#ffb3c6', '#ff7aa2'], [['berry', 3], ['gWater', 1]], 'guide:cpick'],
-  ['radishSoup', '서리 무 냉국', 'heat', 3, 'bowl', ['#d8f2ff', '#9fd8f0'], [['radish', 2], ['gWater', 1]], 'boss:spirit'],
-  ['fireSkewer', '불꽃 버섯 꼬치', 'atk', 3, 'skewer', ['#ff6a3d', '#b9573f'], [['fireBerry', 1], ['shroomCap', 2]], 'boss:turtle'],
-  ['radishSalad', '서리 무 베리 냉채', 'move', 3, 'plate', ['#e8f8ff', '#ff7aa2'], [['radish', 1], ['berry', 2]], 'boss:spirit'],
-  ['fireBeans', '불꽃 콩 볶음', 'mine', 3, 'plate', ['#b99bff', '#ff8a3d'], [['cbean', 2], ['fireBerry', 1]], 'boss:turtle'],
-  ['fireJelly', '불꽃 열매 젤리', 'regen', 3, 'jelly', ['#ff8a3d', '#ffd25c'], [['fireBerry', 1], ['gel', 3]], 'room:r30'],
-  ['frostTea', '서리 꽃잎 냉차', 'hunger', 3, 'cup', ['#bfe6ff', '#f7b8cf'], [['radish', 1], ['anyPetal', 2], ['gWater', 1]], 'boss:spirit'],
-  ['firePie', '불꽃 꽃잎 파이', 'xp', 3, 'cake', ['#ff8a3d', '#f7b8cf'], [['fireBerry', 1], ['anyPetal', 2], ['berry', 2]], 'room:r40'],
-];
-for (const d of DEEP_DISHES) { DISHES.push(d); DISH[d[0]] = { id: d[0], n: d[1], ef: d[2], tier: d[3], shape: d[4], col: d[5], req: d[6], src: d[7] }; const [fd, hl] = DISH_FOOD[d[3]];
-  ITEMS[d[0]] = { n: d[1], kind: 'food', food: fd, heal: hl, buff: [d[2], d[3]], d: d[2] === 'cold' || d[2] === 'heat' ? '깊은 동굴에 가기 전에 먹어 두면 든든해요.' : '버프 요리예요. 먹으면 효과가 생겨요.' }; ICON[d[0]] = dishIcon(d[4], d[5]);
-  const r = Rc(d[0], 1, d[6], 'pot', 'food'); r.dish = d[0]; RECIPES.push(r);
-  ITEMS['rn_' + d[0]] = { n: `레시피 쪽지 · ${d[1]}`, note: d[0], d: '주우면 바로 요리솥 레시피를 알게 돼요.' }; ICON['rn_' + d[0]] = noteIcon;
-  const k = d[6].findIndex(([m]) => STAR_OF[m]); if (k >= 0) { const [m, c] = d[6][k], sm = STAR_OF[m], base = ITEMS[d[0]], id = d[0];
-    ITEMS[id + 'S'] = { ...base, n: '별 ' + base.n, food: Math.round(base.food * 1.2), star: 1, base: id, d: '별 작물로 만든 특별한 요리. 효과가 1.5배 오래가고 배가 더 불러요.' }; ICON[id + 'S'] = (f => A => { f(A); starMark(A); })(ICON[id]);
-    const req = d[6].map(x => x.slice()); if (c > 1) { req[k][1] = c - 1; req.push([sm, 1]); } else req[k] = [sm, 1]; const sr = Rc(id + 'S', 1, req, 'pot', 'food'); sr.dish = id; sr.star = 1; sr.need = () => knows(id) && availCount0(sm) > 0; RECIPES.push(sr); } }
-ROOM_NOTES[3].push('fireJelly'); ROOM_NOTES[4].push('firePie');
-Object.assign(BOSS_NOTES, { turtle: ['fireStew', 'fireSkewer', 'fireBeans'], spirit: ['radishSoup', 'radishSalad', 'frostTea'] });
-{ const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat(['hotTea', 'hotSoup', 'coolTea', 'coolPunch'].map(id => ['rn_' + id, 1])); }
-// ---- cold / heat gauge: only in the lava and ice caves ----
-const ENV_TXT = { hot: ['후끈해요', '더워요', '너무 더워요!', '타 버릴 것 같아요!'], cold: ['으슬으슬해요', '추워요', '너무 추워요!', '얼어붙을 것 같아요!'] };
+for (const d of DEEP_DISHES) { const id = d[0]; ICON[id] = dishIcon(d[4], d[5]); ICON['rn_' + id] = noteIcon; if (d[6].some(([m]) => STAR_OF[m])) ICON[id + 'S'] = (f => A => { f(A); starMark(A); })(ICON[id]); }
 const envLv = k => G && G.env && G.env.k === k ? (G.env.v >= 100 ? 3 : G.env.v >= 70 ? 2 : G.env.v >= 40 ? 1 : 0) : 0;
 function bmul(ef) { if (!G || !G.buffs) return 1; let best = null; for (const b of G.buffs) if (b.ef === ef && b.end > G.time && (!best || b.tier > best.tier)) best = b; return best ? EFF[ef].v[best.tier - 1] : 1; }
 const inDeepArena = () => { const p = G.p; return Math.hypot(p.x - SL.x - .5, p.y - SL.y - .5) < 9.6 || Math.hypot(p.x - SI.x - .5, p.y - SI.y - .5) < 9.6; };
@@ -47,8 +20,6 @@ function envTick(dt) {
   let tgt = [0, .15, .30, .375 + Math.sin(performance.now() / 420) * .075][lv]; if (!$('#bossbar').hidden) tgt = Math.min(tgt, .30);
   envFxV += (tgt - envFxV) * Math.min(1, dt / (tgt > envFxV ? 1.2 : 1.6));
 }
-// v43: every region has its own terrain, mineral and special material (shown on the map once visited)
-const REGION_MAT = [['dirt', 'copperOre', 'fiber'], ['stone', 'ironOre', 'shroomCap'], ['granite', 'crystal', 'cryGem'], ['basalt', 'goldOre', 'obsidian'], ['iceBlock', 'frostShard', 'radish']];
 function regionMatHTML() { const seen = new Set(); for (let i = 0; i < G.explored.length; i++) if (G.explored[i]) seen.add(G.biome[i]);
   return `<div class="lbl">지역 재료</div><div class="rmat">${REGION_MAT.map((m, b) => `<div><b>${seen.has(b) ? BIOME[b] : '???'}</b>${seen.has(b) ? ['지형', '광물', '고유'].map((t, k) => `<span><img class="px" src="${iconURL(m[k])}" alt="">${t} · ${ITEMS[m[k]].n}</span>`).join('') : '<span>아직 가 보지 않은 곳</span>'}</div>`).join('')}</div>`; }
 function eqEffect(sl, s) {
@@ -67,14 +38,7 @@ function suggestWear(b) { const need = b === 3 ? 'hot' : b === 4 ? 'cold' : null
 function drawEnv() { const E = G.env || {}, bar = $('#envBar'), on = !!E.k; if (bar.hidden === on) bar.hidden = !on;
   if (on) { const k = E.k + '|' + Math.round(E.v); if (bar.dataset.k !== k) { bar.dataset.k = k; bar.className = 'bar env ' + E.k; $('#envFill').style.width = E.v + '%'; $('#envTxt').textContent = Math.round(E.v); const ic = E.k === 'hot' ? 'fireBerry' : 'frostShard'; if ($('#icEnv').dataset.ic !== ic) { $('#icEnv').dataset.ic = ic; $('#icEnv').src = iconURL(ic); } } }
   const fx = $('#envFx'), v = Math.round(envFxV * 200) / 200; if (v !== envFxShown) { envFxShown = v; fx.style.opacity = (v / .45).toFixed(3); } const cls = E.k || (envFxV > .005 ? fx.dataset.k : ''); if (fx.dataset.k !== cls) { fx.dataset.k = cls || ''; fx.className = cls || ''; } }
-TIPS.push('용암 동굴과 얼음 동굴에서는 더위·추위 게이지가 올라요. 대비 요리와 옷으로 늦출 수 있어요.', '얼음 동굴에서는 횃불이나 램프 곁, 용암 동굴에서는 물웅덩이 곁에서 게이지가 내려가요.');
-// ================= getting around and the cost of fainting =================
-// homestone: hold still for 1.5 s to go home (bed, or the lantern tree); it leaves a marker so you can come straight back once
-const RECALL_T = 1.5, RECALL_CD = 60;
-ITEMS.homeStone = { n: '귀환석', kind: 'recall', stack: 1, d: `들고 누른 뒤 ${RECALL_T}초 동안 가만히 있으면 침대(없으면 등불나무)로 돌아가요. 떠난 자리에 표지가 남아서, 집 근처에서 다시 쓰면 그곳으로 한 번 돌아갈 수 있어요. 한 번 쓰면 1분 쉬어요.` };
 ICON.homeStone = A => { A.e(8, 9, 5.4, 5.8, '#4a4290'); A.e(8, 8.6, 4.6, 5, '#6a62b8'); A.e(7, 7, 2.4, 2.6, '#a99cf0'); A.e(8, 9, 2, 2, '#ffd27a'); A.p(8, 8, '#fff1c0'); A.p(5, 5, '#e3d4ff'); A.p(11, 12, '#3a3270'); };
-RECIPES.push(Rc('homeStone', 1, [['crystal', 6], ['glowcap', 3], ['copperBar', 2]], 'forge', 'tool'));
-{ const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat([['homeStone', 1]]); }
 // v63: natural rock a pickaxe can dig is not a trap — a rock wall on a tile that was rock in the world first generated counts as open (quartz veins
 // turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
 // Some new worlds start in a rock-ringed clearing. Used by closedIn (fainting, recall, loading — v64) and regionOf (emergency escape — v63).
@@ -129,9 +93,6 @@ function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
   let to; if (R.mode === 'back' && G.backPt) { to = G.backPt; G.backPt = null; } else { G.backPt = { x: p.x, y: p.y }; to = homePt(); }
   puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; if (R.mode !== 'back') unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); /* bug fix (v49.1): going back to the marker (a spot you stood on) never moves you out of a closed cave pocket */ cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
   toast(R.mode === 'back' ? '표지가 있던 곳으로 돌아왔어요' : '집으로 돌아왔어요 · 집 근처에서 귀환석을 다시 쓰면 떠난 자리로 갈 수 있어요', 'good', 'recall'); }
-// fainting drops a quarter of each material stack in a bundle where you fell; walk back to pick it up (not during the first steps of the story)
-const LOST_SHARE = .25, LOST_MAX = 5;
-OBJ.lostBag = { n: '잃어버린 꾸러미', lost: 1, light: [2, '#ffe9a8'] };
 OSPR.lostBag = [16, 16, A => { A.e(8, 13.5, 5, 1.4, 'rgba(0,0,0,.25)'); A.e(8, 10, 5, 4, '#b8903f'); A.e(7, 9, 3.4, 2.6, '#d9b66a'); A.poly([[5, 7], [6, 3.5], [10, 3.5], [11, 7]], '#c9a46b'); A.r(5, 6, 6, 1, '#7a5a2a'); A.p(12, 3, '#fff1b0'); A.p(13, 2, '#ffffff'); A.p(3, 5, '#fff1b0'); }];
 function dropLost() {
   if ((G.guide || 0) < 6) return 0; // no loss before the copper pickaxe
@@ -147,11 +108,6 @@ function dropLost() {
 function pickLost(t, o) { const i = idx(t.x, t.y); let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
   o.items = o.items.filter(Boolean); invDirty = true; SFX.pick();
   if (!o.items.length) { G.objs.delete(i); lightDirty = true; puff(t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); toast(`잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else toast(`가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
-TIPS.push('귀환석을 쓰면 집으로 돌아오고, 집 근처에서 다시 쓰면 떠난 자리로 돌아가요.', '쓰러지면 재료 일부를 그 자리에 떨어뜨려요. 지도에 꾸러미가 표시돼요.');
-// ================= the deep bosses fight in three stages (66% / 33%): a short roar with no damage taken, then one new thing per stage =================
-const PHASE_BOSS = { turtle: 1, spirit: 1 };
-const PHASE_TIP = { turtle: ['등껍질에 금이 갔어요! 굴러오다 벽에 부딪힐 때마다 불씨가 튀어요', '화산 등껍질! 바닥이 빨갛게 빛나는 곳을 피하고, 분화가 끝나면 등껍질이 열려요 (피해 1.5배)'],
-  spirit: ['얼음 기둥이 솟았어요! 기둥 뒤에 숨으면 얼음 고리를 막아 줘요 (몇 번 맞으면 부서져요)', '눈보라 분신! 반투명한 분신은 한 대면 사라지고, 진짜만 얼음 고리를 쏴요'] };
 const bossStage = b => b.hp > b.max * 2 / 3 ? 1 : b.hp > b.max / 3 ? 2 : 3;
 function phaseCheck(b) { if (!PHASE_BOSS[b.k] || b.hp <= 0) return; b.stage = b.stage || 1; const s = bossStage(b); if (s <= b.stage) return;
   b.stage = s; b.ph = 'roar'; b.t = 1.5; b.inv = 1.5; G.shots.length = 0; shake = Math.max(shake, .5); SFX.boss(); puff(b.x, b.y - .5, BOSSES[b.k].col, 30, 4, .6); puff(b.x, b.y - .5, '#ffe9a8', 12, 3, .8); ftext(b.x, b.y - 2.6, '!!', '#ffd25c');
@@ -162,10 +118,7 @@ function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.ge
 function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (rand() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
 function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = rand() * 6.283, r = k ? 1.3 + rand() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }
   shake = Math.max(shake, .45); SFX.brk(); puff(b.x, b.y - .6, '#ff8a3d', 22, 4, .5); }
-// frost spirit: stage 2 raises four ice pillars to hide behind, stage 3 adds two see-through decoys and turns the gap in its rings
-OBJ.icePillar = { n: '얼음 기둥', solid: 1, light: [2.2, '#9fd8f0'] };
 OSPR.icePillar = [16, 26, A => { A.e(8, 24.5, 5.4, 1.6, '#7ab8d8'); A.r(4, 6, 8, 18, '#9fd8f0'); A.r(4, 6, 3, 18, '#d8f2ff'); A.r(11, 6, 1, 18, '#6a9cc8'); A.poly([[4, 6], [8, 1], [12, 6]], '#e8f8ff'); A.p(6, 10, '#ffffff'); A.p(9, 16, '#ffffff'); A.line(7, 13, 10, 18, '#bfe6ff'); }];
-ENEMY.spiritClone = { n: '눈보라 분신', hp: 1, dmg: 0, spd: 0, r: .5, hop: 0, calm: 1, drops: [], col: '#d4f6ff' };
 function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx, dy] of [[-4, -4], [4, -4], [-4, 4], [4, 4]]) { const x = SI.x + dx, y = SI.y + dy, i = idx(x, y); if (!inB(x, y) || G.wall[i] || G.objs.get(i) || (Math.floor(p.x) === x && Math.floor(p.y) === y)) continue; G.objs.set(i, { t: 'icePillar', hp: 4 }); b.pillars.push(i); puff(x + .5, y + .5, '#d4f6ff', 10, 2.5, .4); } lightDirty = true; }
 function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); puff(e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
 function cloneTick(b, dt) { const cl = G.enemies.filter(e => e.k === 'spiritClone'); cl.forEach((e, i) => { const a = (b.anim || 0) * .9 + i * Math.PI + .8, tx = b.x + Math.cos(a) * 2.8, ty = b.y + Math.sin(a) * 1.8, k = Math.min(1, dt * 3); if (!boxHits(e.x + (tx - e.x) * k, e.y + (ty - e.y) * k, .3)) { e.x += (tx - e.x) * k; e.y += (ty - e.y) * k; } e.z = .45; e.anim = b.anim; }); return cl; }
@@ -177,4 +130,3 @@ function bossExtraSprites() {
   const alpha = (src, a) => { const c = document.createElement('canvas'); c.width = src.width; c.height = src.height; c.hd = src.hd; const g = c.getContext('2d'); g.globalAlpha = a; g.drawImage(src, 0, 0); return c; };
   SPR.turtleC = crack(SPR.turtle); SPR.turtleCW = whiten(SPR.turtleC); SPR.turtleSC = crack(SPR.turtleS); SPR.turtleSCW = whiten(SPR.turtleSC);
   SPR.spiritClone = alpha(SPR.spirit, .5); SPR.spiritCloneW = alpha(whiten(SPR.spirit), .7); }
-TIPS.push('용암 거북과 서리 정령은 체력이 3분의 2, 3분의 1로 줄 때마다 새 기술을 꺼내요. 체력 막대의 눈금을 봐요.');

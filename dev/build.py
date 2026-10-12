@@ -123,6 +123,13 @@ def bundle(src=SRC, report=True):
     return ''.join(out)
 
 
+def code_only(s):
+    """이름을 셀 때 주석·글자('…' \"…\")·템플릿의 ${ 표시는 빼요 (글자 속 낱말이나 ${를 이름으로 착각하지 않게)"""
+    s = re.sub(r'//[^\n]*|/\*.*?\*/', '', s, flags=re.S)
+    s = re.sub(r"'(?:\\.|[^'\\\n])*'|\"(?:\\.|[^\"\\\n])*\"", '""', s)
+    return s.replace('${', ' (')
+
+
 def strip_art(s):
     return re.sub(r'/\*@@ART\*/.*?/\*@@ARTEND\*/', '', s, flags=re.S)  # 손그림 데이터 안의 글자는 이름이 아니에요
 
@@ -156,7 +163,7 @@ def check(js, report):
             if n not in mods[target][1]:
                 raise BuildError(f'{rel}: {target}은(는) {n}을(를) 내보내지 않아요 (export 확인)')
         mine = set(top_names(s)) | {n for n, _ in imports}
-        words = set(WORD.findall(re.sub(r'//[^\n]*|/\*.*?\*/', '', s, flags=re.S)))
+        words = set(WORD.findall(code_only(s)))
         for n in sorted(words - mine):
             if owner.get(n) in mods and owner[n] != rel:
                 raise BuildError(f'{rel}: {n}은(는) {owner[n]}의 이름이에요 — import {{ {n} }} from …로 가져와요')
