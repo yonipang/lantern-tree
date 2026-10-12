@@ -1,3 +1,6 @@
+// ================= 생존: 더위·추위, 귀환석, 긴급 탈출·갇힘 풀기, 잃어버린 꾸러미 =================
+// (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+defineCmd('escape', () => emergencyEscape());
 const envLv = k => G && G.env && G.env.k === k ? (G.env.v >= 100 ? 3 : G.env.v >= 70 ? 2 : G.env.v >= 40 ? 1 : 0) : 0;
 function bmul(ef) { if (!G || !G.buffs) return 1; let best = null; for (const b of G.buffs) if (b.ef === ef && b.end > G.time && (!best || b.tier > best.tier)) best = b; return best ? EFF[ef].v[best.tier - 1] : 1; }
 const inDeepArena = () => { const p = G.p; return Math.hypot(p.x - SL.x - .5, p.y - SL.y - .5) < 9.6 || Math.hypot(p.x - SI.x - .5, p.y - SI.y - .5) < 9.6; };
@@ -20,24 +23,6 @@ function envTick(dt) {
   let tgt = [0, .15, .30, .375 + Math.sin(performance.now() / 420) * .075][lv]; if (!$('#bossbar').hidden) tgt = Math.min(tgt, .30);
   envFxV += (tgt - envFxV) * Math.min(1, dt / (tgt > envFxV ? 1.2 : 1.6));
 }
-function regionMatHTML() { const seen = new Set(); for (let i = 0; i < G.explored.length; i++) if (G.explored[i]) seen.add(G.biome[i]);
-  return `<div class="lbl">지역 재료</div><div class="rmat">${REGION_MAT.map((m, b) => `<div><b>${seen.has(b) ? BIOME[b] : '???'}</b>${seen.has(b) ? ['지형', '광물', '고유'].map((t, k) => `<span><img class="px" src="${iconURL(m[k])}" alt="">${t} · ${ITEMS[m[k]].n}</span>`).join('') : '<span>아직 가 보지 않은 곳</span>'}</div>`).join('')}</div>`; }
-function eqEffect(sl, s) {
-  if (!s) return sl === 'ring' ? '비어 있어요 · 장비제작대에서 만들어요' : '비어 있어요';
-  return (s.lv ? `강화 +${s.lv} · ` : '') + upgText(s.id, lvOf(s)); }
-// v48: the equipment rows sit at the top of the bag (no separate menu); pets at the bottom
-function eqRowHTML() {
-  let h = `<div class="lbl">장비 <span style="color:var(--muted);font-size:13px">칸을 누르면 벗어요 · 가방에서 옷·장신구를 고르고 [입기]·[달기]</span></div><div class="eqlist eq2">`;
-  for (const [sl, n] of EQ_SLOTS) { const s = G.equip[sl];
-    h += `<div class="eqr">${slotHTML(s, 'eqSlot', sl, 'eq' + (s ? '' : ' empty')).replace(/<\/button>$/, s ? '</button>' : `<span>${{ head: '머리', neck: '목' }[sl] || n}</span></button>`)}<div><b>${n}${s ? ' · ' + rarName(s.id) + (s.lv ? ` +${s.lv}` : '') : ''}</b><small>${eqEffect(sl, s)}</small></div></div>`; }
-  return h + `</div>`; }
-let wearAskT = 0;
-function suggestWear(b) { const need = b === 3 ? 'hot' : b === 4 ? 'cold' : null, el = $('#wearAsk'); if (!need || !started) return; const cur = G.equip.body;
-  if (cur && ITEMS[cur.id].guard === need) return; const k = G.inv.findIndex(x => x && ITEMS[x.id].kind === 'wear' && ITEMS[x.id].guard === need); if (k < 0) return;
-  el.textContent = `${ITEMS[G.inv[k].id].n}${roJosa(ITEMS[G.inv[k].id].n).slice(ITEMS[G.inv[k].id].n.length)} 갈아입을까요?`; el.dataset.id = G.inv[k].id; el.hidden = false; clearTimeout(wearAskT); wearAskT = setTimeout(() => { el.hidden = true; }, 8000); }
-function drawEnv() { const E = G.env || {}, bar = $('#envBar'), on = !!E.k; if (bar.hidden === on) bar.hidden = !on;
-  if (on) { const k = E.k + '|' + Math.round(E.v); if (bar.dataset.k !== k) { bar.dataset.k = k; bar.className = 'bar env ' + E.k; $('#envFill').style.width = E.v + '%'; $('#envTxt').textContent = Math.round(E.v); const ic = E.k === 'hot' ? 'fireBerry' : 'frostShard'; if ($('#icEnv').dataset.ic !== ic) { $('#icEnv').dataset.ic = ic; $('#icEnv').src = iconURL(ic); } } }
-  const fx = $('#envFx'), v = Math.round(envFxV * 200) / 200; if (v !== envFxShown) { envFxShown = v; fx.style.opacity = (v / .45).toFixed(3); } const cls = E.k || (envFxV > .005 ? fx.dataset.k : ''); if (fx.dataset.k !== cls) { fx.dataset.k = cls || ''; fx.className = cls || ''; } }
 // v63: natural rock a pickaxe can dig is not a trap — a rock wall on a tile that was rock in the world first generated counts as open (quartz veins
 // turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
 // Some new worlds start in a rock-ringed clearing. Used by closedIn (fainting, recall, loading — v64) and regionOf (emergency escape — v63).
@@ -107,17 +92,3 @@ function dropLost() {
 function pickLost(t, o) { const i = idx(t.x, t.y); let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
   o.items = o.items.filter(Boolean); invDirty = true; emit('sfx', 'pick');
   if (!o.items.length) { G.objs.delete(i); lightDirty = true; emit('puff', t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); emit('toast', `잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else emit('toast', `가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
-const bossStage = b => b.hp > b.max * 2 / 3 ? 1 : b.hp > b.max / 3 ? 2 : 3;
-function phaseCheck(b) { if (!PHASE_BOSS[b.k] || b.hp <= 0) return; b.stage = b.stage || 1; const s = bossStage(b); if (s <= b.stage) return;
-  b.stage = s; b.ph = 'roar'; b.t = 1.5; b.inv = 1.5; G.shots.length = 0; emit('shake', .5); emit('sfx', 'boss'); emit('puff', b.x, b.y - .5, BOSSES[b.k].col, 30, 4, .6); emit('puff', b.x, b.y - .5, '#ffe9a8', 12, 3, .8); emit('ftext', b.x, b.y - 2.6, '!!', '#ffd25c');
-  G.stats.phaseTip = G.stats.phaseTip || {}; const key = b.k + s; if (!G.stats.phaseTip[key]) { G.stats.phaseTip[key] = 1; emit('toast', PHASE_TIP[b.k][s - 2], 'warn', 'phase'); }
-  if (b.k === 'spirit' && s >= 2 && !(b.pillars || []).length) spiritPillars(b); if (b.k === 'spirit' && s === 3) spiritClones(b, 2); }
-function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone'); lightDirty = true; }
-// lava turtle: stage 2 sparks off every wall bounce, stage 3 erupts around you and then opens its shell
-function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (rand() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
-function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = rand() * 6.283, r = k ? 1.3 + rand() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }
-  emit('shake', .45); emit('sfx', 'brk'); emit('puff', b.x, b.y - .6, '#ff8a3d', 22, 4, .5); }
-function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx, dy] of [[-4, -4], [4, -4], [-4, 4], [4, 4]]) { const x = SI.x + dx, y = SI.y + dy, i = idx(x, y); if (!inB(x, y) || G.wall[i] || G.objs.get(i) || (Math.floor(p.x) === x && Math.floor(p.y) === y)) continue; G.objs.set(i, { t: 'icePillar', hp: 4 }); b.pillars.push(i); emit('puff', x + .5, y + .5, '#d4f6ff', 10, 2.5, .4); } lightDirty = true; }
-function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); emit('puff', e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
-function cloneTick(b, dt) { const cl = G.enemies.filter(e => e.k === 'spiritClone'); cl.forEach((e, i) => { const a = (b.anim || 0) * .9 + i * Math.PI + .8, tx = b.x + Math.cos(a) * 2.8, ty = b.y + Math.sin(a) * 1.8, k = Math.min(1, dt * 3); if (!boxHits(e.x + (tx - e.x) * k, e.y + (ty - e.y) * k, .3)) { e.x += (tx - e.x) * k; e.y += (ty - e.y) * k; } e.z = .45; e.anim = b.anim; }); return cl; }
-function pillarBlocks(s, tx, ty) { const i = idx(tx, ty), o = G.objs.get(i); if (!o || o.t !== 'icePillar') return false; o.hp = (o.hp || 4) - 1; emit('puff', s.x, s.y, '#d4f6ff', 4, 1.6, .2); if (o.hp <= 0) { G.objs.delete(i); emit('puff', tx + .5, ty + .5, '#e8f8ff', 14, 3, .4); emit('sfx', 'brk'); lightDirty = true; } return true; }

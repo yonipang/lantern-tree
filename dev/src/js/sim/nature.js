@@ -1,32 +1,5 @@
-// skill points earned by a level: one per level up, plus a bonus one at the top level (10 skills × 3 steps = 30)
-const spDue = lv => lv - 1 + (lv >= MAX_LV ? 1 : 0);
-const freshRpg = () => ({ lv: 1, xp: 0, pts: 0, sp: 0, str: 0, dex: 0, vit: 0, int: 0, sk: {}, slot: [null, null] });
-function cleanRpg(r) {
-  const f = freshRpg(); if (!r || typeof r !== 'object') return f;
-  for (const k of ['lv', 'xp', 'pts', 'sp', 'str', 'dex', 'vit', 'int']) f[k] = Math.max(0, Math.floor(+r[k] || 0)); f.lv = clamp(f.lv || 1, 1, MAX_LV);
-  if (r.sk && typeof r.sk === 'object') for (const k in r.sk) if (SKILLS[k]) { const l = clamp(Math.floor(+r.sk[k] || 0), 0, SKILLS[k].max); if (l) f.sk[k] = l; }
-  const spent = Object.values(f.sk).reduce((a, l) => a + l, 0), due = spDue(f.lv); if (spent + f.sp < due) f.sp = due - spent; // older saves at the top level never got the bonus point
-  if (Array.isArray(r.slot)) f.slot = [0, 1].map(i => { const k = r.slot[i]; return SKILLS[k] && SKILLS[k].act && f.sk[k] ? k : null; });
-  return f;
-}
-const skl = k => (G && G.rpg && G.rpg.sk[k]) || 0;
-const RS = k => (G && G.rpg ? G.rpg[k] : 0);
-const maxHp = () => 100 + RS('vit') * 8 + bval('maxhp');
-const maxMp = () => 40 + RS('int') * 6 + skl('arcane') * 8;
-const meleeMul = () => (1 + RS('str') * 0.05) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('warrior') * .06);
-const rangeMul = () => (1 + RS('dex') * 0.03) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('hawk') * .08);
-const magicMul = () => (1 + RS('int') * 0.035) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('arcane') * .06);
-const atkSpd = () => (1 - Math.min(0.2, RS('dex') * 0.01)) * (envLv('cold') >= 2 ? 1.1 : 1);
-const moveMul = () => (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move')) * [1, .9, .8, .8][envLv('cold')];
-const mineMul = () => (1 + RS('str') * 0.03) * (1 + skl('miner') * 0.25) * (1 + bval('mine')) * (1 + ringV('mine'));
-const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15)) * (bval('hunger') || 1) * [1, 1.3, 1.6, 1.6][envLv('hot')];
-function gainXp(n, x, y) {
-  const R = G && G.rpg; if (!R || !(n > 0) || R.lv >= MAX_LV) return; n = Math.max(n, Math.round(n * (1 + bval('xp') + ringV('xp')))); R.xp += n;
-  if (x != null && n >= 3) emit('ftext', x, y - 0.9, `+${n} 경험치`, '#b8e0ff');
-  let up = 0; while (R.lv < MAX_LV && R.xp >= XP_NEED(R.lv)) { R.xp -= XP_NEED(R.lv); R.lv++; R.pts += 2; R.sp += 1; up++; }
-  if (R.lv >= MAX_LV) { R.xp = 0; if (up) R.sp += 1; } // reaching the top level gives one more skill point (since v44 there are more skills than points: 스킬 다시 배우기 is free)
-  if (up) { const p = G.p; p.hp = maxHp(); p.mp = maxMp(); emit('puff', p.x, p.y - .5, '#ffe9a8', 26, 3.5, .8); emit('ftext', p.x, p.y - 1.6, `Lv.${R.lv}!`, '#ffd25c'); emit('sfx', 'seed'); emit('toast', R.lv >= MAX_LV ? `최고 레벨 Lv.${R.lv}! 보너스 스킬 포인트 +1 · [능력]에서 올려요` : `레벨 업! Lv.${R.lv} · [능력]에서 능력치와 스킬을 올려요`, 'good'); emit('refresh', 'stat'); }
-}
+// ================= 자연: 꽃잎 구역, 작물·어린나무 자라기, 베고 남기기·파내기, 풀·뿌리 다시 자라기 =================
+// (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const WATER = 10;
 function genFlowerZones() {
   const R = rng((G.seed | 0) * 7 + 99), zones = [];
@@ -96,3 +69,21 @@ function digPlant(t, o) {
 }
 // ---- nature decorations ----
 const WFLOOR = new Set([11, 12, 13, 14, 15]);
+// ================= update =================
+let regrowT = 0;
+function regrow() {
+  const p = nextTurn().p; // 플레이어를 돌아가며 그 주변에 (8단계)
+  for (let k = 0; k < 14; k++) {
+    const a = rand() * 6.283, d = 13 + rand() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
+    if (x < 2 || y < 2 || x >= W - 2 || y >= H - 2) continue; const i = idx(x, y), f = G.floor[i], b = G.biome[i];
+    if (G.wall[i] || G.objs.get(i) || !(f === 1 || f === 2 || f === 3) || b === 2) continue;
+    if (Math.hypot(x - CX, y - CY) < 3.5) continue;
+    let nat = 0, built = false;
+    for (let dy = -3; dy <= 3 && !built; dy++) for (let dx = -3; dx <= 3; dx++) { const j = idx(x + dx, y + dy), o = G.objs.get(j); if (isPlacedFloor(G.floor[j])) { built = true; break; } if (!o) continue; const od = OBJ[o.t]; if (od.nat || od.bush) nat++; else if (od.item || od.tw) { built = true; break; } }
+    if (built || nat >= 6) continue;
+    G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
+  }
+}
+onFrame('regrow', dt => {
+  regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
+});
