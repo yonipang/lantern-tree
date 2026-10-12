@@ -1,7 +1,7 @@
 // ================= 칸·충돌·움직임·놓기 (구조 변경 5단계: world.js와 content/circuits-regions.js에서 옮김) =================
 // 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 땅 파기·지형 배우기, 놓을 수 있는지(canPlace)
 import { FLOOR_ITEM, TERRAIN } from '../data/rpg-nature.js';
-import { G, beat, started } from '../save/state.js';
+import { G, beat, started, playerList } from '../save/state.js';
 import { LAVA, W, idx, inB } from './map.js';
 import { OBJ } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';

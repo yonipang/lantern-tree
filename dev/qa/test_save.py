@@ -453,8 +453,9 @@ def test_save_split():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[3]={id:'wood',c:7};G.pets={dog:1};G.petOn='dog';G.qclaim.wood=1;
               const w=T.serializeWorld(),c=T.serializeChar(),before=T.serialize();delete w.at; // 저장 시각을 빼요: 컴퓨터가 바빠 1초 넘게 걸리면 「꺼 둔 동안 흐른 시간」만큼 게임 시간이 앞당겨져 가끔 달랐어요
               T.deserializeParts(w,c);const after=T.serialize();delete before.at;delete after.at;
-              return [JSON.stringify(before)===JSON.stringify(after),T.G.inv[3]&&T.G.inv[3].c,T.G.petOn,!!T.G.qclaim.wood,'pets' in w,'qclaim' in c]}""")
-            rec('세이브 나누기','세계·캐릭터 두 덩어리로 불러와도 그대로 (가방·펫은 캐릭터, 퀘스트 보상은 세계)', r==[True,7,'dog',True,False,False], str(r))
+              const diff=Object.keys(before).filter(k=>JSON.stringify(before[k])!==JSON.stringify(after[k])).map(k=>k+':'+JSON.stringify(before[k]).slice(0,80)+'→'+JSON.stringify(after[k]).slice(0,80));
+              return [JSON.stringify(before)===JSON.stringify(after),T.G.inv[3]&&T.G.inv[3].c,T.G.petOn,!!T.G.qclaim.wood,'pets' in w,'qclaim' in c,diff]}""")
+            rec('세이브 나누기','세계·캐릭터 두 덩어리로 불러와도 그대로 (가방·펫은 캐릭터, 퀘스트 보상은 세계)', r[:6]==[True,7,'dog',True,False,False], str(r))  # 마지막 칸: 달라진 칸 (가끔 실패하던 원인 찾기)
             # 모르는 새 칸도 잃지 않음 (나중에 생긴 칸)
             r=await ev(pg,"()=>{const T=__T;const s=T.serialize();s.zzNew=5;const {world,char}=T.splitSave(s);return [T.joinSave(world,char).zzNew,Object.keys(T.joinSave(world,char)).slice(-1)[0]]}")
             rec('세이브 나누기','표에 없는 새 칸도 합칠 때 그대로', r==[5,'zzNew'], str(r))

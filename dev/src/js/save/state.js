@@ -71,7 +71,8 @@ export function nearestPlayer(x, y) { let best = null, bd = 1e9, live = false;
   for (const pl of playerList()) { const a = pl.p.dead <= 0, d = Math.hypot(pl.p.x - x, pl.p.y - y); if ((a && !live) || (a === live && d < bd)) { best = pl; bd = d; live = a; } }
   return best; }
 export const alivePlayers = () => playerList().filter(pl => pl.p.dead <= 0);
-export let turn = 0; export const nextTurn = () => { const L = playerList(); return L[(turn = (turn + 1) % L.length)]; }; // 세계에 한 번 하는 일을 플레이어 돌아가며 (자연 다시 자라기·들짐승 생기기)
+let turn = 0;
+export const nextTurn = () => { const L = playerList(); return L[(turn = (turn + 1) % L.length)]; }; // 세계에 한 번 하는 일을 플레이어 돌아가며 (자연 다시 자라기·들짐승 생기기)
 // G를 새로 만든 바로 뒤: G 안의 플레이어 칸을 첫 플레이어(나)에게 옮기고, G.inv 같은 이름이 지금 플레이어를 가리키게 해요
 function bindPlayers(g, id = ME) {
   const pl = { id, ...freshTimers() }; g.players = { [id]: pl };
