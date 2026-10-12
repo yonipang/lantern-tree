@@ -532,6 +532,38 @@ function runCmd(c) {
 }
 const IDLE = Object.freeze({ mx: 0, my: 0, stick: null, act: false, atk: false, aim: null });
 const ctlOf = p => p.ctl || IDLE;
+// ================= 매 프레임 순서표 (구조 변경 7-3: 연결 고리) =================
+// 매 프레임 진행(update, game/update.js)은 기능을 하나씩 부르지 않고 이 표의 순서대로 돌려요.
+// 기능 파일은 자기 일을 onFrame('이름', dt => …)으로 등록해요 — 새 기능은 이 표에 이름 한 칸을 넣고(자리 = 실행 순서) 그 파일에서 등록.
+// 몇 초마다 하는 일은 등록한 함수 안에서 시간을 세요. 표에 있는데 등록이 없거나, 표에 없는 이름을 등록하면 build.py가 멈춰요.
+const FRAME_ORDER = [
+  'player',   // 움직이기·바라보기·넉백·대시·기력 (game/update.js)
+  'act',      // 상호작용 버튼: 무엇을 할지 고르고 누르면 하기 (game/actions.js)
+  'attack',   // 공격 버튼 (features/controls.js)
+  'buff', 'env', 'recall', // 음식 버프 (features/farming-cooking.js) · 더위·추위 · 귀환석 (features/deep-survival.js)
+  'hunger',   // 배고픔·체력 회복 (game/update.js)
+  'wild',     // 들짐승·펫 (features/gear-animals.js)
+  'enemies', 'bosses', // 몬스터·보스 (game/update.js)
+  'pshots',   // 내 화살·마법 (game/actions.js)
+  'fish',     // 낚시 (game/combat.js)
+  'drops', 'fx', // 떨어진 물건 줍기 · 반짝이·떠오르는 글자 (game/update.js)
+  'ambient',  // 주변 반딧불이 같은 보이기용 (render.js)
+  'tree',     // 등불나무 연출 (game/update.js)
+  'spawn', 'regrow', // 몬스터 생기기 · 자연 다시 자라기 (game/update.js)
+  'zone', 'grow', // 꽃잎 구역 · 작물·나무 자라기 (content/rpg-nature.js)
+  'circuit',  // 전선·기계 (content/circuits-regions.js)
+  'light', 'guide', // 빛 계산 · 퀘스트·지역·숨은 방 확인 (game/update.js)
+  'autosave', 'backup', 'cloud', // 저장·백업·클라우드 (main.js)
+  'camera',   // 카메라 따라가기 (render.js)
+  'shake',    // 화면 흔들림 줄이기 (ui/feedback.js)
+];
+const SYS = new Map();
+function onFrame(name, fn) {
+  if (!FRAME_ORDER.includes(name)) throw new Error('매 프레임 순서표(sim/systems.js)에 없는 이름이에요: ' + name);
+  if (SYS.has(name)) throw new Error('매 프레임 이름이 겹쳐요: ' + name);
+  SYS.set(name, fn);
+}
+function runFrame(dt) { for (const name of FRAME_ORDER) { const fn = SYS.get(name); if (fn) fn(dt); } }
 // ================= 지도 틀 (구조 변경 5단계: content/items.js·world.js에서 옮김) =================
 // 지도 모양(1 = 처음 200×200 지도, 2 = 600×600 고리 지도)과 크기·등불나무·보스 자리, 칸 번호(idx)·지도 안인지(inB), 방향 이름.
 // v47부터 두 가지: 1은 v47 전 세이브가 그대로 쓰는 200×200, 2는 새 게임의 고리 지도
@@ -1809,6 +1841,13 @@ function genFlowerZones() {
   return zones;
 }
 const cleanZones = zs => zs.filter(z => z && Number.isInteger(z.x) && Number.isInteger(z.y) && FLOWERS[z.c]).map(z => ({ x: z.x, y: z.y, c: z.c, dead: Array.isArray(z.dead) ? z.dead.filter(Number.isFinite) : [] }));
+let zoneT = 0, growT = 0;
+onFrame('zone', dt => {
+  zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
+});
+onFrame('grow', dt => {
+  growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
+});
 function zoneTick() {
   const p = G.p; if (p.dead > 0 || !G.fzones) return;
   G.fzones.forEach((z, zi) => {
@@ -1990,6 +2029,10 @@ const SALVAGE_RATE = 0.7, SALVAGE_BASE = { pickWood: [['wood', 3]], swordWood: [
 // ---- circuits: wires, power (battery → generator → crystal generator), switches, powered devices ----
 const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const CIRC = { net: new Map(), pRoots: new Set(), find: x => x };
+let circT = 0;
+onFrame('circuit', dt => {
+  circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
+});
 function circuitTick(dt) {
   const comps = []; for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (d && (d.src || d.sw || d.dev)) comps.push([i, o, d]); }
   if (!comps.length) { CIRC.net = new Map(); CIRC.pRoots = new Set(); return; }
@@ -2332,7 +2375,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
   G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
-  rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
+  emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
 const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
@@ -2427,7 +2470,7 @@ function deserialize(s) {
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
-  rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
+  emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
 function deepSeedDrop(k, S, b) { G.stats.deepSeed = G.stats.deepSeed || {}; if (G.stats.deepSeed[k]) return; G.stats.deepSeed[k] = 1; const sh = G.objs.get(idx(S.x, S.y)); if (sh && sh.t === 'shrine') sh.has = 0; spawnDrop('lightSeed', 1, b.x, b.y); }
@@ -2791,6 +2834,15 @@ const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.r
 const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
 let actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
+onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
+  const p = G.p, ctl = ctlOf(p);
+  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
+  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
+  if (p.dead > 0) actQ = 0;
+  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
+  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
+  holdT = held ? holdT + dt : 0;
+});
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
 
@@ -3037,6 +3089,7 @@ function swingAttack() {
   return true;
 }
 function shootP(ang, o) { const p = G.p; G.pshots.push(Object.assign({ x: p.x + Math.cos(ang) * .3, y: p.y + Math.sin(ang) * .3, vx: Math.cos(ang) * o.spd, vy: Math.sin(ang) * o.spd, life: o.range / o.spd, hit: [], ang }, o)); }
+onFrame('pshots', dt => updatePShots(dt));
 function updatePShots(dt) {
   for (let i = G.pshots.length - 1; i >= 0; i--) {
     const s = G.pshots[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
@@ -3298,6 +3351,7 @@ function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x
 function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; emit('fade', 'sleep'); emit('sfx', 'sleep'); }
 function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; emit('fade', 'wake'); p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); emit('toast', '푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
 function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + rand() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; emit('sfx', 'cast'); }
+onFrame('fish', dt => updateFish(dt));
 function updateFish(dt) {
   if (G.fishFx) { G.fishFx.t += dt; if (G.fishFx.t > 0.55) G.fishFx = null; }
   const f = G.fish; if (!f) return; const p = G.p;
@@ -3479,7 +3533,7 @@ function respawn() {
 }
 
 // ================= update =================
-let regrowT = 0, snapT = 0, cloudT = 0, zoneT = 0, growT = 0, circT = 0;
+let regrowT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
@@ -3493,9 +3547,13 @@ function regrow() {
     G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
   }
 }
-let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0, saveT = 0;
+let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0;
 function update(dt) {
-  G.time += dt; const p = G.p;
+  G.time += dt;
+  runFrame(dt); // 매 프레임 순서표 (sim/systems.js): 기능마다 onFrame으로 등록해요
+}
+onFrame('player', dt => {
+  const p = G.p;
   const ctl = ctlOf(p); let mx = ctl.mx, my = ctl.my;
   let mag = Math.hypot(mx, my); if (mag > 1) { mx /= mag; my /= mag; mag = 1; }
   if (p.dead > 0) { p.dead -= dt; mag = 0; if (p.dead <= 0) respawn(); }
@@ -3510,33 +3568,25 @@ function update(dt) {
   p.inv = Math.max(0, p.inv - dt); p.hurt = Math.max(0, p.hurt - dt);
   if (p.dash) { moveEnt(p, p.dash.vx * dt, p.dash.vy * dt, 0.28); p.dash.t -= dt; if (fxRand() < .5) emit('puff', p.x, p.y, '#e8d8c0', 1, 1, .05); if (p.dash.t <= 0) p.dash = null; }
   p.mp = Math.min(maxMp(), (p.mp == null ? maxMp() : p.mp) + (2.5 + RS('int') * 0.25) * (1 + ringV('mp')) * dt); for (const k in G.skcd) if (G.skcd[k] > 0) G.skcd[k] -= dt;
-  // action
-  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
-  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
-  if (p.dead > 0) actQ = 0;
-  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
-  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
-  holdT = held ? holdT + dt : 0;
-  attackTick(dt); // v65: the attack button
-  // survival
-  buffTick(dt); envTick(dt); recallTick(dt);
+});
+onFrame('hunger', dt => {
+  const p = G.p;
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
   regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
-  wildTick(dt); updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt); updateTree(dt);
+});
+onFrame('enemies', updateEnemies); onFrame('bosses', updateBosses); onFrame('drops', updateDrops); onFrame('fx', updateFx); onFrame('tree', updateTree);
+onFrame('spawn', dt => { const p = G.p;
   spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
+});
+onFrame('regrow', dt => {
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
-  zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
-  growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
-  circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
+});
+onFrame('light', dt => {
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
+});
+onFrame('guide', dt => {
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); roomTick(); }
-  saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
-  snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
-  cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
-  // crops & bush stage only visual
-  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
-  fadeShake(dt);
-}
+});
 function updateEnemies(dt) {
   const p = G.p;
   for (const e of G.enemies.slice()) {
@@ -3995,6 +4045,7 @@ function applyBuff(it, id) { const [ef, tier] = it.buff, dur = BUFF_DUR[tier - 1
   else { if (G.buffs.length >= BUFF_MAX) { const sh = G.buffs.reduce((a, b) => b.end < a.end ? b : a); G.buffs.splice(G.buffs.indexOf(sh), 1); } G.buffs.push({ ef, tier, end: G.time + dur, max: dur, id }); }
   if (ef === 'maxhp') G.p.hp = Math.min(maxHp(), G.p.hp); emit('toast', `${EFF[ef].n} ${EFF[ef].t(EFF[ef].v[tier - 1])} · ${Math.round(dur / 6) / 10}분`, 'good', 'buff'); buffDirty = true; }
 let buffDirty = true, lastBuffKey = '', buffRegenT = 0;
+onFrame('buff', dt => buffTick(dt));
 function buffTick(dt) {
   if (!G.buffs) G.buffs = []; if (G.buffs.some(b => b.end <= G.time)) { const gone = G.buffs.filter(b => b.end <= G.time); G.buffs = G.buffs.filter(b => b.end > G.time); for (const b of gone) emit('toast', `${EFF[b.ef].n} 효과가 끝났어요`, null, 'buffEnd'); if (G.p.hp > maxHp()) G.p.hp = maxHp(); buffDirty = true; }
   const rg = bval('regen'); if (rg && G.p.dead <= 0) { buffRegenT += dt; if (buffRegenT >= rg) { buffRegenT = 0; if (G.p.hp < maxHp()) G.p.hp = Math.min(maxHp(), G.p.hp + 1); } } else buffRegenT = 0;
@@ -4136,6 +4187,7 @@ const animalSpr = {};
 function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/' + k]) return animalSpr[k] = artPaint('animal/' + k, MKDEF || INK); return animalSpr[k] = ANIM_DRAW[k] ? mk(16, 16, ANIM_DRAW[k]) : null; }
 const wildNear = r => { const p = G.p; let best = null, bd = r; for (const w of G.wild || []) { const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w; } } return best; };
 let wildT = 0;
+onFrame('wild', dt => wildTick(dt));
 function wildTick(dt) {
   const p = G.p; G.wild = G.wild || []; wildT -= dt;
   G.wild = G.wild.filter(w => Math.hypot(w.x - p.x, w.y - p.y) < 30);
@@ -4242,6 +4294,7 @@ function envRelief(k) { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y
     const o = G.objs.get(i); if (!o) continue; const d = OBJ[o.t]; if (d && d.light && !d.nat && !d.crop && !o.off && o.t !== 'tchest') return true; }
   return false; }
 let envFxV = 0, envFxShown = -1;
+onFrame('env', dt => envTick(dt));
 function envTick(dt) {
   const p = G.p, E = G.env || (G.env = { k: null, v: 0, lv: 0, t: 0 }), b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))], zone = b === 3 ? 'hot' : b === 4 ? 'cold' : null;
   if (zone && E.k !== zone) { E.k = zone; E.v = 0; E.lv = -1; E.t = 0; }
@@ -4319,6 +4372,7 @@ function recallDecide(s) { const cd = (G.recallCd || 0) - G.time; if (cd > 0) re
   if (nearHome()) return G.backPt ? { k: 'recall', lbl: '표지로 돌아가기', icon: s.id, mode: 'back' } : { k: 'info', lbl: '집 근처', icon: s.id, msg: '여기는 집 근처예요. 멀리 나가서 쓰면 집으로 돌아와요' };
   return { k: 'recall', lbl: '집으로', icon: s.id, mode: 'home' }; }
 function startRecall(mode) { if (G.recall || (G.recallCd || 0) > G.time) return; G.recall = { t: RECALL_T, mode, x: G.p.x, y: G.p.y }; emit('sfx', 'seed'); emit('toast', mode === 'home' ? '귀환석이 빛나요… 가만히 있어요' : '표지로 돌아가요… 가만히 있어요', null, 'recall'); }
+onFrame('recall', dt => recallTick(dt));
 function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
   if (p.dead > 0 || p.hurt > 0 || Math.hypot(p.x - R.x, p.y - R.y) > .25) { G.recall = null; emit('toast', '움직여서 귀환을 멈췄어요', null, 'recallStop'); return; }
   R.t -= dt; if (fxRand() < .5) emit('puff', p.x + (fxRand() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
@@ -4489,6 +4543,7 @@ function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; c
 
 // ---- the attack button ----
 let atkQ = 0, atkT = 0;
+onFrame('attack', dt => attackTick(dt));
 function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || ctlOf(p).atk) && atkT <= 0) { atkQ = 0; doAttack(); } }
 function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
@@ -4954,6 +5009,9 @@ ICON.rotate = A => { for (let k = 0; k <= 20; k++) { const a = -0.4 + k / 20 * 4
 let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
 function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
 function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
+onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드럽게 따라가요
+  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
+});
 function computeLight() {
   if (!G) return; const cw = cv.width, ch = cv.height;
   const camX = cam.x * TP - cw / 2, camY = cam.y * TP - ch / 2;
@@ -5054,6 +5112,7 @@ function getChunk(cx, cy) {
 }
 // ---- ambient particles: fireflies, spores, sparkles ----
 const AMB = [];
+onFrame('ambient', dt => updateAmbient(dt));
 function updateAmbient(dt) {
   const p = G.p;
   for (let i = AMB.length - 1; i >= 0; i--) { const a = AMB[i]; a.t += dt; if (a.t > a.life) { AMB.splice(i, 1); continue; }
@@ -5399,10 +5458,11 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 // ---- 화면 흔들림: emit('shake', 세기) = 지금보다 세면 그만큼, emit('shake', 세기, true) = 그 세기로 ----
 let shake = 0;
 onEvent('shake', (v, set) => { shake = set ? v : Math.max(shake, v); });
-function fadeShake(dt) { shake = Math.max(0, shake - dt); }
+onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 
 // ---- 지도·창 ----
 onEvent('craftNote', (id, n, msg) => craftNote(id, n, msg)); // 제작 알림 (아이콘 + 글)
+onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
 onEvent('open', (kind, data) => openPanel(kind, data));
 onEvent('close', () => closePanel());
@@ -5943,6 +6003,16 @@ const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + 
 function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { const bc = $('#btnCloud'), ct = $('#cloudTitle'); if (bc) bc.hidden = true; if (ct) ct.hidden = true; } $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; resetGoalText(); lastInputAt = performance.now(); G.qt = G.qt || {}; { let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 40) { G.guide++; n++; } } checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
 
 // ================= loop =================
+let saveT = 0, snapT = 0, cloudT = 0; // 저장·백업·클라우드 (매 프레임 순서표 sim/systems.js)
+onFrame('autosave', dt => {
+  saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
+});
+onFrame('backup', dt => {
+  snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
+});
+onFrame('cloud', dt => {
+  cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
+});
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
