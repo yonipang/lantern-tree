@@ -3,7 +3,7 @@
 아기자기한 픽셀 생존·건축·농사 웹게임 (HTML/Canvas, 프레임워크·외부 라이브러리 없음). GitHub Pages + 홈 화면 앱(PWA)으로 배포해요.
 자세한 작업 순서·세이브 호환 규칙은 `dev/README.md`, 소스 파일 지도는 `dev/src/README.md`.
 
-**진행 중: 구조 변경 + 멀티플레이 계획 `dev/PLAN.md`** (모듈 import/export로 단계적 전환 → 코어키퍼 방식 멀티플레이 → 배포). 「다음 단계」를 하라고 하면 거기서 체크 안 된 첫 단계를 진행하고, 끝나면 체크 표시·진행 상황을 갱신해요. 8단계까지 끝나서 새 게임 시스템(새 규칙·동작)도 추가할 수 있어요 — 아래 규칙(사건·명령·매 프레임 순서표·플레이어 여럿)대로 만들어요.
+**진행 중: 구조 변경 + 멀티플레이 계획 `dev/PLAN.md`** (구조 변경 0~11단계 끝 → 코어키퍼 방식 멀티플레이 12~15단계 → 배포). 「다음 단계」를 하라고 하면 거기서 체크 안 된 첫 단계를 진행하고, 끝나면 체크 표시·진행 상황을 갱신해요. 새 게임 시스템(새 규칙·동작)도 추가할 수 있어요 — 아래 규칙(모듈·사건·명령·매 프레임 순서표·플레이어 여럿)대로 만들어요.
 
 ## 어디를 고치나
 
@@ -14,8 +14,8 @@
 
 ## 꼭 지킬 규칙
 
-- **JS는 `shell.html`의 `@include` 순서대로 하나의 `<script>` 안에 이어 붙여져요.** 옛 파일은 `import`/`export` 없이 전역 이름을 같이 써요.
-  - 구조 변경으로 옮긴 파일은 **모듈**이에요: `import { a } from './x.js'`·`export …` (모양과 규칙은 `dev/PLAN.md` 「진행하는 동안 지킬 것」). 모듈의 이름은 반드시 import, 옛 파일의 이름은 그대로. `build.py`가 어기면 알려 줘요.
+- **모든 JS 파일은 모듈이에요** (11단계): 다른 파일의 이름은 `import { a } from './x.js'`(같은 이름 그대로, `as`·`default` 없음), 밖에서 쓰는 이름은 `export`. `build.py`가 묶을 때 `import`/`export`를 떼어 내고 `shell.html`의 `@include` 순서대로 하나의 `<script>`에 이어 붙여요.
+  - `build.py`가 확인해요: 가져오는 이름을 그 파일이 내보내는지, 다른 모듈 이름을 import 없이 쓰는지, 맨 위 이름이 겹치는지, **가져온 값을 바꾸는지**(다른 모듈의 값은 그 모듈의 함수로 바꿔요 — 예: `setPaused(true)`·`markLight()`). 지역 변수가 다른 모듈의 이름과 같으면 이름을 바꿔요.
   - **무작위는 `rand()`(게임 결과에 영향: 피해·드롭·생성·몬스터 움직임 …) 또는 `fxRand()`(반짝이·소리 등 보이기만)** — `Math.random`을 직접 쓰면 `build.py`가 멈춰요. 헷갈리면 `rand()`.
   - **규칙 코드(`sim/`·`world/`·`data/`·`save/state`·`save/migrations`)는 소리·알림·반짝임을 바로 부르지 않고 사건을 남겨요**: `emit('sfx', 'hit')`·`emit('toast', 글, 'good')`·`emit('puff', x, y, 색, 개수)`·`emit('shake', .3)` … 받는 곳은 `ui/feedback.js`(새 효과는 거기에 `onEvent`). `SFX.x()`·`toast()`·`puff()`를 규칙 파일에 쓰거나 받는 곳 없는 사건을 쓰면 `build.py`가 멈춰요 (멀티플레이에서 친구 화면에도 같은 사건을 보내기 위해서).
   - **규칙 코드는 키보드·마우스·조이스틱(`keys`·`mouse`·`joy`·`aimMouse` …)을 직접 읽지 않아요**: 매 프레임 받는 조작 의도 `ctlOf(G.p)`(`mx`·`my`·`act`·`atk`·`aim`·`stick`)와 명령을 써요. 화면·입력 쪽은 `command({ k: 'skill', n: 0 })`(ui/input.js)·`runCmd(…)`로 보내고, 규칙 쪽은 `defineCmd('skill', c => …)`로 받아요 (`sim/commands.js`, `build.py`가 확인). 창 안 버튼(`ui/panel-actions.js`)도 규칙을 바로 바꾸지 않고 명령을 보내요 — 받는 곳은 `sim/inventory.js`·`sim/crafting.js` 같은 규칙 파일.
