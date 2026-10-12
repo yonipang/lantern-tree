@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa5():
+def qa5_save_file_dev_tools():
     import asyncio, sys, json
     async def main():
         mkpage(SRC,'qa.html')
@@ -75,7 +75,7 @@ def qa5():
     return main
 
 
-def qa14():
+def qa14_backups():
     import asyncio, sys
     async def main():
         mkpage(SRC,'qa.html')
@@ -125,7 +125,7 @@ def qa14():
     return main
 
 
-def qa15():
+def qa15_cloud_sync():
     import asyncio, sys, json
     MOCK="""window.__cloudMock=(()=>{const ls=()=>JSON.parse(localStorage.getItem('mockcloud')||'{}'),sv=o=>localStorage.setItem('mockcloud',JSON.stringify(o));let cb=null;const user=()=>{const u=localStorage.getItem('mockauth');return u?JSON.parse(u):null};
 return{onAuth(f){cb=f;setTimeout(()=>f(user()),10)},async google(){const u={uid:'g1',displayName:'구글유저'};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},
@@ -196,7 +196,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
     return main
 
 
-def qa32():
+def qa32_play_time_cloud():
     import asyncio, sys, json
     # v32: 플레이 시간·구간 기록, 판 번호(run), 다른 모험이면 항상 묻기, 클라우드 백업, 타이틀에서 클라우드 이어하기, 옛 세이브
     H2=HOOK.replace("computeLight}","computeLight,fmtPlay,checkGuide,GUIDE,get lastInputAt(){return lastInputAt},set lastInputAt(v){lastInputAt=v},get CLOUD(){return CLOUD}}")

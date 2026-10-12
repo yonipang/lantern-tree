@@ -54,9 +54,9 @@
    - 코드 정리·옮기기만 했다면 반드시 통과해야 해요. 일부러 바꾼 거라면(밸런스 조정, 새 아이템 …) 바뀐 곳이 의도와 맞는지 확인한 뒤 `python3 dev/qa/snapshot.py --update`로 기록을 갱신하고 함께 커밋해요
    - 세이브 입력(`dev/qa/snapshot/fixtures.json`: v1~v3, v62, 옛 기능이 남은 세이브)은 고정이에요. 세이브 구조를 바꾸면 옛 세이브 사례를 `snapshot.py`의 `LEGACY`에 넣고 `--fixtures`로 추가해요 (이미 있는 세이브는 안 바뀌어요)
 4. **테스트**: `python3 dev/qa/run.py` — 비교 테스트 + qa2~qa59 전체를 동시에 4개씩 돌리고 끝에 요약만 보여 줘요 (약 5분, 백그라운드로 돌리고 결과 확인)
-   - 일부만: `python3 dev/qa/run.py crafting`(파일 이름) 또는 `python3 dev/qa/run.py qa59 qa33`. 목록은 `--list`, 테스트마다 한 줄씩 보려면 `-v`, 동시 개수는 `-j 2`
+   - 일부만: `python3 dev/qa/run.py crafting`(파일 이름) 또는 `python3 dev/qa/run.py qa59 qa33`(번호) · `python3 dev/qa/run.py emergency_escape`(제목). 목록(번호·제목·파일)은 `--list`, 테스트마다 한 줄씩 보려면 `-v`, 동시 개수는 `-j 2`
    - 실패한 테스트는 혼자 한 번 더 돌려요. **두 번 모두 실패한 점검만 진짜 실패**로 보고, 한 번만 실패한 건 「가끔 실패하는 테스트」로 요약에 적어요 (`--no-retry`로 끄기)
-   - 새 기능을 넣으면 알맞은 `dev/qa/test_*.py`에 `def qaNN():` 함수를 하나 추가해요 (같은 파일의 다른 함수를 본보기로. 함수 안에서 `async def main()`을 만들고 `return main`)
+   - 새 기능을 넣으면 알맞은 `dev/qa/test_*.py`에 `def qaNN_영어제목():` 함수를 하나 추가해요 (예: `def qa60_fishing_contest():` — 번호는 다음 번호, 제목은 무엇을 확인하는지 짧게. 요약·로그 폴더에는 `qa60`으로 나와요) (같은 파일의 다른 함수를 본보기로. 함수 안에서 `async def main()`을 만들고 `return main`)
    - 스크린샷과 로그는 `dev/qa/out/<테스트>/`, 전체 요약은 `dev/qa/out/summary.txt`에 생겨요 (저장소에는 안 올라가요)
    - **흔들리지 않는 테스트 쓰는 법** (v62 이후 흔들리던 테스트를 고치며 찾은 원인들):
      - 게임 안의 일을 기다릴 땐 실제 시계(`wait_for_timeout`) 대신 `wait_game(pg, 초)`(게임 시간 기준) 또는 `wait_until(pg, "()=>조건")`. 게임은 한 프레임에 최대 0.05초만 진행해서, 바쁘면 실제 1초에 게임은 1초가 안 지나요

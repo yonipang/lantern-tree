@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa7():
+def qa7_terrain_shovel():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,checkGuide,subAction:()=>subAction(),get act(){return G.act},canPlace,RECIPES}")
     async def main():
@@ -102,7 +102,7 @@ def qa7():
     return main
 
 
-def qa12():
+def qa12_doors():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES}")
     async def main():
@@ -161,7 +161,7 @@ def qa12():
     return main
 
 
-def qa22():
+def qa22_circuits():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,checkGuide,circuitTick,isSolid,perform,decide,GUIDE,QSIDE,wirePowered,refreshHotbar}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<120;y++)for(let x=100;x<124;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=101.5;G.p.y=118.5;G.p.face={x:1,y:0}}"
@@ -251,7 +251,7 @@ def qa22():
     return main
 
 
-def qa26():
+def qa26_multi_tile_rotation():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,growTick,refreshHotbar,isSolid,placeItem,hitObj,circuitTick,rotateAction,rotateObjAt,fixParts,fpOf,farmStage,FARM_GROW,useObj:typeof useObj!=='undefined'?useObj:null}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
@@ -335,7 +335,7 @@ def qa26():
     return main
 
 
-def qa41():
+def qa41_building_cleanup():
     import asyncio, sys
     # 건축 정리 (v41): 지붕 삭제, 얇은 벽 높이·바닥선, 바닥 벽선 맞춤, 양문·긴 창, 자동 미닫이문 + 최고 레벨 스킬 포인트
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,twSprite,twMask,getChunk,hash2,SPR,circuitTick,gainXp,cleanRpg,MAX_LV,SKILLS,LIFT,cam}")
@@ -441,7 +441,7 @@ def qa41():
     return main
 
 
-def qa53():
+def qa53_furniture_size():
     import asyncio, sys
     # v50: 다른 게임처럼 칸 크기 — 제작대·화로 2×1, 침대 1×2, 벤치 2×1 / 옛 세이브는 그 자리에서 넓힘 / 나무 크게 / 뒤로 가면 반투명 / 32px 그림 부드러운 테두리
     H2=HOOK.replace("computeLight}","computeLight,SPR,fpOf,homePt,effH,effW,iconURL,get W(){return W},get V(){return VIEW},get lowCv(){return lowCv},lc(){POOL=null;return linkedChests().length},newGame}")

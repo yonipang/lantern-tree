@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa31():
+def qa31_lantern_tree_growth():
     import asyncio, sys
     # 등불나무 성장 6단계 (v31): 모습·성장 연출·축복 범위·이끼와 꽃 번짐·캐노피 반투명
     H2=HOOK.replace("computeLight}","computeLight,SPR,TREEFX,treeStage,insertSeeds,updateTree,growTick,TREE_BLESS,TREE_SPREAD,TREE_STAGE,spreadKind,behindCanopy,treeBox,cropStage,renderPanel}")
@@ -72,7 +72,7 @@ def qa31():
     return main
 
 
-def qa33():
+def qa33_farming_basics():
     import asyncio, sys
     # 농사 기초 (v33): 작물·나무 4단계, 구리 낫, 물뿌리개, 비료, 농사 도전 퀘스트 1~3
     H2=HOOK.replace("computeLight}","computeLight,SPR,growTick,cropStage,treeStep,isYoung,harvest,waterCrop,fertCrop,fillCan,hitObj,RECIPES,recipeOn,QSIDE,questState,placeItem,renderPanel,YOUNG_T,WCAN_MAX,afterCut,moveInto,targetTile}")
@@ -193,7 +193,7 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
     return main
 
 
-def qa34():
+def qa34_farming_advanced():
     import asyncio, sys
     # 농사 심화 (v34): 흙 맞춤, 별 작물, 빛버섯·수정 콩 재배, 수정 비료, 도전 퀘스트 4
     H2=HOOK.replace("computeLight}","computeLight,SPR,growTick,cropStage,harvest,fertCrop,RECIPES,recipeOn,QSIDE,questState,placeItem,targetTile,rollStar,CROP_SOIL,STAR_OF,availCount,takeAvail,canPlace,lightAt}")
@@ -259,7 +259,7 @@ window.__spot=(dx,dy)=>{const G=T.G;return [Math.floor(G.p.x)+dx,Math.floor(G.p.
     return main
 
 
-def qa36():
+def qa36_cooking():
     import asyncio, sys
     # 요리 (v36): 버프 3칸, 레시피 쪽지 해금·??? 카드·도감, 별 요리, 낚시 운·병 속 쪽지·분수
     H2=HOOK.replace("computeLight}","computeLight,DISHES,DISH,EFF,RECIPES,recipeOn,knows,learnRecipe,maybeNote,eat,bval,activeBuffs,meleeMul,moveMul,mineMul,maxHp,hungerMul,hurtPlayer,gainXp,catchTable,luckTier,fishBottle,openTreasure,roomNotes,bossNoteIds,QSIDE,claimQuest,BUFF_DUR,availCount,takeAvail,lightAt,cam,renderPanel,hitBoss,freshBoss}")
@@ -354,7 +354,7 @@ def qa36():
     return main
 
 
-def qa40():
+def qa40_automation_giant_crops():
     import asyncio, sys
     # 자동화·마무리 (v40): 스프링클러, 자동 수확기, 거대 작물, 등불 축제 케이크
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,recipeOn,circuitTick,growTick,cropStage,knows,learnRecipe,syncNotes,eat,QSIDE,questState,SPR,targetTile,cam}")

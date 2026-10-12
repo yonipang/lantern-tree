@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa23():
+def qa23_boss_effects_rarity():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,hitEnemy,hitBoss,mkEnemy,updateEnemies,updateBosses,updatePShots,RAR,rarOf,UNIQ_OF,refreshHotbar,swingAttack,freshBoss,grantUniques,ENEMY,bestPick,checkGuide}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<120;y++)for(let x=100;x<124;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.pshots.length=0;G.p.x=101.5;G.p.y=110.5;G.p.face={x:1,y:0}}"
@@ -60,7 +60,7 @@ def qa23():
     return main
 
 
-def qa24():
+def qa24_bosses_regions():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,updateBosses,hitBoss,freshBoss,isSolid,WALLS,SL,SI,LAVA,trySpawn,ENEMY,checkGuide,GUIDE,QSIDE,insertSeeds,migrateV3,genWorld,BKEYS,mineWall:typeof mineWall!=='undefined'?mineWall:null,newGame,refreshHotbar,rarOf,decide}")
     async def main():
@@ -143,7 +143,7 @@ def qa24():
     return main
 
 
-def qa28():
+def qa28_light_seeds():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,hitBoss,decide,perform,SL,SI,newGame}")
     async def main():
@@ -171,7 +171,7 @@ def qa28():
     return main
 
 
-def qa29():
+def qa29_balance():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,updateBosses,hitBoss,freshBoss,swingAttack,updatePShots,mkEnemy,refreshHotbar}")
     FIGHT="""(k,secs)=>{const T=__T,G=T.G;G.enemies.length=0;G.shots.length=0;G.hz=[];const b=G.bosses[k];Object.assign(b,T.freshBoss(k));const h=T.BOSSES[k].home();if(k==='golem'){for(let y=Math.floor(h.y)-14;y<=h.y+14;y++)for(let x=Math.floor(h.x)-14;x<=h.x+14;x++){const j=T.idx(x,y);G.wall[j]=0;G.objs.delete(j);G.floor[j]=4}}G.p.x=h.x;G.p.y=h.y+4;b.st='sleep';
@@ -207,7 +207,7 @@ def qa29():
     return main
 
 
-def qa30():
+def qa30_boss_rematch():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,hitBoss,freshBoss,updateBosses,circuitTick,trySpawn,mkEnemy,updateEnemies,GUIDE,checkGuide,refreshHotbar,ENEMY,SL}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
@@ -259,7 +259,7 @@ def qa30():
     return main
 
 
-def qa39():
+def qa39_boss_phases():
     import asyncio, sys
     # 보스 3단계 (v39): 용암 거북·서리 정령, 66%·33% 눈금, 단계 전환 무적·연출, 단계별 새 패턴
     H2=HOOK.replace("computeLight}","computeLight,SPR,updateBosses,hitBoss,freshBoss,SL,SI,bossStage,cam,ENEMY,renderPanel}")
@@ -320,7 +320,7 @@ window.__run=(n,dt)=>{const T=__T,G=T.G;for(let i=0;i<n;i++){G.p.hp=9999;G.p.inv
     return main
 
 
-def qa44():
+def qa44_skills():
     import asyncio, sys
     # 스킬 (v44): 일반·마법·활 스킬 2개씩 + 분류 표시 + 스킬 다시 배우기
     H2=HOOK.replace("computeLight}","computeLight,SKILLS,SK_CAT,useSkill,wRange,atkCd,meleeMul,rangeMul,magicMul,maxMp,mkEnemy,WTYPE,curWeapon}")

@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa35():
+def qa35_hidden_rooms():
     import asyncio, sys
     # 숨은 방 (v35): 지역마다 1~2개, 금 간 벽, 보물상자, 옛 세이브에도 생성
     H2=HOOK.replace("computeLight}","computeLight,placeRooms,genWorld,roomTick,openTreasure,ROOM_LOOT,ROOM_DECO,QSIDE,questState,targetTile,get DOORS(){return DOORS},drawMap,lightAt,cam}")
@@ -72,7 +72,7 @@ def qa35():
     return main
 
 
-def qa37():
+def qa37_deep_caves():
     import asyncio, sys
     # 깊은 동굴 준비 (v37): 불꽃 열매·서리 무 재배, 장비 칸·옷·장신구, 대비 요리, 깊은 동굴 재료 요리, 더위·추위 게이지와 화면 가장자리
     H2=HOOK.replace("computeLight}","computeLight,SPR,DISHES,DISH,RECIPES,knows,learnRecipe,eat,activeBuffs,moveMul,atkSpd,hungerMul,hurtPlayer,envTick,envLv,wearItem,unwear,grantAccs,syncNotes,roomNotes,bossNoteIds,GUIDE,ENEMY,CROP_SOIL,STAR_OF,cropStage,hitBoss,freshBoss,checkBiome0,get envFxV(){return envFxV},updateHazards,maxHp,SL,SI}")
@@ -157,7 +157,7 @@ window.__eat=(id)=>{const T=__T,G=T.G;G.inv[0]={id,c:1};G.sel=0;G.p.hunger=10;T.
     return main
 
 
-def qa38():
+def qa38_recall_faint():
     import asyncio, sys
     # 이동·패널티 (v38): 귀환석(집으로 → 표지로 돌아가기), 쓰러지면 재료 일부를 꾸러미로 떨어뜨림
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,GUIDE,startRecall,recallTick,homePt,respawn,pickLost,targetTile,cam}")
@@ -206,7 +206,7 @@ def qa38():
     return main
 
 
-def qa45():
+def qa45_pets():
     import asyncio, sys
     # 펫 (v45): 야생 동물, 올가미 밧줄 포획 미니게임, 강아지·고양이·토끼, 펫 버프
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,ANIMALS,wildTick,wildNear,openCatch,catchAng,get panel(){return panel},updateDrops,rollDrops,luckTier,spawnDrop,perform,QSIDE,animalImg,rarOf}")
@@ -279,7 +279,7 @@ def qa45():
     return main
 
 
-def qa46():
+def qa46_ranch():
     import asyncio, sys
     # 목장 (v46): 소·닭·양 포획, 내려놓으면 우유·달걀·양모, 새 요리·털모자·양털 러그
     H2=HOOK.replace("computeLight}","computeLight,circuitTick,W,RECIPES,ANIMALS,wildTick,openCatch,catchAng,get panel(){return panel},perform,QSIDE,hatMul,upgText,SPR}")
@@ -349,7 +349,7 @@ def qa46():
     return main
 
 
-def qa48():
+def qa48_fenced_home():
     import asyncio, sys
     # 버그 수정: 등불나무·침대 둘레를 울타리로 막아 두면 기절·귀환 뒤 갇히던 문제
     H2=HOOK.replace("computeLight}","computeLight,respawn,closedIn,boxHits}")
@@ -378,7 +378,7 @@ def qa48():
     return main
 
 
-def qa49():
+def qa49_ring_map():
     import asyncio, sys
     # v47: 600x600 고리 지도 (새 게임), 옛 세이브는 200x200 그대로, 지형 재료 2배
     H2=HOOK.replace("computeLight}","computeLight,LAVA,newGame,GUIDE,QSIDE,RECIPES,rebuildMap,genFlowerZones,get L(){return {LAY,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
@@ -422,7 +422,7 @@ def qa49():
     return main
 
 
-def qa52():
+def qa52_ring_map_boss_room():
     import asyncio, sys
     # v49.1 버그 수정: 고리 지도에서 말랑대왕 방(과 그 방에서 시작하는 수정골렘 길)이 바위 고리에 막히던 문제 / 귀환석으로 표지에 돌아갈 때 막힌 굴이면 엉뚱한 곳으로 옮겨지던 문제
     H2=HOOK.replace("computeLight}","computeLight,newGame,get L(){return {LAY,W,H,CX,CY}},BKEYS,LAVA,WALLS,startRecall,recallTick,homePt}")
@@ -455,7 +455,7 @@ def qa52():
     return main
 
 
-def qa54():
+def qa54_emergency_escape():
     import asyncio, sys
     # v57: 메뉴 「긴급 탈출」 — 울타리·벽에 갇혔을 때 막힌 곳 바깥의 가장 가까운 트인 곳으로 (등불나무 둘레 큰 마당도)
     H2=HOOK.replace("computeLight}","computeLight,regionOf,escapeSpot,emergencyEscape,homePt,boxHits,isSolid,newGame,genWorld}")
