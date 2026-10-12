@@ -27,7 +27,7 @@ function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; const
   const left = addItem(j.out, total); if (left) spawnDrop(j.out, left, x, y);
   G.stats.made = G.stats.made || {}; G.stats.made[j.out] = (G.stats.made[j.out] || 0) + d; gainXp(Math.min(8, d));
   if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - Math.floor(c * d / j.q)]); j.q -= d; j.t0 += d * j.per; }
-  if (!quiet) { emit('sfx', 'craft'); craftNote(j.out, total); } invDirty = true; checkGuide(); return total; }
+  if (!quiet) { emit('sfx', 'craft'); emit('craftNote', j.out, total); } invDirty = true; checkGuide(); return total; }
 // cancelling hands back what is finished and the materials of everything not started yet
 function cancelJob(o, x, y) { if (!o || !o.job) return; takeJob(o, x, y, true); const j = o.job; if (!j) return; const rest = j.q - jobDone(j);
   for (const [id, c] of j.used) { const back = Math.floor(c * rest / j.q); if (back > 0 && ITEMS[id]) { const l = addItem(id, back, false); if (l) spawnDrop(id, l, x, y); } }

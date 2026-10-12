@@ -52,6 +52,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/save/migrations.js` | (모듈) **옛 세이브 보정 전부** — `deserialize()`가 정해진 순서로 불러요 |
 | `js/save/storage.js` | (모듈) 브라우저 저장·백업·클라우드, 세이브 파일 내보내기/불러오기, 개발자 도구 |
 | `js/game/actions.js` | 가방·내구도·분해, 버튼이 하는 일(`decide`·`perform`), 명령 `ctl`·`hot`·`sel` |
+| `js/game/bag.js` | **창 버튼 명령**: 가방 옮기기·정렬·입기·먹기·버리기, 상자, 강화·분해·수리·작업대 올리기, 제작(`craft`, 제작 자리 `craftable`), 퀘스트 보상·능력치·스킬·꾸미기 · 제작대 옆 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가까운 제작대(`nearStations`) |
 | `js/game/combat.js` | 스킬·피해·몬스터 처치, 보스 재도전, 물체 쓰기·잠·낚시·캐기·놓기·수확·먹기 |
 | `js/game/update.js` | 등불나무 연출, 매 프레임 세계·몬스터·보스 AI·생성 |
 | `js/data/quests.js` | (모듈) 길잡이 퀘스트(`GUIDE`)·보상(`Q_META`)·곁가지 퀘스트(`QSIDE`), 여러 칸 가구(`MULTI`) |
@@ -70,7 +71,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/render.js` | 빛·지도 픽셀, 카메라·바닥 조각·세계·캐릭터 그리기, 아이템 아이콘(`iconURL`) |
 | `js/ui/feedback.js` | (모듈) **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
 | `js/ui/panels.js` | HUD 갱신·`openPanel`·`renderPanel`·지도·제작 알림 |
-| `js/ui/panel-actions.js` | 제작대 옆 상자 재료 함께 쓰기, 창 안 버튼 처리(`onSheetClick`), 칸 끌어 옮기기·정렬 |
+| `js/ui/panel-actions.js` | 창 안 버튼(`onSheetClick`) → 명령 보내기, 창 안 고르기·확인 묻기(`UIS`), 칸 끌어 옮기기 |
 | `js/ui/input.js` | 입력 상태(`keys`·`mouse`·`joy`·`dpad`)와 **조작 의도 만들기(`readCtl`)·명령 보내기(`command`)**, 키보드·터치·조이스틱 연결, 캐릭터 고르기 |
 | `js/main.js` | 게임 루프와 시작(`start`) |
 

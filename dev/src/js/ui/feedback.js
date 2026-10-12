@@ -33,6 +33,7 @@ onEvent('shake', (v, set) => { shake = set ? v : Math.max(shake, v); });
 export function fadeShake(dt) { shake = Math.max(0, shake - dt); }
 
 // ---- 지도·창 ----
+onEvent('craftNote', (id, n, msg) => craftNote(id, n, msg)); // 제작 알림 (아이콘 + 글)
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
 onEvent('open', (kind, data) => openPanel(kind, data));
 onEvent('close', () => closePanel());

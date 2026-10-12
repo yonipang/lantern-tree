@@ -403,7 +403,8 @@ def test_weapons_skills():
             # ---- weapons ----
             await ev(pg,ARENA); await ev(pg,"()=>{__T.give('spearWood');__T.give('swordWood');__T.G.sel=0}")
             await ev(pg,"()=>{const f="+EN+";f(107.5,110.5)}")
-            r=await ev(pg,"()=>{const f="+EN+";const G=__T.G;f(107.5,110.5);const e=G.enemies[0];const h0=e.hp;G.sel=0;__T.doAttack();const a=h0-e.hp;G.enemies.length=0;f(107.5,110.5);const e2=G.enemies[0];G.sel=1;__T.doAttack();return [a>0,999-e2.hp]}")
+            # 점검하는 순간 다른 몬스터를 비워요 (사이에 프레임이 돌며 새로 생긴 몬스터가 더 가까우면 그쪽을 쳐서 가끔 실패했어요)
+            r=await ev(pg,"()=>{const f="+EN+";const G=__T.G;G.enemies.length=0;f(107.5,110.5);const e=G.enemies[0];const h0=e.hp;G.sel=0;__T.doAttack();const a=h0-e.hp;G.enemies.length=0;f(107.5,110.5);const e2=G.enemies[0];G.sel=1;__T.doAttack();return [a>0,999-e2.hp]}")
             rec('무기','창은 2칸 떨어진 적도 공격, 검은 닿지 않음 (공격 버튼, v65)', r==[True,0], str(r))
             # 적을 놓은 뒤 몇 프레임 사이에 적이 움직여 창 끝에서 벗어나는 일이 있어서, 같은 자리에 다시 놓고 바로 찔러요
             r=await ev(pg,"()=>{const f="+EN+";__T.G.enemies.length=0;f(107.5,110.5);__T.G.sel=0;const e=__T.G.enemies[0];const h=e.hp;__T.doAttack();return [h-e.hp>0, __T.G.swing&&__T.G.swing.wt]}")
