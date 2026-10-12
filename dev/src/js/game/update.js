@@ -104,7 +104,7 @@ function respawn() {
 }
 
 // ================= update =================
-let regrowT = 0, snapT = 0, cloudT = 0, zoneT = 0, growT = 0, circT = 0;
+let regrowT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
@@ -118,9 +118,13 @@ function regrow() {
     G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
   }
 }
-let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0, saveT = 0;
+let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0;
 function update(dt) {
-  G.time += dt; const p = G.p;
+  G.time += dt;
+  runFrame(dt); // 매 프레임 순서표 (sim/systems.js): 기능마다 onFrame으로 등록해요
+}
+onFrame('player', dt => {
+  const p = G.p;
   const ctl = ctlOf(p); let mx = ctl.mx, my = ctl.my;
   let mag = Math.hypot(mx, my); if (mag > 1) { mx /= mag; my /= mag; mag = 1; }
   if (p.dead > 0) { p.dead -= dt; mag = 0; if (p.dead <= 0) respawn(); }
@@ -135,33 +139,25 @@ function update(dt) {
   p.inv = Math.max(0, p.inv - dt); p.hurt = Math.max(0, p.hurt - dt);
   if (p.dash) { moveEnt(p, p.dash.vx * dt, p.dash.vy * dt, 0.28); p.dash.t -= dt; if (fxRand() < .5) emit('puff', p.x, p.y, '#e8d8c0', 1, 1, .05); if (p.dash.t <= 0) p.dash = null; }
   p.mp = Math.min(maxMp(), (p.mp == null ? maxMp() : p.mp) + (2.5 + RS('int') * 0.25) * (1 + ringV('mp')) * dt); for (const k in G.skcd) if (G.skcd[k] > 0) G.skcd[k] -= dt;
-  // action
-  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
-  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
-  if (p.dead > 0) actQ = 0;
-  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
-  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
-  holdT = held ? holdT + dt : 0;
-  attackTick(dt); // v65: the attack button
-  // survival
-  buffTick(dt); envTick(dt); recallTick(dt);
+});
+onFrame('hunger', dt => {
+  const p = G.p;
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
   regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
-  wildTick(dt); updateEnemies(dt); updateBosses(dt); updatePShots(dt); updateFish(dt); updateDrops(dt); updateFx(dt); updateAmbient(dt); updateTree(dt);
+});
+onFrame('enemies', updateEnemies); onFrame('bosses', updateBosses); onFrame('drops', updateDrops); onFrame('fx', updateFx); onFrame('tree', updateTree);
+onFrame('spawn', dt => { const p = G.p;
   spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
+});
+onFrame('regrow', dt => {
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
-  zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
-  growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
-  circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
+});
+onFrame('light', dt => {
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
+});
+onFrame('guide', dt => {
   guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); roomTick(); }
-  saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
-  snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
-  cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
-  // crops & bush stage only visual
-  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
-  fadeShake(dt);
-}
+});
 function updateEnemies(dt) {
   const p = G.p;
   for (const e of G.enemies.slice()) {

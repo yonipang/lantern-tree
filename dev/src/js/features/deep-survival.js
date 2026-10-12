@@ -7,6 +7,7 @@ function envRelief(k) { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y
     const o = G.objs.get(i); if (!o) continue; const d = OBJ[o.t]; if (d && d.light && !d.nat && !d.crop && !o.off && o.t !== 'tchest') return true; }
   return false; }
 let envFxV = 0, envFxShown = -1;
+onFrame('env', dt => envTick(dt));
 function envTick(dt) {
   const p = G.p, E = G.env || (G.env = { k: null, v: 0, lv: 0, t: 0 }), b = G.biome[idx(Math.floor(p.x), Math.floor(p.y))], zone = b === 3 ? 'hot' : b === 4 ? 'cold' : null;
   if (zone && E.k !== zone) { E.k = zone; E.v = 0; E.lv = -1; E.t = 0; }
@@ -84,6 +85,7 @@ function recallDecide(s) { const cd = (G.recallCd || 0) - G.time; if (cd > 0) re
   if (nearHome()) return G.backPt ? { k: 'recall', lbl: '표지로 돌아가기', icon: s.id, mode: 'back' } : { k: 'info', lbl: '집 근처', icon: s.id, msg: '여기는 집 근처예요. 멀리 나가서 쓰면 집으로 돌아와요' };
   return { k: 'recall', lbl: '집으로', icon: s.id, mode: 'home' }; }
 function startRecall(mode) { if (G.recall || (G.recallCd || 0) > G.time) return; G.recall = { t: RECALL_T, mode, x: G.p.x, y: G.p.y }; emit('sfx', 'seed'); emit('toast', mode === 'home' ? '귀환석이 빛나요… 가만히 있어요' : '표지로 돌아가요… 가만히 있어요', null, 'recall'); }
+onFrame('recall', dt => recallTick(dt));
 function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
   if (p.dead > 0 || p.hurt > 0 || Math.hypot(p.x - R.x, p.y - R.y) > .25) { G.recall = null; emit('toast', '움직여서 귀환을 멈췄어요', null, 'recallStop'); return; }
   R.t -= dt; if (fxRand() < .5) emit('puff', p.x + (fxRand() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);

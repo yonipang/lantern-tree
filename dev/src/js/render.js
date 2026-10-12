@@ -2,6 +2,9 @@
 let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
 function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
 function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
+onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드럽게 따라가요
+  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
+});
 function computeLight() {
   if (!G) return; const cw = cv.width, ch = cv.height;
   const camX = cam.x * TP - cw / 2, camY = cam.y * TP - ch / 2;
@@ -102,6 +105,7 @@ function getChunk(cx, cy) {
 }
 // ---- ambient particles: fireflies, spores, sparkles ----
 const AMB = [];
+onFrame('ambient', dt => updateAmbient(dt));
 function updateAmbient(dt) {
   const p = G.p;
   for (let i = AMB.length - 1; i >= 0; i--) { const a = AMB[i]; a.t += dt; if (a.t > a.life) { AMB.splice(i, 1); continue; }

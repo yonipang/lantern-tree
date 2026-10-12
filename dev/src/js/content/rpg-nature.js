@@ -45,6 +45,13 @@ function genFlowerZones() {
   return zones;
 }
 const cleanZones = zs => zs.filter(z => z && Number.isInteger(z.x) && Number.isInteger(z.y) && FLOWERS[z.c]).map(z => ({ x: z.x, y: z.y, c: z.c, dead: Array.isArray(z.dead) ? z.dead.filter(Number.isFinite) : [] }));
+let zoneT = 0, growT = 0;
+onFrame('zone', dt => {
+  zoneT += dt; if (zoneT > 1) { zoneT = 0; zoneTick(); }
+});
+onFrame('grow', dt => {
+  growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
+});
 function zoneTick() {
   const p = G.p; if (p.dead > 0 || !G.fzones) return;
   G.fzones.forEach((z, zi) => {
