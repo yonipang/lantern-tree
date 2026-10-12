@@ -13,8 +13,8 @@ function envTick(dt) {
   let rate = -4; if (zone && !envRelief(zone)) rate = (inDeepArena() ? .5 : 1) * bmul(zone === 'hot' ? 'heat' : 'cold') * (G.equip && G.equip.body && ITEMS[G.equip.body.id].guard === zone ? guardMul(lvOf(G.equip.body)) : 1) * (zone === 'cold' ? hatMul() : 1);
   E.v = clamp(E.v + rate * dt, 0, 100); if (!zone && E.v <= 0) E.k = null;
   const lv = !E.k ? 0 : E.v >= 100 ? 3 : E.v >= 70 ? 2 : E.v >= 40 ? 1 : 0;
-  if (E.k && started && (lv > E.lv)) { if (lv || E.lv < 0) toast(ENV_TXT[E.k][lv], lv >= 2 ? 'warn' : null, 'env'); } if (E.k) E.lv = lv;
-  if (lv === 3 && p.dead <= 0) { E.t += dt; if (E.t >= 5) { E.t = 0; p.hp -= 2; ftext(p.x, p.y - 1.2, '-2', E.k === 'hot' ? '#ff9b4a' : '#9fd8f0'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; $('#fade').textContent = '기절했어요…'; $('#fade').hidden = false; } } } else E.t = 0;
+  if (E.k && started && (lv > E.lv)) { if (lv || E.lv < 0) emit('toast', ENV_TXT[E.k][lv], lv >= 2 ? 'warn' : null, 'env'); } if (E.k) E.lv = lv;
+  if (lv === 3 && p.dead <= 0) { E.t += dt; if (E.t >= 5) { E.t = 0; p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', E.k === 'hot' ? '#ff9b4a' : '#9fd8f0'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; emit('fade', 'faint'); } } } else E.t = 0;
   // the screen edge: fades in and out over a second or two, never stronger than 30% during a boss fight
   let tgt = [0, .15, .30, .375 + Math.sin(performance.now() / 420) * .075][lv]; if (!$('#bossbar').hidden) tgt = Math.min(tgt, .30);
   envFxV += (tgt - envFxV) * Math.min(1, dt / (tgt > envFxV ? 1.2 : 1.6));
@@ -72,25 +72,25 @@ function escapeSpot() { const p = G.p, here = regionOf(p.x, p.y);
   if (here) return openSpotNear(p.x, p.y, here); // closed in where you stand: the nearest open place outside it
   const h = homePt(), home = regionOf(h.x, h.y); if (!home && !boxHits(h.x, h.y, .28)) return h; // otherwise home, unless home is the trap
   return openSpotNear(h.x, h.y, home || []); }
-function emergencyEscape() { const p = G.p; if (p.dead > 0) return false; if ((G.escCd || 0) > G.time) { toast(`긴급 탈출은 ${Math.ceil(G.escCd - G.time)}초 뒤에 다시 쓸 수 있어요`, 'warn', 'esc'); return false; }
-  if (p.sit) standUp(); G.recall = null; G.fish = null; const to = escapeSpot(); if (!to) { toast('빠져나갈 곳을 찾지 못했어요', 'warn', 'esc'); return false; }
-  puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; cam.x = p.x; cam.y = p.y; G.enemies.length = 0; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4);
-  G.escCd = G.time + 30; toast('긴급 탈출! 트인 곳으로 옮겼어요', 'good', 'esc'); return true; }
-function unstick(p, why) { const to = safeSpot(p.x, p.y); if (!to) return false; p.x = to.x; p.y = to.y; cam.x = p.x; cam.y = p.y; lightDirty = true; if (why) setTimeout(() => toast(why, 'warn', 'unstick'), 900); return true; }
+function emergencyEscape() { const p = G.p; if (p.dead > 0) return false; if ((G.escCd || 0) > G.time) { emit('toast', `긴급 탈출은 ${Math.ceil(G.escCd - G.time)}초 뒤에 다시 쓸 수 있어요`, 'warn', 'esc'); return false; }
+  if (p.sit) standUp(); G.recall = null; G.fish = null; const to = escapeSpot(); if (!to) { emit('toast', '빠져나갈 곳을 찾지 못했어요', 'warn', 'esc'); return false; }
+  emit('puff', p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; cam.x = p.x; cam.y = p.y; G.enemies.length = 0; lightDirty = true; emit('puff', p.x, p.y - .3, '#e3d4ff', 18, 3, .4);
+  G.escCd = G.time + 30; emit('toast', '긴급 탈출! 트인 곳으로 옮겼어요', 'good', 'esc'); return true; }
+function unstick(p, why) { const to = safeSpot(p.x, p.y); if (!to) return false; p.x = to.x; p.y = to.y; cam.x = p.x; cam.y = p.y; lightDirty = true; if (why) setTimeout(() => emit('toast', why, 'warn', 'unstick'), 900); return true; }
 function homePt() { const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); if (so && OBJ[so.t].bed) { const fp = fpOf(so), x = G.spawnPt.x + .5, y = G.spawnPt.y + fp[1] + .6; return boxHits(x, y, .28) ? { x: G.spawnPt.x + fp[0] + .5, y: G.spawnPt.y + .5 } : { x, y }; } return { x: CX + .5, y: CY + 1.7 }; }
 const nearHome = () => { const h = homePt(); return Math.hypot(G.p.x - h.x, G.p.y - h.y) < 12; };
 function recallDecide(s) { const cd = (G.recallCd || 0) - G.time; if (cd > 0) return { k: 'info', lbl: `쉬는 중 ${Math.ceil(cd)}초`, icon: s.id, msg: `귀환석이 쉬고 있어요 · ${Math.ceil(cd)}초 뒤에 다시 쓸 수 있어요` };
   if (G.recall) return { k: 'none', lbl: '돌아가는 중…', icon: s.id };
   if (nearHome()) return G.backPt ? { k: 'recall', lbl: '표지로 돌아가기', icon: s.id, mode: 'back' } : { k: 'info', lbl: '집 근처', icon: s.id, msg: '여기는 집 근처예요. 멀리 나가서 쓰면 집으로 돌아와요' };
   return { k: 'recall', lbl: '집으로', icon: s.id, mode: 'home' }; }
-function startRecall(mode) { if (G.recall || (G.recallCd || 0) > G.time) return; G.recall = { t: RECALL_T, mode, x: G.p.x, y: G.p.y }; SFX.seed(); toast(mode === 'home' ? '귀환석이 빛나요… 가만히 있어요' : '표지로 돌아가요… 가만히 있어요', null, 'recall'); }
+function startRecall(mode) { if (G.recall || (G.recallCd || 0) > G.time) return; G.recall = { t: RECALL_T, mode, x: G.p.x, y: G.p.y }; emit('sfx', 'seed'); emit('toast', mode === 'home' ? '귀환석이 빛나요… 가만히 있어요' : '표지로 돌아가요… 가만히 있어요', null, 'recall'); }
 function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
-  if (p.dead > 0 || p.hurt > 0 || Math.hypot(p.x - R.x, p.y - R.y) > .25) { G.recall = null; toast('움직여서 귀환을 멈췄어요', null, 'recallStop'); return; }
-  R.t -= dt; if (fxRand() < .5) puff(p.x + (fxRand() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
+  if (p.dead > 0 || p.hurt > 0 || Math.hypot(p.x - R.x, p.y - R.y) > .25) { G.recall = null; emit('toast', '움직여서 귀환을 멈췄어요', null, 'recallStop'); return; }
+  R.t -= dt; if (fxRand() < .5) emit('puff', p.x + (fxRand() - .5) * .8, p.y - .2, '#b99bff', 1, 1.6, .05);
   if (R.t > 0) return; G.recall = null; G.recallCd = G.time + RECALL_CD;
   let to; if (R.mode === 'back' && G.backPt) { to = G.backPt; G.backPt = null; } else { G.backPt = { x: p.x, y: p.y }; to = homePt(); }
-  puff(p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; if (R.mode !== 'back') unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); /* bug fix (v49.1): going back to the marker (a spot you stood on) never moves you out of a closed cave pocket */ cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; puff(p.x, p.y - .3, '#e3d4ff', 18, 3, .4); SFX.win();
-  toast(R.mode === 'back' ? '표지가 있던 곳으로 돌아왔어요' : '집으로 돌아왔어요 · 집 근처에서 귀환석을 다시 쓰면 떠난 자리로 갈 수 있어요', 'good', 'recall'); }
+  emit('puff', p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; if (R.mode !== 'back') unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); /* bug fix (v49.1): going back to the marker (a spot you stood on) never moves you out of a closed cave pocket */ cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; lightDirty = true; emit('puff', p.x, p.y - .3, '#e3d4ff', 18, 3, .4); emit('sfx', 'win');
+  emit('toast', R.mode === 'back' ? '표지가 있던 곳으로 돌아왔어요' : '집으로 돌아왔어요 · 집 근처에서 귀환석을 다시 쓰면 떠난 자리로 갈 수 있어요', 'good', 'recall'); }
 function dropLost() {
   if ((G.guide || 0) < 6) return 0; // no loss before the copper pickaxe
   const p = G.p, items = []; for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (!s || bagCat(s.id) !== 'mat' || ITEMS[s.id].kind === 'key') continue; const n = Math.floor(s.c * LOST_SHARE); if (n <= 0) continue; s.c -= n; if (!s.c) G.inv[i] = null; const e = items.find(x => x.id === s.id); if (e) e.c += n; else items.push({ id: s.id, c: n }); }
@@ -100,22 +100,22 @@ function dropLost() {
   const px = Math.floor(p.x), py = Math.floor(p.y); let at = -1;
   for (let r = 0; r <= 4 && at < 0; r++) for (let dy = -r; dy <= r && at < 0; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; const x = px + dx, y = py + dy; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || G.floor[i] === WATER || G.floor[i] === LAVA) continue; at = i; break; }
   if (at < 0) { for (const s of items) moveInto(G.inv, s); return 0; }
-  G.objs.set(at, { t: 'lostBag', items, at: Date.now() }); mapPixel(at % W, (at / W) | 0); return items.reduce((a, s) => a + s.c, 0);
+  G.objs.set(at, { t: 'lostBag', items, at: Date.now() }); emit('tile', at % W, (at / W) | 0); return items.reduce((a, s) => a + s.c, 0);
 }
 function pickLost(t, o) { const i = idx(t.x, t.y); let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
-  o.items = o.items.filter(Boolean); invDirty = true; SFX.pick();
-  if (!o.items.length) { G.objs.delete(i); lightDirty = true; puff(t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); toast(`잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else toast(`가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
+  o.items = o.items.filter(Boolean); invDirty = true; emit('sfx', 'pick');
+  if (!o.items.length) { G.objs.delete(i); lightDirty = true; emit('puff', t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); emit('toast', `잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else emit('toast', `가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
 const bossStage = b => b.hp > b.max * 2 / 3 ? 1 : b.hp > b.max / 3 ? 2 : 3;
 function phaseCheck(b) { if (!PHASE_BOSS[b.k] || b.hp <= 0) return; b.stage = b.stage || 1; const s = bossStage(b); if (s <= b.stage) return;
-  b.stage = s; b.ph = 'roar'; b.t = 1.5; b.inv = 1.5; G.shots.length = 0; shake = Math.max(shake, .5); SFX.boss(); puff(b.x, b.y - .5, BOSSES[b.k].col, 30, 4, .6); puff(b.x, b.y - .5, '#ffe9a8', 12, 3, .8); ftext(b.x, b.y - 2.6, '!!', '#ffd25c');
-  G.stats.phaseTip = G.stats.phaseTip || {}; const key = b.k + s; if (!G.stats.phaseTip[key]) { G.stats.phaseTip[key] = 1; toast(PHASE_TIP[b.k][s - 2], 'warn', 'phase'); }
+  b.stage = s; b.ph = 'roar'; b.t = 1.5; b.inv = 1.5; G.shots.length = 0; emit('shake', .5); emit('sfx', 'boss'); emit('puff', b.x, b.y - .5, BOSSES[b.k].col, 30, 4, .6); emit('puff', b.x, b.y - .5, '#ffe9a8', 12, 3, .8); emit('ftext', b.x, b.y - 2.6, '!!', '#ffd25c');
+  G.stats.phaseTip = G.stats.phaseTip || {}; const key = b.k + s; if (!G.stats.phaseTip[key]) { G.stats.phaseTip[key] = 1; emit('toast', PHASE_TIP[b.k][s - 2], 'warn', 'phase'); }
   if (b.k === 'spirit' && s >= 2 && !(b.pillars || []).length) spiritPillars(b); if (b.k === 'spirit' && s === 3) spiritClones(b, 2); }
 function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone'); lightDirty = true; }
 // lava turtle: stage 2 sparks off every wall bounce, stage 3 erupts around you and then opens its shell
 function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (rand() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
 function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = rand() * 6.283, r = k ? 1.3 + rand() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }
-  shake = Math.max(shake, .45); SFX.brk(); puff(b.x, b.y - .6, '#ff8a3d', 22, 4, .5); }
-function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx, dy] of [[-4, -4], [4, -4], [-4, 4], [4, 4]]) { const x = SI.x + dx, y = SI.y + dy, i = idx(x, y); if (!inB(x, y) || G.wall[i] || G.objs.get(i) || (Math.floor(p.x) === x && Math.floor(p.y) === y)) continue; G.objs.set(i, { t: 'icePillar', hp: 4 }); b.pillars.push(i); puff(x + .5, y + .5, '#d4f6ff', 10, 2.5, .4); } lightDirty = true; }
-function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); puff(e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
+  emit('shake', .45); emit('sfx', 'brk'); emit('puff', b.x, b.y - .6, '#ff8a3d', 22, 4, .5); }
+function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx, dy] of [[-4, -4], [4, -4], [-4, 4], [4, 4]]) { const x = SI.x + dx, y = SI.y + dy, i = idx(x, y); if (!inB(x, y) || G.wall[i] || G.objs.get(i) || (Math.floor(p.x) === x && Math.floor(p.y) === y)) continue; G.objs.set(i, { t: 'icePillar', hp: 4 }); b.pillars.push(i); emit('puff', x + .5, y + .5, '#d4f6ff', 10, 2.5, .4); } lightDirty = true; }
+function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); emit('puff', e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
 function cloneTick(b, dt) { const cl = G.enemies.filter(e => e.k === 'spiritClone'); cl.forEach((e, i) => { const a = (b.anim || 0) * .9 + i * Math.PI + .8, tx = b.x + Math.cos(a) * 2.8, ty = b.y + Math.sin(a) * 1.8, k = Math.min(1, dt * 3); if (!boxHits(e.x + (tx - e.x) * k, e.y + (ty - e.y) * k, .3)) { e.x += (tx - e.x) * k; e.y += (ty - e.y) * k; } e.z = .45; e.anim = b.anim; }); return cl; }
-function pillarBlocks(s, tx, ty) { const i = idx(tx, ty), o = G.objs.get(i); if (!o || o.t !== 'icePillar') return false; o.hp = (o.hp || 4) - 1; puff(s.x, s.y, '#d4f6ff', 4, 1.6, .2); if (o.hp <= 0) { G.objs.delete(i); puff(tx + .5, ty + .5, '#e8f8ff', 14, 3, .4); SFX.brk(); lightDirty = true; } return true; }
+function pillarBlocks(s, tx, ty) { const i = idx(tx, ty), o = G.objs.get(i); if (!o || o.t !== 'icePillar') return false; o.hp = (o.hp || 4) - 1; emit('puff', s.x, s.y, '#d4f6ff', 4, 1.6, .2); if (o.hp <= 0) { G.objs.delete(i); emit('puff', tx + .5, ty + .5, '#e8f8ff', 14, 3, .4); emit('sfx', 'brk'); lightDirty = true; } return true; }

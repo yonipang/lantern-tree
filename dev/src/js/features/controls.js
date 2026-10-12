@@ -31,7 +31,7 @@ let altI = 0, altKey = '';
 function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
 function doAlt() { const a = curAlt(); if (!a || actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
-function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; SFX.click(); }
+function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }
 
 // ---- the attack button ----
 let atkBtnHeld = false, atkQ = 0, atkT = 0;
@@ -53,17 +53,17 @@ function recoverTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return nu
   const d = o && OBJ[o.t]; if (!d || !d.item || d.nat || d.crop || d.lost || d.tree || d.shrine || d.tchest || d.ranch || d.bush || d.growTo) return null;
   return { t: { x: i % W, y: (i / W) | 0 }, i, o, full: !!(d.chest && o.items && o.items.some(x => x)) }; }
 function hitRecover(tg, w) { const p = G.p, t = tg.t; faceTo(t.x + .5 - p.x, t.y + .5 - p.y);
-  G.swing = { t: .22, max: .22, ang: Math.atan2(p.face.y, p.face.x), icon: w.id === 'hand' ? null : w.id, wt: w.wt, arc: 1.2, rad: .95 }; SFX.swing();
-  if (tg.full) { SFX.clink(); toast('물건이 든 상자는 비워야 떨어져요', null, 'fullchest'); return; }
+  G.swing = { t: .22, max: .22, ang: Math.atan2(p.face.y, p.face.x), icon: w.id === 'hand' ? null : w.id, wt: w.wt, arc: 1.2, rad: .95 }; emit('sfx', 'swing');
+  if (tg.full) { emit('sfx', 'clink'); emit('toast', '물건이 든 상자는 비워야 떨어져요', null, 'fullchest'); return; }
   const h = HITS.get(tg.i), n = h && G.time - h.t < RECOVER_GAP ? h.n + 1 : 1; HITS.set(tg.i, { n, t: G.time, x: t.x, y: t.y });
-  SFX.mine(); puff(t.x + .5, t.y + .7, '#e8d8c0', 4, 1.6); if (tg.o) tg.o.shake = .15; shake = Math.max(shake, .04);
+  emit('sfx', 'mine'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 4, 1.6); if (tg.o) tg.o.shake = .15; emit('shake', .04);
   if (n >= RECOVER_HITS) { HITS.delete(tg.i); if (tg.wall) breakWall(t.x, t.y); else dropObj(t, tg.o); } }
 function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf(o) : [1, 1], x = t.x + fp[0] / 2, y = t.y + fp[1] / 2 + .3;
   delObj(i); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
   const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
   if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
-  SFX.brk(); puff(x, y, '#e8d8c0', 10, 2.4); lightDirty = true; mapPixel(t.x, t.y); invDirty = true; }
+  emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); lightDirty = true; emit('tile', t.x, t.y); invDirty = true; }
 function drawHitBars(T, camX, camY) { for (const [i, h] of HITS) { if (G.time - h.t >= RECOVER_GAP) { HITS.delete(i); continue; }
   const X = Math.round(h.x * T - camX + T * .15), Y = Math.round(h.y * T - camY - T * .35), w = Math.round(T * .7), f = 1 - h.n / RECOVER_HITS;
   ctx.fillStyle = 'rgba(20,14,30,.85)'; ctx.fillRect(X - 1, Y - 1, w + 2, Math.max(3, Math.round(T / 8)) + 2); ctx.fillStyle = '#ffc861'; ctx.fillRect(X, Y, Math.round(w * f), Math.max(3, Math.round(T / 8))); } }
@@ -74,11 +74,11 @@ function toolSlotHTML() { const s = heldTool() || toolRowList()[0] || null, on =
   return `<button type="button" class="slot tslot ${on ? 'sel' : ''} ${s && isBroken(s) ? 'broken' : ''}" data-tool="1" aria-label="도구 칸${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}` : '<span class="tnone">도구</span>'}<span class="tup">▲</span></button>`; }
 function toggleToolRow(force) { toolRowOpen = force != null ? force : !toolRowOpen; renderToolRow(); }
 function renderToolRow() { let el = $('#toolRow'); if (!el) { el = document.createElement('div'); el.id = 'toolRow'; $('#game').appendChild(el);
-    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { holdTool(s, true); SFX.click(); } toggleToolRow(false); }); }
+    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { holdTool(s, true); emit('sfx', 'click'); } toggleToolRow(false); }); }
   const L = toolRowList(); el.hidden = !toolRowOpen || !G;
   if (!toolRowOpen || !G) return; if (!L.length) { el.innerHTML = '<span class="tnone">도구가 없어요 · 작업대·장비제작대에서 만들어요</span>'; return; }
   el.innerHTML = L.map(s => slotHTML(s, 'tk', G.tools.indexOf(s), s === heldTool() ? 'sel' : '').replace('data-a="tk" data-i=', 'data-tk=')).join(''); }
-function toolSlotClick() { ensureAudio(); if (!G.tools.length) { toast('도구가 없어요 · 작업대·장비제작대에서 만들어요', null, 'notool'); return; }
+function toolSlotClick() { ensureAudio(); if (!G.tools.length) { emit('toast', '도구가 없어요 · 작업대·장비제작대에서 만들어요', null, 'notool'); return; }
   if (G.sel >= 0) { const s = heldTool() || G.tools[G.tsel] || toolRowList()[0]; if (s) holdTool(s, true); } toggleToolRow(); }
 
 // ---- buttons on screen ----

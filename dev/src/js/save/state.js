@@ -19,7 +19,7 @@ export function fmtPlay(sec, est) { sec = Math.max(0, Math.floor(sec || 0)); con
 export let G = null;
 export let TP = 48, Z = 3, DPR = 1;
 export const cam = { x: CX + .5, y: CY + 2 };
-export let shake = 0, paused = true, started = false, soundOn = true;
+export let paused = true, started = false, soundOn = true;
 export const beat = k => !!(G && ((G.bossDead || {})[k] || (G.stats && G.stats.beaten || {})[k]));
 export const freshStats = () => ({ wood: 0, bench: 0, torch: 0, copperOre: 0, copperBar: 0, seedsFound: 0 });
 export const freshBoss = k => { const h = BOSSES[k].home(); return { k, x: h.x, y: h.y, hp: BOSSES[k].hp, max: BOSSES[k].hp, st: 'sleep', t: 0, z: 0, air: 0, airMax: 1, vx: 0, vy: 0, lands: 0, hurt: 0, ph: 'walk', casts: 0, rot: 0, dx: 0, dy: 1, d: 99, poison: null, burn: null, stage: 1, inv: 0, pillars: [] }; };

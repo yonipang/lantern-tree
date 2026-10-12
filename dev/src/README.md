@@ -33,6 +33,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/engine/canvas.js` | (모듈) 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |
 | `js/engine/audio.js` | (모듈) 효과음 `SFX`·`ensureAudio` |
 | `js/engine/effects.js` | (모듈) 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
+| `js/sim/events.js` | (모듈) **사건** `emit`·`onEvent`: 규칙이 소리·알림·반짝임 대신 남기는 것 (받는 곳은 `ui/feedback.js`) |
 | `js/world/map.js` | (모듈) 지도 틀: 지도 모양(`setLayout`·`LAY`)·크기(`W`·`H`)·등불나무와 보스 자리(`CX`·`SA` …)·칸 번호(`idx`)·지도 안인지(`inB`)·방향 이름 |
 | `js/sim/drops.js` | (모듈) 떨어진 아이템 `spawnDrop`·`rollDrops` |
 | `js/art/hand-art.js` | (모듈) 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
@@ -66,6 +67,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/features/controls.js` | v65 조작: 공격 버튼(`doAttack`)·쳐서 회수, 도구 주머니·도구 칸·도구 줄, 작은 버튼(`curAlt`·`cycleAlt`), 버튼 표시(`updateCtrlHud`) |
 | `js/art/content.js` | (모듈) **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render.js` | 빛·지도 픽셀, 카메라·바닥 조각·세계·캐릭터 그리기, 아이템 아이콘(`iconURL`) |
+| `js/ui/feedback.js` | (모듈) **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
 | `js/ui/panels.js` | HUD 갱신·`openPanel`·`renderPanel`·지도·제작 알림 |
 | `js/ui/panel-actions.js` | 제작대 옆 상자 재료 함께 쓰기, 창 안 버튼 처리(`onSheetClick`), 칸 끌어 옮기기·정렬 |
 | `js/ui/input.js` | 키보드·터치·조이스틱 연결, 캐릭터 고르기 |
