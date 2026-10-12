@@ -3,6 +3,8 @@
 아기자기한 픽셀 생존·건축·농사 웹게임 (HTML/Canvas, 프레임워크·외부 라이브러리 없음). GitHub Pages + 홈 화면 앱(PWA)으로 배포해요.
 자세한 작업 순서·세이브 호환 규칙은 `dev/README.md`, 소스 파일 지도는 `dev/src/README.md`.
 
+**진행 중: 구조 변경 + 멀티플레이 계획 `dev/PLAN.md`** (모듈 import/export로 단계적 전환 → 코어키퍼 방식 멀티플레이 → 배포). 「다음 단계」를 하라고 하면 거기서 체크 안 된 첫 단계를 진행하고, 끝나면 체크 표시·진행 상황을 갱신해요. 새 게임 시스템(새 규칙·동작)은 가능하면 8단계 뒤로 — 급하면 사용자와 상의.
+
 ## 어디를 고치나
 
 - **게임 원본은 `dev/src/`** (`shell.html` + `style.css` + `js/` 24개). 여기만 고쳐요.
@@ -12,7 +14,8 @@
 
 ## 꼭 지킬 규칙
 
-- **JS는 `shell.html`의 `@include` 순서대로 하나의 `<script>` 안에 이어 붙여져요.** `import`/`export` 없이 전역 이름을 같이 써요.
+- **JS는 `shell.html`의 `@include` 순서대로 하나의 `<script>` 안에 이어 붙여져요.** 옛 파일은 `import`/`export` 없이 전역 이름을 같이 써요.
+  - 구조 변경으로 옮긴 파일은 **모듈**이에요: `import { a } from './x.js'`·`export …` (모양과 규칙은 `dev/PLAN.md` 「진행하는 동안 지킬 것」). 모듈의 이름은 반드시 import, 옛 파일의 이름은 그대로. `build.py`가 어기면 알려 줘요.
   - 맨 위에서 바로 실행되는 줄(`const …`, `Object.assign(ITEMS, …)`, `RECIPES.push(…)`, `TIPS.push(…)`)은 파일 순서대로 실행돼요. 앞 파일의 값을 뒤에서 쓰는 건 되고, 반대는 안 돼요.
   - `RECIPES`·`QSIDE`·`TIPS`에 넣는 순서가 화면 순서예요. 일괄 보정(예: `features/automation-tiers.js` 중간의 「지형 재료 2배」)은 **그 줄보다 앞에서 추가된 레시피에만** 적용돼요. 파일·줄 순서를 바꾸면 밸런스가 바뀔 수 있어요.
   - 새 기능은 비슷한 `js/features/` 파일 끝에 덧붙이거나, 크면 새 파일 + `shell.html`에 `// @include` 한 줄 (`js/features/automation-tiers.js` 다음, `js/render.js` 앞). 파일 지도는 `dev/src/README.md`.
