@@ -5,7 +5,7 @@
 
 ## 어디를 고치나
 
-- **게임 원본은 `dev/src/`** (`shell.html` + `css/` + `js/`). 여기만 고쳐요.
+- **게임 원본은 `dev/src/`** (`shell.html` + `style.css` + `js/` 24개). 여기만 고쳐요.
 - 저장소 맨 위 `index.html`·`sw.js`·`manifest.webmanifest`·`wiki.html`, 그리고 `dev/index.html`은 **모두 만들어지는 파일**이에요. 직접 고치지 않아요.
   - `dev/index.html`은 `python3 dev/build.py`가 `dev/src/`를 묶어 만들어요 (저장소에는 안 올라감).
 - 그림은 `dev/art/`에 PNG로 넣고 `python3 dev/art_pack.py` (→ `dev/src/js/art/hand-art.js`의 `/*@@ART*/` 부분). 그 부분은 손으로 고치지 않아요.

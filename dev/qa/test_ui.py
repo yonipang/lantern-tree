@@ -299,7 +299,7 @@ def qa18():
                 await pg.tap('#bCraft'); await pg.wait_for_timeout(500)
                 r=await ev(pg,"()=>!!document.querySelector('#sheetWrap:not([hidden]) .sh-head')"); rec('레이아웃',f'{name} 옮긴 제작 버튼 동작', r, r)
                 if name=='iPhone 14':
-                    await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=nature]'); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'qa18_nature_tab.png')
+                    await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=build]'); await pg.wait_for_timeout(250); await pg.tap('[data-a=tab2][data-i=nature]'); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'qa18_nature_tab.png')  # v62: 자연은 건축 탭의 2줄
                 await ev(pg,"()=>__T.closePanel()"); await pg.tap('#bInv'); await pg.wait_for_timeout(500)
                 r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('레이아웃',f'{name} 옮긴 가방 버튼 동작', '가방' in r, r)
                 rec('기능',f'{name} 콘솔 오류 없음', not errs, errs[:3]); await ctx.close()
