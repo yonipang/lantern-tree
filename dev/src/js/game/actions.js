@@ -63,6 +63,15 @@ const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.r
 const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
 let actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
+onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
+  const p = G.p, ctl = ctlOf(p);
+  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
+  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
+  if (p.dead > 0) actQ = 0;
+  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
+  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
+  holdT = held ? holdT + dt : 0;
+});
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
 
@@ -309,6 +318,7 @@ function swingAttack() {
   return true;
 }
 function shootP(ang, o) { const p = G.p; G.pshots.push(Object.assign({ x: p.x + Math.cos(ang) * .3, y: p.y + Math.sin(ang) * .3, vx: Math.cos(ang) * o.spd, vy: Math.sin(ang) * o.spd, life: o.range / o.spd, hit: [], ang }, o)); }
+onFrame('pshots', dt => updatePShots(dt));
 function updatePShots(dt) {
   for (let i = G.pshots.length - 1; i >= 0; i--) {
     const s = G.pshots[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);

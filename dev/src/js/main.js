@@ -1,4 +1,14 @@
 // ================= loop =================
+let saveT = 0, snapT = 0, cloudT = 0; // 저장·백업·클라우드 (매 프레임 순서표 sim/systems.js)
+onFrame('autosave', dt => {
+  saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
+});
+onFrame('backup', dt => {
+  snapT += dt; if (snapT > 1200) { snapT = 0; pushBackup('플레이 중 자동 백업'); }
+});
+onFrame('cloud', dt => {
+  cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
+});
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;

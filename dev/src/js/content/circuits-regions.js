@@ -1,6 +1,10 @@
 // ---- circuits: wires, power (battery → generator → crystal generator), switches, powered devices ----
 const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const CIRC = { net: new Map(), pRoots: new Set(), find: x => x };
+let circT = 0;
+onFrame('circuit', dt => {
+  circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
+});
 function circuitTick(dt) {
   const comps = []; for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (d && (d.src || d.sw || d.dev)) comps.push([i, o, d]); }
   if (!comps.length) { CIRC.net = new Map(); CIRC.pRoots = new Set(); return; }

@@ -35,6 +35,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/engine/effects.js` | (모듈) 반짝임(`puff`)·떠오르는 글자(`ftext`)·알림(`toast`) |
 | `js/sim/events.js` | (모듈) **사건** `emit`·`onEvent`: 규칙이 소리·알림·반짝임 대신 남기는 것 (받는 곳은 `ui/feedback.js`) |
 | `js/sim/commands.js` | (모듈) **명령** `runCmd`·`defineCmd`와 조작 의도 `ctlOf(p)`: 화면·입력이 규칙에 보내는 것 |
+| `js/sim/systems.js` | (모듈) **매 프레임 순서표** `FRAME_ORDER`와 `onFrame`·`runFrame` — 기능마다 이름 한 칸, 자리 = 실행 순서 |
 | `js/world/map.js` | (모듈) 지도 틀: 지도 모양(`setLayout`·`LAY`)·크기(`W`·`H`)·등불나무와 보스 자리(`CX`·`SA` …)·칸 번호(`idx`)·지도 안인지(`inB`)·방향 이름 |
 | `js/sim/drops.js` | (모듈) 떨어진 아이템 `spawnDrop`·`rollDrops` |
 | `js/art/hand-art.js` | (모듈) 손그림 데이터(`ART`, `dev/art_pack.py`가 자동으로 씀)와 불러오기 |
@@ -54,7 +55,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/game/actions.js` | 가방·내구도·분해, 버튼이 하는 일(`decide`·`perform`), 명령 `ctl`·`hot`·`sel` |
 | `js/game/bag.js` | **창 버튼 명령**: 가방 옮기기·정렬·입기·먹기·버리기, 상자, 강화·분해·수리·작업대 올리기, 제작(`craft`, 제작 자리 `craftable`), 퀘스트 보상·능력치·스킬·꾸미기 · 제작대 옆 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가까운 제작대(`nearStations`) |
 | `js/game/combat.js` | 스킬·피해·몬스터 처치, 보스 재도전, 물체 쓰기·잠·낚시·캐기·놓기·수확·먹기 |
-| `js/game/update.js` | 등불나무 연출, 매 프레임 세계·몬스터·보스 AI·생성 |
+| `js/game/update.js` | 등불나무 연출, 매 프레임 진행(`update` → 순서표), 움직이기·배고픔·몬스터·보스 AI·생성·빛 |
 | `js/data/quests.js` | (모듈) 길잡이 퀘스트(`GUIDE`)·보상(`Q_META`)·곁가지 퀘스트(`QSIDE`), 여러 칸 가구(`MULTI`) |
 | `js/game/quests.js` | 퀘스트 진행·보상 받기·지역 알림 |
 | `js/data/farming-cooking.js` | (모듈) 낫·물뿌리개·비료, 맞는 흙·별 작물, **숨은 방**(개수·장식·보물), 버프·요리·레시피 쪽지, 용광로·요리솥 시간, 낚시 운 |

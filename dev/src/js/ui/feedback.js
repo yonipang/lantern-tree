@@ -6,10 +6,11 @@ import { $ } from '../engine/util.js';
 import { fxRand } from '../engine/random.js';
 import { SFX } from '../engine/audio.js';
 import { ftext, puff, toast } from '../engine/effects.js';
-import { G } from '../save/state.js';
+import { G, cam } from '../save/state.js';
 import { BOSSES } from '../data/rpg-nature.js';
 import { PHASE_BOSS } from '../data/deep-survival.js';
 import { onEvent } from '../sim/events.js';
+import { onFrame } from '../sim/systems.js';
 
 // ---- 소리·알림·반짝임 ----
 onEvent('sfx', k => SFX[k]());
@@ -30,10 +31,11 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 // ---- 화면 흔들림: emit('shake', 세기) = 지금보다 세면 그만큼, emit('shake', 세기, true) = 그 세기로 ----
 export let shake = 0;
 onEvent('shake', (v, set) => { shake = set ? v : Math.max(shake, v); });
-export function fadeShake(dt) { shake = Math.max(0, shake - dt); }
+onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 
 // ---- 지도·창 ----
 onEvent('craftNote', (id, n, msg) => craftNote(id, n, msg)); // 제작 알림 (아이콘 + 글)
+onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
 onEvent('open', (kind, data) => openPanel(kind, data));
 onEvent('close', () => closePanel());

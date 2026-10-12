@@ -133,6 +133,7 @@ function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x
 function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; emit('fade', 'sleep'); emit('sfx', 'sleep'); }
 function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; emit('fade', 'wake'); p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); emit('toast', '푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
 function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + rand() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; emit('sfx', 'cast'); }
+onFrame('fish', dt => updateFish(dt));
 function updateFish(dt) {
   if (G.fishFx) { G.fishFx.t += dt; if (G.fishFx.t > 0.55) G.fishFx = null; }
   const f = G.fish; if (!f) return; const p = G.p;

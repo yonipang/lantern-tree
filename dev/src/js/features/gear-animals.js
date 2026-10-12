@@ -49,6 +49,7 @@ const animalSpr = {};
 function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/' + k]) return animalSpr[k] = artPaint('animal/' + k, MKDEF || INK); return animalSpr[k] = ANIM_DRAW[k] ? mk(16, 16, ANIM_DRAW[k]) : null; }
 const wildNear = r => { const p = G.p; let best = null, bd = r; for (const w of G.wild || []) { const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w; } } return best; };
 let wildT = 0;
+onFrame('wild', dt => wildTick(dt));
 function wildTick(dt) {
   const p = G.p; G.wild = G.wild || []; wildT -= dt;
   G.wild = G.wild.filter(w => Math.hypot(w.x - p.x, w.y - p.y) < 30);

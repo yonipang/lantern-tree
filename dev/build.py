@@ -12,7 +12,7 @@
 # 대신 묶기 전에 확인해요: 가져오는 파일이 shell.html에 있는지, 그 이름을 정말 내보내는지,
 # 맨 위 이름이 다른 파일과 겹치지 않는지. 모듈이 아직 옛 전역 이름(모듈이 아닌 파일의 이름)을 쓰면 개수를 알려 줘요.
 # 규칙 파일(RULES)이 소리·알림·반짝임을 바로 부르지 않는지, emit('…')한 사건마다 받는 곳(onEvent)이 있는지도 확인해요 (6단계).
-# 규칙 파일이 입력 상태(키·마우스·조이스틱)를 직접 읽지 않는지, 보내는 명령마다 처리기(defineCmd)가 있는지도 (7단계).
+# 규칙 파일이 입력 상태(키·마우스·조이스틱)를 직접 읽지 않는지, 보내는 명령마다 처리기(defineCmd)가 있는지, 매 프레임 순서표의 이름마다 등록(onFrame)이 있는지도 (7단계).
 import os, re, sys
 
 DEV = os.path.dirname(os.path.abspath(__file__))
@@ -177,6 +177,17 @@ def check(js, report):
     for n, rel in sorted(sent.items()):
         if n not in defined:
             raise BuildError(f'{rel}: 명령 {{ k: \'{n}\' }} — 이 명령을 처리하는 곳(defineCmd(\'{n}\', …))이 없어요')
+    # 매 프레임 순서표(sim/systems.js FRAME_ORDER)의 이름마다 등록(onFrame)이 꼭 하나 (7-3)
+    order = [n for rel, s, _ in js if rel == 'js/sim/systems.js'
+             for blk in re.findall(r'FRAME_ORDER\s*=\s*\[(.*?)\];', re.sub(r'//[^\n]*', '', s), flags=re.S) for n in re.findall(r"'(\w+)'", blk)]
+    framed = {}
+    for rel, s, mod in js:
+        for n in re.findall(r'''(?<![\w$.])onFrame\(\s*['"](\w+)['"]''', re.sub(r'//[^\n]*|/\*.*?\*/', '', s, flags=re.S)):
+            if n not in order: raise BuildError(f'{rel}: onFrame(\'{n}\') — 매 프레임 순서표(sim/systems.js FRAME_ORDER)에 이 이름이 없어요')
+            if n in framed: raise BuildError(f'onFrame(\'{n}\')을 두 번 등록했어요: {framed[n]}, {rel}')
+            framed[n] = rel
+    for n in order:
+        if n not in framed: raise BuildError(f'sim/systems.js: 매 프레임 순서표의 \'{n}\'을(를) 등록하는 곳(onFrame(\'{n}\', …))이 없어요')
     for n, rel in sorted(emitted.items()):
         if n not in handled:
             raise BuildError(f'{rel}: emit(\'{n}\', …) — 이 사건을 받는 곳이 없어요 (ui/feedback.js에 onEvent(\'{n}\', …) 추가)')

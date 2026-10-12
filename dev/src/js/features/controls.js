@@ -39,6 +39,7 @@ function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; c
 
 // ---- the attack button ----
 let atkQ = 0, atkT = 0;
+onFrame('attack', dt => attackTick(dt));
 function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || ctlOf(p).atk) && atkT <= 0) { atkQ = 0; doAttack(); } }
 function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
