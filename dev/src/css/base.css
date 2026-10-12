@@ -1,0 +1,19 @@
+/* Layout: full-bleed pixel canvas; HUD floats top-left, menu column top-right, hotbar + big action button at the thumb zone. One dark lantern-lit look. */
+:root{
+  --bg:#120f1c; --ink:#1b1426; --panel:#2a2139; --panel2:#352a48; --slot:#3a2e50; --line:#57476e;
+  --text:#fbefd9; --muted:#bfaed3; --amber:#ffc861; --amber-d:#d9902f; --mint:#7fe0b5;
+  --rose:#ff8fa3; --hunger:#ffb15c; --danger:#ff7a8a;
+  --font:'Jua','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+  --slotS:clamp(46px, calc((100vw - 88px) / 6), 60px);
+  color-scheme:dark;
+}
+html,body{height:100%;background:var(--bg);color:var(--text)}
+body{margin:0;overflow:hidden;font-family:var(--font);word-break:keep-all;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font-family:var(--font);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+[hidden]{display:none!important}
+img.px{image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain}
+#game{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(10,6,18,0) 55%,rgba(10,6,18,.5) 100%)}
+

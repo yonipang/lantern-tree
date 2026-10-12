@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Pack hand-drawn 16px art (one tile = 16×16 since v53) from dev/art/ into dev/index.html.
+"""Pack hand-drawn 16px art (one tile = 16×16 since v53) from dev/art/ into dev/src/js/art/hand-art.js.
 
 dev/art/<path>.png      -> ART["<path>"]  (automatic outline, like the old sprite)
 dev/art/<path>.raw.png  -> ART["<path>"]  (kept exactly as drawn, no outline)
 
 <path> is where the sprite lives in the game, e.g. obj/roundTree, item/berry, crop/berry/3, slimeG, animal/dog.
-Run it after adding or changing art, then test and deploy as usual.
+Run it after adding or changing art, then build (dev/build.py), test and deploy as usual.
 """
 import base64, json, os, re, struct, sys
 
 DEV = os.path.dirname(os.path.abspath(__file__))
 ART_DIR = sys.argv[1] if len(sys.argv) > 1 else os.path.join(DEV, 'art')
-SRC = sys.argv[2] if len(sys.argv) > 2 else os.path.join(DEV, 'index.html')
+SRC = sys.argv[2] if len(sys.argv) > 2 else os.path.join(DEV, 'src', 'js', 'art', 'hand-art.js')
 
 
 def png_size(b):
@@ -44,7 +44,7 @@ def main():
     block = '/*@@ART*/const ART = ' + (json.dumps(art, ensure_ascii=False, separators=(',', ':')) if art else '{}') + ';/*@@ARTEND*/'
     new, n = re.subn(r'/\*@@ART\*/.*?/\*@@ARTEND\*/', lambda m: block, s, count=1, flags=re.S)
     if n != 1:
-        sys.exit('dev/index.html 안에 /*@@ART*/ 표시를 찾지 못했어요')
+        sys.exit(f'{SRC} 안에 /*@@ART*/ 표시를 찾지 못했어요')
     if new != s:
         open(SRC, 'w', encoding='utf-8').write(new)
     for w in warn:

@@ -1,0 +1,45 @@
+// ---- more decorations, spread over early (wood/stone/fiber/dirt) and later (copper/iron) materials ----
+const DECOR = {
+  woodCrate: { n: '나무 상자', d: '차곡차곡 쌓아 두는 장식용 상자.', req: [['wood', 3]], spr: [16, 16, A => { A.r(2, 4, 12, 11, C.wood); A.r(2, 4, 12, 1, C.woodL); A.r(2, 14, 12, 1, C.woodD); A.r(2, 4, 1, 11, C.woodD); A.r(13, 4, 1, 11, C.woodD); A.r(3, 9, 10, 1, C.woodD); A.line(3, 5, 12, 13, C.woodD); A.p(4, 6, '#ffd1a0'); }] },
+  logBench: { n: '통나무 벤치', d: '앉아서 쉴 수 있어요.', req: [['wood', 5]], use: 'sit', spr: [16, 16, A => { A.r(3, 11, 2, 3, C.woodD); A.r(11, 11, 2, 3, C.woodD); A.r(1, 8, 14, 4, C.wood); A.r(1, 8, 14, 1, C.woodL); A.r(1, 11, 14, 1, C.woodD); A.e(1.6, 9.8, 1.2, 1.8, '#e8b97a'); A.e(14.4, 9.8, 1.2, 1.8, '#e8b97a'); A.p(6, 9, C.woodD); A.p(10, 10, C.woodD); A.e(11, 7.6, 1.6, .8, C.leaf); }] },
+  stoneBench: { n: '돌 벤치', d: '서늘하고 단단한 돌 의자. 앉을 수 있어요.', req: [['stone', 6]], use: 'sit', spr: [16, 16, A => { A.r(2, 11, 3, 3, C.stoneD); A.r(11, 11, 3, 3, C.stoneD); A.r(1, 8, 14, 3, C.stone); A.r(1, 8, 14, 1, C.stoneL); A.r(1, 10, 14, 1, C.stoneD); A.p(4, 9, C.stoneL); A.p(12, 9, C.stoneD); }] },
+  stoneLantern: { n: '돌 등롱', d: '정원을 은은하게 밝히는 돌 등. 눌러서 켜고 꺼요.', req: [['stone', 4], ['wood', 1]], use: 'lamp', light: [5, '#ffd27a'], flick: 1, spr: [16, 24, A => { A.r(5, 20, 6, 2, C.stoneD); A.r(7, 13, 2, 7, C.stone); A.r(7, 13, 1, 7, C.stoneL); A.r(4, 8, 8, 5, C.stone); A.r(6, 9, 4, 3, '#ffd27a'); A.p(7, 10, '#fff1c0'); A.poly([[2, 8.5], [8, 3.5], [14, 8.5]], C.stoneD); A.r(3, 8, 10, 1, C.stoneL); A.p(8, 3, C.stone); }] },
+  flowerBox: { n: '꽃 화단', d: '알록달록한 꽃이 핀 화단. 물을 줄 수 있어요.', req: [['wood', 2], ['dirt', 2], ['fiber', 2]], use: 'water', spr: [16, 16, A => { A.r(1, 9, 14, 5, C.wood); A.r(1, 9, 14, 1, C.woodL); A.r(1, 13, 14, 1, C.woodD); A.r(2, 9, 12, 1, C.dirt); [[3, 6, C.rose], [6, 5, '#fff1d6'], [9, 6, '#ffd25c'], [12, 5, C.cry]].forEach(([x, y, c]) => { A.line(x, y + 1, x, 9, C.leafD); A.p(x, y, c); A.p(x - 1, y, c); A.p(x + 1, y, c); A.p(x, y - 1, c); A.p(x, y + 1, c); A.p(x, y, '#ffc861'); }); A.p(4, 8, C.leaf); A.p(10, 8, C.leaf); }] },
+  strawBasket: { n: '짚 바구니', d: '이끼 섬유로 엮은 바구니.', req: [['fiber', 4]], spr: [16, 16, A => { A.line(4, 8, 6, 3, C.leafD); A.line(10, 8, 11, 4, C.leaf); A.p(6, 3, C.leafL); A.e(8, 11, 6, 3.6, '#d9b26a'); for (let x = 3; x < 14; x += 2) A.line(x, 9, x + 1, 14, '#b08a45'); A.e(8, 8.6, 6, 1.4, '#e8c98a'); A.e(8, 8.6, 4.6, .8, '#9a7438'); }] },
+  pictureFrame: { n: '이젤 액자', d: '풍경화가 담긴 작은 이젤.', req: [['wood', 2], ['fiber', 1]], spr: [16, 16, A => { A.line(5, 11, 3, 15, C.woodD); A.line(11, 11, 13, 15, C.woodD); A.line(8, 10, 8, 15, C.woodD); A.r(3, 1, 10, 10, C.woodD); A.r(4, 2, 8, 8, '#a8dcf5'); A.e(6, 9, 3, 2, C.leaf); A.e(10.5, 9.5, 3, 2.2, C.leafD); A.e(10, 4, 1.3, 1.3, C.amber); A.p(5, 4, '#ffffff'); A.p(6, 4, '#ffffff'); }] },
+  copperLamp: { n: '구리 스탠드', d: '반짝이는 구리 스탠드 조명. 눌러서 켜고 꺼요.', req: [['copperBar', 2], ['wood', 1]], use: 'lamp', light: [6, '#ffd9a0'], spr: [16, 24, A => { A.e(8, 21.5, 3.4, 1.4, C.copperD); A.r(7, 9, 2, 12, C.copper); A.r(7, 9, 1, 12, C.copperL); A.poly([[3, 10], [5, 3.5], [11, 3.5], [13, 10]], C.copper); A.line(5, 4, 4, 9, C.copperL); A.r(4, 10, 8, 1, C.copperD); A.r(6, 11, 4, 1, '#fff1c0'); }] },
+  copperKettle: { n: '구리 주전자', d: '따뜻한 차를 마실 수 있어요.', req: [['copperBar', 2]], use: 'tea', spr: [16, 16, A => { A.line(12, 10, 15, 6, C.copperD, 2); A.line(4, 7, 2, 9, C.copperD); A.line(2, 9, 4, 12, C.copperD); A.e(8, 10.5, 5, 4, C.copper); A.e(6.5, 9, 1.6, 1.4, C.copperL); A.r(4, 14, 8, 1, C.copperD); A.e(8, 6.6, 2.6, 1, C.copperD); A.p(8, 5, C.copperL); }] },
+  grandClock: { n: '괘종시계', d: '똑딱똑딱 시간을 알려 주는 커다란 시계.', req: [['copperBar', 1], ['wood', 6]], spr: [16, 24, A => { A.r(4, 3, 8, 19, C.woodD); A.r(3, 2, 10, 2, C.woodL); A.r(3, 21, 10, 2, C.wood); A.e(8, 7.5, 3, 3, C.cream); A.e(8, 7.5, 3, 3, C.cream); A.p(8, 6, INK); A.p(8, 7, INK); A.p(9, 7, INK); A.r(6, 12, 4, 7, '#5a3a24'); A.line(8, 12, 8, 16, C.copper); A.e(8, 17, 1.2, 1.2, C.copperL); A.p(5, 4, C.copper); A.p(10, 4, C.copper); }] },
+  ironStove: { n: '무쇠 난로', d: '집 안을 따뜻하게 밝혀요. 눌러서 켜고 꺼요.', req: [['ironBar', 3], ['stone', 4]], use: 'lamp', light: [5.5, '#ff9a4a'], flick: 1, spr: [16, 24, A => { A.r(9, 1, 3, 8, '#4a4558'); A.r(9, 1, 3, 1, C.iron); A.r(3, 8, 10, 12, '#5a5468'); A.r(2, 8, 12, 2, C.iron); A.r(5, 12, 6, 5, '#2e2b3a'); A.r(6, 14, 4, 3, C.fire); A.r(7, 15, 2, 2, C.amber); A.r(4, 20, 2, 2, '#3d3a4a'); A.r(10, 20, 2, 2, '#3d3a4a'); A.p(4, 10, C.ironL); }] },
+  ironChair: { n: '철제 의자', d: '돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요.', req: [['ironBar', 2], ['fiber', 1]], use: 'sit', spr: [16, 16, A => { A.line(4, 2, 4, 9, C.ironD); A.line(11, 2, 11, 9, C.ironD); A.r(4, 2, 8, 1, C.ironD); A.e(7, 5, 1.5, 1.5, C.ironD); A.e(7, 5, .6, .6, '#00000000'); A.e(9.5, 5, 1.5, 1.5, C.ironD); A.r(3, 9, 10, 2, C.iron); A.r(4, 9, 8, 1, '#7fb3e0'); A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); }] },
+};
+for (const id in DECOR) { const D = DECOR[id]; OSPR[id] = D.spr; ITEMS[id] = { n: D.n, kind: 'place', obj: id, d: D.d }; OBJ[id] = { n: D.n, solid: 1, item: id }; if (D.light) OBJ[id].light = D.light; if (D.flick) OBJ[id].flick = 1; if (D.use) USE[id] = D.use; RECIPES.push(Rc(id, 1, D.req, 'bench', 'furn')); }
+
+RECIPES.push(
+  Rc('rod', 1, [['wood', 3], ['fiber', 2]], null, 'tool'),
+  Rc('shovel', 1, [['copperBar', 2], ['wood', 3]], 'bench', 'tool'),
+  Rc('gDirt', 2, [['dirt', 1]], null, 'build'),
+  Rc('fishTank', 1, [['stone', 3], ['anyFish', 1]], 'bench', 'furn'),
+  Rc('bootPlanter', 1, [['boot', 1], ['dirt', 2]], 'bench', 'furn'),
+  Rc('grilledFish', 1, [['anyFish', 1]], 'pot', 'food'),
+  Rc('fishStew', 1, [['anyFish', 2], ['mushroom', 1]], 'pot', 'food'),
+  Rc('stumpStool', 1, [['wood', 3], ['fiber', 1]], 'bench', 'moss'),
+  Rc('mossSofa', 1, [['wood', 6], ['fiber', 6]], 'bench', 'moss'),
+  Rc('sproutLamp', 1, [['wood', 2], ['fiber', 2], ['glowcap', 1]], 'bench', 'moss'),
+  Rc('leafRug', 1, [['fiber', 8]], 'bench', 'moss'),
+  Rc('mossBed', 1, [['wood', 8], ['fiber', 8]], 'bench', 'moss'),
+  Rc('floorMoss', 4, [['fiber', 2], ['dirt', 2]], 'bench', 'moss'),
+  Rc('shroomStool', 1, [['shroomCap', 2], ['wood', 1]], 'bench', 'shroom'),
+  Rc('shroomTable', 1, [['shroomCap', 4], ['wood', 2]], 'bench', 'shroom'),
+  Rc('sporeLamp', 1, [['shroomCap', 2], ['glowcap', 2]], 'bench', 'shroom'),
+  Rc('shroomWardrobe', 1, [['shroomCap', 6], ['wood', 6]], 'bench', 'shroom'),
+  Rc('dotRug', 1, [['fiber', 6], ['shroomCap', 1]], 'bench', 'shroom'),
+  Rc('floorShroom', 4, [['shroomCap', 1], ['dirt', 2]], 'bench', 'shroom'),
+  Rc('cryChair', 1, [['crystal', 3], ['ironBar', 1]], 'bench', 'crystal'),
+  Rc('cryTable', 1, [['crystal', 4], ['ironBar', 2]], 'bench', 'crystal'),
+  Rc('cryFountain', 1, [['crystal', 6], ['stone', 6]], 'bench', 'crystal'),
+  Rc('cryMirror', 1, [['crystal', 4], ['ironBar', 2]], 'bench', 'crystal'),
+  Rc('starRug', 1, [['fiber', 6], ['crystal', 1]], 'bench', 'crystal'),
+  Rc('floorCrystal', 4, [['crystal', 1], ['stone', 2]], 'bench', 'crystal'),
+);
+
