@@ -512,6 +512,26 @@ function emit(type, ...args) {
   if (!hs) { console.error('사건을 받는 곳이 없어요: ' + type); return; }
   for (const h of hs) h(...args);
 }
+// ================= 명령 (구조 변경 7단계): 화면·입력 → 규칙 =================
+// 화면 쪽(ui/)은 규칙을 바로 바꾸지 않고 명령을 보내요:  runCmd({ k: 'tap', b: 'act' })   runCmd({ k: 'skill', n: 0 })
+// 규칙 쪽은 defineCmd('이름', c => …)로 받는 곳을 만들어요. 지금은 보내는 순간 바로 처리돼서 예전과 똑같이 동작해요.
+// 멀티플레이(12단계~)에서는 친구가 보낸 명령을 방장이 같은 처리기로 돌려요 — 그래서 명령에는 숫자·글자 같은 단순한 값을 담아요.
+// actor: 지금 처리 중인 명령을 보낸 플레이어 (8단계에서 플레이어마다 쓰여요).
+//
+// 조작 의도(ctl): 매 프레임 화면 쪽이 runCmd({ k: 'ctl', … })로 보내요 — 규칙은 키보드·마우스·조이스틱을 직접 읽지 않아요 (build.py가 확인).
+//   mx·my 움직임(키·조이스틱·방향 패드를 더한 값) · stick 조이스틱 방향(쓰는 중일 때만) · act 상호작용 누르는 중 · atk 공격 누르는 중
+//   aim 마우스로 겨누는 중이면 { x, y 세계 좌표, tx, ty 가리키는 칸 } 아니면 null
+
+const CMDS = new Map();
+let actor = null;
+function defineCmd(k, fn) { if (CMDS.has(k)) throw new Error('명령 이름이 겹쳐요: ' + k); CMDS.set(k, fn); }
+function runCmd(c) {
+  const fn = CMDS.get(c.k);
+  if (!fn) { console.error('명령을 처리하는 곳이 없어요: ' + c.k); return; }
+  actor = c.who || ME; return fn(c);
+}
+const IDLE = Object.freeze({ mx: 0, my: 0, stick: null, act: false, atk: false, aim: null });
+const ctlOf = p => p.ctl || IDLE;
 // ================= 지도 틀 (구조 변경 5단계: content/items.js·world.js에서 옮김) =================
 // 지도 모양(1 = 처음 200×200 지도, 2 = 600×600 고리 지도)과 크기·등불나무·보스 자리, 칸 번호(idx)·지도 안인지(inB), 방향 이름.
 // v47부터 두 가지: 1은 v47 전 세이브가 그대로 쓰는 200×200, 2는 새 게임의 고리 지도
@@ -2770,31 +2790,17 @@ const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1)
 const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.ranged ? 1 : 1 - skl('warrior') * .03); };
 const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
-// ================= input =================
-const keys = new Set();
-const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
-const dpad = { id: null, vx: 0, vy: 0 };
-let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
-const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
-let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
-const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
-const actHeld = () => btnHeld || keys.has('Space') || keys.has('KeyE'); // v65: interact (the mouse and J attack)
-function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
+let actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
-function mouseTile() {
-  const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
-  // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
-  if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
-  return { x: tx, y: ty, mx: m.x, my: m.y };
-}
 
 // ================= actions =================
 const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
-  if (aimMouse()) {
-    const m = mouseTile();
+  const aim = ctlOf(p).aim;
+  if (aim) {
+    const m = { x: aim.tx, y: aim.ty, mx: aim.x, my: aim.y };
     if (m.x !== ptx || m.y !== pty) {
       if (inReach(m.x, m.y)) return { x: m.x, y: m.y };
       let best = null, bd = 1e9;
@@ -2947,7 +2953,6 @@ function pickupObj(t, o) {
   delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   returnObj(o, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
-function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); doAlt(); } // v65: the small button
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
@@ -2956,13 +2961,21 @@ function tryAct(edge) {
   else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
   perform(a);
 }
+defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 매 프레임 화면 쪽이 보내요
+function pickHot(i) { // 단축칸 고르기 (같은 칸을 한 번 더 고르면 음식은 먹고 옷은 입어요)
+  { const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; } // v65
+  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
+  G.sel = i; invDirty = true;
+}
+defineCmd('hot', c => pickHot(c.i));
+defineCmd('sel', c => { const d = c.d, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); invDirty = true; }); // 마우스 휠
 function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
 function perform(a) {
   const p = G.p;
   if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
   switch (a.k) {
     case 'attack': {
-      if (!aimMouse()) faceTo(a.en.x - p.x, a.en.y - p.y);
+      if (!ctlOf(p).aim) faceTo(a.en.x - p.x, a.en.y - p.y);
       actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     }
     case 'rot': rotatePlace(); actCd = 0.15; break;
@@ -3003,7 +3016,7 @@ function perform(a) {
   }
 }
 function swingAttack() {
-  const p = G.p, w = curWeapon(), W = wtOf(w); if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
+  const p = G.p, w = curWeapon(), W = wtOf(w), aim = ctlOf(p).aim; if (aim) faceTo(aim.x - p.x, aim.y - (p.y - .45)); const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
   if (W.ranged) {
     if (W.mp && (p.mp || 0) < W.mp) { emit('toast', '기력이 부족해요. 잠깐 기다리면 다시 차요', null, 'nomp'); emit('sfx', 'clink'); return false; }
     if (W.mp) p.mp -= W.mp;
@@ -3036,6 +3049,7 @@ function updatePShots(dt) {
   }
 }
 // ---- active skills ----
+defineCmd('skill', c => useSkill(c.n));
 function useSkill(n) {
   if (!G || paused || !started) return; const p = G.p; if (p.dead > 0 || p.sleep) return;
   const k = G.rpg.slot[n]; if (!k) { emit('open', 'stat'); return; }
@@ -3045,13 +3059,13 @@ function useSkill(n) {
   if (SK_FN[k](l) === false) return; p.mp -= cost; G.skcd[k] = S.cd(l);
 }
 const SK_FN = {
-  dash(l) { const p = G.p; let dx = p.face.x, dy = p.face.y; if (joy.active && Math.hypot(joy.vx, joy.vy) > .2) { dx = joy.vx; dy = joy.vy; } if (dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2) { dx = dpad.vx; dy = dpad.vy; } const L = Math.hypot(dx, dy) || 1, sp = 15 * (1 + (l - 1) * .15); p.dash = { t: .2, vx: dx / L * sp, vy: dy / L * sp }; p.inv = Math.max(p.inv, .4); emit('puff', p.x, p.y, '#e8d8c0', 8, 2, .1); emit('sfx', 'swing'); },
+  dash(l) { const p = G.p; let dx = p.face.x, dy = p.face.y; const st = ctlOf(p).stick; if (st) { dx = st.x; dy = st.y; } const L = Math.hypot(dx, dy) || 1, sp = 15 * (1 + (l - 1) * .15); p.dash = { t: .2, vx: dx / L * sp, vy: dy / L * sp }; p.inv = Math.max(p.inv, .4); emit('puff', p.x, p.y, '#e8d8c0', 8, 2, .1); emit('sfx', 'swing'); },
   spin(l) { const p = G.p, w = curWeapon(), mul = 1.3 + .3 * l; G.swing = { t: .3, max: .3, ang: Math.atan2(p.face.y, p.face.x), icon: w.id === 'hand' ? null : w.id, arc: Math.PI, rad: 1.35 }; emit('sfx', 'swing'); emit('shake', .15);
     const roll = () => { const crit = rand() < .1; return [Math.round(w.dmg * (wtOf(w).magic ? magicMul() : meleeMul()) * mul * (crit ? 1.6 : 1)), crit]; }; let landed = false;
     for (const e of G.enemies.slice()) if (Math.hypot(e.x - p.x, e.y - p.y) < 1.9 + ENEMY[e.k].r) { const [d, c] = roll(); hitEnemy(e, d, c, 12, w.fx); landed = true; }
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < 1.9 + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c); landed = true; } }
     if (landed) wear(w.slot); },
-  bolt(l) { const p = G.p; if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } else { const en = nearestEnemy(7); if (en) faceTo(en.x - p.x, en.y - p.y); } const ang = Math.atan2(p.face.y, p.face.x);
+  bolt(l) { const p = G.p, aim = ctlOf(p).aim; if (aim) faceTo(aim.x - p.x, aim.y - (p.y - .45)); else { const en = nearestEnemy(7); if (en) faceTo(en.x - p.x, en.y - p.y); } const ang = Math.atan2(p.face.y, p.face.x);
     shootP(ang, { k: 'orb', dmg: Math.round((10 + 6 * l) * magicMul()), crit: false, spd: 11, range: 8, pierce: 1, col: '#fff1b0', kb: 5 }); emit('sfx', 'cast2'); },
   quake(l) { const t = targetTile(), pk = bestPick(); let n = 0; if (inB(t.x, t.y) && !G.wall[idx(t.x, t.y)]) { const f = G.p.face; if (Math.abs(f.x) > Math.abs(f.y)) t.x += Math.sign(f.x); else t.y += f.y < 0 ? -1 : 1; }
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = t.x + dx, y = t.y + dy; if (!inB(x, y)) continue; const w = G.wall[idx(x, y)]; if (!w || w === 8 || WALLS[w].tier > pk.tier || Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) > 3.6) continue; breakWall(x, y); n++; }
@@ -3064,7 +3078,7 @@ const SK_FN = {
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < R + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c, 'slow'); landed = true; } }
     if (landed) wear(w.slot); },
   volley(l) { const p = G.p, w = curWeapon(), W = wtOf(w); if (W.ranged !== 'arrow') { emit('toast', '화살비는 활을 들고 있어야 쓸 수 있어요', null, 'novolley'); return false; }
-    if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } else { const en = nearestEnemy(wRange(W)); if (en) faceTo(en.x - p.x, en.y - p.y); }
+    const aim = ctlOf(p).aim; if (aim) faceTo(aim.x - p.x, aim.y - (p.y - .45)); else { const en = nearestEnemy(wRange(W)); if (en) faceTo(en.x - p.x, en.y - p.y); }
     const ang = Math.atan2(p.face.y, p.face.x), n = 3 + 2 * l, spread = .9;
     for (let k = 0; k < n; k++) { const a = ang + (k / (n - 1) - .5) * spread, crit = rand() < .1; shootP(a, { k: 'arrow', dmg: Math.max(1, Math.round(w.dmg * (.5 + .1 * l) * rangeMul() * (crit ? 1.6 : 1))), crit, spd: W.spd, range: wRange(W), pierce: 0, col: '#bff7ef', kb: 3, fx: w.fx }); }
     G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; emit('sfx', 'swing'); },
@@ -3367,19 +3381,15 @@ function regrow() {
 let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0, saveT = 0;
 function update(dt) {
   G.time += dt; const p = G.p;
-  let mx = 0, my = 0;
-  if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
-  if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
-  if (joy.active) { mx += joy.vx; my += joy.vy; }
-  if (dpad.id != null) { mx += dpad.vx; my += dpad.vy; }
+  const ctl = ctlOf(p); let mx = ctl.mx, my = ctl.my;
   let mag = Math.hypot(mx, my); if (mag > 1) { mx /= mag; my /= mag; mag = 1; }
   if (p.dead > 0) { p.dead -= dt; mag = 0; if (p.dead <= 0) respawn(); }
   if (p.sleep) { p.sleep.t -= dt; mag = 0; if (p.sleep.t <= 0) wakeUp(); }
   if (p.sit) { if (mag > 0.3) standUp(); else { mag = 0; p.sitT = (p.sitT || 0) + dt; if (p.sitT > 0.8) { p.sitT = 0; if (p.hp < maxHp()) p.hp = Math.min(maxHp(), p.hp + 1); } } }
   p.moving = mag > 0.12;
   p.slowT = Math.max(0, (p.slowT || 0) - dt);
-  if (p.moving) { const sp = 4.4 * moveMul() * Math.max(0.5, mag) * (p.slowT > 0 ? .55 : 1); moveEnt(p, mx * sp * dt, my * sp * dt, 0.28); p.anim += dt; if (!aimMouse()) p.face = { x: mx / mag, y: my / mag }; }
-  if (aimMouse() && p.dead <= 0 && !p.sit && !p.sleep) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .4)); }
+  if (p.moving) { const sp = 4.4 * moveMul() * Math.max(0.5, mag) * (p.slowT > 0 ? .55 : 1); moveEnt(p, mx * sp * dt, my * sp * dt, 0.28); p.anim += dt; if (!ctl.aim) p.face = { x: mx / mag, y: my / mag }; }
+  if (ctl.aim && p.dead <= 0 && !p.sit && !p.sleep) faceTo(ctl.aim.x - p.x, ctl.aim.y - (p.y - .4));
   const f = p.face; if (Math.abs(f.x) > Math.abs(f.y) * 1.05) { p.dir = 'side'; p.flip = f.x < 0; } else p.dir = f.y < 0 ? 'up' : 'down';
   if (Math.abs(p.kx) + Math.abs(p.ky) > 0.05) { moveEnt(p, p.kx * dt, p.ky * dt, 0.28); const k = Math.pow(0.0015, dt); p.kx *= k; p.ky *= k; } else p.kx = p.ky = 0;
   p.inv = Math.max(0, p.inv - dt); p.hurt = Math.max(0, p.hurt - dt);
@@ -3387,7 +3397,7 @@ function update(dt) {
   p.mp = Math.min(maxMp(), (p.mp == null ? maxMp() : p.mp) + (2.5 + RS('int') * 0.25) * (1 + ringV('mp')) * dt); for (const k in G.skcd) if (G.skcd[k] > 0) G.skcd[k] -= dt;
   // action
   G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
-  const held = actHeld() && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
+  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
   if (p.dead > 0) actQ = 0;
   if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
   if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
@@ -4356,19 +4366,22 @@ function toolRowList() { const by = {}; for (const s of G.tools || []) { if (isB
 let altI = 0, altKey = '';
 function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
+// 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
+defineCmd('tap', c => { const t = c.t == null ? .3 : c.t; if (c.b === 'atk') atkQ = t; else actQ = t; });
+defineCmd('alt', () => doAlt());
+defineCmd('hold', c => { const s = G.tools && G.tools[c.i]; if (s) holdTool(s, true); });
 function doAlt() { const a = curAlt(); if (!a || actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
 function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }
 
 // ---- the attack button ----
-let atkBtnHeld = false, atkQ = 0, atkT = 0;
-const atkDown = () => atkBtnHeld || mouse.down || keys.has('KeyJ');
-function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || atkDown()) && atkT <= 0) { atkQ = 0; doAttack(); } }
+let atkQ = 0, atkT = 0;
+function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || ctlOf(p).atk) && atkT <= 0) { atkQ = 0; doAttack(); } }
 function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
   const w = curWeapon(), WT = wtOf(w); if (w.id !== 'hand') G.lastW = w.id;
   let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
-  if (en && !aimMouse()) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
+  if (en && !ctlOf(p).aim) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
   if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); atkT = .32; return; } }
   atkT = swingAttack() === false ? .3 : atkCd();
 }
@@ -4400,12 +4413,12 @@ function toolSlotHTML() { const s = heldTool() || toolRowList()[0] || null, on =
   return `<button type="button" class="slot tslot ${on ? 'sel' : ''} ${s && isBroken(s) ? 'broken' : ''}" data-tool="1" aria-label="도구 칸${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}` : '<span class="tnone">도구</span>'}<span class="tup">▲</span></button>`; }
 function toggleToolRow(force) { toolRowOpen = force != null ? force : !toolRowOpen; renderToolRow(); }
 function renderToolRow() { let el = $('#toolRow'); if (!el) { el = document.createElement('div'); el.id = 'toolRow'; $('#game').appendChild(el);
-    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { holdTool(s, true); emit('sfx', 'click'); } toggleToolRow(false); }); }
+    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { runCmd({ k: 'hold', i: +b.dataset.tk }); emit('sfx', 'click'); } toggleToolRow(false); }); }
   const L = toolRowList(); el.hidden = !toolRowOpen || !G;
   if (!toolRowOpen || !G) return; if (!L.length) { el.innerHTML = '<span class="tnone">도구가 없어요 · 작업대·장비제작대에서 만들어요</span>'; return; }
   el.innerHTML = L.map(s => slotHTML(s, 'tk', G.tools.indexOf(s), s === heldTool() ? 'sel' : '').replace('data-a="tk" data-i=', 'data-tk=')).join(''); }
 function toolSlotClick() { ensureAudio(); if (!G.tools.length) { emit('toast', '도구가 없어요 · 작업대·장비제작대에서 만들어요', null, 'notool'); return; }
-  if (G.sel >= 0) { const s = heldTool() || G.tools[G.tsel] || toolRowList()[0]; if (s) holdTool(s, true); } toggleToolRow(); }
+  if (G.sel >= 0) { const s = heldTool() || G.tools[G.tsel] || toolRowList()[0]; if (s) runCmd({ k: 'hold', i: G.tools.indexOf(s) }); } toggleToolRow(); }
 
 // ---- buttons on screen ----
 function updateCtrlHud() { const a = G.act || {};
@@ -5294,6 +5307,7 @@ let bossName = '';
 onEvent('bossbar', on => { $('#bossbar').hidden = !on; if (on) bossName = ''; });
 onEvent('bossHp', (k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } });
 let lastGoalTxt = '';
+function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } });
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
@@ -5333,7 +5347,7 @@ function updateSkBar() {
     b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
 }
 function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
-function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; actQ = 0; refocusGame(); }
+function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
@@ -5590,7 +5604,7 @@ function onSheetClick(e) {
   if (a === 'petOn') { if (!(G.pets || {})[i]) return; if (G.petOn === i) { G.petOn = null; G.petE = null; toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '은', '는').slice(ANIMALS[i].pn.length)} 집에서 쉬어요`, null, 'peton'); } else { G.petOn = i; G.petE = { x: G.p.x - .6, y: G.p.y + .2, flip: false, anim: 0, moving: false }; hearts(G.p.x, G.p.y - .5, 4); toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '과', '와').slice(ANIMALS[i].pn.length)} 함께 다녀요 · ${ANIMALS[i].fx}`, 'good', 'peton'); } SFX.pick(); renderPanel(); return; }
   if (a === 'eqPick') { if (G.inv[i]) wearItem(i); renderPanel(); return; }
   if (a === 'pouch') { UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
-  if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { holdTool(s, true); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
+  if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { runCmd({ k: 'hold', i: UIS.toolSel }); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
   if (a === 'trashTool') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } clearSlot('t:' + UIS.toolSel); UIS.toolSel = null; UIS.trash = false; renderPanel(); return; }
   if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
   if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
@@ -5667,7 +5681,7 @@ function onSheetClick(e) {
   if (a === 'ctrl') { ctrlPref = i === 'pad' ? 'pad' : 'joy'; try { localStorage.setItem('lantern-tree-ctrl', ctrlPref); } catch (e) { } applyCtrl(); renderPanel(); return; }
   if (a === 'zoom') { zoomPref = i; try { localStorage.setItem('lantern-tree-zoom', i); } catch (e) { } resize(); renderPanel(); return; }
   if (a === 'sound') { soundOn = !soundOn; try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
-  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } saveLocal(true); pushBackup('처음부터 다시 하기 전'); { const keepC = G.char; newGame((rand() * 1e9) | 0); G.char = keepC; buildPlayer(0); } started = true; closePanel(); invDirty = true; lastGoalTxt = ''; checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
+  if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } saveLocal(true); pushBackup('처음부터 다시 하기 전'); { const keepC = G.char; newGame((rand() * 1e9) | 0); G.char = keepC; buildPlayer(0); } started = true; closePanel(); invDirty = true; resetGoalText(); checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }
 }
 // ---- drag & drop between bag, hotbar and chest slots ----
 const DRAG = { st: null, block: 0 };
@@ -5724,12 +5738,39 @@ function sortBag() { // merge stacks and order the bag by kind; the hotbar stays
   UIS.invSel = null; invDirty = true;
 }
 function hotClick(i) {
-  ensureAudio(); { const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; } // v65
-  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
-  G.sel = i; invDirty = true;
+  ensureAudio(); runCmd({ k: 'hot', i });
 }
 
 // ================= input wiring =================
+// ---- 입력 상태 (구조 변경 7단계: game/actions.js에서 옮김) — 규칙은 이걸 직접 읽지 않고 매 프레임 조작 의도(ctl)를 받아요 ----
+const keys = new Set();
+const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
+const dpad = { id: null, vx: 0, vy: 0 };
+let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
+const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
+let btnHeld = false, atkBtnHeld = false;
+const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
+function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
+function mouseTile() {
+  const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
+  // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
+  if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
+  return { x: tx, y: ty, mx: m.x, my: m.y };
+}
+// 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)
+function readCtl() {
+  let mx = 0, my = 0;
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
+  if (joy.active) { mx += joy.vx; my += joy.vy; }
+  if (dpad.id != null) { mx += dpad.vx; my += dpad.vy; }
+  const stick = dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2 ? { x: dpad.vx, y: dpad.vy } : joy.active && Math.hypot(joy.vx, joy.vy) > .2 ? { x: joy.vx, y: joy.vy } : null; // 대시 방향 (방향 패드가 먼저)
+  let aim = null; if (aimMouse()) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
+  return { k: 'ctl', mx, my, stick, act: btnHeld || keys.has('Space') || keys.has('KeyE'), atk: atkBtnHeld || mouse.down || keys.has('KeyJ'), aim };
+}
+function sendCtl() { if (G) runCmd(readCtl()); }
+function command(c) { sendCtl(); return runCmd(c); } // 버튼·키로 보내는 명령 — 그 순간의 조작 의도와 함께
+function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); command({ k: 'alt' }); } // v65: the small button
 function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
 function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
 function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
@@ -5738,7 +5779,7 @@ function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     ensureAudio(); if (paused) return;
-    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; useSkill(0); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) atkQ = 0.3; /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
+    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; command({ k: 'skill', n: 0 }); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) command({ k: 'tap', b: 'atk' }); /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
     document.body.classList.add('touch'); mouse.used = false;
     if (!joy.active && ctrlPref !== 'pad' && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
   });
@@ -5752,10 +5793,10 @@ function setupInput() {
   const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); window.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') mouse.down = false; });
   const ab = $('#actBtn');
-  ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
+  ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; command({ k: 'tap', b: 'act' }); ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
   const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
   const kb = $('#atkBtn'); // v65: the attack button
-  kb.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; atkBtnHeld = true; atkQ = 0.3; kb.classList.add('on'); try { kb.setPointerCapture(e.pointerId); } catch (_) { } });
+  kb.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; atkBtnHeld = true; command({ k: 'tap', b: 'atk' }); kb.classList.add('on'); try { kb.setPointerCapture(e.pointerId); } catch (_) { } });
   const kbUp = () => { atkBtnHeld = false; kb.classList.remove('on'); }; kb.addEventListener('pointerup', kbUp); kb.addEventListener('pointercancel', kbUp); kb.addEventListener('lostpointercapture', kbUp);
   $('#altNext').addEventListener('click', () => { if (started && !paused) cycleAlt(); });
   window.addEventListener('keydown', e => {
@@ -5770,12 +5811,12 @@ function setupInput() {
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
-    if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
+    if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
     if (e.code === 'KeyQ') { cycleAlt(); return; } // v65: Q = next option on the small button (eat with E)
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
-    if (['Space', 'KeyE'].includes(e.code)) actQ = 0.3; if (e.code === 'KeyJ') atkQ = 0.3;
+    if (['Space', 'KeyE'].includes(e.code)) command({ k: 'tap', b: 'act' }); if (e.code === 'KeyJ') command({ k: 'tap', b: 'atk' });
     keys.add(e.code);
   });
   window.addEventListener('keyup', e => keys.delete(e.code));
@@ -5791,7 +5832,7 @@ function setupInput() {
   dp.addEventListener('pointermove', padMove);
   const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
   applyCtrl();
-  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); invDirty = true; }, { passive: true });
+  cv.addEventListener('wheel', e => { if (paused) return; command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
@@ -5800,7 +5841,7 @@ function setupInput() {
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
-  $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); useSkill(+b.dataset.n); });
+  $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); command({ k: 'skill', n: +b.dataset.n }); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
   $('#goal').addEventListener('click', () => started && openPanel('quest'));
@@ -5842,13 +5883,13 @@ function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking')
 function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
 function hidePicker() { $('#title').classList.remove('picking'); $('#charPick').hidden = true; clearInterval(pickAnim); }
 const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); };
-function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { const bc = $('#btnCloud'), ct = $('#cloudTitle'); if (bc) bc.hidden = true; if (ct) ct.hidden = true; } $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; lastInputAt = performance.now(); G.qt = G.qt || {}; { let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 40) { G.guide++; n++; } } checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
+function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { const bc = $('#btnCloud'), ct = $('#cloudTitle'); if (bc) bc.hidden = true; if (ct) ct.hidden = true; } $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; resetGoalText(); lastInputAt = performance.now(); G.qt = G.qt || {}; { let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 40) { G.guide++; n++; } } checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
 
 // ================= loop =================
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
-  if (G) { jobPanelTick(dt); if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
+  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
   if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);
