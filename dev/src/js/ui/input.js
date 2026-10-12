@@ -94,7 +94,7 @@ function setupInput() {
     if (cur) pushBackup('백업 되돌리기 전', cur); $('#bkList').hidden = true; beginPlay(); toast('백업에서 되돌렸어요', 'good'); });
   $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
   $('#charBack').addEventListener('click', () => hidePicker());
-  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 손 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, E(또는 스페이스)로 뿌리기둥을 베어 보세요'), 1400); });
+  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((rand() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 손 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, E(또는 스페이스)로 뿌리기둥을 베어 보세요'), 1400); });
   $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
   $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));

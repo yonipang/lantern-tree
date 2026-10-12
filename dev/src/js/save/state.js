@@ -1,7 +1,7 @@
 // ================= state =================
 const SAVE_KEY = 'lantern-tree-save-v1';
 // each playthrough gets its own id so cloud sync never mixes two different adventures
-const newRunId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const newRunId = () => Date.now().toString(36) + rand().toString(36).slice(2, 8);
 // play time: counts only while the game is open, visible and someone touched it in the last 2 minutes
 let lastInputAt = 0; const IDLE_LIMIT = 120;
 function fmtPlay(sec, est) { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); const t = h ? `${h}시간 ${m}분` : m ? `${m}분` : '1분 미만'; return (est ? '약 ' : '') + t; }

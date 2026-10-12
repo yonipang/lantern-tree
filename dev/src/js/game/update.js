@@ -6,9 +6,9 @@ function treeBox(L) { const b = treeBase(); return { l: b.x + (L.box.x0 - L.w / 
 function behindCanopy() { const p = G.p, L = SPR.treeSt && SPR.treeSt[treeStage()]; if (!L || p.y >= CY + 1) return false; const k = treeBox(L); return p.x + .3 > k.l && p.x - .3 < k.r && p.y > k.t + .3 && p.y - .9 < k.b; }
 function treeLeaf(st, burst) {
   const L = SPR.treeSt[st], b = treeBase(), k = treeBox(L), P = TREE_PAL[st];
-  const x = k.l + .3 + Math.random() * Math.max(.1, k.r - k.l - .6), top = k.t + (k.b - k.t) * (.35 + Math.random() * .6), gy = b.y - .2 + Math.random() * .8;
-  const col = burst && st >= 3 && Math.random() < .35 ? (Math.random() < .5 ? '#ffb3c8' : '#fff1f6') : P[1 + ((Math.random() * 3) | 0)];
-  TREEFX.leaves.push({ x, y: gy, z: Math.max(.3, gy - top), vz: burst ? .9 + Math.random() * .8 : .3 + Math.random() * .2, vx: burst ? (x - b.x) * (.8 + Math.random()) : (Math.random() - .5) * .3, vy: burst ? (Math.random() - .2) * .7 : 0, t: 0, ph: Math.random() * 6.28, col });
+  const x = k.l + .3 + fxRand() * Math.max(.1, k.r - k.l - .6), top = k.t + (k.b - k.t) * (.35 + fxRand() * .6), gy = b.y - .2 + fxRand() * .8;
+  const col = burst && st >= 3 && fxRand() < .35 ? (fxRand() < .5 ? '#ffb3c8' : '#fff1f6') : P[1 + ((fxRand() * 3) | 0)];
+  TREEFX.leaves.push({ x, y: gy, z: Math.max(.3, gy - top), vz: burst ? .9 + fxRand() * .8 : .3 + fxRand() * .2, vx: burst ? (x - b.x) * (.8 + fxRand()) : (fxRand() - .5) * .3, vy: burst ? (fxRand() - .2) * .7 : 0, t: 0, ph: fxRand() * 6.28, col });
 }
 function updateTree(dt) {
   const F = TREEFX, st = treeStage(), g = F.grow;
@@ -17,7 +17,7 @@ function updateTree(dt) {
   for (let i = F.leaves.length - 1; i >= 0; i--) { const q = F.leaves[i]; q.t += dt;
     if (q.z > 0) { q.z = Math.max(0, q.z - q.vz * dt); q.x += (q.vx + Math.sin(q.t * 2.4 + q.ph) * .35) * dt; q.y += q.vy * dt; q.vx *= Math.pow(.4, dt); q.vy *= Math.pow(.4, dt); }
     else { q.rest = (q.rest || 0) + dt; if (q.rest > .8) F.leaves.splice(i, 1); } }
-  if (st >= 5 && F.leaves.length < 14 && Math.hypot(G.p.x - CX, G.p.y - CY) < 22) { F.leafT -= dt; if (F.leafT <= 0) { F.leafT = .7 + Math.random() * 1.1; treeLeaf(st, 0); } }
+  if (st >= 5 && F.leaves.length < 14 && Math.hypot(G.p.x - CX, G.p.y - CY) < 22) { F.leafT -= dt; if (F.leafT <= 0) { F.leafT = .7 + fxRand() * 1.1; treeLeaf(st, 0); } }
 }
 // moss and little flowers on bare ground (dirt or moss with nothing on it) near the roots; decided per tile, never stored
 function spreadKind(x, y, R) {
@@ -108,14 +108,14 @@ let regrowT = 0, snapT = 0, cloudT = 0, zoneT = 0, growT = 0, circT = 0;
 function regrow() {
   const p = G.p;
   for (let k = 0; k < 14; k++) {
-    const a = Math.random() * 6.283, d = 13 + Math.random() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
+    const a = rand() * 6.283, d = 13 + rand() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
     if (x < 2 || y < 2 || x >= W - 2 || y >= H - 2) continue; const i = idx(x, y), f = G.floor[i], b = G.biome[i];
     if (G.wall[i] || G.objs.get(i) || !(f === 1 || f === 2 || f === 3) || b === 2) continue;
     if (Math.hypot(x - CX, y - CY) < 3.5) continue;
     let nat = 0, built = false;
     for (let dy = -3; dy <= 3 && !built; dy++) for (let dx = -3; dx <= 3; dx++) { const j = idx(x + dx, y + dy), o = G.objs.get(j); if (isPlacedFloor(G.floor[j])) { built = true; break; } if (!o) continue; const od = OBJ[o.t]; if (od.nat || od.bush) nat++; else if (od.item || od.tw) { built = true; break; } }
     if (built || nat >= 6) continue;
-    G.objs.set(i, { t: Math.random() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
+    G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
   }
 }
 let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0, saveT = 0;
@@ -137,7 +137,7 @@ function update(dt) {
   const f = p.face; if (Math.abs(f.x) > Math.abs(f.y) * 1.05) { p.dir = 'side'; p.flip = f.x < 0; } else p.dir = f.y < 0 ? 'up' : 'down';
   if (Math.abs(p.kx) + Math.abs(p.ky) > 0.05) { moveEnt(p, p.kx * dt, p.ky * dt, 0.28); const k = Math.pow(0.0015, dt); p.kx *= k; p.ky *= k; } else p.kx = p.ky = 0;
   p.inv = Math.max(0, p.inv - dt); p.hurt = Math.max(0, p.hurt - dt);
-  if (p.dash) { moveEnt(p, p.dash.vx * dt, p.dash.vy * dt, 0.28); p.dash.t -= dt; if (Math.random() < .5) puff(p.x, p.y, '#e8d8c0', 1, 1, .05); if (p.dash.t <= 0) p.dash = null; }
+  if (p.dash) { moveEnt(p, p.dash.vx * dt, p.dash.vy * dt, 0.28); p.dash.t -= dt; if (fxRand() < .5) puff(p.x, p.y, '#e8d8c0', 1, 1, .05); if (p.dash.t <= 0) p.dash = null; }
   p.mp = Math.min(maxMp(), (p.mp == null ? maxMp() : p.mp) + (2.5 + RS('int') * 0.25) * (1 + ringV('mp')) * dt); for (const k in G.skcd) if (G.skcd[k] > 0) G.skcd[k] -= dt;
   // action
   G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
@@ -176,10 +176,10 @@ function updateEnemies(dt) {
     const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
     if (def.hop) {
       if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
-      else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = Math.random() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + Math.random() * 0.6; } }
+      else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
     } else {
       e.t -= dt; if (!chase && e.zone != null && G.fzones && G.fzones[e.zone]) { const z = G.fzones[e.zone], zx = z.x + .5 - e.x, zy = z.y + .5 - e.y, zd = Math.hypot(zx, zy); if (zd > 4.5) { e.vx = zx / zd * def.spd * .5; e.vy = zy / zd * def.spd * .5; e.t = .6; } }
-      if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + Math.random() * 2; const a = Math.random() * 6.283, s = Math.random() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
+      if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
       moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.anim = (e.anim || 0) + dt * sm * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
       if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
     }
@@ -205,23 +205,23 @@ const BOSS_AI = {
   turtle(b, dt) {
     const p = G.p, d = b.d, st = b.stage || 1, half = st >= 2; b.t -= dt;
     if (b.ph === 'walk') { if (d > 2.4) moveEnt(b, (p.x - b.x) / d * 1.1 * dt, (p.y - b.y) / d * 1.1 * dt, 1.0); b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.casts++; if (st === 3 && b.casts % 3 === 1) { b.ph = 'erupt'; b.t = .9; SFX.boss(); } else if (b.casts % 3 === 0) { b.ph = 'hide'; b.t = .55; } else { b.ph = 'spit'; b.t = .5; } } }
-    else if (b.ph === 'erupt') { if (Math.random() < dt * 25) puff(b.x + (Math.random() - .5), b.y - .3, '#ff8a3d', 1, 2.4, .3); shake = Math.max(shake, .08); if (b.t <= 0) { turtleErupt(b); b.ph = 'open'; b.t = 3; ftext(b.x, b.y - 2.4, '지금이에요!', '#ffd25c'); } }
-    else if (b.ph === 'open') { if (Math.random() < dt * 6) puff(b.x, b.y - .5, '#ffd25c', 1, 1.2, .2); if (b.t <= 0) { b.ph = 'walk'; b.t = .8; } }
+    else if (b.ph === 'erupt') { if (fxRand() < dt * 25) puff(b.x + (fxRand() - .5), b.y - .3, '#ff8a3d', 1, 2.4, .3); shake = Math.max(shake, .08); if (b.t <= 0) { turtleErupt(b); b.ph = 'open'; b.t = 3; ftext(b.x, b.y - 2.4, '지금이에요!', '#ffd25c'); } }
+    else if (b.ph === 'open') { if (fxRand() < dt * 6) puff(b.x, b.y - .5, '#ffd25c', 1, 1.2, .2); if (b.t <= 0) { b.ph = 'walk'; b.t = .8; } }
     else if (b.ph === 'spit') { if (b.t <= 0) { const n = half ? 7 : 5, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.26; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 6, vy: Math.sin(a) * 6, life: 3, dmg: 20, k: 'fire' }); } SFX.cast2(); b.ph = 'walk'; b.t = half ? 0.8 : 1.2; } }
     else if (b.ph === 'hide') { if (b.t <= 0) { b.ph = 'shell'; b.t = half ? 3.2 : 2.6; const a = Math.atan2(p.y - b.y, p.x - b.x); b.dx = Math.cos(a); b.dy = Math.sin(a); b.bounce = 0; SFX.swing(); } }
     else if (b.ph === 'shell') {
       const sp = half ? 10.5 : 8.5, ox = b.x, oy = b.y, mx = b.dx * sp * dt, my = b.dy * sp * dt;
       if (moveEnt(b, mx, my, 1.0)) { if (Math.abs(b.x - ox) < Math.abs(mx) * .5) b.dx = -b.dx; if (Math.abs(b.y - oy) < Math.abs(my) * .5) b.dy = -b.dy; b.bounce++; shake = Math.max(shake, .3); SFX.brk(); puff(b.x, b.y, '#ff8a3d', 8, 3); if (st >= 2) emberBurst(b); }
-      if (Math.random() < dt * 8) puff(b.x, b.y + .3, '#ff8a3d', 1, 1, .2);
-      if (b.t <= 0 || b.bounce >= (st === 3 ? 7 : 5)) { b.ph = 'walk'; b.t = 1.1; G.hz = G.hz || []; const n = half ? 6 : 4; for (let k = 0; k < n; k++) { const hx = p.x + (Math.random() - .5) * 5, hy = p.y + (Math.random() - .5) * 5; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.1, t: 0, warn: .8, life: 7, dmg: 15, k: 'lava' }); } }
+      if (fxRand() < dt * 8) puff(b.x, b.y + .3, '#ff8a3d', 1, 1, .2);
+      if (b.t <= 0 || b.bounce >= (st === 3 ? 7 : 5)) { b.ph = 'walk'; b.t = 1.1; G.hz = G.hz || []; const n = half ? 6 : 4; for (let k = 0; k < n; k++) { const hx = p.x + (rand() - .5) * 5, hy = p.y + (rand() - .5) * 5; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.1, t: 0, warn: .8, life: 7, dmg: 15, k: 'lava' }); } }
     }
     if (d < 1.5) hurtPlayer(b.ph === 'shell' ? 28 : 18, b.x, b.y);
   },
   spirit(b, dt) {
     const p = G.p, d = b.d, st = b.stage || 1, half = st >= 2; b.t -= dt; b.anim = (b.anim || 0) + dt;
     if (b.ph === 'walk') { const want = d > 5 ? 1 : d < 3.4 ? -1 : 0; if (want && d > 0) moveEnt(b, (p.x - b.x) / d * 1.9 * want * dt, (p.y - b.y) / d * 1.9 * want * dt, .8); if (b.t <= 0) { b.casts++; b.ph = b.casts % (half ? 2 : 3) === 0 ? 'fade' : 'ring'; b.t = b.ph === 'fade' ? .55 : .65; } }
-    else if (b.ph === 'ring') { if (b.t <= 0) { const n = 18, gap = Math.floor(Math.random() * n), off = Math.random(); for (let k = 0; k < n; k++) { if ((k - gap + n) % n < 3) continue; const a = (k + off) / n * 6.283; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4, life: 4, dmg: 17, k: 'ice', a, spin: st === 3 ? (b.rings % 2 ? -.35 : .35) : 0 }); } SFX.cast2(); if (st === 3) for (const e of G.enemies) if (e.k === 'spiritClone') puff(e.x, e.y - .6, '#bfe6ff', 8, 2.2); b.rings = (b.rings || 0) + 1; if (half && b.rings % 2 === 1) b.t = .55; else { b.ph = 'walk'; b.t = half ? 1.0 : 1.5; } } }
-    else if (b.ph === 'fade') { if (b.t <= 0) { const h0 = BOSSES.spirit.home(); for (let k = 0; k < 24; k++) { const a = Math.random() * 6.283, r = 1.8 + Math.random() * 1.0, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r; if (!boxHits(x, y, .8) && Math.hypot(x - h0.x, y - h0.y) < 12) { b.x = x; b.y = y; break; } }
+    else if (b.ph === 'ring') { if (b.t <= 0) { const n = 18, gap = Math.floor(rand() * n), off = rand(); for (let k = 0; k < n; k++) { if ((k - gap + n) % n < 3) continue; const a = (k + off) / n * 6.283; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4, life: 4, dmg: 17, k: 'ice', a, spin: st === 3 ? (b.rings % 2 ? -.35 : .35) : 0 }); } SFX.cast2(); if (st === 3) for (const e of G.enemies) if (e.k === 'spiritClone') puff(e.x, e.y - .6, '#bfe6ff', 8, 2.2); b.rings = (b.rings || 0) + 1; if (half && b.rings % 2 === 1) b.t = .55; else { b.ph = 'walk'; b.t = half ? 1.0 : 1.5; } } }
+    else if (b.ph === 'fade') { if (b.t <= 0) { const h0 = BOSSES.spirit.home(); for (let k = 0; k < 24; k++) { const a = rand() * 6.283, r = 1.8 + rand() * 1.0, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r; if (!boxHits(x, y, .8) && Math.hypot(x - h0.x, y - h0.y) < 12) { b.x = x; b.y = y; break; } }
       if (st === 3) { const nc = G.enemies.filter(e => e.k === 'spiritClone').length; if (nc < 2) spiritClones(b, 2 - nc); } b.ph = 'nova'; b.t = 1.0; G.hz = G.hz || []; G.hz.push({ x: b.x, y: b.y, r: 3.2, t: 0, warn: .9, life: 1.05, dmg: 26, k: 'frost', slow: 2.8 }); puff(b.x, b.y - .5, '#d4f6ff', 14, 2.5); } }
     else if (b.ph === 'nova') { if (b.t <= 0) { b.ph = 'walk'; b.t = .9; if (half && G.enemies.length < 8) { const nf = st === 3 ? Math.max(0, 2 - G.enemies.filter(e => e.k === 'frostSlime').length) : 2; for (let k = 0; k < nf; k++) G.enemies.push(mkEnemy('frostSlime', b.x + (k ? 1.4 : -1.4), b.y + .6)); } } }
     if (d < 1.2 && b.ph !== 'fade') hurtPlayer(18, b.x, b.y);
@@ -254,7 +254,7 @@ const BOSS_AI = {
     if (b.ph === 'walk') { if (d > 2.5) moveEnt(b, (p.x - b.x) / d * 1.4 * dt, (p.y - b.y) / d * 1.4 * dt, .9); if (b.t <= 0) { b.ph = 'aim'; b.t = 0.75; } }
     else if (b.ph === 'aim') { if (b.t > 0.3) { b.dx = (p.x - b.x) / (d || 1); b.dy = (p.y - b.y) / (d || 1); } if (b.t <= 0) { b.ph = 'dash'; b.t = 0.62; SFX.swing(); } }
     else if (b.ph === 'dash') {
-      const blocked = moveEnt(b, b.dx * 12.5 * dt, b.dy * 12.5 * dt, .9); if (Math.random() < .5) puff(b.x, b.y + .3, '#8a83ad', 1, 1, .1);
+      const blocked = moveEnt(b, b.dx * 12.5 * dt, b.dy * 12.5 * dt, .9); if (fxRand() < .5) puff(b.x, b.y + .3, '#8a83ad', 1, 1, .1);
       if (blocked) { b.ph = 'stun'; b.t = 1.0; b.chain = 0; shake = 0.45; SFX.brk(); puff(b.x + b.dx, b.y + b.dy, C.cryL, 14, 3); ftext(b.x, b.y - 2.6, '기절!', '#7ff0e6'); }
       else if (b.t <= 0) { const n = half ? 9 : 7, base = Math.atan2(p.y - b.y, p.x - b.x); for (let k = 0; k < n; k++) { const a = base + (k - (n - 1) / 2) * 0.22; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 7, vy: Math.sin(a) * 7, life: 3, dmg: 17, k: 'shard', a }); } SFX.clink(); if (half && !b.chain) { b.chain = 1; b.ph = 'aim'; b.t = .6; } else { b.chain = 0; b.ph = 'walk'; b.t = half ? 0.5 : 0.9; } }
     }
@@ -274,18 +274,18 @@ function updateShots(dt) {
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
 const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];
 function regionEnemy(e, b) { const m = REGION_HP[b] || 1; if (m !== 1) { e.hp = Math.round(e.hp * m); e.mh = e.hp; } if ((REGION_DMG[b] || 1) !== 1) e.dm = REGION_DMG[b]; return e; }
-function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: Math.random(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
+function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: rand(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
 function trySpawn() {
   const p = G.p; if (p.dead > 0) return; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= (SPAWN_CAP[pb] || 7)) return;
   for (let k = 0; k < 10; k++) {
-    const a = Math.random() * 6.283, r = 10 + Math.random() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
+    const a = rand() * 6.283, r = 10 + rand() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
     if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y))) continue;
     if (Math.hypot(x - CX, y - CY) < 13 + G.treeSeeds * 4) continue; if (Math.hypot(x - BX, y - BY) < 11 || Math.hypot(x - SA.x, y - SA.y) < 10 || Math.hypot(x - SB.x, y - SB.y) < 10 || Math.hypot(x - SL.x, y - SL.y) < 11 || Math.hypot(x - SI.x, y - SI.y) < 11) continue;
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
-    const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (Math.random() < .55 ? 'slimeO' : 'shroomy') : b === 3 ? (Math.random() < .55 ? 'magmaSlime' : 'cinder') : b === 4 ? (Math.random() < .55 ? 'frostSlime' : 'snowling') : (Math.random() < .75 ? 'slimeP' : 'shroomy');
+    const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (rand() < .55 ? 'slimeO' : 'shroomy') : b === 3 ? (rand() < .55 ? 'magmaSlime' : 'cinder') : b === 4 ? (rand() < .55 ? 'frostSlime' : 'snowling') : (rand() < .75 ? 'slimeP' : 'shroomy');
     G.enemies.push(regionEnemy(mkEnemy(kk, x + .5, y + .6), b));
-    if (Math.random() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
+    if (rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
     return;
   }
 }

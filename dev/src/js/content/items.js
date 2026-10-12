@@ -106,7 +106,7 @@ const OBJ = {
   bush: { n: '베리덤불', solid: 1, bush: 1 },
   grass: { n: '이끼풀', hp: 1, nat: 'chop', drops: [['fiber', 1, 2, 1], ['berrySeed', 1, 1, 0.08]] },
   glow: { n: '빛버섯', hp: 1, nat: 'pick', light: [3, '#6ff2e6'], drops: [['glowcap', 1, 1, 1], ['spore', 1, 1, 0.2]] },
-  cluster: { n: '수정 결정', solid: 1, hp: 4, tier: 1, nat: 'mine', light: [3.5, '#b99bff'], drops: [], dropFn: (x, y) => spawnDrop(Math.random() < CRYGEM_P ? 'cryGem' : 'crystal', 1, x, y) },
+  cluster: { n: '수정 결정', solid: 1, hp: 4, tier: 1, nat: 'mine', light: [3.5, '#b99bff'], drops: [], dropFn: (x, y) => spawnDrop(rand() < CRYGEM_P ? 'cryGem' : 'crystal', 1, x, y) },
   cropBerry: { n: '베리', crop: 'berry', grow: 110, yield: [['berry', 2, 3, 1], ['berrySeed', 1, 2, 1]] },
   cropShroom: { n: '버섯', crop: 'shroom', grow: 130, yield: [['mushroom', 2, 3, 1], ['spore', 1, 1, 0.8], ['glowcap', 1, 1, 0.3]] },
   shrine: { n: '고대 제단', solid: 1, shrine: 1 },

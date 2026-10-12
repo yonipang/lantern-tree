@@ -105,12 +105,12 @@ const AMB = [];
 function updateAmbient(dt) {
   const p = G.p;
   for (let i = AMB.length - 1; i >= 0; i--) { const a = AMB[i]; a.t += dt; if (a.t > a.life) { AMB.splice(i, 1); continue; }
-    if (a.k === 0) { a.vx += (Math.random() - .5) * dt * 3; a.vy += (Math.random() - .5) * dt * 3; a.vx = clamp(a.vx, -.6, .6); a.vy = clamp(a.vy, -.6, .6); }
+    if (a.k === 0) { a.vx += (fxRand() - .5) * dt * 3; a.vy += (fxRand() - .5) * dt * 3; a.vx = clamp(a.vx, -.6, .6); a.vy = clamp(a.vy, -.6, .6); }
     a.x += a.vx * dt; a.y += a.vy * dt; }
-  if (AMB.length < 22 && Math.random() < dt * 8) {
-    const x = p.x + (Math.random() - .5) * 18, y = p.y + (Math.random() - .5) * 22, tx = Math.floor(x), ty = Math.floor(y);
+  if (AMB.length < 22 && fxRand() < dt * 8) {
+    const x = p.x + (fxRand() - .5) * 18, y = p.y + (fxRand() - .5) * 22, tx = Math.floor(x), ty = Math.floor(y);
     if (inB(tx, ty) && !G.wall[idx(tx, ty)]) { const b = G.biome[idx(tx, ty)], water = G.floor[idx(tx, ty)] === WATER;
-      const k = water ? 0 : b; AMB.push({ k, x, y, vx: k === 1 || k === 3 ? (Math.random() - .5) * .2 : (Math.random() - .5) * .4, vy: k === 1 ? -.25 - Math.random() * .2 : k === 3 ? -.6 - Math.random() * .4 : k === 4 ? .35 + Math.random() * .3 : (Math.random() - .5) * .4, t: 0, life: 4 + Math.random() * 5, ph: Math.random() * 6.28 }); }
+      const k = water ? 0 : b; AMB.push({ k, x, y, vx: k === 1 || k === 3 ? (fxRand() - .5) * .2 : (fxRand() - .5) * .4, vy: k === 1 ? -.25 - fxRand() * .2 : k === 3 ? -.6 - fxRand() * .4 : k === 4 ? .35 + fxRand() * .3 : (fxRand() - .5) * .4, t: 0, life: 4 + fxRand() * 5, ph: fxRand() * 6.28 }); }
   }
 }
 
@@ -139,7 +139,7 @@ function render() {
   if (lowCv.width !== bw * HD || lowCv.height !== bh * HD) { lowCv.width = bw * HD; lowCv.height = bh * HD; }
   const shk = shake > 0 ? shake * 5 : 0;
   const bx0 = cam.x * 16 - cw / RZ / 2, by0 = cam.y * 16 - ch / RZ / 2;
-  const gx = bx0 + (Math.random() - .5) * shk, gy = by0 + (Math.random() - .5) * shk, ix = Math.floor(gx), iy = Math.floor(gy);
+  const gx = bx0 + (fxRand() - .5) * shk, gy = by0 + (fxRand() - .5) * shk, ix = Math.floor(gx), iy = Math.floor(gy);
   ctx = hdCtx(lowCtx); Z = 1; TP = 16; VIEW = { camX: ix, camY: iy, baseX: ix, baseY: iy };
   lowCtx.setTransform(HD, 0, 0, HD, 0, 0); lowCtx.globalCompositeOperation = 'source-over'; lowCtx.globalAlpha = 1; lowCtx.imageSmoothingEnabled = false;
   lowCtx.fillStyle = '#120f1c'; lowCtx.fillRect(0, 0, bw, bh);

@@ -10,7 +10,7 @@ function useSkill(n) {
 const SK_FN = {
   dash(l) { const p = G.p; let dx = p.face.x, dy = p.face.y; if (joy.active && Math.hypot(joy.vx, joy.vy) > .2) { dx = joy.vx; dy = joy.vy; } if (dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2) { dx = dpad.vx; dy = dpad.vy; } const L = Math.hypot(dx, dy) || 1, sp = 15 * (1 + (l - 1) * .15); p.dash = { t: .2, vx: dx / L * sp, vy: dy / L * sp }; p.inv = Math.max(p.inv, .4); puff(p.x, p.y, '#e8d8c0', 8, 2, .1); SFX.swing(); },
   spin(l) { const p = G.p, w = curWeapon(), mul = 1.3 + .3 * l; G.swing = { t: .3, max: .3, ang: Math.atan2(p.face.y, p.face.x), icon: w.id === 'hand' ? null : w.id, arc: Math.PI, rad: 1.35 }; SFX.swing(); shake = Math.max(shake, .15);
-    const roll = () => { const crit = Math.random() < .1; return [Math.round(w.dmg * (wtOf(w).magic ? magicMul() : meleeMul()) * mul * (crit ? 1.6 : 1)), crit]; }; let landed = false;
+    const roll = () => { const crit = rand() < .1; return [Math.round(w.dmg * (wtOf(w).magic ? magicMul() : meleeMul()) * mul * (crit ? 1.6 : 1)), crit]; }; let landed = false;
     for (const e of G.enemies.slice()) if (Math.hypot(e.x - p.x, e.y - p.y) < 1.9 + ENEMY[e.k].r) { const [d, c] = roll(); hitEnemy(e, d, c, 12, w.fx); landed = true; }
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < 1.9 + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c); landed = true; } }
     if (landed) wear(w.slot); },
@@ -22,14 +22,14 @@ const SK_FN = {
     faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y); G.swing = { t: .22, max: .22, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: pk.id === 'hand' ? null : pk.id }; shake = Math.max(shake, .3); wear(pk.slot, n); },
   stomp(l) { const p = G.p, w = curWeapon(), mul = .7 + .2 * l, R = 2.5; shake = Math.max(shake, .3); SFX.brk();
     for (let k = 0; k < 18; k++) { const a = k / 18 * 6.283; puff(p.x + Math.cos(a) * 1.6, p.y + Math.sin(a) * 1.1, '#c9b8a8', 2, 2, .15); }
-    const roll = () => { const crit = Math.random() < .1; return [Math.max(1, Math.round(w.dmg * (wtOf(w).magic ? magicMul() : meleeMul()) * mul * (crit ? 1.6 : 1))), crit]; }; let landed = false;
+    const roll = () => { const crit = rand() < .1; return [Math.max(1, Math.round(w.dmg * (wtOf(w).magic ? magicMul() : meleeMul()) * mul * (crit ? 1.6 : 1))), crit]; }; let landed = false;
     for (const e of G.enemies.slice()) if (Math.hypot(e.x - p.x, e.y - p.y) < R + ENEMY[e.k].r) { const [d, c] = roll(); hitEnemy(e, d, c, 18, 'slow'); landed = true; }
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < R + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c, 'slow'); landed = true; } }
     if (landed) wear(w.slot); },
   volley(l) { const p = G.p, w = curWeapon(), W = wtOf(w); if (W.ranged !== 'arrow') { toast('화살비는 활을 들고 있어야 쓸 수 있어요', null, 'novolley'); return false; }
     if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } else { const en = nearestEnemy(wRange(W)); if (en) faceTo(en.x - p.x, en.y - p.y); }
     const ang = Math.atan2(p.face.y, p.face.x), n = 3 + 2 * l, spread = .9;
-    for (let k = 0; k < n; k++) { const a = ang + (k / (n - 1) - .5) * spread, crit = Math.random() < .1; shootP(a, { k: 'arrow', dmg: Math.max(1, Math.round(w.dmg * (.5 + .1 * l) * rangeMul() * (crit ? 1.6 : 1))), crit, spd: W.spd, range: wRange(W), pierce: 0, col: '#bff7ef', kb: 3, fx: w.fx }); }
+    for (let k = 0; k < n; k++) { const a = ang + (k / (n - 1) - .5) * spread, crit = rand() < .1; shootP(a, { k: 'arrow', dmg: Math.max(1, Math.round(w.dmg * (.5 + .1 * l) * rangeMul() * (crit ? 1.6 : 1))), crit, spd: W.spd, range: wRange(W), pierce: 0, col: '#bff7ef', kb: 3, fx: w.fx }); }
     G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; SFX.swing(); },
   frostRing(l) { const p = G.p, R = 3, dmg = Math.round((12 + 8 * l) * magicMul()); SFX.cast2();
     for (let k = 0; k < 28; k++) { const a = k / 28 * 6.283; puff(p.x + Math.cos(a) * R * .9, p.y + Math.sin(a) * R * .7, k % 2 ? '#9fd8f0' : '#ffffff', 2, 1.5, .2); }
@@ -44,13 +44,13 @@ function applyFx(e, fx, dmg, boss) {
   else if (fx === 'burn') e.burn = { t: 3, dps: Math.max(3, dmg * .22) };
   else if (fx === 'slow' && !boss) e.slow = 2.5;
   else if (fx === 'chill' && !boss) { e.slow = 3.5; e.chill = 1; }
-  else if (fx === 'split') { for (let k = 0; k < 3; k++) { const a = Math.random() * 6.283; G.pshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: .32, hit: [e], ang: a, k: 'orb', dmg: Math.max(1, Math.round(dmg * .45)), crit: false, col: '#d6c2ff', kb: 3, pierce: 0, spd: 9 }); } }
+  else if (fx === 'split') { for (let k = 0; k < 3; k++) { const a = rand() * 6.283; G.pshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: .32, hit: [e], ang: a, k: 'orb', dmg: Math.max(1, Math.round(dmg * .45)), crit: false, col: '#d6c2ff', kb: 3, pierce: 0, spd: 9 }); } }
 }
 function dotTick(e, dt, boss) {
   for (const [k, col] of [['poison', '#9be37a'], ['burn', '#ff9b4a']]) { const d = e[k]; if (!d) continue; d.t -= dt; d.acc = (d.acc || 0) + d.dps * dt * (boss ? .5 : 1);
-    if (d.acc >= 1) { const n = Math.floor(d.acc); d.acc -= n; if (boss) bossDot(e, n, col); else dotHit(e, n, col); if (Math.random() < .5) puff(e.x, e.y - .3, col, 2, 1, .3); }
+    if (d.acc >= 1) { const n = Math.floor(d.acc); d.acc -= n; if (boss) bossDot(e, n, col); else dotHit(e, n, col); if (fxRand() < .5) puff(e.x, e.y - .3, col, 2, 1, .3); }
     if (d.t <= 0) e[k] = null; }
-  if (e.slow > 0) { e.slow -= dt; if (Math.random() < dt * 4) puff(e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
+  if (e.slow > 0) { e.slow -= dt; if (fxRand() < dt * 4) puff(e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
 }
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; ftext(e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
 function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; ftext(b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
@@ -70,7 +70,7 @@ function hitBoss(b, dmg, crit, fx) {
   if (b.hp <= 0) {
     G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; $('#bossbar').hidden = true; G.shots.length = 0; puff(b.x, b.y, def.col, 40, 5, 0.6); puff(b.x, b.y, '#ffc861', 16, 4, 1); SFX.win(); shake = 0.5;
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
-    if (ACC_OF[b.k] && (!again || Math.random() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
+    if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { G.stats.uniq[b.k] = 1; spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); toast('용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -82,7 +82,7 @@ function hitBoss(b, dmg, crit, fx) {
 }
 // ---- calling a beaten boss back for another fight ----
 const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
-function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && Math.random() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
+function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   toast(`${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 const SUMMON = {
   queenIdol: ['포자 여왕 부름 버섯', 'queen', [['shroomCap', 10], ['glowcap', 6], ['spore', 4]], '#b673de', '#fbe7ff'],
@@ -103,8 +103,8 @@ function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Mat
 function summonBoss(k) { const s0 = selItem(); if (!s0 || ITEMS[s0.id].boss !== k || !G.bossDead[k]) return;
   s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } invDirty = true;
   G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; puff(b.x, b.y, BOSSES[k].col, 30, 4, .8); shake = .4; SFX.boss(); toast(`${BOSSES[k].n}이 다시 나타났어요!`, 'warn', 'summon'); }
-const pickOne = a => a[Math.floor(Math.random() * a.length)];
-function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k++) G.texts.push({ x: x + (Math.random() - .5) * .9, y: y - .2 - Math.random() * .5, txt: ch, col, life: .8 + Math.random() * .5, vy: -1.2 - Math.random() }); }
+const pickOne = a => a[Math.floor(fxRand() * a.length)];
+function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k++) G.texts.push({ x: x + (fxRand() - .5) * .9, y: y - .2 - fxRand() * .5, txt: ch, col, life: .8 + fxRand() * .5, vy: -1.2 - fxRand() }); }
 function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
@@ -138,29 +138,29 @@ function useObj(a) {
     case 'mirror': puff(p.x, p.y - .8, '#fff7c2', 10, 2, .8); SFX.seed(); toast(pickOne(COMPLIMENTS), null, 'mirror'); break;
     case 'dress': openPanel('look'); break;
     case 'wish': if ((o.cd || 0) > G.time) { toast('분수가 쉬고 있어요. 조금 뒤에 다시 빌어요', null, 'wish'); break; } o.cd = G.time + 120; G.luck = G.time + 120; puff(x, t.y, '#bfefff', 16, 2.5, 1); SFX.seed(); toast('행운이 깃들었어요! 2분 동안 낚시 운 2단계 (요리의 낚시 운과 겹치면 더 높은 쪽만)', 'good'); break;
-    case 'water': o.shake = .3; for (let k = 0; k < 8; k++) G.parts.push({ x: x + (Math.random() - .5) * .6, y: t.y + .6, z: 1.2, vx: (Math.random() - .5), vy: 0, vz: -1, life: .5, max: .5, col: '#8fd0ff', sz: 1 }); SFX.plop(); toast('촉촉해졌어요', null, 'water'); break;
+    case 'water': o.shake = .3; for (let k = 0; k < 8; k++) G.parts.push({ x: x + (fxRand() - .5) * .6, y: t.y + .6, z: 1.2, vx: (fxRand() - .5), vy: 0, vz: -1, life: .5, max: .5, col: '#8fd0ff', sz: 1 }); SFX.plop(); toast('촉촉해졌어요', null, 'water'); break;
     case 'tea': if ((o.cd || 0) > G.time) { toast('찻잔이 비었어요. 조금 뒤에 다시 마셔요', null, 'tea'); break; } o.cd = G.time + 45; p.hp = Math.min(maxHp(), p.hp + 6); p.hunger = Math.min(100, p.hunger + 4); ftext(p.x, p.y - 1.3, '♥ +6', '#ff8fa3'); SFX.eat(); toast('따뜻한 차 한 잔, 기운이 나요', null, 'tea'); break;
   }
 }
 function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x = s.px; p.y = s.py; if (boxHits(p.x, p.y, .28)) { p.x = s.x + .5; p.y = s.y + 1.5; } }
 function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; const f = $('#fade'); f.textContent = '쿨쿨… 좋은 꿈 꾸는 중'; f.classList.add('sleep'); f.hidden = false; SFX.sleep(); }
 function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; const f = $('#fade'); f.hidden = true; f.classList.remove('sleep'); f.textContent = '기절했어요…'; p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); toast('푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
-function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (Math.random() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + Math.random() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; SFX.cast(); }
-function splash(x, y, n) { for (let k = 0; k < n; k++) { const a = Math.random() * 6.283; G.parts.push({ x, y, z: .05, vx: Math.cos(a) * 1.2, vy: Math.sin(a) * .6, vz: 2 + Math.random() * 1.5, life: .4, max: .4, col: '#bfe6ff', sz: 1 }); } }
+function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + rand() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; SFX.cast(); }
+function splash(x, y, n) { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283; G.parts.push({ x, y, z: .05, vx: Math.cos(a) * 1.2, vy: Math.sin(a) * .6, vz: 2 + fxRand() * 1.5, life: .4, max: .4, col: '#bfe6ff', sz: 1 }); } }
 function updateFish(dt) {
   if (G.fishFx) { G.fishFx.t += dt; if (G.fishFx.t > 0.55) G.fishFx = null; }
   const f = G.fish; if (!f) return; const p = G.p;
   if (p.moving || p.dead > 0 || p.sit || p.sleep || !usableItem('rod')) { G.fish = null; return; }
   if (f.fly > 0) { f.fly -= dt; if (f.fly <= 0) { SFX.plop(); splash(f.bx, f.by, 5); } return; }
   f.nib = Math.max(0, f.nib - dt);
-  if (f.st === 'wait') { f.t -= dt; if (f.t > 0.7 && f.nib <= 0 && Math.random() < dt * 0.7) { f.nib = 0.22; SFX.plop(); }
+  if (f.st === 'wait') { f.t -= dt; if (f.t > 0.7 && f.nib <= 0 && rand() < dt * 0.7) { f.nib = 0.22; SFX.plop(); }
     if (f.t <= 0) { f.st = 'bite'; f.bite = f.win; SFX.bite(); splash(f.bx, f.by, 8); ftext(p.x, p.y - 1.7, '!', '#ffc861'); try { navigator.vibrate && navigator.vibrate(40); } catch (e) { } } }
   else { f.bite -= dt; if (f.bite <= 0) { toast('놓쳤어요… 다시 던져 봐요', null, 'miss'); G.fish = null; } }
 }
 function reel() {
   const f = G.fish; if (!f) return; G.fish = null;
   if (f.st !== 'bite') { SFX.place(); return; }
-  const tbl = catchTable(G.biome[idx(f.tx, f.ty)]); let r = Math.random() * tbl.reduce((a, x) => a + x[1], 0), id = tbl[0][0];
+  const tbl = catchTable(G.biome[idx(f.tx, f.ty)]); let r = rand() * tbl.reduce((a, x) => a + x[1], 0), id = tbl[0][0];
   for (const [k, w] of tbl) { r -= w; if (r <= 0) { id = k; break; } }
   if (id === 'bottle') fishBottle(); else { const left = addItem(id, 1); if (left) spawnDrop(id, 1, G.p.x, G.p.y); } maybeNote('fish', G.p.x, G.p.y);
   G.fishFx = { id, t: 0, x0: f.bx, y0: f.by, x1: G.p.x, y1: G.p.y - .5 }; splash(f.bx, f.by, 12); SFX.catch();
