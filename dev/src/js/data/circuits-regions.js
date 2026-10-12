@@ -3,7 +3,7 @@
 // 이 파일은 shell.html에서 content/circuits-regions.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { C } from '../engine/canvas.js';
 import { CATCH, ENEMY } from './rpg-nature.js';
-import { DUR2, ITEMS, OBJ, RAR, RECIPES, Rc, UNIQ_OF, USE, USE_LBL } from './items.js';
+import { DUR2, ITEMS, OBJ, RAR, RECIPES, Rc, UNIQ_OF, USE, USE_LBL, WEAPON_DUR } from './items.js';
 
 Object.assign(ITEMS, {
   wire: { n: '전선', kind: 'wire', d: '바닥에 깔아 전기를 이어요. 위·아래·옆으로 붙은 전선끼리 연결돼요. 전선을 들고 전선 칸을 누르면 걷어요.' },
@@ -125,3 +125,13 @@ export const FARM_GROW = 90, FARM_CAP = 60;
 export const FARM_TXT = { treeFarm: ['베기', '나무를 베었어요! 묘목이 다시 자라요', '나무가 자라는 중이에요', '#7fbf6a', 'wood'], quarry: ['캐기', '돌을 캤어요! 바위가 다시 차올라요', '바위가 차오르는 중이에요', '#a29db6', 'stone'],
   pitCu: ['캐기', '구리광석을 캤어요! 광맥이 다시 차올라요', '광맥이 차오르는 중이에요', C.copper, 'copperOre'], pitFe: ['캐기', '철광석을 캤어요! 광맥이 다시 차올라요', '광맥이 차오르는 중이에요', C.iron, 'ironOre'], pitGold: ['캐기', '금광석을 캤어요! 광맥이 다시 차올라요', '광맥이 차오르는 중이에요', '#ffd25c', 'goldOre'] };
 export const PIT_Y = { quarry: ['stone', 5, 7], pitCu: ['copperOre', 3, 4], pitFe: ['ironOre', 3, 4], pitGold: ['goldOre', 2, 3] }; // v46: each pit gives one material only
+
+// ---- 모든 장비의 내구도·분해 (구조 변경 2단계: game/actions.js에서 옮김) — 위 파일들의 무기·장비 내구도(WEAPON_DUR·DUR2)를 다 넣은 뒤에 합쳐요 ----
+// ---- durability: tools wear with use; at 0 they are broken (kept, but unusable) until repaired at a workbench ----
+// [max uses, full repair cost]
+export const DUR = { pickWood: [200, [['wood', 3]]], pickCopper: [400, [['copperBar', 2]]], pickIron: [800, [['ironBar', 2]]],
+  swordWood: [120, [['wood', 3]]], swordCopper: [250, [['copperBar', 2]]], swordIron: [450, [['ironBar', 2]]], swordCrystal: [800, [['crystal', 3]]],
+  rod: [150, [['fiber', 2]]], shovel: [250, [['copperBar', 1]]] };
+Object.assign(DUR, WEAPON_DUR, DUR2); DUR.battery = [600, [['glowcap', 1], ['gel', 2]]];
+// ---- salvage: break equipment down at a workbench and get 70% of its crafting materials back (rounded) ----
+export const SALVAGE_RATE = 0.7, SALVAGE_BASE = { pickWood: [['wood', 3]], swordWood: [['wood', 3]] }; // starter tools have no recipe

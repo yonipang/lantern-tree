@@ -4,6 +4,7 @@
 // 이 파일은 shell.html에서 features/automation-tiers.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { DISH, DISHES } from './farming-cooking.js';
 import { ITEMS, OBJ, RECIPES, Rc, STN, TIPS, USE, USE_LBL } from './items.js';
+import { QSIDE } from './quests.js';
 
 // ================= farm automation (after the crystal generator), giant crops, the festival cake =================
 export const hasCgen = () => ((G.stats.made || {}).crystalGen || 0) > 0 || [...G.objs.values()].some(o => o.t === 'crystalGen');

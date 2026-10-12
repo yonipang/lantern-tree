@@ -4,6 +4,7 @@
 import { C } from '../engine/canvas.js';
 import { FLOWERS } from './rpg-nature.js';
 import { ITEMS, OBJ, RECIPES, Rc, TIPS } from './items.js';
+import { QSIDE } from './quests.js';
 
 // ---- farming basics: copper sickle, watering can, fertilizer (water and fertilizer marks live on the crop object: w, f, p0) ----
 export const WCAN_MAX = 10;
@@ -126,3 +127,14 @@ export const NOTE_CH = { mon: .06, gather: .03, fish: .08 };
 for (const [qid, dish] of [['s_crop2', 'glowPancake'], ['s_crop4', 'beanSteam'], ['s_rooms', 'petalRiceCake'], ['s_fish', 'crucianBraise']]) { const q = QSIDE.find(x => x.id === qid); if (q) q.rw = q.rw.concat([['rn_' + dish, 1]]); }
 // ---- fishing luck, message bottles ----
 export const LUCK_KOI = [1, 1.5, 2, 3], LUCK_BOOT = [1, .7, .5, .25], LUCK_BOTTLE = [.01, .02, .04, .06];
+
+// ---- 숨은 방: 지역마다 몇 개 · 장식 · 보물상자 안 (구조 변경 2단계: world.js에서 옮김) ----
+// ---- hidden rooms: small walled rooms behind a cracked wall, one or two per region, each with a treasure chest ----
+// placed on untouched rock only (compared with the world as first generated), so old saves get them too without touching anything the player built
+export const ROOM_N = [2, 2, 2, 1, 1], ROOM_DECO = ['mossLantern', 'sporeChime', 'cryVase', 'emberBowl', 'iceSwan'];
+export const ROOM_LOOT = [
+  [[['berrySeed', 4], ['glowSpore', 2], ['copperBar', 4], ['rope', 3]], [['mossSpore', 3], ['resin', 3], ['gel', 5], ['berryS', 3]]],
+  [[['glowSpore', 3], ['spore', 4], ['shroomCap', 4], ['ironBar', 2]], [['glowcapS', 3], ['gShroom', 6], ['gel', 6], ['copperBar', 5]]],
+  [[['cbeanSeed', 3], ['crystal', 8], ['ironBar', 3]], [['cbeanS', 3], ['gCrystal', 6], ['crystal', 6], ['goldBar', 1]]],
+  [[['obsidian', 4], ['goldBar', 2], ['fireBerry', 4], ['crystal', 4]]],
+  [[['frostShard', 6], ['goldBar', 2], ['ironBar', 3], ['crystal', 4]]]];

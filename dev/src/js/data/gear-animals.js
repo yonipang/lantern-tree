@@ -5,6 +5,7 @@ import { C } from '../engine/canvas.js';
 import { CROP_SOIL, STAR_OF } from './farming-cooking.js';
 import { ENEMY } from './rpg-nature.js';
 import { ITEMS, OBJ, RAR, RECIPES, Rc, STN } from './items.js';
+import { QSIDE } from './quests.js';
 
 // ================= deep caves: fire berry and frost radish crops, clothes and charms, cold/heat gauge =================
 Object.assign(OBJ, {

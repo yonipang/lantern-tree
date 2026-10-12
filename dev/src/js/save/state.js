@@ -11,14 +11,6 @@ const cam = { x: CX + .5, y: CY + 2 };
 let shake = 0, paused = true, started = false, soundOn = true;
 const beat = k => !!(G && ((G.bossDead || {})[k] || (G.stats && G.stats.beaten || {})[k]));
 const freshStats = () => ({ wood: 0, bench: 0, torch: 0, copperOre: 0, copperBar: 0, seedsFound: 0 });
-const BOSSES = {
-  slime: { n: '말랑대왕', hp: 720, home: () => ({ x: BX + .5, y: BY + .5 }), wake: 8.5, hr: .95, col: '#86d96b', spr: 'boss', scale: 1.25 },
-  queen: { n: '버섯 여왕', hp: 700, home: () => ({ x: SA.x + .5, y: SA.y - 3 }), wake: 8, hr: 1.0, col: '#b673de', spr: 'queen', scale: 1.15 },
-  golem: { n: '수정골렘', hp: 1500, home: () => ({ x: SB.x + .5, y: SB.y + 4.2 }), wake: 8, hr: 1.1, col: '#b493f5', spr: 'golem', scale: 1.2 },
-  turtle: { n: '용암 거북', hp: 2300, home: () => ({ x: SL.x + .5, y: SL.y - 3.5 }), wake: 8, hr: 1.2, col: '#ff8a3d', spr: 'turtle', scale: 1.2 },
-  spirit: { n: '서리 정령', hp: 2000, home: () => ({ x: SI.x + 4, y: SI.y + .5 }), wake: 8, hr: 1.0, col: '#9fd8f0', spr: 'spirit', scale: 1.15 },
-};
-const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
 const freshBoss = k => { const h = BOSSES[k].home(); return { k, x: h.x, y: h.y, hp: BOSSES[k].hp, max: BOSSES[k].hp, st: 'sleep', t: 0, z: 0, air: 0, airMax: 1, vx: 0, vy: 0, lands: 0, hurt: 0, ph: 'walk', casts: 0, rot: 0, dx: 0, dy: 1, d: 99, poison: null, burn: null, stage: 1, inv: 0, pillars: [] }; };
 const freshBosses = () => Object.fromEntries(BKEYS.map(k => [k, freshBoss(k)]));
 const freshDead = () => Object.fromEntries(BKEYS.map(k => [k, false]));

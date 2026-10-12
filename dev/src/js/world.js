@@ -116,15 +116,6 @@ function addPond(w, ok) {
 }
 function addQuartzVeins() { let n = 0; for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (G.wall[i] === 3 && G.biome[i] === 2 && quartzAt(x, y, G.seed)) { G.wall[i] = 13; n++; } } return n; }
 
-// ---- hidden rooms: small walled rooms behind a cracked wall, one or two per region, each with a treasure chest ----
-// placed on untouched rock only (compared with the world as first generated), so old saves get them too without touching anything the player built
-const ROOM_N = [2, 2, 2, 1, 1], ROOM_DECO = ['mossLantern', 'sporeChime', 'cryVase', 'emberBowl', 'iceSwan'];
-const ROOM_LOOT = [
-  [[['berrySeed', 4], ['glowSpore', 2], ['copperBar', 4], ['rope', 3]], [['mossSpore', 3], ['resin', 3], ['gel', 5], ['berryS', 3]]],
-  [[['glowSpore', 3], ['spore', 4], ['shroomCap', 4], ['ironBar', 2]], [['glowcapS', 3], ['gShroom', 6], ['gel', 6], ['copperBar', 5]]],
-  [[['cbeanSeed', 3], ['crystal', 8], ['ironBar', 3]], [['cbeanS', 3], ['gCrystal', 6], ['crystal', 6], ['goldBar', 1]]],
-  [[['obsidian', 4], ['goldBar', 2], ['fireBerry', 4], ['crystal', 4]]],
-  [[['frostShard', 6], ['goldBar', 2], ['ironBar', 3], ['crystal', 4]]]];
 let DOORS = new Set();
 const refreshDoors = () => { DOORS = new Set((G.rooms || []).filter(r => !r.found).map(r => idx(r.dx, r.dy))); };
 function placeRooms(w0) {
@@ -222,4 +213,3 @@ function canPlace(tx, ty, it) {
   if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty)); }
   return false;
 }
-

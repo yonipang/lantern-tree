@@ -4,6 +4,7 @@
 import { BOSS_NOTES, DISH, DISHES, DISH_FOOD, EFF, ROOM_NOTES, STAR_OF } from './farming-cooking.js';
 import { ENEMY } from './rpg-nature.js';
 import { ITEMS, OBJ, RECIPES, Rc, TIPS } from './items.js';
+import { GUIDE } from './quests.js';
 
 // ---- dishes for the deep caves: cold / heat protection and the tier-3 dishes made with fire berries and frost radishes ----
 Object.assign(EFF, { cold: { n: '추위 대비', v: [.75, .5, 0], t: v => v ? `추위 게이지 ${pct(v)} 속도` : '추위 게이지 안 오름' }, heat: { n: '더위 대비', v: [.75, .5, 0], t: v => v ? `더위 게이지 ${pct(v)} 속도` : '더위 게이지 안 오름' } });

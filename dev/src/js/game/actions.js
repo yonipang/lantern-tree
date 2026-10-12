@@ -26,12 +26,6 @@ const idIs = (sid, id) => sid === id || (!!WILD[id] && !!ITEMS[sid] && WILD[id](
 const countItem = id => G.inv.concat(G.tools || []).reduce((a, s) => a + (s && idIs(s.id, id) ? s.c : 0), 0);
 function removeItem(id, c) { for (let i = G.inv.length - 1; i >= 0 && c > 0; i--) { const s = G.inv[i]; if (s && idIs(s.id, id)) { const k = Math.min(s.c, c); s.c -= k; c -= k; if (!s.c) G.inv[i] = null; } }
   const T = G.tools || []; for (let i = T.length - 1; i >= 0 && c > 0; i--) if (idIs(T[i].id, id)) { const h = heldTool(); T.splice(i, 1); c--; fixTsel(h); } invDirty = true; }
-// ---- durability: tools wear with use; at 0 they are broken (kept, but unusable) until repaired at a workbench ----
-// [max uses, full repair cost]
-const DUR = { pickWood: [200, [['wood', 3]]], pickCopper: [400, [['copperBar', 2]]], pickIron: [800, [['ironBar', 2]]],
-  swordWood: [120, [['wood', 3]]], swordCopper: [250, [['copperBar', 2]]], swordIron: [450, [['ironBar', 2]]], swordCrystal: [800, [['crystal', 3]]],
-  rod: [150, [['fiber', 2]]], shovel: [250, [['copperBar', 1]]] };
-Object.assign(DUR, WEAPON_DUR, DUR2); DUR.battery = [600, [['glowcap', 1], ['gel', 2]]];
 const durMax = id => DUR[id] ? DUR[id][0] : 0;
 const durOf = s => !s || !DUR[s.id] ? 0 : (s.dur == null ? DUR[s.id][0] : s.dur);
 const isBroken = s => !!(s && DUR[s.id] && durOf(s) <= 0);
@@ -42,8 +36,6 @@ function wear(s, n = 1) {
   else if (before > mx * .2 && s.dur <= mx * .2) toast(`${josa(nm, '이', '가')} 많이 닳았어요 (${s.dur}/${mx})`, null, 'worn' + s.id);
 }
 function repairCost(s) { const mx = durMax(s.id), frac = 1 - durOf(s) / mx; return DUR[s.id][1].map(([id, c]) => [id, Math.max(1, Math.ceil(c * frac))]); }
-// ---- salvage: break equipment down at a workbench and get 70% of its crafting materials back (rounded) ----
-const SALVAGE_RATE = 0.7, SALVAGE_BASE = { pickWood: [['wood', 3]], swordWood: [['wood', 3]] }; // starter tools have no recipe
 function salvageGet(id) { const r = RECIPES.find(r => r.out === id), req = r ? r.req : SALVAGE_BASE[id]; if (!req) return null; return req.map(([m, c]) => [m, Math.round(c * SALVAGE_RATE)]).filter(([, c]) => c > 0); }
 function salvGet2(s) { const m = new Map(); for (const [id, c] of salvageGet(s.id) || []) m.set(id, (m.get(id) || 0) + c); for (const [id, c] of upgSpent(s.id, lvOf(s))) m.set(id, (m.get(id) || 0) + Math.floor(c / 2)); const out = [...m].filter(([, c]) => c > 0); return out.length ? out : null; }
 const canSalv = near => near.has('smelter'); // v61: only at the 장비제작대

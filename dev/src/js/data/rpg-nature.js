@@ -97,3 +97,15 @@ for (const id in NATURE) { const [n, d, req, flat] = NATURE[id]; ITEMS[id] = { n
 RECIPES.push(Rc('sapling', 1, [['wood', 3], ['dirt', 2], ['fiber', 2]], 'bench', 'nature'));
 Object.assign(OBJ.cherryTree, { ntree: 1, nat: 'cut', hp: 6, drops: [['wood', 3, 5, 1], ['petalW', 1, 2, 0.5], ['petalR', 1, 1, 0.3]] });
 Object.assign(OBJ.roundTree, { ntree: 1, nat: 'cut', hp: 5, drops: [['wood', 2, 4, 1], ['sapling', 1, 1, 0.2]] });
+
+// ---- 보스 (구조 변경 2단계: save/state.js·game/combat.js에서 옮김) — 체력·자리·재도전 보상 ----
+export const BOSSES = {
+  slime: { n: '말랑대왕', hp: 720, home: () => ({ x: BX + .5, y: BY + .5 }), wake: 8.5, hr: .95, col: '#86d96b', spr: 'boss', scale: 1.25 },
+  queen: { n: '버섯 여왕', hp: 700, home: () => ({ x: SA.x + .5, y: SA.y - 3 }), wake: 8, hr: 1.0, col: '#b673de', spr: 'queen', scale: 1.15 },
+  golem: { n: '수정골렘', hp: 1500, home: () => ({ x: SB.x + .5, y: SB.y + 4.2 }), wake: 8, hr: 1.1, col: '#b493f5', spr: 'golem', scale: 1.2 },
+  turtle: { n: '용암 거북', hp: 2300, home: () => ({ x: SL.x + .5, y: SL.y - 3.5 }), wake: 8, hr: 1.2, col: '#ff8a3d', spr: 'turtle', scale: 1.2 },
+  spirit: { n: '서리 정령', hp: 2000, home: () => ({ x: SI.x + 4, y: SI.y + .5 }), wake: 8, hr: 1.0, col: '#9fd8f0', spr: 'spirit', scale: 1.15 },
+};
+export const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
+// ---- calling a beaten boss back for another fight ----
+export const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };

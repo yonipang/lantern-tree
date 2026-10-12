@@ -80,8 +80,6 @@ function hitBoss(b, dmg, crit, fx) {
     if (b.k === 'golem') { spawnDrop('crystal', 8, b.x, b.y); spawnDrop('cryGem', 3, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); toast('수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
   }
 }
-// ---- calling a beaten boss back for another fight ----
-const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
 function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   toast(`${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 const SUMMON = {
