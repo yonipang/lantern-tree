@@ -4,10 +4,14 @@
 // 받는 쪽은 ui/feedback.js (onEvent로 등록). 지금은 남기는 순간 바로 전해져서 예전과 똑같이 동작해요.
 // 멀티플레이(12단계~)에서는 방장이 같은 사건을 친구에게도 보내요 — 그래서 사건에는 숫자·글자 같은 단순한 값을 담아요.
 // 새 사건 이름을 쓰면 ui/feedback.js에 받는 곳도 만들어요 (build.py가 빠진 것을 알려 줘요).
+// 누구의 사건인지: 남길 때의 「지금 플레이어」(eventWho, 8단계) — 알림·창·흔들림 같은 개인 사건은 내 플레이어 것만 내 화면에 보여요 (ui/feedback.js)
+import { curPl } from '../save/state.js';
+export let eventWho = null;
 const handlers = new Map();
 export function onEvent(type, fn) { if (!handlers.has(type)) handlers.set(type, []); handlers.get(type).push(fn); }
 export function emit(type, ...args) {
   const hs = handlers.get(type);
   if (!hs) { console.error('사건을 받는 곳이 없어요: ' + type); return; }
+  eventWho = curPl ? curPl.id : null;
   for (const h of hs) h(...args);
 }

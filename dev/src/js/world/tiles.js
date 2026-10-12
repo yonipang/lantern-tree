@@ -18,7 +18,7 @@ export function moveEnt(e, dx, dy, r) {
   return bx || by;
 }
 export function occupied(tx, ty) {
-  const p = G.p, r = 0.28; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true;
+  const r = 0.28; for (const pl of playerList()) { const p = pl.p; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true; } // 플레이어 누구든 (8단계)
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
 export const isPlacedFloor = f => !!FLOOR_ITEM[f];

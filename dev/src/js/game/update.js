@@ -98,15 +98,16 @@ function respawn() {
   const p = G.p; emit('fade', 'hide'); const lostN = dropLost(); G.recall = null;
   const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); const sp = so && OBJ[so.t].bed ? G.spawnPt : null;
   if (sp) { p.x = sp.x + .5; p.y = sp.y + 1.6; if (boxHits(p.x, p.y, .28)) { p.x = sp.x + 1.5; p.y = sp.y + .5; } } else { p.x = CX + .5; p.y = CY + 1.7; }
-  p.hp = Math.round(maxHp() * .7); p.mp = maxMp(); p.dash = null; p.hunger = Math.max(p.hunger, 45); p.inv = 2; p.dead = 0; G.enemies.length = 0; G.pshots.length = 0;
-  for (const k of BKEYS) if (!G.bossDead[k]) G.bosses[k] = freshBoss(k); G.shots.length = 0; G.hz = []; G.fish = null; emit('bossbar', false);
+  p.hp = Math.round(maxHp() * .7); p.mp = maxMp(); p.dash = null; p.hunger = Math.max(p.hunger, 45); p.inv = 2; p.dead = 0; G.pshots.length = 0; G.fish = null;
+  if (alivePlayers().length <= 1) { G.enemies.length = 0; for (const k of BKEYS) if (!G.bossDead[k]) G.bosses[k] = freshBoss(k); G.shots.length = 0; G.hz = []; } // 혼자일 때만 세계를 가라앉혀요 (8단계)
+  emit('bossbar', false);
   cam.x = p.x; cam.y = p.y; emit('toast', sp ? '침대에서 깨어났어요' : '등불나무 곁에서 깨어났어요'); unstick(p, '사방이 막혀 있어서 바로 바깥에서 깨어났어요'); if (lostN) setTimeout(() => emit('toast', `쓰러진 자리에 재료 ${lostN}개를 떨어뜨렸어요 · 지도에 꾸러미가 표시돼요`, 'warn', 'lostdrop'), 1200);
 }
 
 // ================= update =================
 let regrowT = 0;
 function regrow() {
-  const p = G.p;
+  const p = nextTurn().p; // 플레이어를 돌아가며 그 주변에 (8단계)
   for (let k = 0; k < 14; k++) {
     const a = rand() * 6.283, d = 13 + rand() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
     if (x < 2 || y < 2 || x >= W - 2 || y >= H - 2) continue; const i = idx(x, y), f = G.floor[i], b = G.biome[i];
@@ -118,7 +119,7 @@ function regrow() {
     G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
   }
 }
-let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0;
+let lightDirty = true, lightT = 0, guideT = 0;
 function update(dt) {
   G.time += dt;
   runFrame(dt); // 매 프레임 순서표 (sim/systems.js): 기능마다 onFrame으로 등록해요
@@ -147,7 +148,7 @@ onFrame('hunger', dt => {
 });
 onFrame('enemies', updateEnemies); onFrame('bosses', updateBosses); onFrame('drops', updateDrops); onFrame('fx', updateFx); onFrame('tree', updateTree);
 onFrame('spawn', dt => { const p = G.p;
-  spawnT += dt; if (spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { spawnT = 0; trySpawn(); }
+  G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
 });
 onFrame('regrow', dt => {
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
@@ -156,34 +157,35 @@ onFrame('light', dt => {
   lightT += dt; if (lightT > 0.09 || lightDirty) { lightT = 0; lightDirty = false; computeLight(); }
 });
 onFrame('guide', dt => {
-  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); checkBiome(); roomTick(); }
+  guideT += dt; if (guideT > 0.5) { guideT = 0; checkGuide(); for (const pl of playerList()) withPlayer(pl, () => { checkBiome(); roomTick(); }); }
 });
 function updateEnemies(dt) {
+  for (const e of G.enemies.slice()) withPlayer(nearestPlayer(e.x, e.y), () => enemyStep(e, dt)); // 몬스터마다 가장 가까운 플레이어를 봐요 (8단계)
+}
+function enemyStep(e, dt) {
   const p = G.p;
-  for (const e of G.enemies.slice()) {
-    const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
-    if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); continue; }
-    dotTick(e, dt); if (!G.enemies.includes(e)) continue; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
-    if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-    const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
-    if (def.hop) {
-      if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
-      else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
-    } else {
-      e.t -= dt; if (!chase && e.zone != null && G.fzones && G.fzones[e.zone]) { const z = G.fzones[e.zone], zx = z.x + .5 - e.x, zy = z.y + .5 - e.y, zd = Math.hypot(zx, zy); if (zd > 4.5) { e.vx = zx / zd * def.spd * .5; e.vy = zy / zd * def.spd * .5; e.t = .6; } }
-      if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
-      moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.anim = (e.anim || 0) + dt * sm * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
-      if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
-    }
-    if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
-    e.hurt = Math.max(0, (e.hurt || 0) - dt);
-    if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
+  const def = ENEMY[e.k], dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy);
+  if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
+  dotTick(e, dt); if (!G.enemies.includes(e)) return; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
+  if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
+  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
+  if (def.hop) {
+    if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
+    else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
+  } else {
+    e.t -= dt; if (!chase && e.zone != null && G.fzones && G.fzones[e.zone]) { const z = G.fzones[e.zone], zx = z.x + .5 - e.x, zy = z.y + .5 - e.y, zd = Math.hypot(zx, zy); if (zd > 4.5) { e.vx = zx / zd * def.spd * .5; e.vy = zy / zd * def.spd * .5; e.t = .6; } }
+    if (chase) { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; } else if (e.t <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; }
+    moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.anim = (e.anim || 0) + dt * sm * (Math.hypot(e.vx, e.vy) > 0.1 ? 1 : 0);
+    if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
   }
+  if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
+  e.hurt = Math.max(0, (e.hurt || 0) - dt);
+  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 function updateBosses(dt) {
   let active = null;
-  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }
-  if (active) emit('bossHp', active.k, active.hp, active.max);
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; withPlayer(nearestPlayer(b.x, b.y), () => { if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }); } // 보스마다 가장 가까운 플레이어 (8단계)
+  if (active) withPlayer(nearestPlayer(active.x, active.y), () => emit('bossHp', active.k, active.hp, active.max));
   updateShots(dt); updateHazards(dt);
 }
 function bossCommon(b, dt) {
@@ -254,12 +256,12 @@ const BOSS_AI = {
   },
 };
 function updateShots(dt) {
-  const p = G.p;
   for (let i = G.shots.length - 1; i >= 0; i--) {
     const s = G.shots[i]; if (s.spin) { const c = Math.cos(s.spin * dt), sn = Math.sin(s.spin * dt), vx = s.vx * c - s.vy * sn; s.vy = s.vx * sn + s.vy * c; s.vx = vx; } s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
     if (inB(tx, ty) && pillarBlocks(s, tx, ty)) { G.shots.splice(i, 1); continue; }
     if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { emit('puff', s.x, s.y, s.k === 'spore' ? '#d59bff' : C.cryL, 3, 1.5, .2); G.shots.splice(i, 1); continue; }
-    if (p.dead <= 0 && Math.hypot(s.x - p.x, s.y - (p.y - .3)) < 0.42) { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null); G.shots.splice(i, 1); }
+    const pl = alivePlayers().find(q => Math.hypot(s.x - q.p.x, s.y - (q.p.y - .3)) < 0.42); // 살아 있는 플레이어 누구든
+    if (pl) { withPlayer(pl, () => hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null)); G.shots.splice(i, 1); }
   }
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
@@ -281,8 +283,10 @@ function trySpawn() {
   }
 }
 function updateDrops(dt) {
-  const p = G.p;
-  for (const d of G.drops.slice()) {
+  for (const d of G.drops.slice()) withPlayer(nearestPlayer(d.x, d.y), () => dropStep(d, dt)); // 가장 가까운 플레이어가 끌어당겨 주워요 (8단계)
+}
+function dropStep(d, dt) {
+  const p = G.p; {
     d.t += dt; d.vz -= 12 * dt; d.z += d.vz * dt; if (d.z < 0) { d.z = 0; d.vz = Math.abs(d.vz) * 0.35; if (d.vz < 0.6) d.vz = 0; d.vx *= 0.6; d.vy *= 0.6; }
     moveEnt(d, d.vx * dt, d.vy * dt, 0.15); d.vx *= Math.pow(0.05, dt); d.vy *= Math.pow(0.05, dt);
     d.hold = Math.max(0, d.hold - dt);

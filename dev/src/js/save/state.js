@@ -60,12 +60,18 @@ const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 export const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env',
   'explored', 'spawnPt', 'backPt', // 세계 안 플레이어별 (PLAYER_KEYS)
   'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'newIds', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
-  'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간
-const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0 });
+  'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
+const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0, spawnT: 0 });
 export let curPl = null;
 export function withPlayer(pl, fn) { const old = curPl; curPl = pl; try { return fn(); } finally { curPl = old; } }
 export const playerList = () => (G && G.players ? Object.values(G.players) : []);
 export const myPlayer = () => G && G.players && G.players[ME];
+// (x, y)에서 가장 가까운 살아 있는 플레이어 (모두 쓰러졌으면 가장 가까운 플레이어) — 몬스터·보스·떨어진 물건이 누구를 볼지
+export function nearestPlayer(x, y) { let best = null, bd = 1e9, live = false;
+  for (const pl of playerList()) { const a = pl.p.dead <= 0, d = Math.hypot(pl.p.x - x, pl.p.y - y); if ((a && !live) || (a === live && d < bd)) { best = pl; bd = d; live = a; } }
+  return best; }
+export const alivePlayers = () => playerList().filter(pl => pl.p.dead <= 0);
+export let turn = 0; export const nextTurn = () => { const L = playerList(); return L[(turn = (turn + 1) % L.length)]; }; // 세계에 한 번 하는 일을 플레이어 돌아가며 (자연 다시 자라기·들짐승 생기기)
 // G를 새로 만든 바로 뒤: G 안의 플레이어 칸을 첫 플레이어(나)에게 옮기고, G.inv 같은 이름이 지금 플레이어를 가리키게 해요
 function bindPlayers(g, id = ME) {
   const pl = { id, ...freshTimers() }; g.players = { [id]: pl };

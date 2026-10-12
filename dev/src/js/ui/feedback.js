@@ -6,15 +6,18 @@ import { $ } from '../engine/util.js';
 import { fxRand } from '../engine/random.js';
 import { SFX } from '../engine/audio.js';
 import { ftext, puff, toast } from '../engine/effects.js';
-import { G, cam } from '../save/state.js';
+import { G, ME, cam } from '../save/state.js';
 import { BOSSES } from '../data/rpg-nature.js';
 import { PHASE_BOSS } from '../data/deep-survival.js';
-import { onEvent } from '../sim/events.js';
+import { eventWho, onEvent } from '../sim/events.js';
 import { onFrame } from '../sim/systems.js';
 
+// 개인 사건(소리·알림·흔들림·창·기절 화면·보스 막대 …)은 내 플레이어가 남긴 것만 보여요 — 반짝이·떠오르는 글자는 세계에 그려져서 누구 것이든 (8단계)
+const mine = fn => (...a) => { if (eventWho == null || eventWho === ME) return fn(...a); };
+
 // ---- 소리·알림·반짝임 ----
-onEvent('sfx', k => SFX[k]());
-onEvent('toast', toast);
+onEvent('sfx', mine(k => SFX[k]()));
+onEvent('toast', mine(toast));
 onEvent('puff', puff);
 onEvent('ftext', ftext);
 export function hearts(x, y, n, ch = '♥', col = '#ff8fa3') { for (let k = 0; k < n; k++) G.texts.push({ x: x + (fxRand() - .5) * .9, y: y - .2 - fxRand() * .5, txt: ch, col, life: .8 + fxRand() * .5, vy: -1.2 - fxRand() }); }
@@ -30,30 +33,30 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 
 // ---- 화면 흔들림: emit('shake', 세기) = 지금보다 세면 그만큼, emit('shake', 세기, true) = 그 세기로 ----
 export let shake = 0;
-onEvent('shake', (v, set) => { shake = set ? v : Math.max(shake, v); });
+onEvent('shake', mine((v, set) => { shake = set ? v : Math.max(shake, v); }));
 onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 
 // ---- 지도·창 ----
-onEvent('craftNote', (id, n, msg) => craftNote(id, n, msg)); // 제작 알림 (아이콘 + 글)
+onEvent('craftNote', mine((id, n, msg) => craftNote(id, n, msg))); // 제작 알림 (아이콘 + 글)
 onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
-onEvent('open', (kind, data) => openPanel(kind, data));
-onEvent('close', () => closePanel());
-onEvent('refresh', kind => { if (panel && panel.kind === kind) renderPanel(); }); // 그 창이 열려 있으면 다시 그리기
-onEvent('win', kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700)); // 등불나무를 다 키움 → 조금 뒤 축하 창
+onEvent('open', mine((kind, data) => openPanel(kind, data)));
+onEvent('close', mine(() => closePanel()));
+onEvent('refresh', mine(kind => { if (panel && panel.kind === kind) renderPanel(); })); // 그 창이 열려 있으면 다시 그리기
+onEvent('win', mine(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----
-onEvent('fade', mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기
+onEvent('fade', mine(mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기
   const f = $('#fade');
   if (mode === 'faint') { f.textContent = '기절했어요…'; f.hidden = false; }
   else if (mode === 'show') f.hidden = false;
   else if (mode === 'hide') f.hidden = true;
   else if (mode === 'sleep') { f.textContent = '쿨쿨… 좋은 꿈 꾸는 중'; f.classList.add('sleep'); f.hidden = false; }
   else if (mode === 'wake') { f.hidden = true; f.classList.remove('sleep'); f.textContent = '기절했어요…'; }
-});
+}));
 let bossName = '';
-onEvent('bossbar', on => { $('#bossbar').hidden = !on; if (on) bossName = ''; });
-onEvent('bossHp', (k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } });
+onEvent('bossbar', mine(on => { $('#bossbar').hidden = !on; if (on) bossName = ''; }));
+onEvent('bossHp', mine((k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } }));
 let lastGoalTxt = '';
 export function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } });
