@@ -50,18 +50,21 @@ function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/
 const wildNear = r => { const p = G.p; let best = null, bd = r; for (const w of G.wild || []) { const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w; } } return best; };
 let wildT = 0;
 onFrame('wild', dt => wildTick(dt));
-function wildTick(dt) {
-  const p = G.p; G.wild = G.wild || []; wildT -= dt;
-  G.wild = G.wild.filter(w => Math.hypot(w.x - p.x, w.y - p.y) < 30);
-  if (wildT <= 0) { wildT = 6; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0;
+let petDt = 0;
+function wildTick(dt) { petDt = dt;
+  G.wild = G.wild || []; wildT -= dt;
+  G.wild = G.wild.filter(w => playerList().some(pl => Math.hypot(w.x - pl.p.x, w.y - pl.p.y) < 30)); // 플레이어 누구에게서든 멀면 사라져요 (8단계)
+  if (wildT <= 0) { wildT = 6; const pl = nextTurn(), p = pl.p; withPlayer(pl, () => { const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0;
     const kinds = Object.keys(ANIMALS).filter(k => ANIMALS[k].biome === pb && !(ANIMALS[k].pet && (G.pets || {})[k]) && !G.wild.some(w => w.k === k));
     if (kinds.length && G.wild.length < 2 && rand() < .35) for (let tries = 0; tries < 12; tries++) { const a = rand() * 6.283, r = 7 + rand() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
       if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y)) || G.biome[idx(x, y)] !== pb || G.floor[idx(x, y)] === WATER || G.floor[idx(x, y)] === LAVA) continue;
-      G.wild.push({ k: kinds[(rand() * kinds.length) | 0], x: x + .5, y: y + .6, vx: 0, vy: 0, t: 1, flip: false, anim: 0 }); break; } }
+      G.wild.push({ k: kinds[(rand() * kinds.length) | 0], x: x + .5, y: y + .6, vx: 0, vy: 0, t: 1, flip: false, anim: 0 }); break; } }); } // 생기는 곳: 플레이어 돌아가며 (그 플레이어의 펫 종류는 빼고)
   const mdt = Math.min(dt, .1);
   for (const w of G.wild) { w.t -= dt; if (w.t <= 0) { w.t = 1.2 + rand() * 2; if (rand() < .45) { w.vx = 0; w.vy = 0; } else { const a = rand() * 6.283, sp = ANIMALS[w.k].spd; w.vx = Math.cos(a) * sp; w.vy = Math.sin(a) * sp; } }
     if (w.vx || w.vy) { moveEnt(w, w.vx * mdt, w.vy * mdt, .25); w.anim += mdt; if (w.vx) w.flip = w.vx < 0; } }
-  // the pet walks behind you, and hops over walls when it gets left too far behind
+  for (const pl of playerList()) withPlayer(pl, petFollow); }
+// the pet walks behind its owner, and hops over walls when it gets left too far behind
+function petFollow() { const p = G.p, dt = petDt;
   if (G.petOn && ANIMALS[G.petOn]) { let e = G.petE; if (!e) e = G.petE = { x: p.x - .8, y: p.y + .2, flip: false, anim: 0, moving: false };
     const dx = p.x - e.x, dy = p.y + .15 - e.y, d = Math.hypot(dx, dy);
     if (d > 10) { e.x = p.x - .6; e.y = p.y + .2; }

@@ -285,6 +285,47 @@ def test_recall_faint():
     return main
 
 
+def test_two_players():
+    import asyncio, sys
+    # 구조 변경 8단계: 한 세계에 플레이어 여럿 (멀티플레이 준비) — 둘째 플레이어를 넣어 각자 따로인지, 세계가 가까운 플레이어를 보는지
+    H2=HOOK.replace("computeLight}","computeLight,addPlayer,withPlayer,playerList,runCmd,updateEnemies,updateDrops,spawnDrop,hurtPlayer}")
+    CLEAR="()=>{const T=__T,G=T.G;for(let y=95;y<125;y++)for(let x=92;x<125;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.drops.length=0;G.p.x=100.5;G.p.y=110.5;G.p.hp=100;G.p.dead=0;G.p.inv=0}"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,CLEAR)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=T.addPlayer('p2',115.5,110.5);q.inv[0]={id:'wood',c:5};
+              return [T.playerList().length,G.inv.some(s=>s&&s.id==='wood'&&s.c===5),T.withPlayer(q,()=>G.inv[0]&&G.inv[0].id),G.p===G.players.me.p]}""")
+            rec('플레이어 여럿','둘째 플레이어를 넣으면 가방이 따로 (G.inv는 지금 플레이어 것)', r==[2,False,'wood',True], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G,q=G.players.p2,s0=G.sel;T.runCmd({k:'hot',i:2,who:'p2'});return [q.sel,G.sel===s0,G.p===G.players.me.p]}")
+            rec('플레이어 여럿','명령은 보낸 플레이어에게 (단축칸 고르기), 끝나면 다시 내 플레이어', r==[2,True,True], str(r))
+            x0=await ev(pg,"()=>{const G=__T.G,q=G.players.p2;q.p.ctl={mx:1,my:0,stick:null,act:false,atk:false,aim:null};return [G.p.x,q.p.x]}")
+            await wait_game(pg,.5)
+            r=await ev(pg,"()=>{const G=__T.G,q=G.players.p2;q.p.ctl=null;return [G.p.x,q.p.x]}")
+            rec('플레이어 여럿','각자 움직임 (둘째의 조작 의도로 둘째만 걸어감)', abs(r[0]-x0[0])<0.05 and r[1]-x0[1]>1, str([x0,r]))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,q=G.players.p2;q.p.x=115.5;q.p.y=110.5;G.p.x=100.5;G.p.y=110.5;G.enemies.length=0;
+              const mk=x=>({k:'slimeG',x,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,airMax:.42,land:0,cd:99,anim:0});const a=mk(112.5),b=mk(103.5);G.enemies.push(a,b);T.updateEnemies(.01);
+              const out=[a.vx>0,b.vx<0];G.enemies.length=0;return out}""")
+            rec('플레이어 여럿','몬스터는 가장 가까운 플레이어를 쫓아요', r==[True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,q=G.players.p2,n=()=>G.inv.reduce((a,s)=>a+(s&&s.id==='copperOre'?s.c:0),0);for(let k=0;k<G.inv.length;k++)if(G.inv[k]&&G.inv[k].id==='copperOre')G.inv[k]=null;
+              G.drops.length=0;T.spawnDrop('copperOre',3,q.p.x,q.p.y-.3);for(const d of G.drops){d.t=1;d.z=0;d.vz=0;d.vx=d.vy=0;d.hold=0}for(let k=0;k<6;k++)T.updateDrops(.02);
+              return [n(),T.withPlayer(q,n),G.drops.length]}""")
+            rec('플레이어 여럿','떨어진 물건은 가까운 플레이어 가방으로', r==[0,3,0], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,q=G.players.p2;G.enemies.length=0;G.enemies.push({k:'slimeG',x:108.5,y:98.5,hp:999,vx:0,vy:0,t:99,hurt:0,kx:0,ky:0,z:0,air:0,airMax:.42,land:0,cd:99,anim:0});
+              q.p.hp=1;q.p.inv=0;T.withPlayer(q,()=>T.hurtPlayer(50,q.p.x+1,q.p.y));return [q.p.dead>0,G.p.dead<=0,document.querySelector('#fade').hidden]}""")
+            rec('플레이어 여럿','둘째가 쓰러져도 내 화면에는 기절 화면이 안 떠요', r==[True,True,True], str(r))
+            ok=await wait_until(pg,"()=>__T.G.players.p2.p.dead<=0")
+            r=await ev(pg,"()=>{const G=__T.G,q=G.players.p2;return [q.p.hp>0,G.enemies.length>0,Math.round(G.p.x*10)/10]}")
+            rec('플레이어 여럿','둘째가 깨어나도 다른 플레이어가 있으면 세계(몬스터)는 그대로', ok and r[:2]==[True,True], str([ok,r]))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const s=T.serialize();return [Math.abs(s.p.x-G.players.me.p.x)<1e-9,'players' in s,s.inv.some(x=>x&&x.id==='wood'&&x.c===5)]}")
+            rec('플레이어 여럿','저장은 내 플레이어 기준 (둘째의 가방·위치는 안 섞임)', r==[True,False,False], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_emergency_escape():
     import asyncio, sys
     # v57: 메뉴 「긴급 탈출」 — 울타리·벽에 갇혔을 때 막힌 곳 바깥의 가장 가까운 트인 곳으로 (등불나무 둘레 큰 마당도)

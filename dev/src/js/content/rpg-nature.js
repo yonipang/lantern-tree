@@ -53,8 +53,8 @@ onFrame('grow', dt => {
   growT += dt; if (growT > 2) { const gd = growT; growT = 0; growTick(gd); }
 });
 function zoneTick() {
-  const p = G.p; if (p.dead > 0 || !G.fzones) return;
-  G.fzones.forEach((z, zi) => {
+  if (!G.fzones || !alivePlayers().length) return;
+  G.fzones.forEach((z, zi) => { const p = nearestPlayer(z.x + .5, z.y + .5).p; // 구역마다 가장 가까운 살아 있는 플레이어 (8단계)
     z.dead = z.dead.filter(t => t > G.time);
     if (Math.hypot(z.x + .5 - p.x, z.y + .5 - p.y) > 26 || (z.next || 0) > G.time) return;
     const alive = G.enemies.reduce((n, e) => n + (e.zone === zi ? 1 : 0), 0), cap = z.c === 'K' ? 2 : 3;
@@ -79,7 +79,7 @@ function growTick(dt = 2) {
   // crops: lantern-tree blessing (time ×0.8) and water (time ×0.75) add up, but never below half the normal time
   const BR = TREE_BLESS(treeStage());
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.crop || o.p == null) continue; if (G.time - o.p >= d.grow) { if (o.star == null) rollStar(i, o); giantTry(i, o); continue; } let k = 0; if (BR && Math.hypot(i % W - CX, ((i / W) | 0) - CY) <= BR) k += .25; if (o.w) k += 1 / 3; if (k) { o.p -= dt * k; clampCrop(o); } }
-  const p = G.p, inside = (x, y) => Math.abs(x + .5 - p.x) < .8 && Math.abs(y + .5 - p.y) < .8;
+  const p = G.p, inside = (x, y) => playerList().some(pl => Math.abs(x + .5 - pl.p.x) < .8 && Math.abs(y + .5 - pl.p.y) < .8); // 플레이어가 서 있는 칸에서는 안 자라요
   for (const [i, o] of G.objs) { if (o.yg && G.time >= o.yg) { delete o.yg; const x = i % W, y = (i / W) | 0; if (Math.hypot(x - p.x, y - p.y) < 20) emit('puff', x + .5, y + .2, '#9be37a', 6, 2, .3); } }
   for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!d || !d.growTo || G.time < (o.at || 0) - YOUNG_T) continue; const x = i % W, y = (i / W) | 0;
     if (inside(x, y)) { o.at = Math.max(o.at || 0, G.time + 4 + YOUNG_T); continue; }
