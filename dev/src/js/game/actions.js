@@ -32,8 +32,8 @@ const isBroken = s => !!(s && DUR[s.id] && durOf(s) <= 0);
 function wear(s, n = 1) {
   if (!s || !DUR[s.id] || isBroken(s)) return; const mx = DUR[s.id][0], before = durOf(s); s.dur = Math.max(0, before - n); invDirty = true;
   const nm = ITEMS[s.id].n;
-  if (s.dur <= 0) { toast(`${josa(nm, '이', '가')} 망가졌어요! 장비제작대에서 고칠 수 있어요`, null, 'broke' + s.id); SFX.clink(); }
-  else if (before > mx * .2 && s.dur <= mx * .2) toast(`${josa(nm, '이', '가')} 많이 닳았어요 (${s.dur}/${mx})`, null, 'worn' + s.id);
+  if (s.dur <= 0) { emit('toast', `${josa(nm, '이', '가')} 망가졌어요! 장비제작대에서 고칠 수 있어요`, null, 'broke' + s.id); emit('sfx', 'clink'); }
+  else if (before > mx * .2 && s.dur <= mx * .2) emit('toast', `${josa(nm, '이', '가')} 많이 닳았어요 (${s.dur}/${mx})`, null, 'worn' + s.id);
 }
 function repairCost(s) { const mx = durMax(s.id), frac = 1 - durOf(s) / mx; return DUR[s.id][1].map(([id, c]) => [id, Math.max(1, Math.ceil(c * frac))]); }
 function salvageGet(id) { const r = RECIPES.find(r => r.out === id), req = r ? r.req : SALVAGE_BASE[id]; if (!req) return null; return req.map(([m, c]) => [m, Math.round(c * SALVAGE_RATE)]).filter(([, c]) => c > 0); }
@@ -237,7 +237,7 @@ const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed'
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
   delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
-  returnObj(o, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
+  returnObj(o, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
 function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); doAlt(); } // v65: the small button
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
@@ -263,8 +263,8 @@ function perform(a) {
     case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
     case 'place': placeItem(a.t); actCd = 0.14; break;
     case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
-    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); SFX.pick(); actCd = 0.15; break; }
-    case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
+    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); actCd = 0.15; break; }
+    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
     case 'treasure': openTreasure(a.t, a.o); actCd = 0.4; break;
     case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); actCd = 0.35; break;
@@ -276,13 +276,13 @@ function perform(a) {
     case 'recall': startRecall(a.mode); actCd = 0.4; break;
     case 'lost': pickLost(a.t, a.o); actCd = 0.3; break;
     case 'giant': harvestGiant(a.t, a.o); actCd = 0.4; break;
-    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; SFX.place(); puff(a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); toast('탁자 위에 케이크를 올렸어요', 'good', 'cake'); actCd = .4; break; }
-    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { toast('가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; SFX.pick(); actCd = .4; break; }
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); actCd = .4; break; }
     case 'insert': insertSeeds(); actCd = 0.4; break;
-    case 'tree': openPanel('tree'); actCd = 0.3; break;
+    case 'tree': emit('open', 'tree'); actCd = 0.3; break;
     case 'summon': summonBoss(a.boss); actCd = 0.6; break;
-    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); SFX.seed(); puff(a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); toast('빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
-    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
+    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
+    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
     case 'fish': startFish(a.t); actCd = 0.4; break;
     case 'stand': standUp(); actCd = 0.25; break;
     case 'use': useObj(a); actCd = 0.4; break;
@@ -290,28 +290,28 @@ function perform(a) {
     case 'lasso': openCatch(a.w); actCd = .4; break;
     case 'ranch': ranchCollect(a.t, a.o); actCd = .4; break;
     case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); actCd = .4; break;
-    case 'petpet': { const e = G.petE; hearts(e.x, e.y - .4, 4); SFX.purr ? SFX.purr() : SFX.pick(); toast(`${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); actCd = .6; break; }
-    case 'info': if (a.msg) toast(a.msg, null, 'info' + a.msg); actCd = 0.4; break;
+    case 'petpet': { const e = G.petE; emit('hearts', e.x, e.y - .4, 4); emit('sfx', 'purr'); emit('toast', `${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); actCd = .6; break; }
+    case 'info': if (a.msg) emit('toast', a.msg, null, 'info' + a.msg); actCd = 0.4; break;
   }
 }
 function swingAttack() {
   const p = G.p, w = curWeapon(), W = wtOf(w); if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
   if (W.ranged) {
-    if (W.mp && (p.mp || 0) < W.mp) { toast('기력이 부족해요. 잠깐 기다리면 다시 차요', null, 'nomp'); SFX.clink(); return false; }
+    if (W.mp && (p.mp || 0) < W.mp) { emit('toast', '기력이 부족해요. 잠깐 기다리면 다시 차요', null, 'nomp'); emit('sfx', 'clink'); return false; }
     if (W.mp) p.mp -= W.mp;
     const ar = W.ranged === 'arrow' ? takeArrow() : null; // mineral arrows from the bag, best first
     const crit = rand() < 0.1, dmg = Math.round(w.dmg * (ar ? ar.mul : 1) * (W.magic ? magicMul() : rangeMul()) * (crit ? 1.6 : 1) * (0.9 + rand() * 0.2));
     shootP(ang, { k: W.ranged, dmg, crit, spd: W.spd, range: wRange(W), pierce: W.magic ? 1 : ar ? ar.pierce : 0, col: w.orb || '#bff7ef', tip: ar ? ar.tip : null, slot: w.slot, kb: W.kb != null ? W.kb : W.magic ? 4 : 6, fx: w.fx || (ar && ar.fx) });
-    G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; SFX.swing(); return true;
+    G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; emit('sfx', 'swing'); return true;
   }
   const big = W.arc > 2, dur = big ? 0.3 : W === WTYPE.dagger ? 0.14 : 0.22;
   G.swing = { t: dur, max: dur, ang, icon: w.id === 'hand' ? null : w.id, wt: w.wt, arc: big ? 2 : 1.2, rad: big ? 1.2 : 0.95 };
-  SFX.swing(); if (big) shake = Math.max(shake, 0.12);
+  emit('sfx', 'swing'); if (big) emit('shake', 0.12);
   const hit = (e, rr) => { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy); if (d > W.reach + rr) return false; let da = Math.abs(Math.atan2(dy, dx) - ang); if (da > Math.PI) da = 2 * Math.PI - da; return da < W.arc || d < 0.6 + rr; };
   const roll = () => { const crit = rand() < 0.1 + (W.crit || 0); return [Math.round(w.dmg * meleeMul() * (crit ? 1.6 : 1) * (0.9 + rand() * 0.2)), crit]; };
   let landed = false;
   for (const e of G.enemies.slice()) if (hit(e, ENEMY[e.k].r)) { const [dmg, crit] = roll(); hitEnemy(e, dmg, crit, W.kb, w.fx); landed = true; }
-  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && hit(b, BOSSES[k].hr)) { if (b.z > 0.7) ftext(b.x, b.y - 2, '빗나감', '#bfaed3'); else { const [dmg, crit] = roll(); hitBoss(b, dmg, crit, w.fx); landed = true; } } }
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && hit(b, BOSSES[k].hr)) { if (b.z > 0.7) emit('ftext', b.x, b.y - 2, '빗나감', '#bfaed3'); else { const [dmg, crit] = roll(); hitBoss(b, dmg, crit, w.fx); landed = true; } } }
   if (landed) wear(w.slot);
   return true;
 }
@@ -319,7 +319,7 @@ function shootP(ang, o) { const p = G.p; G.pshots.push(Object.assign({ x: p.x + 
 function updatePShots(dt) {
   for (let i = G.pshots.length - 1; i >= 0; i--) {
     const s = G.pshots[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
-    if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { puff(s.x, s.y - .3, s.k === 'arrow' ? '#e8d8c0' : s.col, 4, 1.5, .2); G.pshots.splice(i, 1); continue; }
+    if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { emit('puff', s.x, s.y - .3, s.k === 'arrow' ? '#e8d8c0' : s.col, 4, 1.5, .2); G.pshots.splice(i, 1); continue; }
     let done = false;
     for (const e of G.enemies.slice()) { if (s.hit.includes(e)) continue; if (Math.hypot(e.x - s.x, e.y - s.y) < ENEMY[e.k].r + 0.28) { hitEnemy(e, s.dmg, s.crit, s.kb || 6, s.fx); s.hit.push(e); s.landed = true; if (!s.pierce) { done = true; break; } } }
     if (!done) for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.7 || s.hit.includes(b)) continue; if (Math.hypot(b.x - s.x, b.y - s.y) < BOSSES[k].hr + 0.28) { hitBoss(b, s.dmg, s.crit, s.fx); s.hit.push(b); s.landed = true; if (!s.pierce) { done = true; break; } } }

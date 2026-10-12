@@ -3,10 +3,9 @@
 import { BX, BY, CX, CY, H, L2, LAVA, LAY, SA, SB, SI, SL, W, idx, inB } from './map.js';
 import { G } from '../save/state.js';
 import { ROOM_DECO, ROOM_LOOT, ROOM_N } from '../data/farming-cooking.js';
-import { SFX } from '../engine/audio.js';
 import { fbm, hash2, rng, vn } from '../engine/random.js';
-import { puff, toast } from '../engine/effects.js';
 import { spawnDrop } from '../sim/drops.js';
+import { emit } from '../sim/events.js';
 
 // ================= world gen =================
 export const quartzAt = (x, y, s) => vn(x * .22, y * .22, s + 81) > 0.71; // v43: quartz veins inside the crystal cave's granite
@@ -152,13 +151,13 @@ export const cleanRooms = a => a.filter(r => r && Number.isInteger(r.x) && Numbe
 export function roomTick() {
   const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let ch = false;
   for (const r of G.rooms || []) { if (r.found) continue;
-    if ((px >= r.x && px <= r.x + 3 && py >= r.y && py <= r.y + 2) || !G.wall[idx(r.dx, r.dy)]) { r.found = 1; ch = true; const tc = G.objs.get(idx(r.cx, r.cy)); if (tc) delete tc.hid; G.stats.rooms = (G.stats.rooms || 0) + 1; toast('숨은 방을 찾았어요! 보물상자를 열어 봐요', 'good', 'room'); SFX.seed(); continue; }
-    if (!r.hint && Math.hypot(p.x - r.dx - .5, p.y - r.dy - .5) < 3.2) { r.hint = 1; toast('금 간 벽 틈으로 바람이 새어 나와요… 이 벽 너머에 뭔가 있는 것 같아요', null, 'roomhint'); } }
+    if ((px >= r.x && px <= r.x + 3 && py >= r.y && py <= r.y + 2) || !G.wall[idx(r.dx, r.dy)]) { r.found = 1; ch = true; const tc = G.objs.get(idx(r.cx, r.cy)); if (tc) delete tc.hid; G.stats.rooms = (G.stats.rooms || 0) + 1; emit('toast', '숨은 방을 찾았어요! 보물상자를 열어 봐요', 'good', 'room'); emit('sfx', 'seed'); continue; }
+    if (!r.hint && Math.hypot(p.x - r.dx - .5, p.y - r.dy - .5) < 3.2) { r.hint = 1; emit('toast', '금 간 벽 틈으로 바람이 새어 나와요… 이 벽 너머에 뭔가 있는 것 같아요', null, 'roomhint'); } }
   if (ch) { refreshDoors(); lightDirty = true; }
 }
 export function openTreasure(t, o) {
   if (o.open) return; o.open = 1; const r = (G.rooms || []).find(q => q.cx === t.x && q.cy === t.y); const loot = r ? (ROOM_LOOT[r.b][r.k] || ROOM_LOOT[r.b][0]).slice() : [['crystal', 3], ['gel', 3]];
   delete o.hid; if (r) { r.open = 1; if (!r.found) { r.found = 1; refreshDoors(); } if (r.k === 0) loot.push([ROOM_DECO[r.b], 1]); for (const id of roomNotes(r)) if (!knows(id)) loot.push(['rn_' + id, 1]); }
   for (const [id, c] of loot) spawnDrop(id, c, t.x + .5, t.y + .9);
-  G.stats.chests = (G.stats.chests || 0) + 1; SFX.win(); puff(t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); toast('보물상자를 열었어요!', 'good'); lightDirty = true; checkGuide();
+  G.stats.chests = (G.stats.chests || 0) + 1; emit('sfx', 'win'); emit('puff', t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); emit('toast', '보물상자를 열었어요!', 'good'); lightDirty = true; checkGuide();
 }

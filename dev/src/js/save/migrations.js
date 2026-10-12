@@ -13,11 +13,11 @@ import { G, beat, started } from './state.js';
 import { GEAR_IT } from '../data/automation-tiers.js';
 import { HOT, ITEMS, OBJ, UNIQ_OF } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
-import { toast } from '../engine/effects.js';
 import { BX, BY, CX, CY, H, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
 import { addPond, addWater, genWorld } from '../world/gen.js';
 import { fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
 import { josa } from '../engine/util.js';
+import { emit } from '../sim/events.js';
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar
@@ -55,23 +55,23 @@ export function refundRoofItems() { const back = { n: 0 };
 export function refundRoofTiles(arr, back) { const cnt = { wood: 0, stone: 0 };
   if (Array.isArray(arr)) for (const e of arr) if (Array.isArray(e) && cnt[e[1]] != null) cnt[e[1]]++;
   for (const m in cnt) if (cnt[m]) { const n = Math.ceil(cnt[m] / 2), l = addItem(m, n, false); if (l) spawnDrop(m, l, G.p.x, G.p.y + .6); back.n += cnt[m]; }
-  if (back.n) { G.stats.roofBack = (G.stats.roofBack || 0) + back.n; setTimeout(() => { try { toast('지붕이 없어져서, 가지고 있던 지붕을 나무·돌로 돌려받았어요', 'good', 'roofback'); } catch (e) { } }, 1200); } }
+  if (back.n) { G.stats.roofBack = (G.stats.roofBack || 0) + back.n; setTimeout(() => { try { emit('toast', '지붕이 없어져서, 가지고 있던 지붕을 나무·돌로 돌려받았어요', 'good', 'roofback'); } catch (e) { } }, 1200); } }
 // v46: old stone drills become stone pits
 export function convertDrills() { const DRILL_TO = { drillStone: 'quarry', drillCu: 'pitCu', drillFe: 'pitFe', drillGold: 'pitGold' }, conv = x => { if (x && DRILL_TO[x.id]) x.id = DRILL_TO[x.id]; }; G.inv.forEach(conv); for (const o of G.objs.values()) if (o.items) o.items.forEach(conv); }
 // v48: the weapon from an old save's weapon slot goes into an empty hotbar slot (or the bag, or onto the ground)
 export function unslotWeapon(w) { const to = G.inv.slice(0, HOT).findIndex(x => !x); if (to >= 0) { G.inv[to] = w; return '단축칸'; }
   if (!moveInto(G.inv, w)) return '가방'; spawnDrop(w.id, 1, G.p.x, G.p.y); const d = G.drops[G.drops.length - 1]; d.dur = w.dur; d.lv = w.lv; return '발밑'; }
 // v48: no weapon slot any more — the old slot's weapon goes to the hotbar (or the bag, or the ground)
-export function moveOldWeapon(oldWp) { const wn = ITEMS[oldWp.id].n, where = unslotWeapon(oldWp); setTimeout(() => { if (G && started) toast(`이제 무기는 단축칸에서 골라 들면 써요 · 무기 칸에 있던 ${josa(wn, '을', '를')} ${where}에 넣어 두었어요`, 'good', 'eqmove'); }, 1600); }
+export function moveOldWeapon(oldWp) { const wn = ITEMS[oldWp.id].n, where = unslotWeapon(oldWp); setTimeout(() => { if (G && started) emit('toast', `이제 무기는 단축칸에서 골라 들면 써요 · 무기 칸에 있던 ${josa(wn, '을', '를')} ${where}에 넣어 두었어요`, 'good', 'eqmove'); }, 1600); }
 // ---- workstations and furniture sizes ----
 // v58 rename notice for older saves (화로 → 용광로, 용광로 → 장비제작대)
-export function noticeRename58() { G.stats.nm58 = 1; const has = [...G.objs.values()].some(o => o.t === 'furnace' || o.t === 'smelter') || G.inv.some(x => x && (x.id === 'furnace' || x.id === 'smelter')); if (has) setTimeout(() => { if (G && started) toast('이름이 바뀌었어요: 화로 → 용광로, 용광로 → 장비제작대', 'good', 'nm58'); }, 2600); }
+export function noticeRename58() { G.stats.nm58 = 1; const has = [...G.objs.values()].some(o => o.t === 'furnace' || o.t === 'smelter') || G.inv.some(x => x && (x.id === 'furnace' || x.id === 'smelter')); if (has) setTimeout(() => { if (G && started) emit('toast', '이름이 바뀌었어요: 화로 → 용광로, 용광로 → 장비제작대', 'good', 'nm58'); }, 2600); }
 // v61: weapons moved to the 장비제작대 — older worlds keep making what they could
 export function migrateGear61() { G.stats.nm61 = 1; let blv = 0, has = false; for (const o of G.objs.values()) { if (o.t === 'bench') blv = Math.max(blv, o.lv || 0); if (o.t === 'forge') blv = Math.max(blv, 1); }
     for (const o of G.objs.values()) if (o.t === 'smelter') { has = true; o.lv = Math.max(o.lv || 0, blv); } // v61: weapons moved to the 장비제작대 — older worlds keep making what they could
-    if (!has && blv >= 1) { const id = GEAR_IT[blv], l = addItem(id, 1, false); if (l) spawnDrop(id, 1, G.p.x, G.p.y); setTimeout(() => { if (G && started) toast(`무기·도구는 이제 장비제작대에서 만들어요 · ${ITEMS[id].n}를 가방에 넣어 드렸어요`, 'good', 'gear61'); }, 4200); } }
+    if (!has && blv >= 1) { const id = GEAR_IT[blv], l = addItem(id, 1, false); if (l) spawnDrop(id, 1, G.p.x, G.p.y); setTimeout(() => { if (G && started) emit('toast', `무기·도구는 이제 장비제작대에서 만들어요 · ${ITEMS[id].n}를 가방에 넣어 드렸어요`, 'good', 'gear61'); }, 4200); } }
 // v60: placed copper workbenches (forge) become tier-1 workbenches
-export function migrateForges60(oldFp) { const nf = convertForges(); if (nf) { if (!oldFp) growFootprints(); setTimeout(() => { if (G && started) toast('구리 제작대는 이제 「구리 작업대」예요 · 작업대를 열어 맨 위에서 다음 단계로 올릴 수 있어요', 'good', 'forgeconv'); }, 3200); } }
+export function migrateForges60(oldFp) { const nf = convertForges(); if (nf) { if (!oldFp) growFootprints(); setTimeout(() => { if (G && started) emit('toast', '구리 제작대는 이제 「구리 작업대」예요 · 작업대를 열어 맨 위에서 다음 단계로 올릴 수 있어요', 'good', 'forgeconv'); }, 3200); } }
 export function convertForges() { let n = 0; for (const o of G.objs.values()) if (o.t === 'forge') { o.t = 'bench'; o.lv = 1; n++; } return n; }
 // v56: in saves from before v50 the workbench and benches stood on one tile. Grow each one to its 2×1 size where it stands
 // (into the tile on its right, or else on its left); if both are taken it goes back to the bag as an item.
@@ -82,7 +82,7 @@ export function growFootprints() {
     const fp = fpOf(o), x = i % W, y = (i / W) | 0; G.objs.delete(i); let ok = false;
     for (const [ax, ay] of [[x, y], [x - fp[0] + 1, y]]) if (inB(ax, ay) && fpFree(ax, ay, fp, false, null)) { const ni = idx(ax, ay); G.objs.set(ni, o); setParts(ni, o); ok = true; break; }
     if (!ok) { returnObj(o, x + .5, y + .5); back++; } }
-  if (back) setTimeout(() => { try { toast(`작업대·벤치가 2칸으로 커졌어요. 옆자리가 막힌 ${back}개는 가방으로 돌려받았어요`, 'good', 'grewback'); } catch (e) { } }, 1400);
+  if (back) setTimeout(() => { try { emit('toast', `작업대·벤치가 2칸으로 커졌어요. 옆자리가 막힌 ${back}개는 가방으로 돌려받았어요`, 'good', 'grewback'); } catch (e) { } }, 1400);
   return back;
 }
 export function fixParts() {
@@ -120,4 +120,4 @@ export function migrateTools65() { G.stats.nm65 = 1; const held = G.sel >= 0 ? G
   for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { G.tools.push({ ...s, c: 1 }); if (s.c > 1) for (let k = 1; k < s.c; k++) G.tools.push({ id: s.id, c: 1 }); G.inv[i] = null; moved += s.c || 1; } }
   if (held && isTool(held.id)) { G.tsel = G.tools.findIndex(x => x.id === held.id && x.dur === held.dur); if (G.tsel < 0) G.tsel = 0; G.sel = -1; G.tHand = true; } // the tool that was in hand stays in hand
   if (!G.lastW && held && ITEMS[held.id] && ITEMS[held.id].kind === 'sword') G.lastW = held.id; // otherwise the strongest weapon is used
-  setTimeout(() => { if (G && started) toast('조작이 바뀌었어요 · 칼 버튼은 공격, 손 버튼은 열기·캐기·놓기예요' + (moved ? ` · 도구 ${moved}개는 도구 주머니로 옮겼어요 (단축칸 맨 앞 도구 칸)` : ''), 'good', 'nm65'); }, 1600); }
+  setTimeout(() => { if (G && started) emit('toast', '조작이 바뀌었어요 · 칼 버튼은 공격, 손 버튼은 열기·캐기·놓기예요' + (moved ? ` · 도구 ${moved}개는 도구 주머니로 옮겼어요 (단축칸 맨 앞 도구 칸)` : ''), 'good', 'nm65'); }, 1600); }

@@ -11,6 +11,7 @@
 # 묶을 때 import 줄은 지우고 export 낱말만 떼어 내 같은 자리에 넣어요 (이름은 그대로 — 테스트도 그대로 들여다볼 수 있어요).
 # 대신 묶기 전에 확인해요: 가져오는 파일이 shell.html에 있는지, 그 이름을 정말 내보내는지,
 # 맨 위 이름이 다른 파일과 겹치지 않는지. 모듈이 아직 옛 전역 이름(모듈이 아닌 파일의 이름)을 쓰면 개수를 알려 줘요.
+# 규칙 파일(RULES)이 소리·알림·반짝임을 바로 부르지 않는지, emit('…')한 사건마다 받는 곳(onEvent)이 있는지도 확인해요 (6단계).
 import os, re, sys
 
 DEV = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,9 @@ EXP_DECL = re.compile(r'^export\s+(?=(?:async\s+)?function\b|class\b|const\b|let
 # 맨 위(줄 맨 앞)에서 만드는 이름: function a · class a · const/let/var a = …, b = … · const { a, b } = …
 DECL = re.compile(r'^(?:export\s+)?(?:async\s+)?(?:function\*?\s*([A-Za-z_$][\w$]*)|class\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+(.*))', re.M)
 WORD = re.compile(r'(?<![\w$.])[A-Za-z_$][\w$]*')
+# 규칙 파일 (화면·소리를 바로 부르지 않는 곳) — 보이기·소리는 engine/·ui/·render, 저장 파일 다루기는 save/storage.js
+RULES = ('js/sim/', 'js/world/', 'js/game/', 'js/features/', 'js/content/', 'js/data/', 'js/save/state.js', 'js/save/migrations.js')
+DIRECT_FX = re.compile(r'(?<![\w$.])(SFX\s*[.\[]|(?:toast|puff|ftext|hearts|splash|mapPixel)\s*\(|shake\s*=(?!=))')
 
 
 class BuildError(Exception):
@@ -141,6 +145,26 @@ def check(js, report):
     for rel, s, mod in js:
         if rel != 'js/engine/random.js' and 'Math.random' in re.sub(r'//[^\n]*', '', s):
             raise BuildError(f'{rel}: Math.random 대신 rand()(게임 결과에 영향) 또는 fxRand()(반짝이·소리 등 보이기만)를 써요 (engine/random.js)')
+    # 규칙 파일은 소리·알림·반짝임·흔들림·지도 점을 바로 부르지 않고 사건만 남겨요 (6단계, sim/events.js → ui/feedback.js)
+    for rel, s, mod in js:
+        if not rel.startswith(RULES): continue
+        m = DIRECT_FX.search(code_only(s))
+        if m:
+            raise BuildError(f'{rel}: 규칙 파일에서는 {m.group(1).strip()}… 대신 emit(\'sfx\', \'hit\')·emit(\'toast\', …)·emit(\'puff\', …)처럼 사건을 남겨요 '
+                             '(받는 곳: ui/feedback.js)')
+    emitted, handled = {}, set()
+    for rel, s, mod in js:
+        c = re.sub(r'//[^\n]*|/\*.*?\*/', '', s, flags=re.S)
+        for n in re.findall(r'''(?<![\w$.])emit\(\s*['"](\w+)['"]''', c): emitted.setdefault(n, rel)
+        handled |= set(re.findall(r'''(?<![\w$.])onEvent\(\s*['"](\w+)['"]''', c))
+    sounds = {k for rel, s, _ in js if rel == 'js/engine/audio.js' for k in re.findall(r'(\w+):\s*\(\)\s*=>', s)}
+    for rel, s, _ in js:
+        for k in re.findall(r'''(?<![\w$.])emit\(\s*['"]sfx['"]\s*,\s*['"](\w+)['"]''', s):
+            if sounds and k not in sounds:
+                raise BuildError(f'{rel}: emit(\'sfx\', \'{k}\') — engine/audio.js의 SFX에 {k} 소리가 없어요')
+    for n, rel in sorted(emitted.items()):
+        if n not in handled:
+            raise BuildError(f'{rel}: emit(\'{n}\', …) — 이 사건을 받는 곳이 없어요 (ui/feedback.js에 onEvent(\'{n}\', …) 추가)')
     for rel, s, mod in js:
         for n in top_names(strip_art(s)):
             if n in owner and owner[n] != rel:
