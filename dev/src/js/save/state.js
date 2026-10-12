@@ -48,15 +48,13 @@ function deserialize(s) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: (s.bossDead && typeof s.bossDead === 'object') ? Object.assign(freshDead(), s.bossDead) : Object.assign(freshDead(), { slime: !!s.bossDead }), shots: [], fish: null, fishFx: null, stats: Object.assign(freshStats(), s.stats), time: s.time || 0, spawnPt: s.spawnPt, treeSeeds: s.treeSeeds || 0,
     won: !!s.won, won2: !!s.won2, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.bagLv = clamp(Math.floor(+s.bagLv || 0), 0, BAG_MAX_LV);
-  if ((s.invV || 1) < 2) { while (G.inv.length < 30) G.inv.push(null); G.inv.splice(6, 0, null, null, null); if (!(G.sel < 6)) G.sel = 0; }
+  if ((s.invV || 1) < 2) migrateBagV2();
   while (G.inv.length < invSize()) G.inv.push(null); if (G.inv.length > invSize()) { const extra = G.inv.splice(invSize()).filter(Boolean); G.inv.push(...[]); G.__extra = extra; }
   if ((s.v || 1) < 2) migrateV2();
   G.wire = new Map(Array.isArray(s.wire) ? s.wire : []); G.under = new Map(Array.isArray(s.under) ? s.under : []);
   if ((s.v || 1) < 3) migrateV3();
   if (!G.stats.qv) { addQuartzVeins(); G.stats.qv = 1; } // v43: older crystal caves get the new quartz veins inside their granite
-  G.equip = freshEquip(); const se = s.equip && typeof s.equip === 'object' ? s.equip : {}; // v42: the old 'acc' slot moves to the slot that fits (turtle charm → neck, snow brooch → head)
-  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = { id: e.id, c: 1 }; }
-  const oldWp = se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword' ? eqCopy(se.weapon) : null; // v48: no weapon slot any more
+  const oldWp = loadEquip(s.equip); // v42 equipment slots; v48: the weapon of the old weapon slot (moved to the hotbar below)
   G.pets = {}; if (s.pets && typeof s.pets === 'object') for (const k in s.pets) if (ANIMALS[k] && ANIMALS[k].pet && s.pets[k]) G.pets[k] = 1; G.petOn = G.pets[s.petOn] ? s.petOn : null; G.wild = []; G.petE = null; // v45 pets
   G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null;
@@ -66,9 +64,9 @@ function deserialize(s) {
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   if (!(G.sel >= 0 && G.sel < HOT)) G.sel = 0; G.newIds = {};
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
-  { const DRILL_TO = { drillStone: 'quarry', drillCu: 'pitCu', drillFe: 'pitFe', drillGold: 'pitGold' }, conv = x => { if (x && DRILL_TO[x.id]) x.id = DRILL_TO[x.id]; }; G.inv.forEach(conv); for (const o of G.objs.values()) if (o.items) o.items.forEach(conv); } // v46: old stone drills become stone pits
-  if (oldWp) { const wn = ITEMS[oldWp.id].n, where = unslotWeapon(oldWp); setTimeout(() => { if (G && started) toast(`이제 무기는 단축칸에서 골라 들면 써요 · 무기 칸에 있던 ${josa(wn, '을', '를')} ${where}에 넣어 두었어요`, 'good', 'eqmove'); }, 1600); }
-  if (!G.stats.nm58) { G.stats.nm58 = 1; const has = [...G.objs.values()].some(o => o.t === 'furnace' || o.t === 'smelter') || G.inv.some(x => x && (x.id === 'furnace' || x.id === 'smelter')); if (has) setTimeout(() => { if (G && started) toast('이름이 바뀌었어요: 화로 → 용광로, 용광로 → 장비제작대', 'good', 'nm58'); }, 2600); } // v58 rename notice for older saves
+  convertDrills(); // v46: old stone drills become stone pits
+  if (oldWp) moveOldWeapon(oldWp);
+  if (!G.stats.nm58) noticeRename58(); // v58 rename notice for older saves
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); refundRoofTiles(s.roof, roofBack); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
@@ -80,10 +78,8 @@ function deserialize(s) {
   G.playTEst = !Number.isFinite(s.playT) || !!s.playTEst; G.playT = Number.isFinite(s.playT) ? s.playT : Math.max(0, Math.round(+s.time || 0));
   G.qt = {}; if (s.qt && typeof s.qt === 'object') for (const k in s.qt) if (Number.isFinite(s.qt[k])) G.qt[k] = s.qt[k];
   for (const [i, o] of [...G.objs]) if (o.t === 'icePillar') G.objs.delete(i); // ice pillars only last for one fight
-  if (!G.stats.nm61) { G.stats.nm61 = 1; let blv = 0, has = false; for (const o of G.objs.values()) { if (o.t === 'bench') blv = Math.max(blv, o.lv || 0); if (o.t === 'forge') blv = Math.max(blv, 1); }
-    for (const o of G.objs.values()) if (o.t === 'smelter') { has = true; o.lv = Math.max(o.lv || 0, blv); } // v61: weapons moved to the 장비제작대 — older worlds keep making what they could
-    if (!has && blv >= 1) { const id = GEAR_IT[blv], l = addItem(id, 1, false); if (l) spawnDrop(id, 1, G.p.x, G.p.y); setTimeout(() => { if (G && started) toast(`무기·도구는 이제 장비제작대에서 만들어요 · ${ITEMS[id].n}를 가방에 넣어 드렸어요`, 'good', 'gear61'); }, 4200); } }
-  { const nf = convertForges(); if (nf) { if (!oldFp) growFootprints(); setTimeout(() => { if (G && started) toast('구리 제작대는 이제 「구리 작업대」예요 · 작업대를 열어 맨 위에서 다음 단계로 올릴 수 있어요', 'good', 'forgeconv'); }, 3200); } } // v60
+  if (!G.stats.nm61) migrateGear61();
+  migrateForges60(oldFp); // v60
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); buffDirty = true;
@@ -93,13 +89,3 @@ function deserialize(s) {
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
 function deepSeedDrop(k, S, b) { G.stats.deepSeed = G.stats.deepSeed || {}; if (G.stats.deepSeed[k]) return; G.stats.deepSeed[k] = 1; const sh = G.objs.get(idx(S.x, S.y)); if (sh && sh.t === 'shrine') sh.has = 0; spawnDrop('lightSeed', 1, b.x, b.y); }
-// saves from before the deep regions: if the altar room was never built (the area had been explored), build it now, or hand over the seed if its boss is already gone
-function ensureDeepAltars() { let w = null; G.stats.deepSeed = G.stats.deepSeed || {};
-  for (const [S, k] of [[SL, 'turtle'], [SI, 'spirit']]) { const o = G.objs.get(idx(S.x, S.y)); if (o && o.t === 'shrine') { if (G.bossDead[k] && !o.has) G.stats.deepSeed[k] = 1; continue; }
-    if (G.bossDead[k]) { if (!G.stats.deepSeed[k]) { G.stats.deepSeed[k] = 1; const l = addItem('lightSeed', 1); if (l) spawnDrop('lightSeed', 1, G.p.x, G.p.y); } continue; }
-    w = w || genWorld(G.seed);
-    for (let y = S.y - 10; y <= S.y + 10; y++) for (let x = S.x - 10; x <= S.x + 10; x++) { if (!inB(x, y) || Math.hypot(x - S.x - .5, y - S.y - .5) > 9.6) continue; const j = idx(x, y), q = G.objs.get(j); if (q && q.t !== 'shrine' && OBJ[q.t] && !OBJ[q.t].nat && q.t !== 'bush') continue; G.wall[j] = w.wall[j]; G.floor[j] = w.floor[j]; G.biome[j] = w.biome[j]; const no = w.objs.get(j); if (no) G.objs.set(j, { ...no }); else G.objs.delete(j); } } }
-function grantUniques() {
-  G.stats.uniq = G.stats.uniq || {};
-  for (const k in UNIQ_OF) if (G.bossDead[k] && !G.stats.uniq[k]) { G.stats.uniq[k] = 1; const l = moveInto(G.inv, { id: UNIQ_OF[k], c: 1 }); if (l) spawnDrop(UNIQ_OF[k], 1, G.p.x, G.p.y); if (k === 'golem') { const l2 = addItem('golemCore', 1, false); if (l2) spawnDrop('golemCore', 1, G.p.x, G.p.y); } }
-}

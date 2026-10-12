@@ -25,22 +25,6 @@ function rotateAction() {
   const a = G.act; if (a && a.o && a.t && inB(a.t.x, a.t.y)) { const ai = anchorAt(idx(a.t.x, a.t.y)); if (ai >= 0 && canRotObj(G.objs.get(ai).t)) { rotateObjAt(ai); return; } }
   toast('돌릴 수 있는 가구를 들거나 바라봐 주세요', null, 'norot2'); }
 const rotTarget = () => { if (!G) return false; const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'place' && canRotObj(it.obj)) return true; const a = G.act; return !!(a && a.o && a.t && inB(a.t.x, a.t.y) && anchorAt(idx(a.t.x, a.t.y)) >= 0 && canRotObj((G.objs.get(anchorAt(idx(a.t.x, a.t.y))) || {}).t)); };
-// v56: in saves from before v50 the workbench and benches stood on one tile. Grow each one to its 2×1 size where it stands
-// (into the tile on its right, or else on its left); if both are taken it goes back to the bag as an item.
-function growFootprints() {
-  let back = 0;
-  for (const [i, o] of [...G.objs]) { if (!GREW[o.t] || !OBJ[o.t].sz) continue;
-    if (fpTiles(i, o).every(j => { if (j === i) return true; const q = G.objs.get(j); return q && q.t === '_part' && q.a === i; })) continue;
-    const fp = fpOf(o), x = i % W, y = (i / W) | 0; G.objs.delete(i); let ok = false;
-    for (const [ax, ay] of [[x, y], [x - fp[0] + 1, y]]) if (inB(ax, ay) && fpFree(ax, ay, fp, false, null)) { const ni = idx(ax, ay); G.objs.set(ni, o); setParts(ni, o); ok = true; break; }
-    if (!ok) { returnObj(o, x + .5, y + .5); back++; } }
-  if (back) setTimeout(() => { try { toast(`작업대·벤치가 2칸으로 커졌어요. 옆자리가 막힌 ${back}개는 가방으로 돌려받았어요`, 'good', 'grewback'); } catch (e) { } }, 1400);
-  return back;
-}
-function fixParts() {
-  for (const [i, o] of [...G.objs]) { if (o.t !== '_part') continue; const a = G.objs.get(o.a); if (!a || a.t === '_part' || !OBJ[a.t] || !OBJ[a.t].sz || !fpTiles(o.a, a).includes(i)) G.objs.delete(i); }
-  for (const [i, o] of [...G.objs]) { const d = OBJ[o.t]; if (!d || !d.sz) continue; for (const j of fpTiles(i, o)) { if (j !== i && !G.objs.get(j)) G.objs.set(j, { t: '_part', a: i }); } }
-}
 function rot90(c) { const k = document.createElement('canvas'); k.width = c.height; k.height = c.width; k.hd = c.hd; const g = k.getContext('2d'); g.imageSmoothingEnabled = false; g.translate(k.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0); return k; }
 // ---- tree workshop: a 2×2 plot of saplings; chop when grown, or power it to chop by itself into a chest next to it ----
 const FARM_GROW = 90, FARM_CAP = 60;

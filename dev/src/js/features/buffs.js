@@ -29,13 +29,6 @@ function maybeNote(src, x, y) { if (!G || !G.recipes || Math.random() >= (NOTE_C
 function roomNotes(r) { const list = ROOM_NOTES[r.b] || [], n = (G.rooms || []).filter(q => q.b === r.b).length; return n >= list.length ? [list[r.k]].filter(Boolean) : r.k === 0 ? list.slice() : []; }
 function bossNoteIds(k) { const list = (BOSS_NOTES[k] || []).slice(), rg = BOSS_REGION[k]; if (rg != null && !(G.rooms || []).some(q => q.b === rg)) list.push(...ROOM_NOTES[rg]); return list; }
 for (const [qid, dish] of [['s_crop2', 'glowPancake'], ['s_crop4', 'beanSteam'], ['s_rooms', 'petalRiceCake'], ['s_fish', 'crucianBraise']]) { const q = QSIDE.find(x => x.id === qid); if (q) q.rw = q.rw.concat([['rn_' + dish, 1]]); }
-// saves from before cooking notes: hand over what the player has already earned (opened rooms, beaten bosses, claimed quests; early notes once past the mushroom queen)
-function migrateRecipes() {
-  for (const r of G.rooms || []) if (r.open) for (const id of roomNotes(r)) learnRecipe(id, true);
-  for (const k of BKEYS) if (beat(k)) for (const id of bossNoteIds(k)) learnRecipe(id, true);
-  for (const d of DISHES) if (d[7].startsWith('quest:') && (G.qclaim || {})[d[7].slice(6)]) learnRecipe(d[0], true);
-  if (beat('queen')) for (const d of DISHES) if (['mon', 'gather', 'fish'].includes(d[7])) learnRecipe(d[0], true);
-}
 // ---- buffs ----
 const activeBuffs = () => (G && G.buffs ? G.buffs.filter(b => b.end > G.time) : []);
 function bval(ef) { if (!G || !G.buffs) return 0; let best = null; for (const b of G.buffs) if (b.ef === ef && b.end > G.time && (!best || b.tier > best.tier)) best = b; return best ? EFF[ef].v[best.tier - 1] : 0; }

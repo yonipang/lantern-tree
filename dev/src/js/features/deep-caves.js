@@ -50,6 +50,3 @@ function unwear(slot) { const s = G.equip[slot]; if (!s) return; const left = mo
 function autoHotWeapon(id) { if (!G || ITEMS[id].kind !== 'sword') return; for (let k = 0; k < HOT; k++) { const x = G.inv[k]; if (x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword') return; }
   const to = G.inv.slice(0, HOT).findIndex(x => !x), k = G.inv.findIndex((x, j) => j >= HOT && x && x.id === id); if (to < 0 || k < 0) return;
   G.inv[to] = G.inv[k]; G.inv[k] = null; invDirty = true; if (started) toast(`${josa(ITEMS[id].n, '을', '를')} 단축칸에 넣었어요 · 골라 들면 그 무기로 싸워요`, 'good', 'wphot'); }
-// v48: the weapon from an old save's weapon slot goes into an empty hotbar slot (or the bag, or onto the ground)
-function unslotWeapon(w) { const to = G.inv.slice(0, HOT).findIndex(x => !x); if (to >= 0) { G.inv[to] = w; return '단축칸'; }
-  if (!moveInto(G.inv, w)) return '가방'; spawnDrop(w.id, 1, G.p.x, G.p.y); const d = G.drops[G.drops.length - 1]; d.dur = w.dur; d.lv = w.lv; return '발밑'; }

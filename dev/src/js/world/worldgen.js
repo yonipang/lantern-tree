@@ -115,22 +115,4 @@ function addPond(w, ok) {
   }
 }
 function addQuartzVeins() { let n = 0; for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (G.wall[i] === 3 && G.biome[i] === 2 && quartzAt(x, y, G.seed)) { G.wall[i] = 13; n++; } } return n; }
-function migrateV3() {
-  const w = genWorld(G.seed); let n = 0;
-  for (let i = 0; i < W * H; i++) { if (w.biome[i] < 3) continue; const o = G.objs.get(i); const mine = (o && !OBJ[o.t].nat && o.t !== 'bush') || G.wire.has(i) || G.under.has(i);
-    G.biome[i] = w.biome[i]; if (G.explored[i] || mine) continue;
-    G.wall[i] = w.wall[i]; G.floor[i] = w.floor[i]; const no = w.objs.get(i); if (no) G.objs.set(i, no); else G.objs.delete(i); n++; }
-  return n;
-}
-function migrateV2() {
-  const natural = o => !o || !!OBJ[o.t].nat || o.t === 'bush';
-  for (const [S, fl, b] of [[SA, 3, 1], [SB, 4, 2]]) for (let y = S.y - 9; y <= S.y + 9; y++) for (let x = S.x - 9; x <= S.x + 9; x++) {
-    if (!inB(x, y)) continue; const d = Math.hypot(x + .5 - (S.x + .5), y + .5 - (S.y + .5)); if (d > 8.2) continue; const i = idx(x, y);
-    if (G.wall[i] && G.wall[i] !== 8 && G.wall[i] !== 6 && G.wall[i] !== 7) { G.wall[i] = 0; G.floor[i] = d < 4.6 ? 6 : fl; G.biome[i] = b; }
-    const o = G.objs.get(i); if (o && d > 4.2 && OBJ[o.t].solid && natural(o)) G.objs.delete(i);
-  }
-  const safe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5;
-  addWater(G, G.seed, safe, i => !G.explored[i] && !G.objs.get(i) && [1, 2, 3, 4].includes(G.floor[i]));
-  addPond(G, i => [1, 2].includes(G.floor[i]) && natural(G.objs.get(i)) && !(G.objs.get(i) && G.objs.get(i).t === 'treeP'));
-}
 

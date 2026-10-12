@@ -24,13 +24,6 @@ for (const d of DEEP_DISHES) { DISHES.push(d); DISH[d[0]] = { id: d[0], n: d[1],
 ROOM_NOTES[3].push('fireJelly'); ROOM_NOTES[4].push('firePie');
 Object.assign(BOSS_NOTES, { turtle: ['fireStew', 'fireSkewer', 'fireBeans'], spirit: ['radishSoup', 'radishSalad', 'frostTea'] });
 { const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat(['hotTea', 'hotSoup', 'coolTea', 'coolPunch'].map(id => ['rn_' + id, 1])); }
-// notes the save has already earned (opened rooms, beaten bosses, claimed quests) — run on every load so later versions can add notes to old places
-function syncNotes() {
-  if (G.won2) learnRecipe('festCake', true);
-  for (const r of G.rooms || []) if (r.open) for (const id of roomNotes(r)) learnRecipe(id, true);
-  for (const k of BKEYS) if (beat(k)) for (const id of bossNoteIds(k)) learnRecipe(id, true);
-  for (const d of DISHES) { const s = d[7]; if ((s.startsWith('quest:') || s.startsWith('guide:')) && (G.qclaim || {})[s.slice(6)]) learnRecipe(d[0], true); }
-}
 // ---- cold / heat gauge: only in the lava and ice caves ----
 const ENV_TXT = { hot: ['후끈해요', '더워요', '너무 더워요!', '타 버릴 것 같아요!'], cold: ['으슬으슬해요', '추워요', '너무 추워요!', '얼어붙을 것 같아요!'] };
 const envLv = k => G && G.env && G.env.k === k ? (G.env.v >= 100 ? 3 : G.env.v >= 70 ? 2 : G.env.v >= 40 ? 1 : 0) : 0;

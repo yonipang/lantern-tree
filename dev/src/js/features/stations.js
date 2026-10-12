@@ -17,7 +17,6 @@ Object.assign(OBJ.forge, { n: BENCH_N[1], station: 'bench' }); STN.forge = BENCH
 const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
 const tierNames = st => TIERED[st] || BENCH_N;
 const craftTier = () => panel && panel.kind === 'craft' && TIERED[panel.st] ? (panel.i != null ? Math.max(0, benchLv(G.objs.get(panel.i))) : panel.tier || 0) : 0;
-function convertForges() { let n = 0; for (const o of G.objs.values()) if (o.t === 'forge') { o.t = 'bench'; o.lv = 1; n++; } return n; }
 // ================= v61: the 장비제작대 has the same six tiers; weapons · armour · accessories · tools are made, fixed, broken down and upgraded there =================
 const GEAR_N = ['장비제작대', '구리 장비제작대', '철 장비제작대', '석영 장비제작대', '금 장비제작대', '서리 장비제작대'];
 const GEAR_IT = ['smelter', 'smelterCu', 'smelterFe', 'smelterQ', 'smelterAu', 'smelterFr'];

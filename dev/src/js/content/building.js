@@ -101,14 +101,5 @@ function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.ro
 // a sliding door's panel glides open and shut (kept outside the save)
 const SLIDE = new WeakMap(), SLIDE_PW = new WeakMap(), SLIDE_NEAR = 2;
 function slideStep(o, t) { const tg = o.open ? 1 : 0; let s = SLIDE.get(o); if (!s) SLIDE.set(o, s = { v: tg, t }); const dt = clamp(t - s.t, 0, .1); s.t = t; s.v += clamp(tg - s.v, -dt * 5, dt * 5); return Math.round(s.v * 4) / 4; }
-// v41: roofs were removed — old saves get their roof items and placed roofs back as material (4 roofs were made from 2 wood or stone)
-const OLD_ROOF = { roofWood: 'wood', roofStone: 'stone' };
-function refundRoofItems() { const back = { n: 0 };
-  const fix = a => Array.isArray(a) ? a.map(s2 => { if (!s2 || !OLD_ROOF[s2.id]) return s2; back.n += s2.c || 1; return { id: OLD_ROOF[s2.id], c: Math.ceil((s2.c || 1) / 2) }; }) : a;
-  G.inv = fix(G.inv); for (const o of G.objs.values()) if (o.items) o.items = fix(o.items); return back; }
-function refundRoofTiles(arr, back) { const cnt = { wood: 0, stone: 0 };
-  if (Array.isArray(arr)) for (const e of arr) if (Array.isArray(e) && cnt[e[1]] != null) cnt[e[1]]++;
-  for (const m in cnt) if (cnt[m]) { const n = Math.ceil(cnt[m] / 2), l = addItem(m, n, false); if (l) spawnDrop(m, l, G.p.x, G.p.y + .6); back.n += cnt[m]; }
-  if (back.n) { G.stats.roofBack = (G.stats.roofBack || 0) + back.n; setTimeout(() => { try { toast('지붕이 없어져서, 가지고 있던 지붕을 나무·돌로 돌려받았어요', 'good', 'roofback'); } catch (e) { } }, 1200); } }
 addBuildPieces();
 
