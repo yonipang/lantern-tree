@@ -4,6 +4,7 @@
 import { FLOWERS } from './rpg-nature.js';
 import { ITEMS, OBJ, RECIPES, Rc, TIPS } from './items.js';
 import { QSIDE } from './quests.js';
+import { G, beat } from '../save/state.js';
 
 // ---- farming basics: copper sickle, watering can, fertilizer (water and fertilizer marks live on the crop object: w, f, p0) ----
 export const WCAN_MAX = 10;
