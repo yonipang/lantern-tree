@@ -1,0 +1,495 @@
+# 가방·창·메뉴: 제작 수량, 캐릭터·메뉴, 꾸미기, 드래그·꽃 구역, 상자, 단축칸·가방, 지도 표시
+# 실행: python3 dev/qa/run.py ui   (테스트 하나만: python3 dev/qa/run.py qa8)
+from harness import *
+
+
+def qa8():
+    import asyncio, sys
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{const G=__T.G;G.inv.fill(null);__T.addItem('wood',40);__T.addItem('stone',30);__T.addItem('mushroom',5);__T.addItem('berry',9);__T.addItem('copperBar',5);G.objs.set(__T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),{t:'bench'})}")
+            await ev(pg,"()=>__T.openPanel('craft',{st:'bench'})"); await pg.wait_for_timeout(600)
+            await ev(pg,"()=>{const b=document.querySelector('#sheet .sh-body');b.scrollTop=420}"); await pg.wait_for_timeout(100)
+            top0=await ev(pg,"()=>document.querySelector('#sheet .sh-body').scrollTop")
+            # click a visible enabled craft button
+            idx=await ev(pg,"()=>{const b=document.querySelector('#sheet .sh-body'),r=b.getBoundingClientRect();const bt=[...b.querySelectorAll('button.mk:not([disabled])')].find(x=>{const q=x.getBoundingClientRect();return q.top>r.top&&q.bottom<r.bottom});return bt?bt.dataset.i:null}")
+            await pg.wait_for_timeout(500)
+            await pg.click(f'#sheet button.mk[data-i="{idx}"]'); await pg.wait_for_timeout(300)
+            top1=await ev(pg,"()=>document.querySelector('#sheet .sh-body').scrollTop")
+            rec('제작','만들기 눌러도 스크롤 위치 유지', top0>100 and abs(top0-top1)<2, f'{top0} → {top1} (recipe {idx})')
+            # quantity: floorWood
+            fi=await ev(pg,"()=>__T.RECIPES.findIndex(r=>r.out==='floorWood')")
+            has=await ev(pg,f"()=>!!document.querySelector('#sheet [data-a=qty][data-i=\"{fi}:1\"]')")
+            rec('수량','나무 바닥에 수량 선택', has)
+            ci=await ev(pg,"()=>__T.RECIPES.findIndex(r=>r.out==='chair')")
+            has2=await ev(pg,f"()=>!!document.querySelector('#sheet [data-a=qty][data-i^=\"{ci}:\"]')")
+            rec('수량','의자(가구)는 수량 선택 없음', not has2)
+            await pg.click(f'#sheet [data-a=qty][data-i="{fi}:1"]'); await pg.wait_for_timeout(100); await pg.click(f'#sheet [data-a=qty][data-i="{fi}:1"]'); await pg.wait_for_timeout(100)
+            lbl=await ev(pg,f"()=>document.querySelector('#sheet [data-a=qty][data-i=\"{fi}:1\"]').parentElement.querySelector('b').textContent")
+            w0=await ev(pg,"()=>__T.countItem('wood')"); f0=await ev(pg,"()=>__T.countItem('floorWood')")
+            await pg.click(f'#sheet button.mk[data-i="{fi}"]'); await pg.wait_for_timeout(200)
+            w1=await ev(pg,"()=>__T.countItem('wood')"); f1=await ev(pg,"()=>__T.countItem('floorWood')")
+            rec('수량','+ 두 번 → 12개 표시, 나무 6개 써서 바닥 12개', lbl=='12개' and w0-w1==6 and f1-f0==12, f'{lbl} wood {w0}->{w1} floor {f0}->{f1}')
+            await pg.click(f'#sheet [data-a=qty][data-i="{fi}:max"]'); await pg.wait_for_timeout(100)
+            lbl=await ev(pg,f"()=>document.querySelector('#sheet [data-a=qty][data-i=\"{fi}:max\"]').parentElement.querySelector('b').textContent")
+            rec('수량','최대 = 가진 재료만큼', lbl==f'{(w1//2)*4}개', f'{lbl} (wood {w1})')
+            await pg.click(f'#sheet button.mk[data-i="{fi}"]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[__T.countItem('wood'), __T.G.inv.filter(Boolean).length]")
+            rec('수량','최대로 만들면 나무가 1개 이하로 남음', r[0]<=1, str(r))
+            await ev(pg,"()=>{document.querySelector('#sheet .sh-body').scrollTop=0}"); await pg.wait_for_timeout(100)
+            await pg.screenshot(path=SP+'qa8_craft.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def qa9():
+    import asyncio, sys
+    async def main():
+        mkpage(SRC,'qa.html')
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); errs=[]
+            ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
+            pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
+            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.tap('#btnNew'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[!document.querySelector('#charPick').hidden, document.querySelectorAll('#cpGrid .cp-card').length, document.querySelector('#cpGrid .cp-card.on').dataset.c, document.querySelector('#btnNew').offsetParent===null]")
+            rec('캐릭터 선택','새 모험 → 선택 화면 (8칸, 기본 새싹)', r==[True,8,'sprout',True], str(r))
+            await pg.tap('#cpGrid [data-c=pori]'); await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>[document.querySelector('#cpGrid .cp-card.on').dataset.c, document.querySelector('#cpDesc').textContent]")
+            rec('캐릭터 선택','카드 누르면 선택 + 설명', r==['pori','버섯 모자를 쓴 탐험가'], str(r))
+            await pg.screenshot(path=SP+'qa9_picker.png')
+            await pg.tap('#charBack'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[document.querySelector('#charPick').hidden, document.querySelector('#btnNew').offsetParent!==null]")
+            rec('캐릭터 선택','뒤로 → 첫 화면', r==[True,True], str(r))
+            await pg.tap('#btnNew'); await pg.wait_for_timeout(200); await pg.tap('#cpGrid [data-c=rumi]'); await pg.wait_for_timeout(100); await pg.tap('#charGo'); await pg.wait_for_timeout(700)
+            r=await ev(pg,"()=>[__T.G.char, document.querySelector('#title').hidden, __T.serialize().char]")
+            rec('캐릭터 선택','루미로 시작 + 세이브에 저장', r==['rumi',True,'rumi'], str(r))
+            await ev(pg,"()=>{document.getElementById('toasts').style.display='none'}")
+            await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'qa9_game.png')
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);const a=__T.G.char;delete s.char;__T.deserialize(s);const b=__T.G.char;s.char='rumi';__T.deserialize(s);return [a,b]}")
+            rec('저장','불러오면 캐릭터 유지 / 예전 세이브는 새싹', r==['rumi','sprout'], str(r))
+            await ev(pg,"()=>{document.getElementById('toasts').style.display=''}")
+            await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
+            n=await ev(pg,"()=>document.querySelectorAll('#sheet .cp-card').length")
+            await pg.tap('#sheet .cp-card[data-c=momo]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[__T.G.char, __T.G.outfit, document.querySelector('#toasts').innerText.includes('모모로 바꿨어요'), document.querySelector('#sheet .cp-card.on').dataset.c]")
+            rec('메뉴','메뉴에서 캐릭터 바꾸기', n==8 and r==['momo',0,True,'momo'], f'{n} {r}')
+            await pg.screenshot(path=SP+'qa9_menu.png')
+            await pg.tap('#sheet .cp-card[data-c=todak]'); await pg.wait_for_timeout(300)
+            rec('메뉴','받침 있는 이름: 토닥으로', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('토닥으로 바꿨어요')"))
+            await pg.tap('#sheet .cp-card[data-c=ciel]'); await pg.wait_for_timeout(300)
+            rec('메뉴','ㄹ 받침 이름: 시엘로', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('시엘로 바꿨어요')"))
+            # restart keeps char
+            await pg.tap('#sheet [data-a=newgame]'); await pg.wait_for_timeout(200); await pg.tap('#sheet [data-a=newgame]'); await pg.wait_for_timeout(500)
+            rec('메뉴','처음부터 다시 해도 캐릭터 유지', await ev(pg,"()=>__T.G.char")=='ciel')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def qa13():
+    import asyncio, sys
+    async def main():
+        mkpage(SRC,'qa.html')
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); errs=[]
+            ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
+            pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
+            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.tap('#btnNew'); await pg.wait_for_timeout(300)
+            rec('꾸미기','선택 화면에 직접 꾸미기 카드', await ev(pg,"()=>!!document.querySelector('#cpGrid [data-c=custom]') && document.querySelector('#cpGrid [data-c=custom] span').textContent==='직접 꾸미기'"))
+            await pg.tap('#cpGrid [data-c=custom]'); await pg.tap('#charGo'); await pg.wait_for_timeout(900)
+            r=await ev(pg,"()=>[__T.G.char, document.querySelector('#sheet h2')?.textContent]")
+            rec('꾸미기','직접 꾸미기로 시작하면 꾸미기 창이 바로 열림', r==['custom','꾸미기'], str(r))
+            n=await ev(pg,"()=>document.querySelectorAll('#sheet .look-opt').length")
+            rec('꾸미기','머리 모양 8가지', n==8, n)
+            await pg.screenshot(path=SP+'qa13_hair.png')
+            await pg.tap('#sheet .look-opt[data-i="hair:buns"]'); await pg.wait_for_timeout(200)
+            await pg.tap('#sheet [data-a=lookTab][data-i=hc]'); await pg.wait_for_timeout(200); await pg.tap('#sheet .look-opt[data-i="hc:5"]'); await pg.wait_for_timeout(200)
+            await pg.tap('#sheet [data-a=lookTab][data-i=outfit]'); await pg.wait_for_timeout(200); await pg.tap('#sheet .look-opt[data-i="outfit:apron"]'); await pg.wait_for_timeout(200)
+            await pg.tap('#sheet [data-a=lookTab][data-i=oc]'); await pg.wait_for_timeout(200); await pg.tap('#sheet .look-opt[data-i="oc:3"]'); await pg.wait_for_timeout(200)
+            await pg.tap('#sheet [data-a=lookTab][data-i=hat]'); await pg.wait_for_timeout(200); await pg.tap('#sheet .look-opt[data-i="hat:flowers"]'); await pg.wait_for_timeout(200)
+            await pg.screenshot(path=SP+'qa13_hat.png')
+            r=await ev(pg,"()=>__T.G.look.hair")
+            rec('꾸미기','적용 전에는 바뀌지 않음', r=='bob', r)
+            await pg.tap('#sheet [data-a=lookOk]'); await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>[__T.G.char, JSON.stringify(__T.serialize().look), document.querySelector('#sheetWrap').hidden]")
+            rec('꾸미기','이 모습으로 하기 → 적용 + 저장', r[0]=='custom' and '"hair":"buns"' in r[1] and '"hat":"flowers"' in r[1] and '"oc":3' in r[1] and r[2], str(r))
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);const a=__T.G.look.hair;s.look={hair:'zzz',hc:99};__T.deserialize(s);const b=[__T.G.look.hair,__T.G.look.hc];delete s.look;s.char='momo';__T.deserialize(s);return [a,b,__T.G.char]}")
+            rec('저장','꾸민 모습 저장 / 잘못된 값은 기본값 / 예전 세이브 정상', r==['buns',['bob',8],'momo'], str(r))
+            # wardrobe furniture opens panel
+            await ev(pg,"()=>{const G=__T.G;G.char='custom';G.objs.set(__T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),{t:'shroomWardrobe'});G.p.face={x:1,y:0}}"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+            rec('가구','옷장 → 꾸미기', r==['use','꾸미기'], str(r))
+            await tap(pg,1); await pg.wait_for_timeout(500)
+            rec('가구','옷장을 쓰면 꾸미기 창', await ev(pg,"()=>document.querySelector('#sheet h2')?.textContent")=='꾸미기')
+            await pg.tap('#sheet [data-a=close]'); await pg.wait_for_timeout(300)
+            await ev(pg,"()=>{document.getElementById('toasts').style.display='none'}"); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'qa13_game.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def qa18():
+    import asyncio, sys
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,ENEMY,FLOWERS,zoneTick,growTick,perform,canPlace,isSolid,mkEnemy,hitEnemy,genFlowerZones,maxHp,FLOOR_ITEM,refreshHotbar}")
+    ARENA="()=>{const G=__T.G;for(let y=96;y<124;y++)for(let x=96;x<126;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.drops.length=0;G.p.x=105.5;G.p.y=110.5;G.p.face={x:1,y:0};G.p.dir='side';G.p.hp=__T.maxHp();for(let i=0;i<30;i++)G.inv[i]=null;G.sel=0;G.fzones=[{x:112,y:110,c:'R',dead:[]}]}"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            # ---------- petals & zones ----------
+            r=await ev(pg,"()=>{const c=Object.keys(__T.FLOWERS);return [c.every(k=>__T.ITEMS['petal'+k]&&__T.ENEMY['bloom'+k]),c.map(k=>__T.ITEMS['petal'+k].n).join(',')]}")
+            rec('꽃잎','꽃잎 5색 + 꽃망울 5종', r[0], r[1])
+            r=await ev(pg,"()=>{const G=__T.G,z=G.fzones;return [z.length,z.every(q=>G.biome[__T.idx(q.x,q.y)]===0),[...new Set(z.map(q=>q.c))].sort().join('')]}")
+            rec('구역','꽃망울 구역이 이끼 동굴에 색깔별로 생성', r[0]>=8 and r[1] and r[2]=='BKRWY', str(r))
+            r=await ev(pg,"()=>{const G=__T.G,out=[];for(let k=0;k<25;k++){G.seed=1000+k*7919;const z=__T.genFlowerZones();out.push([z.length,new Set(z.map(q=>q.c)).size])}return out}")
+            rec('구역','여러 세계에서도 5색 구역이 모두 생김', all(a>=8 and b2==5 for a,b2 in r), str(r))
+            r=await ev(pg,"()=>{const G=__T.G,z=G.fzones;let ok=true;for(let a=0;a<z.length;a++)for(let b=a+1;b<z.length;b++)if(Math.hypot(z[a].x-z[b].x,z[a].y-z[b].y)<13)ok=false;return ok}")
+            rec('구역','구역끼리 겹치지 않음', r, r)
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{const G=__T.G;for(let k=0;k<12;k++){G.time+=2;__T.zoneTick()}return G.enemies.filter(e=>e.zone===0).map(e=>e.k)}")
+            rec('구역','구역에서 꽃망울이 최대 3마리까지 젠', len(r)==3 and all(k=='bloomR' for k in r), str(r))
+            r=await ev(pg,"()=>{const G=__T.G;return G.enemies.every(e=>Math.hypot(e.x-112.5,e.y-110.5)<4.5)}")
+            rec('구역','젠 위치가 구역 안', r, r)
+            # calm behaviour
+            r=await ev(pg,"()=>{const G=__T.G;const e=G.enemies[0];e.x=G.p.x+.3;e.y=G.p.y;G.p.inv=0;const h=G.p.hp;return h}")
+            await pg.wait_for_timeout(1200)
+            r2=await ev(pg,"()=>__T.G.p.hp")
+            rec('꽃망울','먼저 때리지 않으면 공격하지 않음', r2==r, f'{r}->{r2}')
+            r=await ev(pg,"()=>{const G=__T.G;const e=G.enemies[0];__T.hitEnemy(e,1,false);return e.angry>0}")
+            rec('꽃망울','맞으면 화가 나서 반격', r, r)
+            # kill → petal + respawn after a while
+            r=await ev(pg,"()=>{const G=__T.G;G.drops.length=0;const e=G.enemies.find(e=>e.zone===0);__T.hitEnemy(e,999,false);return [G.drops.some(d=>d.id==='petalR'),G.fzones[0].dead.length]}")
+            rec('꽃망울','쓰러뜨리면 빨간 꽃잎', r[0], str(r)); rec('구역','쓰러진 자리는 리젠 대기', r[1]==1, str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.time+=5;__T.zoneTick();__T.zoneTick();const a=G.enemies.filter(e=>e.zone===0).length;G.time+=45;__T.zoneTick();const b=G.enemies.filter(e=>e.zone===0).length;return [a,b]}")
+            rec('구역','45초 뒤 다시 젠', r==[2,3], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.enemies.forEach(e=>{e.angry=0});const e=G.enemies.find(e=>e.zone===0);e.x=118.5;e.y=110.5;e.t=0;return 1}")
+            await pg.wait_for_timeout(2500)
+            r=await ev(pg,"()=>{const G=__T.G;return Math.max(...G.enemies.filter(e=>e.zone===0).map(e=>Math.hypot(e.x-112.5,e.y-110.5)))}")
+            rec('꽃망울','구역 밖으로 나가면 돌아옴', r<5.5, f'{r:.2f}')
+            # ---------- regrowth ----------
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];const i=__T.idx(107,110);G.objs.set(i,{t:'root'});__T.addItem('pickWood',1);for(let k=0;k<6;k++)__T.perform({k:'chop',t:{x:107,y:110},o:G.objs.get(i)});return G.objs.get(i)&&G.objs.get(i).t}")
+            rec('리젠','뿌리기둥을 베면 그루터기가 남음', r=='stump', r)
+            r=await ev(pg,"()=>{const G=__T.G;G.p.x=106.5;G.p.face={x:1,y:0};const d=__T.decide();return [d.k,d.lbl]}")
+            rec('리젠','그루터기 앞 → 그루터기 안내 (새순이 돋기 전, v33)', r==['info','그루터기'], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.time+=241;__T.growTick();return G.objs.get(__T.idx(107,110)).t}")
+            rec('리젠','4분 뒤 뿌리기둥이 다시 자람', r=='root', r)
+            r=await ev(pg,"()=>{const G=__T.G;const i=__T.idx(105,110);G.p.x=105.5;G.objs.set(i,{t:'stump',g:'root',at:G.time-1});__T.growTick();return G.objs.get(i).t}")
+            rec('리젠','플레이어가 서 있는 칸은 자라지 않음(갇힘 방지)', r=='stump', r)
+            r=await ev(pg,"()=>{const G=__T.G;const i=__T.idx(108,112);G.objs.set(i,{t:'grass'});__T.perform({k:'chop',t:{x:108,y:112},o:G.objs.get(i)});const a=!!G.objs.get(i);G.time+=121;__T.growTick();return [a,G.objs.get(i)&&G.objs.get(i).t]}")
+            rec('리젠','이끼풀도 2분 뒤 다시 자람', r==[False,'grass'], str(r))
+            # ---------- saplings ----------
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];__T.addItem('sapling',2);G.sel=G.inv.findIndex(s=>s&&s.id==='sapling');const d=__T.decide();__T.perform(d);return [d.k,G.objs.get(__T.idx(106,110))&&G.objs.get(__T.idx(106,110)).t]}")
+            rec('묘목','묘목을 이끼 바닥에 심기', r==['place','sapling'], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.floor[__T.idx(104,110)]=5;G.p.face={x:-1,y:0};return __T.decide().k}")
+            rec('묘목','나무 바닥에는 못 심음', r!='place', r)
+            r=await ev(pg,"()=>{const G=__T.G;G.time+=181;__T.growTick();return G.objs.get(__T.idx(106,110)).t}")
+            rec('묘목','3분 뒤 뿌리기둥으로 자람', r=='root', r)
+            r=await ev(pg,"()=>!!__T.RECIPES.find(r=>r.out==='sapling')&&__T.OBJ.root.drops.some(d=>d[0]==='sapling')")
+            rec('묘목','묘목 얻는 법: 제작 + 뿌리기둥에서 가끔', r, r)
+            # ---------- berry bush with shovel ----------
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];G.objs.set(__T.idx(106,110),{t:'bush'});__T.addItem('shovel',1);G.sel=G.inv.findIndex(s=>s&&s.id==='shovel');G.p.face={x:1,y:0};const d=__T.decide();__T.perform(d);return [d.k,d.lbl,!!G.objs.get(__T.idx(106,110)),__T.countItem('berryBush')]}")
+            rec('덤불','삽으로 열매덤불 퍼내기', r==['dig','퍼내기',False,1], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.sel=G.inv.findIndex(s=>s&&s.id==='berryBush');const d=__T.decide();__T.perform(d);const o=G.objs.get(__T.idx(106,110));return [d.k,o&&o.t,o&&o.r>G.time]}")
+            rec('덤불','옮겨 심기 (바로 열매는 안 열림)', r==['place','bush',True], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.sel=G.inv.findIndex(s=>s&&s.id==='shovel');G.objs.set(__T.idx(106,110),{t:'stump',g:'root',at:G.time+99});const d=__T.decide();__T.perform(d);return [d.lbl,!!G.objs.get(__T.idx(106,110))]}")
+            rec('덤불','삽으로 그루터기 뽑기', r==['뽑기',False], str(r))
+            # ---------- nature decorations ----------
+            r=await ev(pg,"()=>{const R=id=>__T.RECIPES.find(r=>r.out===id);const ids=r=>r.req.map(x=>x[0]).sort().join(',');const tot=r=>r.req.reduce((a,x)=>a+x[1],0);return {cherry:ids(R('cherryTree')),cherryN:tot(R('cherryTree')),tile:ids(R('floorCherry')),tileN:tot(R('floorCherry')),tree:ids(R('roundTree')),shrub:ids(R('shrub')),bed:ids(R('flowerBed')),water:__T.RECIPES.filter(r=>r.out.startsWith('water')).length}}")
+            rec('꾸미기','벚꽃나무: 흙·이끼·나무·흰·빨간 꽃잎 (재료 많음)', r['cherry']=='dirt,gMoss,petalR,petalW,wood' and r['cherryN']>=30, str(r))
+            rec('꾸미기','벚꽃 타일: 흙·이끼·흰·빨간 꽃잎 (재료 적음)', r['tile']=='dirt,gMoss,petalR,petalW' and r['tileN']<=5, str(r))  # v47: terrain materials x2
+            rec('꾸미기','나무·덤불: 흙·이끼', r['tree']=='dirt,gMoss' and r['shrub']=='dirt,gMoss', str(r))
+            rec('꾸미기','꽃밭: 흙·이끼·빨·파·노 꽃잎', r['bed']=='dirt,gMoss,petalB,petalR,petalY', str(r))
+            rec('꾸미기','물 타일 여러 종류', r['water']>=5, str(r))
+            await ev(pg,ARENA)
+            r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];['cherryTree','flowerBed','waterPond','floorCherry'].forEach(i=>__T.addItem(i,4));const put=(id,x,y)=>{G.sel=G.inv.findIndex(s=>s&&s.id===id);G.p.x=x-1+.5;G.p.y=y+.5;G.p.face={x:1,y:0};const d=__T.decide();__T.perform(d);return d.k};return [put('cherryTree',108,108),put('flowerBed',108,111),put('waterPond',108,114),put('floorCherry',108,116)]}")
+            rec('꾸미기','벚꽃나무·꽃밭·물 타일·벚꽃 타일 설치', r==['place']*4, str(r))
+            r=await ev(pg,"()=>[__T.isSolid(108,108),__T.isSolid(108,111),__T.isSolid(108,114),__T.G.floor[__T.idx(108,114)],__T.G.floor[__T.idx(108,116)]]")
+            rec('꾸미기','벚꽃나무는 막히고 꽃밭·물 타일은 지나갈 수 있음', r[:3]==[True,False,False] and r[3]==12 and r[4]==16, str(r))
+            r=await ev(pg,"()=>{const G=__T.G;__T.addItem('shovel',1);G.sel=G.inv.findIndex(s=>s&&s.id==='shovel');G.p.x=107.5;G.p.y=114.5;G.p.face={x:1,y:0};const d=__T.decide();__T.perform(d);return [d.lbl,G.floor[__T.idx(108,114)],__T.countItem('waterPond')]}")
+            rec('꾸미기','물 타일도 삽으로 걷어 회수', r[0]=='걷기' and r[1]==1 and r[2]==4, str(r))
+            await pg.wait_for_timeout(300); await ev(pg,"()=>{__T.G.p.x=105.5;__T.G.p.y=113.5}")
+            await ev(pg,"""()=>{const G=__T.G;const put=(t,x,y)=>G.objs.set(__T.idx(x,y),{t});put('cherryTree',103,108);put('roundTree',100,110);put('shrub',101,112);put('hydrangea',102,112);put('roseBlack',103,112);put('sunflower',104,110);put('daisies',99,113);put('flowerBed',100,113);
+          for(let y=114;y<=116;y++)for(let x=99;x<=103;x++)G.floor[__T.idx(x,y)]=[11,12,13,14,15][(x+y)%5];for(let x=104;x<=107;x++)G.floor[__T.idx(x,114)]=16;G.objs.set(__T.idx(106,108),{t:'sapling',at:G.time+170});G.objs.set(__T.idx(107,108),{t:'sapling',at:G.time+60});G.objs.set(__T.idx(108,108),{t:'stump',g:'root',at:G.time+99});
+          for(const c of ['R','B','Y','W','K']){const e=__T.mkEnemy('bloom'+c,98+ 'RBYWK'.indexOf(c)*1.6,106.5);G.enemies.push(e)}}""")
+            await ev(pg,"()=>{const G=__T.G;for(let x=99;x<=103;x++){G.floor[__T.idx(x,117)]=__T.WATER;G.floor[__T.idx(x,118)]=[11,16,5,12,15][x-99]}G.floor[__T.idx(104,116)]=__T.WATER}")
+            await pg.wait_for_timeout(900); await pg.screenshot(path=SP+'qa18_garden.png')
+            rec('꾸미기','물 타일·벚꽃 타일을 진짜 물 옆에 깔아도 화면 오류 없음', not errs, errs[:2])
+            rec('기능','콘솔 오류 없음 (기능)', not errs, errs[:3]); await ctx.close()
+            # ---------- drag & drop ----------
+            for touch in [False, True]:
+                ctx,pg,errs=await new_ctx(b,390 if touch else 1280,844 if touch else 800,touch)
+                await ev(pg,"()=>{const G=__T.G;for(let i=0;i<30;i++)G.inv[i]=null;G.inv[0]={id:'wood',c:5};G.inv[1]={id:'stone',c:3};G.inv[8]={id:'wood',c:90};G.inv[12]={id:'gel',c:2};__T.refreshHotbar()}")
+                await pg.wait_for_timeout(300)
+                async def drag(a,b2,steps=8,hold=0):
+                    await pg.evaluate("([a,b])=>{const B=document.querySelector(b);if(B&&B.closest('.sh-body'))B.scrollIntoView({block:'center'});}",[a,b2]); await pg.wait_for_timeout(100)
+                    ra=await pg.locator(a).bounding_box(); rb=await pg.locator(b2).bounding_box()
+                    x0,y0=ra['x']+ra['width']/2,ra['y']+ra['height']/2; x1,y1=rb['x']+rb['width']/2,rb['y']+rb['height']/2
+                    kind='touch' if touch else 'mouse'
+                    await pg.dispatch_event(a,'pointerdown',{'pointerId':5,'pointerType':kind,'isPrimary':True,'clientX':x0,'clientY':y0,'button':0,'bubbles':True})
+                    if hold: await pg.wait_for_timeout(hold)
+                    for k in range(1,steps+1):
+                        await pg.evaluate("([x,y,k])=>window.dispatchEvent(new PointerEvent('pointermove',{pointerId:5,pointerType:k,clientX:x,clientY:y,bubbles:true}))",[x0+(x1-x0)*k/steps,y0+(y1-y0)*k/steps,kind]); await pg.wait_for_timeout(16)
+                    await pg.evaluate("([x,y,k])=>window.dispatchEvent(new PointerEvent('pointerup',{pointerId:5,pointerType:k,clientX:x,clientY:y,bubbles:true}))",[x1,y1,kind])
+                    await pg.evaluate("([x,y])=>{const el=document.elementFromPoint(x,y);if(el)el.click()}",[x1,y1]); await pg.wait_for_timeout(250)
+                nm='모바일' if touch else 'PC'
+                await drag('#hotbar [data-i="0"]','#hotbar [data-i="3"]', hold=300 if touch else 0)
+                r=await ev(pg,"()=>[__T.G.inv[0],__T.G.inv[3]&&__T.G.inv[3].id,__T.G.sel]")
+                rec('드래그',f'{nm} 단축칸끼리 끌어서 옮기기', r[0] is None and r[1]=='wood', str(r))
+                await pg.tap('#bInv') if touch else await pg.click('#bInv'); await pg.wait_for_timeout(600)
+                await drag('#sheet [data-a=inv][data-i="12"]','#sheet [data-a=inv][data-i="2"]', hold=300 if touch else 0)
+                r=await ev(pg,"()=>[__T.G.inv[12],__T.G.inv[2]&&__T.G.inv[2].id,document.querySelector('.detail')?1:0]")
+                rec('드래그',f'{nm} 가방 → 단축칸 끌어 놓기', r[0] is None and r[1]=='gel', str(r))
+                rec('드래그',f'{nm} 끌고 난 뒤 칸이 선택되지 않음', r[2]==0, str(r))
+                await drag('#sheet [data-a=inv][data-i="3"]','#sheet [data-a=inv][data-i="8"]', hold=300 if touch else 0)
+                r=await ev(pg,"()=>[__T.G.inv[3],__T.G.inv[8]&&__T.G.inv[8].c]")
+                rec('드래그',f'{nm} 같은 물건 위에 놓으면 합쳐짐', r[0] is None and r[1]==95, str(r))
+                await drag('#sheet [data-a=inv][data-i="1"]','#sheet [data-a=inv][data-i="1"]')
+                r=await ev(pg,"()=>__T.G.inv[1]&&__T.G.inv[1].id"); rec('드래그',f'{nm} 제자리에 놓으면 그대로', r=='stone', r)
+                if touch:
+                    await ev(pg,"()=>{__T.closePanel();__T.openPanel('inv')}"); await pg.wait_for_timeout(500)
+                    await drag('#sheet [data-a=inv][data-i="20"]','#sheet [data-a=inv][data-i="14"]',steps=6)
+                    r=await ev(pg,"()=>[__T.G.inv[20],__T.G.inv[14],document.querySelector('.sh-body').scrollTop]")
+                    rec('드래그','모바일 빈 칸에서 위아래로 밀어도 오류 없음', True, str(r))
+                    await ev(pg,"()=>{__T.G.inv[26]={id:'dirt',c:4};__T.refreshHotbar()}"); await pg.wait_for_timeout(200)
+                    await drag('#sheet [data-a=inv][data-i="26"]','#sheet [data-a=inv][data-i="14"]',steps=6)
+                    r=await ev(pg,"()=>[__T.G.inv[26]&&__T.G.inv[26].id,__T.G.inv[14]]")
+                    rec('드래그','모바일 빠르게 위로 밀면 옮기지 않고 스크롤', r[0]=='dirt' and r[1] is None, str(r))
+                await ev(pg,"()=>__T.closePanel()")
+                # chest
+                await ev(pg,"()=>{const G=__T.G;const i=__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1);G.objs.set(i,{t:'chest',items:Array(18).fill(null)});G.objs.get(i).items[0]={id:'crystal',c:7};__T.openPanel('chest',{i})}")
+                await pg.wait_for_timeout(600)
+                await drag('#sheet [data-a=cout][data-i="0"]','#sheet [data-a=cin][data-i="15"]', hold=300 if touch else 0)
+                r=await ev(pg,"()=>{const G=__T.G,o=G.objs.get(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1));return [o.items[0],G.inv[15]&&G.inv[15].id]}")
+                rec('드래그',f'{nm} 상자 → 가방 원하는 칸', r[0] is None and r[1]=='crystal', str(r))
+                await drag('#sheet [data-a=cin][data-i="2"]','#sheet [data-a=cout][data-i="5"]', hold=300 if touch else 0)
+                r=await ev(pg,"()=>{const G=__T.G,o=G.objs.get(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1));return [o.items[5]&&o.items[5].id,G.inv[2]]}")
+                rec('드래그',f'{nm} 가방 → 상자 원하는 칸', r[0]=='gel' and r[1] is None, str(r))
+                r=await ev(pg,"()=>{let n=0;const seen=new Set();const G=__T.G,o=G.objs.get(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1));for(const s of [...G.inv,...o.items])if(s){n+=s.c}return n}")
+                rec('드래그',f'{nm} 옮기는 동안 개수가 줄거나 늘지 않음', r==5+3+90+2+7+(4 if touch else 0), r)
+                r=await ev(pg,"()=>!document.querySelector('#dragGhost')"); rec('드래그',f'{nm} 끌기 표시가 남지 않음', r, r)
+                rec('기능',f'{nm} 드래그 콘솔 오류 없음', not errs, errs[:3]); await ctx.close()
+            # ---------- mobile button layout ----------
+            for (w,h,name) in [(390,844,'iPhone 14'),(360,640,'small Android'),(375,667,'iPhone SE'),(430,932,'Pro Max'),(844,390,'landscape')]:
+                ctx,pg,errs=await new_ctx(b,w,h,True)
+                await ev(pg,"()=>{document.body.classList.add('touch');const G=__T.G;G.rpg.sk.dash=1;G.rpg.slot=['dash',null];G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1};for(let k=0;k<3;k++)window.__toast&&0}")
+                await pg.wait_for_timeout(500)
+                r=await ev(pg,"""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
+              const E={craft:q('#bCraft'),equip:q('#bEquip'),quest:q('#bQuest'),stat:q('#bStat'),map:q('#bMap'),menu:q('#bMenu'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),hot:q('#hotbar'),bars:q('#hud .bars'),joy:q('#joy')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+              const bad=[];const ks=Object.keys(E);for(let a=0;a<ks.length;a++)for(let b=a+1;b<ks.length;b++)if(ov(E[ks[a]],E[ks[b]]))bad.push(ks[a]+'/'+ks[b]);
+              const out=ks.filter(k=>E[k]&&k!=='joy'&&(E[k].x<0||E[k].y<0||E[k].r>innerWidth+1||E[k].b>innerHeight+1));
+              return {bad,out,low:E.craft?[0,Math.round(E.craft.y),Math.round(E.sub.y),Math.round(E.act.y)]:null,right:E.craft?innerWidth-E.craft.r:null}}""")
+                land = w>h
+                rec('레이아웃',f'{name} 버튼 겹침 없음', not r['bad'] and not r['out'], str(r))
+                if not land: rec('레이아웃',f'{name} 가방·제작이 우측 하단(상호작용 버튼 위)', r['low'][0]<r['low'][1]<r['low'][2]<r['low'][3] and r['low'][1]>h*0.4 and r['right']<30, str(r))
+                await pg.screenshot(path=SP+f'qa18_layout_{w}x{h}.png')
+                await pg.tap('#bCraft'); await pg.wait_for_timeout(500)
+                r=await ev(pg,"()=>!!document.querySelector('#sheetWrap:not([hidden]) .sh-head')"); rec('레이아웃',f'{name} 옮긴 제작 버튼 동작', r, r)
+                if name=='iPhone 14':
+                    await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=nature]'); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'qa18_nature_tab.png')
+                await ev(pg,"()=>__T.closePanel()"); await pg.tap('#bInv'); await pg.wait_for_timeout(500)
+                r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('레이아웃',f'{name} 옮긴 가방 버튼 동작', '가방' in r, r)
+                rec('기능',f'{name} 콘솔 오류 없음', not errs, errs[:3]); await ctx.close()
+            # ---------- save ----------
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const G=__T.G;G.regen=[[__T.idx(110,110),'grass',G.time+50,null]];G.fzones[0].dead=[G.time+30];const s=JSON.parse(JSON.stringify(__T.serialize()));const z=JSON.stringify(G.fzones.map(z=>[z.x,z.y,z.c]));__T.deserialize(s);return [JSON.stringify(G.fzones.map(z=>[z.x,z.y,z.c]))===z,__T.G.fzones[0].dead.length,__T.G.regen.length]}")
+            rec('저장','꽃망울 구역·리젠 대기가 저장됨', r==[True,1,1], str(r))
+            r=await ev(pg,"()=>{const s=__T.serialize();delete s.fzones;delete s.regen;__T.deserialize(s);return [__T.G.fzones.length,__T.G.regen.length]}")
+            rec('저장','예전 세이브도 구역이 생김', r[0]>=8 and r[1]==0, str(r))
+            rec('기능','콘솔 오류 없음 (저장)', not errs, errs[:3]); await ctx.close()
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def qa20():
+    import asyncio, sys
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,canCraft,nearStations,maxCraft,linkedChests,availCount}")
+    SETUP="""()=>{const G=__T.G;for(let y=104;y<118;y++)for(let x=104;x<122;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}for(let i=0;i<30;i++)G.inv[i]=null;G.enemies.length=0;G.p.x=110.5;G.p.y=112.5;
+ const ch=(x,y,items)=>{const it=Array(18).fill(null);items.forEach((s,k)=>it[k]=s);G.objs.set(__T.idx(x,y),{t:'chest',items:it})};
+ G.objs.set(__T.idx(110,110),{t:'bench'});ch(111,110,[{id:'wood',c:20}]);ch(112,110,[{id:'resin',c:2}]);ch(113,111,[{id:'fiber',c:9},{id:'minnow',c:1}]);ch(116,110,[{id:'stone',c:30}]);ch(104,104,[{id:'gel',c:9}])}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,SETUP)
+            r=await ev(pg,"()=>__T.linkedChests().length"); rec('상자 연결','작업대에 붙은 상자 + 이어 붙은 상자(대각선 포함) 3개 연결', r==3, r)
+            r=await ev(pg,"()=>[__T.availCount('wood'),__T.availCount('resin'),__T.availCount('fiber'),__T.availCount('stone'),__T.availCount('gel')]")
+            rec('상자 연결','떨어진 상자·작업대와 안 붙은 상자는 제외', r==[20,2,9,0,0], str(r))
+            r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='chest');__T.openPanel('craft',{st:'bench'});const o=[__T.canCraft(R,__T.nearStations()),__T.maxCraft(R)];__T.closePanel();return o}")
+            rec('상자 연결','가방이 비어도 상자 재료로 만들 수 있음', r==[True,2], str(r))
+            await ev(pg,"()=>__T.openPanel('craft',{st:'bench'})"); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>[[...document.querySelectorAll('.stations .chip')].map(e=>e.textContent).join('|'),!!document.querySelector('.sh-body .hint, .hint')]")
+            rec('상자 연결','제작 창에 "연결된 상자 3개" 표시', '연결된 상자 3개' in r[0], r[0])
+            idx=await ev(pg,"()=>__T.RECIPES.findIndex(r=>r.out==='chest')")
+            await pg.tap('[data-a=tab][data-i=furn]'); await pg.wait_for_timeout(250)
+            await ev(pg,f"()=>{{document.querySelector('[data-a=craft][data-i=\"{idx}\"]').scrollIntoView({{block:'center'}})}}"); await pg.wait_for_timeout(150)
+            txt=await ev(pg,f"()=>document.querySelector('[data-a=craft][data-i=\"{idx}\"]').closest('.rc').querySelector('.ings').textContent")
+            rec('상자 연결','재료 표시에 상자 개수 포함', '20/8' in txt and '2/1' in txt, txt)
+            await pg.tap(f'[data-a=craft][data-i="{idx}"]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const G=__T.G,o=(x,y)=>G.objs.get(__T.idx(x,y)).items;return [o(111,110)[0]&&o(111,110)[0].c,o(112,110)[0]&&o(112,110)[0].c,__T.countItem('chest')]}")
+            rec('상자 연결','만들면 상자에서 재료가 빠지고 결과는 가방으로', r==[12,1,1], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;__T.addItem('wood',5);__T.addItem('resin',1);const R=__T.RECIPES.find(r=>r.out==='chest');const ri=__T.RECIPES.indexOf(R);return ri}")
+            await ev(pg,"()=>__T.closePanel()"); await ev(pg,"()=>__T.openPanel('craft',{st:'bench'})"); await pg.wait_for_timeout(600); await pg.tap('[data-a=tab][data-i=furn]'); await pg.wait_for_timeout(250)
+            await ev(pg,f"()=>{{document.querySelector('[data-a=craft][data-i=\"{idx}\"]').scrollIntoView({{block:'center'}})}}"); await pg.wait_for_timeout(150)
+            await pg.tap(f'[data-a=craft][data-i="{idx}"]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const G=__T.G,o=G.objs.get(__T.idx(111,110)).items;return [__T.countItem('wood'),o[0]&&o[0].c,__T.countItem('resin'),G.objs.get(__T.idx(112,110)).items[0]&&G.objs.get(__T.idx(112,110)).items[0].c]}")
+            rec('상자 연결','가방 재료부터 쓰고 모자란 만큼 상자에서', r==[0,9,0,1], str(r))
+            # anyFish from chest
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.get(__T.idx(116,110)).items[0]=null;G.objs.get(__T.idx(111,110)).items[1]={id:'stone',c:10};const R=__T.RECIPES.find(r=>r.out==='fishTank');return [R.at,__T.canCraft(R,__T.nearStations())]}")
+            rec('상자 연결','물고기(아무 물고기) 재료도 상자에서 찾음', r[1]==True, str(r))
+            # far away → nothing
+            r=await ev(pg,"()=>{const G=__T.G;G.p.x=118.5;G.p.y=116.5;const n=__T.linkedChests().length;G.p.x=110.5;G.p.y=112.5;return n}")
+            rec('상자 연결','작업대에서 멀어지면 연결 안 됨', r==0, r)
+            # repair from chest
+            r=await ev(pg,"()=>{const G=__T.G;for(let i=0;i<30;i++)G.inv[i]=null;G.inv[0]={id:'pickWood',c:1,dur:10};const bi=__T.idx(110,110);G.objs.set(bi,{t:'smelter'});__T.openPanel('craft',{st:'smelter',i:bi});return 1}  /* v61: repair at the 장비제작대 */")
+            await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=fix]'); await pg.wait_for_timeout(250)
+            await pg.tap('[data-a=fix][data-i="0"]'); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>[__T.G.inv[0].dur,__T.G.objs.get(__T.idx(111,110)).items[0].c]")
+            rec('상자 연결','수리 재료도 상자에서', r[0]==200 and r[1]<9, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await pg.screenshot(path=SP+'qa20.png'); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def qa21():
+    import asyncio, sys
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,refreshHotbar,perform,decide,HOT,invSize,stackMax:id=>(ITEMS[id].stack||((!ITEMS[id].kind||ITEMS[id].kind==='ground'||id==='dirt')?999:99)),sortBag,hotClick}")
+    LAYOUT="""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
+ const E={hot:q('#hotbar'),bag:q('#bInv'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),craft:q('#bCraft'),joy:q('#joy'),side:q('#hud .side'),bars:q('#hud .bars')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+ const bad=[];for(const [a,b] of [['hot','act'],['hot','sub'],['hot','sk'],['hot','craft'],['hot','joy'],['bag','act'],['bag','sk'],['craft','act'],['craft','sub'],['craft','sk'],])if(ov(E[a],E[b]))bad.push(a+'/'+b);
+ const out=Object.keys(E).filter(k=>E[k]&&k!=='joy'&&(E[k].x<-1||E[k].r>innerWidth+1||E[k].b>innerHeight+1));const hb=document.querySelector('#hbSlots');
+ return {bad,out,bagRight:E.bag&&E.hot?E.bag.r<=E.hot.r+1&&E.bag.x>document.querySelector('#hbSlots').getBoundingClientRect().right-2:false,scroll:hb.scrollWidth>hb.clientWidth+2,slots:hb.children.length}}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>[__T.G.inv.length,__T.G.inv.slice(0,9).map(s=>s&&s.id).join(','),__T.G.inv.slice(9).filter(Boolean).map(s=>s.id).join(',')]")
+            rec('시작','단축칸 9 + 가방 24, 음식·씨앗은 단축칸·도구는 가방', r[0]==33 and r[1].startswith('berry,berrySeed') and 'pickWood' in r[2], str(r))
+            await ev(pg,"()=>document.body.classList.add('touch')"); await pg.wait_for_timeout(300)
+            r=await ev(pg,LAYOUT); rec('단축칸','9칸 · 모바일 가로 스크롤 · 가방 버튼이 오른쪽 고정', r['slots']==9 and r['scroll'] and r['bagRight'] and not r['bad'] and not r['out'], str(r))
+            await ev(pg,"()=>{__T.hotClick(8)}"); await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>{const hb=document.querySelector('#hbSlots'),el=hb.children[8],a=el.getBoundingClientRect(),c=hb.getBoundingClientRect();return [a.right<=c.right+1,a.left>=c.left-1,__T.G.sel]}")
+            rec('단축칸','9번 칸을 고르면 보이도록 자동 스크롤', r==[True,True,8], str(r))
+            await ev(pg,"()=>{document.querySelector('#hbSlots').scrollLeft=0}"); await pg.wait_for_timeout(200)
+            bx=await pg.locator('#hotbar [data-i="2"]').bounding_box(); x0,y0=bx['x']+bx['width']/2,bx['y']+bx['height']/2
+            await pg.dispatch_event('#hotbar [data-i="2"]','pointerdown',{'pointerId':7,'pointerType':'touch','isPrimary':True,'clientX':x0,'clientY':y0,'bubbles':True})
+            for k in range(1,7): await pg.evaluate("([x,y])=>window.dispatchEvent(new PointerEvent('pointermove',{pointerId:7,pointerType:'touch',clientX:x,clientY:y,bubbles:true}))",[x0-25*k,y0]); await pg.wait_for_timeout(16)
+            await pg.evaluate("([x,y])=>window.dispatchEvent(new PointerEvent('pointerup',{pointerId:7,pointerType:'touch',clientX:x,clientY:y,bubbles:true}))",[x0-150,y0]); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[document.querySelector('#hbSlots').scrollLeft>20,__T.G.inv[0]&&__T.G.inv[0].id,!document.querySelector('#dragGhost')]")
+            rec('단축칸','모바일에서 빠르게 옆으로 밀면 스크롤 (아이템은 그대로)', r==[True,'berry',True], str(r))
+            r=await ev(pg,"()=>{const ev=new Event('dragstart',{cancelable:true,bubbles:true});document.querySelector('#hotbar .slot img').dispatchEvent(ev);const cs=getComputedStyle(document.querySelector('#hotbar .slot img'));return [ev.defaultPrevented,cs.pointerEvents,cs.webkitUserDrag||cs.getPropertyValue('-webkit-user-drag')]}")
+            rec('드래그','브라우저 기본 이미지 끌기 차단 (원본 이미지가 따라오지 않음)', r[0] and r[1]=='none', str(r))
+            # placing new items
+            r=await ev(pg,"()=>{const G=__T.G;__T.addItem('torch',3);__T.addItem('berry',2);return [G.inv.slice(0,9).filter(Boolean).map(s=>s.id+':'+s.c).join(','),G.inv.findIndex(s=>s&&s.id==='torch')]}")
+            rec('단축칸','새 아이템은 가방으로, 이미 단축칸에 있는 건 거기에 합쳐짐 (v48: 나무 검은 처음부터 단축칸)', r[0]=='berry:6,berrySeed:2,swordWood:1' and r[1]>=9, str(r))
+            r=await ev(pg,"()=>[__T.stackMax('wood'),__T.stackMax('dirt'),__T.stackMax('berry'),__T.stackMax('torch')]")
+            rec('겹치기','재료는 999개까지, 음식·가구는 99개', r==[999,999,99,99], str(r))
+            r=await ev(pg,"()=>{__T.addItem('wood',1500);return __T.G.inv.filter(s=>s&&s.id==='wood').map(s=>s.c)}")
+            rec('겹치기','나무 1500개 → 999 + 501', sorted(r)==[501,999], str(r))
+            # sort
+            r=await ev(pg,"()=>{const G=__T.G;for(let i=9;i<G.inv.length;i++)G.inv[i]=null;G.inv[2]={id:'gel',c:3};const L=[['stone',5],['grilled',2],['swordWood',1],['stone',7],['torch',2],['berrySeed',3],['pickWood',1],['wood',4]];L.forEach(([id,c],k)=>{G.inv[30-k]={id,c}});__T.sortBag();return [G.inv.slice(9).filter(Boolean).map(s=>s.id+':'+s.c).join(','),G.inv[2].id]}")
+            rec('정렬','장비 → 음식 → 재료 → 씨앗 → 꾸미기 순, 같은 것 합침, 단축칸은 그대로', r[0].startswith('pickWood:1,swordWood:1,grilled:2') and 'stone:12' in r[0] and r[0].endswith('torch:2') and r[1]=='gel', str(r))
+            # tabs
+            await pg.tap('#bInv'); await pg.wait_for_timeout(600)
+            await pg.tap('[data-a=bagTab][data-i=food]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const d=[...document.querySelectorAll('#sheet .slot[data-a=inv]')].filter(e=>e.querySelector('img'));return [d.filter(e=>!e.classList.contains('dim')).map(e=>e.getAttribute('aria-label').split(' ')[0]).join(','),d.filter(e=>e.classList.contains('dim')).length]}")
+            rec('종류 탭','음식 탭: 음식만 밝게, 나머지는 흐리게', r[1]>3 and all(x in ['통통베리','구운'] for x in r[0].split(',')), str(r))
+            await pg.screenshot(path=SP+'qa21_bag_food.png')
+            await pg.tap('[data-a=bagTab][data-i=all]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>document.querySelectorAll('#sheet .slot.dim').length"); rec('종류 탭','전체 탭은 모두 밝게', r==0, r)
+            await pg.tap('[data-a=sortBag]'); await pg.wait_for_timeout(200)
+            await ev(pg,"()=>__T.closePanel()")
+            # auto refill
+            r=await ev(pg,"()=>{const G=__T.G;for(let x=-2;x<=2;x++)for(let y=-2;y<=2;y++){const i=__T.idx(Math.floor(G.p.x)+x,Math.floor(G.p.y)+y);G.objs.delete(i);G.wall[i]=0;G.floor[i]=1}G.inv[4]={id:'torch',c:1};G.sel=4;G.p.face={x:1,y:0};const n0=__T.countItem('torch');__T.perform(__T.decide());return [G.inv[4]&&G.inv[4].id,G.inv[4]&&G.inv[4].c,__T.countItem('torch'),n0]}")
+            rec('자동 보충','단축칸 횃불을 다 쓰면 가방 횃불로 자동 보충', r[0]=='torch' and r[2]==r[3]-1, str(r))
+            # craft: notice + no auto hotbar
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)-2),{t:'bench'});__T.addItem('wood',30);__T.openPanel('craft',{st:'bench'});return __T.RECIPES.findIndex(r=>r.out==='chair')}")
+            await pg.wait_for_timeout(500)
+            hot_before=await ev(pg,"()=>__T.G.inv.slice(0,9).map(s=>s&&s.id).join(',')")
+            await ev(pg,f"()=>{{const b=document.querySelector('[data-a=craft][data-i=\"{r}\"]');b.scrollIntoView({{block:'center'}})}}"); await pg.wait_for_timeout(200)
+            await pg.tap(f'[data-a=craft][data-i="{r}"]'); await pg.wait_for_timeout(250)
+            n=await ev(pg,"()=>{const e=document.querySelector('#craftNote');return e&&!e.hidden?[e.textContent,e.getBoundingClientRect().top<document.querySelector('#sheet').getBoundingClientRect().top+60]:null}")
+            rec('제작 알림','"나무 의자를 제작했어요" 알림이 창 위에 보임', n and n[0]=='나무 의자를 제작했어요' and n[1], str(n))
+            await pg.screenshot(path=SP+'qa21_craftnote.png')
+            r2=await ev(pg,"()=>__T.G.inv.slice(0,9).map(s=>s&&s.id).join(',')"); rec('단축칸','만든 물건이 단축칸을 멋대로 바꾸지 않음', r2==hot_before, f'{hot_before} -> {r2}')
+            ri=await ev(pg,"()=>__T.RECIPES.findIndex(r=>r.out==='floorWood')")
+            await ev(pg,f"()=>{{__T.closePanel();__T.openPanel('craft',{{st:'bench'}})}}"); await pg.wait_for_timeout(500)
+            await pg.tap('[data-a=tab][data-i=build]'); await pg.wait_for_timeout(200)
+            await ev(pg,f"()=>{{document.querySelector('[data-a=craft][data-i=\"{ri}\"]').scrollIntoView({{block:'center'}})}}"); await pg.wait_for_timeout(150)
+            await pg.tap(f'[data-a=qty][data-i="{ri}:1"]'); await pg.wait_for_timeout(100); await pg.tap(f'[data-a=craft][data-i="{ri}"]'); await pg.wait_for_timeout(250)
+            n=await ev(pg,"()=>document.querySelector('#craftNote').textContent"); rec('제작 알림','여러 개면 "나무 바닥을 8개 제작했어요!"', n=='나무 바닥을 8개 제작했어요!', n)
+            # bag upgrade
+            r=await ev(pg,"()=>{const G=__T.G;G.bagLv=0;G.inv.length=33;['fiber','rope','resin'].forEach(i=>__T.addItem(i,30));__T.closePanel();__T.openPanel('craft',{st:'bench'});return [__T.RECIPES.findIndex(r=>r.out==='bagUp1'),!!document.querySelector('[data-a=craft][data-i=\"'+__T.RECIPES.findIndex(r=>r.out==='bagUp2')+'\"]')]}")
+            await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=tool]'); await pg.wait_for_timeout(200)
+            vis=await ev(pg,f"()=>[!!document.querySelector('[data-a=craft][data-i=\"{r[0]}\"]'),!!document.querySelector('[data-a=craft][data-i=\"'+__T.RECIPES.findIndex(r=>r.out==='bagUp2')+'\"]')]")
+            rec('가방 확장','처음엔 1단계 가방만 보임', vis==[True,False], str(vis))
+            await ev(pg,f"()=>{{document.querySelector('[data-a=craft][data-i=\"{r[0]}\"]').scrollIntoView({{block:'center'}})}}"); await pg.wait_for_timeout(150)
+            await pg.tap(f'[data-a=craft][data-i="{r[0]}"]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[__T.G.inv.length,__T.G.bagLv,document.querySelector('#craftNote').textContent,__T.countItem('bagUp1')]")
+            rec('가방 확장','가방이 30칸으로 늘고 아이템은 생기지 않음', r[0]==39 and r[1]==1 and '30칸' in r[2] and r[3]==0, str(r))
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.inv.length,__T.G.bagLv]}")
+            rec('가방 확장','저장·불러오기 후에도 유지', r==[39,1], str(r))
+            # old save migration
+            r=await ev(pg,"()=>{const s=__T.serialize();s.invV=undefined;s.bagLv=undefined;s.inv=Array(30).fill(null);s.inv[0]={id:'berry',c:3};s.inv[5]={id:'torch',c:2};s.inv[6]={id:'wood',c:9};s.inv[29]={id:'stone',c:4};s.sel=5;__T.deserialize(s);const G=__T.G;return [G.inv.length,G.inv[0].id,G.inv[5].id,G.inv[6],G.inv[9].id,G.inv[32].id,G.sel]}")
+            rec('예전 세이브','단축칸 6칸 그대로 + 빈 3칸 추가, 가방 아이템 보존', r==[33,'berry','torch',None,'wood','stone',5], str(r))
+            rec('기능','콘솔 오류 없음 (모바일)', not errs, errs[:3]); await ctx.close()
+            # PC
+            ctx,pg,errs=await new_ctx(b,1280,800,False)
+            r=await ev(pg,LAYOUT); rec('단축칸','PC 9칸 한 줄 · 가방 버튼 오른쪽', r['slots']==9 and not r['scroll'] and r['bagRight'] and not r['bad'], str(r))
+            await pg.keyboard.press('Digit9'); r=await ev(pg,"()=>__T.G.sel"); rec('단축칸','PC 숫자 9로 9번 칸 선택', r==8, r)
+            await pg.mouse.move(640,400); await pg.mouse.wheel(0,100); await pg.wait_for_timeout(100); r=await ev(pg,"()=>__T.G.sel"); rec('단축칸','휠로 9칸 순환', r==0, r)
+            await pg.click('#bInv'); await pg.wait_for_timeout(500); r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('가방','단축칸 옆 가방 버튼으로 가방 열기', '가방' in r, r)
+            await pg.screenshot(path=SP+'qa21_pc_bag.png')
+            rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await ctx.close()
+            for (w,h,name) in [(360,640,'small Android'),(375,667,'iPhone SE'),(430,932,'Pro Max'),(844,390,'landscape')]:
+                ctx,pg,errs=await new_ctx(b,w,h,True)
+                await ev(pg,"()=>{document.body.classList.add('touch');const G=__T.G;G.rpg.sk.dash=1;G.rpg.slot=['dash',null];G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1}}"); await pg.wait_for_timeout(500)
+                r=await ev(pg,LAYOUT); rec('레이아웃',f'{name} 단축칸·가방 버튼 겹침 없음', not r['bad'] and not r['out'] and r['bagRight'], str(r))
+                await pg.screenshot(path=SP+f'qa21_{w}x{h}.png'); await ctx.close()
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def qa47():
+    import asyncio, sys
+    # 지도: 찾았지만 안 연 보물상자 표시를 체크박스로 켜고 끄기
+    H2=HOOK.replace("computeLight}","computeLight,mapChestOn}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # a found-but-closed room in the middle of the explored map
+            px="(()=>{const cv=document.querySelector('#mapCv');const g=cv.getContext('2d');let n=0;const d=g.getImageData(0,0,cv.width,cv.height).data;for(let i=0;i<d.length;i+=4)if(d[i]===255&&d[i+1]===210&&d[i+2]===92)n++;return n})()"
+            await ev(pg,"()=>{const T=__T,G=T.G;for(let i=0;i<G.explored.length;i++)G.explored[i]=1;const rm=G.rooms[0];rm.found=1;rm.open=0;G.p.x=rm.cx+.5;G.p.y=rm.cy+3.5;T.openPanel('map')}"); await pg.wait_for_timeout(700)
+            r=await ev(pg,"()=>{const c=document.querySelector('#sheet [data-a=mapChest]');return [!!c,c&&c.checked,"+px+"]}"); n_on=r[2]; r=r[:2]+[n_on>0]
+            rec('지도','범례에 「찾았지만 안 연 보물상자」 체크박스 (처음엔 켜짐, 지도에 표시)', r==[True,True,True], str(r))
+            await pg.screenshot(path=SP+'qa47_map.png')
+            await pg.click('#sheet [data-a=mapChest]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const c=document.querySelector('#sheet [data-a=mapChest]');let ls=null;try{ls=localStorage.getItem('lantern-tree-map-chest')}catch(e){}return [c.checked,"+px+"<n_on,__T.mapChestOn(),ls]}".replace('n_on',str(n_on)))
+            rec('지도','체크를 끄면 보물상자 표시가 사라지고 설정이 남음', r==[False,True,False,'0'], str(r))
+            await ev(pg,"()=>{__T.closePanel();__T.openPanel('map')}"); await pg.wait_for_timeout(700)
+            r=await ev(pg,"()=>[document.querySelector('#sheet [data-a=mapChest]').checked,"+px+"<"+str(n_on)+"]")
+            rec('지도','지도를 다시 열어도 꺼진 채로', r==[False,True], str(r))
+            await pg.click('#sheet [data-a=mapChest]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[document.querySelector('#sheet [data-a=mapChest]').checked,"+px+"==="+str(n_on)+"]")
+            rec('지도','다시 켜면 다시 표시', r==[True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
