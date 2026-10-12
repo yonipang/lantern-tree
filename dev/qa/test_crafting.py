@@ -182,7 +182,8 @@ def qa17():
             await ev(pg,"()=>{const f="+EN+";f(107.5,110.5)}")
             r=await ev(pg,"()=>{const a=__T.decide().k;__T.G.sel=1;const b=__T.decide().k;return [a,b]}")
             rec('무기','창은 2칸 떨어진 적도 공격, 검은 닿지 않음', r==['attack','swing'], str(r))
-            r=await ev(pg,"()=>{__T.G.sel=0;const e=__T.G.enemies[0];const h=e.hp;__T.perform(__T.decide());return [h-e.hp>0, __T.G.swing&&__T.G.swing.wt]}")
+            # 적을 놓은 뒤 몇 프레임 사이에 적이 움직여 창 끝에서 벗어나는 일이 있어서, 같은 자리에 다시 놓고 바로 찔러요
+            r=await ev(pg,"()=>{const f="+EN+";__T.G.enemies.length=0;f(107.5,110.5);__T.G.sel=0;const e=__T.G.enemies[0];const h=e.hp;__T.perform(__T.decide());return [h-e.hp>0, __T.G.swing&&__T.G.swing.wt]}")
             rec('무기','창 찌르기 명중', r[0] and r[1]=='spear', str(r))
             await ev(pg,ARENA); await ev(pg,"()=>{__T.give('bowWood');__T.G.sel=0;const f="+EN+";f(110.5,110.5)}")
             r=await ev(pg,"()=>{const d=__T.decide();return [d.k,d.lbl]}")

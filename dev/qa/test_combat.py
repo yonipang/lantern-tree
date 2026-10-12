@@ -78,7 +78,8 @@ def qa24():
                 rec('지역',f'시드 {seed}: 두 제단 + 보스방 안쪽은 막혀 있지만 넓음', r[6]=='shrine' and r[7]=='shrine' and r[8][0]>80 and r[8][1]==0 and r[9][0]>80 and r[9][1]==0, str(r[8:]))
             r=await ev(pg,"()=>{const T=__T;return [9,10,11,12].map(w=>T.WALLS[w].tier)}")
             rec('지역','새 벽은 모두 3단계(수정 곡괭이)', r==[3,3,3,3], str(r))
-            r=await ev(pg,"()=>{const T=__T,G=T.G;let n3=0;for(let i=0;i<40000;i++)if(G.biome[i]===3)n3++;const i=G.floor.indexOf(T.LAVA);return [n3>800,i>=0?T.isSolid(i%200,(i/200)|0):'none']}")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;let n3=0;for(let i=0;i<40000;i++)if(G.biome[i]===3)n3++;let i=G.floor.indexOf(T.LAVA);if(i<0){i=G.biome.indexOf(3);G.wall[i]=0;G.objs.delete(i);G.floor[i]=T.LAVA}return [n3>800,T.isSolid(i%200,(i/200)|0)]}")
+            # 지도에 따라 용암 웅덩이가 하나도 안 생기기도 해서, 없으면 용암 동굴에 용암 칸을 하나 깔고 확인해요
             rec('지역','현재 세계에도 지역 존재 · 용암은 못 지나감', r[0] and r[1] is True, str(r))
             # mining tier
             r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'pickIron',c:1};const x=T.CX+3,y=T.CY+6;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){G.objs.delete(T.idx(x+dx,y+dy));G.wall[T.idx(x+dx,y+dy)]=0}G.wall[T.idx(x,y)]=10;G.p.x=x+.5;G.p.y=y-.5;G.p.face={x:0,y:1};T.mineWall({x,y});const a=G.wdmg.get(T.idx(x,y))||0;G.inv[1]={id:'pickCrystal',c:1};T.mineWall({x,y});const b=G.wdmg.get(T.idx(x,y))||0;G.wall[T.idx(x,y)]=0;G.wdmg.clear();return [a,b]}""")
@@ -185,12 +186,13 @@ def qa29():
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.rpg.dex=18;const a=[T.ITEMS.bowCrystal.dmg,T.ITEMS.swordCrystal.dmg];return a}")
             rec('밸런스','별빛 활 18 · 수정 검 26 그대로', r==[18,26], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.dex=18;G.rpg.str=0;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'bowCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};
-          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60);return [9999-e.hp,Math.abs(e.kx||0)]}""")
+          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);const mr=Math.random;Math.random=()=>.5;try{T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60)}finally{Math.random=mr}return [9999-e.hp,Math.abs(e.kx||0)]}""")
+            # 한 발 피해는 치명타(10%, 1.6배)가 아닐 때의 값을 봐요 — 계산하는 동안만 무작위 값을 고정해 치명타가 안 나오게 (예전에는 10번에 1번꼴로 실패)
             rec('밸런스','민첩 18 별빛 활 한 발 25~32 · 밀어내기 약함', 22<=r[0]<=33 and r[1]<3, str(r))
             r=await ev(pg,"()=>{const T=__T;return [T.ITEMS.bowWood.dmg,T.ITEMS.bowIron.dmg,T.ITEMS.bowGold.dmg,T.ITEMS.bowGolem.dmg,T.ITEMS.bowFrost.dmg]}")
             rec('밸런스','활 공격력 하향 (나무4·사냥꾼11·황금28·수정거인24·서리32)', r==[4,11,28,24,32], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.dex=0;G.rpg.int=18;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'staffCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};G.p.mp=999;
-          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60);return [9999-e.hp,Math.abs(e.kx||0),T.ITEMS.staffGlow.dmg,T.ITEMS.staffFrost.dmg]}""")
+          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);const mr=Math.random;Math.random=()=>.5;try{T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60)}finally{Math.random=mr}return [9999-e.hp,Math.abs(e.kx||0),T.ITEMS.staffGlow.dmg,T.ITEMS.staffFrost.dmg]}""")
             rec('밸런스','지혜 18 수정 지팡이 한 발 24~32 · 밀어내기 약함 · 지팡이 하향(빛버섯9·눈꽃28)', 22<=r[0]<=33 and r[1]<3 and r[2:]==[9,28], str(r))
             r=await ev(pg,"()=>{const B=__T.BOSSES;return ['slime','queen','golem','turtle','spirit'].map(k=>B[k].hp)}")
             rec('보스','체력: 말랑대왕 그대로 720 · 여왕 700 · 골렘 1500 · 거북 2300 · 정령 2000', r==[720,700,1500,2300,2000], str(r))

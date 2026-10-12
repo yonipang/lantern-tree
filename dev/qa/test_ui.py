@@ -56,7 +56,7 @@ def qa9():
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(500)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>[!document.querySelector('#charPick').hidden, document.querySelectorAll('#cpGrid .cp-card').length, document.querySelector('#cpGrid .cp-card.on').dataset.c, document.querySelector('#btnNew').offsetParent===null]")
             rec('캐릭터 선택','새 모험 → 선택 화면 (8칸, 기본 새싹)', r==[True,8,'sprout',True], str(r))
@@ -102,7 +102,7 @@ def qa13():
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto('file://'+SP+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(500)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(300)
             rec('꾸미기','선택 화면에 직접 꾸미기 카드', await ev(pg,"()=>!!document.querySelector('#cpGrid [data-c=custom]') && document.querySelector('#cpGrid [data-c=custom] span').textContent==='직접 꾸미기'"))
             await pg.tap('#cpGrid [data-c=custom]'); await pg.tap('#charGo'); await pg.wait_for_timeout(900)
@@ -154,7 +154,8 @@ def qa18():
             rec('구역','꽃망울 구역이 이끼 동굴에 색깔별로 생성', r[0]>=8 and r[1] and r[2]=='BKRWY', str(r))
             r=await ev(pg,"()=>{const G=__T.G,out=[];for(let k=0;k<25;k++){G.seed=1000+k*7919;const z=__T.genFlowerZones();out.push([z.length,new Set(z.map(q=>q.c)).size])}return out}")
             rec('구역','여러 세계에서도 5색 구역이 모두 생김', all(a>=8 and b2==5 for a,b2 in r), str(r))
-            r=await ev(pg,"()=>{const G=__T.G,z=G.fzones;let ok=true;for(let a=0;a<z.length;a++)for(let b=a+1;b<z.length;b++)if(Math.hypot(z[a].x-z[b].x,z[a].y-z[b].y)<13)ok=false;return ok}")
+            r=await ev(pg,"()=>{const G=__T.G,z=G.fzones;let ok=true;for(let a=0;a<z.length;a++)for(let b=a+1;b<z.length;b++)if(Math.hypot(z[a].x-z[b].x,z[a].y-z[b].y)<10)ok=false;return ok}")
+            # 게임은 보통 13칸 넘게 띄우지만, 자리를 500번 넘게 못 찾으면 10칸까지 허용해요 (genFlowerZones). 지도에 따라 그런 경우가 있어서 10칸으로 봐요
             rec('구역','구역끼리 겹치지 않음', r, r)
             await ev(pg,ARENA)
             r=await ev(pg,"()=>{const G=__T.G;for(let k=0;k<12;k++){G.time+=2;__T.zoneTick()}return G.enemies.filter(e=>e.zone===0).map(e=>e.k)}")
