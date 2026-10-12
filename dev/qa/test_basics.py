@@ -360,7 +360,7 @@ def qa16():
                     if abs(m['x']-wx)<0.03 and abs(m['y']-wy)<0.03:
                         await pg.wait_for_timeout(80); m=await ev(pg,"()=>__T.mw()")
                         if abs(m['x']-wx)<0.03 and abs(m['y']-wy)<0.03: return
-            x,y=await screen(109.5,110.5); await pg.mouse.move(x,y); await pg.wait_for_timeout(200)
+            await aim_at(109.5,110.5)
             await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}")
             print('dbg', await ev(pg,"()=>[__T.aim(), JSON.stringify(__T.mw()),JSON.stringify(__T.cam()), __T.G.enemies.length]"))
             r=await ev(pg,"()=>__T.decide().k")

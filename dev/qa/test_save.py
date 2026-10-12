@@ -347,9 +347,13 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             await pg.tap('#btnContinue'); await pg.wait_for_timeout(500)
             await ev(pg,"()=>{__T.addItem('crystal',2);window.dispatchEvent(new Event('pagehide'))}"); await pg.wait_for_timeout(200)
             await pg.reload(); await pg.wait_for_timeout(900)
+            # 클라우드 저장은 뒤에서 비동기로 끝나요. 컴퓨터가 바쁘면 0.9초 안에 안 끝나서, 판 번호가 생길 때까지 (최대 5초) 기다려요
+            for _ in range(25):
+                c=await ev(pg,cloud_of)
+                if c.get('run'): break
+                await pg.wait_for_timeout(200)
             r=await ev(pg,"()=>[document.querySelector('#cloudAsk').hidden,JSON.parse(localStorage.getItem('lantern-tree-save-v1')).run]")
-            c=await ev(pg,cloud_of)
-            rec('옛 세이브','다시 열면 같은 모험으로 알아보고 묻지 않음', r[0] is True and r[1]==c['run'], str([r,c['run']]))
+            rec('옛 세이브','다시 열면 같은 모험으로 알아보고 묻지 않음', r[0] is True and r[1]==c.get('run'), str([r,c.get('run')]))
             await ctx.close()
 
             rec('기능','콘솔 오류 없음', not allerr, allerr[:3])
