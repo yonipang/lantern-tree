@@ -28,7 +28,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 |---|---|
 | `shell.html` | 페이지 뼈대: `<head>`, HUD·버튼·타이틀 화면 HTML, CSS/JS를 넣는 순서 |
 | `style.css` | 화면 모양 전부: 색·글꼴 → HUD(체력·목표·보스바·토스트) → 단축칸·터치 버튼·조이스틱 → 시트 창(제작·지도·메뉴) → 타이틀·캐릭터 고르기·능력 창, 작은 화면 규칙 |
-| `js/engine/util.js` | (모듈) 공통 도구: `$`·`clamp`·`hexRgb`, 한국어 조사 `josa` |
+| `js/engine/util.js` | (모듈) 공통 도구: `$`·`clamp`·`hexRgb`, 한국어 조사 `josa`·`roJosa`(으로/로) |
 | `js/engine/random.js` | (모듈) 난수·노이즈: **`rand()` 게임 결과용 · `fxRand()` 보이기용** (`Math.random`은 여기서만, `build.py`가 확인), `rint`, 시드 노이즈 `hash2`·`vn`·`fbm`·`rng` |
 | `js/engine/canvas.js` | (모듈) 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |
 | `js/engine/audio.js` | (모듈) 효과음 `SFX`·`ensureAudio` |
@@ -76,14 +76,21 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/tree.js` | 등불나무: 자라는 단계(`treeStage`), 빛씨앗 넣기(`insertSeeds`) |
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
 | `js/art/content.js` | (모듈) **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
-| `js/render.js` | 빛·지도 픽셀, 카메라·바닥 조각·세계·캐릭터 그리기, 아이템 아이콘(`iconURL`) |
-| `js/render/parts.js` | 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행(`updateFx`), 동물 그림, 회수 막대 (10단계에서 `render/`로 정리) |
+| `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
+| `js/render/map.js` | 지도 그림: 칸 색(`MAPF`·`MAPW`), 지도 다시 만들기(`rebuildMap`)·한 점 고치기(`mapPixel`) |
+| `js/render/view.js` | 화면: 캔버스·배율(`resize`·`VIEW`)·카메라 따라가기, 한 장 그리기(`render`) |
+| `js/render/chunks.js` | 바닥 조각: 바닥·벽 타일을 큰 조각으로 미리 그려 두기(`drawChunk`·`getChunk`) |
+| `js/render/world.js` | 세계 그리기: 반딧불이 같은 주변 효과, 물체·몬스터·플레이어·보스 그리기(`renderWorld`·`drawEntity`), 겹쳐 그리기 |
+| `js/render/icons.js` | 아이콘: 아이템 아이콘 그림·주소(`iconURL`) |
+| `js/render/parts.js` | 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행(`updateFx`), 동물 그림, 회수 막대 |
 | `js/ui/feedback.js` | (모듈) **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
-| `js/ui/panels.js` | HUD 갱신·`openPanel`·`renderPanel`·지도·제작 알림 |
-| `js/ui/hud.js` | HUD: 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시(`updateCtrlHud`) |
+| `js/ui/panels.js` | 창: `UIS`(창 안 고르기 상태)·`openPanel`·`closePanel`·`renderPanel`(가방·제작·퀘스트·능력·메뉴 …), 제작 알림, 아이템 설명 |
+| `js/ui/hud.js` | HUD: 단축칸(`refreshHotbar`, 규칙은 `emit('inv')`)·체력·배고픔·스킬 막대(`updateHud`), 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시 |
 | `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |
+| `js/ui/map.js` | 지도 창: 상자 표시 설정, 지도 그리기(`drawMap`) |
 | `js/ui/panel-actions.js` | 창 안 버튼(`onSheetClick`) → 명령 보내기, 창 안 고르기·확인 묻기(`UIS`), 칸 끌어 옮기기 |
-| `js/ui/input.js` | 입력 상태(`keys`·`mouse`·`joy`·`dpad`)와 **조작 의도 만들기(`readCtl`)·명령 보내기(`command`)**, 키보드·터치·조이스틱 연결, 캐릭터 고르기 |
+| `js/ui/input.js` | 입력 상태(`keys`·`mouse`·`joy`·`dpad`)와 **조작 의도 만들기(`readCtl`)·명령 보내기(`command`)**, 키보드·터치·조이스틱 연결(`setupInput`) |
+| `js/ui/picker.js` | 캐릭터 고르기, 시작하기(`beginPlay`) |
 | `js/main.js` | 게임 루프와 시작(`start`) |
 
 찾는 이름이 어느 파일에 있는지 모르면 `grep -rn "function 이름\|const 이름" dev/src/js`로 찾아요.

@@ -30,7 +30,7 @@ WORD = re.compile(r'(?<![\w$.])[A-Za-z_$][\w$]*')
 RULES = ('js/sim/', 'js/world/', 'js/data/', 'js/save/state.js', 'js/save/migrations.js')
 # 규칙 파일은 키보드·마우스·조이스틱을 직접 읽지 않고 조작 의도 ctlOf(p)와 명령(defineCmd)으로 받아요 (7단계, sim/commands.js)
 RAW_INPUT = {'keys', 'mouse', 'joy', 'dpad', 'btnHeld', 'atkBtnHeld', 'aimMouse', 'mouseWorld', 'mouseTile', 'readCtl'}
-DIRECT_FX = re.compile(r'(?<![\w$.])(SFX\s*[.\[]|(?:toast|puff|ftext|hearts|splash|mapPixel|craftNote)\s*\(|shake\s*=(?!=))')
+DIRECT_FX = re.compile(r'(?<![\w$.])(SFX\s*[.\[]|(?:toast|puff|ftext|hearts|splash|mapPixel|craftNote|buildPlayer)\s*\(|(?:shake|invDirty)\s*=(?!=)|UIS\s*\.|CHARS\.custom\s*=(?!=))')
 
 
 class BuildError(Exception):

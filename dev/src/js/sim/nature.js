@@ -64,7 +64,7 @@ function digPlant(t, o) {
   const d = OBJ[o.t], i = idx(t.x, t.y); delObj(i);
   const id = d.bush ? 'berryBush' : o.t === 'sapling' ? 'sapling' : o.t === 'capSapling' ? 'capSapling' : d.stump && o.g && OBJ[o.g] && OBJ[o.g].ntree && ITEMS[o.g] ? o.g : 'wood';
   const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-  emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#9be37a', 7, 2.2); invDirty = true; lightDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
+  emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#9be37a', 7, 2.2); emit('inv'); lightDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
   emit('toast', d.bush ? '베리덤불을 퍼냈어요. 원하는 곳에 다시 심어요' : d.stump ? `${d.n}을(를) 뽑았어요` : `${d.n}을(를) 퍼냈어요`, null, 'digplant');
 }
 // ---- nature decorations ----

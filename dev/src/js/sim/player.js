@@ -35,8 +35,8 @@ defineCmd('skUp', c => { const R = G.rpg, i = c.s, S = SKILLS[i]; if (!S) return
 defineCmd('skReset', () => { const R = G.rpg; R.sp += Object.values(R.sk).reduce((a2, l) => a2 + l, 0); R.sk = {}; R.slot = [null, null]; G.p.mp = Math.min(G.p.mp, maxMp()); emit('sfx', 'click'); emit('toast', '스킬 포인트를 모두 돌려받았어요', 'good', 'skreset'); });
 defineCmd('skSlot', c => { const id = c.s, R = G.rpg, m = c.n; if (!R.sk[id]) return false; if (R.slot[m] === id) R.slot[m] = null; else { const o = R.slot.indexOf(id); if (o >= 0) R.slot[o] = R.slot[m]; R.slot[m] = id; } emit('sfx', 'click'); });
 // ---- 꾸미기·캐릭터·긴급 탈출·지도 표시(개발자) ----
-defineCmd('look', c => { G.look = cleanLook(c.look); CHARS.custom = lookDef(G.look); G.char = 'custom'; G.outfit = 0; buildPlayer(0); emit('puff', G.p.x, G.p.y - .5, CHARS.custom.pal[0], 16, 2.6, .6); emit('sfx', 'craft'); emit('toast', '새 모습으로 꾸몄어요', 'good'); });
-defineCmd('char', c => { const i = c.c; if (!(CHARS[i] && G.char !== i)) return false; G.char = i; G.outfit = 0; buildPlayer(0); emit('puff', G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); emit('sfx', 'craft'); emit('toast', `${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); return true; });
+defineCmd('look', c => { G.look = cleanLook(c.look); G.char = 'custom'; G.outfit = 0; emit('look'); emit('puff', G.p.x, G.p.y - .5, lookDef(G.look).pal[0], 16, 2.6, .6); emit('sfx', 'craft'); emit('toast', '새 모습으로 꾸몄어요', 'good'); });
+defineCmd('char', c => { const i = c.c; if (!(CHARS[i] && G.char !== i)) return false; G.char = i; G.outfit = 0; emit('look'); emit('puff', G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); emit('sfx', 'craft'); emit('toast', `${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); return true; });
 function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x = s.px; p.y = s.py; if (boxHits(p.x, p.y, .28)) { p.x = s.x + .5; p.y = s.y + 1.5; } }
 function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; emit('fade', 'sleep'); emit('sfx', 'sleep'); }
 function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; emit('fade', 'wake'); p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); emit('toast', '푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
@@ -45,7 +45,7 @@ function eat(slot) {
   const p = G.p; if (p.hunger >= 99.5 && p.hp >= maxHp() && !it.buff) { emit('toast', '지금은 배가 불러요', null, 'full'); return; }
   const bc = it.buff ? buffCheck(it, s.id) : null; if (bc === 'ask') return;
   const gm = 1 + skl('gourmet') * 0.1, fd = Math.round(it.food * gm), hl = Math.round((it.heal || 0) * gm);
-  p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) { G.inv[slot] = null; refillHot(slot, s.id); } invDirty = true;
+  p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) { G.inv[slot] = null; refillHot(slot, s.id); } emit('inv');
   emit('sfx', 'eat'); emit('ftext', p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) emit('ftext', p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
   if (bc === 'ok') applyBuff(it, s.id);
 }
