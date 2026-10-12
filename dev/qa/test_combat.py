@@ -185,12 +185,13 @@ def qa29():
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.rpg.dex=18;const a=[T.ITEMS.bowCrystal.dmg,T.ITEMS.swordCrystal.dmg];return a}")
             rec('밸런스','별빛 활 18 · 수정 검 26 그대로', r==[18,26], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.dex=18;G.rpg.str=0;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'bowCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};
-          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60);return [9999-e.hp,Math.abs(e.kx||0)]}""")
+          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);const mr=Math.random;Math.random=()=>.5;try{T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60)}finally{Math.random=mr}return [9999-e.hp,Math.abs(e.kx||0)]}""")
+            # 한 발 피해는 치명타(10%, 1.6배)가 아닐 때의 값을 봐요 — 계산하는 동안만 무작위 값을 고정해 치명타가 안 나오게 (예전에는 10번에 1번꼴로 실패)
             rec('밸런스','민첩 18 별빛 활 한 발 25~32 · 밀어내기 약함', 22<=r[0]<=33 and r[1]<3, str(r))
             r=await ev(pg,"()=>{const T=__T;return [T.ITEMS.bowWood.dmg,T.ITEMS.bowIron.dmg,T.ITEMS.bowGold.dmg,T.ITEMS.bowGolem.dmg,T.ITEMS.bowFrost.dmg]}")
             rec('밸런스','활 공격력 하향 (나무4·사냥꾼11·황금28·수정거인24·서리32)', r==[4,11,28,24,32], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.dex=0;G.rpg.int=18;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'staffCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};G.p.mp=999;
-          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60);return [9999-e.hp,Math.abs(e.kx||0),T.ITEMS.staffGlow.dmg,T.ITEMS.staffFrost.dmg]}""")
+          const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);const mr=Math.random;Math.random=()=>.5;try{T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60)}finally{Math.random=mr}return [9999-e.hp,Math.abs(e.kx||0),T.ITEMS.staffGlow.dmg,T.ITEMS.staffFrost.dmg]}""")
             rec('밸런스','지혜 18 수정 지팡이 한 발 24~32 · 밀어내기 약함 · 지팡이 하향(빛버섯9·눈꽃28)', 22<=r[0]<=33 and r[1]<3 and r[2:]==[9,28], str(r))
             r=await ev(pg,"()=>{const B=__T.BOSSES;return ['slime','queen','golem','turtle','spirit'].map(k=>B[k].hp)}")
             rec('보스','체력: 말랑대왕 그대로 720 · 여왕 700 · 골렘 1500 · 거북 2300 · 정령 2000', r==[720,700,1500,2300,2000], str(r))

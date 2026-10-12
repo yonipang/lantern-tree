@@ -363,7 +363,8 @@ def qa16():
             await aim_at(109.5,110.5)
             await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}")
             print('dbg', await ev(pg,"()=>[__T.aim(), JSON.stringify(__T.mw()),JSON.stringify(__T.cam()), __T.G.enemies.length]"))
-            r=await ev(pg,"()=>__T.decide().k")
+            # 적을 다시 놓고 바로 판단해요 (사이에 프레임이 돌면 슬라임이 움직이거나 다른 몬스터가 생길 수 있어요)
+            r=await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5;return __T.decide().k}")
             rec('클릭 방향','적이 오른쪽에 있어도 왼쪽 벽을 클릭하면 캐기', r=='mine', r)
             async def point(wx,wy): return await ev(pg,f"()=>{{const V=__T.VIEW(),T=__T.TPv(),D=__T.DPR(),M=__T.mouse();M.x=({wx}*T-V.camX)/D;M.y=({wy}*T-V.camY)/D;M.last=performance.now();return __T.decide().k}}")
             en="()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}"
@@ -571,7 +572,7 @@ def qa27():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,1280,800,False)
             await ev(pg,"()=>{const G=__T.G;for(let y=100;y<114;y++)for(let x=100;x<116;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.objs.set(__T.idx(106,106),{t:'bench'});G.p.x=105.5;G.p.y=106.5;__T.addItem('wood',50);__T.addItem('resin',10)}")
             async def walk():
-                x0=await ev(pg,"()=>__T.G.p.x"); await pg.keyboard.down('KeyA'); await pg.wait_for_timeout(400); await pg.keyboard.up('KeyA'); x1=await ev(pg,"()=>__T.G.p.x"); await ev(pg,"()=>{__T.G.p.x=105.5}"); return round(x0-x1,2)
+                x0=await ev(pg,"()=>__T.G.p.x"); await pg.keyboard.down('KeyA'); await wait_game(pg,0.4); await pg.keyboard.up('KeyA');  # 게임 시간으로 0.4초 x1=await ev(pg,"()=>__T.G.p.x"); await ev(pg,"()=>{__T.G.p.x=105.5}"); return round(x0-x1,2)
             mk="()=>{__T.openPanel('menu');const i=document.createElement('input');i.id='tst';document.querySelector('#sheetWrap').appendChild(i);i.focus()}"
             await ev(pg,mk); await pg.wait_for_timeout(300); await pg.keyboard.press('Escape'); await pg.wait_for_timeout(300)
             r=await walk(); pnl=await ev(pg,"()=>document.querySelector('#sheetWrap').hidden")

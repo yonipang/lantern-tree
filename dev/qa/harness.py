@@ -49,3 +49,15 @@ async def ev(pg, js, arg=None): return await pg.evaluate(js, arg) if arg is not 
 async def stand(pg, x, y, fx, fy, sel=None):
     await ev(pg, f"()=>{{const G=__T.G;G.p.sit=null;G.fish=null;G.enemies.length=0;G.p.x={x};G.p.y={y};G.p.face={{x:{fx},y:{fy}}};G.p.hp=100;G.p.hunger=100;{'G.sel='+str(sel)+';' if sel is not None else ''}}}")
     await pg.wait_for_timeout(120)
+
+# ---- 흔들리지 않게 기다리는 도구 ----
+# 게임은 한 프레임에 최대 0.05초씩만 진행해요. 컴퓨터가 바쁘면 실제로 4초를 기다려도 게임 안에서는 4초가 안 지나요.
+# 게임 안의 일(재생·성장·이동 …)을 기다릴 때는 wait_for_timeout 대신 wait_game을 써요.
+async def wait_game(pg, sec, timeout=30000):
+    """게임 안 시간(G.time)이 sec초 지날 때까지 기다려요 (창이 열려 게임이 멈춰 있으면 timeout까지 기다리다 오류)"""
+    t0 = await pg.evaluate("()=>__T.G.time")
+    await pg.wait_for_function("([t0,s])=>__T.G.time-t0>=s", arg=[t0, sec], timeout=timeout, polling=50)
+
+async def wait_until(pg, js, timeout=10000):
+    """브라우저 안의 조건(js: '()=>…')이 참이 될 때까지 기다려요"""
+    await pg.wait_for_function(js, timeout=timeout, polling=50)

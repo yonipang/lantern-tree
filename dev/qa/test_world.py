@@ -230,15 +230,14 @@ def qa45():
             r=await ev(pg,"()=>{const P=__T.panel;return [P&&P.kind,!!document.querySelector('#catchCv'),document.querySelector('#sheet').innerText.includes('던지기')]}")
             rec('포획','포획 미니게임 창 (돌아가는 밧줄·던지기 버튼)', r==['catch',True,True], str(r))
             await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'qa45_catch.png')
+            # 밧줄 각도는 실제 시간을 따라 돌아요. 구간 맞추기와 던지기 버튼 누르기를 한 번에 해야 바쁠 때도 구간 안에서 던져요
             for k in range(3):
-                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P);P.zw=1.2}")
-                await pg.click('#sheet [data-a=catchThrow]'); await pg.wait_for_timeout(300)
+                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P);P.zw=1.2;document.querySelector('#sheet [data-a=catchThrow]').click()}"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const G=__T.G;return [!!__T.panel,JSON.stringify(G.pets),G.petOn,G.wild.length,document.querySelector('#toasts').innerText.includes('친구가 됐어요'),!!G.petE]}")
             rec('포획','초록 구간에서 세 번 던지면 친구가 되고 바로 따라다님', r==[False,'{"dog":1}','dog',0,True,True], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const w=__wild('rabbit',2,0);T.openCatch(w);return 1}"""); await pg.wait_for_timeout(650)
             for k in range(2):
-                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P)+3.1;P.zw=.4}")
-                await pg.click('#sheet [data-a=catchThrow]'); await pg.wait_for_timeout(300)
+                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P)+3.1;P.zw=.4;document.querySelector('#sheet [data-a=catchThrow]').click()}"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const G=__T.G;return [!!__T.panel,!!G.pets.rabbit,G.wild.length,document.querySelector('#toasts').innerText.includes('도망')]}")
             rec('포획','두 번 놓치면 도망감', r==[False,False,0,True], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const w=__wild('cat',2,0);T.openCatch(w);return 1}"""); await pg.wait_for_timeout(650)
@@ -298,9 +297,9 @@ def qa46():
             rec('야생','버섯숲에 양과 토끼가 나타남', r=='rabbit,sheep', r)
             # catch a cow
             await ev(pg,"()=>{const T=__T,G=T.G;__clear(0);const w=__wild('cow',2,0);T.openCatch(w)}"); await pg.wait_for_timeout(650)
+            # 밧줄 각도는 실제 시간을 따라 돌아요. 구간 맞추기와 던지기 버튼 누르기를 한 번에 해야 바쁠 때도 구간 안에서 던져요
             for k in range(3):
-                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P);P.zw=1.2}")
-                await pg.click('#sheet [data-a=catchThrow]'); await pg.wait_for_timeout(300)
+                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P);P.zw=1.2;document.querySelector('#sheet [data-a=catchThrow]').click()}"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const G=__T.G;return [!!__T.panel,__T.countItem('cow'),JSON.stringify(G.pets||{}),G.petOn||null,JSON.stringify(G.stats.ranchK),document.querySelector('#toasts').innerText.includes('데려왔어요')]}")
             rec('포획','소를 포획하면 펫이 아니라 「소」 아이템으로', r==[False,1,'{}',None,'{"cow":1}',True], str(r))
             # place it
