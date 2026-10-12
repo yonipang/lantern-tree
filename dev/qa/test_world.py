@@ -249,7 +249,7 @@ def test_recall_faint():
           const far={x:__T.SB.x+.5,y:__T.SB.y+2.5};G.p.x=far.x;G.p.y=far.y;const a=T.decide();T.startRecall(a.mode);T.recallTick(.5);const mid=[!!G.recall,Math.round(G.p.x)];T.recallTick(.6);T.recallTick(.6);const h=T.homePt();
           const shut=T.closedIn(h.x,h.y),home=shut?(!shut.has(T.idx(Math.floor(G.p.x),Math.floor(G.p.y)))&&Math.hypot(G.p.x-h.x,G.p.y-h.y)<40?'바깥':'?'):+(G.p.x-h.x).toFixed(2)+','+(+(G.p.y-h.y).toFixed(2));
           return [a.k,a.lbl,mid,home,G.backPt&&Math.round(G.backPt.x)===Math.round(far.x),T.decide().k,T.decide().lbl]}""")
-            # 새 세계는 테스트마다 무작위라, 아주 드물게(약 0.3~1%) 등불나무 빈터가 자연 바위로 작게 둘러싸여 「집이 막힘」으로 판정돼요 → 그때는 바로 바깥으로 오는 게 맞아요
+            # 새 세계는 테스트마다 무작위라, 혹시 집이 정말 막힌 세계(물 등)라면 바로 바깥으로 오는 게 맞아요 (자연 바위는 v64부터 막힘이 아님 — emergency_escape)
             rec('귀환석','멀리서 쓰면 "집으로" → 1.5초 가만히 있으면 등불나무 곁으로', r[0]=='recall' and r[1]=='집으로' and r[2][0] is True and r[3] in ('0,0','바깥'), str(r))
             rec('귀환석','떠난 자리에 표지가 남고, 1분 동안 쉼', r[4] is True and r[5]=='info' and r[6].startswith('쉬는 중'), str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.time+=61;const a=T.decide();T.startRecall(a.mode);for(let k=0;k<4;k++)T.recallTick(.5);return [a.lbl,Math.floor(G.p.x)===__T.SB.x,Math.floor(G.p.y)===__T.SB.y+2,G.backPt]}""")
@@ -288,7 +288,7 @@ def test_recall_faint():
 def test_emergency_escape():
     import asyncio, sys
     # v57: 메뉴 「긴급 탈출」 — 울타리·벽에 갇혔을 때 막힌 곳 바깥의 가장 가까운 트인 곳으로 (등불나무 둘레 큰 마당도)
-    H2=HOOK.replace("computeLight}","computeLight,regionOf,escapeSpot,emergencyEscape,homePt,boxHits,isSolid,newGame,genWorld}")
+    H2=HOOK.replace("computeLight}","computeLight,regionOf,escapeSpot,emergencyEscape,homePt,boxHits,isSolid,newGame,genWorld,closedIn}")
     FENCE="""window.__fence=(R)=>{const T=__T,G=T.G;const x0=T.CX-R,x1=T.CX+R,y0=T.CY-R,y1=T.CY+R;for(let y=y0-6;y<=y1+6;y++)for(let x=x0-6;x<=x1+6;x++){const i=T.idx(x,y);if(G.objs.get(i)&&G.objs.get(i).t!=='treeP')G.objs.delete(i);G.wall[i]=0;if(G.floor[i]===T.WATER||G.floor[i]===5)G.floor[i]=1}
   for(let x=x0;x<=x1;x++){G.objs.set(T.idx(x,y0),{t:'bFenceWood'});G.objs.set(T.idx(x,y1),{t:'bFenceWood'})}for(let y=y0;y<=y1;y++){G.objs.set(T.idx(x0,y),{t:'bFenceWood'});G.objs.set(T.idx(x1,y),{t:'bFenceWood'})}G.enemies.length=0;return [x0,x1,y0,y1]};"""
     async def main():
@@ -299,9 +299,9 @@ def test_emergency_escape():
                 r=await ev(pg,"()=>{const T=__T,G=T.G,h=T.homePt();return [!!T.regionOf(G.p.x,G.p.y),!!T.regionOf(h.x,h.y)]}")
                 rec(f'시작 지점 (지도 {lay})','새 게임 시작 자리와 집은 막힌 곳으로 보지 않음', r==[False,False], str(r))
                 # v63: some worlds start in a clearing ringed by natural rock — a pickaxe digs out, so that is not "stuck"
-                seeds=[150461,158380,261327] if lay==1 else [63352,134623]
-                r=await ev(pg,"(S)=>{const T=__T,keep=T.G.seed;const out=S.map(s=>{T.newGame(s);const G=T.G,h=T.homePt();return [!!T.regionOf(G.p.x,G.p.y),!!T.regionOf(h.x,h.y)]});T.newGame(keep);return out}",seeds)
-                rec(f'긴급 탈출 (지도 {lay})','바위로 둘러싸인 곳에서 시작하는 세계도 갇힌 곳으로 보지 않음', all(x==[False,False] for x in r), str(r))
+                seeds=[150461,158380,261327,523057148,426376833] if lay==1 else [63352,134623,115292]
+                r=await ev(pg,"(S)=>{const T=__T,keep=T.G.seed;const out=S.map(s=>{T.newGame(s);const G=T.G,h=T.homePt();return [!!T.regionOf(G.p.x,G.p.y),!!T.regionOf(h.x,h.y),!!T.closedIn(h.x,h.y)]});T.newGame(keep);return out}",seeds)
+                rec(f'긴급 탈출 (지도 {lay})','바위로 둘러싸인 곳에서 시작하는 세계도 갇힌 곳으로 보지 않음 (긴급 탈출·기절·귀환 모두)', all(x==[False,False,False] for x in r), str(r))
                 if lay==2: await ctx.close(); await b.close(); continue
                 # not stuck: goes home
                 r=await ev(pg,"()=>{const T=__T,G=T.G,h=T.homePt();G.p.x+=6;const ok=T.emergencyEscape();return [ok,Math.round((G.p.x-h.x)*10)/10,Math.round((G.p.y-h.y)*10)/10]}")
@@ -324,12 +324,12 @@ def test_emergency_escape():
                 # v63: what closes you in — walls built on open ground (even dirt) yes; a pocket dug into natural rock no
                 r=await ev(pg,"""()=>{const T=__T,G=T.G,nat=T.genWorld(G.seed).wall;G.escCd=0;
               const cx=T.CX-4,cy=T.CY-4;for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++){const i=T.idx(x,y);G.objs.delete(i);G.wall[i]=(x===cx&&y===cy)?0:1;if(G.floor[i]===T.WATER)G.floor[i]=1}
-              const built=[nat[T.idx(cx-1,cy)],!!T.regionOf(cx+.5,cy+.6)];
+              const built=[nat[T.idx(cx-1,cy)],!!T.regionOf(cx+.5,cy+.6),!!T.closedIn(cx+.5,cy+.6)];
               for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)G.wall[T.idx(x,y)]=0;
               let dug=null;for(let y=T.CY+12;y<T.CY+80&&!dug;y++)for(let x=T.CX-80;x<T.CX+80&&!dug;x++){let ok=true;for(let dy=-2;dy<=2&&ok;dy++)for(let dx=-2;dx<=2;dx++){const i=T.idx(x+dx,y+dy),w=nat[i];if(!w||w===8||G.wall[i]!==w||G.objs.get(i)){ok=false;break}}if(ok)dug=[x,y]}
               if(!dug)return [built,'no rock'];const [x,y]=dug;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)G.wall[T.idx(x+dx,y+dy)]=0;
-              const r=[built,!!T.regionOf(x+.5,y+.6)];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const i=T.idx(x+dx,y+dy);G.wall[i]=nat[i]}return r}""")
-                rec('긴급 탈출','빈 땅에 쌓은 흙벽은 갇힘 · 자연 바위를 파 들어간 곳은 갇힘 아님', r==[[0,True],False], str(r))
+              const r=[built,!!T.regionOf(x+.5,y+.6),!!T.closedIn(x+.5,y+.6)];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const i=T.idx(x+dx,y+dy);G.wall[i]=nat[i]}return r}""")
+                rec('긴급 탈출','빈 땅에 쌓은 흙벽은 갇힘 · 자연 바위를 파 들어간 곳은 갇힘 아님', r==[[0,True,True],False,False], str(r))
                 # the menu button asks once more before moving
                 await ev(pg,"()=>{const T=__T,G=T.G;G.escCd=0;G.p.x=T.CX+3.5;G.p.y=T.CY+5.6;T.openPanel('menu')}"); await pg.wait_for_timeout(700)
                 b1=await pg.locator("[data-a=escape]").inner_text(); await pg.click('#sheet [data-a=escape]'); await pg.wait_for_timeout(300)

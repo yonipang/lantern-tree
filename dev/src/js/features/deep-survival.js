@@ -75,13 +75,20 @@ ITEMS.homeStone = { n: '귀환석', kind: 'recall', stack: 1, d: `들고 누른 
 ICON.homeStone = A => { A.e(8, 9, 5.4, 5.8, '#4a4290'); A.e(8, 8.6, 4.6, 5, '#6a62b8'); A.e(7, 7, 2.4, 2.6, '#a99cf0'); A.e(8, 9, 2, 2, '#ffd27a'); A.p(8, 8, '#fff1c0'); A.p(5, 5, '#e3d4ff'); A.p(11, 12, '#3a3270'); };
 RECIPES.push(Rc('homeStone', 1, [['crystal', 6], ['glowcap', 3], ['copperBar', 2]], 'forge', 'tool'));
 { const g = GUIDE.find(q => q.id === 'cpick'); if (g) g.rw = g.rw.concat([['homeStone', 1]]); }
+// v63: natural rock a pickaxe can dig is not a trap — a rock wall on a tile that was rock in the world first generated counts as open (quartz veins
+// turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
+// Some new worlds start in a rock-ringed clearing. Used by closedIn (fainting, recall, loading — v64) and regionOf (emergency escape — v63).
+let NATW = null, NATW_K = '';
+function naturalWalls() { const k = G.seed + '|' + W + 'x' + H; if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
+function shutsIn(x, y, j, nat) { if (!isSolid(x, y)) return false; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o); if (a && OBJ[a.t] && OBJ[a.t].door) return false;
+  return !(nat && nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && G.wall[j] !== 6 && G.wall[j] !== 7); } // nat null: every solid tile shuts you in
 // bug fix: a home point (the lantern tree or a bed) fenced in on every side left you stuck after fainting or recalling;
 // if the spot is closed in (no way out within 16 tiles, doors count as a way out), you wake up just outside instead
-function closedIn(x, y, lim = 900, far = 16) { const sx = Math.floor(x), sy = Math.floor(y); if (!inB(sx, sy) || isSolid(sx, sy)) return null; /* only a free spot can be fenced in */ const seen = new Set([idx(sx, sy)]), st = [[sx, sy]];
+// (it looks at natural rock only when the spot reads as closed without it, so loading and waking up seldom rebuild the first world)
+function closedIn(x, y, lim = 900, far = 16, nat = null) { const sx = Math.floor(x), sy = Math.floor(y); if (!inB(sx, sy) || isSolid(sx, sy)) return null; /* only a free spot can be fenced in */ const seen = new Set([idx(sx, sy)]), st = [[sx, sy]];
   while (st.length) { const [cx, cy] = st.pop(); if (Math.hypot(cx - sx, cy - sy) > far || seen.size > lim) return null;
-    for (const [dx, dy] of D4) { const nx = cx + dx, ny = cy + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o);
-      if (isSolid(nx, ny) && !(a && OBJ[a.t] && OBJ[a.t].door)) continue; seen.add(j); st.push([nx, ny]); } }
-  return seen; }
+    for (const [dx, dy] of D4) { const nx = cx + dx, ny = cy + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j) || shutsIn(nx, ny, j, nat)) continue; seen.add(j); st.push([nx, ny]); } }
+  return nat ? seen : closedIn(x, y, lim, far, naturalWalls()); }
 function safeSpot(x, y) { const inside = closedIn(x, y); if (!inside) return null; const sx = Math.floor(x), sy = Math.floor(y);
   for (let r = 1; r <= 40; r++) { let best = null, bd = 1e9; for (let ty = sy - r; ty <= sy + r; ty++) for (let tx = sx - r; tx <= sx + r; tx++) { if (Math.max(Math.abs(tx - sx), Math.abs(ty - sy)) !== r || !inB(tx, ty) || inside.has(idx(tx, ty)) || isSolid(tx, ty) || boxHits(tx + .5, ty + .6, .28)) continue;
       const d = Math.hypot(tx - sx, ty - sy); if (d < bd && !closedIn(tx + .5, ty + .6)) { bd = d; best = { x: tx + .5, y: ty + .6 }; } }
@@ -89,16 +96,9 @@ function safeSpot(x, y) { const inside = closedIn(x, y); if (!inside) return nul
   return null; }
 // v57 emergency escape (menu): a fenced yard bigger than closedIn's 16 tiles still trapped a player. regionOf flood-fills the
 // walkable area (doors count as a way out); it is "closed" when it ends within lim tiles and far tiles of the start.
-// v63: natural rock a pickaxe can dig is not a trap — a rock wall on a tile that was rock in the world first generated counts as open (quartz veins
-// turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
-// Some new worlds start in a rock-ringed clearing.
-let NATW = null, NATW_K = '';
-function naturalWalls() { const k = G.seed + '|' + W + 'x' + H; if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
 function regionOf(x, y, lim = 3000, far = 60) { const nat = naturalWalls(); const sx = Math.floor(x), sy = Math.floor(y); if (!inB(sx, sy)) return null; const seen = new Set([idx(sx, sy)]), st = [[sx, sy]];
   while (st.length) { const [cx, cy] = st.pop(); if (Math.abs(cx - sx) > far || Math.abs(cy - sy) > far || seen.size > lim) return null;
-    for (const [dx, dy] of D4) { const nx = cx + dx, ny = cy + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o);
-      const natRock = nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && G.wall[j] !== 6 && G.wall[j] !== 7;
-      if (isSolid(nx, ny) && !natRock && !(a && OBJ[a.t] && OBJ[a.t].door)) continue; seen.add(j); st.push([nx, ny]); } }
+    for (const [dx, dy] of D4) { const nx = cx + dx, ny = cy + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j) || shutsIn(nx, ny, j, nat)) continue; seen.add(j); st.push([nx, ny]); } }
   return seen; }
 function openSpotNear(x, y, skip) { const sx = Math.floor(x), sy = Math.floor(y), bad = new Set(skip || []); let tries = 0;
   for (let r = 1; r <= 90; r++) { const ring = [];
