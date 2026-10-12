@@ -599,7 +599,7 @@ def test_mouse_aim():
 
 def test_click_direction():
     import asyncio, sys
-    H2=HOOK.replace("computeLight}","computeLight,TPv:()=>TP,VIEW:()=>VIEW,DPR:()=>DPR,mouse:()=>mouse,aim:()=>aimMouse(),cam:()=>cam,mw:()=>mouseWorld()}")
+    H2=HOOK.replace("computeLight}","computeLight,TPv:()=>TP,VIEW:()=>VIEW,DPR:()=>DPR,mouse:()=>mouse,aim:()=>aimMouse(),cam:()=>cam,mw:()=>mouseWorld(),sendCtl}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -621,9 +621,10 @@ def test_click_direction():
             print('dbg', await ev(pg,"()=>[__T.aim(), JSON.stringify(__T.mw()),JSON.stringify(__T.cam()), __T.G.enemies.length]"))
             # 적을 다시 놓고 바로 판단해요 (사이에 프레임이 돌면 슬라임이 움직이거나 다른 몬스터가 생길 수 있어요).
             # 캐릭터가 마우스 쪽으로 돌면 화면이 조금 더 따라가서, 판단하는 순간의 화면 기준으로 마우스 좌표를 벽에 다시 맞춰요 (실제 마우스 이벤트는 위에서 보냄)
-            r=await ev(pg,"()=>{const T=__T,V=T.VIEW(),M=T.mouse();M.x=(109.5*T.TPv()-V.baseX)/T.DPR();M.y=(110.5*T.TPv()-V.baseY)/T.DPR();T.G.enemies.length=0;T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});T.G.p.x=110.5;T.G.p.y=110.5;return T.decide().k}")
+            # 규칙은 매 프레임 받는 조작 의도(ctl)를 읽어서, 마우스를 바꾼 뒤 sendCtl()로 그 순간의 조작 의도를 보내고 판단해요 (구조 변경 7-1)
+            r=await ev(pg,"()=>{const T=__T,V=T.VIEW(),M=T.mouse();M.x=(109.5*T.TPv()-V.baseX)/T.DPR();M.y=(110.5*T.TPv()-V.baseY)/T.DPR();T.G.enemies.length=0;T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});T.G.p.x=110.5;T.G.p.y=110.5;T.sendCtl();return T.decide().k}")
             rec('클릭 방향','적이 오른쪽에 있어도 왼쪽 벽을 클릭하면 캐기', r=='mine', r)
-            async def point(wx,wy): return await ev(pg,f"()=>{{const V=__T.VIEW(),T=__T.TPv(),D=__T.DPR(),M=__T.mouse();M.x=({wx}*T-V.camX)/D;M.y=({wy}*T-V.camY)/D;M.last=performance.now();return __T.decide().k}}")
+            async def point(wx,wy): return await ev(pg,f"()=>{{const V=__T.VIEW(),T=__T.TPv(),D=__T.DPR(),M=__T.mouse();M.x=({wx}*T-V.camX)/D;M.y=({wy}*T-V.camY)/D;M.last=performance.now();__T.sendCtl();return __T.decide().k}}")
             en="()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}"
             await ev(pg,en); r=await point(111.3,110.5)
             rec('클릭 방향','v65: 적 쪽을 가리켜도 상호작용은 공격하지 않음 (공격은 클릭·칼 버튼)', r not in ('attack','swing'), r)
