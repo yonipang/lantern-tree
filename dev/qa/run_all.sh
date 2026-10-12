@@ -3,6 +3,7 @@
 # 사용법: bash dev/qa/run_all.sh        → 모두 실행
 #         bash dev/qa/run_all.sh 23 24  → 일부만 실행
 cd "$(dirname "$0")"
+python3 ../build.py || exit 1
 node syn.js ../index.html || exit 1
 list=${@:-$(seq 2 59)}
 fail=0

@@ -1,8 +1,9 @@
-# 원본(dev/index.html)을 홈 화면 앱용으로 바꿔서 저장소 맨 위(index.html, sw.js, manifest.webmanifest)에 써요.
+# 원본(dev/src/ → dev/build.py가 묶은 dev/index.html)을 홈 화면 앱용으로 바꿔서 저장소 맨 위(index.html, sw.js, manifest.webmanifest)에 써요.
 # 사용법: python3 dev/build_web.py
 import json, hashlib
 import os
 L=os.path.dirname(os.path.abspath(__file__))+'/'; W=os.path.abspath(L+'..')+'/'
+import sys; sys.path.insert(0, L); import build; build.main()  # dev/src/ → dev/index.html (늘 최신 원본으로)
 s=open(L+'index.html').read()
 i=s.index('<div id="game">')
 ver=hashlib.md5(s.encode()).hexdigest()[:8]

@@ -1,0 +1,254 @@
+// ================= input =================
+const keys = new Set();
+const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
+const dpad = { id: null, vx: 0, vy: 0 };
+let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
+const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
+let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
+const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
+const actHeld = () => btnHeld || mouse.down || keys.has('Space') || keys.has('KeyJ') || keys.has('KeyE');
+function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
+const REACH = 2.4;
+const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
+function mouseTile() {
+  const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
+  // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
+  if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
+  return { x: tx, y: ty, mx: m.x, my: m.y };
+}
+
+// ================= actions =================
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
+function targetTile() {
+  const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
+  if (aimMouse()) {
+    const m = mouseTile();
+    if (m.x !== ptx || m.y !== pty) {
+      if (inReach(m.x, m.y)) return { x: m.x, y: m.y };
+      let best = null, bd = 1e9;
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const tx = ptx + dx, ty = pty + dy; if ((!dx && !dy) || !inReach(tx, ty)) continue; const d = Math.hypot(tx + .5 - m.mx, ty + .5 - m.my); if (d < bd) { bd = d; best = { x: tx, y: ty }; } }
+      if (best) { best.far = { x: m.x, y: m.y }; return best; }
+    }
+  }
+  const f = p.face; if (Math.abs(f.x) > Math.abs(f.y)) return { x: ptx + Math.sign(f.x), y: pty }; return { x: ptx, y: pty + (f.y < 0 ? -1 : 1) };
+}
+function nearestEnemy(range) {
+  let best = null, bd = 1e9; const p = G.p;
+  for (const e of G.enemies) { const d = Math.hypot(e.x - p.x, e.y - p.y) - ENEMY[e.k].r; if (d < range && d < bd) { bd = d; best = e; } }
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.8) continue; const d = Math.hypot(b.x - p.x, b.y - p.y) - BOSSES[k].hr; if (d < range && d < bd) { bd = d; best = b; } }
+  return best;
+}
+// v48: what you hold decides what the button does. Holding a tool, a weapon, food or something to build only does that
+// item's own job; an empty hand (or a plain material) does everything else as before (open, pick up, gather, mine …).
+const HOLD_MODE = { sword: 'weapon', pick: 'pick', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
+const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
+function fightDecide(sw) { const p = G.p, WT = wtOf(sw);
+  let en = nearestEnemy(WT.ranged ? wRange(WT) : WT.reach - 0.1);
+  if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
+  if (en && aimMouse()) { const m = mouseWorld(), a1 = Math.atan2(m.y - p.y, m.x - p.x), a2 = Math.atan2(en.y - p.y, en.x - p.x); let da = Math.abs(a1 - a2); if (da > Math.PI) da = 2 * Math.PI - da; if (da > 1.1) en = null; }
+  return en ? { k: 'attack', lbl: WT.ranged ? '쏘기' : '공격', icon: sw.id === 'hand' ? 'hand' : sw.id, en } : null; }
+const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
+function natAct(d, o, t, pk) { return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o }; }
+function decide() {
+  const p = G.p; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
+  const s = selItem(), it = s && ITEMS[s.id], md = holdMode(it);
+  if (md === 'hand' || md === 'weapon' || md === 'pick') { const f = fightDecide(curWeapon()); if (f && !(md === 'pick' && pickTarget())) return f; }
+  if (p.sit) return { k: 'stand', lbl: '일어나기', icon: 'hand' };
+  if (G.fish) return { k: 'reel', lbl: G.fish.st === 'bite' ? '당기기!' : '거두기', icon: 'rod' };
+  let t = targetTile(), i = inB(t.x, t.y) ? idx(t.x, t.y) : -1, o = i >= 0 ? G.objs.get(i) : null;
+  if (o && o.t === '_part') { const ai = anchorAt(i); if (ai >= 0) { i = ai; t = { x: ai % W, y: (ai / W) | 0, far: t.far }; o = G.objs.get(ai); } else o = null; }
+  { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
+    const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (md === 'build' && canPlace(t.x, t.y, it));
+    if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
+  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3') && (md === 'hand' || md === 'sickle') && hasItem('sickle')) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list }; }
+  if (o && OBJ[o.t] && OBJ[o.t].lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold
+  if (md !== 'hand') return heldDecide(md, s, it, t, i, o);
+  return handDecide(t, i, o);
+}
+// the target the held pickaxe would work on (a wall, or a rock / tree / plant to gather)
+function pickTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return false; let i = idx(t.x, t.y), o = G.objs.get(i); if (o && o.t === '_part') { const ai = anchorAt(i); o = ai >= 0 ? G.objs.get(ai) : null; }
+  return !!((G.wall[i] && G.wall[i] !== 8) || (o && OBJ[o.t].nat)); }
+function heldDecide(md, s, it, t, i, o) {
+  const d = o && OBJ[o.t], water = i >= 0 && !G.wall[i] && G.floor[i] === WATER, no = (lbl, msg) => ({ k: 'info', lbl, icon: s.id, msg, t });
+  const crop = d && d.crop ? Math.max(0, cropStage(o)) : -1;
+  switch (md) {
+    case 'summon': return summonDecide(it, s);
+    case 'recall': return recallDecide(s);
+    case 'lasso': { const wa = wildNear(2.8); return wa ? { k: 'lasso', lbl: '포획', icon: 'lasso', w: wa } : no('포획', '올가미 밧줄을 든 채 동물에게 다가가서 눌러요'); }
+    case 'build': {
+      if (canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
+      if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
+      if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
+      if (d && d.item) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
+      return no(it.kind === 'seed' ? '심을 수 없음' : '놓을 수 없음', it.kind === 'seed' ? '여기엔 심을 수 없어요 · 빈 흙·이끼·버섯흙·수정 모래를 바라보고 눌러요' : '여기엔 놓을 수 없어요 · 빈 곳을 바라보고 눌러요'); }
+    case 'shovel': {
+      if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
+      if (d && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
+      if (i >= 0 && !G.wall[i] && !o) { const f = G.floor[i];
+        if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
+        if (f === 2) return no('흙 땅', '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요');
+        if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
+      return no('팔 수 없음', '삽으로는 깔아 둔 바닥·배운 지형·덤불·묘목만 떠요'); }
+    case 'wcan':
+      if (crop >= 0 && crop < 3) return o.w ? { k: 'info', lbl: `자라는 중 ${crop + 1}/4`, icon: 'dots', msg: cropMsg(o, crop, i), t } : (s.w || 0) > 0 ? { k: 'water', lbl: '물 주기', icon: 'wcan', t, o } : no('물 없음', '물뿌리개가 비었어요 · 물가를 바라보고 눌러 채워요');
+      if (water) return (s.w || 0) >= WCAN_MAX ? no('가득 참', '물뿌리개에 물이 가득해요') : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
+      return no('물 주기', '자라는 작물에 물을 주거나, 물가를 바라보고 눌러 채워요');
+    case 'fert':
+      if (crop >= 0 && crop < 3) return o.f ? { k: 'info', lbl: `자라는 중 ${crop + 1}/4`, icon: 'dots', msg: cropMsg(o, crop, i), t } : { k: 'fert', lbl: '비료 주기', icon: s.id, t, o };
+      return no('비료 주기', '자라는 작물을 바라보고 눌러요');
+    case 'sickle':
+      if (crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
+      if (d && d.giant) return { k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o };
+      if (d && d.bush && (o.r || 0) <= G.time) return { k: 'harvest', lbl: '따기', icon: 'berry', t, o };
+      return no('거두기', '다 자란 작물 앞에서 눌러요 · 꾹 누르면 둘레 3×3을 한 번에 거둬요');
+    case 'rod':
+      if (water) return isBroken(s) ? no('낚싯대 고장', '낚싯대가 망가졌어요. 장비제작대에서 고칠 수 있어요') : { k: 'fish', lbl: '낚시', icon: 'rod', t };
+      return no('낚시', '물을 바라보고 눌러 찌를 던져요');
+    case 'food':
+      if (it.cake && o && CAKE_TABLES.includes(o.t) && !o.cake) return { k: 'cakeOn', lbl: '올리기', icon: 'festCake', t, o };
+      return { k: 'eat', lbl: '먹기', icon: s.id };
+    case 'wear': return { k: 'wear', lbl: it.slot === 'body' ? '입기' : '달기', icon: s.id };
+    case 'key': return d && d.tree ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
+    case 'pick': {
+      if (isBroken(s)) return no('곡괭이 고장', `${josa(it.n, '이', '가')} 망가졌어요. 장비제작대에서 고칠 수 있어요`);
+      const pk = bestPick();
+      if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: s.id, t };
+      if (d && d.nat) return natAct(d, o, t, pk);
+      return swingAct(curWeapon()); }
+    case 'weapon': {
+      if (isBroken(s)) return no('무기 고장', `${josa(it.n, '이', '가')} 망가졌어요. 장비제작대에서 고칠 수 있어요`);
+      if (d && d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe) return natAct(d, o, t, bestPick()); // an axe also chops trees
+      return swingAct(curWeapon()); }
+  }
+  return handDecide(t, i, o);
+}
+// empty hand (or a plain material): everything in front, as before v48
+function handDecide(t, i, o) {
+  const p = G.p, pk = bestPick();
+  if (o) {
+    const d = OBJ[o.t];
+    if (d.growTo) { const st = treeStep(o), into = d.stump && OBJ[o.g] ? OBJ[o.g].n : d.into, mins = s2 => Math.max(1, Math.ceil(s2 / 60)), r = (o.at || 0) - G.time;
+      if (st < 0) return { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t };
+      return { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t }; }
+    if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
+    if (d.giant) return { k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o };
+    if (o.cake) return { k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o };
+    if (d.lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o };
+    if (d.tchest) return o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o };
+    if (d.ranch) return ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t, sub: true };
+    if (d.station && o.job && jobDone(o.job) > 0) return { k: 'jobTake', lbl: '꺼내기', icon: o.job.out, t, o, sub: true }; // v59
+    if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
+    if (d.crop) { const cs = Math.max(0, cropStage(o));
+      if (cs >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
+      return { k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs, i), t }; }
+    if (d.bush) return (o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t };
+    if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) return { k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t };
+      return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
+    if (d.nat) return natAct(d, o, t, pk);
+    if (d.item) {
+      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o, sub: true };
+      return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
+    }
+  }
+  if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return usableItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : hasItem('rod') ? { k: 'info', lbl: '낚싯대 고장', icon: 'rod', msg: '낚싯대가 망가졌어요. 장비제작대에서 고칠 수 있어요', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (장비제작대 → 도구)', t };
+  if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
+  if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) return { k: 'petpet', lbl: '쓰다듬기', icon: 'hand' };
+  { const wa = wildNear(1.8); if (wa) return { k: 'info', lbl: ANIMALS[wa.k].n, icon: 'dots', msg: `${ANIMALS[wa.k].n}예요 · 올가미 밧줄(작업대)을 들고 다가가면 데려갈 수 있어요`, t: { x: Math.floor(wa.x), y: Math.floor(wa.y) } }; }
+  return swingAct(curWeapon());
+}
+const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
+const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
+const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
+function pickupObj(t, o) {
+  const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
+  delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
+  returnObj(o, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
+}
+function subAction() { const a = G.act; if (!started || paused || !a || !a.sub || G.p.dead > 0) return; ensureAudio(); if (a.sub === 'dig') digGround(a.t); else pickupObj(a.t, a.o); }
+const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
+const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
+function tryAct(edge) {
+  const a = G.act; const grp = GROUP[a.k] || null;
+  if (edge) { holdGroup = grp; holdK = a.k; }
+  else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
+  perform(a);
+}
+function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
+let fistTip = 0; // v48: one hint per session when fighting bare-handed with a weapon in the bag
+function perform(a) {
+  const p = G.p;
+  switch (a.k) {
+    case 'attack': {
+      if (!aimMouse()) faceTo(a.en.x - p.x, a.en.y - p.y);
+      if (!fistTip && curWeapon() === FIST) { const k = G.inv.findIndex(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x)); if (k >= 0) { fistTip = 1; toast(`주먹으로 싸우는 중이에요 · ${k < HOT ? `단축칸 ${k + 1}번` : '가방'}의 ${josa(ITEMS[G.inv[k].id].n, '을', '를')} 골라 들면 더 세요`, null, 'fisttip'); } }
+      actCd = swingAttack() === false ? 0.3 : atkCd(); break;
+    }
+    case 'swing': actCd = swingAttack() === false ? 0.3 : atkCd(); break;
+    case 'mine': mineWall(a.t); actCd = 0.27; break;
+    case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
+    case 'place': placeItem(a.t); actCd = 0.14; break;
+    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
+    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); SFX.pick(); actCd = 0.15; break; }
+    case 'open': if (a.o.t === 'chest') openPanel('chest', { i: idx(a.t.x, a.t.y) }); else openPanel('craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
+    case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
+    case 'treasure': openTreasure(a.t, a.o); actCd = 0.4; break;
+    case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); actCd = 0.35; break;
+    case 'water': waterCrop(a.t, a.o); actCd = 0.25; break;
+    case 'fert': fertCrop(a.t, a.o); actCd = 0.3; break;
+    case 'fill': fillCan(a.t); actCd = 0.4; break;
+    case 'eat': eat(G.sel); actCd = 0.4; break;
+    case 'wear': wearItem(G.sel); actCd = 0.4; break;
+    case 'recall': startRecall(a.mode); actCd = 0.4; break;
+    case 'lost': pickLost(a.t, a.o); actCd = 0.3; break;
+    case 'giant': harvestGiant(a.t, a.o); actCd = 0.4; break;
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; SFX.place(); puff(a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); toast('탁자 위에 케이크를 올렸어요', 'good', 'cake'); actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { toast('가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; SFX.pick(); actCd = .4; break; }
+    case 'insert': insertSeeds(); actCd = 0.4; break;
+    case 'tree': openPanel('tree'); actCd = 0.3; break;
+    case 'summon': summonBoss(a.boss); actCd = 0.6; break;
+    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); SFX.seed(); puff(a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); toast('빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
+    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); SFX.pick(); puff(a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
+    case 'fish': startFish(a.t); actCd = 0.4; break;
+    case 'stand': standUp(); actCd = 0.25; break;
+    case 'use': useObj(a); actCd = 0.4; break;
+    case 'reel': reel(); actCd = 0.35; break;
+    case 'lasso': openCatch(a.w); actCd = .4; break;
+    case 'ranch': ranchCollect(a.t, a.o); actCd = .4; break;
+    case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); actCd = .4; break;
+    case 'petpet': { const e = G.petE; hearts(e.x, e.y - .4, 4); SFX.purr ? SFX.purr() : SFX.pick(); toast(`${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); actCd = .6; break; }
+    case 'info': if (a.msg) toast(a.msg, null, 'info' + a.msg); actCd = 0.4; break;
+  }
+}
+function swingAttack() {
+  const p = G.p, w = curWeapon(), W = wtOf(w); if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } const ang = Math.atan2(p.face.y, p.face.x); G.fish = null;
+  if (W.ranged) {
+    if (W.mp && (p.mp || 0) < W.mp) { toast('기력이 부족해요. 잠깐 기다리면 다시 차요', null, 'nomp'); SFX.clink(); return false; }
+    if (W.mp) p.mp -= W.mp;
+    const ar = W.ranged === 'arrow' ? takeArrow() : null; // mineral arrows from the bag, best first
+    const crit = Math.random() < 0.1, dmg = Math.round(w.dmg * (ar ? ar.mul : 1) * (W.magic ? magicMul() : rangeMul()) * (crit ? 1.6 : 1) * (0.9 + Math.random() * 0.2));
+    shootP(ang, { k: W.ranged, dmg, crit, spd: W.spd, range: wRange(W), pierce: W.magic ? 1 : ar ? ar.pierce : 0, col: w.orb || '#bff7ef', tip: ar ? ar.tip : null, slot: w.slot, kb: W.kb != null ? W.kb : W.magic ? 4 : 6, fx: w.fx || (ar && ar.fx) });
+    G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; SFX.swing(); return true;
+  }
+  const big = W.arc > 2, dur = big ? 0.3 : W === WTYPE.dagger ? 0.14 : 0.22;
+  G.swing = { t: dur, max: dur, ang, icon: w.id === 'hand' ? null : w.id, wt: w.wt, arc: big ? 2 : 1.2, rad: big ? 1.2 : 0.95 };
+  SFX.swing(); if (big) shake = Math.max(shake, 0.12);
+  const hit = (e, rr) => { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy); if (d > W.reach + rr) return false; let da = Math.abs(Math.atan2(dy, dx) - ang); if (da > Math.PI) da = 2 * Math.PI - da; return da < W.arc || d < 0.6 + rr; };
+  const roll = () => { const crit = Math.random() < 0.1 + (W.crit || 0); return [Math.round(w.dmg * meleeMul() * (crit ? 1.6 : 1) * (0.9 + Math.random() * 0.2)), crit]; };
+  let landed = false;
+  for (const e of G.enemies.slice()) if (hit(e, ENEMY[e.k].r)) { const [dmg, crit] = roll(); hitEnemy(e, dmg, crit, W.kb, w.fx); landed = true; }
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && hit(b, BOSSES[k].hr)) { if (b.z > 0.7) ftext(b.x, b.y - 2, '빗나감', '#bfaed3'); else { const [dmg, crit] = roll(); hitBoss(b, dmg, crit, w.fx); landed = true; } } }
+  if (landed) wear(w.slot);
+  return true;
+}
+function shootP(ang, o) { const p = G.p; G.pshots.push(Object.assign({ x: p.x + Math.cos(ang) * .3, y: p.y + Math.sin(ang) * .3, vx: Math.cos(ang) * o.spd, vy: Math.sin(ang) * o.spd, life: o.range / o.spd, hit: [], ang }, o)); }
+function updatePShots(dt) {
+  for (let i = G.pshots.length - 1; i >= 0; i--) {
+    const s = G.pshots[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; const tx = Math.floor(s.x), ty = Math.floor(s.y);
+    if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { puff(s.x, s.y - .3, s.k === 'arrow' ? '#e8d8c0' : s.col, 4, 1.5, .2); G.pshots.splice(i, 1); continue; }
+    let done = false;
+    for (const e of G.enemies.slice()) { if (s.hit.includes(e)) continue; if (Math.hypot(e.x - s.x, e.y - s.y) < ENEMY[e.k].r + 0.28) { hitEnemy(e, s.dmg, s.crit, s.kb || 6, s.fx); s.hit.push(e); s.landed = true; if (!s.pierce) { done = true; break; } } }
+    if (!done) for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.7 || s.hit.includes(b)) continue; if (Math.hypot(b.x - s.x, b.y - s.y) < BOSSES[k].hr + 0.28) { hitBoss(b, s.dmg, s.crit, s.fx); s.hit.push(b); s.landed = true; if (!s.pierce) { done = true; break; } } }
+    if (s.landed && s.slot && !s.worn) { wear(s.slot); s.worn = true; }
+    if (done) G.pshots.splice(i, 1);
+  }
+}

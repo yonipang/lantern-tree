@@ -1,5 +1,5 @@
 # 게임 위키 만들기: python3 dev/wiki/build_wiki.py
-# dev/index.html을 브라우저에서 열어 게임 데이터(아이템·제작법·몬스터·퀘스트 …)와 아이콘을 뽑고,
+# dev/src/를 묶은 dev/index.html을 브라우저에서 열어 게임 데이터(아이템·제작법·몬스터·퀘스트 …)와 아이콘을 뽑고,
 # dev/wiki/template.html에 넣어 wiki.html(저장소 맨 위)을 만들어요. 게임을 고친 뒤 다시 돌리면 위키도 맞춰져요.
 import asyncio, json, os, re, subprocess, sys
 from playwright.async_api import async_playwright
@@ -23,6 +23,7 @@ def version():
     except Exception: return ''
 
 async def extract():
+    sys.path.insert(0, DEV); import build; build.main()  # dev/src/ → dev/index.html
     src = open(os.path.join(DEV, 'index.html'), encoding='utf-8').read().replace('window.claude?.hot?.snapshot', HOOK, 1)
     page = os.path.join(OUT, 'wiki_src.html')
     open(page, 'w', encoding='utf-8').write('<!doctype html><html><head><meta charset="utf-8"></head><body>' + src + '</body></html>')

@@ -1,4 +1,4 @@
-# 그림 자동 반영: dev/art/ 에 PNG를 올리면(깃허브 웹사이트 업로드 포함) 게임 원본에 그림을 넣고
+# 그림 자동 반영: dev/art/ 에 PNG를 올리면(깃허브 웹사이트 업로드 포함) 게임 원본(dev/src/js/art/hand-art.js)에 그림을 넣고
 # 배포용 index.html·sw.js를 다시 만들어 커밋해요. GitHub Pages 게임이 1~2분 뒤 바뀌어요.
 # - 코드는 건드리지 않으므로 회귀 테스트는 돌리지 않아요 (그림만 바뀜)
 # - Claude 게임 페이지(아티팩트)는 바뀌지 않아요. 다음에 Claude가 배포할 때 함께 반영돼요
@@ -24,13 +24,13 @@ jobs:
           python-version: '3.12'
       - name: 그림 넣기 (art_pack.py)
         run: python3 dev/art_pack.py
-      - name: 배포용 파일 만들기 (build_web.py)
+      - name: 배포용 파일 만들기 (build_web.py — dev/src/를 묶어 index.html로)
         run: python3 dev/build_web.py
       - name: 커밋·푸시
         run: |
           git config user.name "Juyeon"
           git config user.email "yon2pang@gmail.com"
-          git add dev/index.html index.html sw.js manifest.webmanifest
+          git add dev/src/js/art/hand-art.js index.html sw.js manifest.webmanifest
           if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
           files=$(git diff --name-only HEAD~1 HEAD -- dev/art | sed 's#^dev/art/##' | head -20 | tr '\n' ' ')
           git commit -m "그림 자동 반영: ${files}" -m "dev/art/의 그림을 게임에 넣음 (GitHub Actions, 테스트 없이 그림만)"

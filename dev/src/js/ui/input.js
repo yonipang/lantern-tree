@@ -1,0 +1,112 @@
+// ================= input wiring =================
+function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
+function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
+function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
+function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 120)) + 'px'; }
+function setupInput() {
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('pointerdown', e => {
+    ensureAudio(); if (paused) return;
+    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; useSkill(0); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) actQ = 0.3; mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
+    document.body.classList.add('touch'); mouse.used = false;
+    if (!joy.active && ctrlPref !== 'pad' && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
+  });
+  window.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; mouse.x = e.clientX; mouse.y = e.clientY; mouse.last = performance.now(); mouse.used = true; mouse.over = e.target === cv; });
+  document.addEventListener('mouseleave', () => { mouse.over = false; });
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerType === 'mouse') return;
+    if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 50; if (l > R) { joy.ox += dx * (1 - R / l) * 0.35; joy.oy += dy * (1 - R / l) * 0.35; dx = e.clientX - joy.ox; dy = e.clientY - joy.oy; const l2 = Math.hypot(dx, dy); if (l2 > R) { dx *= R / l2; dy *= R / l2; } const j = $('#joy'); j.style.left = joy.ox + 'px'; j.style.top = joy.oy + 'px'; }
+      const m = Math.hypot(dx, dy) / R; joy.vx = m > 0.15 ? dx / R : 0; joy.vy = m > 0.15 ? dy / R : 0; $('#joyKnob').style.transform = `translate(${dx}px,${dy}px)`; }
+  });
+  const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); window.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') mouse.down = false; });
+  const ab = $('#actBtn');
+  ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
+  const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
+  window.addEventListener('keydown', e => {
+    const tf = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+    if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
+    if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
+    ensureAudio();
+    if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
+    if (!started) return;
+    if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
+    if (panel) { if ((e.code === 'KeyI' || e.code === 'Tab') && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'inv') closePanel(); return; }
+    if (e.code === 'KeyI' || e.code === 'Tab' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
+    if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
+    if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
+    if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
+    if (e.code === 'KeyR') { subAction(); return; }
+    if (e.code === 'KeyT') { rotateAction(); return; }
+    if (e.code === 'KeyQ') { const s = selItem(); if (s && ITEMS[s.id].kind === 'food') eat(G.sel); return; }
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+    if (['Space', 'KeyJ', 'KeyE'].includes(e.code)) actQ = 0.3;
+    keys.add(e.code);
+  });
+  window.addEventListener('keyup', e => keys.delete(e.code));
+  // buttons never keep keyboard focus after a mouse click; any click outside a text field brings focus back to the game
+  document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button') && !e.target.closest('input,textarea')) e.preventDefault(); }, true);
+  document.addEventListener('pointerdown', e => { if (!(e.target.closest && e.target.closest('input,textarea,select'))) refocusGame(); }, true);
+  window.addEventListener('blur', () => { keys.clear(); btnHeld = false; mouse.down = false; joyEnd(); padEnd(); });
+  const dp = $('#dpad');
+  const padMove = e => { if (dpad.id !== e.pointerId) return; const r = dp.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    if (Math.hypot(dx, dy) < 14) { dpad.vx = dpad.vy = 0; } else { const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4); dpad.vx = Math.abs(Math.cos(a)) < 1e-6 ? 0 : Math.cos(a); dpad.vy = Math.abs(Math.sin(a)) < 1e-6 ? 0 : Math.sin(a); }
+    dp.querySelector('.u').classList.toggle('on', dpad.vy < -.1); dp.querySelector('.d').classList.toggle('on', dpad.vy > .1); dp.querySelector('.l').classList.toggle('on', dpad.vx < -.1); dp.querySelector('.r').classList.toggle('on', dpad.vx > .1); };
+  dp.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); document.body.classList.add('touch'); if (paused || dpad.id != null) return; dpad.id = e.pointerId; try { dp.setPointerCapture(e.pointerId); } catch (_) { } padMove(e); });
+  dp.addEventListener('pointermove', padMove);
+  const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
+  applyCtrl();
+  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1; G.sel = (G.sel + d + HOT) % HOT; invDirty = true; }, { passive: true });
+  $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
+  setupDrag();
+  $('#subBtn').addEventListener('click', () => subAction());
+  $('#rotBtn').addEventListener('click', () => rotateAction());
+  $('#sheet').addEventListener('click', onSheetClick);
+  $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
+  $('#bInv').addEventListener('click', () => started && openPanel('inv'));
+  $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
+  $('#bStat').addEventListener('click', () => started && openPanel('stat'));
+  $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); useSkill(+b.dataset.n); });
+  $('#bMap').addEventListener('click', () => started && openPanel('map'));
+  $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
+  $('#goal').addEventListener('click', () => started && openPanel('quest'));
+  $('#bQuest').addEventListener('click', () => started && openPanel('quest'));
+  let newAsk = false;
+  $('#btnNew').addEventListener('click', () => { ensureAudio();
+    if (loadLocal() && !newAsk) { newAsk = true; $('#btnNew').textContent = '정말 새로 시작할까요? (지금 세이브는 백업돼요)'; $('#btnNew').classList.add('warn'); return; }
+    if (newAsk) pushBackup('새 모험 시작 전'); newAsk = false; $('#btnNew').textContent = '새 모험 시작'; $('#btnNew').classList.remove('warn'); showPicker(); });
+  $('#btnBackups').addEventListener('click', () => { const el = $('#bkList'); if (!el.hidden) { el.hidden = true; return; } const b = loadBackups();
+    const fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    el.innerHTML = `<div style="color:var(--muted);font-size:14px">되돌리면 지금 세이브도 백업해 둬요.</div>` + b.map((x, k) => `<div class="bk"><span>${fmt(x.at)}<br><small style="color:var(--muted)">${escHTML(x.reason || '')}</small></span><button class="btn ghost" type="button" data-bk="${k}">되돌리기</button></div>`).join(''); el.hidden = false; });
+  $('#btnCloud').addEventListener('click', () => { ensureAudio(); cloudTitleClick(); });
+  $('#cloudTitle').addEventListener('click', e => { const b = e.target.closest('[data-ct]'); if (!b) return; const k = b.dataset.ct;
+    if (k === 'emailT') { UIS.clTitleEmail = !UIS.clTitleEmail; cloudTitleRefresh(); return; }
+    CLOUD.wantTake = true; cloudAuth(k, 'ct'); });
+  $('#wearAsk').addEventListener('click', () => { const el = $('#wearAsk'), k = G.inv.findIndex(x => x && x.id === el.dataset.id); el.hidden = true; if (k >= 0) wearItem(k); });
+  $('#cloudAsk').addEventListener('click', e => { const b = e.target.closest('[data-cl]'); if (!b) return; if (b.dataset.cl === 'take') cloudTakePending(); else cloudKeepLocal(); });
+  $('#bkList').addEventListener('click', e => { const bt = e.target.closest('[data-bk]'); if (!bt) return; const x = loadBackups()[+bt.dataset.bk]; if (!x) return;
+    let sv; try { sv = JSON.parse(x.data); } catch (err) { toast('백업을 읽지 못했어요'); return; }
+    const cur = (() => { try { return localStorage.getItem(SAVE_KEY); } catch (err) { return null; } })();
+    try { deserialize(sv); } catch (err) { toast('백업을 불러오지 못했어요'); return; }
+    if (cur) pushBackup('백업 되돌리기 전', cur); $('#bkList').hidden = true; beginPlay(); toast('백업에서 되돌렸어요', 'good'); });
+  $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
+  $('#charBack').addEventListener('click', () => hidePicker());
+  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
+  $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
+  $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
+  $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
+  $('#impAsk').addEventListener('click', e => { const b = e.target.closest('[data-imp]'); if (!b) return; if (b.dataset.imp === 'yes') applyImport(); else { pendingImp = null; $('#impAsk').hidden = true; } });
+  window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
+  let hiddenAt = 0; document.addEventListener('visibilitychange', () => { if (document.hidden && started) { hiddenAt = Date.now(); saveLocal(true); cloudUpload(false); } else if (!document.hidden && hiddenAt) { if (G && started) advanceOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; } });
+  window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
+}
+// ---- character picker (title + menu) ----
+let pickSel = 'sprout', pickAnim = 0;
+function cpCards(sel) { return CHAR_IDS.map(id => `<button type="button" class="cp-card ${id === sel ? 'on' : ''}" data-c="${id}" data-a="charSet" data-i="${id}"><img class="px" src="${charPreview(id)}" alt=""><span>${id === 'custom' ? '직접 꾸미기' : CHARS[id].n}</span></button>`).join(''); }
+function animPick(root) { clearInterval(pickAnim); let f = 0; pickAnim = setInterval(() => { const im = root && root.querySelector('.cp-card.on img'); if (!im || !im.isConnected) { clearInterval(pickAnim); return; } f ^= 1; im.src = charPreview(im.parentElement.dataset.c, f); }, 320); }
+function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking'); $('#charPick').hidden = false; renderPicker(); }
+function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
+function hidePicker() { $('#title').classList.remove('picking'); $('#charPick').hidden = true; clearInterval(pickAnim); }
+const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); };
+function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { const bc = $('#btnCloud'), ct = $('#cloudTitle'); if (bc) bc.hidden = true; if (ct) ct.hidden = true; } $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; lastGoalTxt = ''; lastInputAt = performance.now(); G.qt = G.qt || {}; { let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 40) { G.guide++; n++; } } checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
+

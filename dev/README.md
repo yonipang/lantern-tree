@@ -2,25 +2,28 @@
 
 게임을 고치고 배포할 때 쓰는 원본과 도구예요. 저장소 맨 위의 `index.html`은 배포용으로 바꾼 결과물이니 직접 고치지 않아요.
 
+게임 원본은 `dev/src/`의 여러 파일이에요(v62 다음 리팩터링부터). `python3 dev/build.py`가 이를 한 파일짜리 게임 `dev/index.html`로 묶어요. `dev/index.html`도 결과물이라 직접 고치지 않고 저장소에도 올리지 않아요. 파일 지도와 순서 규칙은 `dev/src/README.md`.
+
 ## 들어 있는 것
 
 | 경로 | 내용 |
 |---|---|
-| `dev/index.html` | **게임 원본** (한 파일짜리 HTML/Canvas). 모든 수정은 여기서 해요 |
-| `dev/build_web.py` | 원본 → 배포용 `index.html`·`sw.js`·`manifest.webmanifest`(저장소 맨 위) |
+| `dev/src/` | **게임 원본** (HTML 뼈대 `shell.html` + `css/` + `js/`). 모든 수정은 여기서 해요. 파일 지도: `dev/src/README.md` |
+| `dev/build.py` | `dev/src/` → 한 파일짜리 게임 `dev/index.html` (테스트·위키·배포 도구가 시작할 때 자동으로 돌려요. 저장소에는 안 올라감) |
+| `dev/build_web.py` | 원본(묶은 `dev/index.html`) → 배포용 `index.html`·`sw.js`·`manifest.webmanifest`(저장소 맨 위) |
 | `dev/qa/` | 회귀 테스트 (Playwright). `run_all.sh`로 한 번에 실행 |
 | `dev/old/` | 옛 버전(v1~v3). 예전 세이브를 불러오는 테스트에 써요 |
 | `dev/character-parts/` | 캐릭터 부위 그리기 템플릿 |
 | `dev/art/` | 직접 그린 16px 그림 (아래 「16px 그림」) |
 | `dev/art_32px/` | v49~v52에 쓰던 32px 손그림 보관 (게임에는 안 들어감) |
-| `dev/art_pack.py` | `dev/art/`의 그림을 `dev/index.html` 안에 넣는 도구 |
-| `dev/wiki/` | 게임 위키 만들기. `python3 dev/wiki/build_wiki.py` → 저장소 맨 위 `wiki.html` (게임 데이터·아이콘을 코드에서 바로 뽑아요. 게임을 고친 뒤 다시 돌리면 위키도 맞춰져요) |
+| `dev/art_pack.py` | `dev/art/`의 그림을 `dev/src/js/art/hand-art.js` 안에 넣는 도구 |
+| `dev/wiki/` | 게임 위키 만들기. `python3 dev/wiki/build_wiki.py` → 저장소 맨 위 `wiki.html` (묶은 `dev/index.html`에서 게임 데이터·아이콘을 바로 뽑아요. 게임을 고친 뒤 다시 돌리면 위키도 맞춰져요) |
 
 ## 16px 그림 (v53부터 다시 16px)
 
 - **한 칸 = 16×16px.** 세계를 1:1(게임 픽셀 = 그림 픽셀)로 그려요 (`HD = 1`). 앞으로 그림·타일셋은 모두 16px 기준으로 맞춰요
 - 그린 PNG는 게임 안 경로 그대로 `dev/art/`에 넣어요. 예) `dev/art/obj/roundTree.png`, `dev/art/item/berry.png`, `dev/art/crop/berry/3.png`, `dev/art/mon/slimeG.png`, `dev/art/animal/dog.png`, `dev/art/etc/bush/1.png`
-- 넣은 뒤 `python3 dev/art_pack.py` → `dev/index.html`의 `/*@@ART*/ … /*@@ARTEND*/` 부분이 바뀌어요. 그다음 평소처럼 테스트·배포
+- 넣은 뒤 `python3 dev/art_pack.py` → `dev/src/js/art/hand-art.js`의 `/*@@ART*/ … /*@@ARTEND*/` 부분이 바뀌어요. 그다음 평소처럼 테스트·배포
 - 외곽선은 게임이 옛 그림과 같은 방식으로 붙여요. 그린 그대로 쓰려면 파일 이름 끝을 `.raw.png`로
 - 작물은 식물만 그려요 (흙은 게임이 깔아 줌). 하얀 번쩍임·꺼진 램프·세로 가구·어린 나무·거대 작물은 원본 그림에서 자동으로 만들어요
 - 나무류는 v50부터 크게 그려요 (둥근 나무·뿌리기둥·큰버섯 1.75배, 벚꽃나무 1.4배, 큰 고목 1.5배, 부딪히는 칸은 그대로). 높이 34px 넘는 물체 뒤에 플레이어가 서면 반투명
@@ -31,15 +34,15 @@
 
 ## 그림 자동 반영 (GitHub Actions)
 
-- `dev/art/`에 PNG를 올리면(깃허브 웹사이트에서 「Add file → Upload files」도 됨) `.github/workflows/art.yml`이 `art_pack.py` → `build_web.py`를 돌리고 `dev/index.html`·`index.html`·`sw.js`를 커밋해요. GitHub Pages 게임이 1~2분 뒤 바뀌어요.
+- `dev/art/`에 PNG를 올리면(깃허브 웹사이트에서 「Add file → Upload files」도 됨) `.github/workflows/art.yml`이 `art_pack.py` → `build_web.py`를 돌리고 `dev/src/js/art/hand-art.js`·`index.html`·`sw.js`를 커밋해요. GitHub Pages 게임이 1~2분 뒤 바뀌어요.
 - 그림만 넣는 작업이라 회귀 테스트는 돌리지 않아요. Claude 게임 페이지(아티팩트)는 다음에 Claude가 배포할 때 함께 반영돼요.
 - 다른 세션이 배포하는 중에는 올리지 않기 (배포 파일이 겹칠 수 있어요). Claude 세션은 작업 전·커밋 전에 늘 `git pull`.
 - 수동으로 다시 돌리려면 깃허브 Actions 탭 → 「그림 자동 반영」 → Run workflow.
 
 ## 작업 순서
 
-1. **원본 수정**: `dev/index.html`
-2. **문법 확인**: `node dev/qa/syn.js dev/index.html` → `ok`가 나와야 해요
+1. **원본 수정**: `dev/src/` (어느 파일인지는 `dev/src/README.md`의 파일 지도)
+2. **묶기·문법 확인**: `python3 dev/build.py && node dev/qa/syn.js dev/index.html` → `ok`가 나와야 해요 (테스트·배포 도구도 시작할 때 알아서 묶어요)
 3. **테스트**: `bash dev/qa/run_all.sh` (qa2~qa59 전체, 약 25분 — 백그라운드로 돌리고 결과 확인) 또는 `bash dev/qa/run_all.sh 23 24`처럼 일부만
    - 새 기능을 넣으면 `dev/qa/qa29.py`처럼 테스트를 새로 추가해요 (`qa28.py`를 본보기로)
    - 스크린샷과 로그는 `dev/qa/out/`에 생겨요 (저장소에는 안 올라가요)
@@ -49,7 +52,7 @@
 4. **배포용 만들기**: `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
 5. **올리기**
    - 깃허브: `git add -A && git commit && git push origin main` (작성자 Juyeon / yon2pang@gmail.com)
-   - Claude 게임 페이지(아티팩트): `dev/index.html`을 기존 주소 `https://claude.ai/artifact/RBFeEeaCo7T5a6LgZCb9ga`에 다시 게시 (다운로드 기능 유지)
+   - Claude 게임 페이지(아티팩트): `python3 dev/build.py`로 묶은 `dev/index.html`을 기존 주소 `https://claude.ai/artifact/RBFeEeaCo7T5a6LgZCb9ga`에 다시 게시 (다운로드 기능 유지)
    - 위키 페이지(아티팩트): 저장소 맨 위 `wiki.html`을 기존 주소 `https://claude.ai/artifact/6uDujDPR1jG1DLBBg4Nn6g`에 다시 게시
 
 ## 테스트 환경 준비 (새 작업 공간일 때)
@@ -57,6 +60,7 @@
 ```
 pip install playwright --break-system-packages   # 이미 있으면 생략
 # 브라우저가 미리 깔린 환경이면 playwright install은 하지 않아요
+# (깔린 브라우저와 버전이 안 맞는다는 오류가 나면 그 브라우저에 맞는 버전으로: 예) chromium-1194 → pip install playwright==1.56.0)
 ```
 
 ## 세이브 호환 규칙

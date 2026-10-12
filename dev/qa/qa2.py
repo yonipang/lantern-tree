@@ -2,6 +2,7 @@ import asyncio, json, random, sys
 from playwright.async_api import async_playwright
 SP=__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'out')+'/'; __import__('os').makedirs(SP, exist_ok=True)
 SRC=sys.argv[1] if len(sys.argv)>1 else __import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','index.html')
+if len(sys.argv)<=1: sys.path.insert(0,__import__('os').path.dirname(SRC)); __import__('build').main()  # dev/src/ → dev/index.html
 HOOK="window.__T={get G(){return G},CX,CY,BX,BY,SA,SB,idx,addItem,openPanel,closePanel,decide,serialize,deserialize,WATER,BOSSES,bestPick,lightAt,countItem,OBJ,ITEMS,computeLight};window.claude?.hot?.snapshot"
 def mkpage(src,out,hook=None,layout=1):
     html=open(src).read().replace("window.claude?.hot?.snapshot",hook or HOOK,1)
