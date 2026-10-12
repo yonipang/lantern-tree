@@ -1,4 +1,5 @@
 // ---- active skills ----
+defineCmd('skill', c => useSkill(c.n));
 function useSkill(n) {
   if (!G || paused || !started) return; const p = G.p; if (p.dead > 0 || p.sleep) return;
   const k = G.rpg.slot[n]; if (!k) { emit('open', 'stat'); return; }
@@ -8,13 +9,13 @@ function useSkill(n) {
   if (SK_FN[k](l) === false) return; p.mp -= cost; G.skcd[k] = S.cd(l);
 }
 const SK_FN = {
-  dash(l) { const p = G.p; let dx = p.face.x, dy = p.face.y; if (joy.active && Math.hypot(joy.vx, joy.vy) > .2) { dx = joy.vx; dy = joy.vy; } if (dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2) { dx = dpad.vx; dy = dpad.vy; } const L = Math.hypot(dx, dy) || 1, sp = 15 * (1 + (l - 1) * .15); p.dash = { t: .2, vx: dx / L * sp, vy: dy / L * sp }; p.inv = Math.max(p.inv, .4); emit('puff', p.x, p.y, '#e8d8c0', 8, 2, .1); emit('sfx', 'swing'); },
+  dash(l) { const p = G.p; let dx = p.face.x, dy = p.face.y; const st = ctlOf(p).stick; if (st) { dx = st.x; dy = st.y; } const L = Math.hypot(dx, dy) || 1, sp = 15 * (1 + (l - 1) * .15); p.dash = { t: .2, vx: dx / L * sp, vy: dy / L * sp }; p.inv = Math.max(p.inv, .4); emit('puff', p.x, p.y, '#e8d8c0', 8, 2, .1); emit('sfx', 'swing'); },
   spin(l) { const p = G.p, w = curWeapon(), mul = 1.3 + .3 * l; G.swing = { t: .3, max: .3, ang: Math.atan2(p.face.y, p.face.x), icon: w.id === 'hand' ? null : w.id, arc: Math.PI, rad: 1.35 }; emit('sfx', 'swing'); emit('shake', .15);
     const roll = () => { const crit = rand() < .1; return [Math.round(w.dmg * (wtOf(w).magic ? magicMul() : meleeMul()) * mul * (crit ? 1.6 : 1)), crit]; }; let landed = false;
     for (const e of G.enemies.slice()) if (Math.hypot(e.x - p.x, e.y - p.y) < 1.9 + ENEMY[e.k].r) { const [d, c] = roll(); hitEnemy(e, d, c, 12, w.fx); landed = true; }
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < 1.9 + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c); landed = true; } }
     if (landed) wear(w.slot); },
-  bolt(l) { const p = G.p; if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } else { const en = nearestEnemy(7); if (en) faceTo(en.x - p.x, en.y - p.y); } const ang = Math.atan2(p.face.y, p.face.x);
+  bolt(l) { const p = G.p, aim = ctlOf(p).aim; if (aim) faceTo(aim.x - p.x, aim.y - (p.y - .45)); else { const en = nearestEnemy(7); if (en) faceTo(en.x - p.x, en.y - p.y); } const ang = Math.atan2(p.face.y, p.face.x);
     shootP(ang, { k: 'orb', dmg: Math.round((10 + 6 * l) * magicMul()), crit: false, spd: 11, range: 8, pierce: 1, col: '#fff1b0', kb: 5 }); emit('sfx', 'cast2'); },
   quake(l) { const t = targetTile(), pk = bestPick(); let n = 0; if (inB(t.x, t.y) && !G.wall[idx(t.x, t.y)]) { const f = G.p.face; if (Math.abs(f.x) > Math.abs(f.y)) t.x += Math.sign(f.x); else t.y += f.y < 0 ? -1 : 1; }
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = t.x + dx, y = t.y + dy; if (!inB(x, y)) continue; const w = G.wall[idx(x, y)]; if (!w || w === 8 || WALLS[w].tier > pk.tier || Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) > 3.6) continue; breakWall(x, y); n++; }
@@ -27,7 +28,7 @@ const SK_FN = {
     for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && b.z <= .7 && Math.hypot(b.x - p.x, b.y - p.y) < R + BOSSES[k].hr) { const [d, c] = roll(); hitBoss(b, d, c, 'slow'); landed = true; } }
     if (landed) wear(w.slot); },
   volley(l) { const p = G.p, w = curWeapon(), W = wtOf(w); if (W.ranged !== 'arrow') { emit('toast', '화살비는 활을 들고 있어야 쓸 수 있어요', null, 'novolley'); return false; }
-    if (aimMouse()) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .45)); } else { const en = nearestEnemy(wRange(W)); if (en) faceTo(en.x - p.x, en.y - p.y); }
+    const aim = ctlOf(p).aim; if (aim) faceTo(aim.x - p.x, aim.y - (p.y - .45)); else { const en = nearestEnemy(wRange(W)); if (en) faceTo(en.x - p.x, en.y - p.y); }
     const ang = Math.atan2(p.face.y, p.face.x), n = 3 + 2 * l, spread = .9;
     for (let k = 0; k < n; k++) { const a = ang + (k / (n - 1) - .5) * spread, crit = rand() < .1; shootP(a, { k: 'arrow', dmg: Math.max(1, Math.round(w.dmg * (.5 + .1 * l) * rangeMul() * (crit ? 1.6 : 1))), crit, spd: W.spd, range: wRange(W), pierce: 0, col: '#bff7ef', kb: 3, fx: w.fx }); }
     G.swing = { t: 0.18, max: 0.18, ang, icon: w.id, wt: w.wt }; emit('sfx', 'swing'); },

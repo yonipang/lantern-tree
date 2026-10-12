@@ -12,6 +12,7 @@
 # 대신 묶기 전에 확인해요: 가져오는 파일이 shell.html에 있는지, 그 이름을 정말 내보내는지,
 # 맨 위 이름이 다른 파일과 겹치지 않는지. 모듈이 아직 옛 전역 이름(모듈이 아닌 파일의 이름)을 쓰면 개수를 알려 줘요.
 # 규칙 파일(RULES)이 소리·알림·반짝임을 바로 부르지 않는지, emit('…')한 사건마다 받는 곳(onEvent)이 있는지도 확인해요 (6단계).
+# 규칙 파일이 입력 상태(키·마우스·조이스틱)를 직접 읽지 않는지, 보내는 명령마다 처리기(defineCmd)가 있는지도 (7단계).
 import os, re, sys
 
 DEV = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,8 @@ DECL = re.compile(r'^(?:export\s+)?(?:async\s+)?(?:function\*?\s*([A-Za-z_$][\w$
 WORD = re.compile(r'(?<![\w$.])[A-Za-z_$][\w$]*')
 # 규칙 파일 (화면·소리를 바로 부르지 않는 곳) — 보이기·소리는 engine/·ui/·render, 저장 파일 다루기는 save/storage.js
 RULES = ('js/sim/', 'js/world/', 'js/game/', 'js/features/', 'js/content/', 'js/data/', 'js/save/state.js', 'js/save/migrations.js')
+# 규칙 파일은 키보드·마우스·조이스틱을 직접 읽지 않고 조작 의도 ctlOf(p)와 명령(defineCmd)으로 받아요 (7단계, sim/commands.js)
+RAW_INPUT = {'keys', 'mouse', 'joy', 'dpad', 'btnHeld', 'atkBtnHeld', 'aimMouse', 'mouseWorld', 'mouseTile', 'readCtl'}
 DIRECT_FX = re.compile(r'(?<![\w$.])(SFX\s*[.\[]|(?:toast|puff|ftext|hearts|splash|mapPixel)\s*\(|shake\s*=(?!=))')
 
 
@@ -152,6 +155,10 @@ def check(js, report):
         if m:
             raise BuildError(f'{rel}: 규칙 파일에서는 {m.group(1).strip()}… 대신 emit(\'sfx\', \'hit\')·emit(\'toast\', …)·emit(\'puff\', …)처럼 사건을 남겨요 '
                              '(받는 곳: ui/feedback.js)')
+        raw = sorted(set(WORD.findall(code_only(s))) & RAW_INPUT)
+        if raw:
+            raise BuildError(f'{rel}: 규칙 파일에서는 입력 상태 {raw[0]}을(를) 직접 읽지 않아요 — 조작 의도 ctlOf(G.p)(act·atk·aim·mx·my·stick)나 '
+                             'defineCmd로 받는 명령을 써요 (sim/commands.js, 보내는 쪽은 ui/input.js). 같은 이름의 지역 변수라면 이름을 바꿔요')
     emitted, handled = {}, set()
     for rel, s, mod in js:
         c = re.sub(r'//[^\n]*|/\*.*?\*/', '', s, flags=re.S)
@@ -162,6 +169,14 @@ def check(js, report):
         for k in re.findall(r'''(?<![\w$.])emit\(\s*['"]sfx['"]\s*,\s*['"](\w+)['"]''', s):
             if sounds and k not in sounds:
                 raise BuildError(f'{rel}: emit(\'sfx\', \'{k}\') — engine/audio.js의 SFX에 {k} 소리가 없어요')
+    sent, defined = {}, set()
+    for rel, s, mod in js:
+        c = re.sub(r'//[^\n]*|/\*.*?\*/', '', s, flags=re.S)
+        for n in re.findall(r'''(?<![\w$.])(?:runCmd|command)\(\s*\{\s*k:\s*['"](\w+)['"]''', c): sent.setdefault(n, rel)
+        defined |= set(re.findall(r'''(?<![\w$.])defineCmd\(\s*['"](\w+)['"]''', c))
+    for n, rel in sorted(sent.items()):
+        if n not in defined:
+            raise BuildError(f'{rel}: 명령 {{ k: \'{n}\' }} — 이 명령을 처리하는 곳(defineCmd(\'{n}\', …))이 없어요')
     for n, rel in sorted(emitted.items()):
         if n not in handled:
             raise BuildError(f'{rel}: emit(\'{n}\', …) — 이 사건을 받는 곳이 없어요 (ui/feedback.js에 onEvent(\'{n}\', …) 추가)')

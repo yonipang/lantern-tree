@@ -30,19 +30,22 @@ function toolRowList() { const by = {}; for (const s of G.tools || []) { if (isB
 let altI = 0, altKey = '';
 function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
+// 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
+defineCmd('tap', c => { const t = c.t == null ? .3 : c.t; if (c.b === 'atk') atkQ = t; else actQ = t; });
+defineCmd('alt', () => doAlt());
+defineCmd('hold', c => { const s = G.tools && G.tools[c.i]; if (s) holdTool(s, true); });
 function doAlt() { const a = curAlt(); if (!a || actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
 function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }
 
 // ---- the attack button ----
-let atkBtnHeld = false, atkQ = 0, atkT = 0;
-const atkDown = () => atkBtnHeld || mouse.down || keys.has('KeyJ');
-function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || atkDown()) && atkT <= 0) { atkQ = 0; doAttack(); } }
+let atkQ = 0, atkT = 0;
+function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || ctlOf(p).atk) && atkT <= 0) { atkQ = 0; doAttack(); } }
 function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
   const w = curWeapon(), WT = wtOf(w); if (w.id !== 'hand') G.lastW = w.id;
   let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
-  if (en && !aimMouse()) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
+  if (en && !ctlOf(p).aim) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
   if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); atkT = .32; return; } }
   atkT = swingAttack() === false ? .3 : atkCd();
 }
@@ -74,12 +77,12 @@ function toolSlotHTML() { const s = heldTool() || toolRowList()[0] || null, on =
   return `<button type="button" class="slot tslot ${on ? 'sel' : ''} ${s && isBroken(s) ? 'broken' : ''}" data-tool="1" aria-label="도구 칸${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}` : '<span class="tnone">도구</span>'}<span class="tup">▲</span></button>`; }
 function toggleToolRow(force) { toolRowOpen = force != null ? force : !toolRowOpen; renderToolRow(); }
 function renderToolRow() { let el = $('#toolRow'); if (!el) { el = document.createElement('div'); el.id = 'toolRow'; $('#game').appendChild(el);
-    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { holdTool(s, true); emit('sfx', 'click'); } toggleToolRow(false); }); }
+    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { runCmd({ k: 'hold', i: +b.dataset.tk }); emit('sfx', 'click'); } toggleToolRow(false); }); }
   const L = toolRowList(); el.hidden = !toolRowOpen || !G;
   if (!toolRowOpen || !G) return; if (!L.length) { el.innerHTML = '<span class="tnone">도구가 없어요 · 작업대·장비제작대에서 만들어요</span>'; return; }
   el.innerHTML = L.map(s => slotHTML(s, 'tk', G.tools.indexOf(s), s === heldTool() ? 'sel' : '').replace('data-a="tk" data-i=', 'data-tk=')).join(''); }
 function toolSlotClick() { ensureAudio(); if (!G.tools.length) { emit('toast', '도구가 없어요 · 작업대·장비제작대에서 만들어요', null, 'notool'); return; }
-  if (G.sel >= 0) { const s = heldTool() || G.tools[G.tsel] || toolRowList()[0]; if (s) holdTool(s, true); } toggleToolRow(); }
+  if (G.sel >= 0) { const s = heldTool() || G.tools[G.tsel] || toolRowList()[0]; if (s) runCmd({ k: 'hold', i: G.tools.indexOf(s) }); } toggleToolRow(); }
 
 // ---- buttons on screen ----
 function updateCtrlHud() { const a = G.act || {};

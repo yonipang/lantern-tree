@@ -121,19 +121,15 @@ function regrow() {
 let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0, saveT = 0;
 function update(dt) {
   G.time += dt; const p = G.p;
-  let mx = 0, my = 0;
-  if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
-  if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
-  if (joy.active) { mx += joy.vx; my += joy.vy; }
-  if (dpad.id != null) { mx += dpad.vx; my += dpad.vy; }
+  const ctl = ctlOf(p); let mx = ctl.mx, my = ctl.my;
   let mag = Math.hypot(mx, my); if (mag > 1) { mx /= mag; my /= mag; mag = 1; }
   if (p.dead > 0) { p.dead -= dt; mag = 0; if (p.dead <= 0) respawn(); }
   if (p.sleep) { p.sleep.t -= dt; mag = 0; if (p.sleep.t <= 0) wakeUp(); }
   if (p.sit) { if (mag > 0.3) standUp(); else { mag = 0; p.sitT = (p.sitT || 0) + dt; if (p.sitT > 0.8) { p.sitT = 0; if (p.hp < maxHp()) p.hp = Math.min(maxHp(), p.hp + 1); } } }
   p.moving = mag > 0.12;
   p.slowT = Math.max(0, (p.slowT || 0) - dt);
-  if (p.moving) { const sp = 4.4 * moveMul() * Math.max(0.5, mag) * (p.slowT > 0 ? .55 : 1); moveEnt(p, mx * sp * dt, my * sp * dt, 0.28); p.anim += dt; if (!aimMouse()) p.face = { x: mx / mag, y: my / mag }; }
-  if (aimMouse() && p.dead <= 0 && !p.sit && !p.sleep) { const m = mouseWorld(); faceTo(m.x - p.x, m.y - (p.y - .4)); }
+  if (p.moving) { const sp = 4.4 * moveMul() * Math.max(0.5, mag) * (p.slowT > 0 ? .55 : 1); moveEnt(p, mx * sp * dt, my * sp * dt, 0.28); p.anim += dt; if (!ctl.aim) p.face = { x: mx / mag, y: my / mag }; }
+  if (ctl.aim && p.dead <= 0 && !p.sit && !p.sleep) faceTo(ctl.aim.x - p.x, ctl.aim.y - (p.y - .4));
   const f = p.face; if (Math.abs(f.x) > Math.abs(f.y) * 1.05) { p.dir = 'side'; p.flip = f.x < 0; } else p.dir = f.y < 0 ? 'up' : 'down';
   if (Math.abs(p.kx) + Math.abs(p.ky) > 0.05) { moveEnt(p, p.kx * dt, p.ky * dt, 0.28); const k = Math.pow(0.0015, dt); p.kx *= k; p.ky *= k; } else p.kx = p.ky = 0;
   p.inv = Math.max(0, p.inv - dt); p.hurt = Math.max(0, p.hurt - dt);
@@ -141,7 +137,7 @@ function update(dt) {
   p.mp = Math.min(maxMp(), (p.mp == null ? maxMp() : p.mp) + (2.5 + RS('int') * 0.25) * (1 + ringV('mp')) * dt); for (const k in G.skcd) if (G.skcd[k] > 0) G.skcd[k] -= dt;
   // action
   G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
-  const held = actHeld() && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
+  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
   if (p.dead > 0) actQ = 0;
   if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
   if (!held && actQ <= 0) { holdGroup = null; holdK = null; }

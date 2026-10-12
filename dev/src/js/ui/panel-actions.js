@@ -47,7 +47,7 @@ function onSheetClick(e) {
   if (a === 'petOn') { if (!(G.pets || {})[i]) return; if (G.petOn === i) { G.petOn = null; G.petE = null; toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '은', '는').slice(ANIMALS[i].pn.length)} 집에서 쉬어요`, null, 'peton'); } else { G.petOn = i; G.petE = { x: G.p.x - .6, y: G.p.y + .2, flip: false, anim: 0, moving: false }; hearts(G.p.x, G.p.y - .5, 4); toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '과', '와').slice(ANIMALS[i].pn.length)} 함께 다녀요 · ${ANIMALS[i].fx}`, 'good', 'peton'); } SFX.pick(); renderPanel(); return; }
   if (a === 'eqPick') { if (G.inv[i]) wearItem(i); renderPanel(); return; }
   if (a === 'pouch') { UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
-  if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { holdTool(s, true); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
+  if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { runCmd({ k: 'hold', i: UIS.toolSel }); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
   if (a === 'trashTool') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } clearSlot('t:' + UIS.toolSel); UIS.toolSel = null; UIS.trash = false; renderPanel(); return; }
   if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
   if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
@@ -181,8 +181,6 @@ function sortBag() { // merge stacks and order the bag by kind; the hotbar stays
   UIS.invSel = null; invDirty = true;
 }
 function hotClick(i) {
-  ensureAudio(); { const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; } // v65
-  if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
-  G.sel = i; invDirty = true;
+  ensureAudio(); runCmd({ k: 'hot', i });
 }
 

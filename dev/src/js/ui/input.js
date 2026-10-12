@@ -1,4 +1,33 @@
 // ================= input wiring =================
+// ---- 입력 상태 (구조 변경 7단계: game/actions.js에서 옮김) — 규칙은 이걸 직접 읽지 않고 매 프레임 조작 의도(ctl)를 받아요 ----
+const keys = new Set();
+const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
+const dpad = { id: null, vx: 0, vy: 0 };
+let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl') === 'pad' ? 'pad' : 'joy'; } catch (e) { }
+const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
+let btnHeld = false, atkBtnHeld = false;
+const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
+function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
+function mouseTile() {
+  const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
+  // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
+  if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
+  return { x: tx, y: ty, mx: m.x, my: m.y };
+}
+// 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)
+function readCtl() {
+  let mx = 0, my = 0;
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
+  if (joy.active) { mx += joy.vx; my += joy.vy; }
+  if (dpad.id != null) { mx += dpad.vx; my += dpad.vy; }
+  const stick = dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2 ? { x: dpad.vx, y: dpad.vy } : joy.active && Math.hypot(joy.vx, joy.vy) > .2 ? { x: joy.vx, y: joy.vy } : null; // 대시 방향 (방향 패드가 먼저)
+  let aim = null; if (aimMouse()) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
+  return { k: 'ctl', mx, my, stick, act: btnHeld || keys.has('Space') || keys.has('KeyE'), atk: atkBtnHeld || mouse.down || keys.has('KeyJ'), aim };
+}
+function sendCtl() { if (G) runCmd(readCtl()); }
+function command(c) { sendCtl(); return runCmd(c); } // 버튼·키로 보내는 명령 — 그 순간의 조작 의도와 함께
+function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); command({ k: 'alt' }); } // v65: the small button
 function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
 function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
 function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
@@ -7,7 +36,7 @@ function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     ensureAudio(); if (paused) return;
-    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; useSkill(0); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) atkQ = 0.3; /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
+    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; command({ k: 'skill', n: 0 }); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) command({ k: 'tap', b: 'atk' }); /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
     document.body.classList.add('touch'); mouse.used = false;
     if (!joy.active && ctrlPref !== 'pad' && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
   });
@@ -21,10 +50,10 @@ function setupInput() {
   const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); window.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') mouse.down = false; });
   const ab = $('#actBtn');
-  ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
+  ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; command({ k: 'tap', b: 'act' }); ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
   const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
   const kb = $('#atkBtn'); // v65: the attack button
-  kb.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; atkBtnHeld = true; atkQ = 0.3; kb.classList.add('on'); try { kb.setPointerCapture(e.pointerId); } catch (_) { } });
+  kb.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; atkBtnHeld = true; command({ k: 'tap', b: 'atk' }); kb.classList.add('on'); try { kb.setPointerCapture(e.pointerId); } catch (_) { } });
   const kbUp = () => { atkBtnHeld = false; kb.classList.remove('on'); }; kb.addEventListener('pointerup', kbUp); kb.addEventListener('pointercancel', kbUp); kb.addEventListener('lostpointercapture', kbUp);
   $('#altNext').addEventListener('click', () => { if (started && !paused) cycleAlt(); });
   window.addEventListener('keydown', e => {
@@ -39,12 +68,12 @@ function setupInput() {
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
-    if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
+    if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
     if (e.code === 'KeyQ') { cycleAlt(); return; } // v65: Q = next option on the small button (eat with E)
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
-    if (['Space', 'KeyE'].includes(e.code)) actQ = 0.3; if (e.code === 'KeyJ') atkQ = 0.3;
+    if (['Space', 'KeyE'].includes(e.code)) command({ k: 'tap', b: 'act' }); if (e.code === 'KeyJ') command({ k: 'tap', b: 'atk' });
     keys.add(e.code);
   });
   window.addEventListener('keyup', e => keys.delete(e.code));
@@ -60,7 +89,7 @@ function setupInput() {
   dp.addEventListener('pointermove', padMove);
   const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
   applyCtrl();
-  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); invDirty = true; }, { passive: true });
+  cv.addEventListener('wheel', e => { if (paused) return; command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
@@ -69,7 +98,7 @@ function setupInput() {
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
-  $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); useSkill(+b.dataset.n); });
+  $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); command({ k: 'skill', n: +b.dataset.n }); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
   $('#goal').addEventListener('click', () => started && openPanel('quest'));
