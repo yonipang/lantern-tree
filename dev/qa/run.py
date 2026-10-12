@@ -1,5 +1,5 @@
 # 테스트 실행: 비교 테스트(snapshot.py) + 회귀 테스트(test_*.py 안의 qa2~qa59)를 한 번에 돌리고 요약만 보여 줘요.
-# 사용법: python3 dev/qa/run.py               → 전부 (동시에 4개씩, 약 5분)
+# 사용법: python3 dev/qa/run.py               → 전부 (동시에 4개씩 — CPU가 적으면 그만큼, 약 5분)
 #         python3 dev/qa/run.py crafting      → test_crafting.py만      python3 dev/qa/run.py qa59 qa33 → 테스트 몇 개만
 #         -j 2  동시에 돌릴 개수 · -v  테스트마다 결과 한 줄씩 · --no-retry  실패한 테스트를 다시 돌리지 않기 · --list  목록
 # 자세한 로그·스크린샷: dev/qa/out/<테스트>/ (log.txt), 전체 요약: dev/qa/out/summary.txt
@@ -62,7 +62,7 @@ async def job(chain, src, sem, verbose):
 
 
 async def main(argv):
-    jobs = 4; verbose = '-v' in argv; retry = '--no-retry' not in argv; src = None; picks = []
+    jobs = min(4, os.cpu_count() or 2); verbose = '-v' in argv; retry = '--no-retry' not in argv; src = None; picks = []
     it = iter(argv)
     for a in it:
         if a == '-j': jobs = int(next(it))

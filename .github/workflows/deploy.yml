@@ -1,0 +1,75 @@
+# 자동 반영·배포: main에 게임 원본(dev/src)이나 그림(dev/art)이 바뀌어 올라오면 테스트를 돌리고, 모두 통과하면
+# 배포 파일(index.html·sw.js·manifest.webmanifest·wiki.html)을 다시 만들어 커밋해요. GitHub Pages는 끝나고 1~2분 뒤 바뀌어요 (전체 약 10분).
+#  1) 비교 테스트: 코드가 기록(dev/qa/snapshot)과 맞는지 먼저 확인 — 일부러 바꾼 데이터는 커밋할 때 기록도 같이 갱신해 두어야 해요
+#  2) dev/art/의 그림을 게임에 넣고(art_pack.py), 바뀐 그림 지문만 비교 기록에 반영
+#  3) 전체 테스트(python3 dev/qa/run.py) — 가끔 실패하는 테스트는 혼자 한 번 더 돌려서, 다시 돌려 통과하면 통과로 봐요
+#  4) 통과하면 배포 파일을 만들어 그림·기록과 함께 커밋 → GitHub Pages
+# - 테스트가 실패하면 배포하지 않아요 (Actions 탭에 빨간 X, 결과는 「qa-결과」 파일로 내려받기, GitHub이 메일로도 알려 줘요)
+# - Claude 게임 페이지·위키 페이지(아티팩트)는 바뀌지 않아요. 다음에 Claude가 게시할 때 함께 반영돼요
+# - 다른 세션이 배포하는 중에는 올리지 않기 (배포 파일이 겹칠 수 있어요). 수동 실행: Actions 탭 → 「자동 반영·배포」 → Run workflow
+name: 자동 반영·배포
+on:
+  push:
+    branches: [main]
+    paths: ['dev/art/**', 'dev/src/**', 'dev/build.py', 'dev/build_web.py', 'dev/art_pack.py', 'dev/wiki/**', 'dev/qa/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+jobs:
+  test-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50  # 위키에 적는 게임 버전(vNN)을 최근 커밋 메시지에서 찾아요
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 테스트 도구 설치 (Playwright·Chromium)
+        run: |
+          pip install playwright==1.56.0 pillow
+          python -m playwright install --with-deps chromium
+      - name: 묶기·문법 확인
+        run: |
+          python3 dev/build.py
+          node dev/qa/syn.js dev/index.html | tee syn.txt
+          if grep -q '^ERR' syn.txt; then echo "문법 오류"; exit 1; fi
+      - name: 1) 비교 테스트 (코드가 기록과 맞는지)
+        run: python3 dev/qa/snapshot.py
+      - name: 2) 그림 넣기 (art_pack.py) · 바뀐 그림 지문을 기록에 반영
+        run: |
+          python3 dev/art_pack.py
+          if ! git diff --quiet -- dev/src/js/art/hand-art.js; then python3 dev/qa/snapshot.py --update; fi
+      - name: 3) 전체 테스트 (비교 테스트 + qa2~qa59)
+        run: python3 dev/qa/run.py
+      - name: 테스트 결과 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-결과
+          path: |
+            dev/qa/out/summary.txt
+            dev/qa/out/*/log.txt
+          if-no-files-found: ignore
+      - name: 4) 배포 파일 만들기 (build_web.py, 위키 포함)
+        run: python3 dev/build_web.py
+      - name: 커밋·푸시
+        run: |
+          git config user.name "Juyeon"
+          git config user.email "yon2pang@gmail.com"
+          git add dev/src/js/art/hand-art.js dev/qa/snapshot/data.json index.html sw.js manifest.webmanifest wiki.html
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          arts=$(git diff --name-only HEAD~1 HEAD -- dev/art 2>/dev/null | sed 's#^dev/art/##' | head -20 | tr '\n' ' ')
+          git commit -m "자동 배포: 테스트 통과 후 배포 파일 갱신${arts:+ (그림: $arts)}" -m "$(head -1 dev/qa/out/summary.txt)"
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: GitHub Pages 다시 빌드 요청
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || true
