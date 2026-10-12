@@ -351,6 +351,15 @@ def qa16():
             await ev(pg,"()=>{const G=__T.G;for(let y=104;y<116;y++)for(let x=104;x<118;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wall[__T.idx(109,110)]=1;G.enemies.length=0;G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});G.p.x=110.5;G.p.y=110.5;__T.cam().x=110.5;__T.cam().y=110.5}")
             await pg.wait_for_timeout(1500)
             async def screen(wx,wy): return await ev(pg,f"()=>{{const V=__T.VIEW(),T=__T.TPv(),D=__T.DPR();return [({wx}*T-V.camX)/D,({wy}*T-V.camY)/D]}}")
+            # 화면(카메라)은 마우스 쪽으로 천천히 따라 움직여요. 마우스를 옮긴 뒤 카메라가 멈춰 마우스가 목표 칸을 정확히 가리킬 때 클릭해야
+            # 결과가 흔들리지 않아요 (안 기다리면 클릭하는 동안 가리키는 곳이 캐릭터 쪽으로 밀려 들어와 방향이 「아래」가 되기도 했어요)
+            async def aim_at(wx,wy):
+                for _ in range(40):
+                    x,y=await screen(wx,wy); await pg.mouse.move(x,y); await pg.wait_for_timeout(80)
+                    m=await ev(pg,"()=>__T.mw()")
+                    if abs(m['x']-wx)<0.03 and abs(m['y']-wy)<0.03:
+                        await pg.wait_for_timeout(80); m=await ev(pg,"()=>__T.mw()")
+                        if abs(m['x']-wx)<0.03 and abs(m['y']-wy)<0.03: return
             x,y=await screen(109.5,110.5); await pg.mouse.move(x,y); await pg.wait_for_timeout(200)
             await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.enemies.push({k:'slimeG',x:111.3,y:110.5,hp:999,vx:0,vy:0,t:0,hurt:0,kx:0,ky:0,z:0,air:0,land:0,cd:99,anim:0});__T.G.p.x=110.5;__T.G.p.y=110.5}")
             print('dbg', await ev(pg,"()=>[__T.aim(), JSON.stringify(__T.mw()),JSON.stringify(__T.cam()), __T.G.enemies.length]"))
@@ -363,13 +372,14 @@ def qa16():
             await ev(pg,en); r=await point(109.5,110.5)
             rec('클릭 방향','적이 오른쪽에 있어도 벽 쪽(왼쪽)을 가리키면 캐기 (재확인)', r=='mine', r)
             # swing with nothing nearby: face follows the click
-            await ev(pg,"()=>{__T.G.inv[__T.G.sel]=null;__T.G.enemies.length=0;__T.G.p.face={x:-1,y:0};__T.G.p.dir='side'}")
-            x,y=await screen(112.5,110.5); await pg.mouse.move(x,y); await pg.mouse.down(); await pg.wait_for_timeout(120); await pg.mouse.up(); await pg.wait_for_timeout(100)
+            await ev(pg,"()=>{__T.G.inv[__T.G.sel]=null;__T.G.enemies.length=0}")
+            await aim_at(112.5,110.5); await ev(pg,"()=>{__T.G.p.face={x:-1,y:0};__T.G.p.dir='side'}"); await pg.mouse.down(); await pg.wait_for_timeout(120); await pg.mouse.up(); await pg.wait_for_timeout(100)
             r=await ev(pg,"()=>[__T.G.p.face.x>0.8, __T.G.p.dir]")
             rec('클릭 방향','휘두르기가 클릭한 쪽(오른쪽)을 향함', r==[True,'side'], str(r))
-            await ev(pg,en); await ev(pg,"()=>{__T.G.p.face={x:0,y:1};__T.G.p.dir='down'}")
-            x,y=await screen(111.3,110.3); await pg.mouse.move(x,y); await pg.mouse.down(); await pg.wait_for_timeout(120); await pg.mouse.up(); await pg.wait_for_timeout(100)
-            r=await ev(pg,"()=>[__T.G.p.face.x>0.5, __T.G.p.dir]")
+            # 공격하는 순간의 방향을 봐요 (공격이 끝난 뒤에는 화면이 다시 움직이고 캐릭터가 마우스를 따라 돌아서 결과가 흔들렸어요)
+            await aim_at(111.3,110.3); await ev(pg,en); await ev(pg,"()=>{__T.G.p.face={x:0,y:1};__T.G.p.dir='down'}"); await pg.mouse.down()
+            await ev(pg,"()=>new Promise(r=>{const t0=performance.now();(function w(){if(__T.G.swing||performance.now()-t0>1000)r();else requestAnimationFrame(w)})()})")
+            r=await ev(pg,"()=>[__T.G.p.face.x>0.5, __T.G.p.dir]"); await pg.wait_for_timeout(120); await pg.mouse.up(); await pg.wait_for_timeout(100)
             rec('클릭 방향','공격 동작이 클릭한 쪽(오른쪽)을 향함', r==[True,'side'], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
