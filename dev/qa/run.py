@@ -97,17 +97,27 @@ async def main(argv):
     for r in res: times[r['name']] = r['sec']
     json.dump(times, open(times_f, 'w'), indent=0)
     n_ok = sum(r['pass'] for r in res); n_fail = sum(len(r['fail']) for r in res)
-    bad = [r for r in res if r['fail'] or r['error']]
-    still = [r for r in bad if r['name'] not in again or again[r['name']]['fail'] or again[r['name']]['error']]
-    lines = [f"QA {'통과' if not still else '실패 있음'}: 테스트 {len(res)}개 · 점검 {n_ok + n_fail}개 중 {n_ok}개 통과 · {total // 60:.0f}분 {total % 60:.0f}초 (동시 {jobs}개)"]
+    # 진짜 실패 = 두 번(처음 + 혼자 다시) 모두 실패한 점검. 한 번만 실패한 건 「가끔 실패」로 적기만 해요
+    # (다시 돌린 쪽이 끝까지 못 돌았으면 처음 실패한 점검을 확인하지 못한 것이니 진짜 실패로 봐요)
     key = lambda f: '|'.join(f.split('|')[:2])  # 「FAIL 분류 | 항목」까지가 점검 이름
+    bad = [r for r in res if r['fail'] or r['error']]
+    real, out = 0, []
     for r in bad:
-        a = again.get(r['name'])
-        def tag(failed_again):
-            return '' if not a else ' → 다시 돌려도 실패' if failed_again else ' → 다시 돌려 통과 (가끔 실패하는 테스트)'
-        for f in r['fail'][:5]: lines.append(f"  {r['name']} {f[:160]}{tag(a and key(f) in [key(x) for x in a['fail']])}")
-        for f in r['more']: lines.append(f'    {f.strip()[:160]}')
-        if r['error']: lines.append(f"  {r['name']} 오류{tag(a and a['error'])}: " + ' / '.join(x[:120] for x in r['error']))
+        a = again.get(r['name']); k1 = {key(x) for x in r['fail']}
+        k2 = None if (a is None or a['error']) else {key(x) for x in a['fail']}
+        tag = lambda twice: '' if a is None else ' → 다시 돌려도 실패' if twice else ' → 다시 돌려 통과 (가끔 실패하는 테스트)'
+        for n, f in enumerate(r['fail']):
+            twice = k2 is None or key(f) in k2; real += twice
+            if n < 8: out.append(f"  {r['name']} {f[:160]}{tag(twice)}")
+        for f in r['more']: out.append(f'    {f.strip()[:160]}')
+        if r['error']:
+            twice = a is None or bool(a['error']); real += twice
+            out.append(f"  {r['name']} 오류{tag(twice)}: " + ' / '.join(x[:120] for x in r['error']))
+        if a:
+            for f in a['fail']:
+                if key(f) not in k1: out.append(f"  {r['name']} {f[:160]} → 다시 돌릴 때만 실패 (가끔 실패하는 테스트)")
+    still = real > 0
+    lines = [f"QA {'통과' if not still else '실패 있음'}: 테스트 {len(res)}개 · 점검 {n_ok + n_fail}개 중 {n_ok}개 통과" + (f" ({'두 번 모두 ' if retry else ''}실패 {real}개)" if still else '') + f" · {total // 60:.0f}분 {total % 60:.0f}초 (동시 {jobs}개)"] + out
     lines.append('로그: dev/qa/out/<테스트>/log.txt · 요약: dev/qa/out/summary.txt')
     detail = [f"{r['name']:9s} 통과 {r['pass']:3d} 실패 {len(r['fail'])} {'오류 ' if r['error'] else ''}{r['sec']:6.0f}초" for r in sorted(res, key=lambda r: (len(r['name']), r['name']))]
     open(os.path.join(OUT, 'summary.txt'), 'w', encoding='utf-8').write('\n'.join(lines + [''] + detail) + '\n')
