@@ -306,6 +306,7 @@ def qa4():
 
 
 def qa6():
+    # qa5가 만든 qa.html·exported.json을 이어서 써요 (run.py가 qa5 바로 다음에 같은 폴더에서 돌려요)
     import asyncio, sys
     async def main():
         async with async_playwright() as p:

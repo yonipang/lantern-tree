@@ -1,5 +1,5 @@
 # 테스트 실행: 비교 테스트(snapshot.py) + 회귀 테스트(test_*.py 안의 qa2~qa59)를 한 번에 돌리고 요약만 보여 줘요.
-# 사용법: python3 dev/qa/run.py               → 전부 (동시에 4개씩, 약 10분)
+# 사용법: python3 dev/qa/run.py               → 전부 (동시에 4개씩, 약 5분)
 #         python3 dev/qa/run.py crafting      → test_crafting.py만      python3 dev/qa/run.py qa59 qa33 → 테스트 몇 개만
 #         -j 2  동시에 돌릴 개수 · -v  테스트마다 결과 한 줄씩 · --no-retry  실패한 테스트를 다시 돌리지 않기 · --list  목록
 # 자세한 로그·스크린샷: dev/qa/out/<테스트>/ (log.txt), 전체 요약: dev/qa/out/summary.txt
@@ -33,22 +33,32 @@ def one(name):
         traceback.print_exc(); print('ERROR 테스트가 끝까지 돌지 못했어요'); sys.exit(2)
 
 
-async def job(name, src, sem, verbose):
+# qa6은 qa5가 만든 페이지·내보낸 세이브 파일을 이어서 써요 → 늘 qa5 바로 다음에, 같은 폴더에서 돌려요
+AFTER = {'qa6': 'qa5'}
+
+
+async def run1(name, d, src, verbose):
+    os.makedirs(os.path.join(OUT, name), exist_ok=True)
+    env = dict(os.environ, QA_OUT=d + '/', QA_SRC=src, PYTHONDONTWRITEBYTECODE='1')
+    cmd = [sys.executable, os.path.join(QA, 'snapshot.py')] if name == 'snapshot' else [sys.executable, __file__, '--one', name]
+    t0 = time.time()
+    p = await asyncio.create_subprocess_exec(*cmd, env=env, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, cwd=QA)
+    try: out = (await asyncio.wait_for(p.communicate(), TIMEOUT + 60))[0].decode('utf-8', 'replace')
+    except asyncio.TimeoutError: p.kill(); out = 'ERROR 시간 초과'
+    sec = time.time() - t0
+    open(os.path.join(OUT, name, 'log.txt'), 'w', encoding='utf-8').write(out)
+    ok = len(re.findall(r'^PASS', out, re.M)); fails = re.findall(r'^FAIL.*', out, re.M)
+    err = 'ERROR' in out or not re.search(r'^TOTAL', out, re.M)
+    r = {'name': name, 'pass': ok, 'fail': fails, 'more': re.findall(r'^  \S.*', out, re.M)[:10] if name == 'snapshot' else [], 'error': (out.strip().splitlines() or ['?'])[-3:] if err else None, 'sec': round(sec, 1)}
+    if verbose: print(f"{name:9s} {ok}개 통과" + (f", 실패 {len(fails)}" if fails else '') + (' · 오류' if err else '') + f" · {sec:.0f}초", flush=True)
+    return r
+
+
+async def job(chain, src, sem, verbose):
+    """chain: 차례로 돌릴 테스트들 (보통 하나, qa5→qa6처럼 이어지는 것은 둘). 같은 폴더를 써요"""
     async with sem:
-        d = os.path.join(OUT, name); os.makedirs(d, exist_ok=True)
-        env = dict(os.environ, QA_OUT=d + '/', QA_SRC=src, PYTHONDONTWRITEBYTECODE='1')
-        cmd = [sys.executable, os.path.join(QA, 'snapshot.py')] if name == 'snapshot' else [sys.executable, __file__, '--one', name]
-        t0 = time.time()
-        p = await asyncio.create_subprocess_exec(*cmd, env=env, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, cwd=QA)
-        try: out = (await asyncio.wait_for(p.communicate(), TIMEOUT + 60))[0].decode('utf-8', 'replace')
-        except asyncio.TimeoutError: p.kill(); out = 'ERROR 시간 초과'
-        sec = time.time() - t0
-        open(os.path.join(d, 'log.txt'), 'w', encoding='utf-8').write(out)
-        ok = len(re.findall(r'^PASS', out, re.M)); fails = re.findall(r'^FAIL.*', out, re.M)
-        err = 'ERROR' in out or not re.search(r'^TOTAL', out, re.M)
-        r = {'name': name, 'pass': ok, 'fail': fails, 'more': re.findall(r'^  \S.*', out, re.M)[:10] if name == 'snapshot' else [], 'error': (out.strip().splitlines() or ['?'])[-3:] if err else None, 'sec': round(sec, 1)}
-        if verbose: print(f"{name:9s} {ok}개 통과" + (f", 실패 {len(fails)}" if fails else '') + (' · 오류' if err else '') + f" · {sec:.0f}초", flush=True)
-        return r
+        d = os.path.join(OUT, chain[0])
+        return [await run1(n, d, src, verbose) for n in chain]
 
 
 async def main(argv):
@@ -63,6 +73,8 @@ async def main(argv):
         for n, f in T.items(): print(n, f)
         return 0
     names = [n for n, f in T.items() if not picks or n in picks or f in picks or f[5:] in picks]
+    for n, first in AFTER.items():
+        if n in names and first not in names: names.insert(names.index(n), first)
     if picks and not names: print('그런 테스트가 없어요:', ' '.join(picks)); return 1
     if not src:
         sys.path.insert(0, DEV); import build
@@ -71,15 +83,16 @@ async def main(argv):
     times_f = os.path.join(OUT, 'times.json')
     try: times = json.load(open(times_f))
     except Exception: times = {}
-    names.sort(key=lambda n: -times.get(n, 60))  # 오래 걸리는 것부터 시작해야 전체가 빨리 끝나요
+    chains = [[n] + [m for m, f in AFTER.items() if f == n and m in names] for n in names if n not in AFTER or AFTER[n] not in names]
+    chains.sort(key=lambda c: -sum(times.get(n, 60) for n in c))  # 오래 걸리는 것부터 시작해야 전체가 빨리 끝나요
     os.makedirs(OUT, exist_ok=True); t0 = time.time(); sem = asyncio.Semaphore(jobs)
-    res = await asyncio.gather(*(job(n, src, sem, verbose) for n in names))
+    res = [r for rs in await asyncio.gather(*(job(c, src, sem, verbose) for c in chains)) for r in rs]
     # 실패한 테스트는 한 번만 혼자 다시 돌려요 (동시에 돌리면 타이밍 테스트가 가끔 흔들려요). 결과에는 둘 다 적어요
     again = {}
     if retry:
-        for r in res:
-            if r['fail'] or r['error']:
-                again[r['name']] = await job(r['name'], src, asyncio.Semaphore(1), verbose)
+        for c in chains:
+            if any(r['fail'] or r['error'] for r in res if r['name'] in c):
+                for r in await job(c, src, asyncio.Semaphore(1), verbose): again[r['name']] = r
     total = time.time() - t0
     for r in res: times[r['name']] = r['sec']
     json.dump(times, open(times_f, 'w'), indent=0)
@@ -87,11 +100,14 @@ async def main(argv):
     bad = [r for r in res if r['fail'] or r['error']]
     still = [r for r in bad if r['name'] not in again or again[r['name']]['fail'] or again[r['name']]['error']]
     lines = [f"QA {'통과' if not still else '실패 있음'}: 테스트 {len(res)}개 · 점검 {n_ok + n_fail}개 중 {n_ok}개 통과 · {total // 60:.0f}분 {total % 60:.0f}초 (동시 {jobs}개)"]
+    key = lambda f: '|'.join(f.split('|')[:2])  # 「FAIL 분류 | 항목」까지가 점검 이름
     for r in bad:
-        a = again.get(r['name']); tag = '' if not a else (' → 다시 돌려 통과 (가끔 실패하는 테스트)' if not a['fail'] and not a['error'] else ' → 다시 돌려도 실패')
-        for f in r['fail'][:5]: lines.append(f"  {r['name']} {f[:160]}{tag}")
+        a = again.get(r['name'])
+        def tag(failed_again):
+            return '' if not a else ' → 다시 돌려도 실패' if failed_again else ' → 다시 돌려 통과 (가끔 실패하는 테스트)'
+        for f in r['fail'][:5]: lines.append(f"  {r['name']} {f[:160]}{tag(a and key(f) in [key(x) for x in a['fail']])}")
         for f in r['more']: lines.append(f'    {f.strip()[:160]}')
-        if r['error']: lines.append(f"  {r['name']} 오류{tag}: " + ' / '.join(x[:120] for x in r['error']))
+        if r['error']: lines.append(f"  {r['name']} 오류{tag(a and a['error'])}: " + ' / '.join(x[:120] for x in r['error']))
     lines.append('로그: dev/qa/out/<테스트>/log.txt · 요약: dev/qa/out/summary.txt')
     detail = [f"{r['name']:9s} 통과 {r['pass']:3d} 실패 {len(r['fail'])} {'오류 ' if r['error'] else ''}{r['sec']:6.0f}초" for r in sorted(res, key=lambda r: (len(r['name']), r['name']))]
     open(os.path.join(OUT, 'summary.txt'), 'w', encoding='utf-8').write('\n'.join(lines + [''] + detail) + '\n')
