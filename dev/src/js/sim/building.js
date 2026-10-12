@@ -63,7 +63,7 @@ function placeItem(t) {
     if (dd.sz) { const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
-  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
+  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } emit('inv');
   emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; emit('tile', t.x, t.y);
 }
 const GROW_SPR = { bench: [2, 2], logBench: [2, 1], stoneBench: [2, 1],

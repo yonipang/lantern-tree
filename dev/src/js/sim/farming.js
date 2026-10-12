@@ -21,12 +21,12 @@ function cropMsg(o, cs, i) { const d = OBJ[o.t], rem = Math.max(0, d.grow - (G.t
   return `${d.n} · ${CROP_STEP[d.crop][cs]} (${cs + 1}/4단계) · ${left} 남았어요${o.w ? ' · 물 줌' : ''}${o.f ? ' · 비료 줌' : ''}${soil}`; }
 function ripeAround(cx, cy) { const out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = cx + dx, y = cy + dy; if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t] && OBJ[o.t].crop && cropStage(o) >= 3) out.push([x, y, o]); } return out; }
 function waterCrop(t, o) { const s = selItem(); if (!s || s.id !== 'wcan' || (s.w || 0) <= 0 || o.w || !OBJ[o.t].crop) return;
-  s.w--; o.w = 1; if (o.p0 == null) o.p0 = o.p; invDirty = true; emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .7, '#8fd0f0', 7, 1.8, .2);
+  s.w--; o.w = 1; if (o.p0 == null) o.p0 = o.p; emit('inv'); emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .7, '#8fd0f0', 7, 1.8, .2);
   if (!s.w) emit('toast', '물뿌리개가 비었어요. 물가를 바라보고 눌러 채워요', null, 'wcanEmpty'); }
 function fertCrop(t, o) { const s = selItem(), it = s && ITEMS[s.id]; if (!it || it.kind !== 'fert' || o.f || !OBJ[o.t].crop) return; const d = OBJ[o.t];
   if (o.p0 == null) o.p0 = o.p; const rem = d.grow - (G.time - o.p); if (rem > 0) o.p -= rem * .4; clampCrop(o); o.f = it.fx === 'shroom' ? 2 : it.fx === 'cry' ? 3 : 1;
-  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } G.stats.fert = (G.stats.fert || 0) + 1; invDirty = true; emit('sfx', 'craft'); emit('puff', t.x + .5, t.y + .7, '#e8d098', 9, 2, .25); }
-function fillCan(t) { const s = selItem(); if (!s || s.id !== 'wcan') return; s.w = WCAN_MAX; invDirty = true; emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .5, '#bfe6ff', 8, 2, .2); emit('toast', '물뿌리개를 가득 채웠어요', 'good', 'wfill'); }
+  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } G.stats.fert = (G.stats.fert || 0) + 1; emit('inv'); emit('sfx', 'craft'); emit('puff', t.x + .5, t.y + .7, '#e8d098', 9, 2, .25); }
+function fillCan(t) { const s = selItem(); if (!s || s.id !== 'wcan') return; s.w = WCAN_MAX; emit('inv'); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .5, '#bfe6ff', 8, 2, .2); emit('toast', '물뿌리개를 가득 채웠어요', 'good', 'wfill'); }
 // decided once, when the crop is grown: only on its own soil, only after the golem; crystal fertilizer raises the odds
 function rollStar(i, o) { o.star = beat('golem') && CROP_SOIL[o.t] != null && CROP_SOIL[o.t] === G.floor[i] && rand() < (o.f === 3 ? .35 : .15) ? 1 : 0; }
 // what one ripe crop gives (star and mushroom-fertilizer rules apply, the sickle bonus does not); also counts it for the quests

@@ -36,7 +36,7 @@ function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Mat
   if (d > 9) return { k: 'info', lbl: '보스방에서', icon: 'dots', msg: `${BOSSES[k].n}의 보스방 안에서 써요`, t };
   return { k: 'summon', lbl: '소환', icon: s0.id, t, boss: k }; }
 function summonBoss(k) { const s0 = selItem(); if (!s0 || ITEMS[s0.id].boss !== k || !G.bossDead[k]) return;
-  s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } invDirty = true;
+  s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } emit('inv');
   G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; emit('puff', b.x, b.y, BOSSES[k].col, 30, 4, .8); emit('shake', .4, true); emit('sfx', 'boss'); emit('toast', `${BOSSES[k].n}이 다시 나타났어요!`, 'warn', 'summon'); }
 onFrame('bosses', updateBosses);
 function updateBosses(dt) {

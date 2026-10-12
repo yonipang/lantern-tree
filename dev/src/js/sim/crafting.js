@@ -16,16 +16,16 @@ const stationTier = c => c && TIERED[c.st] ? (c.i != null ? Math.max(0, benchLv(
 function craftable(r, near, c) { const st = (c && c.st) || null; return (!r.dish || knows(r.dish)) && atHere(r, st) && (!st || near.has(st)) && (!TIERED[st] || (r.tier || 0) <= stationTier(c)) && r.req.every(([id, c2]) => availCount(id) >= c2); }
 // ---- 강화·분해·수리·작업대 올리기 (가까운 제작대와 연결된 상자의 재료를 함께 써요) ----
 defineCmd('upg', c => { const s = upgSlot(c.i); if (!s || !upgOk(s.id) || lvOf(s) >= UPG_MAX || !nearStations().has('smelter')) return false; const cost = upgCost(s.id, lvOf(s)); POOL = null; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); emit('toast', `강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); invDirty = true; });
+  for (const [id, n] of cost) takeAvail(id, n); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); emit('toast', `강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); emit('inv'); });
 defineCmd('salv', c => { const s = itemAt(c.i), got = s && (DUR[s.id] || upgOk(s.id)) && salvGet2(s); if (!got || !canSalv(nearStations())) return false;
   clearSlot(c.i); for (const [id, n] of got) { const l = addItem(id, n, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
-  emit('sfx', 'brk'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, n]) => ITEMS[id].n + ' ' + n + '개').join(', ')}`, 'good'); invDirty = true; });
+  emit('sfx', 'brk'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, n]) => ITEMS[id].n + ' ' + n + '개').join(', ')}`, 'good'); emit('inv'); });
 defineCmd('fix', c => { const s = itemAt(c.i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return false; const cost = repairCost(s); POOL = null; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; });
+  for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); emit('inv'); });
 defineCmd('benchUp', c => { const o = c.o != null ? G.objs.get(c.o) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return false; POOL = null; const cost = BENCH_UP[lv + 1]; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
   for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1;
   if (o.t === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, o.lv); else { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, o.lv); }
-  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${tierNames(o.t)[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); invDirty = true; checkGuide(); });
+  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${tierNames(o.t)[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
 // ---- 제작 { r: 레시피 번호, q: 몇 번, st·i·tier: 제작 자리 } → false 못 만듦 · 'reorder' 목록 순서를 새로 · 그 밖은 다시 그리기 ----
 defineCmd('craft', c => {
   const r = RECIPES[c.r], near = nearStations(); POOL = null; if (!craftable(r, near, c)) return false;
@@ -35,12 +35,12 @@ defineCmd('craft', c => {
   const before = so ? stockMap() : null;
   for (const [id, n] of r.req) takeAvail(id, n * q);
   if (so) { const after = stockMap(), used = Object.keys(before).map(id => [id, before[id] - (after[id] || 0)]).filter(([, n]) => n > 0), per = jobTime(r);
-    so.job = { out: r.out, n: r.n, q, per, t0: nowS(), used }; emit('sfx', 'place'); emit('toast', `${STN[r.at]}에 넣었어요 · ${fmtT(q * per)} 뒤에 다 돼요`, 'good', 'jobput'); invDirty = true; return 'reorder'; }
+    so.job = { out: r.out, n: r.n, q, per, t0: nowS(), used }; emit('sfx', 'place'); emit('toast', `${STN[r.at]}에 넣었어요 · ${fmtT(q * per)} 뒤에 다 돼요`, 'good', 'jobput'); emit('inv'); return 'reorder'; }
   G.stats.made = G.stats.made || {}; G.stats.made[r.out] = (G.stats.made[r.out] || 0) + q;
-  if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); emit('sfx', 'craft'); emit('craftNote', r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); invDirty = true; return 'reorder'; }
+  if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); emit('sfx', 'craft'); emit('craftNote', r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); emit('inv'); return 'reorder'; }
   const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
   emit('sfx', 'craft'); emit('craftNote', r.out, total); gainXp(Math.min(8, q * (r.tier ? 3 : r.at ? 1 : 0)));
-  invDirty = true; checkGuide();
+  emit('inv'); checkGuide();
 });
 defineCmd('jobTake', c => { const o = c.o != null && G.objs.get(c.o); if (o) takeJob(o, G.p.x, G.p.y); });
 defineCmd('jobCancel', c => { const o = c.o != null && G.objs.get(c.o); if (o) { cancelJob(o, G.p.x, G.p.y); emit('sfx', 'click'); emit('toast', '취소하고 재료를 돌려받았어요', null, 'jobcancel'); } });
@@ -54,11 +54,11 @@ function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; const
   const left = addItem(j.out, total); if (left) spawnDrop(j.out, left, x, y);
   G.stats.made = G.stats.made || {}; G.stats.made[j.out] = (G.stats.made[j.out] || 0) + d; gainXp(Math.min(8, d));
   if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - Math.floor(c * d / j.q)]); j.q -= d; j.t0 += d * j.per; }
-  if (!quiet) { emit('sfx', 'craft'); emit('craftNote', j.out, total); } invDirty = true; checkGuide(); return total; }
+  if (!quiet) { emit('sfx', 'craft'); emit('craftNote', j.out, total); } emit('inv'); checkGuide(); return total; }
 // cancelling hands back what is finished and the materials of everything not started yet
 function cancelJob(o, x, y) { if (!o || !o.job) return; takeJob(o, x, y, true); const j = o.job; if (!j) return; const rest = j.q - jobDone(j);
   for (const [id, c] of j.used) { const back = Math.floor(c * rest / j.q); if (back > 0 && ITEMS[id]) { const l = addItem(id, back, false); if (l) spawnDrop(id, l, x, y); } }
-  delete o.job; invDirty = true; }
+  delete o.job; emit('inv'); }
 function advanceOffline(sec) { if (!G || !(sec > 1)) return 0; sec = Math.min(sec, OFF_MAX); G.time += sec; for (const b of G.buffs || []) b.end += sec; return sec; } // food buffs wait for you
 const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
 const tierNames = st => TIERED[st] || BENCH_N;

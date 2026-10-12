@@ -47,4 +47,4 @@ function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf
   if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
   const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
   if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
-  emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); lightDirty = true; emit('tile', t.x, t.y); invDirty = true; }
+  emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); lightDirty = true; emit('tile', t.x, t.y); emit('inv'); }

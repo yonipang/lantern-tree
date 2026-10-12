@@ -11,9 +11,10 @@ import { BOSSES } from '../data/rpg-nature.js';
 import { PHASE_BOSS } from '../data/deep-survival.js';
 import { eventWho, onEvent } from '../sim/events.js';
 import { onFrame } from '../sim/systems.js';
+import { CHARS, buildPlayer, lookDef } from '../art/characters.js';
 
 // 개인 사건(소리·알림·흔들림·창·기절 화면·보스 막대 …)은 내 플레이어가 남긴 것만 보여요 — 반짝이·떠오르는 글자는 세계에 그려져서 누구 것이든 (8단계)
-const onlyMe = fn => (...a) => { if (eventWho == null || eventWho === ME) return fn(...a); };
+export const onlyMe = fn => (...a) => { if (eventWho == null || eventWho === ME) return fn(...a); };
 
 // ---- 소리·알림·반짝임 ----
 onEvent('sfx', onlyMe(k => SFX[k]()));
@@ -38,6 +39,8 @@ onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 �
 
 // ---- 지도·창 ----
 onEvent('craftNote', onlyMe((id, n, msg) => craftNote(id, n, msg))); // 제작 알림 (아이콘 + 글)
+onEvent('look', onlyMe(() => { CHARS.custom = lookDef(G.look); buildPlayer(G.outfit || 0); })); // 옷·생김새가 바뀜 → 내 캐릭터 그림 다시 만들기
+onEvent('reorder', onlyMe(() => { UIS.craftOrder = null; })); // 새 요리를 배움 → 제작 목록 순서를 새로
 onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
 onEvent('open', onlyMe((kind, data) => openPanel(kind, data)));

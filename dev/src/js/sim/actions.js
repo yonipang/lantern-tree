@@ -199,8 +199,8 @@ function perform(a) {
     case 'recall': startRecall(a.mode); G.actCd = 0.4; break;
     case 'lost': pickLost(a.t, a.o); G.actCd = 0.3; break;
     case 'giant': harvestGiant(a.t, a.o); G.actCd = 0.4; break;
-    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); G.actCd = .4; break; }
-    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); G.actCd = .4; break; }
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } emit('inv'); emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); G.actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; emit('inv'); emit('sfx', 'pick'); G.actCd = .4; break; }
     case 'insert': insertSeeds(); G.actCd = 0.4; break;
     case 'tree': emit('open', 'tree'); G.actCd = 0.3; break;
     case 'summon': summonBoss(a.boss); G.actCd = 0.6; break;
@@ -222,7 +222,7 @@ function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
     case 'farm': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
-      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `${OBJ[o.t].n}에서 ${n}개를 꺼냈어요`, 'good', 'farm'); invDirty = true; break; }
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `${OBJ[o.t].n}에서 ${n}개를 꺼냈어요`, 'good', 'farm'); emit('inv'); break; }
       if (farmStage(o) >= 3) { farmHarvest(idx(t.x, t.y), o, false); emit('toast', farmT(o)[1], null, 'farm'); break; }
       emit('toast', `${farmT(o)[2]} (${Math.round(Math.min(1, (G.time - (o.p || 0)) / growOf(o)) * 100)}%) · 건전지·발전기와 전선으로 이으면 다 될 때마다 저절로 ${farmT(o)[0] === '캐기' ? '캐서' : '베어'} 옆 상자에 담아요`, null, 'farm'); break; }
     case 'lever': o.on = !o.on; emit('sfx', 'click'); emit('toast', o.on ? '레버를 켰어요' : '레버를 껐어요', null, 'lever'); break;
@@ -232,10 +232,10 @@ function useObj(a) {
       emit('toast', added ? `연료를 넣었어요 · 약 ${Math.round((o.fuel || 0) / 60)}분 동안 일할 수 있어요` : (o.fuel || 0) >= FUEL_MAX - 30 ? '연료가 가득 찼어요' : `연료가 없어요 (나무·젤·송진) · 남은 연료 약 ${Math.round((o.fuel || 0) / 60)}분`, added ? 'good' : null, 'fuel'); if (added) emit('sfx', 'place'); break; }
     case 'sprk': emit('toast', o.work ? '물을 주는 중이에요 · 둘레 5×5 칸의 자라는 작물에 2초마다 물을 줘요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'sprk'); break;
     case 'harv': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
-      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `자동 수확기에서 ${n}개를 꺼냈어요`, 'good', 'harv'); invDirty = true; break; }
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `자동 수확기에서 ${n}개를 꺼냈어요`, 'good', 'harv'); emit('inv'); break; }
       emit('toast', o.work ? '둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'harv'); break; }
     case 'drill': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
-      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); invDirty = true; break; }
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); emit('inv'); break; }
       const d2 = OBJ[o.t]; emit('toast', o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? (d2.only ? '돌 채굴기는 흙벽·돌벽·화강암 벽(지형)만 캘 수 있어요. 광맥은 구리·철·황금 채굴기로 캐요' : '이 채굴기로는 못 캐는 벽이에요') : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
     case 'cinfo': { const d2 = OBJ[o.t]; emit('toast', d2.src === 'cgen' ? '수정 발전기 · 연료 없이 계속 전기를 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 전선을 이어 줘요' : d2.dev === 'door' ? (o.open ? '전기 문 · 전기가 들어와 열려 있어요' : '전기 문 · 전기가 들어오면 열려요') : (o.off === false ? '전기 램프 · 켜져 있어요' : '전기 램프 · 전기가 들어오면 켜져요'), null, 'cinfo'); break; }
     case 'door': { if (OBJ[o.t].dev === 'slide' && o.pw) { emit('toast', '자동 미닫이문 · 전기가 들어와 있어서 다가가면 저절로 열려요', null, 'cinfo'); break; }

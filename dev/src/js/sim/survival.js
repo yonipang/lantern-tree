@@ -81,7 +81,7 @@ function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
 function dropLost() {
   if ((G.guide || 0) < 6) return 0; // no loss before the copper pickaxe
   const p = G.p, items = []; for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (!s || bagCat(s.id) !== 'mat' || ITEMS[s.id].kind === 'key') continue; const n = Math.floor(s.c * LOST_SHARE); if (n <= 0) continue; s.c -= n; if (!s.c) G.inv[i] = null; const e = items.find(x => x.id === s.id); if (e) e.c += n; else items.push({ id: s.id, c: n }); }
-  if (!items.length) return 0; invDirty = true;
+  if (!items.length) return 0; emit('inv');
   const bags = []; for (const [i, o] of G.objs) if (o.t === 'lostBag') bags.push([i, o]);
   if (bags.length >= LOST_MAX) { bags.sort((a, b) => (a[1].at || 0) - (b[1].at || 0)); const [oi, oo] = bags[0]; for (const s of oo.items) if (s) { const e = items.find(x => x.id === s.id); if (e) e.c += s.c; else items.push({ ...s }); } G.objs.delete(oi); }
   const px = Math.floor(p.x), py = Math.floor(p.y); let at = -1;
@@ -90,5 +90,5 @@ function dropLost() {
   G.objs.set(at, { t: 'lostBag', items, at: Date.now() }); emit('tile', at % W, (at / W) | 0); return items.reduce((a, s) => a + s.c, 0);
 }
 function pickLost(t, o) { const i = idx(t.x, t.y); let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
-  o.items = o.items.filter(Boolean); invDirty = true; emit('sfx', 'pick');
+  o.items = o.items.filter(Boolean); emit('inv'); emit('sfx', 'pick');
   if (!o.items.length) { G.objs.delete(i); lightDirty = true; emit('puff', t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); emit('toast', `잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else emit('toast', `가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
