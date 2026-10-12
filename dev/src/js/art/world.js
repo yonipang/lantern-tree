@@ -1,12 +1,14 @@
 // --- world object sprites
 import { ARTC, ARTP } from './hand-art.js';
-import { C, HD, INK, MKDEF, mk, outline, outlineHD, outlineSel, softShadow, whiten } from '../engine/canvas.js';
+import { C, HD, INK, mk, outline, outlineHD, outlineSel, setMkDef, softShadow, whiten } from '../engine/canvas.js';
 import { DECOR, OBJ } from '../data/items.js';
 import { FLOWERS, YOUNG_TREES } from '../data/rpg-nature.js';
 import { ICON, UICON, bossSpr, buildPlayer, dimmed, golemSpr, queenSpr, shotSpr, shroomySpr, slimeSpr, waterTex } from './characters.js';
 import { clamp, hexRgb } from '../engine/util.js';
 import { hash2, rng } from '../engine/random.js';
 import { bloomSpr, bossExtraSprites, emberSpr, giantSpr, natFloorTex, regFloorTex, snowSpr, spiritSpr, turtleSpr, wildSpr } from './content.js';
+import { rot90, twIcon, twSprite } from '../render/parts.js';
+import { FPV, GREW, GROW_SPR, setFootprints } from '../sim/building.js';
 export const OSPR = {
   bench: [16, 16, A => { A.r(3, 9, 2, 5, C.woodD); A.r(11, 9, 2, 5, C.woodD); A.r(1, 6, 14, 4, C.wood); A.r(1, 6, 14, 1, C.woodL); A.r(1, 9, 14, 1, C.woodD); A.r(3, 4, 4, 2, C.iron); A.r(3, 4, 4, 1, C.ironL); A.r(9, 3, 1, 3, C.woodD); A.r(8, 3, 3, 1, C.stoneD); A.r(12, 5, 2, 1, C.amber); }],
   furnace: [16, 20, A => { A.r(10, 1, 3, 5, C.stoneD); A.r(10, 1, 3, 1, C.stone); A.e(8, 9, 6.2, 5, C.stone); A.r(2, 9, 12, 9, C.stone); A.e(6, 6.5, 2.5, 1.4, C.stoneL); A.r(2, 17, 12, 1, C.stoneD); for (const [x, y] of [[3, 10], [9, 9], [6, 12], [12, 13], [3, 15]]) A.r(x, y, 2, 1, C.stoneD); A.e(8, 14.5, 3.2, 2.6, '#2a1d2f'); A.r(5, 15, 6, 2, '#2a1d2f'); A.e(8, 15.5, 2.2, 1.4, C.fire); A.p(8, 15, C.amber); A.p(7, 16, C.amber); }],
@@ -303,7 +305,7 @@ export function buildSprites() {
   SPR.shroomy = shroomySpr(); SPR.boss = bossSpr(); SPR.queen = queenSpr(); SPR.golem = golemSpr();
   SPR.shot = { spore: shotSpr('#d59bff', '#f6e6ff'), shard: shotSpr(C.cry, '#ffffff', true), fire: shotSpr('#ff8a3d', '#ffe0a0'), ice: shotSpr('#9fd8f0', '#ffffff', true) };
   SPR.magmaSlime = slimeSpr('#ff7a3d', '#ffd0a0', '#c04a1a'); SPR.frostSlime = slimeSpr('#9fd8f0', '#ffffff', '#5a9ac8'); SPR.cinder = emberSpr(); SPR.snowling = snowSpr(); SPR.turtle = turtleSpr(false); SPR.turtleS = turtleSpr(true); SPR.spirit = spiritSpr(); SPR.water = [waterTex(0), waterTex(1)];
-  MKDEF = 'sel';
+  setMkDef('sel');
   SPR.item = {}; for (const k in ICON) SPR.item[k] = mk(16, 16, ICON[k]);
   SPR.ui = {}; for (const k in UICON) SPR.ui[k] = mk(16, 16, UICON[k]);
   SPR.obj = {}; for (const k in OSPR) { const [w, h, f, o] = OSPR[k]; SPR.obj[k] = mk(w, h, f, o); }
@@ -333,7 +335,7 @@ export function buildSprites() {
   SPR.fp = {}; for (const id in GREW) if (SPR.obj[id] && OSPR[id]) { const [w, h, f, o] = OSPR[id]; SPR.fp[id] = { big: SPR.obj[id], bigV: SPR.obj[id + 'V'] || (GREW[id][2] ? rot90(SPR.obj[id]) : null), small: ARTC['obj/' + id] ? SPR.obj[id] : mk(w, h, f, o) }; }
   setFootprints(FPV);
   buildTerrain();
-  MKDEF = null;
+  setMkDef(null);
 }
 // sprites that can't take hand-drawn art yet (floors/walls come with the 32px floor template; characters are built from parts)
 // v54: floors and walls take drawn art too (floor/<type>/<n>, any number of variants; wtop/<type>/0-3; wfront/<type>)

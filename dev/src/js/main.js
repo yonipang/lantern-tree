@@ -1,5 +1,18 @@
 // ================= loop =================
-let saveT = 0, snapT = 0, cloudT = 0; // 저장·백업·클라우드 (매 프레임 순서표 sim/systems.js)
+import { loadArt } from './art/hand-art.js';
+import { buildSprites } from './art/world.js';
+import { $ } from './engine/util.js';
+import { iconURL } from './render/icons.js';
+import { computeLight, initLight } from './render/light.js';
+import { render, resize } from './render/view.js';
+import { cam, deserialize, G, lastInputAt, newGame, noteInput, paused, serialize, setSound, started } from './save/state.js';
+import { cloudInit, cloudUpload, loadBackups, loadLocal, pushBackup, saveLocal, storageWorks } from './save/storage.js';
+import { pausedTick, update } from './sim/loop.js';
+import { onFrame } from './sim/systems.js';
+import { jobPanelTick, updateHud } from './ui/hud.js';
+import { placeJoyIdle, sendCtl, setupInput } from './ui/input.js';
+import { beginPlay } from './ui/picker.js';
+export let saveT = 0, snapT = 0, cloudT = 0; // 저장·백업·클라우드 (매 프레임 순서표 sim/systems.js)
 onFrame('autosave', dt => {
   saveT += dt; if (saveT > 25) { saveT = 0; saveLocal(true); }
 });
@@ -9,26 +22,26 @@ onFrame('backup', dt => {
 onFrame('cloud', dt => {
   cloudT += dt; if (cloudT > 120) { cloudT = 0; cloudUpload(false); }
 });
-let lastT = 0;
-function loop(ts) {
+export let lastT = 0;
+export function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
-  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) update(dt); else { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } }
+  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) update(dt); else pausedTick(dt); }
   if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);
 }
-async function start(data) {
+export async function start(data) {
   document.body.classList.add('intro');
   await loadArt();
   buildSprites();
-  lightCv = document.createElement('canvas'); lightCtx = lightCv.getContext('2d');
-  try { soundOn = localStorage.getItem('lantern-tree-sound') !== '0'; } catch (e) { }
+  initLight();
+  try { setSound(localStorage.getItem('lantern-tree-sound') !== '0'); } catch (e) { }
   if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   $('#icHp').src = iconURL('heart'); $('#icHu').src = iconURL('food');
   ['bInv', 'bCraft', 'bQuest', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'quest', 'star', 'map', 'gear'][k]); });
   if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
-  for (const ev of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) window.addEventListener(ev, () => { lastInputAt = performance.now(); }, { capture: true, passive: true });
+  for (const ev of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) window.addEventListener(ev, () => { noteInput(); }, { capture: true, passive: true });
   try { navigator.storage?.persist?.().catch(() => { }); } catch (e) { }
   const saved = (data && data.save) || loadLocal();
   if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { pushBackup('불러오기 실패한 세이브'); newGame(20261008); } } else newGame(20261008);

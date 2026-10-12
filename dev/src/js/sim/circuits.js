@@ -1,13 +1,26 @@
 // ================= 회로: 전선·전력 계산, 기계 작동 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- circuits: wires, power (battery → generator → crystal generator), switches, powered devices ----
-const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-const CIRC = { net: new Map(), pRoots: new Set(), find: x => x };
-let circT = 0;
+import { WPAL } from '../art/world.js';
+import { DRILL_CAP } from '../data/circuits-regions.js';
+import { OBJ, WALLS } from '../data/items.js';
+import { fxRand, rand } from '../engine/random.js';
+import { alivePlayers, G } from '../save/state.js';
+import { doorGroup, SLIDE_NEAR, SLIDE_PW } from './building.js';
+import { emit } from './events.js';
+import { farmDevStep, farmHarvest, farmStage } from './farming.js';
+import { moveInto } from './inventory.js';
+import { onFrame } from './systems.js';
+import { idx, inB, W } from '../world/map.js';
+import { fpTiles, occupied } from '../world/tiles.js';
+import { markLight } from './loop.js';
+export const D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+export const CIRC = { net: new Map(), pRoots: new Set(), find: x => x };
+export let circT = 0;
 onFrame('circuit', dt => {
   circT += dt; if (circT > .2) { circuitTick(circT); circT = 0; }
 });
-function circuitTick(dt) {
+export function circuitTick(dt) {
   const comps = []; for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (d && (d.src || d.sw || d.dev)) comps.push([i, o, d]); }
   if (!comps.length) { CIRC.net = new Map(); CIRC.pRoots = new Set(); return; }
   const swT = new Set(comps.filter(c => c[2].sw).map(c => c[0])), net = new Map(); let nid = 0;
@@ -28,10 +41,10 @@ function circuitTick(dt) {
   for (const [, e] of rs) { if (!e.load || e.inf) continue; if (e.g.length) { for (const g of e.g) { g.fuel = Math.max(0, g.fuel - dt); G.stats.genRun = 1; } continue; } if (e.b.length) { const per = e.load / e.b.length; for (const b of e.b) b.e = Math.max(0, b.e - per); } }
   CIRC.net = net; CIRC.pRoots = new Set(rs.keys()); CIRC.find = find;
 }
-function deviceStep(i, o, d, on, dt) {
+export function deviceStep(i, o, d, on, dt) {
   if (d.dev === 'sprk' || d.dev === 'harv') { farmDevStep(i, o, d, on, dt); return; }
   const x = i % W, y = (i / W) | 0;
-  if (d.dev === 'lamp') { if (o.off !== !on) { o.off = !on; lightDirty = true; } o.work = on; if (on) G.stats.litLamp = 1; return; }
+  if (d.dev === 'lamp') { if (o.off !== !on) { o.off = !on; markLight(); } o.work = on; if (on) G.stats.litLamp = 1; return; }
   if (d.dev === 'farm') { const ready = farmStage(o) >= 3; o.work = on && ready; if (on && ready) farmHarvest(i, o, true); return; }
   if (d.dev === 'door') { if (!!o.open !== on) { if (!on && occupied(x, y)) return; o.open = on; emit('sfx', 'place'); } o.work = false; return; }
   if (d.dev === 'slide') { o.work = false; if (on) SLIDE_PW.set(o, G.time); // powered (or joined to a powered leaf): opens while the player is close, closes when they walk away
@@ -47,4 +60,4 @@ function deviceStep(i, o, d, on, dt) {
       let put = false; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const c = G.objs.get(idx(cx, cy)); if (c && c.t === 'chest' && c.items && !moveInto(c.items, { id, c: 1 })) { put = true; break; } }
       if (!put) { o.store = o.store || []; const s2 = o.store.find(z => z.id === id); if (s2) s2.c++; else o.store.push({ id, c: 1 }); } } }
 }
-function wirePowered(i) { const n = CIRC.net.get(i); return n != null && CIRC.pRoots.has(CIRC.find(n)); }
+export function wirePowered(i) { const n = CIRC.net.get(i); return n != null && CIRC.pRoots.has(CIRC.find(n)); }

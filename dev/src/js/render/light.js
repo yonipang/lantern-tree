@@ -1,9 +1,23 @@
 // ================= 빛: 등불·횃불 빛 계산(computeLight)과 밝기(lightAt), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
-let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
-function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
-function computeLight() {
+import { SPR } from '../art/world.js';
+import { OBJ } from '../data/items.js';
+import { BKEYS, BOSSES } from '../data/rpg-nature.js';
+import { effH } from '../engine/canvas.js';
+import { hexRgb } from '../engine/util.js';
+import { mapPixel } from './map.js';
+import { cv, TP } from './view.js';
+import { cam, G } from '../save/state.js';
+import { cropStage } from '../sim/actions.js';
+import { los } from '../sim/combat.js';
+import { bval } from '../sim/cooking.js';
+import { CX, CY, idx, inB, LAVA } from '../world/map.js';
+import { fpOf } from '../world/tiles.js';
+export let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
+export function initLight() { lightCv = document.createElement('canvas'); lightCtx = lightCv.getContext('2d'); }
+export function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
+export function computeLight() {
   if (!G) return; const cw = cv.width, ch = cv.height;
   const camX = cam.x * TP - cw / 2, camY = cam.y * TP - ch / 2;
   const x0 = Math.floor(camX / TP) - 2, x1 = Math.ceil((camX + cw) / TP) + 2, y0 = Math.floor(camY / TP) - 3, y1 = Math.ceil((camY + ch) / TP) + 3;

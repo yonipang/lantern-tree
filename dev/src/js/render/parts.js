@@ -1,8 +1,23 @@
 // ================= 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행, 동물 그림, 회수 막대 (10단계에서 render/로 정리) =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
-const TW_BASE = 4; // pieces are drawn in their own coordinates with the footprint line at y=12, then moved down onto the tile's bottom line
+import { ANIM_DRAW } from '../art/content.js';
+import { ARTC } from '../art/hand-art.js';
+import { artPaint, glowSprite, SPR, TREE_BLESS, TREE_PAL } from '../art/world.js';
+import { RECOVER_GAP, RECOVER_HITS } from '../data/controls.js';
+import { OBJ } from '../data/items.js';
+import { INK, mk, MKDEF } from '../engine/canvas.js';
+import { fxRand, hash2 } from '../engine/random.js';
+import { clamp } from '../engine/util.js';
+import { ctx, drawImg, shadow, Z } from './view.js';
+import { G } from '../save/state.js';
+import { bmat, rotN, twH } from '../sim/building.js';
+import { HITS } from '../sim/gathering.js';
+import { onFrame } from '../sim/systems.js';
+import { spreadKind, treeStage } from '../sim/tree.js';
+import { CX, CY, idx, inB } from '../world/map.js';
+export const TW_BASE = 4; // pieces are drawn in their own coordinates with the footprint line at y=12, then moved down onto the tile's bottom line
 // draws one piece in tile coordinates (tile top at y0); the piece rises h px above its footprint line. open: 0..1 (a sliding door slides part way)
-function twDraw(A, type, mat, mask, open, h, y0) {
+export function twDraw(A, type, mat, mask, open, h, y0) {
   y0 += TW_BASE;
   const M = bmat(mat), R = (x, y, w, hh, c) => { if (w > 0 && hh > 0) A.r(x, y0 + y, w, hh, c); }, P = (x, y, c) => A.p(x, y0 + y, c);
   const N = mask & 1, E = mask & 2, S = mask & 4, Wm = mask & 8, jw = mask & 16, je = mask & 32, ew = E || Wm || !(N || S), x0 = Wm ? 0 : 6, x1 = E ? 16 : 10;
@@ -41,34 +56,34 @@ function twDraw(A, type, mat, mask, open, h, y0) {
   if (S) cap(6, 10, 12, 16);
   if (!ew) { if (type === 'win' || type === 'frame') R(7, (N ? 0 : 8) - h + 1, 2, (S ? 16 : 12) - (N ? 0 : 8) - 2, '#a8dcf5'); if (type === 'door') R(7, (N ? 0 : 8) - h, 2, (S ? 16 : 12) - (N ? 0 : 8), M.door); }
 }
-const TWC = {}, TW_Y0 = 26;
-function twSprite(id, mask, open) { const k = id + '|' + mask + '|' + (+open || 0); if (TWC[k]) return TWC[k]; const { type, mat } = OBJ[id].tw;
+export const TWC = {}, TW_Y0 = 26;
+export function twSprite(id, mask, open) { const k = id + '|' + mask + '|' + (+open || 0); if (TWC[k]) return TWC[k]; const { type, mat } = OBJ[id].tw;
   return TWC[k] = mk(16, TW_Y0 + 16, A => twDraw(A, type, mat, mask, +open || 0, twH(type), TW_Y0), 'sel'); }
-function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.round(twH(type) * .5) + 2); return mk(16, 16, A => twDraw(A, type, mat, type === 'pillar' ? 0 : 10, false, h, 3 - TW_BASE), 'sel'); }
-function drawHazards(T, camX, camY) {
+export function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.round(twH(type) * .5) + 2); return mk(16, 16, A => twDraw(A, type, mat, type === 'pillar' ? 0 : 10, false, h, 3 - TW_BASE), 'sel'); }
+export function drawHazards(T, camX, camY) {
   const t = performance.now() / 1000;
   for (const h of G.hz || []) { const X = h.x * T - camX, Y = h.y * T - camY, warn = h.t < h.warn;
     if (h.k === 'lava') { const a = warn ? .25 + .25 * Math.sin(t * 20) : Math.min(1, (h.life - h.t) * 1.5); ctx.globalAlpha = a; ctx.fillStyle = warn ? '#ff8a3d' : '#e8501f'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); if (!warn) { ctx.fillStyle = '#ffc861'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * .55, h.r * T * .32, 0, 0, 6.283); ctx.fill(); } ctx.globalAlpha = 1; }
     else if (warn) { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(191,230,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(191,230,255,${pr * .25})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } }
 }
-const ROTC = new WeakMap(), turned = c => { let k = ROTC.get(c); if (!k) { k = rot90(c); ROTC.set(c, k); } return k; };
-function rotImg(t, r, base) { // → [image, flip]
+export const ROTC = new WeakMap(), turned = c => { let k = ROTC.get(c); if (!k) { k = rot90(c); ROTC.set(c, k); } return k; };
+export function rotImg(t, r, base) { // → [image, flip]
   if (!r || !base) return [base, false]; const main = base === SPR.obj[t];
   if (r === 2 && rotN(t) === 4) return [(main && SPR.obj[t + 'U']) || base, false];
   return [(main && (SPR.obj[t + 'S'] || SPR.obj[t + 'V'])) || turned(base), r === 3]; }
-function rot90(c) { const k = document.createElement('canvas'); k.width = c.height; k.height = c.width; k.hd = c.hd; const g = k.getContext('2d'); g.imageSmoothingEnabled = false; g.translate(k.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0); return k; }
+export function rot90(c) { const k = document.createElement('canvas'); k.width = c.height; k.height = c.width; k.hd = c.hd; const g = k.getContext('2d'); g.imageSmoothingEnabled = false; g.translate(k.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0); return k; }
 // ---- lantern tree at play: growth show, see-through canopy, falling leaves, glow (all visual, nothing saved) ----
-const TREEFX = { grow: null, leaves: [], alpha: 1, leafT: 0 };
-const treeBase = () => ({ x: CX + .5, y: CY + 1 + 2 / 16 });
-function treeBox(L) { const b = treeBase(); return { l: b.x + (L.box.x0 - L.w / 2) / 16, r: b.x + (L.box.x1 + 1 - L.w / 2) / 16, t: b.y - (L.h - L.box.y0) / 16, b: b.y - (L.h - L.box.y1 - 1) / 16 }; }
-function behindCanopy() { const p = G.p, L = SPR.treeSt && SPR.treeSt[treeStage()]; if (!L || p.y >= CY + 1) return false; const k = treeBox(L); return p.x + .3 > k.l && p.x - .3 < k.r && p.y > k.t + .3 && p.y - .9 < k.b; }
-function treeLeaf(st, burst) {
+export const TREEFX = { grow: null, leaves: [], alpha: 1, leafT: 0 };
+export const treeBase = () => ({ x: CX + .5, y: CY + 1 + 2 / 16 });
+export function treeBox(L) { const b = treeBase(); return { l: b.x + (L.box.x0 - L.w / 2) / 16, r: b.x + (L.box.x1 + 1 - L.w / 2) / 16, t: b.y - (L.h - L.box.y0) / 16, b: b.y - (L.h - L.box.y1 - 1) / 16 }; }
+export function behindCanopy() { const p = G.p, L = SPR.treeSt && SPR.treeSt[treeStage()]; if (!L || p.y >= CY + 1) return false; const k = treeBox(L); return p.x + .3 > k.l && p.x - .3 < k.r && p.y > k.t + .3 && p.y - .9 < k.b; }
+export function treeLeaf(st, burst) {
   const L = SPR.treeSt[st], b = treeBase(), k = treeBox(L), P = TREE_PAL[st];
   const x = k.l + .3 + fxRand() * Math.max(.1, k.r - k.l - .6), top = k.t + (k.b - k.t) * (.35 + fxRand() * .6), gy = b.y - .2 + fxRand() * .8;
   const col = burst && st >= 3 && fxRand() < .35 ? (fxRand() < .5 ? '#ffb3c8' : '#fff1f6') : P[1 + ((fxRand() * 3) | 0)];
   TREEFX.leaves.push({ x, y: gy, z: Math.max(.3, gy - top), vz: burst ? .9 + fxRand() * .8 : .3 + fxRand() * .2, vx: burst ? (x - b.x) * (.8 + fxRand()) : (fxRand() - .5) * .3, vy: burst ? (fxRand() - .2) * .7 : 0, t: 0, ph: fxRand() * 6.28, col });
 }
-function updateTree(dt) {
+export function updateTree(dt) {
   const F = TREEFX, st = treeStage(), g = F.grow;
   if (g) { g.t += dt; if (!g.burst && g.t >= .45) { g.burst = 1; if (g.to >= 1) for (let k = 0; k < 22; k++) treeLeaf(g.to, 1); } if (g.t >= 1.6) F.grow = null; }
   F.alpha += ((behindCanopy() ? .42 : 1) - F.alpha) * Math.min(1, dt * 8);
@@ -77,12 +92,12 @@ function updateTree(dt) {
     else { q.rest = (q.rest || 0) + dt; if (q.rest > .8) F.leaves.splice(i, 1); } }
   if (st >= 5 && F.leaves.length < 14 && Math.hypot(G.p.x - CX, G.p.y - CY) < 22) { F.leafT -= dt; if (F.leafT <= 0) { F.leafT = .7 + fxRand() * 1.1; treeLeaf(st, 0); } }
 }
-function drawSpread(x, y, sx, sy, R) {
+export function drawSpread(x, y, sx, sy, R) {
   const k = spreadKind(x, y, R); if (!k) return;
   if (k[0] === 'm') ctx.drawImage(SPR.tmoss[+k[1]], sx + 1 + ((hash2(x, y, 73) * 5) | 0), sy + 4 + ((hash2(x, y, 74) * 6) | 0));
   else { ctx.drawImage(SPR.tflower[k], sx + 2 + ((hash2(x, y, 73) * 9) | 0), sy + 2 + ((hash2(x, y, 74) * 8) | 0)); if (hash2(x, y, 75) < .35) ctx.drawImage(SPR.tmoss[0], sx + ((hash2(x, y, 76) * 6) | 0), sy + 9); }
 }
-function drawTreeLook(L, t, o) {
+export function drawTreeLook(L, t, o) {
   const b = treeBase(), sc = o.sc || 1, a = o.alpha, ca = a * o.ca, sw = L.s >= 5 ? Math.round(Math.sin(t * .7) * 1.2) / 16 : 0;
   const at = (lx, ly) => ({ x: b.x + (lx - L.w / 2) * sc / 16, y: b.y - (L.h - ly) * sc / 16 });
   if (a <= 0) return;
@@ -93,19 +108,19 @@ function drawTreeLook(L, t, o) {
   if (L.s >= 2) L.lan.forEach(([lx, ly], k) => { const q = at(lx + Math.sin(t * 1.6 + k) * .6, ly + 11); drawImg(SPR.lantern[k < L.s ? 1 : 0], q.x + sw, q.y, { alpha: ca }); });
   L.small.forEach(([lx, ly], k) => { const q = at(lx + Math.sin(t * 1.3 + k * 2) * .5, ly + 8); drawImg(SPR.lanternS, q.x + sw, q.y, { alpha: ca }); });
 }
-function drawTree(t) {
+export function drawTree(t) {
   const S = SPR.treeSt, g = TREEFX.grow, ca = TREEFX.alpha;
   if (!g) { drawTreeLook(S[treeStage()], t, { alpha: 1, ca }); return; }
   const u = clamp((g.t - .2) / .9, 0, 1), e = 1 + 2.70158 * Math.pow(u - 1, 3) + 1.70158 * Math.pow(u - 1, 2); // grows with a little overshoot
   drawTreeLook(S[g.from], t, { alpha: 1 - clamp((u - .7) / .3, 0, 1), ca });
   drawTreeLook(S[g.to], t, { alpha: Math.min(1, u * 1.7), ca, sc: .78 + .22 * e });
 }
-function drawTreeLeaves(T, camX, camY) {
+export function drawTreeLeaves(T, camX, camY) {
   for (const q of TREEFX.leaves) { ctx.globalAlpha = q.z > 0 ? 1 : Math.max(0, 1 - q.rest / .8); ctx.fillStyle = q.col; const X = Math.round(q.x * T - camX), Y = Math.round((q.y - q.z) * T - camY); ctx.fillRect(X, Y, 2, 1); if (Math.sin(q.t * 5 + q.ph) > 0) ctx.fillRect(X + 1, Y - 1, 1, 1); }
   ctx.globalAlpha = 1;
 }
 // drawn after the darkness so lanterns, fruit, fireflies and the blessing edge read as light
-function drawTreeGlow(t, T, camX, camY, cw, ch) {
+export function drawTreeGlow(t, T, camX, camY, cw, ch) {
   const st = treeStage(), g = TREEFX.grow, b = treeBase(), show = g ? (g.t > .7 ? g.to : g.from) : st, L = SPR.treeSt[show], ca = TREEFX.alpha;
   const onS = (X, Y, m = 12) => X > -m && Y > -m && X < cw + m && Y < ch + m, sw = show >= 5 ? Math.round(Math.sin(t * .7) * 1.2) : 0;
   const at = (lx, ly) => [Math.round((b.x + (lx - L.w / 2) / 16) * T - camX), Math.round((b.y - (L.h - ly) / 16) * T - camY)];
@@ -132,14 +147,14 @@ function drawTreeGlow(t, T, camX, camY, cw, ch) {
 }
 onFrame('fx', updateFx);
 onFrame('tree', updateTree);
-function updateFx(dt) {
+export function updateFx(dt) {
   for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= 9 * dt; q.z = Math.max(0, q.z + q.vz * dt); q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); }
   for (let i = G.texts.length - 1; i >= 0; i--) { const t = G.texts[i]; t.life -= dt; t.y += t.vy * dt; t.vy *= Math.pow(.15, dt); if (t.life <= 0) G.texts.splice(i, 1); }
   for (const o of visibleShakers) { o.shake = Math.max(0, (o.shake || 0) - dt); }
 }
-const visibleShakers = new Set();
-const animalSpr = {};
-function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/' + k]) return animalSpr[k] = artPaint('animal/' + k, MKDEF || INK); return animalSpr[k] = ANIM_DRAW[k] ? mk(16, 16, ANIM_DRAW[k]) : null; }
-function drawHitBars(T, camX, camY) { for (const [i, h] of HITS) { if (G.time - h.t >= RECOVER_GAP) { HITS.delete(i); continue; }
+export const visibleShakers = new Set();
+export const animalSpr = {};
+export function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/' + k]) return animalSpr[k] = artPaint('animal/' + k, MKDEF || INK); return animalSpr[k] = ANIM_DRAW[k] ? mk(16, 16, ANIM_DRAW[k]) : null; }
+export function drawHitBars(T, camX, camY) { for (const [i, h] of HITS) { if (G.time - h.t >= RECOVER_GAP) { HITS.delete(i); continue; }
   const X = Math.round(h.x * T - camX + T * .15), Y = Math.round(h.y * T - camY - T * .35), w = Math.round(T * .7), f = 1 - h.n / RECOVER_HITS;
   ctx.fillStyle = 'rgba(20,14,30,.85)'; ctx.fillRect(X - 1, Y - 1, w + 2, Math.max(3, Math.round(T / 8)) + 2); ctx.fillStyle = '#ffc861'; ctx.fillRect(X, Y, Math.round(w * f), Math.max(3, Math.round(T / 8))); } }

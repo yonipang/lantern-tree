@@ -6,6 +6,10 @@ import { LAVA, W, idx, inB } from './map.js';
 import { OBJ } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
 import { emit } from '../sim/events.js';
+import { placeFp } from '../sim/building.js';
+import { addItem, selItem, wear } from '../sim/inventory.js';
+import { WATER } from '../sim/nature.js';
+import { hasItem } from '../sim/quests.js';
 
 export function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
 export function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }

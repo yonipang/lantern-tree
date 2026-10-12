@@ -1,8 +1,21 @@
 // ================= 낚시: 던지기·입질·거두기, 낚시 표·병 편지 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
-function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + rand() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; emit('sfx', 'cast'); }
+import { LUCK_BOOT, LUCK_BOTTLE, LUCK_KOI } from '../data/farming-cooking.js';
+import { ITEMS } from '../data/items.js';
+import { CATCH, FLOWERS } from '../data/rpg-nature.js';
+import { fxRand, rand } from '../engine/random.js';
+import { G } from '../save/state.js';
+import { faceTo } from './actions.js';
+import { knows, learnRecipe, luckTier, maybeNote } from './cooking.js';
+import { spawnDrop } from './drops.js';
+import { emit } from './events.js';
+import { addItem, bestTool, usableItem, wear } from './inventory.js';
+import { gainXp } from './player.js';
+import { onFrame } from './systems.js';
+import { idx } from '../world/map.js';
+export function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + rand() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; emit('sfx', 'cast'); }
 onFrame('fish', dt => updateFish(dt));
-function updateFish(dt) {
+export function updateFish(dt) {
   if (G.fishFx) { G.fishFx.t += dt; if (G.fishFx.t > 0.55) G.fishFx = null; }
   const f = G.fish; if (!f) return; const p = G.p;
   if (p.moving || p.dead > 0 || p.sit || p.sleep || !usableItem('rod')) { G.fish = null; return; }
@@ -12,7 +25,7 @@ function updateFish(dt) {
     if (f.t <= 0) { f.st = 'bite'; f.bite = f.win; emit('sfx', 'bite'); emit('splash', f.bx, f.by, 8); emit('ftext', p.x, p.y - 1.7, '!', '#ffc861'); try { navigator.vibrate && navigator.vibrate(40); } catch (e) { } } }
   else { f.bite -= dt; if (f.bite <= 0) { emit('toast', '놓쳤어요… 다시 던져 봐요', null, 'miss'); G.fish = null; } }
 }
-function reel() {
+export function reel() {
   const f = G.fish; if (!f) return; G.fish = null;
   if (f.st !== 'bite') { emit('sfx', 'place'); return; }
   const tbl = catchTable(G.biome[idx(f.tx, f.ty)]); let r = rand() * tbl.reduce((a, x) => a + x[1], 0), id = tbl[0][0];
@@ -24,8 +37,8 @@ function reel() {
   G.stats.fishCaught = (G.stats.fishCaught || 0) + 1; gainXp(id === 'koi' ? 12 : id === 'boot' ? 1 : 4, G.p.x, G.p.y);
   wear(bestTool('rod'));
 }
-function catchTable(b) { const L = luckTier(), base = (CATCH[b] || CATCH[0]).map(([k, w]) => [k, k === 'koi' ? w * LUCK_KOI[L] : k === 'boot' ? w * LUCK_BOOT[L] : w]); const tot = base.reduce((a, x) => a + x[1], 0), pb = LUCK_BOTTLE[L]; base.push(['bottle', tot * pb / (1 - pb)]); return base; }
-function fishBottle() {
+export function catchTable(b) { const L = luckTier(), base = (CATCH[b] || CATCH[0]).map(([k, w]) => [k, k === 'koi' ? w * LUCK_KOI[L] : k === 'boot' ? w * LUCK_BOOT[L] : w]); const tot = base.reduce((a, x) => a + x[1], 0), pb = LUCK_BOTTLE[L]; base.push(['bottle', tot * pb / (1 - pb)]); return base; }
+export function fishBottle() {
   if (!knows('koiSteam')) { learnRecipe('koiSteam', true); emit('toast', '병 속에서 쪽지가 나왔어요! 새 레시피: 별빛 잉어찜', 'good'); emit('sfx', 'seed'); return; }
   const cs = Object.keys(FLOWERS), pool = [['petal' + cs[(rand() * cs.length) | 0], 2], ['crystal', 2], ['gel', 2], [['glowSpore', 'cbeanSeed', 'berrySeed'][(rand() * 3) | 0], 2]];
   pool.sort(() => rand() - .5); for (const [id, c] of pool.slice(0, 3)) { const l = addItem(id, c); if (l) spawnDrop(id, l, G.p.x, G.p.y); } emit('toast', '작은 보물상자를 낚았어요!', 'good'); }

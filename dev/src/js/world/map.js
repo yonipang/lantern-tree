@@ -2,6 +2,7 @@
 // 지도 모양(1 = 처음 200×200 지도, 2 = 600×600 고리 지도)과 크기·등불나무·보스 자리, 칸 번호(idx)·지도 안인지(inB), 방향 이름.
 // v47부터 두 가지: 1은 v47 전 세이브가 그대로 쓰는 200×200, 2는 새 게임의 고리 지도
 // (가운데 등불나무, 이끼 동굴(북)·버섯숲(남) 고리, 수정 동굴(북)·용암(남동)·얼음(남서) 큰 고리, 바다 고리, 가장자리 암반)
+import { layoutTexts } from '../sim/quests.js';
 
 // ================= data =================
 // v47: two map layouts. 1 = the original 200×200 map (every save made before v47 keeps it); 2 = the 600×600 ring map for new games:

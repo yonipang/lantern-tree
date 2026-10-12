@@ -22,6 +22,7 @@ export function outline(c, col) {
   g.putImageData(new ImageData(o, w, h), 0, 0);
 }
 export let MKDEF = null;
+export const setMkDef = v => { MKDEF = v; };
 export function softShadow(c) {
   const w = c.width, h = c.height, g = c.getContext('2d'), d = g.getImageData(0, 0, w, h), s = d.data, o = new Uint8ClampedArray(s);
   for (let y = 1; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; if (s[i + 3] || !s[i - w * 4 + 3]) continue; o[i] = 18; o[i + 1] = 10; o[i + 2] = 28; o[i + 3] = 80; }

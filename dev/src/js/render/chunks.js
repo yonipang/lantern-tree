@@ -1,10 +1,17 @@
 // ================= 바닥 조각: 바닥·벽 타일을 큰 조각으로 미리 그려 두기(drawChunk·getChunk) =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ---- floor chunks: 16x16 tiles pre-rendered once, redrawn only when their tiles change ----
-const CHN = 16, chunks = new Map();
-function chunkSig(cx, cy) { let h = 7; for (let y = cy * CHN - 1; y <= cy * CHN + CHN; y++) for (let x = cx * CHN - 1; x <= cx * CHN + CHN; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
-const natural = f => !!PRI[f];
-function drawChunk(c, cx, cy) {
+import { PRI, SPR } from '../art/world.js';
+import { hash2 } from '../engine/random.js';
+import { G } from '../save/state.js';
+import { wallPiece } from '../sim/building.js';
+import { WATER, WFLOOR } from '../sim/nature.js';
+import { idx, inB, LAVA, W } from '../world/map.js';
+import { cv } from './view.js';
+export const CHN = 16, chunks = new Map();
+export function chunkSig(cx, cy) { let h = 7; for (let y = cy * CHN - 1; y <= cy * CHN + CHN; y++) for (let x = cx * CHN - 1; x <= cx * CHN + CHN; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
+export const natural = f => !!PRI[f];
+export function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i]) continue; const f = G.floor[i]; if (f === WATER) continue;
@@ -33,7 +40,7 @@ function drawChunk(c, cx, cy) {
     if (x < W - 1 && G.wall[i + 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
   }
 }
-function getChunk(cx, cy) {
+export function getChunk(cx, cy) {
   const key = cx * 1000 + cy; let c = chunks.get(key);
   if (!c) { c = { cv: document.createElement('canvas'), sig: null }; c.cv.width = c.cv.height = 256; chunks.set(key, c); }
   const sig = chunkSig(cx, cy); if (sig !== c.sig) { c.sig = sig; drawChunk(c, cx, cy); }

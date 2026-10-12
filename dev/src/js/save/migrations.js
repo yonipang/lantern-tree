@@ -18,6 +18,10 @@ import { addPond, addWater, genWorld } from '../world/gen.js';
 import { fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
 import { josa } from '../engine/util.js';
 import { emit } from '../sim/events.js';
+import { GREW } from '../sim/building.js';
+import { bossNoteIds, learnRecipe, roomNotes } from '../sim/cooking.js';
+import { eqCopy, freshEquip } from '../sim/gear.js';
+import { addItem, isTool, moveInto, returnObj } from '../sim/inventory.js';
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar
@@ -36,15 +40,15 @@ export function migrateV3() {
   return n;
 }
 export function migrateV2() {
-  const natural = o => !o || !!OBJ[o.t].nat || o.t === 'bush';
+  const isNatural = o => !o || !!OBJ[o.t].nat || o.t === 'bush';
   for (const [S, fl, b] of [[SA, 3, 1], [SB, 4, 2]]) for (let y = S.y - 9; y <= S.y + 9; y++) for (let x = S.x - 9; x <= S.x + 9; x++) {
     if (!inB(x, y)) continue; const d = Math.hypot(x + .5 - (S.x + .5), y + .5 - (S.y + .5)); if (d > 8.2) continue; const i = idx(x, y);
     if (G.wall[i] && G.wall[i] !== 8 && G.wall[i] !== 6 && G.wall[i] !== 7) { G.wall[i] = 0; G.floor[i] = d < 4.6 ? 6 : fl; G.biome[i] = b; }
-    const o = G.objs.get(i); if (o && d > 4.2 && OBJ[o.t].solid && natural(o)) G.objs.delete(i);
+    const o = G.objs.get(i); if (o && d > 4.2 && OBJ[o.t].solid && isNatural(o)) G.objs.delete(i);
   }
   const safe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5;
   addWater(G, G.seed, safe, i => !G.explored[i] && !G.objs.get(i) && [1, 2, 3, 4].includes(G.floor[i]));
-  addPond(G, i => [1, 2].includes(G.floor[i]) && natural(G.objs.get(i)) && !(G.objs.get(i) && G.objs.get(i).t === 'treeP'));
+  addPond(G, i => [1, 2].includes(G.floor[i]) && isNatural(G.objs.get(i)) && !(G.objs.get(i) && G.objs.get(i).t === 'treeP'));
 }
 // ---- items that changed or went away ----
 // v41: roofs were removed — old saves get their roof items and placed roofs back as material (4 roofs were made from 2 wood or stone)

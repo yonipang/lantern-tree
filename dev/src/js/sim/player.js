@@ -1,9 +1,26 @@
 // ================= 플레이어: 능력치·스킬·경험치, 움직이기·배고픔·다치기·기절·깨어나기, 앉기·자기·먹기, 능력치·스킬·꾸미기 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // skill points earned by a level: one per level up, plus a bonus one at the top level (10 skills × 3 steps = 30)
-const spDue = lv => lv - 1 + (lv >= MAX_LV ? 1 : 0);
-const freshRpg = () => ({ lv: 1, xp: 0, pts: 0, sp: 0, str: 0, dex: 0, vit: 0, int: 0, sk: {}, slot: [null, null] });
-function cleanRpg(r) {
+import { CHARS, cleanLook, lookDef } from '../art/characters.js';
+import { turtleCut } from '../data/gear-animals.js';
+import { ITEMS, OBJ } from '../data/items.js';
+import { BKEYS, MAX_LV, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
+import { fxRand } from '../engine/random.js';
+import { clamp, roJosa } from '../engine/util.js';
+import { alivePlayers, cam, freshBoss, G } from '../save/state.js';
+import { faceTo } from './actions.js';
+import { ctlOf, defineCmd } from './commands.js';
+import { applyBuff, buffCheck, bval } from './cooking.js';
+import { emit } from './events.js';
+import { eqLv, ringV, wearing } from './gear.js';
+import { refillHot } from './inventory.js';
+import { dropLost, envLv, unstick } from './survival.js';
+import { onFrame } from './systems.js';
+import { CX, CY, idx } from '../world/map.js';
+import { boxHits, moveEnt } from '../world/tiles.js';
+export const spDue = lv => lv - 1 + (lv >= MAX_LV ? 1 : 0);
+export const freshRpg = () => ({ lv: 1, xp: 0, pts: 0, sp: 0, str: 0, dex: 0, vit: 0, int: 0, sk: {}, slot: [null, null] });
+export function cleanRpg(r) {
   const f = freshRpg(); if (!r || typeof r !== 'object') return f;
   for (const k of ['lv', 'xp', 'pts', 'sp', 'str', 'dex', 'vit', 'int']) f[k] = Math.max(0, Math.floor(+r[k] || 0)); f.lv = clamp(f.lv || 1, 1, MAX_LV);
   if (r.sk && typeof r.sk === 'object') for (const k in r.sk) if (SKILLS[k]) { const l = clamp(Math.floor(+r.sk[k] || 0), 0, SKILLS[k].max); if (l) f.sk[k] = l; }
@@ -11,18 +28,18 @@ function cleanRpg(r) {
   if (Array.isArray(r.slot)) f.slot = [0, 1].map(i => { const k = r.slot[i]; return SKILLS[k] && SKILLS[k].act && f.sk[k] ? k : null; });
   return f;
 }
-const skl = k => (G && G.rpg && G.rpg.sk[k]) || 0;
-const RS = k => (G && G.rpg ? G.rpg[k] : 0);
-const maxHp = () => 100 + RS('vit') * 8 + bval('maxhp');
-const maxMp = () => 40 + RS('int') * 6 + skl('arcane') * 8;
-const meleeMul = () => (1 + RS('str') * 0.05) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('warrior') * .06);
-const rangeMul = () => (1 + RS('dex') * 0.03) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('hawk') * .08);
-const magicMul = () => (1 + RS('int') * 0.035) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('arcane') * .06);
-const atkSpd = () => (1 - Math.min(0.2, RS('dex') * 0.01)) * (envLv('cold') >= 2 ? 1.1 : 1);
-const moveMul = () => (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move')) * [1, .9, .8, .8][envLv('cold')];
-const mineMul = () => (1 + RS('str') * 0.03) * (1 + skl('miner') * 0.25) * (1 + bval('mine')) * (1 + ringV('mine'));
-const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15)) * (bval('hunger') || 1) * [1, 1.3, 1.6, 1.6][envLv('hot')];
-function gainXp(n, x, y) {
+export const skl = k => (G && G.rpg && G.rpg.sk[k]) || 0;
+export const RS = k => (G && G.rpg ? G.rpg[k] : 0);
+export const maxHp = () => 100 + RS('vit') * 8 + bval('maxhp');
+export const maxMp = () => 40 + RS('int') * 6 + skl('arcane') * 8;
+export const meleeMul = () => (1 + RS('str') * 0.05) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('warrior') * .06);
+export const rangeMul = () => (1 + RS('dex') * 0.03) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('hawk') * .08);
+export const magicMul = () => (1 + RS('int') * 0.035) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('arcane') * .06);
+export const atkSpd = () => (1 - Math.min(0.2, RS('dex') * 0.01)) * (envLv('cold') >= 2 ? 1.1 : 1);
+export const moveMul = () => (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move')) * [1, .9, .8, .8][envLv('cold')];
+export const mineMul = () => (1 + RS('str') * 0.03) * (1 + skl('miner') * 0.25) * (1 + bval('mine')) * (1 + ringV('mine'));
+export const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15)) * (bval('hunger') || 1) * [1, 1.3, 1.6, 1.6][envLv('hot')];
+export function gainXp(n, x, y) {
   const R = G && G.rpg; if (!R || !(n > 0) || R.lv >= MAX_LV) return; n = Math.max(n, Math.round(n * (1 + bval('xp') + ringV('xp')))); R.xp += n;
   if (x != null && n >= 3) emit('ftext', x, y - 0.9, `+${n} 경험치`, '#b8e0ff');
   let up = 0; while (R.lv < MAX_LV && R.xp >= XP_NEED(R.lv)) { R.xp -= XP_NEED(R.lv); R.lv++; R.pts += 2; R.sp += 1; up++; }
@@ -37,10 +54,10 @@ defineCmd('skSlot', c => { const id = c.s, R = G.rpg, m = c.n; if (!R.sk[id]) re
 // ---- 꾸미기·캐릭터·긴급 탈출·지도 표시(개발자) ----
 defineCmd('look', c => { G.look = cleanLook(c.look); G.char = 'custom'; G.outfit = 0; emit('look'); emit('puff', G.p.x, G.p.y - .5, lookDef(G.look).pal[0], 16, 2.6, .6); emit('sfx', 'craft'); emit('toast', '새 모습으로 꾸몄어요', 'good'); });
 defineCmd('char', c => { const i = c.c; if (!(CHARS[i] && G.char !== i)) return false; G.char = i; G.outfit = 0; emit('look'); emit('puff', G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); emit('sfx', 'craft'); emit('toast', `${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); return true; });
-function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x = s.px; p.y = s.py; if (boxHits(p.x, p.y, .28)) { p.x = s.x + .5; p.y = s.y + 1.5; } }
-function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; emit('fade', 'sleep'); emit('sfx', 'sleep'); }
-function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; emit('fade', 'wake'); p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); emit('toast', '푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
-function eat(slot) {
+export function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x = s.px; p.y = s.py; if (boxHits(p.x, p.y, .28)) { p.x = s.x + .5; p.y = s.y + 1.5; } }
+export function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; emit('fade', 'sleep'); emit('sfx', 'sleep'); }
+export function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; emit('fade', 'wake'); p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); emit('toast', '푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
+export function eat(slot) {
   const s = G.inv[slot]; if (!s) return; const it = ITEMS[s.id]; if (it.kind !== 'food') return;
   const p = G.p; if (p.hunger >= 99.5 && p.hp >= maxHp() && !it.buff) { emit('toast', '지금은 배가 불러요', null, 'full'); return; }
   const bc = it.buff ? buffCheck(it, s.id) : null; if (bc === 'ask') return;
@@ -49,7 +66,7 @@ function eat(slot) {
   emit('sfx', 'eat'); emit('ftext', p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) emit('ftext', p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
   if (bc === 'ok') applyBuff(it, s.id);
 }
-function hurtPlayer(dmg, sx, sy, kind) {
+export function hurtPlayer(dmg, sx, sy, kind) {
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
   const p = G.p; if (p.inv > 0 || p.dead > 0 || p.sleep) return; if (p.sit) standUp(); dmg = Math.max(1, Math.round(dmg * (1 - skl('tough') * 0.07) * (1 - bval('def'))));
@@ -57,7 +74,7 @@ function hurtPlayer(dmg, sx, sy, kind) {
   emit('shake', 0.28); emit('sfx', 'hurt'); emit('ftext', p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');
   if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; emit('fade', 'faint'); }
 }
-function respawn() {
+export function respawn() {
   const p = G.p; emit('fade', 'hide'); const lostN = dropLost(); G.recall = null;
   const so = G.spawnPt && G.objs.get(idx(G.spawnPt.x, G.spawnPt.y)); const sp = so && OBJ[so.t].bed ? G.spawnPt : null;
   if (sp) { p.x = sp.x + .5; p.y = sp.y + 1.6; if (boxHits(p.x, p.y, .28)) { p.x = sp.x + 1.5; p.y = sp.y + .5; } } else { p.x = CX + .5; p.y = CY + 1.7; }
