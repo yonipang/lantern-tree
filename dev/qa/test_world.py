@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa35():
+def qa35_hidden_rooms():
     import asyncio, sys
     # 숨은 방 (v35): 지역마다 1~2개, 금 간 벽, 보물상자, 옛 세이브에도 생성
     H2=HOOK.replace("computeLight}","computeLight,placeRooms,genWorld,roomTick,openTreasure,ROOM_LOOT,ROOM_DECO,QSIDE,questState,targetTile,get DOORS(){return DOORS},drawMap,lightAt,cam}")
@@ -72,7 +72,7 @@ def qa35():
     return main
 
 
-def qa37():
+def qa37_deep_caves():
     import asyncio, sys
     # 깊은 동굴 준비 (v37): 불꽃 열매·서리 무 재배, 장비 칸·옷·장신구, 대비 요리, 깊은 동굴 재료 요리, 더위·추위 게이지와 화면 가장자리
     H2=HOOK.replace("computeLight}","computeLight,SPR,DISHES,DISH,RECIPES,knows,learnRecipe,eat,activeBuffs,moveMul,atkSpd,hungerMul,hurtPlayer,envTick,envLv,wearItem,unwear,grantAccs,syncNotes,roomNotes,bossNoteIds,GUIDE,ENEMY,CROP_SOIL,STAR_OF,cropStage,hitBoss,freshBoss,checkBiome0,get envFxV(){return envFxV},updateHazards,maxHp,SL,SI}")
@@ -157,7 +157,7 @@ window.__eat=(id)=>{const T=__T,G=T.G;G.inv[0]={id,c:1};G.sel=0;G.p.hunger=10;T.
     return main
 
 
-def qa38():
+def qa38_recall_faint():
     import asyncio, sys
     # 이동·패널티 (v38): 귀환석(집으로 → 표지로 돌아가기), 쓰러지면 재료 일부를 꾸러미로 떨어뜨림
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,GUIDE,startRecall,recallTick,homePt,respawn,pickLost,targetTile,cam}")
@@ -206,7 +206,7 @@ def qa38():
     return main
 
 
-def qa45():
+def qa45_pets():
     import asyncio, sys
     # 펫 (v45): 야생 동물, 올가미 밧줄 포획 미니게임, 강아지·고양이·토끼, 펫 버프
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,ANIMALS,wildTick,wildNear,openCatch,catchAng,get panel(){return panel},updateDrops,rollDrops,luckTier,spawnDrop,perform,QSIDE,animalImg,rarOf}")
@@ -279,7 +279,7 @@ def qa45():
     return main
 
 
-def qa46():
+def qa46_ranch():
     import asyncio, sys
     # 목장 (v46): 소·닭·양 포획, 내려놓으면 우유·달걀·양모, 새 요리·털모자·양털 러그
     H2=HOOK.replace("computeLight}","computeLight,circuitTick,W,RECIPES,ANIMALS,wildTick,openCatch,catchAng,get panel(){return panel},perform,QSIDE,hatMul,upgText,SPR}")
@@ -349,7 +349,7 @@ def qa46():
     return main
 
 
-def qa48():
+def qa48_fenced_home():
     import asyncio, sys
     # 버그 수정: 등불나무·침대 둘레를 울타리로 막아 두면 기절·귀환 뒤 갇히던 문제
     H2=HOOK.replace("computeLight}","computeLight,respawn,closedIn,boxHits}")
@@ -378,7 +378,7 @@ def qa48():
     return main
 
 
-def qa49():
+def qa49_ring_map():
     import asyncio, sys
     # v47: 600x600 고리 지도 (새 게임), 옛 세이브는 200x200 그대로, 지형 재료 2배
     H2=HOOK.replace("computeLight}","computeLight,LAVA,newGame,GUIDE,QSIDE,RECIPES,rebuildMap,genFlowerZones,get L(){return {LAY,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
@@ -422,7 +422,7 @@ def qa49():
     return main
 
 
-def qa52():
+def qa52_ring_map_boss_room():
     import asyncio, sys
     # v49.1 버그 수정: 고리 지도에서 말랑대왕 방(과 그 방에서 시작하는 수정골렘 길)이 바위 고리에 막히던 문제 / 귀환석으로 표지에 돌아갈 때 막힌 굴이면 엉뚱한 곳으로 옮겨지던 문제
     H2=HOOK.replace("computeLight}","computeLight,newGame,get L(){return {LAY,W,H,CX,CY}},BKEYS,LAVA,WALLS,startRecall,recallTick,homePt}")
@@ -455,10 +455,10 @@ def qa52():
     return main
 
 
-def qa54():
+def qa54_emergency_escape():
     import asyncio, sys
     # v57: 메뉴 「긴급 탈출」 — 울타리·벽에 갇혔을 때 막힌 곳 바깥의 가장 가까운 트인 곳으로 (등불나무 둘레 큰 마당도)
-    H2=HOOK.replace("computeLight}","computeLight,regionOf,escapeSpot,emergencyEscape,homePt,boxHits,isSolid}")
+    H2=HOOK.replace("computeLight}","computeLight,regionOf,escapeSpot,emergencyEscape,homePt,boxHits,isSolid,newGame,genWorld}")
     FENCE="""window.__fence=(R)=>{const T=__T,G=T.G;const x0=T.CX-R,x1=T.CX+R,y0=T.CY-R,y1=T.CY+R;for(let y=y0-6;y<=y1+6;y++)for(let x=x0-6;x<=x1+6;x++){const i=T.idx(x,y);if(G.objs.get(i)&&G.objs.get(i).t!=='treeP')G.objs.delete(i);G.wall[i]=0;if(G.floor[i]===T.WATER||G.floor[i]===5)G.floor[i]=1}
   for(let x=x0;x<=x1;x++){G.objs.set(T.idx(x,y0),{t:'bFenceWood'});G.objs.set(T.idx(x,y1),{t:'bFenceWood'})}for(let y=y0;y<=y1;y++){G.objs.set(T.idx(x0,y),{t:'bFenceWood'});G.objs.set(T.idx(x1,y),{t:'bFenceWood'})}G.enemies.length=0;return [x0,x1,y0,y1]};"""
     async def main():
@@ -468,6 +468,10 @@ def qa54():
                 b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
                 r=await ev(pg,"()=>{const T=__T,G=T.G,h=T.homePt();return [!!T.regionOf(G.p.x,G.p.y),!!T.regionOf(h.x,h.y)]}")
                 rec(f'시작 지점 (지도 {lay})','새 게임 시작 자리와 집은 막힌 곳으로 보지 않음', r==[False,False], str(r))
+                # v63: some worlds start in a clearing ringed by natural rock — a pickaxe digs out, so that is not "stuck"
+                seeds=[150461,158380,261327] if lay==1 else [63352,134623]
+                r=await ev(pg,"(S)=>{const T=__T,keep=T.G.seed;const out=S.map(s=>{T.newGame(s);const G=T.G,h=T.homePt();return [!!T.regionOf(G.p.x,G.p.y),!!T.regionOf(h.x,h.y)]});T.newGame(keep);return out}",seeds)
+                rec(f'긴급 탈출 (지도 {lay})','바위로 둘러싸인 곳에서 시작하는 세계도 갇힌 곳으로 보지 않음', all(x==[False,False] for x in r), str(r))
                 if lay==2: await ctx.close(); await b.close(); continue
                 # not stuck: goes home
                 r=await ev(pg,"()=>{const T=__T,G=T.G,h=T.homePt();G.p.x+=6;const ok=T.emergencyEscape();return [ok,Math.round((G.p.x-h.x)*10)/10,Math.round((G.p.y-h.y)*10)/10]}")
@@ -484,9 +488,18 @@ def qa54():
               const ok=T.emergencyEscape();return [ok,!T.regionOf(G.p.x,G.p.y),Math.abs(G.p.x-T.CX)>21||Math.abs(G.p.y-T.CY)>21]}""")
                 rec('긴급 탈출','집이 막혀 있으면 집 안이 아니라 그 바깥으로', r==[True,True,True], str(r))
                 # a small walled pocket far from home: the nearest open spot, close by
-                r=await ev(pg,"""()=>{const T=__T,G=T.G;G.escCd=0;const cx=T.CX+30,cy=T.CY-30;for(let y=cy-8;y<=cy+8;y++)for(let x=cx-8;x<=cx+8;x++){const i=T.idx(x,y);G.objs.delete(i);G.wall[i]=(Math.abs(x-cx)<=2&&Math.abs(y-cy)<=2)?0:(Math.abs(x-cx)<=3&&Math.abs(y-cy)<=3?1:0);if(G.floor[i]===T.WATER)G.floor[i]=1}
+                r=await ev(pg,"""()=>{const T=__T,G=T.G;G.escCd=0;const cx=T.CX+30,cy=T.CY-30;for(let y=cy-8;y<=cy+8;y++)for(let x=cx-8;x<=cx+8;x++){const i=T.idx(x,y);G.objs.delete(i);G.wall[i]=(Math.abs(x-cx)<=2&&Math.abs(y-cy)<=2)?0:(Math.abs(x-cx)<=3&&Math.abs(y-cy)<=3?7:0);if(G.floor[i]===T.WATER)G.floor[i]=1}
               G.p.x=cx+.5;G.p.y=cy+.6;const inside=!!T.regionOf(G.p.x,G.p.y);const ok=T.emergencyEscape();return [inside,ok,Math.hypot(G.p.x-cx,G.p.y-cy)<9,!T.regionOf(G.p.x,G.p.y)]}""")
                 rec('긴급 탈출','벽으로 막힌 작은 공간에서는 바로 옆 트인 곳으로', r==[True,True,True,True], str(r))
+                # v63: what closes you in — walls built on open ground (even dirt) yes; a pocket dug into natural rock no
+                r=await ev(pg,"""()=>{const T=__T,G=T.G,nat=T.genWorld(G.seed).wall;G.escCd=0;
+              const cx=T.CX-4,cy=T.CY-4;for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++){const i=T.idx(x,y);G.objs.delete(i);G.wall[i]=(x===cx&&y===cy)?0:1;if(G.floor[i]===T.WATER)G.floor[i]=1}
+              const built=[nat[T.idx(cx-1,cy)],!!T.regionOf(cx+.5,cy+.6)];
+              for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)G.wall[T.idx(x,y)]=0;
+              let dug=null;for(let y=T.CY+12;y<T.CY+80&&!dug;y++)for(let x=T.CX-80;x<T.CX+80&&!dug;x++){let ok=true;for(let dy=-2;dy<=2&&ok;dy++)for(let dx=-2;dx<=2;dx++){const i=T.idx(x+dx,y+dy),w=nat[i];if(!w||w===8||G.wall[i]!==w||G.objs.get(i)){ok=false;break}}if(ok)dug=[x,y]}
+              if(!dug)return [built,'no rock'];const [x,y]=dug;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)G.wall[T.idx(x+dx,y+dy)]=0;
+              const r=[built,!!T.regionOf(x+.5,y+.6)];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const i=T.idx(x+dx,y+dy);G.wall[i]=nat[i]}return r}""")
+                rec('긴급 탈출','빈 땅에 쌓은 흙벽은 갇힘 · 자연 바위를 파 들어간 곳은 갇힘 아님', r==[[0,True],False], str(r))
                 # the menu button asks once more before moving
                 await ev(pg,"()=>{const T=__T,G=T.G;G.escCd=0;G.p.x=T.CX+3.5;G.p.y=T.CY+5.6;T.openPanel('menu')}"); await pg.wait_for_timeout(700)
                 b1=await pg.locator("[data-a=escape]").inner_text(); await pg.click('#sheet [data-a=escape]'); await pg.wait_for_timeout(300)

@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa2():
+def qa2_core_play():
     async def main():
         mkpage(SRC,'qa.html')
         async with async_playwright() as p:
@@ -198,7 +198,7 @@ def qa2():
     return main
 
 
-def qa3():
+def qa3_walk_over():
     import asyncio, sys
     async def main():
         mkpage(SRC,'qa.html')
@@ -240,7 +240,7 @@ def qa3():
     return main
 
 
-def qa4():
+def qa4_mouse_aim():
     import asyncio, sys
     HOOK2=HOOK.replace("computeLight}","computeLight,mouseTile,targetTile,get VIEW(){return VIEW},get TP(){return TP},get DPR(){return DPR}}")
     async def main():
@@ -305,7 +305,7 @@ def qa4():
     return main
 
 
-def qa6():
+def qa6_title_import():
     # qa5가 만든 qa.html·exported.json을 이어서 써요 (run.py가 qa5 바로 다음에 같은 폴더에서 돌려요)
     import asyncio, sys
     async def main():
@@ -341,7 +341,7 @@ def qa6():
     return main
 
 
-def qa16():
+def qa16_click_direction():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,TPv:()=>TP,VIEW:()=>VIEW,DPR:()=>DPR,mouse:()=>mouse,aim:()=>aimMouse(),cam:()=>cam,mw:()=>mouseWorld()}")
     async def main():
@@ -388,7 +388,7 @@ def qa16():
     return main
 
 
-def qa19():
+def qa19_stress_performance():
     import asyncio, sys, random, json
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,ENEMY,growTick,zoneTick,isSolid,maxHp,maxMp,stackMax,useSkill,refreshHotbar}")
     GIVE="""()=>{const G=__T.G;for(let i=0;i<30;i++)G.inv[i]=null;const L=[['swordCopper',1],['spearCopper',1],['bowWood',1],['staffGlow',1],['shovel',1],['pickIron',1],['sapling',9],['berryBush',3],['cherryTree',2],['flowerBed',5],['waterPond',12],['floorCherry',12],['petalR',30],['petalB',30],['petalY',30],['petalW',30],['petalK',10],['dirt',60],['gMoss',40],['wood',99],['stone',60],['fiber',60],['copperBar',30],['ironBar',20],['crystal',20],['gWater',10],['berry',20],['rope',20],['resin',20],['gel',20]];for(const[id,c]of L)__T.addItem(id,c,false);
@@ -472,7 +472,7 @@ def qa19():
     return main
 
 
-def qa25():
+def qa25_arrow_keys_trees():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,growTick,refreshHotbar,canCraft:typeof canCraft!=='undefined'?canCraft:null,nearStations,stashBag,placeItem,hitObj}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<114;y++)for(let x=100;x<116;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.p.x=104.5;G.p.y=106.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
@@ -564,7 +564,7 @@ def qa25():
     return main
 
 
-def qa27():
+def qa27_keyboard_focus():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,refreshHotbar}")
     async def main():
@@ -592,7 +592,7 @@ def qa27():
     return main
 
 
-def qa50():
+def qa50_held_item_actions():
     import asyncio, sys
     # v48: 손에 든 물건의 일만 함 (가구=놓기, 삽=파기, 무기=공격 …), 빈손이면 예전처럼 다 함 / 장비의 무기 칸 없앰 → 든 무기가 무기
     H2=HOOK.replace("computeLight}","computeLight,curWeapon,holdMode,newGame,RECIPES,EQ_SLOTS,get panel(){return panel},renderPanel,HOT}")
@@ -670,7 +670,7 @@ def qa50():
     return main
 
 
-def qa51():
+def qa51_hand_drawn_art():
     import asyncio, sys, os, io, json, base64, shutil, subprocess
     # v49 손그림 불러오기 / v53부터 한 칸 16px(HD=1): 세계를 1:1로 그리고, dev/art의 16px 손그림을 지금 그림 대신 씀
     from PIL import Image, ImageDraw

@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa8():
+def qa8_craft_quantity():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES}")
     async def main():
@@ -48,7 +48,7 @@ def qa8():
     return main
 
 
-def qa9():
+def qa9_character_menu():
     import asyncio, sys
     async def main():
         mkpage(SRC,'qa.html')
@@ -94,7 +94,7 @@ def qa9():
     return main
 
 
-def qa13():
+def qa13_dress_up():
     import asyncio, sys
     async def main():
         mkpage(SRC,'qa.html')
@@ -138,7 +138,7 @@ def qa13():
     return main
 
 
-def qa18():
+def qa18_drag_zones_layout():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,ENEMY,FLOWERS,zoneTick,growTick,perform,canPlace,isSolid,mkEnemy,hitEnemy,genFlowerZones,maxHp,FLOOR_ITEM,refreshHotbar}")
     ARENA="()=>{const G=__T.G;for(let y=96;y<124;y++)for(let x=96;x<126;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.drops.length=0;G.p.x=105.5;G.p.y=110.5;G.p.face={x:1,y:0};G.p.dir='side';G.p.hp=__T.maxHp();for(let i=0;i<30;i++)G.inv[i]=null;G.sel=0;G.fzones=[{x:112,y:110,c:'R',dead:[]}]}"
@@ -323,7 +323,7 @@ def qa18():
     return main
 
 
-def qa20():
+def qa20_chests():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,canCraft,nearStations,maxCraft,linkedChests,availCount}")
     SETUP="""()=>{const G=__T.G;for(let y=104;y<118;y++)for(let x=104;x<122;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}for(let i=0;i<30;i++)G.inv[i]=null;G.enemies.length=0;G.p.x=110.5;G.p.y=112.5;
@@ -373,7 +373,7 @@ def qa20():
     return main
 
 
-def qa21():
+def qa21_hotbar_bag():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,refreshHotbar,perform,decide,HOT,invSize,stackMax:id=>(ITEMS[id].stack||((!ITEMS[id].kind||ITEMS[id].kind==='ground'||id==='dirt')?999:99)),sortBag,hotClick}")
     LAYOUT="""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
@@ -474,7 +474,7 @@ def qa21():
     return main
 
 
-def qa47():
+def qa47_map_markers():
     import asyncio, sys
     # 지도: 찾았지만 안 연 보물상자 표시를 체크박스로 켜고 끄기
     H2=HOOK.replace("computeLight}","computeLight,mapChestOn}")

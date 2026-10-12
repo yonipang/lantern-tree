@@ -3,7 +3,7 @@
 from harness import *
 
 
-def qa10():
+def qa10_durability_repair():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,checkGuide,bestPick,curWeapon,get panelKind(){return panel&&panel.kind}}")
     async def main():
@@ -86,7 +86,7 @@ def qa10():
     return main
 
 
-def qa11():
+def qa11_salvage():
     import asyncio, sys
     async def main():
         mkpage(SRC,'qa.html')
@@ -134,7 +134,7 @@ def qa11():
     return main
 
 
-def qa17():
+def qa17_weapons_skills():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,give:(id)=>{const i=G.inv.findIndex((s,k)=>k<9&&!s);G.inv[i]={id,c:1};if(DUR[id])G.inv[i].dur=DUR[id][0];invDirty=true},GUIDE,RECIPES,nearStations,canCraft,checkGuide,gainXp,maxHp,maxMp,useSkill,SKILLS,XP_NEED,WTYPE,curWeapon,perform,swingAttack,targetTile,canPlace:typeof canPlace!=='undefined'?canPlace:null}")
     ARENA="()=>{const G=__T.G;for(let y=100;y<120;y++)for(let x=100;x<122;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.p.x=105.5;G.p.y=110.5;G.p.face={x:1,y:0};G.p.dir='side';G.p.hp=__T.maxHp();G.p.mp=__T.maxMp();for(let i=0;i<30;i++)G.inv[i]=null;G.sel=0}"
@@ -260,7 +260,7 @@ def qa17():
     return main
 
 
-def qa42():
+def qa42_equipment_weapons():
     import asyncio, sys
     # 장비 메뉴·무기 (v42): 장비 칸, 주먹·도끼, 광물 화살 + 돌 채굴기 (v48: 무기 칸 없음 · 장비는 가방 안)
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,SPR,circuitTick,swingAttack,updatePShots,mkEnemy,curWeapon,wearItem,unwear,wearing,hitObj,hotClick,freshEquip,WTYPE,rarOf}")
@@ -373,7 +373,7 @@ def qa42():
     return main
 
 
-def qa43():
+def qa43_materials_upgrades():
     import asyncio, sys
     # 재료·강화 (v43): 화강암·석영·수정결정, 정제 석영, 지역 재료, 용광로(강화·분해), 장비 강화, 반지, 지역 난이도
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,SPR,WALLS,STN,breakWall,hitObj,freshBoss,hitBoss,upgCost,upgText,ringV,meleeMul,mineMul,hurtPlayer,gainXp,regionEnemy,mkEnemy,curWeapon,bestPick,salvGet2,envTick,circuitTick,quartzAt,maxMp,rarOf}")
@@ -485,7 +485,7 @@ def qa43():
     return main
 
 
-def qa55():
+def qa55_renames():
     import asyncio, sys
     # v58: 이름 변경 — 화로 → 용광로, 용광로 → 장비제작대 / 구이 4개는 요리솥으로 / 장비제작대는 작업대에서 나무·돌로
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,STN,GUIDE,newGame}")
@@ -521,7 +521,7 @@ def qa55():
     return main
 
 
-def qa56():
+def qa56_timed_jobs():
     import asyncio, sys
     # v59: 용광로·요리솥은 넣어 두고 나중에 꺼내기 (한 번에 한 가지, 30개까지, 실제 시간으로 진행) / 게임을 꺼 둔 동안에도 작물 등이 자람
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,jobTime,jobDone,takeJob,cancelJob,returnObj,perform,get panel(){return panel},renderPanel,JOB_MAX,cropStage,advanceOffline}")
@@ -589,7 +589,7 @@ def qa56():
     return main
 
 
-def qa57():
+def qa57_workbench_tiers():
     import asyncio, sys
     # v60: 작업대 단계 — 작업대 → 구리 → 철 → 석영 → 금 → 서리, 제작 창 맨 위에서 재료를 넣어 올리기, 높은 단계는 아래 단계 물건도 (자기 단계가 맨 위)
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,BENCH_N,BENCH_IT,returnObj,perform,get panel(){return panel},renderPanel,GUIDE,STN,fpTiles}")
@@ -641,7 +641,7 @@ def qa57():
     return main
 
 
-def qa58():
+def qa58_gear_bench_tiers():
     import asyncio, sys
     # v61: 장비제작대도 6단계로 올리기 — 무기·방어구·장신구·도구는 장비제작대에서 (제작·수리·분해·강화 / 전체·무기·방어구·장신구·도구)
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,GEAR_N,GEAR_IT,returnObj,get panel(){return panel},renderPanel,GUIDE}")
@@ -695,7 +695,7 @@ def qa58():
     return main
 
 
-def qa59():
+def qa59_workbench_tabs():
     import asyncio, sys
     # v62: 작업대 창 — 1줄 아이콘 탭(전체·재료·도구·제작대·가구·건축·편의, 고른 탭만 이름), 2줄 탭(가구: 의자·탁자·침대·수납·조명·장식 / 건축: 벽·바닥·울타리·기둥·문·창문·자연 / 편의: 회로·농사·채굴장 / 제작대), 세트는 태그, 손 제작도 작업대에서
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,bcat,get panel(){return panel},renderPanel}")
