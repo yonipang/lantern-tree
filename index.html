@@ -390,6 +390,7 @@ function hexRgb(h) { const n = parseInt(h.slice(1, 7), 16); return [(n >> 16 & 2
 
 // 한국어 조사 고르기: josa('나무', '을', '를') → '나무를' (구조 변경 5단계: world.js에서 옮김)
 const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? a : b); };
+const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); }; // 「으로/로」
 // ================= 난수·노이즈 =================
 // · rand(): 게임 결과에 영향을 주는 무작위 (피해·치명타·드롭·몬스터 움직임·생성 …) — 멀티플레이에서는 방장만 굴려요
 // · fxRand(): 보이기·소리에만 쓰는 무작위 (반짝이·나뭇잎·화면 흔들림 …) — 사람마다 달라도 괜찮아요
@@ -2049,7 +2050,7 @@ function digGround(t) {
   if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
   else { if (f === 2 || !terrainOk(f)) return; const id = TERRAIN[f].item; G.floor[i] = 2; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
     emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === WATER ? '#8fd0ff' : f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : '#b9a8ff', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
-  emit('tile', t.x, t.y); invDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
+  emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
 function canPlace(tx, ty, it) {
   if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid); }
@@ -2097,7 +2098,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2200,7 +2201,7 @@ function deserialize(s) {
   G.pets = {}; if (s.pets && typeof s.pets === 'object') for (const k in s.pets) if (ANIMALS[k] && ANIMALS[k].pet && s.pets[k]) G.pets[k] = 1; G.petOn = G.pets[s.petOn] ? s.petOn : null; G.wild = []; G.petE = null; // v45 pets
   G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null;
-  G.look = cleanLook(s.look); CHARS.custom = lookDef(G.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; buildPlayer(G.outfit);
+  G.look = cleanLook(s.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; emit('look');
   const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
@@ -2950,7 +2951,7 @@ function returnObj(o, x, y) {
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
   if (DUR[d.item]) { const it = { id: d.item, c: 1, dur: Math.round(o.e != null ? o.e : DUR[d.item][0]) }; if (moveInto(G.inv, it)) { spawnDrop(d.item, 1, x, y); G.drops[G.drops.length - 1].dur = it.dur; } }
   else { const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; const l = addItem(it, 1, false); if (l) spawnDrop(it, 1, x, y); } // v60: an upgraded workbench comes back as its tier item
-  invDirty = true;
+  emit('inv');
 }
 // ================= inventory =================
 const invSize = () => HOT + BAG0 + BAG_STEP * ((G && G.bagLv) || 0);
@@ -2959,10 +2960,9 @@ const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting
 const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['food', '음식'], ['deco', '꾸미기'], ['seed', '씨앗']];
 function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'axe', 'lasso', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
-let invDirty = true;
 function addItem(id, c, count = true) {
   if (ITEMS[id] && ITEMS[id].note) { learnRecipe(ITEMS[id].note); return 0; } // recipe notes teach a dish instead of taking a bag slot
-  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } G.newIds = G.newIds || {}; G.newIds[id] = 1; invDirty = true; return 0; } // v65: tools go into the tool pouch
+  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } G.newIds = G.newIds || {}; G.newIds[id] = 1; emit('inv'); return 0; } // v65: tools go into the tool pouch
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
   // v65: new stacks go into an empty hotbar slot first, then the bag
@@ -2972,19 +2972,19 @@ function addItem(id, c, count = true) {
   if (got > 0 && rarOf(id) >= 3 && (ITEMS[id].kind === 'sword' || ITEMS[id].kind === 'pick')) { G.stats.epicSeen = G.stats.epicSeen || {}; G.stats.epicSeen[id] = 1; }
   if (got > 0 && ITEMS[id].kind === 'sword') autoHotWeapon(id);
   if (count && got > 0) { const S = G.stats; if (id === 'wood') S.wood += got; if (id === 'copperOre') S.copperOre += got; if (id === 'copperBar') S.copperBar += got; if (id === 'lightSeed') S.seedsFound += got; }
-  invDirty = true; return left;
+  emit('inv'); return left;
 }
 // 'anyFish' / 'anyPetal' in a recipe take any fish / any petal
 const WILD = { anyFish: it => !!it.fish, anyPetal: it => !!it.petal };
 const idIs = (sid, id) => sid === id || (!!WILD[id] && !!ITEMS[sid] && WILD[id](ITEMS[sid]));
 const countItem = id => G.inv.concat(G.tools || []).reduce((a, s) => a + (s && idIs(s.id, id) ? s.c : 0), 0);
 function removeItem(id, c) { for (let i = G.inv.length - 1; i >= 0 && c > 0; i--) { const s = G.inv[i]; if (s && idIs(s.id, id)) { const k = Math.min(s.c, c); s.c -= k; c -= k; if (!s.c) G.inv[i] = null; } }
-  const T = G.tools || []; for (let i = T.length - 1; i >= 0 && c > 0; i--) if (idIs(T[i].id, id)) { const h = heldTool(); T.splice(i, 1); c--; fixTsel(h); } invDirty = true; }
+  const T = G.tools || []; for (let i = T.length - 1; i >= 0 && c > 0; i--) if (idIs(T[i].id, id)) { const h = heldTool(); T.splice(i, 1); c--; fixTsel(h); } emit('inv'); }
 const durMax = id => DUR[id] ? DUR[id][0] : 0;
 const durOf = s => !s || !DUR[s.id] ? 0 : (s.dur == null ? DUR[s.id][0] : s.dur);
 const isBroken = s => !!(s && DUR[s.id] && durOf(s) <= 0);
 function wear(s, n = 1) {
-  if (!s || !DUR[s.id] || isBroken(s)) return; const mx = DUR[s.id][0], before = durOf(s); s.dur = Math.max(0, before - n); invDirty = true;
+  if (!s || !DUR[s.id] || isBroken(s)) return; const mx = DUR[s.id][0], before = durOf(s); s.dur = Math.max(0, before - n); emit('inv');
   const nm = ITEMS[s.id].n;
   if (s.dur <= 0) { emit('toast', `${josa(nm, '이', '가')} 망가졌어요! 장비제작대에서 고칠 수 있어요`, null, 'broke' + s.id); emit('sfx', 'clink'); }
   else if (before > mx * .2 && s.dur <= mx * .2) emit('toast', `${josa(nm, '이', '가')} 많이 닳았어요 (${s.dur}/${mx})`, null, 'worn' + s.id);
@@ -2994,10 +2994,10 @@ const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv
 function pickHot(i) { // 단축칸 고르기 (같은 칸을 한 번 더 고르면 음식은 먹고 옷은 입어요)
   { const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; } // v65
   if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
-  G.sel = i; invDirty = true;
+  G.sel = i; emit('inv');
 }
 defineCmd('hot', c => pickHot(c.i));
-defineCmd('sel', c => { const d = c.d, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); invDirty = true; }); // 마우스 휠
+defineCmd('sel', c => { const d = c.d, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); emit('inv'); }); // 마우스 휠
 // ================= 가방·상자·제작 명령 (구조 변경 7-2: ui/panel-actions.js·ui/panels.js에서 옮김) =================
 // 창 안 버튼(ui/panel-actions.js의 onSheetClick)과 칸 끌어 옮기기는 명령만 보내고(runCmd), 규칙은 여기서 처리해요.
 // 창 안 고르기 상태(UIS)·확인 한 번 더 묻기·다시 그리기는 화면 쪽. 명령이 false를 돌려주면 「아무 일도 안 함」(화면은 다시 그리지 않음).
@@ -3019,10 +3019,10 @@ function takeAvail0(id, c) { // bag first, then the linked chests; returns what 
   for (const o of linkedChests()) for (let k = 0; k < o.items.length && c > 0; k++) { const s = o.items[k]; if (!slotIs(s, id)) continue; const t = Math.min(s.c, c); s.c -= t; c -= t; if (!s.c) o.items[k] = null; }
   return c;
 }
-function takeAvail(id, c) { c = takeAvail0(id, c); if (c > 0 && STAR_OF[id]) takeAvail0(STAR_OF[id], c); invDirty = true; } // plain ones go first, star ones are kept for last
+function takeAvail(id, c) { c = takeAvail0(id, c); if (c > 0 && STAR_OF[id]) takeAvail0(STAR_OF[id], c); emit('inv'); } // plain ones go first, star ones are kept for last
 function refillHot(slot, id) {
   if (slot == null || slot >= HOT || G.inv[slot] || !id) return;
-  for (let j = HOT; j < G.inv.length; j++) { const t = G.inv[j]; if (t && t.id === id) { G.inv[slot] = t; G.inv[j] = null; invDirty = true; emit('ftext', G.p.x, G.p.y - 1.5, `${ITEMS[id].n} 보충`, '#bfe6ff'); return; } }
+  for (let j = HOT; j < G.inv.length; j++) { const t = G.inv[j]; if (t && t.id === id) { G.inv[slot] = t; G.inv[j] = null; emit('inv'); emit('ftext', G.p.x, G.p.y - 1.5, `${ITEMS[id].n} 보충`, '#bfe6ff'); return; } }
 }
 // bag (not the hotbar) → chest; 'same' only moves kinds the chest already holds
 function stashBag(o, same) { let n = 0, left = 0; for (let i = HOT; i < G.inv.length; i++) { const s = G.inv[i]; if (!s) continue; if (same && !o.items.some(x => x && x.id === s.id)) continue; const l = moveInto(o.items, s); n += s.c - l; if (l) { s.c = l; left++; } else G.inv[i] = null; } return { n, left }; }
@@ -3033,29 +3033,29 @@ function sortBag() { // merge stacks and order the bag by kind; the hotbar stays
   const catOrd = { equip: 0, food: 1, mat: 2, seed: 3, deco: 4 }, ord = Object.keys(ITEMS);
   merged.sort((a, b) => catOrd[bagCat(a.id)] - catOrd[bagCat(b.id)] || ord.indexOf(a.id) - ord.indexOf(b.id) || b.c - a.c);
   for (let j = HOT; j < G.inv.length; j++) G.inv[j] = merged[j - HOT] || null;
-  invDirty = true;
+  emit('inv');
 }
 function moveSlot(A, B) {
   if (A.arr === B.arr && A.i === B.i) return false; const a = A.arr[A.i], b = B.arr[B.i]; if (!a) return false;
   if (b && a.id === b.id && b.c < stackMax(b.id)) { const k = Math.min(stackMax(b.id) - b.c, a.c); b.c += k; a.c -= k; if (!a.c) A.arr[A.i] = null; }
   else { A.arr[A.i] = b; B.arr[B.i] = a; }
-  invDirty = true; emit('sfx', 'place'); return true;
+  emit('inv'); emit('sfx', 'place'); return true;
 }
 const slotArr = s => s.o == null ? G.inv : (G.objs.get(s.o) || {}).items; // 칸 위치 { o: 상자 칸(가방이면 null), i }
 // ---- 가방 ----
-defineCmd('invSwap', c => { const A = G.inv[c.a], B = G.inv[c.b]; if (A && B && A.id === B.id && B.c < stackMax(B.id)) { const k = Math.min(stackMax(B.id) - B.c, A.c); B.c += k; A.c -= k; if (!A.c) G.inv[c.a] = null; } else { G.inv[c.a] = B; G.inv[c.b] = A; } emit('sfx', 'place'); invDirty = true; });
+defineCmd('invSwap', c => { const A = G.inv[c.a], B = G.inv[c.b]; if (A && B && A.id === B.id && B.c < stackMax(B.id)) { const k = Math.min(stackMax(B.id) - B.c, A.c); B.c += k; A.c -= k; if (!A.c) G.inv[c.a] = null; } else { G.inv[c.a] = B; G.inv[c.b] = A; } emit('sfx', 'place'); emit('inv'); });
 defineCmd('move', c => { const A = slotArr(c.a), B = slotArr(c.b); return !!A && !!B && moveSlot({ arr: A, i: c.a.i }, { arr: B, i: c.b.i }); }); // 끌어 옮기기
 defineCmd('sortBag', () => { sortBag(); emit('sfx', 'place'); emit('toast', '가방을 정리했어요', null, 'sortbag'); });
 defineCmd('wear', c => { if (G.inv[c.i]) wearItem(c.i); });
 defineCmd('unwear', c => { if (G.equip[c.sl]) unwear(c.sl); });
 defineCmd('eat', c => eat(c.i));
-defineCmd('toHot', c => { const from = c.i; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; invDirty = true; emit('sfx', 'place'); });
-defineCmd('trash', c => { G.inv[c.i] = null; invDirty = true; });
+defineCmd('toHot', c => { const from = c.i; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; emit('inv'); emit('sfx', 'place'); });
+defineCmd('trash', c => { G.inv[c.i] = null; emit('inv'); });
 defineCmd('trashTool', c => clearSlot('t:' + c.i));
 // ---- 상자 ----
 defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items) return false; const r = stashBag(o, c.same);
-  emit('toast', r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : c.same ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) emit('sfx', 'place'); invDirty = true; });
-defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); invDirty = true; }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
+  emit('toast', r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : c.same ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) emit('sfx', 'place'); emit('inv'); });
+defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
 defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); lightDirty = true; } }); // 제작대 회수
 defineCmd('markAdd', () => { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); });
 defineCmd('markDel', c => { G.marks.splice(c.i, 1); });
@@ -3068,14 +3068,14 @@ function bestTool(kind) { if (!G) return null; const h = selItem(); if (h && ITE
   let b = null; for (const s of (G.tools || []).concat(G.inv)) { if (!s || !ITEMS[s.id] || ITEMS[s.id].kind !== kind || isBroken(s)) continue; if (!b || toolPow(s) > toolPow(b)) b = s; } return b; }
 function holdTool(s, chosen) { if (!s || !G.tools) return; G.tHand = !!chosen; let k = G.tools.indexOf(s);
   if (k < 0) { const j = G.inv.indexOf(s); if (j < 0) return; G.inv[j] = null; G.tools.push(s); k = G.tools.length - 1; } // a tool still in the bag moves into the pouch
-  G.tsel = k; G.sel = -1; invDirty = true; }
+  G.tsel = k; G.sel = -1; emit('inv'); }
 function fixTsel(h) { if (!G.tools.length) { G.tsel = 0; if (G.sel < 0) G.sel = 0; return; } const k = h ? G.tools.indexOf(h) : -1; if (k >= 0) G.tsel = k; else { G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); const kd = h && ITEMS[h.id].kind, nx = kd && bestTool(kd); if (nx && G.tools.includes(nx)) G.tsel = G.tools.indexOf(nx); } }
 // tools that ended up in the bag (from a chest, an old save …) go to the pouch
-function sweepTools() { if (!G || !G.tools) return; const h = heldTool(); for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { if (i === G.sel) { G.inv[i] = null; G.tools.push(s); G.tsel = G.tools.length - 1; G.sel = -1; } else { G.inv[i] = null; G.tools.push(s); } invDirty = true; } } if (h && G.sel < 0) fixTsel(h); }
+function sweepTools() { if (!G || !G.tools) return; const h = heldTool(); for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { if (i === G.sel) { G.inv[i] = null; G.tools.push(s); G.tsel = G.tools.length - 1; G.sel = -1; } else { G.inv[i] = null; G.tools.push(s); } emit('inv'); } } if (h && G.sel < 0) fixTsel(h); }
 // the bag and the pouch together for repair · salvage · upgrade lists ('t:3' = pouch slot 3)
 const slotList = () => G.inv.map((s, i) => ({ s, i })).concat((G.tools || []).map((s, k) => ({ s, i: 't:' + k })));
 const itemAt = i => typeof i === 'string' ? (i.startsWith('e:') ? G.equip[i.slice(2)] : i.startsWith('t:') ? (G.tools || [])[+i.slice(2)] : null) : G.inv[i];
-function clearSlot(i) { if (typeof i === 'string' && i.startsWith('t:')) { const h = heldTool(), k = +i.slice(2), gone = G.tools[k]; G.tools.splice(k, 1); if (h && h === gone) { G.tsel = 0; if (!G.tools.length && G.sel < 0) G.sel = 0; } else fixTsel(h); } else G.inv[i] = null; invDirty = true; }
+function clearSlot(i) { if (typeof i === 'string' && i.startsWith('t:')) { const h = heldTool(), k = +i.slice(2), gone = G.tools[k]; G.tools.splice(k, 1); if (h && h === gone) { G.tsel = 0; if (!G.tools.length && G.sel < 0) G.sel = 0; } else fixTsel(h); } else G.inv[i] = null; emit('inv'); }
 // one of each kind for the tool row: the best working one, broken ones hidden
 function toolRowList() { const by = {}; for (const s of G.tools || []) { if (isBroken(s)) continue; const k = ITEMS[s.id].kind; if (!by[k] || toolPow(s) > toolPow(by[k])) by[k] = s; } return TOOL_KINDS.map(k => by[k]).filter(Boolean); }
 defineCmd('hold', c => { const s = G.tools && G.tools[c.i]; if (s) holdTool(s, true); });
@@ -3093,13 +3093,13 @@ const eqCopy = s => { const c = { id: s.id, c: 1 }; if (s.dur != null) c.dur = s
 function wearItem(i) { const s = G.inv[i], it = s && ITEMS[s.id], sl = s && eqSlotOf(s.id); if (!sl) return; const old = G.equip[sl];
   G.equip[sl] = eqCopy(s);
   G.inv[i] = old ? eqCopy(old) : null; // the clothes taken off go where the new ones were
-  if (sl === 'body') buildPlayer(G.outfit || 0); emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, sl === 'body' ? (WEAR_PAL[s.id] || ['#fff'])[0] : '#ffe9a8', 12, 2.2, .5);
-  emit('toast', `${josa(it.n, '을', '를')} ${sl === 'body' ? '입었어요' : '달았어요'}`, 'good', 'wear'); invDirty = true; }
-function unwear(slot) { const s = G.equip[slot]; if (!s) return; const left = moveInto(G.inv, eqCopy(s)); if (left) { emit('toast', '가방이 가득 찼어요', null, 'full'); return; } G.equip[slot] = null; if (slot === 'body') buildPlayer(G.outfit || 0); emit('sfx', 'place'); invDirty = true; }
+  if (sl === 'body') emit('look'); emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, sl === 'body' ? (WEAR_PAL[s.id] || ['#fff'])[0] : '#ffe9a8', 12, 2.2, .5);
+  emit('toast', `${josa(it.n, '을', '를')} ${sl === 'body' ? '입었어요' : '달았어요'}`, 'good', 'wear'); emit('inv'); }
+function unwear(slot) { const s = G.equip[slot]; if (!s) return; const left = moveInto(G.inv, eqCopy(s)); if (left) { emit('toast', '가방이 가득 찼어요', null, 'full'); return; } G.equip[slot] = null; if (slot === 'body') emit('look'); emit('sfx', 'place'); emit('inv'); }
 // v48: a weapon picked up or made while no weapon sits in the hotbar goes into an empty hotbar slot, ready to hold
 function autoHotWeapon(id) { if (!G || ITEMS[id].kind !== 'sword') return; for (let k = 0; k < HOT; k++) { const x = G.inv[k]; if (x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword') return; }
   const to = G.inv.slice(0, HOT).findIndex(x => !x), k = G.inv.findIndex((x, j) => j >= HOT && x && x.id === id); if (to < 0 || k < 0) return;
-  G.inv[to] = G.inv[k]; G.inv[k] = null; invDirty = true; if (started) emit('toast', `${josa(ITEMS[id].n, '을', '를')} 단축칸에 넣었어요 · 골라 들면 칼 버튼이 그 무기로 싸워요`, 'good', 'wphot'); }
+  G.inv[to] = G.inv[k]; G.inv[k] = null; emit('inv'); if (started) emit('toast', `${josa(ITEMS[id].n, '을', '를')} 단축칸에 넣었어요 · 골라 들면 칼 버튼이 그 무기로 싸워요`, 'good', 'wphot'); }
 const lvOf = s => (s && s.lv) || 0;
 const upgOk = id => { const it = ITEMS[id]; return !!it && (it.kind === 'sword' || it.kind === 'pick' || it.kind === 'axe' || it.kind === 'wear'); };
 const upgTier = id => { const r = rarOf(id); return r >= 0 ? Math.min(4, r) : 3; }; // clothes and charms from the deep caves count as heroic
@@ -3139,16 +3139,16 @@ const stationTier = c => c && TIERED[c.st] ? (c.i != null ? Math.max(0, benchLv(
 function craftable(r, near, c) { const st = (c && c.st) || null; return (!r.dish || knows(r.dish)) && atHere(r, st) && (!st || near.has(st)) && (!TIERED[st] || (r.tier || 0) <= stationTier(c)) && r.req.every(([id, c2]) => availCount(id) >= c2); }
 // ---- 강화·분해·수리·작업대 올리기 (가까운 제작대와 연결된 상자의 재료를 함께 써요) ----
 defineCmd('upg', c => { const s = upgSlot(c.i); if (!s || !upgOk(s.id) || lvOf(s) >= UPG_MAX || !nearStations().has('smelter')) return false; const cost = upgCost(s.id, lvOf(s)); POOL = null; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); emit('toast', `강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); invDirty = true; });
+  for (const [id, n] of cost) takeAvail(id, n); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); emit('toast', `강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); emit('inv'); });
 defineCmd('salv', c => { const s = itemAt(c.i), got = s && (DUR[s.id] || upgOk(s.id)) && salvGet2(s); if (!got || !canSalv(nearStations())) return false;
   clearSlot(c.i); for (const [id, n] of got) { const l = addItem(id, n, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
-  emit('sfx', 'brk'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, n]) => ITEMS[id].n + ' ' + n + '개').join(', ')}`, 'good'); invDirty = true; });
+  emit('sfx', 'brk'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, n]) => ITEMS[id].n + ' ' + n + '개').join(', ')}`, 'good'); emit('inv'); });
 defineCmd('fix', c => { const s = itemAt(c.i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return false; const cost = repairCost(s); POOL = null; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; });
+  for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); emit('inv'); });
 defineCmd('benchUp', c => { const o = c.o != null ? G.objs.get(c.o) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return false; POOL = null; const cost = BENCH_UP[lv + 1]; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
   for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1;
   if (o.t === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, o.lv); else { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, o.lv); }
-  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${tierNames(o.t)[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); invDirty = true; checkGuide(); });
+  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${tierNames(o.t)[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
 // ---- 제작 { r: 레시피 번호, q: 몇 번, st·i·tier: 제작 자리 } → false 못 만듦 · 'reorder' 목록 순서를 새로 · 그 밖은 다시 그리기 ----
 defineCmd('craft', c => {
   const r = RECIPES[c.r], near = nearStations(); POOL = null; if (!craftable(r, near, c)) return false;
@@ -3158,12 +3158,12 @@ defineCmd('craft', c => {
   const before = so ? stockMap() : null;
   for (const [id, n] of r.req) takeAvail(id, n * q);
   if (so) { const after = stockMap(), used = Object.keys(before).map(id => [id, before[id] - (after[id] || 0)]).filter(([, n]) => n > 0), per = jobTime(r);
-    so.job = { out: r.out, n: r.n, q, per, t0: nowS(), used }; emit('sfx', 'place'); emit('toast', `${STN[r.at]}에 넣었어요 · ${fmtT(q * per)} 뒤에 다 돼요`, 'good', 'jobput'); invDirty = true; return 'reorder'; }
+    so.job = { out: r.out, n: r.n, q, per, t0: nowS(), used }; emit('sfx', 'place'); emit('toast', `${STN[r.at]}에 넣었어요 · ${fmtT(q * per)} 뒤에 다 돼요`, 'good', 'jobput'); emit('inv'); return 'reorder'; }
   G.stats.made = G.stats.made || {}; G.stats.made[r.out] = (G.stats.made[r.out] || 0) + q;
-  if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); emit('sfx', 'craft'); emit('craftNote', r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); invDirty = true; return 'reorder'; }
+  if (ITEMS[r.out].bagUp) { G.bagLv = (G.bagLv || 0) + 1; while (G.inv.length < invSize()) G.inv.push(null); emit('sfx', 'craft'); emit('craftNote', r.out, 1, `가방이 ${G.inv.length - HOT}칸으로 늘었어요!`); emit('inv'); return 'reorder'; }
   const left = addItem(r.out, total); if (left) spawnDrop(r.out, left, G.p.x, G.p.y);
   emit('sfx', 'craft'); emit('craftNote', r.out, total); gainXp(Math.min(8, q * (r.tier ? 3 : r.at ? 1 : 0)));
-  invDirty = true; checkGuide();
+  emit('inv'); checkGuide();
 });
 defineCmd('jobTake', c => { const o = c.o != null && G.objs.get(c.o); if (o) takeJob(o, G.p.x, G.p.y); });
 defineCmd('jobCancel', c => { const o = c.o != null && G.objs.get(c.o); if (o) { cancelJob(o, G.p.x, G.p.y); emit('sfx', 'click'); emit('toast', '취소하고 재료를 돌려받았어요', null, 'jobcancel'); } });
@@ -3177,11 +3177,11 @@ function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; const
   const left = addItem(j.out, total); if (left) spawnDrop(j.out, left, x, y);
   G.stats.made = G.stats.made || {}; G.stats.made[j.out] = (G.stats.made[j.out] || 0) + d; gainXp(Math.min(8, d));
   if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - Math.floor(c * d / j.q)]); j.q -= d; j.t0 += d * j.per; }
-  if (!quiet) { emit('sfx', 'craft'); emit('craftNote', j.out, total); } invDirty = true; checkGuide(); return total; }
+  if (!quiet) { emit('sfx', 'craft'); emit('craftNote', j.out, total); } emit('inv'); checkGuide(); return total; }
 // cancelling hands back what is finished and the materials of everything not started yet
 function cancelJob(o, x, y) { if (!o || !o.job) return; takeJob(o, x, y, true); const j = o.job; if (!j) return; const rest = j.q - jobDone(j);
   for (const [id, c] of j.used) { const back = Math.floor(c * rest / j.q); if (back > 0 && ITEMS[id]) { const l = addItem(id, back, false); if (l) spawnDrop(id, l, x, y); } }
-  delete o.job; invDirty = true; }
+  delete o.job; emit('inv'); }
 function advanceOffline(sec) { if (!G || !(sec > 1)) return 0; sec = Math.min(sec, OFF_MAX); G.time += sec; for (const b of G.buffs || []) b.end += sec; return sec; } // food buffs wait for you
 const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
 const tierNames = st => TIERED[st] || BENCH_N;
@@ -3250,7 +3250,7 @@ function placeItem(t) {
     if (dd.sz) { const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
-  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
+  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } emit('inv');
   emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; emit('tile', t.x, t.y);
 }
 const GROW_SPR = { bench: [2, 2], logBench: [2, 1], stoneBench: [2, 1],
@@ -3315,7 +3315,7 @@ function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf
   if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
   const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
   if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
-  emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); lightDirty = true; emit('tile', t.x, t.y); invDirty = true; }
+  emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); lightDirty = true; emit('tile', t.x, t.y); emit('inv'); }
 // ================= 플레이어: 능력치·스킬·경험치, 움직이기·배고픔·다치기·기절·깨어나기, 앉기·자기·먹기, 능력치·스킬·꾸미기 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // skill points earned by a level: one per level up, plus a bonus one at the top level (10 skills × 3 steps = 30)
@@ -3353,8 +3353,8 @@ defineCmd('skUp', c => { const R = G.rpg, i = c.s, S = SKILLS[i]; if (!S) return
 defineCmd('skReset', () => { const R = G.rpg; R.sp += Object.values(R.sk).reduce((a2, l) => a2 + l, 0); R.sk = {}; R.slot = [null, null]; G.p.mp = Math.min(G.p.mp, maxMp()); emit('sfx', 'click'); emit('toast', '스킬 포인트를 모두 돌려받았어요', 'good', 'skreset'); });
 defineCmd('skSlot', c => { const id = c.s, R = G.rpg, m = c.n; if (!R.sk[id]) return false; if (R.slot[m] === id) R.slot[m] = null; else { const o = R.slot.indexOf(id); if (o >= 0) R.slot[o] = R.slot[m]; R.slot[m] = id; } emit('sfx', 'click'); });
 // ---- 꾸미기·캐릭터·긴급 탈출·지도 표시(개발자) ----
-defineCmd('look', c => { G.look = cleanLook(c.look); CHARS.custom = lookDef(G.look); G.char = 'custom'; G.outfit = 0; buildPlayer(0); emit('puff', G.p.x, G.p.y - .5, CHARS.custom.pal[0], 16, 2.6, .6); emit('sfx', 'craft'); emit('toast', '새 모습으로 꾸몄어요', 'good'); });
-defineCmd('char', c => { const i = c.c; if (!(CHARS[i] && G.char !== i)) return false; G.char = i; G.outfit = 0; buildPlayer(0); emit('puff', G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); emit('sfx', 'craft'); emit('toast', `${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); return true; });
+defineCmd('look', c => { G.look = cleanLook(c.look); G.char = 'custom'; G.outfit = 0; emit('look'); emit('puff', G.p.x, G.p.y - .5, lookDef(G.look).pal[0], 16, 2.6, .6); emit('sfx', 'craft'); emit('toast', '새 모습으로 꾸몄어요', 'good'); });
+defineCmd('char', c => { const i = c.c; if (!(CHARS[i] && G.char !== i)) return false; G.char = i; G.outfit = 0; emit('look'); emit('puff', G.p.x, G.p.y - .5, CHARS[i].pal[0], 14, 2.5, .6); emit('sfx', 'craft'); emit('toast', `${roJosa(CHARS[i].n)} 바꿨어요`, 'good'); return true; });
 function standUp() { const p = G.p, s = p.sit; if (!s) return; p.sit = null; p.x = s.px; p.y = s.py; if (boxHits(p.x, p.y, .28)) { p.x = s.x + .5; p.y = s.y + 1.5; } }
 function sleepIn(t) { const p = G.p; G.fish = null; p.sleep = { t: 2.6, x: t.x, y: t.y }; p.inv = 4; emit('fade', 'sleep'); emit('sfx', 'sleep'); }
 function wakeUp() { const p = G.p, s = p.sleep; p.sleep = null; emit('fade', 'wake'); p.hp = maxHp(); p.hunger = Math.max(0, p.hunger - 6); G.spawnPt = { x: s.x, y: s.y }; G.enemies = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) > 12); emit('toast', '푹 잤어요! 체력이 가득 찼고, 여기서 다시 깨어나요', 'good'); }
@@ -3363,7 +3363,7 @@ function eat(slot) {
   const p = G.p; if (p.hunger >= 99.5 && p.hp >= maxHp() && !it.buff) { emit('toast', '지금은 배가 불러요', null, 'full'); return; }
   const bc = it.buff ? buffCheck(it, s.id) : null; if (bc === 'ask') return;
   const gm = 1 + skl('gourmet') * 0.1, fd = Math.round(it.food * gm), hl = Math.round((it.heal || 0) * gm);
-  p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) { G.inv[slot] = null; refillHot(slot, s.id); } invDirty = true;
+  p.hunger = Math.min(100, p.hunger + fd); p.hp = Math.min(maxHp(), p.hp + hl); s.c--; if (!s.c) { G.inv[slot] = null; refillHot(slot, s.id); } emit('inv');
   emit('sfx', 'eat'); emit('ftext', p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) emit('ftext', p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
   if (bc === 'ok') applyBuff(it, s.id);
 }
@@ -3489,7 +3489,7 @@ function recallTick(dt) { const R = G.recall; if (!R) return; const p = G.p;
 function dropLost() {
   if ((G.guide || 0) < 6) return 0; // no loss before the copper pickaxe
   const p = G.p, items = []; for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (!s || bagCat(s.id) !== 'mat' || ITEMS[s.id].kind === 'key') continue; const n = Math.floor(s.c * LOST_SHARE); if (n <= 0) continue; s.c -= n; if (!s.c) G.inv[i] = null; const e = items.find(x => x.id === s.id); if (e) e.c += n; else items.push({ id: s.id, c: n }); }
-  if (!items.length) return 0; invDirty = true;
+  if (!items.length) return 0; emit('inv');
   const bags = []; for (const [i, o] of G.objs) if (o.t === 'lostBag') bags.push([i, o]);
   if (bags.length >= LOST_MAX) { bags.sort((a, b) => (a[1].at || 0) - (b[1].at || 0)); const [oi, oo] = bags[0]; for (const s of oo.items) if (s) { const e = items.find(x => x.id === s.id); if (e) e.c += s.c; else items.push({ ...s }); } G.objs.delete(oi); }
   const px = Math.floor(p.x), py = Math.floor(p.y); let at = -1;
@@ -3498,7 +3498,7 @@ function dropLost() {
   G.objs.set(at, { t: 'lostBag', items, at: Date.now() }); emit('tile', at % W, (at / W) | 0); return items.reduce((a, s) => a + s.c, 0);
 }
 function pickLost(t, o) { const i = idx(t.x, t.y); let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
-  o.items = o.items.filter(Boolean); invDirty = true; emit('sfx', 'pick');
+  o.items = o.items.filter(Boolean); emit('inv'); emit('sfx', 'pick');
   if (!o.items.length) { G.objs.delete(i); lightDirty = true; emit('puff', t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); emit('toast', `잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else emit('toast', `가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
 // ================= 상호작용 버튼: 무엇을 할지 고르기(decide)·하기(perform)·목표 칸, 물체 쓰기, 작은 버튼 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
@@ -3701,8 +3701,8 @@ function perform(a) {
     case 'recall': startRecall(a.mode); G.actCd = 0.4; break;
     case 'lost': pickLost(a.t, a.o); G.actCd = 0.3; break;
     case 'giant': harvestGiant(a.t, a.o); G.actCd = 0.4; break;
-    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); G.actCd = .4; break; }
-    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); G.actCd = .4; break; }
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } emit('inv'); emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); G.actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; emit('inv'); emit('sfx', 'pick'); G.actCd = .4; break; }
     case 'insert': insertSeeds(); G.actCd = 0.4; break;
     case 'tree': emit('open', 'tree'); G.actCd = 0.3; break;
     case 'summon': summonBoss(a.boss); G.actCd = 0.6; break;
@@ -3724,7 +3724,7 @@ function useObj(a) {
   const o = a.o, t = a.t, p = G.p, x = t.x + .5;
   switch (a.u) {
     case 'farm': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
-      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `${OBJ[o.t].n}에서 ${n}개를 꺼냈어요`, 'good', 'farm'); invDirty = true; break; }
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `${OBJ[o.t].n}에서 ${n}개를 꺼냈어요`, 'good', 'farm'); emit('inv'); break; }
       if (farmStage(o) >= 3) { farmHarvest(idx(t.x, t.y), o, false); emit('toast', farmT(o)[1], null, 'farm'); break; }
       emit('toast', `${farmT(o)[2]} (${Math.round(Math.min(1, (G.time - (o.p || 0)) / growOf(o)) * 100)}%) · 건전지·발전기와 전선으로 이으면 다 될 때마다 저절로 ${farmT(o)[0] === '캐기' ? '캐서' : '베어'} 옆 상자에 담아요`, null, 'farm'); break; }
     case 'lever': o.on = !o.on; emit('sfx', 'click'); emit('toast', o.on ? '레버를 켰어요' : '레버를 껐어요', null, 'lever'); break;
@@ -3734,10 +3734,10 @@ function useObj(a) {
       emit('toast', added ? `연료를 넣었어요 · 약 ${Math.round((o.fuel || 0) / 60)}분 동안 일할 수 있어요` : (o.fuel || 0) >= FUEL_MAX - 30 ? '연료가 가득 찼어요' : `연료가 없어요 (나무·젤·송진) · 남은 연료 약 ${Math.round((o.fuel || 0) / 60)}분`, added ? 'good' : null, 'fuel'); if (added) emit('sfx', 'place'); break; }
     case 'sprk': emit('toast', o.work ? '물을 주는 중이에요 · 둘레 5×5 칸의 자라는 작물에 2초마다 물을 줘요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'sprk'); break;
     case 'harv': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
-      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `자동 수확기에서 ${n}개를 꺼냈어요`, 'good', 'harv'); invDirty = true; break; }
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `자동 수확기에서 ${n}개를 꺼냈어요`, 'good', 'harv'); emit('inv'); break; }
       emit('toast', o.work ? '둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'harv'); break; }
     case 'drill': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
-      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); invDirty = true; break; }
+      if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); emit('inv'); break; }
       const d2 = OBJ[o.t]; emit('toast', o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? (d2.only ? '돌 채굴기는 흙벽·돌벽·화강암 벽(지형)만 캘 수 있어요. 광맥은 구리·철·황금 채굴기로 캐요' : '이 채굴기로는 못 캐는 벽이에요') : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
     case 'cinfo': { const d2 = OBJ[o.t]; emit('toast', d2.src === 'cgen' ? '수정 발전기 · 연료 없이 계속 전기를 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 전선을 이어 줘요' : d2.dev === 'door' ? (o.open ? '전기 문 · 전기가 들어와 열려 있어요' : '전기 문 · 전기가 들어오면 열려요') : (o.off === false ? '전기 램프 · 켜져 있어요' : '전기 램프 · 전기가 들어오면 켜져요'), null, 'cinfo'); break; }
     case 'door': { if (OBJ[o.t].dev === 'slide' && o.pw) { emit('toast', '자동 미닫이문 · 전기가 들어와 있어서 다가가면 저절로 열려요', null, 'cinfo'); break; }
@@ -3769,7 +3769,7 @@ function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; c
 // ================= 전투: 무기·휘두르기·쏘기, 스킬, 피해·상태 이상·몬스터 처치, 화살, 공격 버튼 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 function bestArrow() { for (const id of ARROW_ORD) { const k = G.inv.findIndex(s => s && s.id === id); if (k >= 0) return k; } return -1; }
-function takeArrow() { const k = bestArrow(); if (k < 0) return null; const s = G.inv[k], a = ITEMS[s.id].arw; s.c--; if (s.c <= 0) G.inv[k] = null; invDirty = true; G.stats.arrows = (G.stats.arrows || 0) + 1; return a; }
+function takeArrow() { const k = bestArrow(); if (k < 0) return null; const s = G.inv[k], a = ITEMS[s.id].arw; s.c--; if (s.c <= 0) G.inv[k] = null; emit('inv'); G.stats.arrows = (G.stats.arrows || 0) + 1; return a; }
 function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; const h = selItem(); // v48: a pickaxe held is the one used (v65: from the tool slot)
   if (h && ITEMS[h.id] && ITEMS[h.id].kind === 'pick' && !isBroken(h) && (G.sel >= 0 || G.tHand)) return { ...ITEMS[h.id], id: h.id, slot: h, power: ITEMS[h.id].power * (1 + UPG_POW * lvOf(h)) };
   for (const s of G.inv.concat(G.tools || [])) { if (!s || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; const pw = ITEMS[s.id].power * (1 + UPG_POW * lvOf(s)); if (pw > b.power) b = { ...ITEMS[s.id], id: s.id, slot: s, power: pw }; } return b; }
@@ -3890,6 +3890,7 @@ function doAttack() {
   if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); G.atkT = .32; return; } }
   G.atkT = swingAttack() === false ? .3 : atkCd();
 }
+function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
 // ================= 몬스터: 움직이기·쫓기(가장 가까운 플레이어), 만들기·생기기 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 onFrame('enemies', updateEnemies);
@@ -3975,7 +3976,7 @@ function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Mat
   if (d > 9) return { k: 'info', lbl: '보스방에서', icon: 'dots', msg: `${BOSSES[k].n}의 보스방 안에서 써요`, t };
   return { k: 'summon', lbl: '소환', icon: s0.id, t, boss: k }; }
 function summonBoss(k) { const s0 = selItem(); if (!s0 || ITEMS[s0.id].boss !== k || !G.bossDead[k]) return;
-  s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } invDirty = true;
+  s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } emit('inv');
   G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; emit('puff', b.x, b.y, BOSSES[k].col, 30, 4, .8); emit('shake', .4, true); emit('sfx', 'boss'); emit('toast', `${BOSSES[k].n}이 다시 나타났어요!`, 'warn', 'summon'); }
 onFrame('bosses', updateBosses);
 function updateBosses(dt) {
@@ -4140,7 +4141,7 @@ function digPlant(t, o) {
   const d = OBJ[o.t], i = idx(t.x, t.y); delObj(i);
   const id = d.bush ? 'berryBush' : o.t === 'sapling' ? 'sapling' : o.t === 'capSapling' ? 'capSapling' : d.stump && o.g && OBJ[o.g] && OBJ[o.g].ntree && ITEMS[o.g] ? o.g : 'wood';
   const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-  emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#9be37a', 7, 2.2); invDirty = true; lightDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
+  emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#9be37a', 7, 2.2); emit('inv'); lightDirty = true; const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
   emit('toast', d.bush ? '베리덤불을 퍼냈어요. 원하는 곳에 다시 심어요' : d.stump ? `${d.n}을(를) 뽑았어요` : `${d.n}을(를) 퍼냈어요`, null, 'digplant');
 }
 // ---- nature decorations ----
@@ -4186,12 +4187,12 @@ function cropMsg(o, cs, i) { const d = OBJ[o.t], rem = Math.max(0, d.grow - (G.t
   return `${d.n} · ${CROP_STEP[d.crop][cs]} (${cs + 1}/4단계) · ${left} 남았어요${o.w ? ' · 물 줌' : ''}${o.f ? ' · 비료 줌' : ''}${soil}`; }
 function ripeAround(cx, cy) { const out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = cx + dx, y = cy + dy; if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t] && OBJ[o.t].crop && cropStage(o) >= 3) out.push([x, y, o]); } return out; }
 function waterCrop(t, o) { const s = selItem(); if (!s || s.id !== 'wcan' || (s.w || 0) <= 0 || o.w || !OBJ[o.t].crop) return;
-  s.w--; o.w = 1; if (o.p0 == null) o.p0 = o.p; invDirty = true; emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .7, '#8fd0f0', 7, 1.8, .2);
+  s.w--; o.w = 1; if (o.p0 == null) o.p0 = o.p; emit('inv'); emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .7, '#8fd0f0', 7, 1.8, .2);
   if (!s.w) emit('toast', '물뿌리개가 비었어요. 물가를 바라보고 눌러 채워요', null, 'wcanEmpty'); }
 function fertCrop(t, o) { const s = selItem(), it = s && ITEMS[s.id]; if (!it || it.kind !== 'fert' || o.f || !OBJ[o.t].crop) return; const d = OBJ[o.t];
   if (o.p0 == null) o.p0 = o.p; const rem = d.grow - (G.time - o.p); if (rem > 0) o.p -= rem * .4; clampCrop(o); o.f = it.fx === 'shroom' ? 2 : it.fx === 'cry' ? 3 : 1;
-  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } G.stats.fert = (G.stats.fert || 0) + 1; invDirty = true; emit('sfx', 'craft'); emit('puff', t.x + .5, t.y + .7, '#e8d098', 9, 2, .25); }
-function fillCan(t) { const s = selItem(); if (!s || s.id !== 'wcan') return; s.w = WCAN_MAX; invDirty = true; emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .5, '#bfe6ff', 8, 2, .2); emit('toast', '물뿌리개를 가득 채웠어요', 'good', 'wfill'); }
+  s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } G.stats.fert = (G.stats.fert || 0) + 1; emit('inv'); emit('sfx', 'craft'); emit('puff', t.x + .5, t.y + .7, '#e8d098', 9, 2, .25); }
+function fillCan(t) { const s = selItem(); if (!s || s.id !== 'wcan') return; s.w = WCAN_MAX; emit('inv'); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .5, '#bfe6ff', 8, 2, .2); emit('toast', '물뿌리개를 가득 채웠어요', 'good', 'wfill'); }
 // decided once, when the crop is grown: only on its own soil, only after the golem; crystal fertilizer raises the odds
 function rollStar(i, o) { o.star = beat('golem') && CROP_SOIL[o.t] != null && CROP_SOIL[o.t] === G.floor[i] && rand() < (o.f === 3 ? .35 : .15) ? 1 : 0; }
 // what one ripe crop gives (star and mushroom-fertilizer rules apply, the sickle bonus does not); also counts it for the quests
@@ -4220,7 +4221,7 @@ function noteHint(d) { const s = d.src; if (s === 'mon') return '이끼 동굴·
   if (s.startsWith('room:')) return `${REGION_N[+s[6]]} 숨은 방 어딘가`; if (s.startsWith('boss:')) return `${BOSSES[s.slice(5)].n}을(를) 물리치면`; if (s.startsWith('guide:')) { const q = GUIDE.find(x => x.id === s.slice(6)); return q ? `이야기 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '이야기 퀘스트 보상'; } if (s.startsWith('quest:')) { const q = QSIDE.find(x => x.id === s.slice(6)); return q ? `도전 퀘스트 「${escHTML(qText(q).replace(/ \(.*\)$/, ''))}」 보상` : '도전 퀘스트 보상'; } return ''; }
 const knows = id => !DISH[id] || !!(G && G.recipes && G.recipes[id]);
 const buffText = it => { if (!it.buff) return ''; const [ef, tier] = it.buff, E = EFF[ef], m = BUFF_DUR[tier - 1] * (it.star ? 1.5 : 1) / 60; return `${E.n} ${E.t(E.v[tier - 1])} · ${Number.isInteger(m) ? m : m.toFixed(1)}분`; };
-function learnRecipe(id, quiet) { if (!DISH[id] || !G) return false; G.recipes = G.recipes || {}; if (G.recipes[id]) return false; G.recipes[id] = 1; UIS.craftOrder = null;
+function learnRecipe(id, quiet) { if (!DISH[id] || !G) return false; G.recipes = G.recipes || {}; if (G.recipes[id]) return false; G.recipes[id] = 1; emit('reorder');
   if (!quiet) { emit('toast', `새 레시피를 알게 됐어요: ${DISH[id].n}! (요리솥)`, 'good'); emit('sfx', 'seed'); } return true; }
 function maybeNote(src, x, y) { if (!G || !G.recipes || rand() >= (NOTE_CH[src] || 0)) return; const pool = DISHES.filter(d => d[7] === src && !knows(d[0]) && !G.drops.some(q => q.id === 'rn_' + d[0])); if (!pool.length) return; spawnDrop('rn_' + pool[(rand() * pool.length) | 0][0], 1, x, y); }
 function roomNotes(r) { const list = ROOM_NOTES[r.b] || [], n = (G.rooms || []).filter(q => q.b === r.b).length; return n >= list.length ? [list[r.k]].filter(Boolean) : r.k === 0 ? list.slice() : []; }
@@ -4308,7 +4309,7 @@ function openCatch(w) { if (!w || !G.wild.includes(w)) return; openPanel('catch'
 const catchAng = c => ((performance.now() - c.t0) / 1000 * c.spd) % 6.283;
 const inZone = (a, c) => { let d = Math.abs(a - c.za) % 6.283; if (d > Math.PI) d = 6.283 - d; return d < c.zw / 2; };
 function catchThrow() { const c = panel && panel.kind === 'catch' ? panel : null; if (!c || (c.cool || 0) > performance.now()) return; c.cool = performance.now() + 250; const w = c.w, a = catchAng(c);
-  if (inZone(a, c)) { c.hits++; emit('sfx', 'pick'); if (c.hits >= 3 && ANIMALS[w.k].ranch) { G.wild = G.wild.filter(x => x !== w); const l = addItem(w.k, 1); if (l) spawnDrop(w.k, l, G.p.x, G.p.y); G.stats.ranchK = G.stats.ranchK || {}; G.stats.ranchK[w.k] = 1; emit('close'); emit('hearts', w.x, w.y - .5, 6); emit('sfx', 'seed'); emit('toast', `${ANIMALS[w.k].n}${josa(ANIMALS[w.k].n, '을', '를').slice(ANIMALS[w.k].n.length)} 데려왔어요! 원하는 곳에 내려놓으면 ${ANIMALS[w.k].verb.split(' ')[0]}${ANIMALS[w.k].ranch === 'wool' ? '을' : '를'} 줘요`, 'good'); invDirty = true; return; }
+  if (inZone(a, c)) { c.hits++; emit('sfx', 'pick'); if (c.hits >= 3 && ANIMALS[w.k].ranch) { G.wild = G.wild.filter(x => x !== w); const l = addItem(w.k, 1); if (l) spawnDrop(w.k, l, G.p.x, G.p.y); G.stats.ranchK = G.stats.ranchK || {}; G.stats.ranchK[w.k] = 1; emit('close'); emit('hearts', w.x, w.y - .5, 6); emit('sfx', 'seed'); emit('toast', `${ANIMALS[w.k].n}${josa(ANIMALS[w.k].n, '을', '를').slice(ANIMALS[w.k].n.length)} 데려왔어요! 원하는 곳에 내려놓으면 ${ANIMALS[w.k].verb.split(' ')[0]}${ANIMALS[w.k].ranch === 'wool' ? '을' : '를'} 줘요`, 'good'); emit('inv'); return; }
     if (c.hits >= 3) { G.pets = G.pets || {}; G.pets[w.k] = 1; G.wild = G.wild.filter(x => x !== w); if (!G.petOn) { G.petOn = w.k; G.petE = { x: w.x, y: w.y, flip: false, anim: 0, moving: false }; } G.stats.pets = Object.keys(G.pets).length;
       emit('close'); emit('hearts', w.x, w.y - .5, 8); emit('sfx', 'seed'); emit('toast', `${ANIMALS[w.k].n} ${ANIMALS[w.k].pn}${josa(ANIMALS[w.k].pn, '이', '가').slice(ANIMALS[w.k].pn.length)} 친구가 됐어요! [가방]에서 함께 다닐 펫을 골라요`, 'good'); return; }
     c.za = rand() * 6.283; c.zw *= .78; c.spd *= 1.18; }
@@ -4316,7 +4317,7 @@ function catchThrow() { const c = panel && panel.kind === 'catch' ? panel : null
   emit('refresh', 'catch'); }
 function ranchReady(o) { return G.time >= (o.p || 0); }
 function ranchCollect(t, o) { const d = OBJ[o.t]; if (!ranchReady(o)) return; o.p = G.time + d.every; const l = addItem(d.ranch, 1); if (l) spawnDrop(d.ranch, l, t.x + .5, t.y + .5);
-  G.stats.ranch = (G.stats.ranch || 0) + 1; emit('hearts', t.x + .5, t.y, 3); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .3, '#fff4e0', 6, 1.6, .2); emit('toast', `${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻었어요`, 'good', 'ranch'); invDirty = true; }
+  G.stats.ranch = (G.stats.ranch || 0) + 1; emit('hearts', t.x + .5, t.y, 3); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .3, '#fff4e0', 6, 1.6, .2); emit('toast', `${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻었어요`, 'good', 'ranch'); emit('inv'); }
 // ================= 회로: 전선·전력 계산, 기계 작동 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- circuits: wires, power (battery → generator → crystal generator), switches, powered devices ----
@@ -4855,13 +4856,11 @@ ICON.rn_festCake = noteIcon;
 // ---- 조작 (features/controls.js) ----
 // an arrow icon for the 「방향」 option
 ICON.rotate = A => { for (let k = 0; k <= 20; k++) { const a = -0.4 + k / 20 * 4.6; A.r(8 + Math.cos(a) * 5 - .5, 8 + Math.sin(a) * 5 - .5, 2, 2, '#7fe0b5'); } A.poly([[10.5, 1], [15, 3.5], [10.5, 6.5]], '#7fe0b5'); };
+// ================= 빛: 등불·횃불 빛 계산(computeLight)과 밝기(lightAt), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
 let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
 function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
-function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
-onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드럽게 따라가요
-  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
-});
 function computeLight() {
   if (!G) return; const cw = cv.width, ch = cv.height;
   const camX = cam.x * TP - cw / 2, camY = cam.y * TP - ch / 2;
@@ -4901,7 +4900,8 @@ function computeLight() {
   }
   lightCtx.putImageData(lightImg, 0, 0);
 }
-
+// ================= 지도 그림: 칸 색(MAPF·MAPW), 지도 다시 만들기(rebuildMap)·한 점 고치기(mapPixel) =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= map =================
 let mapCv = null, mapCtx = null, mapImg = null;
 const MAPF = { 7: '#6fb36a', 8: '#7f6191', 9: '#958ccf', 10: '#3f7fb5', 1: '#4f8f57', 2: '#7a5442', 3: '#6a5272', 4: '#4a5378', 5: '#c08a58', 6: '#8f8aa3' };
@@ -4913,7 +4913,11 @@ function mapPixel(x, y, bulk) {
   const [r, g, b] = hexRgb(col); const k = i * 4; mapImg.data[k] = r * 255; mapImg.data[k + 1] = g * 255; mapImg.data[k + 2] = b * 255; mapImg.data[k + 3] = 255; if (!bulk) mapDirty = true;
 }
 let mapDirty = false;
-
+// ================= 화면: 캔버스·배율(resize)·카메라 따라가기, 한 장 그리기(render) =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
+onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드럽게 따라가요
+  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
+});
 // ================= render =================
 const cv = $('#cv'), mainCtx = cv.getContext('2d');
 let ctx = mainCtx;
@@ -4921,6 +4925,42 @@ const lowCv = document.createElement('canvas'), lowCtx = lowCv.getContext('2d');
 let VIEW = { camX: 0, camY: 0, baseX: 0, baseY: 0 };
 let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoom') || 'normal'; } catch (e) { }
 let vignette = null;
+const LIFT = 5;
+function resize() {
+  DPR = Math.min(3, window.devicePixelRatio || 1);
+  const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
+  const zm = { small: .78, normal: 1, large: 1.25 }[zoomPref] || 1;
+  const target = clamp(Math.min(w, h) / 10.5, 30, 54) * zm; Z = Math.max(1, Math.round(target * DPR / 16)); TP = 16 * Z; lightDirty = true; vignette = null;
+}
+function drawImg(img, wx, wyFoot, o = {}) {
+  const sx = (o.sx || 1), sy = (o.sy || 1); const sw = effW(img) * Z * sx, sh = effH(img) * Z * sy;
+  const dx = Math.round(wx * TP - VIEW.camX - sw / 2), dy = Math.round(wyFoot * TP - VIEW.camY - sh - (o.z || 0) * TP);
+  if (o.alpha != null) ctx.globalAlpha = o.alpha;
+  if (o.flip) { ctx.save(); ctx.translate(dx + sw, dy); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, sw, sh); ctx.restore(); } else ctx.drawImage(img, dx, dy, sw, sh);
+  if (o.alpha != null) ctx.globalAlpha = 1;
+}
+function shadow(wx, wy, rw, alpha = 0.32) { ctx.fillStyle = `rgba(12,6,22,${alpha})`; ctx.beginPath(); ctx.ellipse(wx * TP - VIEW.camX, wy * TP - VIEW.camY, rw * TP, rw * TP * 0.42, 0, 0, 6.283); ctx.fill(); }
+function render() {
+  const cw = cv.width, ch = cv.height, RZ = Z;
+  mainCtx.setTransform(1, 0, 0, 1, 0, 0); mainCtx.globalCompositeOperation = 'source-over'; mainCtx.imageSmoothingEnabled = false;
+  mainCtx.fillStyle = '#120f1c'; mainCtx.fillRect(0, 0, cw, ch);
+  if (!G) return;
+  // world is drawn in game pixels on a canvas with HD art pixels per game pixel, then scaled up to the screen
+  const bw = Math.ceil(cw / RZ) + 2, bh = Math.ceil(ch / RZ) + 2;
+  if (lowCv.width !== bw * HD || lowCv.height !== bh * HD) { lowCv.width = bw * HD; lowCv.height = bh * HD; }
+  const shk = shake > 0 ? shake * 5 : 0;
+  const bx0 = cam.x * 16 - cw / RZ / 2, by0 = cam.y * 16 - ch / RZ / 2;
+  const gx = bx0 + (fxRand() - .5) * shk, gy = by0 + (fxRand() - .5) * shk, ix = Math.floor(gx), iy = Math.floor(gy);
+  ctx = hdCtx(lowCtx); Z = 1; TP = 16; VIEW = { camX: ix, camY: iy, baseX: ix, baseY: iy };
+  lowCtx.setTransform(HD, 0, 0, HD, 0, 0); lowCtx.globalCompositeOperation = 'source-over'; lowCtx.globalAlpha = 1; lowCtx.imageSmoothingEnabled = false;
+  lowCtx.fillStyle = '#120f1c'; lowCtx.fillRect(0, 0, bw, bh);
+  try { renderWorld(bw, bh); } finally { ctx = mainCtx; Z = RZ; TP = 16 * RZ; lowCtx.setTransform(1, 0, 0, 1, 0, 0); }
+  mainCtx.drawImage(lowCv, Math.round((ix - gx) * RZ), Math.round((iy - gy) * RZ), bw * RZ, bh * RZ);
+  VIEW = { camX: gx * RZ, camY: gy * RZ, baseX: bx0 * RZ, baseY: by0 * RZ };
+  renderOverlay(cw, ch);
+}
+// ================= 바닥 조각: 바닥·벽 타일을 큰 조각으로 미리 그려 두기(drawChunk·getChunk) =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ---- floor chunks: 16x16 tiles pre-rendered once, redrawn only when their tiles change ----
 const CHN = 16, chunks = new Map();
 function chunkSig(cx, cy) { let h = 7; for (let y = cy * CHN - 1; y <= cy * CHN + CHN; y++) for (let x = cx * CHN - 1; x <= cx * CHN + CHN; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
@@ -4960,6 +5000,8 @@ function getChunk(cx, cy) {
   const sig = chunkSig(cx, cy); if (sig !== c.sig) { c.sig = sig; drawChunk(c, cx, cy); }
   return c.cv;
 }
+// ================= 세계 그리기: 반딧불이 같은 주변 효과, 물체·몬스터·플레이어·보스 그리기(renderWorld·drawEntity), 겹쳐 그리기 =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ---- ambient particles: fireflies, spores, sparkles ----
 const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
@@ -4973,41 +5015,6 @@ function updateAmbient(dt) {
     if (inB(tx, ty) && !G.wall[idx(tx, ty)]) { const b = G.biome[idx(tx, ty)], water = G.floor[idx(tx, ty)] === WATER;
       const k = water ? 0 : b; AMB.push({ k, x, y, vx: k === 1 || k === 3 ? (fxRand() - .5) * .2 : (fxRand() - .5) * .4, vy: k === 1 ? -.25 - fxRand() * .2 : k === 3 ? -.6 - fxRand() * .4 : k === 4 ? .35 + fxRand() * .3 : (fxRand() - .5) * .4, t: 0, life: 4 + fxRand() * 5, ph: fxRand() * 6.28 }); }
   }
-}
-
-const LIFT = 5;
-function resize() {
-  DPR = Math.min(3, window.devicePixelRatio || 1);
-  const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
-  const zm = { small: .78, normal: 1, large: 1.25 }[zoomPref] || 1;
-  const target = clamp(Math.min(w, h) / 10.5, 30, 54) * zm; Z = Math.max(1, Math.round(target * DPR / 16)); TP = 16 * Z; lightDirty = true; vignette = null;
-}
-function drawImg(img, wx, wyFoot, o = {}) {
-  const sx = (o.sx || 1), sy = (o.sy || 1); const sw = effW(img) * Z * sx, sh = effH(img) * Z * sy;
-  const dx = Math.round(wx * TP - VIEW.camX - sw / 2), dy = Math.round(wyFoot * TP - VIEW.camY - sh - (o.z || 0) * TP);
-  if (o.alpha != null) ctx.globalAlpha = o.alpha;
-  if (o.flip) { ctx.save(); ctx.translate(dx + sw, dy); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, sw, sh); ctx.restore(); } else ctx.drawImage(img, dx, dy, sw, sh);
-  if (o.alpha != null) ctx.globalAlpha = 1;
-}
-function shadow(wx, wy, rw, alpha = 0.32) { ctx.fillStyle = `rgba(12,6,22,${alpha})`; ctx.beginPath(); ctx.ellipse(wx * TP - VIEW.camX, wy * TP - VIEW.camY, rw * TP, rw * TP * 0.42, 0, 0, 6.283); ctx.fill(); }
-function render() {
-  const cw = cv.width, ch = cv.height, RZ = Z;
-  mainCtx.setTransform(1, 0, 0, 1, 0, 0); mainCtx.globalCompositeOperation = 'source-over'; mainCtx.imageSmoothingEnabled = false;
-  mainCtx.fillStyle = '#120f1c'; mainCtx.fillRect(0, 0, cw, ch);
-  if (!G) return;
-  // world is drawn in game pixels on a canvas with HD art pixels per game pixel, then scaled up to the screen
-  const bw = Math.ceil(cw / RZ) + 2, bh = Math.ceil(ch / RZ) + 2;
-  if (lowCv.width !== bw * HD || lowCv.height !== bh * HD) { lowCv.width = bw * HD; lowCv.height = bh * HD; }
-  const shk = shake > 0 ? shake * 5 : 0;
-  const bx0 = cam.x * 16 - cw / RZ / 2, by0 = cam.y * 16 - ch / RZ / 2;
-  const gx = bx0 + (fxRand() - .5) * shk, gy = by0 + (fxRand() - .5) * shk, ix = Math.floor(gx), iy = Math.floor(gy);
-  ctx = hdCtx(lowCtx); Z = 1; TP = 16; VIEW = { camX: ix, camY: iy, baseX: ix, baseY: iy };
-  lowCtx.setTransform(HD, 0, 0, HD, 0, 0); lowCtx.globalCompositeOperation = 'source-over'; lowCtx.globalAlpha = 1; lowCtx.imageSmoothingEnabled = false;
-  lowCtx.fillStyle = '#120f1c'; lowCtx.fillRect(0, 0, bw, bh);
-  try { renderWorld(bw, bh); } finally { ctx = mainCtx; Z = RZ; TP = 16 * RZ; lowCtx.setTransform(1, 0, 0, 1, 0, 0); }
-  mainCtx.drawImage(lowCv, Math.round((ix - gx) * RZ), Math.round((iy - gy) * RZ), bw * RZ, bh * RZ);
-  VIEW = { camX: gx * RZ, camY: gy * RZ, baseX: bx0 * RZ, baseY: by0 * RZ };
-  renderOverlay(cw, ch);
 }
 function renderWorld(cw, ch) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, t = G.time;
@@ -5261,6 +5268,8 @@ function drawEntity(it, t) {
   }
   if (it.k === 'd') { const d = it.d; shadow(d.x, d.y + .05, .16, .3); const bob = d.z === 0 ? Math.sin(t * 4 + d.x * 3) * 0.05 + 0.05 : 0; drawImg(iconCanvas(d.id), d.x, d.y + .05, { sx: .6, sy: .6, z: d.z + bob }); }
 }
+// ================= 아이콘: 아이템 아이콘 그림·주소(iconURL) =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // tall or wide pictures sit in a square canvas so bag and hotbar slots keep their square shape (v55)
 const SQICON = new WeakMap();
 function squareIcon(c) {
@@ -5283,7 +5292,6 @@ function iconCanvas(id) {
 }
 const ICONURL = {};
 function iconURL(id) { if (ICONURL[id]) return ICONURL[id]; const c = SPR.ui[id] || squareIcon(iconCanvas(id)); return ICONURL[id] = c.toDataURL(); } // every item takes one square slot (v55)
-
 // ================= 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행, 동물 그림, 회수 막대 (10단계에서 render/로 정리) =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const TW_BASE = 4; // pieces are drawn in their own coordinates with the footprint line at y=12, then moved down onto the tile's bottom line
@@ -5460,6 +5468,8 @@ onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 �
 
 // ---- 지도·창 ----
 onEvent('craftNote', onlyMe((id, n, msg) => craftNote(id, n, msg))); // 제작 알림 (아이콘 + 글)
+onEvent('look', onlyMe(() => { CHARS.custom = lookDef(G.look); buildPlayer(G.outfit || 0); })); // 옷·생김새가 바뀜 → 내 캐릭터 그림 다시 만들기
+onEvent('reorder', onlyMe(() => { UIS.craftOrder = null; })); // 새 요리를 배움 → 제작 목록 순서를 새로
 onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
 onEvent('open', onlyMe((kind, data) => openPanel(kind, data)));
@@ -5485,40 +5495,6 @@ onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = 
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
-function durBar(s) { if (s && s.id === 'wcan') return `<span class="dur"><i style="width:${Math.max(4, Math.round((s.w || 0) / WCAN_MAX * 100))}%;background:${s.w ? '#6fb8ff' : '#ff6b7a'}"></i></span>`; if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
-function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
-function refreshHotbar() {
-  sweepTools(); // v65: a tool that landed in the bag goes to the pouch
-  const hb = $('#hbSlots'); let h = '';
-  h += toolSlotHTML(); // v65: the tool slot
-  for (let i = 0; i < HOT; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
-  hb.innerHTML = h; invDirty = false; if (panel) renderPanel(); if (toolRowOpen) renderToolRow();
-  if (hbSel !== G.sel) { hbSel = G.sel; const el = G.sel < 0 ? hb.querySelector('[data-tool]') : hb.querySelector(`[data-i="${G.sel}"]`); if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
-  const full = G.inv.slice(HOT).every(Boolean); $('#bInv').classList.toggle('dot', full);
-}
-let lastHud = '', lastAct = '', hbSel = -1;
-function updateHud() {
-  const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
-  drawBuffs(); drawEnv();
-  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
-  const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
-  updateCtrlHud(); // v65: attack button · small button
-  if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
-  const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
-  if (mk2 !== lastMp) { lastMp = mk2; $('#mpFill').style.width = (p.mp / maxMp() * 100) + '%'; $('#mpTxt').textContent = Math.round(p.mp); $('#lvTxt').textContent = 'Lv.' + R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#bStat').classList.toggle('dot', R.pts > 0 || R.sp > 0); }
-  updateSkBar();
-  if (G.time - (G.__qt || 0) > .5 || G.__qt == null) { G.__qt = G.time; $('#goal').classList.toggle('dot', canClaim()); }
-  if (invDirty) refreshHotbar();
-}
-let lastMp = '';
-function updateSkBar() {
-  const R = G.rpg, bar = $('#skBar'), any = Object.keys(R.sk).some(k => SKILLS[k].act && R.sk[k]);
-  if (bar.hidden === any) bar.hidden = !any; if (!any) return;
-  const st = R.slot.map(k => { if (!k) return null; const S = SKILLS[k], l = R.sk[k], cd = Math.max(0, G.skcd[k] || 0); return { k, f: cd > 0 ? Math.ceil(cd / S.cd(l) * 24) / 24 : 0, nomp: (G.p.mp || 0) < S.mp(l) }; });
-  const key = JSON.stringify(st); if (key === bar.dataset.k) return; bar.dataset.k = key;
-  bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
-    b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
-}
 function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
@@ -5697,25 +5673,6 @@ function renderPanel() {
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
 }
-// the map's unopened-treasure markers can be hidden; a per-viewer setting kept in this browser
-let mapChestPref = null;
-function mapChestOn() { if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
-function drawMap() {
-  const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
-  if (mapDirty) { mapCtx.putImageData(mapImg, 0, 0); mapDirty = false; }
-  const span = UIS.mapAll ? W : 90, s = 600 / span; const ox = UIS.mapAll ? 0 : clamp(G.p.x - span / 2, 0, W - span), oy = UIS.mapAll ? 0 : clamp(G.p.y - span / 2, 0, H - span);
-  g.drawImage(mapCv, ox, oy, span, span, 0, 0, 600, 600);
-  const dot = (x, y, col, r) => { const X = (x - ox) * s, Y = (y - oy) * s; g.fillStyle = INK; g.beginPath(); g.arc(X, Y, r + 3, 0, 6.283); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(X, Y, r, 0, 6.283); g.fill(); };
-  dot(CX + .5, CY, '#ffc861', 9);
-  if (G.spawnPt) dot(G.spawnPt.x + .5, G.spawnPt.y + .5, '#ff8fa3', 5);
-  for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) dot(z.x + .5, z.y + .5, FLOWERS[z.c][2], 4);
-  for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
-  for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
-  if (mapChestOn()) for (const r of G.rooms || []) if (r.found && !r.open) dot(r.cx + .5, r.cy + .5, '#ffd25c', 5);
-  for (const [i, o] of G.objs) if (o.t === 'lostBag') dot(i % W + .5, ((i / W) | 0) + .5, '#ff9b4a', 5);
-  if (G.backPt) dot(G.backPt.x, G.backPt.y, '#b99bff', 5);
-  dot(G.p.x, G.p.y, '#7fe0b5', 8);
-}
 let craftNoteT = 0;
 function craftNote(id, n, msg) {
   let el = $('#craftNote'); if (!el) { el = document.createElement('div'); el.id = 'craftNote'; el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
@@ -5765,6 +5722,42 @@ function updateCtrlHud() { const a = G.act || {};
   const ib = $('#actBtn'); if (ib) ib.classList.toggle('dim', a.k === 'info' || a.k === 'none');
   const alt = curAlt(), sb = $('#subBtn'); if (sb) { if (sb.hidden === !!alt) sb.hidden = !alt; const key = alt ? alt.lbl + '|' + alt.icon : ''; if (alt && sb.dataset.k !== key) { sb.dataset.k = key; $('#subIcon').src = iconURL(alt.k === 'rot' ? 'rotate' : alt.icon || 'hand'); $('#subLbl').textContent = alt.lbl; sb.setAttribute('aria-label', alt.lbl); } }
   const nx = $('#altNext'); if (nx) { const v = !!alt && G.alts.length > 1; if (nx.hidden === v) nx.hidden = !v; } }
+function durBar(s) { if (s && s.id === 'wcan') return `<span class="dur"><i style="width:${Math.max(4, Math.round((s.w || 0) / WCAN_MAX * 100))}%;background:${s.w ? '#6fb8ff' : '#ff6b7a'}"></i></span>`; if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
+function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
+let invDirty = true; // 단축칸을 다시 그릴 때 (규칙은 emit('inv'), 8단계부터 내 플레이어 것만)
+onEvent('inv', onlyMe(() => { invDirty = true; }));
+function refreshHotbar() {
+  sweepTools(); // v65: a tool that landed in the bag goes to the pouch
+  const hb = $('#hbSlots'); let h = '';
+  h += toolSlotHTML(); // v65: the tool slot
+  for (let i = 0; i < HOT; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
+  hb.innerHTML = h; invDirty = false; if (panel) renderPanel(); if (toolRowOpen) renderToolRow();
+  if (hbSel !== G.sel) { hbSel = G.sel; const el = G.sel < 0 ? hb.querySelector('[data-tool]') : hb.querySelector(`[data-i="${G.sel}"]`); if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
+  const full = G.inv.slice(HOT).every(Boolean); $('#bInv').classList.toggle('dot', full);
+}
+let lastHud = '', lastAct = '', hbSel = -1;
+function updateHud() {
+  const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
+  drawBuffs(); drawEnv();
+  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
+  const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
+  updateCtrlHud(); // v65: attack button · small button
+  if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
+  const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
+  if (mk2 !== lastMp) { lastMp = mk2; $('#mpFill').style.width = (p.mp / maxMp() * 100) + '%'; $('#mpTxt').textContent = Math.round(p.mp); $('#lvTxt').textContent = 'Lv.' + R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#bStat').classList.toggle('dot', R.pts > 0 || R.sp > 0); }
+  updateSkBar();
+  if (G.time - (G.__qt || 0) > .5 || G.__qt == null) { G.__qt = G.time; $('#goal').classList.toggle('dot', canClaim()); }
+  if (invDirty) refreshHotbar();
+}
+let lastMp = '';
+function updateSkBar() {
+  const R = G.rpg, bar = $('#skBar'), any = Object.keys(R.sk).some(k => SKILLS[k].act && R.sk[k]);
+  if (bar.hidden === any) bar.hidden = !any; if (!any) return;
+  const st = R.slot.map(k => { if (!k) return null; const S = SKILLS[k], l = R.sk[k], cd = Math.max(0, G.skcd[k] || 0); return { k, f: cd > 0 ? Math.ceil(cd / S.cd(l) * 24) / 24 : 0, nomp: (G.p.mp || 0) < S.mp(l) }; });
+  const key = JSON.stringify(st); if (key === bar.dataset.k) return; bar.dataset.k = key;
+  bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
+    b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
+}
 // ================= 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const rarName = id => { const c = rarCol(id), n = ITEMS[id].n; return c ? `<span style="color:${c}">${n}</span>` : n; };
@@ -5810,6 +5803,27 @@ function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구
   h += `</div>`; const s = UIS.toolSel != null ? T[UIS.toolSel] : null;
   if (s) { const it = ITEMS[s.id], st = itemStat(it, s); h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}</h3><p>${it.d || ''}</p>${st ? `<div class="st">${st}</div>` : ''}</div><div class="btns">${isBroken(s) ? '' : `<button class="btn" data-a="holdTool" type="button">${s === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
   return h; }
+// ================= 지도 창: 상자 표시 설정, 지도 그리기(drawMap) =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
+// the map's unopened-treasure markers can be hidden; a per-viewer setting kept in this browser
+let mapChestPref = null;
+function mapChestOn() { if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
+function drawMap() {
+  const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
+  if (mapDirty) { mapCtx.putImageData(mapImg, 0, 0); mapDirty = false; }
+  const span = UIS.mapAll ? W : 90, s = 600 / span; const ox = UIS.mapAll ? 0 : clamp(G.p.x - span / 2, 0, W - span), oy = UIS.mapAll ? 0 : clamp(G.p.y - span / 2, 0, H - span);
+  g.drawImage(mapCv, ox, oy, span, span, 0, 0, 600, 600);
+  const dot = (x, y, col, r) => { const X = (x - ox) * s, Y = (y - oy) * s; g.fillStyle = INK; g.beginPath(); g.arc(X, Y, r + 3, 0, 6.283); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(X, Y, r, 0, 6.283); g.fill(); };
+  dot(CX + .5, CY, '#ffc861', 9);
+  if (G.spawnPt) dot(G.spawnPt.x + .5, G.spawnPt.y + .5, '#ff8fa3', 5);
+  for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) dot(z.x + .5, z.y + .5, FLOWERS[z.c][2], 4);
+  for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
+  for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
+  if (mapChestOn()) for (const r of G.rooms || []) if (r.found && !r.open) dot(r.cx + .5, r.cy + .5, '#ffd25c', 5);
+  for (const [i, o] of G.objs) if (o.t === 'lostBag') dot(i % W + .5, ((i / W) | 0) + .5, '#ff9b4a', 5);
+  if (G.backPt) dot(G.backPt.x, G.backPt.y, '#b99bff', 5);
+  dot(G.p.x, G.p.y, '#7fe0b5', 8);
+}
 function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;
@@ -6072,6 +6086,8 @@ function setupInput() {
   let hiddenAt = 0; document.addEventListener('visibilitychange', () => { if (document.hidden && started) { hiddenAt = Date.now(); saveLocal(true); cloudUpload(false); } else if (!document.hidden && hiddenAt) { if (G && started) advanceOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; } });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
 }
+// ================= 캐릭터 고르기·시작하기(beginPlay) =================
+// (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ---- character picker (title + menu) ----
 let pickSel = 'sprout', pickAnim = 0;
 function cpCards(sel) { return CHAR_IDS.map(id => `<button type="button" class="cp-card ${id === sel ? 'on' : ''}" data-c="${id}" data-a="charSet" data-i="${id}"><img class="px" src="${charPreview(id)}" alt=""><span>${id === 'custom' ? '직접 꾸미기' : CHARS[id].n}</span></button>`).join(''); }
@@ -6079,9 +6095,7 @@ function animPick(root) { clearInterval(pickAnim); let f = 0; pickAnim = setInte
 function showPicker() { pickSel = 'sprout'; $('#title').classList.add('picking'); $('#charPick').hidden = false; renderPicker(); }
 function renderPicker() { $('#cpGrid').innerHTML = cpCards(pickSel); $('#cpDesc').textContent = CHARS[pickSel].d; animPick($('#cpGrid')); }
 function hidePicker() { $('#title').classList.remove('picking'); $('#charPick').hidden = true; clearInterval(pickAnim); }
-const roJosa = w => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로'); };
 function beginPlay() { const ca = $('#cloudAsk'); if (ca) ca.hidden = true; { const bc = $('#btnCloud'), ct = $('#cloudTitle'); if (bc) bc.hidden = true; if (ct) ct.hidden = true; } $('#title').hidden = true; document.body.classList.remove('intro'); started = true; paused = false; invDirty = true; resetGoalText(); lastInputAt = performance.now(); G.qt = G.qt || {}; { let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 40) { G.guide++; n++; } } checkGuide(); G.biomeNow = G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))]; lightDirty = true; saveLocal(true); }
-
 // ================= loop =================
 let saveT = 0, snapT = 0, cloudT = 0; // 저장·백업·클라우드 (매 프레임 순서표 sim/systems.js)
 onFrame('autosave', dt => {
