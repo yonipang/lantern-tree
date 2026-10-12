@@ -122,3 +122,4 @@ function doAttack() {
   if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); G.atkT = .32; return; } }
   G.atkT = swingAttack() === false ? .3 : atkCd();
 }
+function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }

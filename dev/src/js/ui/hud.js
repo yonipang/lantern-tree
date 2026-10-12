@@ -35,3 +35,39 @@ function updateCtrlHud() { const a = G.act || {};
   const ib = $('#actBtn'); if (ib) ib.classList.toggle('dim', a.k === 'info' || a.k === 'none');
   const alt = curAlt(), sb = $('#subBtn'); if (sb) { if (sb.hidden === !!alt) sb.hidden = !alt; const key = alt ? alt.lbl + '|' + alt.icon : ''; if (alt && sb.dataset.k !== key) { sb.dataset.k = key; $('#subIcon').src = iconURL(alt.k === 'rot' ? 'rotate' : alt.icon || 'hand'); $('#subLbl').textContent = alt.lbl; sb.setAttribute('aria-label', alt.lbl); } }
   const nx = $('#altNext'); if (nx) { const v = !!alt && G.alts.length > 1; if (nx.hidden === v) nx.hidden = !v; } }
+function durBar(s) { if (s && s.id === 'wcan') return `<span class="dur"><i style="width:${Math.max(4, Math.round((s.w || 0) / WCAN_MAX * 100))}%;background:${s.w ? '#6fb8ff' : '#ff6b7a'}"></i></span>`; if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
+function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
+let invDirty = true; // 단축칸을 다시 그릴 때 (규칙은 emit('inv'), 8단계부터 내 플레이어 것만)
+onEvent('inv', onlyMe(() => { invDirty = true; }));
+function refreshHotbar() {
+  sweepTools(); // v65: a tool that landed in the bag goes to the pouch
+  const hb = $('#hbSlots'); let h = '';
+  h += toolSlotHTML(); // v65: the tool slot
+  for (let i = 0; i < HOT; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
+  hb.innerHTML = h; invDirty = false; if (panel) renderPanel(); if (toolRowOpen) renderToolRow();
+  if (hbSel !== G.sel) { hbSel = G.sel; const el = G.sel < 0 ? hb.querySelector('[data-tool]') : hb.querySelector(`[data-i="${G.sel}"]`); if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
+  const full = G.inv.slice(HOT).every(Boolean); $('#bInv').classList.toggle('dot', full);
+}
+let lastHud = '', lastAct = '', hbSel = -1;
+function updateHud() {
+  const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
+  drawBuffs(); drawEnv();
+  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
+  const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
+  updateCtrlHud(); // v65: attack button · small button
+  if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
+  const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
+  if (mk2 !== lastMp) { lastMp = mk2; $('#mpFill').style.width = (p.mp / maxMp() * 100) + '%'; $('#mpTxt').textContent = Math.round(p.mp); $('#lvTxt').textContent = 'Lv.' + R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#bStat').classList.toggle('dot', R.pts > 0 || R.sp > 0); }
+  updateSkBar();
+  if (G.time - (G.__qt || 0) > .5 || G.__qt == null) { G.__qt = G.time; $('#goal').classList.toggle('dot', canClaim()); }
+  if (invDirty) refreshHotbar();
+}
+let lastMp = '';
+function updateSkBar() {
+  const R = G.rpg, bar = $('#skBar'), any = Object.keys(R.sk).some(k => SKILLS[k].act && R.sk[k]);
+  if (bar.hidden === any) bar.hidden = !any; if (!any) return;
+  const st = R.slot.map(k => { if (!k) return null; const S = SKILLS[k], l = R.sk[k], cd = Math.max(0, G.skcd[k] || 0); return { k, f: cd > 0 ? Math.ceil(cd / S.cd(l) * 24) / 24 : 0, nomp: (G.p.mp || 0) < S.mp(l) }; });
+  const key = JSON.stringify(st); if (key === bar.dataset.k) return; bar.dataset.k = key;
+  bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
+    b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
+}
