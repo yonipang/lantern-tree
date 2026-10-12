@@ -1,11 +1,11 @@
 # 비교 테스트(스냅샷): 게임 데이터와 세이브 불러오기 결과가 예전과 똑같은지 1분 안에 확인해요.
 # 사용법: python3 dev/qa/snapshot.py            → 기록(dev/qa/snapshot/)과 비교. 다르면 무엇이 바뀌었는지 보여 줘요
 #         python3 dev/qa/snapshot.py --update   → 지금 상태를 새 기록으로 저장 (일부러 바꾼 뒤에만!)
-#         python3 dev/qa/snapshot.py --fixtures → 세이브 입력 파일(snapshot/saves/)까지 새로 만들기 (보통은 쓰지 않아요)
+#         python3 dev/qa/snapshot.py --fixtures → LEGACY에 새로 넣은 옛 세이브 사례를 snapshot/fixtures.json에 추가 (이미 있는 세이브는 그대로)
 #
 # 기록하는 것
 #  1) data.json   : 아이템·물체·레시피(순서 포함)·몬스터·보스·퀘스트·스킬·요리 …의 값, 그림(스프라이트·아이콘)의 지문
-#  2) saves.json  : snapshot/saves/의 세이브(옛 버전 v1~v3, v62, 옛 기능이 남은 세이브 …)를 불러온 뒤 다시 저장한 결과
+#  2) saves.json  : snapshot/fixtures.json의 세이브(옛 버전 v1~v3, v62, 옛 기능이 남은 세이브 …)를 불러온 뒤 다시 저장한 결과
 # 구조를 정리하거나 코드를 옮긴 뒤 이 테스트가 통과하면 밸런스·순서·그림·세이브 호환이 그대로라는 뜻이에요.
 import asyncio, hashlib, json, os, sys
 from playwright.async_api import async_playwright
@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DEV = os.path.dirname(HERE)
 OUT = os.path.join(HERE, 'out'); os.makedirs(OUT, exist_ok=True)
 SNAP = os.path.join(HERE, 'snapshot')
-SAVES = os.path.join(SNAP, 'saves')
+FIXTURES = os.path.join(SNAP, 'fixtures.json')  # {이름: 세이브 JSON 글자}
 
 # 무작위·시간을 고정해서 몇 번을 돌려도 같은 결과가 나오게 해요 (게임 코드보다 먼저 실행)
 FIX = """<script>(()=>{let a=1234567;const r=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
@@ -70,24 +70,26 @@ LEGACY = {
 
 
 async def make_fixtures(b, src):
-    os.makedirs(SAVES, exist_ok=True)
+    fx = {}
     old = os.path.join(DEV, 'old')
     for v in (1, 2, 3):  # 예전 버전 게임에서 새 게임을 시작해 바로 저장
         pg = await b.new_page()
         await pg.goto(page(os.path.join(old, f'index.v{v}.html'), f'snap_old{v}.html', "window.__S={get G(){return G},serialize};window.claude?.hot?.snapshot"))
         await pg.wait_for_timeout(500)
         s = await pg.evaluate("()=>JSON.stringify(__S.serialize())")
-        open(os.path.join(SAVES, f'v{v}.json'), 'w').write(s); await pg.close()
+        fx[f'v{v}'] = s; await pg.close()
     for lay in (1, 2):
         pg = await b.new_page(); await pg.goto(page(src, 'snap_fx.html', HOOK, lay)); await ready(pg)
         s = await pg.evaluate("()=>{__seed(42);__S.newGame(20261012);return JSON.stringify(__S.serialize())}")
-        open(os.path.join(SAVES, f'v62_layout{lay}.json'), 'w').write(s)
+        fx[f'v62_layout{lay}'] = s
         if lay == 1:
             pos = await pg.evaluate("()=>{const G=__S.G;return [Math.floor(G.p.x),Math.floor(G.p.y),__S.reg().W]}")  # I(dx,dy): 플레이어 근처 칸 번호
             for name, js in LEGACY.items():
                 t = await pg.evaluate("(a)=>{const s=JSON.parse(a[0]),I=(dx,dy)=>(a[2]+dy)*a[3]+a[1]+dx;" + js + ";return JSON.stringify(s)}", [s, *pos])
-                open(os.path.join(SAVES, f'{name}.json'), 'w').write(t)
+                fx[name] = t
         await pg.close()
+    if os.path.isfile(FIXTURES): fx.update(json.load(open(FIXTURES)))  # 이미 있는 세이브는 그대로 (새 사례만 추가돼요)
+    json.dump(dict(sorted(fx.items())), open(FIXTURES, 'w'), ensure_ascii=False, indent=0)
 
 
 def summarize(v):
@@ -106,11 +108,9 @@ async def collect(b, src):
     data = await pg.evaluate("(C)=>{const canon=eval(C);const R=__S.reg();R.SPR=__S.SPR;R.icons={};for(const id of Object.keys(R.ITEMS))try{R.icons[id]=__S.iconURL(id)}catch(e){R.icons[id]='[오류]'}"
                              "const h=s=>{let x=2166136261;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619)}return (x>>>0).toString(16)};for(const k in R.icons)R.icons[k]=h(R.icons[k]);return canon(R)}", CANON)
     saves = {}
-    for f in sorted(os.listdir(SAVES)):
-        if not f.endswith('.json'): continue
-        s = open(os.path.join(SAVES, f)).read()
+    for name, s in json.load(open(FIXTURES)).items():
         r = await pg.evaluate("(s)=>{__seed(7);try{__S.deserialize(JSON.parse(s));return {ok:JSON.parse(JSON.stringify(__S.serialize()))}}catch(e){return {err:String(e)}}}", s)
-        saves[f[:-5]] = summarize(r['ok']) if 'ok' in r else {'오류': r['err']}
+        saves[name] = summarize(r['ok']) if 'ok' in r else {'오류': r['err']}
     await pg.close()
     return data, saves, errs
 
@@ -138,7 +138,7 @@ async def main():
     src = build()
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        if mode == '--fixtures' or not os.path.isdir(SAVES): await make_fixtures(b, src)
+        if mode == '--fixtures' or not os.path.isfile(FIXTURES): await make_fixtures(b, src)
         data, saves, errs = await collect(b, src)
         data2, saves2, _ = await collect(b, src)  # 두 번 돌려서 결과가 흔들리지 않는지도 확인
         await b.close()
