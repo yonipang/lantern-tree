@@ -118,7 +118,7 @@ function regrow() {
     G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
   }
 }
-let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0, hungerT = 0, regenT = 0;
+let lightDirty = true, lightT = 0, guideT = 0, spawnT = 0;
 function update(dt) {
   G.time += dt;
   runFrame(dt); // 매 프레임 순서표 (sim/systems.js): 기능마다 onFrame으로 등록해요
@@ -142,8 +142,8 @@ onFrame('player', dt => {
 });
 onFrame('hunger', dt => {
   const p = G.p;
-  hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
-  regenT += dt; if (regenT >= 2.5) { regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
+  G.hungerT += dt; if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
+  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
 });
 onFrame('enemies', updateEnemies); onFrame('bosses', updateBosses); onFrame('drops', updateDrops); onFrame('fx', updateFx); onFrame('tree', updateTree);
 onFrame('spawn', dt => { const p = G.p;

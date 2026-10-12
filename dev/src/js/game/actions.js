@@ -62,15 +62,14 @@ const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1)
 const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.ranged ? 1 : 1 - skl('warrior') * .03); };
 const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
-let actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
 onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
   const p = G.p, ctl = ctlOf(p);
-  G.act = decide(); actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
-  const held = ctl.act && p.dead <= 0 && !p.sleep; actQ = Math.max(0, actQ - dt);
-  if (p.dead > 0) actQ = 0;
-  if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
-  if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
-  holdT = held ? holdT + dt : 0;
+  G.act = decide(); G.actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
+  const held = ctl.act && p.dead <= 0 && !p.sleep; G.actQ = Math.max(0, G.actQ - dt);
+  if (p.dead > 0) G.actQ = 0;
+  if (G.actQ > 0 && G.actCd <= 0) { G.actQ = 0; tryAct(true); } else if (held && G.actCd <= 0) tryAct(false);
+  if (!held && G.actQ <= 0) { G.holdGroup = null; G.holdK = null; }
+  G.holdT = held ? G.holdT + dt : 0;
 });
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
@@ -120,7 +119,7 @@ function decide() {
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (md === 'build' && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
   if (o && OBJ[o.t] && OBJ[o.t].lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold
-  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3')) { const sk = bestTool('sickle'); if (sk) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list, tool: sk }; } }
+  if (G.holdT >= .3 && (G.holdK === 'harvest' || G.holdK === 'harvest3')) { const sk = bestTool('sickle'); if (sk) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list, tool: sk }; } }
   const main = [], alt = [], has = a => main.concat(alt).some(b => b.k === a.k && b.lbl === a.lbl), push = a => { if (a && !has(a)) (a.onlyAlt ? alt : main).push(a); };
   let h = null, hInfo = null;
   if (md !== 'hand' && md !== 'weapon') { h = heldDecide(md, s, it, t, i, o); if (!h || ['info', 'swing', 'none'].includes(h.k)) { hInfo = h && h.k === 'info' ? h : null; h = null; } }
@@ -238,8 +237,8 @@ const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.cro
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
   const a = G.act; const grp = GROUP[a.k] || null;
-  if (edge) { holdGroup = grp; holdK = a.k; }
-  else { if (a.k !== 'attack' && (!grp || grp !== holdGroup)) return; }
+  if (edge) { G.holdGroup = grp; G.holdK = a.k; }
+  else { if (a.k !== 'attack' && (!grp || grp !== G.holdGroup)) return; }
   perform(a);
 }
 defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 매 프레임 화면 쪽이 보내요
@@ -257,43 +256,43 @@ function perform(a) {
   switch (a.k) {
     case 'attack': {
       if (!ctlOf(p).aim) faceTo(a.en.x - p.x, a.en.y - p.y);
-      actCd = swingAttack() === false ? 0.3 : atkCd(); break;
+      G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     }
-    case 'rot': rotatePlace(); actCd = 0.15; break;
-    case 'swing': actCd = swingAttack() === false ? 0.3 : atkCd(); break;
-    case 'mine': mineWall(a.t); actCd = 0.27; break;
-    case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
-    case 'place': placeItem(a.t); actCd = 0.14; break;
-    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); actCd = 0.22; break;
-    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); actCd = 0.15; break; }
-    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); actCd = 0.3; break;
-    case 'harvest': harvest(a.t, a.o); actCd = 0.3; break;
-    case 'treasure': openTreasure(a.t, a.o); actCd = 0.4; break;
-    case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); actCd = 0.35; break;
-    case 'water': waterCrop(a.t, a.o); actCd = 0.25; break;
-    case 'fert': fertCrop(a.t, a.o); actCd = 0.3; break;
-    case 'fill': fillCan(a.t); actCd = 0.4; break;
-    case 'eat': eat(G.sel); actCd = 0.4; break;
-    case 'wear': wearItem(G.sel); actCd = 0.4; break;
-    case 'recall': startRecall(a.mode); actCd = 0.4; break;
-    case 'lost': pickLost(a.t, a.o); actCd = 0.3; break;
-    case 'giant': harvestGiant(a.t, a.o); actCd = 0.4; break;
-    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); actCd = .4; break; }
-    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); actCd = .4; break; }
-    case 'insert': insertSeeds(); actCd = 0.4; break;
-    case 'tree': emit('open', 'tree'); actCd = 0.3; break;
-    case 'summon': summonBoss(a.boss); actCd = 0.6; break;
-    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); actCd = 0.4; break;
-    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); actCd = 0.3; lightDirty = true; break; }
-    case 'fish': startFish(a.t); actCd = 0.4; break;
-    case 'stand': standUp(); actCd = 0.25; break;
-    case 'use': useObj(a); actCd = 0.4; break;
-    case 'reel': reel(); actCd = 0.35; break;
-    case 'lasso': openCatch(a.w); actCd = .4; break;
-    case 'ranch': ranchCollect(a.t, a.o); actCd = .4; break;
-    case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); actCd = .4; break;
-    case 'petpet': { const e = G.petE; emit('hearts', e.x, e.y - .4, 4); emit('sfx', 'purr'); emit('toast', `${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); actCd = .6; break; }
-    case 'info': if (a.msg) emit('toast', a.msg, null, 'info' + a.msg); actCd = 0.4; break;
+    case 'rot': rotatePlace(); G.actCd = 0.15; break;
+    case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
+    case 'mine': mineWall(a.t); G.actCd = 0.27; break;
+    case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
+    case 'place': placeItem(a.t); G.actCd = 0.14; break;
+    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); G.actCd = 0.22; break;
+    case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
+    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
+    case 'harvest': harvest(a.t, a.o); G.actCd = 0.3; break;
+    case 'treasure': openTreasure(a.t, a.o); G.actCd = 0.4; break;
+    case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); G.actCd = 0.35; break;
+    case 'water': waterCrop(a.t, a.o); G.actCd = 0.25; break;
+    case 'fert': fertCrop(a.t, a.o); G.actCd = 0.3; break;
+    case 'fill': fillCan(a.t); G.actCd = 0.4; break;
+    case 'eat': eat(G.sel); G.actCd = 0.4; break;
+    case 'wear': wearItem(G.sel); G.actCd = 0.4; break;
+    case 'recall': startRecall(a.mode); G.actCd = 0.4; break;
+    case 'lost': pickLost(a.t, a.o); G.actCd = 0.3; break;
+    case 'giant': harvestGiant(a.t, a.o); G.actCd = 0.4; break;
+    case 'cakeOn': { const s2 = selItem(); if (!s2 || !ITEMS[s2.id].cake || a.o.cake) break; a.o.cake = 1; s2.c--; if (!s2.c) { G.inv[G.sel] = null; refillHot(G.sel, s2.id); } invDirty = true; emit('sfx', 'place'); emit('puff', a.t.x + .5, a.t.y + .3, '#ffe9a8', 10, 2, .5); emit('toast', '탁자 위에 케이크를 올렸어요', 'good', 'cake'); G.actCd = .4; break; }
+    case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; invDirty = true; emit('sfx', 'pick'); G.actCd = .4; break; }
+    case 'insert': insertSeeds(); G.actCd = 0.4; break;
+    case 'tree': emit('open', 'tree'); G.actCd = 0.3; break;
+    case 'summon': summonBoss(a.boss); G.actCd = 0.6; break;
+    case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); G.actCd = 0.4; break;
+    case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); G.actCd = 0.3; lightDirty = true; break; }
+    case 'fish': startFish(a.t); G.actCd = 0.4; break;
+    case 'stand': standUp(); G.actCd = 0.25; break;
+    case 'use': useObj(a); G.actCd = 0.4; break;
+    case 'reel': reel(); G.actCd = 0.35; break;
+    case 'lasso': openCatch(a.w); G.actCd = .4; break;
+    case 'ranch': ranchCollect(a.t, a.o); G.actCd = .4; break;
+    case 'jobTake': takeJob(a.o, a.t.x + .5, a.t.y + .5); G.actCd = .4; break;
+    case 'petpet': { const e = G.petE; emit('hearts', e.x, e.y - .4, 4); emit('sfx', 'purr'); emit('toast', `${ANIMALS[G.petOn].pn}${josa(ANIMALS[G.petOn].pn, '이', '가').slice(ANIMALS[G.petOn].pn.length)} 좋아해요`, 'good', 'petpet'); G.actCd = .6; break; }
+    case 'info': if (a.msg) emit('toast', a.msg, null, 'info' + a.msg); G.actCd = 0.4; break;
   }
 }
 function swingAttack() {

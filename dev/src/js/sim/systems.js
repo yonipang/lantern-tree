@@ -2,6 +2,7 @@
 // 매 프레임 진행(update, game/update.js)은 기능을 하나씩 부르지 않고 이 표의 순서대로 돌려요.
 // 기능 파일은 자기 일을 onFrame('이름', dt => …)으로 등록해요 — 새 기능은 이 표에 이름 한 칸을 넣고(자리 = 실행 순서) 그 파일에서 등록.
 // 몇 초마다 하는 일은 등록한 함수 안에서 시간을 세요. 표에 있는데 등록이 없거나, 표에 없는 이름을 등록하면 build.py가 멈춰요.
+import { playerList, withPlayer } from '../save/state.js';
 export const FRAME_ORDER = [
   'player',   // 움직이기·바라보기·넉백·대시·기력 (game/update.js)
   'act',      // 상호작용 버튼: 무엇을 할지 고르고 누르면 하기 (game/actions.js)
@@ -23,10 +24,15 @@ export const FRAME_ORDER = [
   'camera',   // 카메라 따라가기 (render.js)
   'shake',    // 화면 흔들림 줄이기 (ui/feedback.js)
 ];
+// 플레이어마다 한 번씩 도는 칸 (그동안 G.p·G.inv … 가 그 플레이어 것). 나머지 칸은 세계에 한 번 (화면 쪽은 내 플레이어 기준)
+export const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'hunger', 'pshots', 'fish']);
 const SYS = new Map();
 export function onFrame(name, fn) {
   if (!FRAME_ORDER.includes(name)) throw new Error('매 프레임 순서표(sim/systems.js)에 없는 이름이에요: ' + name);
   if (SYS.has(name)) throw new Error('매 프레임 이름이 겹쳐요: ' + name);
   SYS.set(name, fn);
 }
-export function runFrame(dt) { for (const name of FRAME_ORDER) { const fn = SYS.get(name); if (fn) fn(dt); } }
+export function runFrame(dt) {
+  for (const name of FRAME_ORDER) { const fn = SYS.get(name); if (!fn) continue;
+    if (PER_PLAYER_FRAMES.has(name)) { for (const pl of playerList()) withPlayer(pl, () => fn(dt)); } else fn(dt); }
+}

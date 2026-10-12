@@ -32,6 +32,7 @@ export function newGame(seed) {
   G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0, tools: [], tsel: 0, lastW: null,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
+  bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
   G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
@@ -49,8 +50,36 @@ export const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'o
 export const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 export const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
-export const ME = 'me'; // 멀티플레이 전에는 플레이어가 하나 (13단계에서 캐릭터마다 이름표)
+export const ME = 'me'; // 내 플레이어 (13단계에서 캐릭터마다 이름표)
 const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+// ---- 플레이어 여럿 (구조 변경 8단계) ----
+// 세계(G) 안에 플레이어가 여럿: G.players[id] = { id, p: 몸, 가방·장비 … 캐릭터 칸, 지도·침대 … 플레이어별 칸, 낚시·휘두르기·고른 행동·타이머 … 지금 하는 일 }.
+// 옛 코드의 G.inv·G.p·G.actCd … (PER_PLAYER)는 「지금 플레이어」(curPl)의 것을 가리켜요:
+//   명령은 보낸 플레이어(sim/commands.js), 매 프레임 플레이어별 일은 한 명씩(sim/systems.js), 그 밖(화면·저장)은 내 플레이어(ME).
+// 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
+export const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env',
+  'explored', 'spawnPt', 'backPt', // 세계 안 플레이어별 (PLAYER_KEYS)
+  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'newIds', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
+  'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간
+const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0 });
+export let curPl = null;
+export function withPlayer(pl, fn) { const old = curPl; curPl = pl; try { return fn(); } finally { curPl = old; } }
+export const playerList = () => (G && G.players ? Object.values(G.players) : []);
+export const myPlayer = () => G && G.players && G.players[ME];
+// G를 새로 만든 바로 뒤: G 안의 플레이어 칸을 첫 플레이어(나)에게 옮기고, G.inv 같은 이름이 지금 플레이어를 가리키게 해요
+function bindPlayers(g, id = ME) {
+  const pl = { id, ...freshTimers() }; g.players = { [id]: pl };
+  for (const k of PER_PLAYER) { if (hasOwn(g, k)) { pl[k] = g[k]; delete g[k]; } Object.defineProperty(g, k, { get: () => curPl[k], set: v => { curPl[k] = v; }, enumerable: false, configurable: true }); }
+  curPl = pl; return pl;
+}
+// 같은 세계에 플레이어 더하기 (지금은 테스트용 — 12단계 「혼자서 둘이 하기」·13단계 친구 들어오기에서 씀). 캐릭터는 새로 시작
+export function addPlayer(id, x, y) {
+  const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
+    inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(),
+    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
+    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0, newIds: {} };
+  G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
+}
 export function splitSave(s, id = ME) {
   const world = {}, char = { v: s.v }, pl = {};
   for (const k of Object.keys(s)) {
@@ -74,8 +103,8 @@ export const serializeWorld = (id = ME) => { const s = serialize(); return s && 
 export const serializeChar = () => { const s = serialize(); return s && splitSave(s).char; };
 export const deserializeParts = (world, char, id = ME) => deserialize(joinSave(world, char, id));
 export function serialize() {
-  if (!G) return null; const p = G.p;
-  const { world, char } = splitSave(saveAll(p)); return joinSave(world, char); // 늘 나누기·합치기를 거쳐요 (둘이 어긋나면 바로 드러나게)
+  if (!G) return null; return withPlayer(myPlayer(), () => { const p = G.p; // 저장은 내 플레이어 기준 (다른 플레이어 저장은 13단계)
+  const { world, char } = splitSave(saveAll(p)); return joinSave(world, char); }); // 늘 나누기·합치기를 거쳐요 (둘이 어긋나면 바로 드러나게)
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
@@ -89,6 +118,7 @@ export function deserialize(s) {
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: (s.bossDead && typeof s.bossDead === 'object') ? Object.assign(freshDead(), s.bossDead) : Object.assign(freshDead(), { slime: !!s.bossDead }), shots: [], fish: null, fishFx: null, stats: Object.assign(freshStats(), s.stats), time: s.time || 0, spawnPt: s.spawnPt, treeSeeds: s.treeSeeds || 0,
     won: !!s.won, won2: !!s.won2, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
+  bindPlayers(G);
   G.bagLv = clamp(Math.floor(+s.bagLv || 0), 0, BAG_MAX_LV);
   if ((s.invV || 1) < 2) migrateBagV2();
   while (G.inv.length < invSize()) G.inv.push(null); if (G.inv.length > invSize()) { const extra = G.inv.splice(invSize()).filter(Boolean); G.inv.push(...[]); G.__extra = extra; }
