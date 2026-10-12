@@ -59,5 +59,6 @@ async def wait_game(pg, sec, timeout=30000):
     await pg.wait_for_function("([t0,s])=>__T.G.time-t0>=s", arg=[t0, sec], timeout=timeout, polling=50)
 
 async def wait_until(pg, js, timeout=10000):
-    """브라우저 안의 조건(js: '()=>…')이 참이 될 때까지 기다려요"""
-    await pg.wait_for_function(js, timeout=timeout, polling=50)
+    """브라우저 안의 조건(js: '()=>…')이 참이 될 때까지 기다려요. 시간 안에 안 되면 False (오류로 멈추지 않고, 뒤의 rec가 실패로 기록해요)"""
+    try: await pg.wait_for_function(js, timeout=timeout, polling=50); return True
+    except Exception: return False

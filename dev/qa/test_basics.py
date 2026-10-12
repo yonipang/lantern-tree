@@ -572,7 +572,7 @@ def qa27():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,1280,800,False)
             await ev(pg,"()=>{const G=__T.G;for(let y=100;y<114;y++)for(let x=100;x<116;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.objs.set(__T.idx(106,106),{t:'bench'});G.p.x=105.5;G.p.y=106.5;__T.addItem('wood',50);__T.addItem('resin',10)}")
             async def walk():
-                x0=await ev(pg,"()=>__T.G.p.x"); await pg.keyboard.down('KeyA'); await wait_game(pg,0.4); await pg.keyboard.up('KeyA');  # 게임 시간으로 0.4초 x1=await ev(pg,"()=>__T.G.p.x"); await ev(pg,"()=>{__T.G.p.x=105.5}"); return round(x0-x1,2)
+                x0=await ev(pg,"()=>__T.G.p.x"); await pg.keyboard.down('KeyA'); await wait_game(pg,0.4); await pg.keyboard.up('KeyA'); x1=await ev(pg,"()=>__T.G.p.x"); await ev(pg,"()=>{__T.G.p.x=105.5}"); return round(x0-x1,2)  # 키는 게임 시간으로 0.4초 누름
             mk="()=>{__T.openPanel('menu');const i=document.createElement('input');i.id='tst';document.querySelector('#sheetWrap').appendChild(i);i.focus()}"
             await ev(pg,mk); await pg.wait_for_timeout(300); await pg.keyboard.press('Escape'); await pg.wait_for_timeout(300)
             r=await walk(); pnl=await ev(pg,"()=>document.querySelector('#sheetWrap').hidden")

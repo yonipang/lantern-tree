@@ -167,12 +167,14 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             r=await ev(pg,"()=>[!document.querySelector('#cloudAsk').hidden, document.querySelector('#cloudAsk').innerText.slice(0,30)]")
             rec('다른 기기','새 기기 첫 화면에 클라우드 세이브 불러오기 안내', r[0], str(r))
             await pg.screenshot(path=SP+'qa15_title.png')
-            await pg.tap('#cloudAsk [data-cl=take]'); await pg.wait_for_timeout(600)
+            await pg.tap('#cloudAsk [data-cl=take]'); await pg.wait_for_timeout(600); await wait_until(pg,"()=>document.querySelector('#title').hidden",5000)
             r=await ev(pg,"()=>[document.querySelector('#title').hidden, __T.countItem('crystal')]")
             rec('다른 기기','불러오기 → 다른 기기 진행 그대로', r==[True,43], str(r))
             # same adventure (same run id), local newer than cloud → auto upload, no prompt (v32: different adventures always ask, see qa32)
             await ev(pg,"()=>{__T.addItem('crystal',7);__T.openPanel('menu');window.dispatchEvent(new Event('pagehide'))}"); await pg.wait_for_timeout(300)
+            # 다시 연 뒤 클라우드 확인·업로드는 뒤에서 끝나요. 바쁘면 0.9초 안에 안 끝나서, 클라우드가 바뀔 때까지 (최대 5초) 기다려요
             await pg.reload(); await pg.wait_for_timeout(900)
+            await wait_until(pg,"()=>{const c=JSON.parse(localStorage.getItem('mockcloud')||'{}')['u_juyeon@test.kr'];return !!c&&JSON.parse(c.data).inv.find(s=>s&&s.id==='crystal').c===50}",5000)
             r=await ev(pg,"()=>[document.querySelector('#cloudAsk').hidden, JSON.parse(JSON.parse(localStorage.getItem('mockcloud'))['u_juyeon@test.kr'].data).inv.find(s=>s&&s.id==='crystal').c]")
             rec('충돌','같은 모험이고 이 기기가 더 최근이면 묻지 않고 자동 업로드', r==[True,50], str(r))
             # cloud newer while playing → menu conflict box, keep local
