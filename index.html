@@ -4259,10 +4259,16 @@ function safeSpot(x, y) { const inside = closedIn(x, y); if (!inside) return nul
   return null; }
 // v57 emergency escape (menu): a fenced yard bigger than closedIn's 16 tiles still trapped a player. regionOf flood-fills the
 // walkable area (doors count as a way out); it is "closed" when it ends within lim tiles and far tiles of the start.
-function regionOf(x, y, lim = 3000, far = 60) { const sx = Math.floor(x), sy = Math.floor(y); if (!inB(sx, sy)) return null; const seen = new Set([idx(sx, sy)]), st = [[sx, sy]];
+// v63: natural rock a pickaxe can dig is not a trap — a rock wall on a tile that was rock in the world first generated counts as open (quartz veins
+// turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
+// Some new worlds start in a rock-ringed clearing.
+let NATW = null, NATW_K = '';
+function naturalWalls() { const k = G.seed + '|' + W + 'x' + H; if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
+function regionOf(x, y, lim = 3000, far = 60) { const nat = naturalWalls(); const sx = Math.floor(x), sy = Math.floor(y); if (!inB(sx, sy)) return null; const seen = new Set([idx(sx, sy)]), st = [[sx, sy]];
   while (st.length) { const [cx, cy] = st.pop(); if (Math.abs(cx - sx) > far || Math.abs(cy - sy) > far || seen.size > lim) return null;
     for (const [dx, dy] of D4) { const nx = cx + dx, ny = cy + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o);
-      if (isSolid(nx, ny) && !(a && OBJ[a.t] && OBJ[a.t].door)) continue; seen.add(j); st.push([nx, ny]); } }
+      const natRock = nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && G.wall[j] !== 6 && G.wall[j] !== 7;
+      if (isSolid(nx, ny) && !natRock && !(a && OBJ[a.t] && OBJ[a.t].door)) continue; seen.add(j); st.push([nx, ny]); } }
   return seen; }
 function openSpotNear(x, y, skip) { const sx = Math.floor(x), sy = Math.floor(y), bad = new Set(skip || []); let tries = 0;
   for (let r = 1; r <= 90; r++) { const ring = [];
