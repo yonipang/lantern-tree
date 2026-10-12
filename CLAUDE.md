@@ -22,6 +22,7 @@
   - **밸런스 데이터(아이템·레시피·몬스터·퀘스트·요리 수치와 이름·설명)는 `js/data/`**, 동작은 같은 이름의 규칙 파일에, **그림(아이콘 `ICON`·물체 그림 `OSPR`)은 `js/art/`** (기능별 아이콘은 `art/content.js`). 데이터 파일은 `shell.html`에서 그 규칙 파일 바로 앞에 와요.
   - 새 기능은 비슷한 `js/features/` 파일(데이터는 `js/data/` 같은 이름 파일) 끝에 덧붙이거나, 크면 새 파일 + `shell.html`에 `// @include` 한 줄 (`js/features/automation-tiers.js` 다음, `js/render.js` 앞). 파일 지도는 `dev/src/README.md`.
 - **세이브 호환**: 저장 키 `lantern-tree-save-v1`, 세이브 버전 `v: 3`은 바꾸지 않아요. 새 필드는 기본값과 함께 추가만 해요.
+  - **세이브는 「세계」·「캐릭터」·「세계 안 플레이어별」로 나뉘어요** (멀티플레이 준비, `save/state.js`의 `splitSave`·`joinSave`). 새 칸을 저장하면 `SAVE_ORDER`에 넣고, 캐릭터 것이면 `CHAR_KEYS`, 플레이어별이면 `PLAYER_KEYS`에 (안 넣으면 세계). 정한 것: 퀘스트 진행·기록은 세계, 지도에서 밝힌 곳은 플레이어별, 펫은 캐릭터.
   - 옛 세이브 보정은 모두 `js/save/migrations.js`에 두고 `save/state.js`의 `deserialize()`에서 불러요 (호출 순서가 중요).
   - 세이브 구조를 바꾸면 옛 세이브 사례를 `dev/qa/snapshot.py`의 `LEGACY`에 추가하고 `--fixtures`로 추가해요 (이미 있는 세이브는 안 바뀌어요).
 - 기존 기능·밸런스·그래픽·조작감을 요청 없이 바꾸지 않아요. 코드 정리만 했다면 아래 비교 테스트가 그대로 통과해야 해요.
@@ -31,7 +32,7 @@
 1. `python3 dev/build.py && node dev/qa/syn.js dev/index.html` → `ok`
 2. **비교 테스트** `python3 dev/qa/snapshot.py` (약 20초, `run.py`도 맨 먼저 돌려요): 게임 데이터·그림 지문·옛 세이브 불러오기 결과를 `dev/qa/snapshot/`과 비교.
    일부러 바꾼 거라면 바뀐 곳이 의도와 맞는지 확인하고 `--update`로 갱신해 같이 커밋해요.
-3. 전체 테스트 `python3 dev/qa/run.py` (비교 테스트 + 기능 테스트 63개, 약 5분, 백그라운드로 돌리고 끝에 나오는 요약만 읽어요) 또는 `python3 dev/qa/run.py crafting`(파일) / `emergency_escape`(테스트 이름).
+3. 전체 테스트 `python3 dev/qa/run.py` (비교 테스트 + 기능 테스트 64개, 약 5분, 백그라운드로 돌리고 끝에 나오는 요약만 읽어요) 또는 `python3 dev/qa/run.py crafting`(파일) / `emergency_escape`(테스트 이름).
    새 기능에는 알맞은 `dev/qa/test_*.py`에 `def test_영어이름():`(예: `test_fishing_contest`, 번호 없이 무엇을 확인하는지)을 비슷한 테스트 옆에 추가해요. 실패한 테스트는 자동으로 한 번 더 돌려 요약에 적어 줘요.
    - 테스트는 흔들리지 않게: 게임 안의 일은 `wait_game`/`wait_until`로 기다리고(실제 시계 대신), 상태 맞추기와 확인은 한 번의 `ev` 안에서, 확률·지도 모양에 기대지 않기. 자세히는 `dev/README.md`의 「흔들리지 않는 테스트 쓰는 법」
    - Playwright가 깔린 브라우저와 버전이 안 맞으면 그 브라우저에 맞는 버전으로 설치 (예: `/opt/pw-browsers/chromium-1194` → `pip install playwright==1.56.0 --break-system-packages`). `playwright install`은 하지 않아요.

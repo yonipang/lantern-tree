@@ -35,8 +35,46 @@ export function newGame(seed) {
 }
 export const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
 export const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
+// ---- 세이브 나누기 (구조 변경 4단계, 멀티플레이 준비) ----
+// 세이브는 「세계」(방장 기기에 저장, 같이 씀)와 「캐릭터」(내 기기에 저장, 여러 세계로 들고 다님)로 나눠요.
+// 한 사람이 할 때는 지금처럼 둘을 합친 한 덩어리(v: 3, 같은 저장 키)로 저장해요 — joinSave(splitSave(s))는 s와 글자까지 같아요.
+// 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
+export const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
+  'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env'];
+// 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
+export const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env']);
+// 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
+export const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
+export const ME = 'me'; // 멀티플레이 전에는 플레이어가 하나 (13단계에서 캐릭터마다 이름표)
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+export function splitSave(s, id = ME) {
+  const world = {}, char = { v: s.v }, pl = {};
+  for (const k of Object.keys(s)) {
+    if (k === 'p') { pl.x = s.p.x; pl.y = s.p.y; char.p = { hp: s.p.hp, hunger: s.p.hunger, mp: s.p.mp }; }
+    else if (CHAR_KEYS.has(k)) char[k] = s[k]; else if (PLAYER_KEYS.has(k)) pl[k] = s[k]; else world[k] = s[k];
+  }
+  world.players = { [id]: pl }; return { world, char };
+}
+export function joinSave(world, char, id = ME) {
+  const pl = (world.players && world.players[id]) || {}, s = {};
+  const extra = [...Object.keys(world), ...Object.keys(char), ...Object.keys(pl).filter(k => k !== 'x' && k !== 'y')].filter(k => k !== 'players' && !SAVE_ORDER.includes(k)); // 나중에 생긴 칸도 잃지 않게
+  for (const k of [...SAVE_ORDER, ...new Set(extra)]) {
+    if (k === 'p') { if (char.p || own(pl, 'x')) s.p = { x: pl.x, y: pl.y, hp: char.p && char.p.hp, hunger: char.p && char.p.hunger, mp: char.p && char.p.mp }; }
+    else if (k === 'v') s.v = own(world, 'v') ? world.v : char.v;
+    else if (CHAR_KEYS.has(k)) { if (own(char, k)) s[k] = char[k]; } else if (PLAYER_KEYS.has(k)) { if (own(pl, k)) s[k] = pl[k]; }
+    else if (own(world, k)) s[k] = world[k]; else if (own(char, k)) s[k] = char[k]; else if (own(pl, k)) s[k] = pl[k];
+  }
+  return s;
+}
+export const serializeWorld = (id = ME) => { const s = serialize(); return s && splitSave(s, id).world; };
+export const serializeChar = () => { const s = serialize(); return s && splitSave(s).char; };
+export const deserializeParts = (world, char, id = ME) => deserialize(joinSave(world, char, id));
 export function serialize() {
   if (!G) return null; const p = G.p;
+  const { world, char } = splitSave(saveAll(p)); return joinSave(world, char); // 늘 나누기·합치기를 거쳐요 (둘이 어긋나면 바로 드러나게)
+}
+function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
     p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: LAY, fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
