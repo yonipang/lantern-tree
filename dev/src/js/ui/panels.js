@@ -45,7 +45,6 @@ const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${
 function itemStat1(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
 function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; if (it.kind === 'axe') return `도구 · 나무 베는 힘 ${it.power}`; return ''; }
 // v62: the workbench window — 1st row 전체/재료/도구/제작대/가구/건축/편의 (icons), 2nd row per tab. Hand recipes can be made at the workbench too
-const atHere = (r, st) => (r.at || null) === (st || null) || (st === 'bench' && !r.at);
 const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['tool', '도구', 'bagUp1'], ['stn', '제작대', 'bench'], ['furn', '가구', 'chair'], ['build', '건축', 'wallBrick'], ['conv', '편의', 'lever']];
 const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], ['cook', '요리']],
   furn: [['all', '전체'], ['seat', '의자'], ['table', '탁자'], ['bed', '침대'], ['store', '수납'], ['light', '조명'], ['deco', '장식']],
@@ -233,7 +232,6 @@ function drawMap() {
   if (G.backPt) dot(G.backPt.x, G.backPt.y, '#b99bff', 5);
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
 }
-function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) set.add(OBJ[o.t].station); } return set; }
 let craftNoteT = 0;
 function craftNote(id, n, msg) {
   let el = $('#craftNote'); if (!el) { el = document.createElement('div'); el.id = 'craftNote'; el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
@@ -243,4 +241,6 @@ function craftNote(id, n, msg) {
   el.classList.remove('out'); el.hidden = false; clearTimeout(craftNoteT); craftNoteT = setTimeout(() => { el.classList.add('out'); craftNoteT = setTimeout(() => { el.hidden = true; }, 400); }, 1800);
 }
 const craftCtx = () => panel && panel.kind === 'craft' ? (panel.st || null) : null;
-function canCraft(r, near) { const c = craftCtx(); return (!r.dish || knows(r.dish)) && atHere(r, c) && (!c || near.has(c)) && (!TIERED[c] || (r.tier || 0) <= craftTier()) && r.req.every(([id, c2]) => availCount(id) >= c2); }
+const craftPanel = () => panel && panel.kind === 'craft' ? panel : null;
+const craftTier = () => stationTier(craftPanel());
+function canCraft(r, near) { return craftable(r, near, craftPanel()); } // 규칙: game/bag.js

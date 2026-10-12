@@ -19,7 +19,6 @@ function harvestGiant(t, o) { const base = OBJ[o.c], [id, a, b] = base.yield[0],
   const S = G.stats; S.cropH = (S.cropH || 0) + 1; S.giantH = (S.giantH || 0) + 1; emit('sfx', 'win'); emit('puff', t.x + 1, t.y + 1, '#9be37a', 20, 3.5); gainXp(20); }
 const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
 const tierNames = st => TIERED[st] || BENCH_N;
-const craftTier = () => panel && panel.kind === 'craft' && TIERED[panel.st] ? (panel.i != null ? Math.max(0, benchLv(G.objs.get(panel.i))) : panel.tier || 0) : 0;
 function benchUpHTML(o) { const lv = benchLv(o); if (lv < 0) return ''; const st = o.t === 'smelter' ? 'smelter' : 'bench', NM = tierNames(st), IT = TIER_IT[st];
   if (lv >= BENCH_MAX) return `<p class="hint">가장 높은 단계 ${st === 'smelter' ? '장비제작대' : '작업대'}예요 · 모든 ${st === 'smelter' ? '장비' : '작업대 물건'}를 만들 수 있어요</p>`;
   const cost = BENCH_UP[lv + 1], ok = cost.every(([id, c]) => availCount(id) >= c);
