@@ -78,8 +78,12 @@ jobs:
           if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
           arts=$(git diff --name-only HEAD~1 HEAD -- dev/art 2>/dev/null | sed 's#^dev/art/##' | head -20 | tr '\n' ' ')
           git commit -m "자동 배포: 테스트 통과 후 배포 파일 갱신${arts:+ (그림: $arts)}" -m "$(head -1 dev/qa/out/summary.txt)"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          # GitHub 쪽 일시 오류(예: 「fatal error in commit_refs」)로 올리기가 실패하면 잠깐 뒤 3번까지 다시 해요
+          for n in 1 2 3; do
+            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            echo "올리기 실패 ($n번째) — 잠깐 뒤 다시"; sleep $((n * 15))
+          done
+          exit 1
       - name: GitHub Pages 다시 빌드 요청
         continue-on-error: true
         env:
