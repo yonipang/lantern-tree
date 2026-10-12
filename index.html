@@ -112,25 +112,36 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 .slot.pick{border-color:var(--mint);background:#3c4a55}
 
 /* Touch controls */
-#subBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 36px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 160px);width:64px;height:64px;border-radius:50%;
-  background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #8a7aa6;box-shadow:0 4px 0 rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;touch-action:none}
-#subBtn img{width:26px;height:26px}
-#subBtn span{font-size:13px}
+/* v65: attack (bottom right) and interact (up-left of it) — two big buttons on a diagonal; skills above attack; the small button left of interact */
+#altWrap{position:absolute;right:calc(env(safe-area-inset-right,0px) + 118px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 238px);display:flex;align-items:center;gap:4px;pointer-events:none}
+#altWrap>*{pointer-events:auto}
+#subBtn{position:relative;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #8a7aa6;box-shadow:0 4px 0 rgba(0,0,0,.4);opacity:.92;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;touch-action:none}
+#subBtn img{width:24px;height:24px}
+#subBtn span{font-size:12px;max-width:56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#subBtn .k{display:none;position:absolute;top:-6px;right:-4px;font-style:normal;font-size:11px;background:#1b1426;color:#ffe9a8;border-radius:6px;padding:0 4px}
 #subBtn:active{transform:translateY(2px);box-shadow:none}
-body:not(.touch) #subBtn, body.intro #subBtn{display:none}
-#rotBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 110px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 164px);width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:3px solid #7fe0b5;box-shadow:0 4px 0 rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;touch-action:none;color:var(--text)}
-#rotBtn b{font-size:22px;line-height:1;font-weight:400}#rotBtn span{font-size:12px}#rotBtn:active{transform:translateY(2px);box-shadow:none}
-body:not(.touch) #rotBtn, body.intro #rotBtn{display:none}
+#altNext{width:34px;height:44px;border-radius:12px;background:rgba(42,33,57,.9);border:2px solid #8a7aa6;font-size:20px;padding:0;touch-action:none}
+#altNext:active{transform:translateY(2px)}
+body.intro #altWrap{display:none}
+body:not(.touch) #altWrap{right:18px;bottom:calc(var(--slotS) + 104px)}
+body:not(.touch) #subBtn{width:auto;height:40px;border-radius:12px;flex-direction:row;gap:6px;padding:0 10px}
+body:not(.touch) #subBtn .k{display:block;position:static;order:-1}
+body:not(.touch) #subBtn span{max-width:none}
+body:not(.touch) #altNext{height:40px}
+body:not(.touch) #altNext::after{content:' Q';font-size:11px;color:#ffe9a8}
 #fade.sleep{color:var(--amber);background:rgba(14,10,30,.9)}
-#actBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 48px);width:100px;height:100px;border-radius:50%;
-  background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:3px solid var(--amber);box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 24px rgba(255,200,97,.25);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:none}
-#actBtn img{width:44px;height:44px}
-#actBtn span{font-size:15px}
-#actBtn.on{transform:translateY(3px) scale(.96);box-shadow:0 2px 0 rgba(0,0,0,.4),0 0 30px rgba(255,200,97,.45)}
-#skBar{position:absolute;right:calc(env(safe-area-inset-right,0px) + 128px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 52px);display:flex;flex-direction:column-reverse;gap:10px}
+#actBtn,#atkBtn{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:none}
+#atkBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 40px);width:96px;height:96px;
+  background:radial-gradient(circle at 50% 35%,#7a4458,#4f2b3e 70%);border:3px solid #ff8fa3;box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 22px rgba(255,143,163,.25)}
+#actBtn{right:calc(env(safe-area-inset-right,0px) + 104px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 140px);width:88px;height:88px;
+  background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:3px solid var(--amber);box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 24px rgba(255,200,97,.25)}
+#actBtn img,#atkBtn img{width:40px;height:40px}
+#actBtn span,#atkBtn span{font-size:14px;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#actBtn.dim img,#actBtn.dim span{opacity:.5}
+#actBtn.on,#atkBtn.on{transform:translateY(3px) scale(.96);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+#skBar{position:absolute;right:calc(env(safe-area-inset-right,0px) + 118px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 40px);display:flex;flex-direction:row-reverse;gap:8px}
 #skBar[hidden]{display:none}
-.skb{position:relative;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3f5a74,#2a3a52 70%);border:3px solid #8fc4f0;box-shadow:0 4px 0 rgba(0,0,0,.4);display:grid;place-items:center;padding:0;touch-action:none;overflow:hidden}
+.skb{position:relative;width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3f5a74,#2a3a52 70%);border:3px solid #8fc4f0;box-shadow:0 4px 0 rgba(0,0,0,.4);display:grid;place-items:center;padding:0;touch-action:none;overflow:hidden}
 .skb img{width:34px;height:34px}
 .skb.empty{border-style:dashed;background:rgba(42,33,57,.7)}
 .skb.empty img{opacity:.35}
@@ -141,11 +152,12 @@ body:not(.touch) #rotBtn, body.intro #rotBtn{display:none}
 body.touch .skb .k{display:none}
 body:not(.touch) #skBar{right:18px;bottom:18px;flex-direction:row}
 body:not(.touch) .skb{width:54px;height:54px}
+@media (max-width:1120px){body:not(.touch) #skBar{bottom:calc(var(--slotS) + 40px)}} /* v65: the hotbar got a tool slot, so on narrow PCs the skills sit above it */
 body.intro #skBar{display:none}
 .joy{position:absolute;width:128px;height:128px;margin:-64px 0 0 -64px;border-radius:50%;border:3px solid rgba(255,241,214,.35);background:rgba(27,20,38,.35);pointer-events:none;opacity:.55;transition:opacity .15s}
 .joy.on{opacity:.95}
 .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff1d6,#d9c3a3);box-shadow:0 3px 0 rgba(0,0,0,.35)}
-body:not(.touch) #actBtn, body:not(.touch) .joy{display:none}
+body:not(.touch) #actBtn, body:not(.touch) #atkBtn, body:not(.touch) .joy{display:none}
 #dpad{position:absolute;left:calc(env(safe-area-inset-left,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 44px);width:150px;height:150px;display:none;touch-action:none;z-index:3}
 body.touch.padmode #dpad{display:block} body.padmode .joy{display:none!important} body.intro #dpad{display:none!important}
 #dpad i{position:absolute;width:50px;height:50px;background:rgba(43,33,60,.72);border:3px solid rgba(255,241,214,.45);border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
@@ -155,7 +167,7 @@ body.touch.padmode #dpad{display:block} body.padmode .joy{display:none!important
 #dpad .l::after{border-right:12px solid #fff1d6;border-left:0;margin-left:-3px}#dpad .r::after{border-left:12px solid #fff1d6;border-right:0;margin-left:3px}
 #dpad b{position:absolute;left:56px;top:56px;width:38px;height:38px;border-radius:50%;background:rgba(43,33,60,.6)}
 #dpad i.on{background:rgba(255,200,97,.55);border-color:var(--amber)}
-body.intro #hud, body.intro #hotbar, body.intro #actBtn, body.intro .joy, body.intro #pcHint, body.intro #toasts{display:none}
+body.intro #hud, body.intro #hotbar, body.intro #actBtn, body.intro #atkBtn, body.intro #toolRow, body.intro .joy, body.intro #pcHint, body.intro #toasts{display:none}
 #pcHint{position:absolute;left:14px;bottom:calc(var(--slotS) + 44px);font-size:13px;color:var(--muted);background:rgba(27,20,38,.75);border-radius:12px;padding:8px 12px;line-height:1.6;max-width:260px}
 body.touch #pcHint{display:none}
 @media (max-width:900px){#pcHint{display:none}}
@@ -302,8 +314,17 @@ body.touch #pcHint{display:none}
 .skslots .btn{min-height:38px;padding:0 12px;font-size:14px}
 #title .ver{font-size:12px;color:var(--muted)}
 #fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:24px;color:var(--rose);text-align:center;padding:20px}
-@media (max-height:520px){:root{--slotS:44px}.side{grid-auto-flow:column}.goal{max-width:46vw;padding:4px 10px 5px;font-size:14px}.bars{gap:4px}.bar{padding:1px 8px 1px 2px;border-radius:12px}.bar img,.bar .lv{width:22px;height:22px}.bar span{font-size:13px}}
+@media (max-height:520px){:root{--slotS:44px}.side{grid-auto-flow:column}.goal{max-width:46vw;padding:4px 10px 5px;font-size:14px}.bars{gap:4px}.bar{padding:1px 8px 1px 2px;border-radius:12px}.bar img,.bar .lv{width:22px;height:22px}.bar span{font-size:13px}#atkBtn{width:88px;height:88px;bottom:calc(var(--slotS) + 22px)}#actBtn{width:88px;height:88px;right:112px;bottom:calc(var(--slotS) + 96px)}#actBtn img,#atkBtn img{width:34px;height:34px}#skBar{right:112px;bottom:calc(var(--slotS) + 40px);flex-direction:row-reverse}.skb{width:50px;height:50px}#altWrap{right:208px;bottom:calc(var(--slotS) + 120px)}#subBtn{width:52px;height:52px}}
 @media (prefers-reduced-motion:reduce){.toast,.sheet{animation:none}.fill{transition:none}}
+
+/* v65 tool slot + tool row */
+.slot.tslot{border-color:#7fe0b5;border-style:dashed}
+.slot.tslot.sel{border-style:solid}
+.slot.tslot .tup{position:absolute;left:50%;top:-2px;transform:translateX(-50%);font-size:9px;color:#7fe0b5;line-height:1}
+.slot .tnone,#toolRow .tnone{font-size:12px;color:var(--muted);padding:0 6px}
+#toolRow{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 34px);display:flex;gap:8px;padding:8px;background:rgba(27,20,38,.94);border:2px solid #7fe0b5;border-radius:18px;z-index:4;max-width:calc(100vw - 16px);overflow-x:auto}
+#toolRow[hidden]{display:none}
+#toolRow .slot{flex:none}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -329,12 +350,12 @@ body.touch #pcHint{display:none}
   <div id="toasts" aria-live="polite"></div>
   <div class="joy" id="joy"><i id="joyKnob"></i></div>
   <div id="dpad" aria-hidden="true"><i class="u"></i><i class="r"></i><i class="d"></i><i class="l"></i><b></b></div>
-  <button id="actBtn" type="button" aria-label="행동"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
+  <button id="actBtn" type="button" aria-label="상호작용"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
+  <button id="atkBtn" type="button" aria-label="공격"><img class="px" id="atkIcon" alt=""><span id="atkLbl">공격</span></button>
   <div id="hotbar"><div id="hbSlots"></div><button class="sbtn" id="bInv" type="button" aria-label="가방"><img class="px" alt=""></button></div>
   <div id="skBar" hidden><button class="skb" type="button" data-n="0"><img class="px" alt=""><i class="cd"></i><span class="k">F</span></button><button class="skb" type="button" data-n="1"><img class="px" alt=""><i class="cd"></i><span class="k">G</span></button></div>
-  <button id="rotBtn" type="button" hidden aria-label="방향 바꾸기"><b>↻</b><span>방향</span></button>
-  <button id="subBtn" type="button" hidden aria-label="회수"><img class="px" id="subIcon" alt=""><span id="subLbl">회수</span></button>
-  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭 또는 스페이스: 행동<br>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방(장비) · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
+  <div id="altWrap"><button id="altNext" type="button" hidden aria-label="다음 선택지">▸</button><button id="subBtn" type="button" hidden aria-label="다른 행동"><img class="px" id="subIcon" alt=""><span id="subLbl"></span><i class="k">R</i></button></div>
+  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭: 공격 · E(스페이스): 상호작용<br>R 다른 행동 · Q 다음 선택지 · Tab 도구<br>1–9 단축칸 · I 가방 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="fade" hidden>기절했어요…</div>
   <input type="file" id="fileIn" hidden>
@@ -355,7 +376,7 @@ body.touch #pcHint{display:none}
     <div id="bkList" hidden></div>
     <div id="cloudAsk" hidden></div>
     <div id="charPick" hidden><div class="cp-h">누구와 모험할까요?</div><div class="cp-grid" id="cpGrid"></div><div class="cp-desc" id="cpDesc"></div><div class="menu-two"><button class="btn ghost" id="charBack" type="button">뒤로</button><button class="btn" id="charGo" type="button">이 친구로 시작</button></div></div>
-    <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 오른쪽 큰 버튼으로 캐기·공격·놓기</div>
+    <div class="ver" id="titleHint">왼쪽을 끌어서 이동 · 칼 버튼은 공격, 손 버튼은 캐기·열기·놓기</div>
   </div>
 </div>
 
@@ -1188,7 +1209,7 @@ const ITEMS = {
   pickWood: { n: '나무 곡괭이', kind: 'pick', power: 1, tier: 0, stack: 1, d: '흙벽과 구리 광맥을 캘 수 있어요.' },
   pickCopper: { n: '구리 곡괭이', kind: 'pick', power: 2, tier: 1, stack: 1, d: '돌벽과 철 광맥도 캘 수 있어요.' },
   pickIron: { n: '철 곡괭이', kind: 'pick', power: 3, tier: 2, stack: 1, d: '수정 동굴의 단단한 화강암 벽과 석영 광맥까지 캘 수 있어요.' },
-  swordWood: { n: '나무 검', kind: 'sword', dmg: 6, stack: 1, d: '처음부터 가진 검. 단축칸에서 골라 들면 이 검으로 싸워요.' },
+  swordWood: { n: '나무 검', kind: 'sword', dmg: 6, stack: 1, d: '처음부터 가진 검. 칼 버튼으로 휘둘러요.' },
   swordCopper: { n: '구리 검', kind: 'sword', dmg: 11, stack: 1, d: '가볍고 튼튼한 검.' },
   swordIron: { n: '철 검', kind: 'sword', dmg: 17, stack: 1, d: '묵직한 한 방.' },
   swordCrystal: { n: '수정 검', kind: 'sword', dmg: 26, stack: 1, d: '보랏빛으로 반짝이는 검.' },
@@ -1296,7 +1317,7 @@ const USE = { chair: 'sit', stumpStool: 'sit', shroomStool: 'sit', cryChair: 'si
   torch: 'lamp', lampShroom: 'lamp', lampCrystal: 'lamp', sproutLamp: 'lamp', sporeLamp: 'lamp', fishTank: 'feed', shelf: 'read', cryMirror: 'mirror',
   shroomWardrobe: 'dress', cryFountain: 'wish', plant: 'water', vase: 'water', bootPlanter: 'water', table: 'tea', shroomTable: 'tea', cryTable: 'tea' };
 const USE_LBL = { sit: '앉기', sleep: '잠자기', pet: '쓰다듬기', feed: '밥 주기', read: '책 읽기', mirror: '거울 보기', dress: '꾸미기', wish: '소원 빌기', water: '물 주기', tea: '차 마시기' };
-const TIPS = ['무기·도구·가구는 단축칸에서 골라 들면 그 일만 해요. 빈손이면 앞에 있는 것에 맞춰 열기·줍기·캐기를 해요.', '활을 쓸 때 가방에 광물 화살이 있으면 좋은 화살부터 써서 더 세게 쏴요.', '도끼를 들고 나무를 베면 더 빨리 베요.', '횃불이나 램프로 밝힌 곳에는 몬스터가 생기지 않아요.', '침대에서 자면 체력이 가득 차고, 그 침대에서 다시 깨어나요.',
+const TIPS = ['칼 버튼은 언제나 공격, 손 버튼은 앞에 있는 것에 맞춰 열기·캐기·베기를 해요. 곡괭이·도끼는 알아서 꺼내 들어요.', '활을 쓸 때 가방에 광물 화살이 있으면 좋은 화살부터 써서 더 세게 쏴요.', '도끼가 도구 주머니에 있으면 나무를 훨씬 빨리 베요.', '횃불이나 램프로 밝힌 곳에는 몬스터가 생기지 않아요.', '침대에서 자면 체력이 가득 차고, 그 침대에서 다시 깨어나요.',
   '말랑대왕은 착지할 때 충격파를 내요. 점프하면 멀리 떨어져요.', '버섯 여왕의 포자는 둥글게 퍼져요. 포자 사이 틈으로 빠져나가요.', '수정골렘이 벽에 부딪혀 기절하면 1.5배 피해를 줄 수 있어요.',
   '수정 분수에서 소원을 빌면 잠시 희귀 물고기가 잘 낚여요.', '구리 낫이 가방에 있으면 작물을 하나씩 더 얻어요. 꾹 누르면 주변 3×3을 한 번에 거둬요.', '바닥 타일을 물 위에 깔면 다리가 돼요.', '찌가 쏙 들어가고 느낌표가 뜨면 바로 당겨요!', '의자에 앉아 있으면 체력이 조금씩 차올라요.'];
 const COMPLIMENTS = ['오늘도 귀여워요!', '반짝반짝, 멋진 모험가예요', '새싹이 생기 있어 보여요', '웃는 얼굴이 제일 예뻐요'];
@@ -2082,7 +2103,7 @@ function drawHazards(T, camX, camY) {
 
 // ---- multi-tile objects (2×1, 2×2, 3×2 …): the top-left tile holds the object, the other tiles hold {t:'_part', a: anchor} ----
 OBJ._part = { n: '', part: 1 };
-const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.rotV ? [d.sz[1], d.sz[0]] : d.sz; };
+const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.sz[0] !== d.sz[1] ? [d.sz[1], d.sz[0]] : d.sz; };
 function fpTiles(i, o, fp) { fp = fp || fpOf(o); const x = i % W, y = (i / W) | 0, out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push(idx(x + dx, y + dy)); return out; }
 function setParts(i, o) { for (const j of fpTiles(i, o)) if (j !== i) G.objs.set(j, { t: '_part', a: i }); }
 function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i) continue; const q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); } }
@@ -2093,20 +2114,25 @@ function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math
 let placeRot = 0, placeRotFor = null;
 const pRot = () => { const s0 = G && selItem(); return s0 && s0.id === placeRotFor ? placeRot : 0; };
 const DIRN = ['아래', '오른쪽', '위', '왼쪽'];
-const canRotObj = t => { const d = OBJ[t]; return !!(d && d.item && !d.tw && !d.dev && !d.src && !d.sw && !d.chest && !(d.sz && !d.rotV && d.sz[0] === d.sz[1])); };
-const placeFp = d => d.sz ? (pRot() % 2 && d.rotV ? [d.sz[1], d.sz[0]] : d.sz) : [1, 1];
-function rotateObjAt(i) { const o = G.objs.get(i); if (!o || !canRotObj(o.t)) return false; const d = OBJ[o.t];
-  if (d.sz && d.rotV) { const nf = o.rot ? d.sz : [d.sz[1], d.sz[0]], x = i % W, y = (i / W) | 0; if (!fpFree(x, y, nf, !!d.solid, i)) { toast('돌릴 자리가 부족해요', null, 'norot'); return false; } clearParts(i, o); o.rot = o.rot ? 0 : 1; setParts(i, o); }
-  else if (d.dir4) o.dir = ((o.dir || 0) + 1) % 4;
-  else o.flip = !o.flip;
-  SFX.place(); puff((i % W) + .5, ((i / W) | 0) + .6, '#e8d8c0', 4, 1.4); lightDirty = true; return true; }
-function rotateAction() {
-  if (!started || paused || !G || G.p.dead > 0) return; const s = selItem(), it = s && ITEMS[s.id];
-  if (it && it.kind === 'place' && canRotObj(it.obj)) { const d = OBJ[it.obj]; if (placeRotFor !== s.id) { placeRotFor = s.id; placeRot = 0; } placeRot = d.dir4 ? (placeRot + 1) % 4 : (placeRot % 2 ? 0 : 1);
-    toast(d.sz && d.rotV ? (placeRot % 2 ? '세로로 놓아요' : '가로로 놓아요') : d.dir4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : (placeRot % 2 ? '반대 방향으로 놓아요' : '원래 방향으로 놓아요'), null, 'prot'); SFX.click(); return; }
-  const a = G.act; if (a && a.o && a.t && inB(a.t.x, a.t.y)) { const ai = anchorAt(idx(a.t.x, a.t.y)); if (ai >= 0 && canRotObj(G.objs.get(ai).t)) { rotateObjAt(ai); return; } }
-  toast('돌릴 수 있는 가구를 들거나 바라봐 주세요', null, 'norot2'); }
-const rotTarget = () => { if (!G) return false; const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'place' && canRotObj(it.obj)) return true; const a = G.act; return !!(a && a.o && a.t && inB(a.t.x, a.t.y) && anchorAt(idx(a.t.x, a.t.y)) >= 0 && canRotObj((G.objs.get(anchorAt(idx(a.t.x, a.t.y))) || {}).t)); };
+// v65 (stardew-like): each piece turns 1, 2 or 4 ways, chosen before placing (to turn a placed one, pick it up and place it again).
+// Seats face 4 ways (the sitter faces the same way); other furniture 2 (front / turned 90°); front-only and round things do not turn.
+// A turned piece uses its own drawing when there is one (obj/<id>S.png side, obj/<id>U.png back), otherwise the drawing turned 90°.
+const ROT4 = new Set(['chair', 'cryChair', 'mossSofa', 'ironChair', 'shroomStool', 'stumpStool', 'sofa2', 'logBench', 'stoneBench', 'cushion']);
+const NOROT = new Set(['pictureFrame', 'vase', 'table', 'rugRound', 'cryMirror', 'cryFountain', 'fountainBig', 'fishTank', 'bootPlanter', 'torch']);
+function rotN(t) { const d = OBJ[t]; if (!d || !d.item || d.tw || d.dev || d.src || d.sw || d.chest || d.ranch || d.nat || d.crop || d.tree || d.lost || NOROT.has(t)) return 1; return ROT4.has(t) || d.dir4 ? 4 : 2; }
+const canRotObj = t => rotN(t) > 1;
+const rotSwaps = d => !!(d && d.sz && d.sz[0] !== d.sz[1]);
+const placeFp = d => d.sz ? (pRot() % 2 && rotSwaps(d) ? [d.sz[1], d.sz[0]] : d.sz) : [1, 1];
+const rotOf = o => typeof o.dir === 'number' ? o.dir : o.rot ? 1 : 0;
+const ROTC = new WeakMap(), turned = c => { let k = ROTC.get(c); if (!k) { k = rot90(c); ROTC.set(c, k); } return k; };
+function rotImg(t, r, base) { // → [image, flip]
+  if (!r || !base) return [base, false]; const main = base === SPR.obj[t];
+  if (r === 2 && rotN(t) === 4) return [(main && SPR.obj[t + 'U']) || base, false];
+  return [(main && (SPR.obj[t + 'S'] || SPR.obj[t + 'V'])) || turned(base), r === 3]; }
+function rotatePlace() { const s = selItem(), it = s && ITEMS[s.id]; if (!it || it.kind !== 'place' || rotN(it.obj) < 2) return; const n = rotN(it.obj);
+  if (placeRotFor !== s.id) { placeRotFor = s.id; placeRot = 0; } placeRot = (placeRot + 1) % n;
+  toast(n === 4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : placeRot ? '옆으로 돌려 놓아요' : '정면으로 놓아요', null, 'prot'); SFX.click(); }
+function rotateAction() { if (!started || paused || !G || G.p.dead > 0) return; rotatePlace(); }
 function rot90(c) { const k = document.createElement('canvas'); k.width = c.height; k.height = c.width; k.hd = c.hd; const g = k.getContext('2d'); g.imageSmoothingEnabled = false; g.translate(k.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0); return k; }
 // ---- tree workshop: a 2×2 plot of saplings; chop when grown, or power it to chop by itself into a chest next to it ----
 const FARM_GROW = 90, FARM_CAP = 60;
@@ -2340,7 +2366,7 @@ function checkUnlocks() {
 }
 function shovelDesc() {
   const ks = Object.keys(TERRAIN).map(Number), ok = ks.filter(terrainOk).map(f => TERRAIN[f].n), no = ks.filter(f => !terrainOk(f));
-  return `단축칸에서 삽을 들고 바닥을 바라보며 누르면 깔아 둔 바닥을 걷고, 땅을 누르면 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
+  return `삽을 들고(도구 칸) 바닥을 바라보며 누르면 깔아 둔 바닥을 걷고, 땅을 누르면 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
 }
 function digGround(t) {
   const i = idx(t.x, t.y), f = G.floor[i]; if (G.wall[i] || G.objs.get(i)) return;
@@ -2390,25 +2416,25 @@ const freshDead = () => Object.fromEntries(BKEYS.map(k => [k, false]));
 const guardOf = (x, y) => (x === SA.x && y === SA.y) ? 'queen' : (x === SB.x && y === SB.y) ? 'golem' : (x === SL.x && y === SL.y) ? 'turtle' : (x === SI.x && y === SI.y) ? 'spirit' : null;
 function newGame(seed) {
   setLayout(devLayout() || 2); setFootprints(2); const w = genWorld(seed);
-  G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0,
+  G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0, tools: [], tsel: 0, lastW: null,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.sel = 3; /* v48: start with an empty hand (berries · seeds · wooden sword sit in slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); CHARS.custom = lookDef(G.look); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; buildPlayer(0);
   rebuildMap(); cam.x = G.p.x; cam.y = G.p.y;
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
 const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i = 0; i < r.length; i += 2) { a.fill(r[i], k, k + r[i + 1]); k += r[i + 1]; } return a; };
 function serialize() {
   if (!G) return null; const p = G.p;
-  return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
+  return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
     p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: LAY, fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
 function deserialize(s) {
   setLayout(s.mapV === 2 ? 2 : 1); // saves from before v47 keep the original 200×200 map
   setFootprints(2); const oldFp = s.fpV !== 2; // v56: saves from before v50 get the 2×1 workbench and benches too (growFootprints below)
   const N = W * H;
-  G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: s.sel || 0,
+  G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: Number.isInteger(s.sel) ? s.sel : 0, tools: Array.isArray(s.tools) ? s.tools : [], tsel: Number.isInteger(s.tsel) ? s.tsel : 0, tHand: !!s.tHand, lastW: typeof s.lastW === 'string' ? s.lastW : null,
     p: { x: s.p.x, y: s.p.y, hp: s.p.hp, hunger: s.p.hunger, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: (s.bossDead && typeof s.bossDead === 'object') ? Object.assign(freshDead(), s.bossDead) : Object.assign(freshDead(), { slime: !!s.bossDead }), shots: [], fish: null, fishFx: null, stats: Object.assign(freshStats(), s.stats), time: s.time || 0, spawnPt: s.spawnPt, treeSeeds: s.treeSeeds || 0,
     won: !!s.won, won2: !!s.won2, guide: s.guide || 0, wdmg: new Map(), swing: null, biomeNow: 0 };
@@ -2427,7 +2453,8 @@ function deserialize(s) {
   const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
-  if (!(G.sel >= 0 && G.sel < HOT)) G.sel = 0; G.newIds = {};
+  G.tools = G.tools.filter(x => known(x) && isTool(x.id)).map(x => ({ ...x, c: 1 })); if (!(G.tsel >= 0 && G.tsel < G.tools.length)) G.tsel = 0;
+  if (!(G.sel >= (G.tools.length ? -1 : 0) && G.sel < HOT)) G.sel = 0; G.newIds = {};
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   convertDrills(); // v46: old stone drills become stone pits
   if (oldWp) moveOldWeapon(oldWp);
@@ -2444,6 +2471,7 @@ function deserialize(s) {
   G.qt = {}; if (s.qt && typeof s.qt === 'object') for (const k in s.qt) if (Number.isFinite(s.qt[k])) G.qt[k] = s.qt[k];
   for (const [i, o] of [...G.objs]) if (o.t === 'icePillar') G.objs.delete(i); // ice pillars only last for one fight
   if (!G.stats.nm61) migrateGear61();
+  if (!G.stats.nm65) migrateTools65(); // v65 tool pouch
   migrateForges60(oldFp); // v60
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
@@ -2559,6 +2587,12 @@ function syncNotes() {
   for (const d of DISHES) { const s = d[7]; if ((s.startsWith('quest:') || s.startsWith('guide:')) && (G.qclaim || {})[s.slice(6)]) learnRecipe(d[0], true); }
 }
 function grantAccs() { G.stats.accGot = G.stats.accGot || {}; for (const k in ACC_OF) if (beat(k) && !G.stats.accGot[k]) { G.stats.accGot[k] = 1; const l = moveInto(G.inv, { id: ACC_OF[k], c: 1 }); if (l) spawnDrop(ACC_OF[k], 1, G.p.x, G.p.y); } }
+// v65: tools move into their own pouch (the tool slot at the front of the hotbar holds one); a tool held stays in hand
+function migrateTools65() { G.stats.nm65 = 1; const held = G.sel >= 0 ? G.inv[G.sel] : null; let moved = 0;
+  for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { G.tools.push({ ...s, c: 1 }); if (s.c > 1) for (let k = 1; k < s.c; k++) G.tools.push({ id: s.id, c: 1 }); G.inv[i] = null; moved += s.c || 1; } }
+  if (held && isTool(held.id)) { G.tsel = G.tools.findIndex(x => x.id === held.id && x.dur === held.dur); if (G.tsel < 0) G.tsel = 0; G.sel = -1; G.tHand = true; } // the tool that was in hand stays in hand
+  if (!G.lastW && held && ITEMS[held.id] && ITEMS[held.id].kind === 'sword') G.lastW = held.id; // otherwise the strongest weapon is used
+  setTimeout(() => { if (G && started) toast('조작이 바뀌었어요 · 칼 버튼은 공격, 손 버튼은 열기·캐기·놓기예요' + (moved ? ` · 도구 ${moved}개는 도구 주머니로 옮겼어요 (단축칸 맨 앞 도구 칸)` : ''), 'good', 'nm65'); }, 1600); }
 let saveFailWarned = false;
 function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
@@ -2749,14 +2783,15 @@ const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt || !!i
 const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting
 const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['food', '음식'], ['deco', '꾸미기'], ['seed', '씨앗']];
-function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
+function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'axe', 'lasso', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 let invDirty = true;
 function addItem(id, c, count = true) {
   if (ITEMS[id] && ITEMS[id].note) { learnRecipe(ITEMS[id].note); return 0; } // recipe notes teach a dish instead of taking a bag slot
+  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } G.newIds = G.newIds || {}; G.newIds[id] = 1; invDirty = true; return 0; } // v65: tools go into the tool pouch
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
-  // new stacks go into the bag; the hotbar is only used when the bag is full (the player arranges the hotbar)
-  const order = [...Array(inv.length - HOT).keys()].map(k => k + HOT).concat([...Array(HOT).keys()]);
+  // v65: new stacks go into an empty hotbar slot first, then the bag
+  const order = [...Array(HOT).keys()].concat([...Array(inv.length - HOT).keys()].map(k => k + HOT));
   for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; G.newIds = G.newIds || {}; G.newIds[id] = 1; } }
   const got = c - left;
   if (got > 0 && rarOf(id) >= 3 && (ITEMS[id].kind === 'sword' || ITEMS[id].kind === 'pick')) { G.stats.epicSeen = G.stats.epicSeen || {}; G.stats.epicSeen[id] = 1; }
@@ -2767,8 +2802,9 @@ function addItem(id, c, count = true) {
 // 'anyFish' / 'anyPetal' in a recipe take any fish / any petal
 const WILD = { anyFish: it => !!it.fish, anyPetal: it => !!it.petal };
 const idIs = (sid, id) => sid === id || (!!WILD[id] && !!ITEMS[sid] && WILD[id](ITEMS[sid]));
-const countItem = id => G.inv.reduce((a, s) => a + (s && idIs(s.id, id) ? s.c : 0), 0);
-function removeItem(id, c) { for (let i = G.inv.length - 1; i >= 0 && c > 0; i--) { const s = G.inv[i]; if (s && idIs(s.id, id)) { const k = Math.min(s.c, c); s.c -= k; c -= k; if (!s.c) G.inv[i] = null; } } invDirty = true; }
+const countItem = id => G.inv.concat(G.tools || []).reduce((a, s) => a + (s && idIs(s.id, id) ? s.c : 0), 0);
+function removeItem(id, c) { for (let i = G.inv.length - 1; i >= 0 && c > 0; i--) { const s = G.inv[i]; if (s && idIs(s.id, id)) { const k = Math.min(s.c, c); s.c -= k; c -= k; if (!s.c) G.inv[i] = null; } }
+  const T = G.tools || []; for (let i = T.length - 1; i >= 0 && c > 0; i--) if (idIs(T[i].id, id)) { const h = heldTool(); T.splice(i, 1); c--; fixTsel(h); } invDirty = true; }
 // ---- durability: tools wear with use; at 0 they are broken (kept, but unusable) until repaired at a workbench ----
 // [max uses, full repair cost]
 const DUR = { pickWood: [200, [['wood', 3]]], pickCopper: [400, [['copperBar', 2]]], pickIron: [800, [['ironBar', 2]]],
@@ -2790,25 +2826,28 @@ const SALVAGE_RATE = 0.7, SALVAGE_BASE = { pickWood: [['wood', 3]], swordWood: [
 function salvageGet(id) { const r = RECIPES.find(r => r.out === id), req = r ? r.req : SALVAGE_BASE[id]; if (!req) return null; return req.map(([m, c]) => [m, Math.round(c * SALVAGE_RATE)]).filter(([, c]) => c > 0); }
 function salvGet2(s) { const m = new Map(); for (const [id, c] of salvageGet(s.id) || []) m.set(id, (m.get(id) || 0) + c); for (const [id, c] of upgSpent(s.id, lvOf(s))) m.set(id, (m.get(id) || 0) + Math.floor(c / 2)); const out = [...m].filter(([, c]) => c > 0); return out.length ? out : null; }
 const canSalv = near => near.has('smelter'); // v61: only at the 장비제작대
-const upgSlot = i => typeof i === 'string' && i.startsWith('e:') ? G.equip[i.slice(2)] : G.inv[i];
+const upgSlot = i => itemAt(i);
 function upgListHTML(ok) {
-  const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...G.inv.map((s, i) => ({ s, i, tag: '' }))].filter(({ s }) => s && upgOk(s.id));
+  const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
   let h = `<div class="sh-body"><p class="hint">${ok ? `재료를 넣어 장비를 강화해요 (최대 +${UPG_MAX}). 무기는 공격력, 곡괭이는 캐는 힘, 옷·장신구·반지는 효과가 좋아져요.` : '장비제작대 근처에서 강화할 수 있어요.'}</p><div class="list">`;
   if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">강화할 장비가 없어요</p>`;
   for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && cost.every(([id, c]) => availCount(id) >= c);
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
   return h + `</div></div>`; }
-const usableItem = id => G.inv.some(s => s && s.id === id && !isBroken(s));
-function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; const h = G.inv[G.sel]; // v48: a pickaxe held in the hotbar is the one used
-  if (h && ITEMS[h.id] && ITEMS[h.id].kind === 'pick' && !isBroken(h)) return { ...ITEMS[h.id], id: h.id, slot: h, power: ITEMS[h.id].power * (1 + UPG_POW * lvOf(h)) };
-  for (const s of G.inv) { if (!s || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; const pw = ITEMS[s.id].power * (1 + UPG_POW * lvOf(s)); if (pw > b.power) b = { ...ITEMS[s.id], id: s.id, slot: s, power: pw }; } return b; }
+const usableItem = id => G.inv.concat(G.tools || []).some(s => s && s.id === id && !isBroken(s));
+function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; const h = selItem(); // v48: a pickaxe held is the one used (v65: from the tool slot)
+  if (h && ITEMS[h.id] && ITEMS[h.id].kind === 'pick' && !isBroken(h) && (G.sel >= 0 || G.tHand)) return { ...ITEMS[h.id], id: h.id, slot: h, power: ITEMS[h.id].power * (1 + UPG_POW * lvOf(h)) };
+  for (const s of G.inv.concat(G.tools || [])) { if (!s || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; const pw = ITEMS[s.id].power * (1 + UPG_POW * lvOf(s)); if (pw > b.power) b = { ...ITEMS[s.id], id: s.id, slot: s, power: pw }; } return b; }
 // v48: the weapon held in the hotbar is the weapon (there is no weapon slot any more); otherwise the fist
 const FIST = { n: '주먹', dmg: 3, id: 'hand', wt: 'fist' };
 const wpOf = s => { const it = ITEMS[s.id]; return { ...it, id: s.id, slot: s, dmg: it.dmg * (1 + UPG_DMG * lvOf(s)) }; }; // v43: each upgrade level adds 8% damage
-function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; return it && it.kind === 'sword' && !isBroken(s) ? wpOf(s) : FIST; }
+function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'sword' && !isBroken(s)) return wpOf(s); // v65: the attack button always has a weapon
+  const all = G.inv.filter(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x)); if (!all.length) return FIST;
+  const last = G.lastW && all.find(x => x.id === G.lastW); if (last) return wpOf(last);
+  let b = all[0]; for (const x of all) if (wpOf(x).dmg > wpOf(b).dmg) b = x; return wpOf(b); }
 const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1); // v44 매의 눈
 const atkCd = () => { const W = wtOf(curWeapon()); return W.cd * atkSpd() * (W.ranged ? 1 : 1 - skl('warrior') * .03); };
-const selItem = () => G.inv[G.sel];
+const selItem = () => G.sel < 0 ? ((G.tools && G.tools[G.tsel]) || null) : G.inv[G.sel]; // v65: sel −1 = the tool slot
 
 // ================= input =================
 const keys = new Set();
@@ -2818,7 +2857,7 @@ let ctrlPref = 'joy'; try { ctrlPref = localStorage.getItem('lantern-tree-ctrl')
 const mouse = { x: 0, y: 0, down: false, last: 0, used: false, over: false };
 let btnHeld = false, actCd = 0, holdGroup = null, actQ = 0, holdT = 0, holdK = null;
 const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.now() - mouse.last < 3500);
-const actHeld = () => btnHeld || mouse.down || keys.has('Space') || keys.has('KeyJ') || keys.has('KeyE');
+const actHeld = () => btnHeld || keys.has('Space') || keys.has('KeyE'); // v65: interact (the mouse and J attack)
 function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
@@ -2850,36 +2889,44 @@ function nearestEnemy(range) {
   for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st !== 'fight' || b.z > 0.8) continue; const d = Math.hypot(b.x - p.x, b.y - p.y) - BOSSES[k].hr; if (d < range && d < bd) { bd = d; best = b; } }
   return best;
 }
-// v48: what you hold decides what the button does. Holding a tool, a weapon, food or something to build only does that
-// item's own job; an empty hand (or a plain material) does everything else as before (open, pick up, gather, mine …).
-const HOLD_MODE = { sword: 'weapon', pick: 'pick', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
+// v65: two buttons. The attack button (doAttack in features/controls.js) always attacks. This one — interact — does what fits the
+// thing in front: an item held on purpose comes first (seed · watering can · furniture · food …), otherwise a recommendation
+// (open · harvest · chop · mine · pick up …) that takes the right tool out of the tool pouch by itself (pickaxe · axe · sickle ·
+// shovel; the fishing rod and the watering can only from the small button or when held). Other things that fit go to the small button.
+const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
 const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
-function fightDecide(sw) { const p = G.p, WT = wtOf(sw);
-  let en = nearestEnemy(WT.ranged ? wRange(WT) : WT.reach - 0.1);
-  if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
-  if (en && aimMouse()) { const m = mouseWorld(), a1 = Math.atan2(m.y - p.y, m.x - p.x), a2 = Math.atan2(en.y - p.y, en.x - p.x); let da = Math.abs(a1 - a2); if (da > Math.PI) da = 2 * Math.PI - da; if (da > 1.1) en = null; }
-  return en ? { k: 'attack', lbl: WT.ranged ? '쏘기' : '공격', icon: sw.id === 'hand' ? 'hand' : sw.id, en } : null; }
+const NOTGT = ['eat', 'wear']; // held food · clothes: after a real action in front (opening a chest, …), or first when there is nothing to do
 const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
-function natAct(d, o, t, pk) { return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: d.nat === 'pick' ? 'hand' : pk.id === 'hand' ? 'hand' : pk.id, t, o }; }
+// the tool a natural thing needs: trees take an axe (or a pickaxe), rocks and crystals a pickaxe; small plants the hand
+function natTool(d) { if (d.nat === 'pick') return null; if (d.nat === 'chop') return bestTool('axe') || bestTool('pick'); return bestTool('pick'); }
+function natAct(d, o, t) { const tl = natTool(d); return { k: 'chop', lbl: d.nat === 'pick' ? '줍기' : d.nat === 'mine' ? '캐기' : isYoung(o) ? '베기 3/4' : '베기', icon: tl ? tl.id : 'hand', t, o, tool: tl }; }
 function decide() {
-  const p = G.p; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
-  const s = selItem(), it = s && ITEMS[s.id], md = holdMode(it);
-  if (md === 'hand' || md === 'weapon' || md === 'pick') { const f = fightDecide(curWeapon()); if (f && !(md === 'pick' && pickTarget())) return f; }
+  const p = G.p; G.alts = []; if (p.dead > 0 || p.sleep) return { k: 'none', lbl: '…', icon: 'dots' };
   if (p.sit) return { k: 'stand', lbl: '일어나기', icon: 'hand' };
   if (G.fish) return { k: 'reel', lbl: G.fish.st === 'bite' ? '당기기!' : '거두기', icon: 'rod' };
+  let s = selItem(); if (s && G.sel < 0 && isBroken(s)) { const nx = bestTool(ITEMS[s.id].kind); if (nx) { holdTool(nx); s = nx; } } // a broken tool gives way to the next one
+  const it = s && ITEMS[s.id], md0 = holdMode(it), md = G.sel < 0 && !G.tHand && ['pick', 'axe', 'sickle', 'shovel'].includes(md0) ? 'hand' : md0; // a tool interact took out by itself does not decide anything
   let t = targetTile(), i = inB(t.x, t.y) ? idx(t.x, t.y) : -1, o = i >= 0 ? G.objs.get(i) : null;
   if (o && o.t === '_part') { const ai = anchorAt(i); if (ai >= 0) { i = ai; t = { x: ai % W, y: (ai / W) | 0, far: t.far }; o = G.objs.get(ai); } else o = null; }
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (md === 'build' && canPlace(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
-  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3') && (md === 'hand' || md === 'sickle') && hasItem('sickle')) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list }; }
   if (o && OBJ[o.t] && OBJ[o.t].lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold
-  if (md !== 'hand') return heldDecide(md, s, it, t, i, o);
-  return handDecide(t, i, o);
+  if (holdT >= .3 && (holdK === 'harvest' || holdK === 'harvest3')) { const sk = bestTool('sickle'); if (sk) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list, tool: sk }; } }
+  const main = [], alt = [], has = a => main.concat(alt).some(b => b.k === a.k && b.lbl === a.lbl), push = a => { if (a && !has(a)) (a.onlyAlt ? alt : main).push(a); };
+  let h = null, hInfo = null;
+  if (md !== 'hand' && md !== 'weapon') { h = heldDecide(md, s, it, t, i, o); if (!h || ['info', 'swing', 'none'].includes(h.k)) { hInfo = h && h.k === 'info' ? h : null; h = null; } }
+  if (h && !NOTGT.includes(h.k)) { push(h); if (h.k === 'place' && it.kind === 'place' && rotN(it.obj) > 1) push({ k: 'rot', lbl: '방향', icon: s.id, onlyAlt: 1 }); }
+  // when the thing in front is only to look at for now (a growing crop, an animal not ready …) or a held piece cannot go there,
+  // picking it up or digging it out is never the big button — those stay on the small one
+  const auto = autoOptions(t, i, o), quiet = (auto[0] && auto[0].k === 'info') || (md === 'build' && !h);
+  for (const a of auto) if (a.k !== 'info') push(quiet && (a.k === 'pickup' || a.k === 'dig') ? { ...a, onlyAlt: 1 } : a);
+  if (h && NOTGT.includes(h.k)) push(h); // food, clothes …: after a real action in front, or first when there is nothing to do
+  // a held watering can, rod, fertiliser … explains itself first ("가득 참", "물 없음"); a pickaxe or axe with nothing to do lets the thing in front speak
+  const info = (hInfo && !['pick', 'axe', 'sickle', 'shovel'].includes(md) && hInfo) || auto.find(a => a.k === 'info') || hInfo;
+  if (!main.length) { G.alts = alt; return info || { k: 'none', lbl: '…', icon: 'dots' }; }
+  G.alts = main.slice(1).concat(alt); return main[0];
 }
-// the target the held pickaxe would work on (a wall, or a rock / tree / plant to gather)
-function pickTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return false; let i = idx(t.x, t.y), o = G.objs.get(i); if (o && o.t === '_part') { const ai = anchorAt(i); o = ai >= 0 ? G.objs.get(ai) : null; }
-  return !!((G.wall[i] && G.wall[i] !== 8) || (o && OBJ[o.t].nat)); }
 function heldDecide(md, s, it, t, i, o) {
   const d = o && OBJ[o.t], water = i >= 0 && !G.wall[i] && G.floor[i] === WATER, no = (lbl, msg) => ({ k: 'info', lbl, icon: s.id, msg, t });
   const crop = d && d.crop ? Math.max(0, cropStage(o)) : -1;
@@ -2891,7 +2938,6 @@ function heldDecide(md, s, it, t, i, o) {
       if (canPlace(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t };
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
-      if (d && d.item) return { k: 'info', lbl: '자리 있음', icon: 'dots', msg: '여기엔 이미 다른 것이 있어요. 작은 [회수] 버튼으로 치울 수 있어요', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
       return no(it.kind === 'seed' ? '심을 수 없음' : '놓을 수 없음', it.kind === 'seed' ? '여기엔 심을 수 없어요 · 빈 흙·이끼·버섯흙·수정 모래를 바라보고 눌러요' : '여기엔 놓을 수 없어요 · 빈 곳을 바라보고 눌러요'); }
     case 'shovel': {
       if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
@@ -2923,60 +2969,64 @@ function heldDecide(md, s, it, t, i, o) {
     case 'key': return d && d.tree ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'info', lbl: '등불나무로', icon: 'lightSeed', msg: '등불나무 앞에서 누르면 심을 수 있어요' };
     case 'pick': {
       if (isBroken(s)) return no('곡괭이 고장', `${josa(it.n, '이', '가')} 망가졌어요. 장비제작대에서 고칠 수 있어요`);
-      const pk = bestPick();
-      if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: s.id, t };
-      if (d && d.nat) return natAct(d, o, t, pk);
-      return swingAct(curWeapon()); }
-    case 'weapon': {
-      if (isBroken(s)) return no('무기 고장', `${josa(it.n, '이', '가')} 망가졌어요. 장비제작대에서 고칠 수 있어요`);
-      if (d && d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe) return natAct(d, o, t, bestPick()); // an axe also chops trees
-      return swingAct(curWeapon()); }
+      if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: s.id, t, tool: s };
+      if (d && d.nat && d.nat !== 'pick') return { ...natAct(d, o, t), icon: s.id, tool: d.nat === 'chop' && bestTool('axe') ? bestTool('axe') : s };
+      return no('캐기', '벽이나 바위를 바라보고 눌러요'); }
+    case 'axe': {
+      if (isBroken(s)) return no('도끼 고장', `${josa(it.n, '이', '가')} 망가졌어요. 장비제작대에서 고칠 수 있어요`);
+      if (d && d.nat === 'chop') return { ...natAct(d, o, t), icon: s.id, tool: s };
+      return no('베기', '나무를 바라보고 눌러요'); }
   }
-  return handDecide(t, i, o);
+  return null;
 }
-// empty hand (or a plain material): everything in front, as before v48
-function handDecide(t, i, o) {
-  const p = G.p, pk = bestPick();
+// what fits the thing in front, best first (onlyAlt: never on the big button, only on the small one)
+function autoOptions(t, i, o) {
+  const p = G.p, L = [], A = a => { if (a) L.push(a); }, sh = bestTool('shovel'), rod = bestTool('rod'), can = bestTool('wcan');
+  const dig = (lbl, oo) => sh ? { k: 'dig', lbl, icon: 'shovel', t, o: oo, tool: sh, onlyAlt: 1 } : null;
   if (o) {
     const d = OBJ[o.t];
     if (d.growTo) { const st = treeStep(o), into = d.stump && OBJ[o.g] ? OBJ[o.g].n : d.into, mins = s2 => Math.max(1, Math.ceil(s2 / 60)), r = (o.at || 0) - G.time;
-      if (st < 0) return { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t };
-      return { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t }; }
-    if (d.tree) return countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t };
-    if (d.giant) return { k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o };
-    if (o.cake) return { k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o };
-    if (d.lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o };
-    if (d.tchest) return o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o };
-    if (d.ranch) return ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t, sub: true };
-    if (d.station && o.job && jobDone(o.job) > 0) return { k: 'jobTake', lbl: '꺼내기', icon: o.job.out, t, o, sub: true }; // v59
-    if (d.station || d.chest) return { k: 'open', lbl: '열기', icon: 'hand', t, o, sub: !(d.chest && o.items && o.items.some(x => x)) };
+      A(st < 0 ? { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t }
+        : { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t });
+      A(dig(d.stump ? '뽑기' : '퍼내기', o)); return L; }
+    if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
+    if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
+    if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
+    if (d.lost) { A({ k: 'lost', lbl: '되찾기', icon: 'hand', t, o }); return L; }
+    if (d.tchest) { A(o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o }); return L; }
+    if (d.ranch) { A(ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t });
+      if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
+    if (d.station || d.chest) { if (d.station && o.job && jobDone(o.job) > 0) A({ k: 'jobTake', lbl: '꺼내기', icon: o.job.out, t, o }); // v59
+      A({ k: 'open', lbl: '열기', icon: 'hand', t, o }); if (!(d.chest && o.items && o.items.some(x => x))) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
     if (d.crop) { const cs = Math.max(0, cropStage(o));
-      if (cs >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o };
-      return { k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs, i), t }; }
-    if (d.bush) return (o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t };
-    if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) return { k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t };
-      return o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }; }
-    if (d.nat) return natAct(d, o, t, pk);
-    if (d.item) {
-      const u = USE[o.t]; if (u) return { k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o, sub: true };
-      return { k: 'pickup', lbl: '회수', icon: 'hand', t, o };
-    }
+      if (cs >= 3) A({ k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o, tool: bestTool('sickle') });
+      else { A({ k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs, i), t }); if (!o.w && can && (can.w || 0) > 0) A({ k: 'water', lbl: '물 주기', icon: 'wcan', t, o, tool: can, onlyAlt: 1 }); }
+      return L; }
+    if (d.bush) { A((o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o, tool: bestTool('sickle') } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t }); A(dig('퍼내기', o)); return L; }
+    if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
+      else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
+    if (d.nat) { A(natAct(d, o, t)); return L; }
+    if (d.item) { const u = USE[o.t]; if (u) A({ k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o });
+      A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
   }
-  if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) return usableItem('rod') ? { k: 'fish', lbl: '낚시', icon: 'rod', t } : hasItem('rod') ? { k: 'info', lbl: '낚싯대 고장', icon: 'rod', msg: '낚싯대가 망가졌어요. 장비제작대에서 고칠 수 있어요', t } : { k: 'info', lbl: '낚싯대 필요', icon: 'rod', msg: '낚싯대가 있으면 낚시할 수 있어요 (장비제작대 → 도구)', t };
-  if (i >= 0 && G.wall[i] && G.wall[i] !== 8) return { k: 'mine', lbl: '캐기', icon: pk.id === 'hand' ? 'hand' : pk.id, t };
-  if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) return { k: 'petpet', lbl: '쓰다듬기', icon: 'hand' };
-  { const wa = wildNear(1.8); if (wa) return { k: 'info', lbl: ANIMALS[wa.k].n, icon: 'dots', msg: `${ANIMALS[wa.k].n}예요 · 올가미 밧줄(작업대)을 들고 다가가면 데려갈 수 있어요`, t: { x: Math.floor(wa.x), y: Math.floor(wa.y) } }; }
-  return swingAct(curWeapon());
+  if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) {
+    A(rod && !isBroken(rod) ? { k: 'fish', lbl: '낚시', icon: 'rod', t, tool: rod, onlyAlt: 1 } : { k: 'info', lbl: rod ? '낚싯대 고장' : '낚싯대 필요', icon: 'rod', msg: rod ? '낚싯대가 망가졌어요. 장비제작대에서 고칠 수 있어요' : '낚싯대가 있으면 낚시할 수 있어요 (장비제작대 → 도구)', t });
+    if (can && (can.w || 0) < WCAN_MAX) A({ k: 'fill', lbl: '물 채우기', icon: 'wcan', t, tool: can, onlyAlt: 1 });
+    if (rod) A({ k: 'info', lbl: '물가', icon: 'rod', msg: '작은 버튼의 [낚시]를 누르거나, 도구 칸에서 낚싯대를 들고 눌러요', t }); }
+  if (i >= 0 && G.wall[i] && G.wall[i] !== 8) { const pk = bestTool('pick'); A({ k: 'mine', lbl: '캐기', icon: pk ? pk.id : 'hand', t, tool: pk }); }
+  if (i >= 0 && !G.wall[i] && !o && isPlacedFloor(G.floor[i])) A(dig('걷기'));
+  if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) A({ k: 'petpet', lbl: '쓰다듬기', icon: 'hand' });
+  { const wa = wildNear(1.8); if (wa) A({ k: 'info', lbl: ANIMALS[wa.k].n, icon: 'dots', msg: `${ANIMALS[wa.k].n}예요 · 올가미 밧줄(장비제작대)을 도구 칸에서 들고 다가가면 데려갈 수 있어요`, t: { x: Math.floor(wa.x), y: Math.floor(wa.y) } }); }
+  return L;
 }
 const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
 const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
-const subLabel = a => a && a.sub === 'dig' ? '걷기' : '회수';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
   delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   returnObj(o, t.x + .5, t.y + .5); SFX.pick(); puff(t.x + .5, t.y + .6, '#e8d8c0', 5, 2); lightDirty = true;
 }
-function subAction() { const a = G.act; if (!started || paused || !a || !a.sub || G.p.dead > 0) return; ensureAudio(); if (a.sub === 'dig') digGround(a.t); else pickupObj(a.t, a.o); }
+function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ensureAudio(); doAlt(); } // v65: the small button
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
 const cropStage = o => Math.min(3, Math.floor((G.time - o.p) / OBJ[o.t].grow * 3));
 function tryAct(edge) {
@@ -2986,15 +3036,15 @@ function tryAct(edge) {
   perform(a);
 }
 function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
-let fistTip = 0; // v48: one hint per session when fighting bare-handed with a weapon in the bag
 function perform(a) {
   const p = G.p;
+  if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
   switch (a.k) {
     case 'attack': {
       if (!aimMouse()) faceTo(a.en.x - p.x, a.en.y - p.y);
-      if (!fistTip && curWeapon() === FIST) { const k = G.inv.findIndex(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x)); if (k >= 0) { fistTip = 1; toast(`주먹으로 싸우는 중이에요 · ${k < HOT ? `단축칸 ${k + 1}번` : '가방'}의 ${josa(ITEMS[G.inv[k].id].n, '을', '를')} 골라 들면 더 세요`, null, 'fisttip'); } }
       actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     }
+    case 'rot': rotatePlace(); actCd = 0.15; break;
     case 'swing': actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); actCd = 0.28; break;
@@ -3195,7 +3245,7 @@ function useObj(a) {
       const grp = doorGroup(t.x, t.y), nv = !o.open; // a double door opens and closes together
       if (!nv && grp.some(([j]) => occupied(j % W, (j / W) | 0))) { toast('문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; }
       for (const [, g] of grp) g.open = nv; SFX.place(); puff(x, t.y + .6, '#e8d8c0', 3, 1.2); break; }
-    case 'sit': { const sd = OBJ[o.t].dir4 ? (o.dir || 0) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
+    case 'sit': { const sd = rotN(o.t) === 4 ? rotOf(o) : 0, fp2 = fpOf(o); p.sit = { x: t.x, y: t.y, px: p.x, py: p.y, dir: sd }; p.x = t.x + (fp2[0] > 1 ? fp2[0] / 2 : .5); p.y = t.y + (fp2[1] > 1 ? fp2[1] / 2 : .62); p.face = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }][sd]; p.dir = ['down', 'side', 'up', 'side'][sd]; p.flip = sd === 3; } G.fish = null; SFX.place(); toast('편안하게 앉았어요. 체력이 조금씩 차올라요', null, 'sit'); break;
     case 'sleep': sleepIn(t); break;
     case 'pet': hearts(x, t.y, 5); SFX.purr(); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); ftext(p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } toast(pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
     case 'lamp': o.off = !o.off; lightDirty = true; SFX.click(); break;
@@ -3233,7 +3283,7 @@ function reel() {
   const seen = G.stats.fishSeen || (G.stats.fishSeen = {});
   if (id === 'bottle') { } else if (!seen[id]) { seen[id] = 1; toast(`처음 낚았어요: ${ITEMS[id].n}!`, 'good'); } else ftext(G.p.x, G.p.y - 1.5, ITEMS[id].n, '#bfe6ff');
   G.stats.fishCaught = (G.stats.fishCaught || 0) + 1; gainXp(id === 'koi' ? 12 : id === 'boot' ? 1 : 4, G.p.x, G.p.y);
-  wear(G.inv.find(s => s && s.id === 'rod' && !isBroken(s)));
+  wear(bestTool('rod'));
 }
 function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
@@ -3246,12 +3296,11 @@ function mineWall(t) {
   } else G.wdmg.set(i, dm);
 }
 function hitObj(t, o) {
-  const d = OBJ[o.t], pk = bestPick(), i = idx(t.x, t.y);
+  const d = OBJ[o.t], tl = natTool(d), i = idx(t.x, t.y), tier = tl ? ITEMS[tl.id].tier || 0 : 0; // v65: an axe (or else a pickaxe) from the tool pouch
   faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y);
-  G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' ? null : d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? curWeapon().id : pk.id === 'hand' ? null : pk.id };
-  if ((d.tier || 0) > pk.tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
-  const axe = d.nat === 'chop' && wtOf(curWeapon()) === WTYPE.axe ? WTYPE.axe.chop : 1; // a held axe chops trees faster
-  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, pk.power) * mineMul() * axe); if (d.nat !== 'pick') wear(pk.slot);
+  G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' || !tl ? null : tl.id };
+  if ((d.tier || 0) > tier) { SFX.clink(); toast(`${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
+  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, tl ? toolPow(tl) : 0.5) * mineMul()); if (d.nat !== 'pick' && tl) wear(tl);
   SFX.mine(); puff(t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
   const yg = isYoung(o);
   if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o); SFX.brk(); lightDirty = true; gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
@@ -3264,8 +3313,9 @@ function placeItem(t) {
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
   else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
-    const pr = pRot(); if (dd.sz) { if (pr % 2 && dd.rotV) o.rot = 1; const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
-    else { if (pr && canRotObj(it.obj)) { if (dd.dir4) o.dir = pr % 4; else if (pr % 2) o.flip = true; } G.objs.set(i, o); }
+    const pr = pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
+    if (dd.sz) { const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
+    else G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; toast('이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
   s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } invDirty = true;
   SFX.place(); puff(t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); lightDirty = true; mapPixel(t.x, t.y);
@@ -3436,6 +3486,7 @@ function update(dt) {
   if (actQ > 0 && actCd <= 0) { actQ = 0; tryAct(true); } else if (held && actCd <= 0) tryAct(false);
   if (!held && actQ <= 0) { holdGroup = null; holdK = null; }
   holdT = held ? holdT + dt : 0;
+  attackTick(dt); // v65: the attack button
   // survival
   buffTick(dt); envTick(dt); recallTick(dt);
   hungerT += dt; if (hungerT >= 9 / hungerMul()) { hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) toast('배가 고파요. 무언가 먹어요', null, 'hungry'); }
@@ -3611,7 +3662,7 @@ function dirText(str) { const m = dirFix(); if (!m || typeof str !== 'string') r
 function layoutTexts() { if (typeof GUIDE === 'undefined') return; for (const q of [...GUIDE, ...QSIDE]) { if (!('_t0' in q)) { q._t0 = q.t; q._h0 = q.h; }
   q.t = typeof q._t0 === 'function' ? (() => dirText(q._t0())) : dirText(q._t0); q.h = typeof q._h0 === 'function' ? (() => dirText(q._h0())) : dirText(q._h0); } }
 const GUIDE = [
-  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 큰 버튼을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
+  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 손 버튼(PC는 E)을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
   { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [제작] → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
   { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '횃불은 어디서나 만들 수 있어요. 밝은 곳에는 몬스터가 생기지 않아요.', done: () => G.stats.torch > 0 },
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽을 찾아 캐요. 흙은 용광로 재료가 돼요.', done: () => G.stats.copperOre >= 6 },
@@ -3736,7 +3787,7 @@ function checkBiome0() { const p = G.p, b = G.biome[idx(Math.floor(p.x), Math.fl
 const WCAN_MAX = 10;
 Object.assign(ITEMS, {
   sickle: { n: '구리 낫', kind: 'sickle', stack: 1, d: '가방에 있기만 해도 작물을 거둘 때 하나씩 더 얻어요. 다 자란 작물 앞에서 꾹 누르고 있으면 주변 3×3을 한 번에 거둬요. 닳지 않아요.' },
-  wcan: { n: '물뿌리개', kind: 'wcan', stack: 1, d: `단축칸에서 골라 들고 물가를 바라보며 누르면 가득 채워요 (${WCAN_MAX}번). 자라는 작물에 물을 주면 25% 빨리 자라요.` },
+  wcan: { n: '물뿌리개', kind: 'wcan', stack: 1, d: `도구 칸에서 골라 들고 물가를 바라보며 누르면 가득 채워요 (${WCAN_MAX}번). 자라는 작물에 물을 주면 25% 빨리 자라요.` },
   fert: { n: '비료', kind: 'fert', d: '단축칸에서 골라 들고 자라는 작물에 뿌리면 남은 성장 시간이 바로 40% 줄어요. 작물마다 한 번만 줄 수 있어요.' },
   fertShroom: { n: '버섯 비료', kind: 'fert', fx: 'shroom', d: '비료와 같아요. 버섯에 주면 거둘 때 빛버섯이 나올 확률이 30%에서 60%로 올라요.' },
 });
@@ -4015,7 +4066,7 @@ function unwear(slot) { const s = G.equip[slot]; if (!s) return; const left = mo
 // v48: a weapon picked up or made while no weapon sits in the hotbar goes into an empty hotbar slot, ready to hold
 function autoHotWeapon(id) { if (!G || ITEMS[id].kind !== 'sword') return; for (let k = 0; k < HOT; k++) { const x = G.inv[k]; if (x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword') return; }
   const to = G.inv.slice(0, HOT).findIndex(x => !x), k = G.inv.findIndex((x, j) => j >= HOT && x && x.id === id); if (to < 0 || k < 0) return;
-  G.inv[to] = G.inv[k]; G.inv[k] = null; invDirty = true; if (started) toast(`${josa(ITEMS[id].n, '을', '를')} 단축칸에 넣었어요 · 골라 들면 그 무기로 싸워요`, 'good', 'wphot'); }
+  G.inv[to] = G.inv[k]; G.inv[k] = null; invDirty = true; if (started) toast(`${josa(ITEMS[id].n, '을', '를')} 단축칸에 넣었어요 · 골라 들면 칼 버튼이 그 무기로 싸워요`, 'good', 'wphot'); }
 // ---- v43 smelter 「용광로」 (v58: renamed 「장비제작대」): upgrade gear (+1 … +5) and break it down; rings are made here too ----
 ITEMS.smelter = { n: '장비제작대', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요. (v58 전 이름: 용광로)' };
 OBJ.smelter = { n: '장비제작대', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
@@ -4052,7 +4103,7 @@ for (const id in RINGS) { const [n, k, b, per, req, rar, band, gem] = RINGS[id];
   RECIPES.push(Rc(id, 1, req, 'smelter', 'ring')); }
 const lvOf = s => (s && s.lv) || 0;
 const UPG_MAX = 5, UPG_DMG = .08, UPG_POW = .1, UPG_MAT = ['copperBar', 'ironBar', 'quartzR', 'goldBar', 'goldBar'];
-const upgOk = id => { const it = ITEMS[id]; return !!it && (it.kind === 'sword' || it.kind === 'pick' || it.kind === 'wear'); };
+const upgOk = id => { const it = ITEMS[id]; return !!it && (it.kind === 'sword' || it.kind === 'pick' || it.kind === 'axe' || it.kind === 'wear'); };
 const upgTier = id => { const r = rarOf(id); return r >= 0 ? Math.min(4, r) : 3; }; // clothes and charms from the deep caves count as heroic
 function upgCost(id, lv) { const t = upgTier(id), c = [[UPG_MAT[t], 2 + 2 * lv]]; if (lv >= 2) c.push(t <= 1 ? ['glowcap', 2 * (lv - 1)] : ['cryGem', lv - 1]); return c; }
 function upgSpent(id, lv) { const m = {}; for (let k = 0; k < lv; k++) for (const [x, c] of upgCost(id, k)) m[x] = (m[x] || 0) + c; return Object.entries(m); }
@@ -4062,6 +4113,7 @@ const guardMul = lv => .5 - .05 * lv, turtleCut = lv => .3 + .04 * lv, broochMul
 function upgText(id, lv) { const it = ITEMS[id];
   if (it.kind === 'sword') return `공격력 ${Math.round(it.dmg * (1 + UPG_DMG * lv))}`;
   if (it.kind === 'pick') return `캐는 힘 ${+(it.power * (1 + UPG_POW * lv)).toFixed(1)}`;
+  if (it.kind === 'axe') return `베는 힘 ${+(it.power * (1 + UPG_POW * lv)).toFixed(1)}`;
   if (it.ring) return RING_TXT[it.ring](RINGS[id][2] + RINGS[id][3] * lv);
   if (it.guard) return `${it.guard === 'hot' ? '더위' : '추위'} 게이지 ${pct2(guardMul(lv))} 속도`;
   if (id === 'turtleCharm') return `불·용암 피해 -${pct2(turtleCut(lv))}`;
@@ -4432,6 +4484,113 @@ function benchUpHTML(o) { const lv = benchLv(o); if (lv < 0) return ''; const st
   if (lv >= BENCH_MAX) return `<p class="hint">가장 높은 단계 ${st === 'smelter' ? '장비제작대' : '작업대'}예요 · 모든 ${st === 'smelter' ? '장비' : '작업대 물건'}를 만들 수 있어요</p>`;
   const cost = BENCH_UP[lv + 1], ok = cost.every(([id, c]) => availCount(id) >= c);
   return `<div class="rc ${ok ? 'ok' : 'no'} benchup" style="margin-bottom:10px"><div class="ri"><img class="px" src="${iconURL(IT[lv + 1])}" alt=""></div><div class="rn">${NM[lv + 1]}로 올리기<small>새 ${st === 'smelter' ? '장비가' : '물건이'} 더 생겨요</small><div class="ings">${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="benchUp" ${ok ? '' : 'disabled'}>올리기</button></div>`; }
+// ================= v65 controls: attack / interact buttons, tool pouch, small button, hitting things loose =================
+// · The attack button always attacks: the held weapon, else the last weapon used, else the strongest one, else the fist.
+//   It aims at the nearest monster by itself (on PC the mouse aims). With no monster near it hits a placed piece in front:
+//   three quick hits and the piece falls on the floor as an item (the fist works too, the weapon does not wear).
+// · Interact (decide() in game/actions.js) does what fits the thing in front; other things that fit go to the small button.
+// · Tools (pickaxe · axe · sickle · shovel · watering can · rod · lasso) live in their own pouch and the tool slot at the
+//   front of the hotbar holds one. Interact takes the pickaxe, axe, sickle or shovel out by itself and keeps it in hand.
+
+// ---- tools ----
+const TOOL_KINDS = ['pick', 'axe', 'sickle', 'shovel', 'wcan', 'rod', 'lasso'];
+const isTool = id => !!ITEMS[id] && TOOL_KINDS.includes(ITEMS[id].kind);
+// axes stop being weapons and become the tree-cutting tool (power = how fast they cut, like a pickaxe's power)
+const AXE_TOOL = { axeStone: [1.6, 0, '돌로 만든 도끼. 나무를 손이나 곡괭이보다 빨리 베어요.'], axeCopper: [3.2, 1, '단단한 구리 도끼. 큰 나무도 금방 베어요.'], axeIron: [4.8, 2, '날이 선 철 도끼. 어떤 나무든 몇 번이면 베어요.'] };
+for (const id in AXE_TOOL) { const it = ITEMS[id]; if (!it) continue; it.kind = 'axe'; [it.power, it.tier, it.d] = AXE_TOOL[id]; delete it.dmg; delete it.wt; }
+for (const r of RECIPES) if (AXE_TOOL[r.out]) r.cat = 'tool';
+const toolPow = s => ((ITEMS[s.id] && ITEMS[s.id].power) || 1) * (1 + UPG_POW * lvOf(s));
+const heldTool = () => (G && G.sel < 0 && G.tools && G.tools[G.tsel]) || null;
+// the tool of a kind to use: the one in hand if it is that kind, else the best working one (pouch first, then the bag)
+// (a tool the player chose on purpose — from the tool row, the pouch or the hotbar — is used even if a better one exists; one interact took out by itself is not)
+function bestTool(kind) { if (!G) return null; const h = selItem(); if (h && ITEMS[h.id] && ITEMS[h.id].kind === kind && !isBroken(h) && (G.sel >= 0 || G.tHand)) return h;
+  let b = null; for (const s of (G.tools || []).concat(G.inv)) { if (!s || !ITEMS[s.id] || ITEMS[s.id].kind !== kind || isBroken(s)) continue; if (!b || toolPow(s) > toolPow(b)) b = s; } return b; }
+function holdTool(s, chosen) { if (!s || !G.tools) return; G.tHand = !!chosen; let k = G.tools.indexOf(s);
+  if (k < 0) { const j = G.inv.indexOf(s); if (j < 0) return; G.inv[j] = null; G.tools.push(s); k = G.tools.length - 1; } // a tool still in the bag moves into the pouch
+  G.tsel = k; G.sel = -1; invDirty = true; }
+function fixTsel(h) { if (!G.tools.length) { G.tsel = 0; if (G.sel < 0) G.sel = 0; return; } const k = h ? G.tools.indexOf(h) : -1; if (k >= 0) G.tsel = k; else { G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); const kd = h && ITEMS[h.id].kind, nx = kd && bestTool(kd); if (nx && G.tools.includes(nx)) G.tsel = G.tools.indexOf(nx); } }
+// tools that ended up in the bag (from a chest, an old save …) go to the pouch
+function sweepTools() { if (!G || !G.tools) return; const h = heldTool(); for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { if (i === G.sel) { G.inv[i] = null; G.tools.push(s); G.tsel = G.tools.length - 1; G.sel = -1; } else { G.inv[i] = null; G.tools.push(s); } invDirty = true; } } if (h && G.sel < 0) fixTsel(h); }
+// the bag and the pouch together for repair · salvage · upgrade lists ('t:3' = pouch slot 3)
+const slotList = () => G.inv.map((s, i) => ({ s, i })).concat((G.tools || []).map((s, k) => ({ s, i: 't:' + k })));
+const itemAt = i => typeof i === 'string' ? (i.startsWith('e:') ? G.equip[i.slice(2)] : i.startsWith('t:') ? (G.tools || [])[+i.slice(2)] : null) : G.inv[i];
+function clearSlot(i) { if (typeof i === 'string' && i.startsWith('t:')) { const h = heldTool(), k = +i.slice(2), gone = G.tools[k]; G.tools.splice(k, 1); if (h && h === gone) { G.tsel = 0; if (!G.tools.length && G.sel < 0) G.sel = 0; } else fixTsel(h); } else G.inv[i] = null; invDirty = true; }
+// one of each kind for the tool row: the best working one, broken ones hidden
+function toolRowList() { const by = {}; for (const s of G.tools || []) { if (isBroken(s)) continue; const k = ITEMS[s.id].kind; if (!by[k] || toolPow(s) > toolPow(by[k])) by[k] = s; } return TOOL_KINDS.map(k => by[k]).filter(Boolean); }
+
+// ---- the small button: the other things that fit ----
+let altI = 0, altKey = '';
+function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
+  if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
+function doAlt() { const a = curAlt(); if (!a || actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
+function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; SFX.click(); }
+
+// ---- the attack button ----
+let atkBtnHeld = false, atkQ = 0, atkT = 0;
+const atkDown = () => atkBtnHeld || mouse.down || keys.has('KeyJ');
+function attackTick(dt) { const p = G.p; atkT -= dt; atkQ = Math.max(0, atkQ - dt); if (p.dead > 0 || p.sleep) { atkQ = 0; return; } if ((atkQ > 0 || atkDown()) && atkT <= 0) { atkQ = 0; doAttack(); } }
+function doAttack() {
+  const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
+  const w = curWeapon(), WT = wtOf(w); if (w.id !== 'hand') G.lastW = w.id;
+  let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
+  if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
+  if (en && !aimMouse()) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
+  if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); atkT = .32; return; } }
+  atkT = swingAttack() === false ? .3 : atkCd();
+}
+// ---- hit a placed piece three times and it falls on the floor ----
+const RECOVER_HITS = 3, RECOVER_GAP = 2; // hits · seconds (game time) the hits may be apart
+const HITS = new Map();
+function recoverTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return null; let i = idx(t.x, t.y); const w = G.wall[i];
+  if (w === 6 || w === 7) return { t, i, wall: w }; // the wood and brick walls players build (natural walls only by pickaxe)
+  let o = G.objs.get(i); if (o && o.t === '_part') { const ai = anchorAt(i); if (ai < 0) return null; i = ai; o = G.objs.get(ai); }
+  const d = o && OBJ[o.t]; if (!d || !d.item || d.nat || d.crop || d.lost || d.tree || d.shrine || d.tchest || d.ranch || d.bush || d.growTo) return null;
+  return { t: { x: i % W, y: (i / W) | 0 }, i, o, full: !!(d.chest && o.items && o.items.some(x => x)) }; }
+function hitRecover(tg, w) { const p = G.p, t = tg.t; faceTo(t.x + .5 - p.x, t.y + .5 - p.y);
+  G.swing = { t: .22, max: .22, ang: Math.atan2(p.face.y, p.face.x), icon: w.id === 'hand' ? null : w.id, wt: w.wt, arc: 1.2, rad: .95 }; SFX.swing();
+  if (tg.full) { SFX.clink(); toast('물건이 든 상자는 비워야 떨어져요', null, 'fullchest'); return; }
+  const h = HITS.get(tg.i), n = h && G.time - h.t < RECOVER_GAP ? h.n + 1 : 1; HITS.set(tg.i, { n, t: G.time, x: t.x, y: t.y });
+  SFX.mine(); puff(t.x + .5, t.y + .7, '#e8d8c0', 4, 1.6); if (tg.o) tg.o.shake = .15; shake = Math.max(shake, .04);
+  if (n >= RECOVER_HITS) { HITS.delete(tg.i); if (tg.wall) breakWall(t.x, t.y); else dropObj(t, tg.o); } }
+function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf(o) : [1, 1], x = t.x + fp[0] / 2, y = t.y + fp[1] / 2 + .3;
+  delObj(i); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
+  if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
+  const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
+  if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
+  SFX.brk(); puff(x, y, '#e8d8c0', 10, 2.4); lightDirty = true; mapPixel(t.x, t.y); invDirty = true; }
+function drawHitBars(T, camX, camY) { for (const [i, h] of HITS) { if (G.time - h.t >= RECOVER_GAP) { HITS.delete(i); continue; }
+  const X = Math.round(h.x * T - camX + T * .15), Y = Math.round(h.y * T - camY - T * .35), w = Math.round(T * .7), f = 1 - h.n / RECOVER_HITS;
+  ctx.fillStyle = 'rgba(20,14,30,.85)'; ctx.fillRect(X - 1, Y - 1, w + 2, Math.max(3, Math.round(T / 8)) + 2); ctx.fillStyle = '#ffc861'; ctx.fillRect(X, Y, Math.round(w * f), Math.max(3, Math.round(T / 8))); } }
+
+// ---- the tool slot (front of the hotbar) and its row ----
+let toolRowOpen = false;
+function toolSlotHTML() { const s = heldTool() || toolRowList()[0] || null, on = G.sel < 0;
+  return `<button type="button" class="slot tslot ${on ? 'sel' : ''} ${s && isBroken(s) ? 'broken' : ''}" data-tool="1" aria-label="도구 칸${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}` : '<span class="tnone">도구</span>'}<span class="tup">▲</span></button>`; }
+function toggleToolRow(force) { toolRowOpen = force != null ? force : !toolRowOpen; renderToolRow(); }
+function renderToolRow() { let el = $('#toolRow'); if (!el) { el = document.createElement('div'); el.id = 'toolRow'; $('#game').appendChild(el);
+    el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { holdTool(s, true); SFX.click(); } toggleToolRow(false); }); }
+  const L = toolRowList(); el.hidden = !toolRowOpen || !G;
+  if (!toolRowOpen || !G) return; if (!L.length) { el.innerHTML = '<span class="tnone">도구가 없어요 · 작업대·장비제작대에서 만들어요</span>'; return; }
+  el.innerHTML = L.map(s => slotHTML(s, 'tk', G.tools.indexOf(s), s === heldTool() ? 'sel' : '').replace('data-a="tk" data-i=', 'data-tk=')).join(''); }
+function toolSlotClick() { ensureAudio(); if (!G.tools.length) { toast('도구가 없어요 · 작업대·장비제작대에서 만들어요', null, 'notool'); return; }
+  if (G.sel >= 0) { const s = heldTool() || G.tools[G.tsel] || toolRowList()[0]; if (s) holdTool(s, true); } toggleToolRow(); }
+
+// ---- buttons on screen ----
+function updateCtrlHud() { const a = G.act || {};
+  const w = curWeapon(), ab = $('#atkBtn'); if (ab && ab.dataset.w !== w.id) { ab.dataset.w = w.id; $('#atkIcon').src = iconURL(w.id === 'hand' ? 'hand' : w.id); $('#atkLbl').textContent = w.id === 'hand' ? '주먹' : '공격'; }
+  const ib = $('#actBtn'); if (ib) ib.classList.toggle('dim', a.k === 'info' || a.k === 'none');
+  const alt = curAlt(), sb = $('#subBtn'); if (sb) { if (sb.hidden === !!alt) sb.hidden = !alt; const key = alt ? alt.lbl + '|' + alt.icon : ''; if (alt && sb.dataset.k !== key) { sb.dataset.k = key; $('#subIcon').src = iconURL(alt.k === 'rot' ? 'rotate' : alt.icon || 'hand'); $('#subLbl').textContent = alt.lbl; sb.setAttribute('aria-label', alt.lbl); } }
+  const nx = $('#altNext'); if (nx) { const v = !!alt && G.alts.length > 1; if (nx.hidden === v) nx.hidden = !v; } }
+// an arrow icon for the 「방향」 option
+ICON.rotate = A => { for (let k = 0; k <= 20; k++) { const a = -0.4 + k / 20 * 4.6; A.r(8 + Math.cos(a) * 5 - .5, 8 + Math.sin(a) * 5 - .5, 2, 2, '#7fe0b5'); } A.poly([[10.5, 1], [15, 3.5], [10.5, 6.5]], '#7fe0b5'); };
+
+// ---- the tool pouch in the bag window ----
+function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요 · 단축칸 맨 앞 도구 칸에서 골라 들어요)</span></div><div class="grid">`;
+  T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '')); });
+  if (!T.length) h += `<p class="prose" style="grid-column:1/-1;color:var(--muted);font-size:14px">아직 도구가 없어요</p>`;
+  h += `</div>`; const s = UIS.toolSel != null ? T[UIS.toolSel] : null;
+  if (s) { const it = ITEMS[s.id], st = itemStat(it, s); h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}</h3><p>${it.d || ''}</p>${st ? `<div class="st">${st}</div>` : ''}</div><div class="btns">${isBroken(s) ? '' : `<button class="btn" data-a="holdTool" type="button">${s === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
+  return h; }
 // ================= lighting =================
 let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
 function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
@@ -4609,9 +4768,9 @@ function renderWorld(cw, ch) {
       ctx.fillStyle = 'rgba(20,12,30,.45)'; ctx.fillRect(sx + 6, sy + 7, 4, 4); ctx.fillStyle = c1; ctx.fillRect(sx + 6, sy + 6, 4, 4);
       if (hw(1, 0)) ctx.fillRect(sx + 10, sy + 7, 6, 2); if (hw(-1, 0)) ctx.fillRect(sx, sy + 7, 6, 2); if (hw(0, 1)) ctx.fillRect(sx + 7, sy + 10, 2, 6); if (hw(0, -1)) ctx.fillRect(sx + 7, sy, 2, 6);
       ctx.fillStyle = c2; ctx.fillRect(sx + 7, sy + 7, 1, 1); }
-    const o = G.objs.get(i); if (o && OBJ[o.t].flat && !OBJ[o.t].sz) ctx.drawImage(o.t === 'plate' && o.lit ? SPR.obj.plateOn : SPR.obj[o.t], sx, sy);
+    const o = G.objs.get(i); if (o && OBJ[o.t].flat && !OBJ[o.t].sz) { const [im, fl] = rotImg(o.t, rotOf(o), o.t === 'plate' && o.lit ? SPR.obj.plateOn : SPR.obj[o.t]); if (fl) { ctx.save(); ctx.translate(sx + 16, sy); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0); ctx.restore(); } else ctx.drawImage(im, sx, sy); }
   }
-  for (let y = y0 - 3; y <= y1; y++) for (let x = x0 - 3; x <= x1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o || o.t === '_part') continue; const d = OBJ[o.t]; if (!d || !d.sz || !d.flat) continue; const img = o.rot && d.rotV ? SPR.obj[o.t + 'V'] : SPR.obj[o.t]; if (img) ctx.drawImage(img, x * T - camX, y * T - camY); }
+  for (let y = y0 - 3; y <= y1; y++) for (let x = x0 - 3; x <= x1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o || o.t === '_part') continue; const d = OBJ[o.t]; if (!d || !d.sz || !d.flat) continue; const [img] = rotImg(o.t, rotOf(o), SPR.obj[o.t]); if (img) ctx.drawImage(img, x * T - camX, y * T - camY); }
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i]) continue; const o = G.objs.get(i); if (o && isGround(o)) drawEntity({ k: 'o', x, y, o }, t); }
   // rows: walls interleaved with everything that stands
   const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
@@ -4724,11 +4883,11 @@ function renderWorld(cw, ch) {
   if (G.act && G.act.t && p.dead <= 0 && !paused) {
     const tt = G.act.t, k = G.act.k; const hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
-    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse})`;
+    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse * .16})`; ctx.fillRect(hx, hy, T, T); ctx.fillStyle = `rgba(${col},${pulse})`; // v65: the target tile shows clearly
     for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + T, hy, -1, 1], [hx, hy + T, 1, -1], [hx + T, hy + T, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
     if (k === 'place') { const s = selItem(); if (s) { const it = ITEMS[s.id], d = it.kind === 'place' ? OBJ[it.obj] : null; ctx.globalAlpha = 0.45;
-      if (d && d.sz) { const fp = placeFp(d), a = placeAnchor(tt, fp), img = pRot() % 2 && d.rotV && SPR.obj[it.obj + 'V'] ? SPR.obj[it.obj + 'V'] : SPR.obj[it.obj], X = a.x * T - camX, Y = a.y * T - camY; if (d.flat) ctx.drawImage(img, X, Y); else ctx.drawImage(img, X + fp[0] * T / 2 - effW(img) / 2, Y + fp[1] * T - effH(img)); ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(127,224,181,.85)'; ctx.lineWidth = 1; ctx.strokeRect(X + .5, Y + .5, fp[0] * T - 1, fp[1] * T - 1); }
-      else { let img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id), fl = false; const pr = pRot(); if (d && pr && canRotObj(it.obj)) { if (d.dir4) { img = SPR.obj[it.obj + (pr % 4 === 2 ? 'U' : 'S')] || img; fl = pr % 4 === 3; } else fl = !!(pr % 2); }
+      if (d && d.sz) { const fp = placeFp(d), a = placeAnchor(tt, fp), [img] = rotImg(it.obj, pRot() % rotN(it.obj), SPR.obj[it.obj]), X = a.x * T - camX, Y = a.y * T - camY; if (d.flat) ctx.drawImage(img, X, Y); else ctx.drawImage(img, X + fp[0] * T / 2 - effW(img) / 2, Y + fp[1] * T - effH(img)); ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(127,224,181,.85)'; ctx.lineWidth = 1; ctx.strokeRect(X + .5, Y + .5, fp[0] * T - 1, fp[1] * T - 1); }
+      else { let img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id), fl = false; const pr = pRot(); if (d && pr && canRotObj(it.obj)) [img, fl] = rotImg(it.obj, pr % rotN(it.obj), img);
         if (fl) { ctx.save(); ctx.translate(hx + T / 2, 0); ctx.scale(-1, 1); ctx.drawImage(img, -effW(img) / 2, hy + T - effH(img)); ctx.restore(); } else ctx.drawImage(img, hx + T / 2 - effW(img) / 2, hy + T - effH(img)); }
       ctx.globalAlpha = 1; } }
   }
@@ -4742,8 +4901,9 @@ function renderOverlay(cw, ch) {
   if (G.act && G.act.t && p.dead <= 0 && !paused && !document.body.classList.contains('touch') && G.act.lbl) {
     const tt = G.act.t, k = G.act.k, hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
-    const lb = G.act.sub ? (G.act.k === 'swing' ? 'R ' + subLabel(G.act) : G.act.lbl + ' · R ' + subLabel(G.act)) : G.act.lbl; ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
+    const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
   }
+  drawHitBars(T, camX, camY); // v65: hit to recover
   // goal arrow (drawn at screen resolution so it stays crisp)
   if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${Math.round(6.2 * Z)}px Jua, sans-serif`; ctx.lineJoin = 'round';
@@ -4755,7 +4915,7 @@ function drawEntity(it, t) {
   if (it.k === 'o') {
     const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), d.dev === 'slide' ? slideStep(o, t) : !!o.open), it.x + .5, it.y + 1); return; }
     let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const fpD = d.sz ? fpOf(o) : null, wx = it.x + (fpD ? fpD[0] / 2 : .5), wy = it.y + (fpD ? fpD[1] : 1) - 1 / 16; let flipX = !!o.flip;
-    if (fpD && o.rot && d.rotV && SPR.obj[o.t + 'V']) img = SPR.obj[o.t + 'V']; if (d.dev === 'farm') img = SPR.obj[o.t + (farmStage(o) || '')] || img; if (d.dir4 && o.dir) { img = SPR.obj[o.t + (o.dir === 2 ? 'U' : 'S')] || img; flipX = o.dir === 3; }
+    if (d.dev === 'farm') img = SPR.obj[o.t + (farmStage(o) || '')] || img; { const r = rotOf(o); if (r && !d.dev) { const [im, fl] = rotImg(o.t, r, img); img = im; flipX = fl; } } // v65
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))][(o.w ? 1 : 0) + (o.f ? 2 : 0)];
     if (o.t === 'giantCrop') img = (OBJ[o.c] && SPR.giant[OBJ[o.c].crop]) || SPR.crop.berry[3][0];
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
@@ -4862,10 +5022,12 @@ let panel = null, panelAt = 0;
 function durBar(s) { if (s && s.id === 'wcan') return `<span class="dur"><i style="width:${Math.max(4, Math.round((s.w || 0) / WCAN_MAX * 100))}%;background:${s.w ? '#6fb8ff' : '#ff6b7a'}"></i></span>`; if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
 function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
 function refreshHotbar() {
+  sweepTools(); // v65: a tool that landed in the bag goes to the pouch
   const hb = $('#hbSlots'); let h = '';
+  h += toolSlotHTML(); // v65: the tool slot
   for (let i = 0; i < HOT; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
-  hb.innerHTML = h; invDirty = false; if (panel) renderPanel();
-  if (hbSel !== G.sel) { hbSel = G.sel; const el = hb.children[G.sel]; if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
+  hb.innerHTML = h; invDirty = false; if (panel) renderPanel(); if (toolRowOpen) renderToolRow();
+  if (hbSel !== G.sel) { hbSel = G.sel; const el = G.sel < 0 ? hb.querySelector('[data-tool]') : hb.querySelector(`[data-i="${G.sel}"]`); if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
   const full = G.inv.slice(HOT).every(Boolean); $('#bInv').classList.toggle('dot', full);
 }
 let lastHud = '', lastAct = '', hbSel = -1;
@@ -4874,8 +5036,7 @@ function updateHud() {
   drawBuffs(); drawEnv();
   if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
   const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
-  { const rb = $('#rotBtn'), rv = rotTarget(); if (rb && rb.hidden === rv) rb.hidden = !rv; }
-  const sb = $('#subBtn'), sv = !!(a.sub); if (sb.hidden === sv) sb.hidden = !sv; if (sv) { const sk = subLabel(a); if (sb.dataset.k !== sk) { sb.dataset.k = sk; $('#subIcon').src = iconURL(sk === '걷기' ? 'shovel' : 'hand'); $('#subLbl').textContent = sk; sb.setAttribute('aria-label', sk); } }
+  updateCtrlHud(); // v65: attack button · small button
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
   const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
   if (mk2 !== lastMp) { lastMp = mk2; $('#mpFill').style.width = (p.mp / maxMp() * 100) + '%'; $('#mpTxt').textContent = Math.round(p.mp); $('#lvTxt').textContent = 'Lv.' + R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#bStat').classList.toggle('dot', R.pts > 0 || R.sp > 0); }
@@ -4892,7 +5053,7 @@ function updateSkBar() {
   bar.querySelectorAll('.skb').forEach((b, n) => { const x = st[n]; b.classList.toggle('empty', !x); b.classList.toggle('nomp', !!(x && x.nomp)); const img = b.querySelector('img'), src = iconURL(x ? 'sk_' + x.k : 'star'); if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
     b.querySelector('.cd').style.background = x && x.f > 0 ? `conic-gradient(rgba(14,10,22,.72) ${Math.round(x.f * 360)}deg, transparent 0)` : ''; b.setAttribute('aria-label', x ? SKILLS[x.k].n : '빈 스킬 칸'); });
 }
-function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') pendingImp = null; $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; paused = true; btnHeld = false; actQ = 0; mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; paused = !started; keys.clear(); btnHeld = false; mouse.down = false; actQ = 0; refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
@@ -4900,7 +5061,7 @@ function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon
 function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up + (s && it.kind === 'sword' && wtOf(it).ranged === 'arrow' ? arrowInfo() : ''); }
 const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; };
 function itemStat1(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
-function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; return ''; }
+function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; if (it.kind === 'axe') return `도구 · 나무 베는 힘 ${it.power}`; return ''; }
 // v62: the workbench window — 1st row 전체/재료/도구/제작대/가구/건축/편의 (icons), 2nd row per tab. Hand recipes can be made at the workbench too
 const atHere = (r, st) => (r.at || null) === (st || null) || (st === 'bench' && !r.at);
 const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['tool', '도구', 'bagUp1'], ['stn', '제작대', 'bench'], ['furn', '가구', 'chair'], ['build', '건축', 'wallBrick'], ['conv', '편의', 'lever']];
@@ -4927,11 +5088,11 @@ function renderPanel() {
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
   if (k === 'inv') {
     h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:46px;padding:0 14px;font-size:15px">정렬</button>`);
-    h += `<div class="sh-body"><p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 단축칸에서 고른 물건을 손에 들어요: 무기·도구·가구는 그 일만 하고, 빈손(또는 재료)이면 앞에 있는 것에 맞춰 열기·줍기·캐기를 해요.</p><div class="lbl">단축칸</div><div class="grid">`;
+    h += `<div class="sh-body"><p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칼 버튼은 언제나 공격해요(든 무기, 안 들었으면 마지막에 쓴 무기). 손 버튼은 앞에 있는 것에 맞춰 열기·캐기·놓기를 하고, 필요한 도구를 도구 주머니에서 꺼내 들어요.</p><div class="lbl">단축칸</div><div class="grid">`;
     const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && G.newIds && G.newIds[s0.id] && i >= HOT) c += ' new'; return c; };
     h = h.replace(`<div class="lbl">단축칸</div>`, eqRowHTML() + `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
     for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
-    h += `</div>`;
+    h += `</div>` + pouchHTML(); // v65: the tool pouch
     const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
     if (s) { const it = ITEMS[s.id]; const st = itemStat(it, s);
       h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''} <span style="color:var(--muted);font-size:15px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${rarOf(s.id) >= 0 && (it.kind === 'sword' || it.kind === 'pick' || rarOf(s.id) >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, rarOf(s.id))][1]}">★ ${RARITY[Math.max(0, rarOf(s.id))][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
@@ -4966,7 +5127,7 @@ function renderPanel() {
     h += `<div class="stations"><span class="chip on">${TIERED[st] ? TIERED[st][ctier] + '에서 만들기' : st ? STN[st] + '에서 만들기' : '손 제작'}</span>${nCh ? `<span class="chip on">연결된 상자 ${nCh}개</span>` : ''}</div>${st ? '' : `<p class="hint">여기선 손으로 만들 수 있는 것만 보여요. 작업대·용광로·요리솥·장비제작대를 바라보고 [열기]를 누르면 그곳에서 만드는 것들이 나와요.</p>`}${nCh ? `<p class="hint">작업대·용광로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함) ${nCh}개의 재료도 함께 써요. 가방에 있는 것부터 써요.</p>` : ''}`;
     if (UIS.tab === 'upg') { h += upgListHTML(near.has('smelter')); } else
     if (UIS.tab === 'salv') {
-      const nb = smel && canSalv(near), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && (DUR[s.id] || (smel && upgOk(s.id))));
+      const nb = smel && canSalv(near), list = slotList().filter(({ s }) => s && (DUR[s.id] || (smel && upgOk(s.id))));
       h += `<div class="sh-body"><p class="hint">${nb ? '장비를 분해하면 만들 때 든 재료의 70%와 강화에 쓴 재료의 절반을 돌려받아요. 분해한 장비는 사라져요.' : '장비제작대 근처에서 분해할 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">분해할 장비가 없어요</p>`;
       for (const { s, i } of list) { const got = salvGet2(s), ok = nb && !!got, mx = DUR[s.id] ? DUR[s.id][0] : 0, ask = UIS.salvAsk === i;
@@ -4977,7 +5138,7 @@ function renderPanel() {
       h += `<div class="sh-body"><p class="hint">만들어 본 요리에 도장이 찍혀요 · 만든 요리 ${nMade}/${all.length} · 아는 레시피 ${nKnown}/${all.length}</p><div class="dbook">${all.map(id => { const k = knows(id), m = made(id), it = ITEMS[id];
         return `<div class="dk ${m ? 'done' : ''} ${k ? '' : 'unk'}"><img class="px" src="${iconURL(k ? id : 'rn_' + (DISH[id] ? id : 'skewer'))}" alt=""><b>${k ? it.n : '???'}</b><small>${k ? (it.buff ? buffText(it) : '회복 요리') : escHTML(noteHint(DISH[id]))}</small>${m ? '<i>✓</i>' : ''}</div>`; }).join('')}</div></div>`;
     } else if (UIS.tab === 'fix') {
-      const nb = smel && near.has('smelter'), list = G.inv.map((s, i) => ({ s, i })).filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
+      const nb = smel && near.has('smelter'), list = slotList().filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
       h += `<div class="sh-body"><p class="hint">${nb ? '닳은 도구를 새것처럼 고쳐요. 많이 닳을수록 재료가 더 들어요.' : '장비제작대 근처에서 고칠 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:18px">고칠 도구가 없어요</p>`;
       for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => availCount(id) >= c), mx = DUR[s.id][0];
@@ -5016,7 +5177,7 @@ function renderPanel() {
       <div class="lbl" style="margin-top:16px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:8px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:16px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:8px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:16px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:16px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>행동</b><span>큰 버튼 · 스페이스 · 클릭. 손에 든 물건의 일을 해요(무기=공격, 삽=파기, 가구=놓기 …). 빈손이면 앞에 있는 것에 맞춰 캐기/열기/앉기 등으로 바뀌어요</span><b>가구</b><span>가구 앞에서 큰 버튼은 앉기·잠자기 같은 사용, 작은 [회수] 버튼(PC는 R)은 가방으로 회수</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요</span><b>먹기</b><span>골라 둔 음식을 한 번 더 누르면 먹어요</span><b>삽</b><span>삽을 들고 바닥을 누르면 걷고, 땅을 누르면 배운 지형을 떠요</span><b>단축키</b><span>1–9 단축칸 · R 회수 · T 가구 방향 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:16px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>공격</b><span>칼 버튼 · 클릭. 든 무기로, 안 들었으면 마지막에 쓴 무기로 가까운 몬스터를 노려요. 몬스터가 없을 때 놓아 둔 가구·벽을 세 번 치면 바닥에 떨어져요</span><b>상호작용</b><span>손 버튼 · E · 스페이스. 일부러 든 물건(씨앗·가구·물뿌리개·음식 …)을 먼저 쓰고, 아니면 앞에 있는 것에 맞춰 열기·캐기·베기·거두기·회수를 해요. 곡괭이·도끼·낫·삽은 도구 주머니에서 알아서 꺼내 들어요</span><b>작은 버튼</b><span>같은 곳에서 할 수 있는 다른 일(회수·물 주기·낚시 …). ▸로 다음 것 (PC는 R · Q)</span><b>도구 칸</b><span>단축칸 맨 앞. 누르면 가진 도구가 펼쳐져요 (PC는 Tab)</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요. 작은 [방향] 버튼으로 놓기 전에 돌려요</span><b>먹기</b><span>음식을 고르고 손 버튼, 또는 골라 둔 음식을 한 번 더 눌러요</span><b>단축키</b><span>1–9 단축칸 · Tab 도구 · I 가방 · C 제작 · M 지도</span></div>
       <div class="lbl" style="margin-top:16px">갇혔을 때</div><div class="menu-list"><button class="btn ${UIS.confirmEsc ? 'warn' : 'ghost'}" data-a="escape" type="button">${UIS.confirmEsc ? '한 번 더 누르면 트인 곳으로 옮겨요' : '긴급 탈출'}</button></div><p class="hint" style="margin-top:8px">벽·울타리에 갇혀 나갈 수 없을 때 써요. 막힌 곳 바깥의 가장 가까운 트인 곳으로 옮겨 줘요 (30초에 한 번).</p>
       <div class="menu-list" style="margin-top:16px"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
@@ -5052,7 +5213,7 @@ function renderPanel() {
     for (const st in STATN) h += `<div class="strow"><b>${STATN[st][0]}</b><span class="v">${R[st]}</span><small>${STATN[st][1]}</small><button type="button" class="btn" data-a="statUp" data-i="${st}" ${R.pts > 0 ? '' : 'disabled'} aria-label="${STATN[st][0]} 올리기">+</button></div>`;
     h += `<div class="stsum">최대 체력 ${maxHp()} · 최대 기력 ${maxMp()} · 근접 피해 ×${meleeMul().toFixed(2)} · 활 ×${rangeMul().toFixed(2)} · 마법 ×${magicMul().toFixed(2)} · 공격 속도 +${Math.round((1 / atkSpd() - 1) * 100)}% · 이동 +${Math.round((moveMul() - 1) * 100)}%</div>`;
     if (R.str + R.dex + R.vit + R.int) h += `<div class="menu-list"><button type="button" class="btn ${UIS.statAsk ? 'warn' : 'ghost'}" data-a="statReset">${UIS.statAsk ? '정말 포인트를 모두 돌려받을까요?' : '능력치 다시 나누기 (무료)'}</button></div>`;
-    h += `<div class="lbl" style="margin-top:16px">스킬<span class="pt">스킬 포인트 ${R.sp}</span></div><p class="hint">사용 스킬은 스킬 칸 두 곳에 넣어 ${touch ? '큰 버튼 옆 파란 버튼으로' : 'F · G 키(오른쪽 클릭은 첫째 칸)로'} 써요. 기력은 가만히 있어도 천천히 차요.</p>`;
+    h += `<div class="lbl" style="margin-top:16px">스킬<span class="pt">스킬 포인트 ${R.sp}</span></div><p class="hint">사용 스킬은 스킬 칸 두 곳에 넣어 ${touch ? '칼 버튼 위 파란 버튼으로' : 'F · G 키(오른쪽 클릭은 첫째 칸)로'} 써요. 기력은 가만히 있어도 천천히 차요.</p>`;
     const skOrder = SK_CAT.flatMap(([c, cn, ids]) => ids.map((id, n) => [id, n ? null : cn])).concat(Object.keys(SKILLS).filter(id => !SK_CAT.some(c => c[2].includes(id))).map(id => [id, null]));
     for (const [id, catName] of skOrder) { const S = SKILLS[id], l = R.sk[id] || 0, lock = R.lv < S.lv, can = !lock && R.sp > 0 && l < S.max, L1 = Math.max(1, l); if (catName) h += `<div class="skcat">${catName} 스킬</div>`;
       const slots = S.act && l ? `<div class="skslots">${[0, 1].map(n => `<button type="button" class="btn ${R.slot[n] === id ? '' : 'ghost'}" data-a="skSlot" data-i="${id}:${n}">${n + 1}칸${R.slot[n] === id ? ' ✓' : ''}</button>`).join('')}</div>` : '';
@@ -5149,6 +5310,9 @@ function onSheetClick(e) {
   if (a === 'catchThrow') { catchThrow(); return; }
   if (a === 'petOn') { if (!(G.pets || {})[i]) return; if (G.petOn === i) { G.petOn = null; G.petE = null; toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '은', '는').slice(ANIMALS[i].pn.length)} 집에서 쉬어요`, null, 'peton'); } else { G.petOn = i; G.petE = { x: G.p.x - .6, y: G.p.y + .2, flip: false, anim: 0, moving: false }; hearts(G.p.x, G.p.y - .5, 4); toast(`${ANIMALS[i].pn}${josa(ANIMALS[i].pn, '과', '와').slice(ANIMALS[i].pn.length)} 함께 다녀요 · ${ANIMALS[i].fx}`, 'good', 'peton'); } SFX.pick(); renderPanel(); return; }
   if (a === 'eqPick') { if (G.inv[i]) wearItem(i); renderPanel(); return; }
+  if (a === 'pouch') { UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
+  if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { holdTool(s, true); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
+  if (a === 'trashTool') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } clearSlot('t:' + UIS.toolSel); UIS.toolSel = null; UIS.trash = false; renderPanel(); return; }
   if (a === 'eat') { eat(UIS.invSel); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
   if (a === 'tohot') { const from = UIS.invSel; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; UIS.invSel = null; invDirty = true; SFX.place(); renderPanel(); return; }
   if (a === 'trash') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } G.inv[UIS.invSel] = null; UIS.invSel = null; UIS.trash = false; invDirty = true; renderPanel(); return; }
@@ -5156,11 +5320,11 @@ function onSheetClick(e) {
   if (a === 'tab2') { UIS.tab2 = i; renderPanel(); return; }
   if (a === 'upg') { const s = upgSlot(i); if (!s || !upgOk(s.id) || lvOf(s) >= UPG_MAX || !nearStations().has('smelter')) return; const cost = upgCost(s.id, lvOf(s)); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
     for (const [id, c] of cost) takeAvail(id, c); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; SFX.craft(); puff(G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); toast(`강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); invDirty = true; renderPanel(); return; }
-  if (a === 'salv') { const s = G.inv[i], got = s && (DUR[s.id] || upgOk(s.id)) && salvGet2(s); if (!got || !canSalv(nearStations())) return;
+  if (a === 'salv') { const s = itemAt(i), got = s && (DUR[s.id] || upgOk(s.id)) && salvGet2(s); if (!got || !canSalv(nearStations())) return;
     if (UIS.salvAsk !== i) { UIS.salvAsk = i; renderPanel(); return; }
-    UIS.salvAsk = null; G.inv[i] = null; for (const [id, c] of got) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
+    UIS.salvAsk = null; clearSlot(i); for (const [id, c] of got) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
     SFX.brk(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, c]) => ITEMS[id].n + ' ' + c + '개').join(', ')}`, 'good'); invDirty = true; renderPanel(); return; }
-  if (a === 'fix') { const s = G.inv[i]; if (!s || !DUR[s.id] || !nearStations().has('smelter')) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
+  if (a === 'fix') { const s = itemAt(i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return; const cost = repairCost(s); POOL = null; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
     for (const [id, c] of cost) takeAvail(id, c); s.dur = DUR[s.id][0]; SFX.craft(); toast(`${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); invDirty = true; renderPanel(); return; }
   if (a === 'benchUp') { const o = panel && panel.i != null ? G.objs.get(panel.i) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return; POOL = null; const cost = BENCH_UP[lv + 1]; if (!cost.every(([id, c]) => availCount(id) >= c)) return;
     for (const [id, c] of cost) takeAvail(id, c); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1;
@@ -5281,7 +5445,7 @@ function sortBag() { // merge stacks and order the bag by kind; the hotbar stays
   UIS.invSel = null; invDirty = true;
 }
 function hotClick(i) {
-  ensureAudio();
+  ensureAudio(); { const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; } // v65
   if (G.sel === i) { const s = G.inv[i]; if (s && ITEMS[s.id].kind === 'food') eat(i); else if (s && ITEMS[s.id].kind === 'wear') wearItem(i); }
   G.sel = i; invDirty = true;
 }
@@ -5290,12 +5454,12 @@ function hotClick(i) {
 function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
 function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
 function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
-function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 120)) + 'px'; }
+function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 150)) + 'px'; }
 function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     ensureAudio(); if (paused) return;
-    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; useSkill(0); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) actQ = 0.3; mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
+    if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; useSkill(0); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) atkQ = 0.3; /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
     document.body.classList.add('touch'); mouse.used = false;
     if (!joy.active && ctrlPref !== 'pad' && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
   });
@@ -5311,6 +5475,10 @@ function setupInput() {
   const ab = $('#actBtn');
   ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; actQ = 0.3; ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
   const abUp = () => { btnHeld = false; ab.classList.remove('on'); }; ab.addEventListener('pointerup', abUp); ab.addEventListener('pointercancel', abUp); ab.addEventListener('lostpointercapture', abUp);
+  const kb = $('#atkBtn'); // v65: the attack button
+  kb.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; atkBtnHeld = true; atkQ = 0.3; kb.classList.add('on'); try { kb.setPointerCapture(e.pointerId); } catch (_) { } });
+  const kbUp = () => { atkBtnHeld = false; kb.classList.remove('on'); }; kb.addEventListener('pointerup', kbUp); kb.addEventListener('pointercancel', kbUp); kb.addEventListener('lostpointercapture', kbUp);
+  $('#altNext').addEventListener('click', () => { if (started && !paused) cycleAlt(); });
   window.addEventListener('keydown', e => {
     const tf = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
     if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
@@ -5319,23 +5487,23 @@ function setupInput() {
     if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
-    if (panel) { if ((e.code === 'KeyI' || e.code === 'Tab') && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'inv') closePanel(); return; }
-    if (e.code === 'KeyI' || e.code === 'Tab' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
+    if (panel) { if (e.code === 'KeyI' && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'inv') closePanel(); return; }
+    if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
+    if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
     if (e.code === 'KeyF') { useSkill(0); return; } if (e.code === 'KeyG') { useSkill(1); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
-    if (e.code === 'KeyT') { rotateAction(); return; }
-    if (e.code === 'KeyQ') { const s = selItem(); if (s && ITEMS[s.id].kind === 'food') eat(G.sel); return; }
+    if (e.code === 'KeyQ') { cycleAlt(); return; } // v65: Q = next option on the small button (eat with E)
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
-    if (['Space', 'KeyJ', 'KeyE'].includes(e.code)) actQ = 0.3;
+    if (['Space', 'KeyE'].includes(e.code)) actQ = 0.3; if (e.code === 'KeyJ') atkQ = 0.3;
     keys.add(e.code);
   });
   window.addEventListener('keyup', e => keys.delete(e.code));
   // buttons never keep keyboard focus after a mouse click; any click outside a text field brings focus back to the game
   document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button') && !e.target.closest('input,textarea')) e.preventDefault(); }, true);
   document.addEventListener('pointerdown', e => { if (!(e.target.closest && e.target.closest('input,textarea,select'))) refocusGame(); }, true);
-  window.addEventListener('blur', () => { keys.clear(); btnHeld = false; mouse.down = false; joyEnd(); padEnd(); });
+  window.addEventListener('blur', () => { keys.clear(); btnHeld = false; atkBtnHeld = false; mouse.down = false; joyEnd(); padEnd(); });
   const dp = $('#dpad');
   const padMove = e => { if (dpad.id !== e.pointerId) return; const r = dp.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
     if (Math.hypot(dx, dy) < 14) { dpad.vx = dpad.vy = 0; } else { const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4); dpad.vx = Math.abs(Math.cos(a)) < 1e-6 ? 0 : Math.cos(a); dpad.vy = Math.abs(Math.sin(a)) < 1e-6 ? 0 : Math.sin(a); }
@@ -5344,11 +5512,10 @@ function setupInput() {
   dp.addEventListener('pointermove', padMove);
   const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
   applyCtrl();
-  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1; G.sel = (G.sel + d + HOT) % HOT; invDirty = true; }, { passive: true });
-  $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; const b = e.target.closest('[data-i]'); if (b) hotClick(+b.dataset.i); });
+  cv.addEventListener('wheel', e => { if (paused) return; const d = e.deltaY > 0 ? 1 : -1, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); invDirty = true; }, { passive: true });
+  $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
-  $('#rotBtn').addEventListener('click', () => rotateAction());
   $('#sheet').addEventListener('click', onSheetClick);
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
@@ -5379,7 +5546,7 @@ function setupInput() {
     if (cur) pushBackup('백업 되돌리기 전', cur); $('#bkList').hidden = true; beginPlay(); toast('백업에서 되돌렸어요', 'good'); });
   $('#cpGrid').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; pickSel = b.dataset.c; renderPicker(); });
   $('#charBack').addEventListener('click', () => hidePicker());
-  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 큰 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, 스페이스나 클릭으로 뿌리기둥을 베어 보세요'), 1400); });
+  $('#charGo').addEventListener('click', () => { hidePicker(); newGame((Math.random() * 1e9) | 0); G.char = pickSel; G.outfit = 0; buildPlayer(0); beginPlay(); if (pickSel === 'custom') setTimeout(() => openPanel('look'), 300); toast('등불나무 곁에서 눈을 떴어요'); setTimeout(() => toast(document.body.classList.contains('touch') ? '왼쪽을 끌어 움직이고, 손 버튼으로 뿌리기둥을 베어 보세요' : 'WASD로 움직이고, E(또는 스페이스)로 뿌리기둥을 베어 보세요'), 1400); });
   $('#btnContinue').addEventListener('click', () => { ensureAudio(); beginPlay(); toast('다시 돌아왔어요'); });
   $('#btnImport').addEventListener('click', () => { ensureAudio(); pickSaveFile('title'); });
   $('#fileIn').addEventListener('change', e => readSaveFile(e.target.files && e.target.files[0]));
