@@ -1,4 +1,8 @@
-function playerFrame(dir, step, pal) {
+import { C, INK, mk, whiten } from '../engine/canvas.js';
+import { SPR } from './world.js';
+import { clamp } from '../engine/util.js';
+import { rng } from '../engine/random.js';
+export function playerFrame(dir, step, pal) {
   return mk(16, 19, A => {
     const { r, p, e } = A; const fy = 17;
     if (dir === 'side') { if (step) { r(5, fy, 3, 1, C.dirtD); r(9, fy - 1, 3, 1, C.dirtD); } else r(6, fy, 4, 1, C.dirtD); }
@@ -15,12 +19,12 @@ function playerFrame(dir, step, pal) {
     r(8, 1, 1, 3, C.leafD); e(6.6, 2.2, 1.7, 1.1, C.leaf); e(9.8, 1.8, 1.7, 1.1, C.leafL);
   });
 }
-const OUTFITS = [['민트', '#6cc9a3', '#479b7f', '#a5ecc9'], ['딸기', '#ff8fa3', '#d9607d', '#ffc2cf'], ['라벤더', '#b493f5', '#7a5cc4', '#e3d4ff'], ['하늘', '#7fb3e0', '#4f84b8', '#c4e2fa'], ['귤', '#ffb15c', '#d9822f', '#ffd9a0']];
+export const OUTFITS = [['민트', '#6cc9a3', '#479b7f', '#a5ecc9'], ['딸기', '#ff8fa3', '#d9607d', '#ffc2cf'], ['라벤더', '#b493f5', '#7a5cc4', '#e3d4ff'], ['하늘', '#7fb3e0', '#4f84b8', '#c4e2fa'], ['귤', '#ffb15c', '#d9822f', '#ffd9a0']];
 // ---- playable characters (original designs). Each has its own hair/hat, outfit palette (dyeable) and details ----
-function headHelpers(A, dy) {
+export function headHelpers(A, dy) {
   return { R: (x, y, w, h, c) => A.r(x, y + dy, w, h, c), P: (x, y, c) => A.p(x, y + dy, c), E: (x, y, rx, ry, c) => A.e(x, y + dy, rx, ry, c), poly: (pts, c) => A.poly(pts.map(([x, y]) => [x, y + dy]), c) };
 }
-const CHARS = {
+export const CHARS = {
   sprout: { n: '새싹', d: '민트 후드를 쓴 정원지기', pal: ['#6cc9a3', '#479b7f', '#a5ecc9'], classic: true },
   momo: { n: '모모', d: '늘 졸린 견습 마법사', pal: ['#6a4fa0', '#4d3678', '#8d72c4'], hc: ['#8a5a3c', '#6b4029', '#b07a52'], eye: '#6b4029', shoe: '#3a2e4f',
     eyes(H, dir) { const lid = '#f0c2a0'; if (dir === 'down') { H.R(5, 8, 2, 1, lid); H.R(9, 8, 2, 1, lid); H.R(5, 9, 2, 1, INK); H.R(9, 9, 2, 1, INK); } else if (dir === 'side') { H.R(10, 8, 2, 1, lid); H.R(10, 9, 2, 1, INK); } },
@@ -78,12 +82,12 @@ const CHARS = {
       if (dir === 'up') { A.r(4, 13, 8, 1, pal[1]); } } },
 };
 // ---- dress-up: build your own character from original parts ----
-const HAIRC = [['갈색', ['#8a5a3c', '#6b4029', '#b07a52']], ['밤색', ['#9a5a3a', '#6e3d27', '#c07e57']], ['검정', ['#3a3045', '#262033', '#5a4d6b']], ['금발', ['#f0c85a', '#c99a2e', '#ffe69a']], ['주황', ['#e08a4a', '#b8642f', '#ffb57a']],
+export const HAIRC = [['갈색', ['#8a5a3c', '#6b4029', '#b07a52']], ['밤색', ['#9a5a3a', '#6e3d27', '#c07e57']], ['검정', ['#3a3045', '#262033', '#5a4d6b']], ['금발', ['#f0c85a', '#c99a2e', '#ffe69a']], ['주황', ['#e08a4a', '#b8642f', '#ffb57a']],
   ['분홍', ['#f29ab8', '#c96b8f', '#ffc6da']], ['하늘', ['#5fc7c9', '#3e9a9e', '#a6ecec']], ['초록', ['#6fb86a', '#4e8a4a', '#a6e09c']], ['보라', ['#9b7ad6', '#7356a8', '#c7b0f0']]];
-const EYEC = [['갈색', '#6b4029'], ['초록', '#4f9a5e'], ['파랑', '#3b5a8a'], ['보라', '#8d72c4'], ['호박', '#d98b2b']];
-const OUTC = [['민트', ['#6cc9a3', '#479b7f', '#a5ecc9']], ['딸기', ['#ff8fa3', '#d9607d', '#ffc2cf']], ['라벤더', ['#b493f5', '#7a5cc4', '#e3d4ff']], ['하늘', ['#7fb3e0', '#4f84b8', '#c4e2fa']], ['귤', ['#ffb15c', '#d9822f', '#ffd9a0']],
+export const EYEC = [['갈색', '#6b4029'], ['초록', '#4f9a5e'], ['파랑', '#3b5a8a'], ['보라', '#8d72c4'], ['호박', '#d98b2b']];
+export const OUTC = [['민트', ['#6cc9a3', '#479b7f', '#a5ecc9']], ['딸기', ['#ff8fa3', '#d9607d', '#ffc2cf']], ['라벤더', ['#b493f5', '#7a5cc4', '#e3d4ff']], ['하늘', ['#7fb3e0', '#4f84b8', '#c4e2fa']], ['귤', ['#ffb15c', '#d9822f', '#ffd9a0']],
   ['노랑', ['#ffd25c', '#d9a63a', '#fff0a8']], ['남색', ['#4a4f8f', '#33366a', '#6d73b8']], ['이끼', ['#7d9a4f', '#5b7536', '#a6c27a']], ['밤', ['#9a6a4a', '#6e4a33', '#c49272']]];
-const HAIRS = {
+export const HAIRS = {
   bob: { n: '단발', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(3, 7, 2, 5, h0); H.R(11, 7, 2, 5, h0); H.R(3, 11, 2, 1, h1); H.R(11, 11, 2, 1, h1); H.R(4, 6, 8, 2, h0); H.P(6, 8, h0); H.P(9, 8, h0); H.P(6, 5, h2); H.P(7, 5, h2); }
     if (d === 'up') { H.E(8, 8.6, 5.2, 4, h0); H.R(4, 11, 8, 1, h1); H.R(6, 5, 3, 1, h2); } if (d === 'side') { H.R(3, 6, 6, 6, h0); H.R(3, 11, 5, 1, h1); H.R(8, 6, 5, 2, h0); H.P(12, 8, h0); H.P(6, 5, h2); } } },
   short: { n: '짧은 머리', draw(H, d, [h0, h1, h2]) { if (d === 'down') { H.R(3, 7, 1, 3, h0); H.R(12, 7, 1, 3, h0); H.R(4, 6, 8, 2, h0); H.P(4, 8, h0); H.P(8, 8, h0); H.P(11, 8, h0); H.P(5, 5, h2); H.P(6, 4, h2); }
@@ -108,7 +112,7 @@ const HAIRS = {
     if (d === 'down') { sp(); H.R(3, 7, 1, 3, h0); H.R(12, 7, 1, 3, h0); H.R(4, 6, 8, 1, h0); H.P(4, 7, h0); H.P(6, 8, h0); H.P(8, 7, h0); H.P(10, 8, h0); H.P(11, 7, h0); }
     if (d === 'up') { sp(); H.E(8, 8.2, 5.2, 4.2, h0); } if (d === 'side') { sp(); H.R(3, 6, 6, 5, h0); H.R(8, 6, 5, 1, h0); H.P(12, 7, h0); H.P(10, 8, h0); H.poly([[2, 8], [1, 5], [4, 6]], h0); } } },
 };
-const HATS = {
+export const HATS = {
   none: { n: '없음' },
   sprout: { n: '새싹', draw(H) { H.R(8, 1, 1, 3, C.leafD); H.E(6.6, 2.2, 1.7, 1.1, C.leaf); H.E(9.8, 1.8, 1.7, 1.1, C.leafL); } },
   ribbon: { n: '리본', draw(H, d) { const x = d === 'side' ? 5 : 10; H.poly([[x - 2.5, 3], [x, 4.5], [x - 2.5, 6]], '#ff8fa3'); H.poly([[x + 2.5, 3], [x, 4.5], [x + 2.5, 6]], '#ff8fa3'); H.P(x, 4, '#d9607d'); } },
@@ -121,7 +125,7 @@ const HATS = {
   lanternpin: { n: '등불 머리핀', draw(H, d) { const x = d === 'up' ? 11 : d === 'side' ? 5 : 3; H.R(x, 5, 2, 2, '#ffd25c'); H.P(x, 4, '#fff0a8'); } },
   crystalpin: { n: '수정 핀', draw(H, d) { const x = d === 'up' ? 4 : d === 'side' ? 6 : 11; H.R(x, 5, 1, 2, C.cry); H.P(x + 1, 5, C.cryL); } },
 };
-const OUTFITS2 = {
+export const OUTFITS2 = {
   tunic: { n: '튜닉', front(A, d, p) { if (d === 'down') { A.r(7, 13, 2, 3, p[1]); A.p(7, 14, '#ffc861'); A.p(8, 14, '#ffc861'); } if (d === 'up') { A.r(5, 12, 6, 4, C.woodD); A.r(6, 13, 4, 2, C.wood); } } },
   robe: { n: '로브', front(A, d, p) { if (d === 'down') { A.r(7, 12, 2, 1, C.cream); A.p(8, 14, '#ffc861'); A.p(7, 14, '#ffc861'); A.r(4, 16, 8, 1, p[1]); } } },
   raincoat: { n: '우비', shoe: '#5a7a9a', front(A, d, p) { if (d === 'down') { A.r(8, 12, 1, 5, p[1]); A.p(7, 13, p[1]); A.p(7, 15, p[1]); } if (d === 'up') A.r(5, 12, 6, 1, p[1]); } },
@@ -131,9 +135,9 @@ const OUTFITS2 = {
   armor: { n: '꼬마 갑옷', shoe: '#5a5468', back(A, d) { if (d === 'down') A.r(3, 12, 10, 5, '#a8413a'); if (d === 'side') { A.r(3, 12, 4, 6, '#d9604f'); A.r(3, 17, 3, 1, '#a8413a'); } },
     front(A, d, p) { if (d === 'down') { A.r(5, 12, 6, 1, p[2]); A.p(7, 14, '#ffc861'); A.p(8, 14, '#ffc861'); A.p(7, 13, '#ffc861'); A.p(8, 15, '#ffc861'); } if (d === 'up') { A.r(4, 12, 8, 5, '#d9604f'); A.r(4, 16, 8, 1, '#a8413a'); } } },
 };
-const LOOK_DEF = { hair: 'bob', hc: 0, eye: 0, outfit: 'tunic', oc: 0, hat: 'none' };
-function cleanLook(L) { L = Object.assign({}, LOOK_DEF, L || {}); if (!HAIRS[L.hair]) L.hair = 'bob'; if (!HATS[L.hat]) L.hat = 'none'; if (!OUTFITS2[L.outfit]) L.outfit = 'tunic'; L.hc = clamp(L.hc | 0, 0, HAIRC.length - 1); L.eye = clamp(L.eye | 0, 0, EYEC.length - 1); L.oc = clamp(L.oc | 0, 0, OUTC.length - 1); return L; }
-function lookDef(L) {
+export const LOOK_DEF = { hair: 'bob', hc: 0, eye: 0, outfit: 'tunic', oc: 0, hat: 'none' };
+export function cleanLook(L) { L = Object.assign({}, LOOK_DEF, L || {}); if (!HAIRS[L.hair]) L.hair = 'bob'; if (!HATS[L.hat]) L.hat = 'none'; if (!OUTFITS2[L.outfit]) L.outfit = 'tunic'; L.hc = clamp(L.hc | 0, 0, HAIRC.length - 1); L.eye = clamp(L.eye | 0, 0, EYEC.length - 1); L.oc = clamp(L.oc | 0, 0, OUTC.length - 1); return L; }
+export function lookDef(L) {
   L = cleanLook(L); const hs = HAIRS[L.hair], hat = HATS[L.hat], of = OUTFITS2[L.outfit], hc = HAIRC[L.hc][1];
   return { n: '나만의 캐릭터', d: '직접 고른 머리와 옷', pal: OUTC[L.oc][1], hc, eye: EYEC[L.eye][1], shoe: of.shoe || '#5a4637', custom: true,
     hair(H, d) { hs.draw(H, d, hc); if (hat.draw) hat.draw(H, d); },
@@ -142,8 +146,8 @@ function lookDef(L) {
     body: of.body, front: of.front };
 }
 CHARS.custom = lookDef(LOOK_DEF);
-const CHAR_IDS = Object.keys(CHARS);
-function charFrame(id, dir, step, pal) {
+export const CHAR_IDS = Object.keys(CHARS);
+export function charFrame(id, dir, step, pal) {
   const def = CHARS[id];
   return mk(16, 19, A => {
     const { r, p } = A; const fy = 17, sh = def.shoe || C.dirtD;
@@ -158,7 +162,7 @@ function charFrame(id, dir, step, pal) {
     charHead(A, id, dir, pal, 0, false);
   });
 }
-function charHead(A, id, dir, pal, dy, sleep) {
+export function charHead(A, id, dir, pal, dy, sleep) {
   const def = CHARS[id], H = headHelpers(A, dy);
   if (def.head) { def.head(H, dir, pal, sleep); return; }
   const h0 = def.hc[0];
@@ -169,11 +173,11 @@ function charHead(A, id, dir, pal, dy, sleep) {
   if (dir === 'side') { H.E(10.2, 9.6, 2.6, 2.6, C.skin); if (def.eyes) def.eyes(H, dir); else { H.R(10, 8, 1, 2, INK); H.P(10, 9, def.eye); } H.P(11, 10, C.blush); }
   def.hair(H, dir);
 }
-function curChar() { return G && CHARS[G.char] ? G.char : 'sprout'; }
-function outfitPal(id, o) { return o ? OUTFITS[o % OUTFITS.length].slice(1) : CHARS[id].pal; }
-const charPrevCache = {};
-function charPreview(id, step = 0, dir = 'down') { const k = id + step + dir; if (CHARS[id].custom || id === '__look') { const c = CHARS[id]; return charFrame(id, dir, step, c.pal).toDataURL(); } if (!charPrevCache[k]) { const c = CHARS[id]; charPrevCache[k] = (c.classic ? playerFrame(dir, step, c.pal) : charFrame(id, dir, step, c.pal)).toDataURL(); } return charPrevCache[k]; }
-function buildPlayer(o) {
+export function curChar() { return G && CHARS[G.char] ? G.char : 'sprout'; }
+export function outfitPal(id, o) { return o ? OUTFITS[o % OUTFITS.length].slice(1) : CHARS[id].pal; }
+export const charPrevCache = {};
+export function charPreview(id, step = 0, dir = 'down') { const k = id + step + dir; if (CHARS[id].custom || id === '__look') { const c = CHARS[id]; return charFrame(id, dir, step, c.pal).toDataURL(); } if (!charPrevCache[k]) { const c = CHARS[id]; charPrevCache[k] = (c.classic ? playerFrame(dir, step, c.pal) : charFrame(id, dir, step, c.pal)).toDataURL(); } return charPrevCache[k]; }
+export function buildPlayer(o) {
   const id = curChar(), ch = CHARS[id], pal = (G && G.equip && G.equip.body && WEAR_PAL[G.equip.body.id]) || outfitPal(id, o || 0);
   const fr = (d, st) => ch.classic ? playerFrame(d, st, pal) : charFrame(id, d, st, pal);
   SPR.player = {}; for (const d of ['down', 'up', 'side']) SPR.player[d] = [fr(d, 0), fr(d, 1)];
@@ -182,14 +186,14 @@ function buildPlayer(o) {
   if (!ch.classic) { SPR.sleepHead = mk(16, 11, A => charHead(A, id, 'down', pal, -2, true)); return; }
   SPR.sleepHead = mk(16, 11, A => { A.e(8, 5.5, 5.2, 4.4, pal[0]); A.e(6.4, 3.2, 2, 1.1, pal[2]); A.e(8, 6.6, 3.6, 2.6, C.skin); A.r(5, 6, 2, 1, INK); A.r(9, 6, 2, 1, INK); A.p(5, 8, C.blush); A.p(10, 8, C.blush); A.r(8, 0, 1, 2, C.leafD); A.p(7, 0, C.leaf); });
 }
-function dimmed(c) { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; k.hd = c.hd; const g = k.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, k.width, k.height), a = d.data; for (let i = 0; i < a.length; i += 4) { if (!a[i + 3]) continue; const l = (a[i] * .3 + a[i + 1] * .59 + a[i + 2] * .11) / 255; if (l > 0.55) { a[i] *= .45; a[i + 1] *= .45; a[i + 2] *= .55; } } g.putImageData(d, 0, 0); return k; }
-function slimeSpr(col, colL, colD) {
+export function dimmed(c) { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; k.hd = c.hd; const g = k.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, k.width, k.height), a = d.data; for (let i = 0; i < a.length; i += 4) { if (!a[i + 3]) continue; const l = (a[i] * .3 + a[i + 1] * .59 + a[i + 2] * .11) / 255; if (l > 0.55) { a[i] *= .45; a[i + 1] *= .45; a[i + 2] *= .55; } } g.putImageData(d, 0, 0); return k; }
+export function slimeSpr(col, colL, colD) {
   return mk(16, 14, A => {
     A.e(8, 8, 6.5, 5, colD); A.e(8, 7.5, 6, 4.5, col); A.e(5.6, 5.6, 1.9, 1.1, colL); A.p(4, 6, '#ffffff');
     A.r(6, 7, 1, 2, INK); A.r(10, 7, 1, 2, INK); A.p(5, 9, '#ff9ab0'); A.p(11, 9, '#ff9ab0'); A.p(8, 9, INK);
   });
 }
-function bossSpr() {
+export function bossSpr() {
   return mk(36, 32, A => {
     A.e(18, 20, 15.5, 10.5, '#4f9e45'); A.e(18, 19, 14.5, 9.6, '#86d96b'); A.e(11.5, 14.5, 4.2, 2.2, '#d2f7b8'); A.p(9, 14, '#fff'); A.p(10, 14, '#fff');
     A.r(12, 17, 2, 4, INK); A.r(23, 17, 2, 4, INK); A.p(12, 17, '#fff'); A.p(23, 17, '#fff');
@@ -199,7 +203,7 @@ function bossSpr() {
     A.r(11, 9, 15, 2, '#e5a73f'); A.p(18, 5, C.rose); A.p(13, 7, '#7fe0b5'); A.p(23, 7, '#7fe0b5');
   });
 }
-function shroomySpr() {
+export function shroomySpr() {
   return mk(16, 16, A => {
     A.r(5, 14, 2, 1, C.dirtD); A.r(9, 14, 2, 1, C.dirtD);
     A.e(8, 11, 3.8, 3.3, C.cream); A.p(7, 11, INK); A.p(9, 11, INK); A.p(6, 12, C.blush); A.p(10, 12, C.blush);
@@ -207,7 +211,7 @@ function shroomySpr() {
     A.p(5, 5, '#fbe7ff'); A.p(6, 5, '#fbe7ff'); A.p(9, 4, '#fbe7ff'); A.p(11, 6, '#fbe7ff'); A.p(7, 7, '#fbe7ff');
   });
 }
-function queenSpr() {
+export function queenSpr() {
   return mk(36, 36, A => {
     A.e(9, 27, 2.4, 2.2, C.cream); A.e(27, 27, 2.4, 2.2, C.cream);
     A.poly([[11, 20], [25, 20], [29, 34], [7, 34]], '#f3e2c4'); A.r(7, 32, 22, 2, '#e5cfae'); for (let x = 8; x < 29; x += 3) A.p(x, 31, '#d9bfe8');
@@ -219,7 +223,7 @@ function queenSpr() {
     A.poly([[12, 7], [13, 1.5], [16, 4.5], [18, 0.6], [20, 4.5], [23, 1.5], [24, 7]], C.amber); A.r(12, 6, 12, 2, '#e5a73f'); A.p(18, 3, C.rose);
   });
 }
-function golemSpr() {
+export function golemSpr() {
   return mk(36, 34, A => {
     A.r(8, 29, 7, 4, '#4a4468'); A.r(21, 29, 7, 4, '#4a4468');
     A.poly([[6, 15], [10, 2], [14, 14]], C.cryD); A.poly([[14, 13], [18, 1], [22, 13]], C.cry); A.poly([[14, 13], [18, 1], [18, 13]], C.cryL); A.poly([[22, 14], [27, 4], [30, 15]], C.cry);
@@ -229,21 +233,21 @@ function golemSpr() {
     A.r(15, 25, 6, 1, '#2a2340'); A.p(9, 25, C.cry); A.p(27, 17, C.cry); A.p(25, 26, C.cryL);
   });
 }
-const shotSpr = (c1, c2, diamond) => mk(8, 8, A => { if (diamond) { A.poly([[4, 0.5], [7, 4], [4, 7.5], [1, 4]], c1); A.p(3, 3, c2); A.p(3, 4, c2); } else { A.e(4, 4, 3.2, 3.2, c1); A.e(3.5, 3.5, 1.5, 1.5, c2); } }, null);
-const fishIcon = (body, belly, fin, extra) => A => { A.poly([[1.5, 4.5], [5, 8], [1.5, 11.5]], fin); A.e(9, 8, 5.6, 3.4, body); A.e(9.5, 9.6, 4, 1.4, belly); A.p(8, 4, fin); A.p(9, 4, fin); A.p(10, 5, fin); A.p(12, 7, INK); A.p(10, 6, '#ffffff'); if (extra) extra(A); };
-function waterTex(f) { const R = rng(5150 + f * 17); return mk(16, 16, A => { A.r(0, 0, 16, 16, '#3a78b0'); for (let k = 0; k < 6; k++) { const x = R() * 13 | 0, y = R() * 15 | 0; A.r((x + f * 2) % 13, y, 3, 1, '#5b9bd0'); } for (let k = 0; k < 3; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#8cc4ec'); A.p((4 + f * 5) % 16, (9 + f * 3) % 16, '#e6f7ff'); }, null); }
-const pickIcon = (h, hl) => A => { A.line(3, 13, 10, 6, C.woodD, 2); A.line(3, 12, 9, 6, C.woodL, 1); A.line(5, 3, 9, 3, h, 2); A.line(10, 4, 12, 6, h, 2); A.line(13, 7, 13, 11, h, 2); A.line(6, 3, 9, 3, hl, 1); A.p(11, 4, hl); };
-const axeIcon = (h, hl) => A => { A.line(4, 14, 10, 4, C.woodD, 2); A.line(4, 13, 9, 4, C.woodL, 1); A.poly([[8, 3], [13, 1.5], [14.5, 6.5], [10, 7]], h); A.line(9, 3, 13, 2, hl, 1); A.p(14, 5, hl); };
-const daggerIcon = (b, bl, g) => A => { A.line(7, 9, 12, 4, b, 2); A.line(7, 8, 12, 4, bl, 1); A.p(13, 3, bl); A.line(5, 7, 9, 11, g, 2); A.line(3, 13, 6, 10, C.woodD, 2); A.p(2, 14, C.amber); };
-const spearIcon = (h, hl) => A => { A.line(1, 15, 10, 6, C.woodD, 1); A.line(2, 15, 10, 7, C.wood, 1); A.r(8, 7, 2, 2, '#e5c97a'); A.poly([[9.2, 4.2], [15, 1], [11.8, 6.8]], h); A.line(10, 4.5, 14, 1.8, hl, 1); };
-const hammerIcon = (h, hl, hd) => A => { A.line(2, 14, 9, 7, C.woodD, 2); A.line(2, 13, 8, 7, C.woodL, 1); A.poly([[6, 5], [10.5, 0.5], [15.5, 5.5], [11, 10]], h); A.line(7, 5, 10.5, 1.5, hl, 1); A.line(11, 9.5, 15, 5.5, hd, 1); };
-const bowIcon = (c1, c2, ar) => A => { for (let k = 0; k <= 24; k++) { const t = k / 24, x = Math.round((1 - t) * (1 - t) * 3 + 2 * (1 - t) * t * 2 + t * t * 13), y = Math.round((1 - t) * (1 - t) * 13 + 2 * (1 - t) * t * 2 + t * t * 3); A.r(x, y, 2, 2, c1); A.p(x, y, c2); } A.line(4, 13, 13, 4, '#f0e8d8'); A.line(6, 10, 12, 4, ar || C.woodL); A.p(12, 3, C.ironL); A.p(13, 4, C.ironL); };
-const staffIcon = (o1, o2) => A => { A.line(2, 14, 10, 6, C.woodD, 2); A.line(2, 13, 9, 6, C.woodL, 1); A.p(9, 8, C.woodD); A.p(8, 6, C.woodD); A.e(11.5, 4.5, 3.2, 3.2, o1); A.e(11, 4, 1.4, 1.4, o2); A.p(10, 3, '#ffffff'); A.p(14, 1, o2); A.p(15, 7, o2); };
-const sickleIcon = (b, bl) => A => { A.e(9, 6.5, 5.4, 4.8, b); A.g.globalCompositeOperation = 'destination-out'; A.e(10.6, 8.6, 4.6, 4.2, '#000'); A.g.globalCompositeOperation = 'source-over'; A.p(6, 3, bl); A.p(8, 2, bl); A.line(3, 14, 6, 10, C.woodD, 2); A.p(3, 13, C.woodL); };
-const rodIcon = (c1, c2, bob) => A => { A.line(2, 14, 12, 3, c1, 1); A.line(3, 14, 12, 4, c2, 1); A.p(5, 11, C.iron); A.p(4, 12, C.iron); A.line(13, 3, 13, 10, '#e8e0f0'); A.e(13, 11.5, 1.6, 1.6, bob); A.p(13, 10, '#ffffff'); };
-const swordIcon = (b, bl, g) => A => { A.line(5, 10, 12, 3, b, 2); A.line(6, 9, 12, 3, bl, 1); A.p(13, 2, bl); A.line(3, 8, 7, 12, g, 2); A.line(2, 13, 4, 11, C.woodD, 2); A.p(1, 14, C.amber); };
-const packet = (col, pic) => A => { A.r(4, 3, 8, 11, '#ecd6a8'); A.r(4, 3, 8, 2, '#cdb282'); A.r(5, 13, 6, 1, '#cdb282'); pic(A); };
-const ICON = {
+export const shotSpr = (c1, c2, diamond) => mk(8, 8, A => { if (diamond) { A.poly([[4, 0.5], [7, 4], [4, 7.5], [1, 4]], c1); A.p(3, 3, c2); A.p(3, 4, c2); } else { A.e(4, 4, 3.2, 3.2, c1); A.e(3.5, 3.5, 1.5, 1.5, c2); } }, null);
+export const fishIcon = (body, belly, fin, extra) => A => { A.poly([[1.5, 4.5], [5, 8], [1.5, 11.5]], fin); A.e(9, 8, 5.6, 3.4, body); A.e(9.5, 9.6, 4, 1.4, belly); A.p(8, 4, fin); A.p(9, 4, fin); A.p(10, 5, fin); A.p(12, 7, INK); A.p(10, 6, '#ffffff'); if (extra) extra(A); };
+export function waterTex(f) { const R = rng(5150 + f * 17); return mk(16, 16, A => { A.r(0, 0, 16, 16, '#3a78b0'); for (let k = 0; k < 6; k++) { const x = R() * 13 | 0, y = R() * 15 | 0; A.r((x + f * 2) % 13, y, 3, 1, '#5b9bd0'); } for (let k = 0; k < 3; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#8cc4ec'); A.p((4 + f * 5) % 16, (9 + f * 3) % 16, '#e6f7ff'); }, null); }
+export const pickIcon = (h, hl) => A => { A.line(3, 13, 10, 6, C.woodD, 2); A.line(3, 12, 9, 6, C.woodL, 1); A.line(5, 3, 9, 3, h, 2); A.line(10, 4, 12, 6, h, 2); A.line(13, 7, 13, 11, h, 2); A.line(6, 3, 9, 3, hl, 1); A.p(11, 4, hl); };
+export const axeIcon = (h, hl) => A => { A.line(4, 14, 10, 4, C.woodD, 2); A.line(4, 13, 9, 4, C.woodL, 1); A.poly([[8, 3], [13, 1.5], [14.5, 6.5], [10, 7]], h); A.line(9, 3, 13, 2, hl, 1); A.p(14, 5, hl); };
+export const daggerIcon = (b, bl, g) => A => { A.line(7, 9, 12, 4, b, 2); A.line(7, 8, 12, 4, bl, 1); A.p(13, 3, bl); A.line(5, 7, 9, 11, g, 2); A.line(3, 13, 6, 10, C.woodD, 2); A.p(2, 14, C.amber); };
+export const spearIcon = (h, hl) => A => { A.line(1, 15, 10, 6, C.woodD, 1); A.line(2, 15, 10, 7, C.wood, 1); A.r(8, 7, 2, 2, '#e5c97a'); A.poly([[9.2, 4.2], [15, 1], [11.8, 6.8]], h); A.line(10, 4.5, 14, 1.8, hl, 1); };
+export const hammerIcon = (h, hl, hd) => A => { A.line(2, 14, 9, 7, C.woodD, 2); A.line(2, 13, 8, 7, C.woodL, 1); A.poly([[6, 5], [10.5, 0.5], [15.5, 5.5], [11, 10]], h); A.line(7, 5, 10.5, 1.5, hl, 1); A.line(11, 9.5, 15, 5.5, hd, 1); };
+export const bowIcon = (c1, c2, ar) => A => { for (let k = 0; k <= 24; k++) { const t = k / 24, x = Math.round((1 - t) * (1 - t) * 3 + 2 * (1 - t) * t * 2 + t * t * 13), y = Math.round((1 - t) * (1 - t) * 13 + 2 * (1 - t) * t * 2 + t * t * 3); A.r(x, y, 2, 2, c1); A.p(x, y, c2); } A.line(4, 13, 13, 4, '#f0e8d8'); A.line(6, 10, 12, 4, ar || C.woodL); A.p(12, 3, C.ironL); A.p(13, 4, C.ironL); };
+export const staffIcon = (o1, o2) => A => { A.line(2, 14, 10, 6, C.woodD, 2); A.line(2, 13, 9, 6, C.woodL, 1); A.p(9, 8, C.woodD); A.p(8, 6, C.woodD); A.e(11.5, 4.5, 3.2, 3.2, o1); A.e(11, 4, 1.4, 1.4, o2); A.p(10, 3, '#ffffff'); A.p(14, 1, o2); A.p(15, 7, o2); };
+export const sickleIcon = (b, bl) => A => { A.e(9, 6.5, 5.4, 4.8, b); A.g.globalCompositeOperation = 'destination-out'; A.e(10.6, 8.6, 4.6, 4.2, '#000'); A.g.globalCompositeOperation = 'source-over'; A.p(6, 3, bl); A.p(8, 2, bl); A.line(3, 14, 6, 10, C.woodD, 2); A.p(3, 13, C.woodL); };
+export const rodIcon = (c1, c2, bob) => A => { A.line(2, 14, 12, 3, c1, 1); A.line(3, 14, 12, 4, c2, 1); A.p(5, 11, C.iron); A.p(4, 12, C.iron); A.line(13, 3, 13, 10, '#e8e0f0'); A.e(13, 11.5, 1.6, 1.6, bob); A.p(13, 10, '#ffffff'); };
+export const swordIcon = (b, bl, g) => A => { A.line(5, 10, 12, 3, b, 2); A.line(6, 9, 12, 3, bl, 1); A.p(13, 2, bl); A.line(3, 8, 7, 12, g, 2); A.line(2, 13, 4, 11, C.woodD, 2); A.p(1, 14, C.amber); };
+export const packet = (col, pic) => A => { A.r(4, 3, 8, 11, '#ecd6a8'); A.r(4, 3, 8, 2, '#cdb282'); A.r(5, 13, 6, 1, '#cdb282'); pic(A); };
+export const ICON = {
   wood: A => { A.r(2, 6, 11, 6, C.wood); A.r(2, 6, 11, 1, C.woodL); A.r(2, 11, 11, 1, C.woodD); A.p(5, 8, C.woodD); A.p(8, 10, C.woodD); A.p(6, 9, C.woodD); A.e(12.5, 9, 2.3, 3, '#e8b97a'); A.p(12, 9, C.woodD); A.p(13, 8, '#c99560'); },
   dirt: A => { A.e(8, 9.5, 5.6, 4.2, C.dirt); A.e(6.5, 8, 2.6, 1.5, C.dirtL); A.p(10, 10, C.dirtD); A.p(5, 11, C.dirtD); A.p(9, 12, C.dirtD); A.p(11, 8, '#8f7a72'); },
   stone: A => { A.e(8, 9, 5.6, 4.6, C.stone); A.e(6.5, 7.5, 2.6, 1.5, C.stoneL); A.p(10, 11, C.stoneD); A.p(9, 12, C.stoneD); A.p(5, 10, C.stoneD); },
@@ -284,7 +288,7 @@ Object.assign(ICON, {
   grilledFish: A => { A.e(8, 11, 7, 2.6, '#e8e2d8'); A.e(8, 10.5, 6, 1.7, '#ffffff'); A.poly([[2, 6], [4, 8], [2, 10]], '#a0603a'); A.e(9, 8, 5, 2.6, '#c9824a'); A.line(6, 7, 7, 9, '#7a3f22'); A.line(9, 7, 10, 9, '#7a3f22'); A.p(12, 7, INK); A.p(13, 11, C.leaf); A.p(14, 11, C.leafL); },
   fishStew: A => { A.r(2, 8, 12, 3, '#6d8fb0'); A.e(8, 11, 6, 3, '#6d8fb0'); A.e(8, 8, 6, 1.8, '#f2e3c2'); A.p(6, 8, '#e36b6b'); A.p(10, 8, C.leaf); A.poly([[9, 5], [11, 7], [9, 8]], '#8fc7a0'); A.p(6, 4, '#e8e0f0'); A.p(7, 3, '#e8e0f0'); A.r(3, 12, 10, 1, '#4a6a8a'); },
 });
-const UICON = {
+export const UICON = {
   heart: A => { A.e(5.5, 6, 3.6, 3.6, C.rose); A.e(10.5, 6, 3.6, 3.6, C.rose); A.poly([[1.9, 7], [14.1, 7], [8, 14]], C.rose); A.p(4, 4, '#fff'); A.p(4, 5, '#ffd0d8'); A.p(11, 10, C.roseD); A.p(10, 11, C.roseD); },
   food: ICON.berry,
   bag: A => { A.r(6, 2, 4, 1, C.woodD); A.p(5, 3, C.woodD); A.p(10, 3, C.woodD); A.e(8, 10, 6, 4.5, C.wood); A.r(2, 9, 12, 4, C.wood); A.e(8, 7, 5.5, 3, C.woodL); A.r(7, 8, 2, 2, C.amber); A.r(3, 13, 10, 1, C.woodD); },

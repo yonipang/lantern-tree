@@ -1,5 +1,13 @@
 // --- world object sprites
-const OSPR = {
+import { ARTC, ARTP } from './hand-art.js';
+import { C, HD, INK, MKDEF, mk, outline, outlineHD, outlineSel, softShadow, whiten } from '../engine/canvas.js';
+import { DECOR, OBJ } from '../data/items.js';
+import { FLOWERS, YOUNG_TREES } from '../data/rpg-nature.js';
+import { ICON, UICON, bossSpr, buildPlayer, dimmed, golemSpr, queenSpr, shotSpr, shroomySpr, slimeSpr, waterTex } from './characters.js';
+import { clamp, hexRgb } from '../engine/util.js';
+import { hash2, rng } from '../engine/random.js';
+import { bloomSpr, bossExtraSprites, emberSpr, giantSpr, natFloorTex, regFloorTex, snowSpr, spiritSpr, turtleSpr, wildSpr } from './content.js';
+export const OSPR = {
   bench: [16, 16, A => { A.r(3, 9, 2, 5, C.woodD); A.r(11, 9, 2, 5, C.woodD); A.r(1, 6, 14, 4, C.wood); A.r(1, 6, 14, 1, C.woodL); A.r(1, 9, 14, 1, C.woodD); A.r(3, 4, 4, 2, C.iron); A.r(3, 4, 4, 1, C.ironL); A.r(9, 3, 1, 3, C.woodD); A.r(8, 3, 3, 1, C.stoneD); A.r(12, 5, 2, 1, C.amber); }],
   furnace: [16, 20, A => { A.r(10, 1, 3, 5, C.stoneD); A.r(10, 1, 3, 1, C.stone); A.e(8, 9, 6.2, 5, C.stone); A.r(2, 9, 12, 9, C.stone); A.e(6, 6.5, 2.5, 1.4, C.stoneL); A.r(2, 17, 12, 1, C.stoneD); for (const [x, y] of [[3, 10], [9, 9], [6, 12], [12, 13], [3, 15]]) A.r(x, y, 2, 1, C.stoneD); A.e(8, 14.5, 3.2, 2.6, '#2a1d2f'); A.r(5, 15, 6, 2, '#2a1d2f'); A.e(8, 15.5, 2.2, 1.4, C.fire); A.p(8, 15, C.amber); A.p(7, 16, C.amber); }],
   pot: [16, 16, A => { A.r(4, 13, 2, 2, '#3a3448'); A.r(10, 13, 2, 2, '#3a3448'); A.e(8, 10, 6, 4.5, '#4a4458'); A.e(6, 9, 2, 1.2, '#6d6680'); A.r(2, 6, 12, 2, '#6d6680'); A.r(2, 6, 12, 1, '#8c86a0'); A.e(8, 6.5, 5, 1, '#e7a24b'); A.p(6, 6, '#ffd08a'); A.r(0, 8, 2, 1, '#6d6680'); A.r(14, 8, 2, 1, '#6d6680'); A.p(6, 3, '#e8e0f0'); A.p(7, 2, '#e8e0f0'); A.p(10, 3, '#e8e0f0'); }],
@@ -40,14 +48,14 @@ const OSPR = {
   shrine: [16, 22, A => { A.r(3, 14, 10, 7, C.stone); A.r(2, 12, 12, 3, C.stoneL); A.r(3, 20, 10, 1, C.stoneD); A.r(5, 16, 6, 1, C.stoneD); A.p(5, 17, C.amber); A.p(10, 17, C.amber); A.r(6, 18, 4, 1, C.stoneD); A.r(7, 11, 2, 1, C.stoneD); }],
 };
 // crops: seed → sprout → flower/bud → grown. soil: bit 1 watered (dark, wet shine), bit 2 fertilized (pale grains)
-const CROP_STEP = { berry: ['씨앗', '새싹', '꽃', '다 자람'], shroom: ['포자', '새싹', '아기 버섯', '다 자람'], moss: ['포자', '새싹', '반쯤 덮임', '다 자람'], glow: ['포자', '새싹', '빛이 돌기 시작', '다 자람'], bean: ['씨앗', '새싹', '꽃', '다 자람'], fire: ['씨앗', '새싹', '꽃', '다 자람'], radish: ['씨앗', '새싹', '서리 맺힌 잎', '다 자람'] };
-function cropSoil(A, soil) {
+export const CROP_STEP = { berry: ['씨앗', '새싹', '꽃', '다 자람'], shroom: ['포자', '새싹', '아기 버섯', '다 자람'], moss: ['포자', '새싹', '반쯤 덮임', '다 자람'], glow: ['포자', '새싹', '빛이 돌기 시작', '다 자람'], bean: ['씨앗', '새싹', '꽃', '다 자람'], fire: ['씨앗', '새싹', '꽃', '다 자람'], radish: ['씨앗', '새싹', '서리 맺힌 잎', '다 자람'] };
+export function cropSoil(A, soil) {
   const wet = soil & 1; A.e(8, 13, 5, 1.8, wet ? '#3a271c' : C.dirtD); A.e(8, 12.6, 4.4, 1.2, wet ? '#563826' : C.dirt);
   if (wet) { A.p(5, 13, '#7fb4dc'); A.p(11, 12, '#7fb4dc'); A.p(9, 14, '#5a88b0'); }
   if (soil & 2) for (const [x, y] of [[4, 12], [12, 13], [7, 14], [10, 12]]) A.p(x, y, '#efe4c4');
 }
-const cropSprout = (A, c1, c2, c3) => { A.r(8, 10, 1, 3, c3); A.e(6.4, 9.6, 1.8, 1.1, c1); A.e(9.7, 8.8, 1.8, 1.1, c2); A.p(6, 9, c2); };
-function cropSpr(kind, stage, soil = 0) {
+export const cropSprout = (A, c1, c2, c3) => { A.r(8, 10, 1, 3, c3); A.e(6.4, 9.6, 1.8, 1.1, c1); A.e(9.7, 8.8, 1.8, 1.1, c2); A.p(6, 9, c2); };
+export function cropSpr(kind, stage, soil = 0) {
   return mk(16, 16, A => {
     cropSoil(A, soil);
     if (stage === 0) { const c = kind === 'fire' ? '#ff8a3d' : kind === 'radish' ? '#e8f8ff' : kind === 'berry' || kind === 'bean' ? '#c9a46b' : kind === 'shroom' ? '#c79ae8' : kind === 'glow' ? '#6ff2e6' : '#7cc271'; A.p(6, 12, c); A.p(8, 13, c); A.p(10, 12, c); A.p(7, 12, '#e9d6a8'); return; }
@@ -82,17 +90,17 @@ function cropSpr(kind, stage, soil = 0) {
   });
 }
 // a younger look for a tree: the same picture drawn smaller, then outlined again
-function youngSpr([w, h, f]) { const raw = mk(w, h, f, null), k = .78, w2 = Math.round(w * k), h2 = Math.round(h * k); return mk(w2, h2, A => { A.g.imageSmoothingEnabled = false; A.g.drawImage(raw, 0, 0, w2, h2); }); }
-function bushSpr(full) {
+export function youngSpr([w, h, f]) { const raw = mk(w, h, f, null), k = .78, w2 = Math.round(w * k), h2 = Math.round(h * k); return mk(w2, h2, A => { A.g.imageSmoothingEnabled = false; A.g.drawImage(raw, 0, 0, w2, h2); }); }
+export function bushSpr(full) {
   return mk(16, 16, A => { A.e(8, 10, 6.6, 4.8, C.leafD); A.e(6, 8.6, 3.6, 3, C.leaf); A.e(10.4, 8.2, 3.6, 3, C.leaf); A.e(5, 7.4, 1.4, 1, C.leafL); A.e(10, 6.8, 1.4, 1, C.leafL);
     if (full) for (const [x, y] of [[4, 10], [8, 8], [11, 11], [7, 12], [12, 8]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } });
 }
 // ---- lantern tree: six looks, one per planted light seed. The look follows G.treeSeeds only, so old saves need nothing new ----
-const TREE_STAGE = ['잠든 나무', '새순', '잎이 차오름', '첫 꽃', '빛 열매', '완성'];
-const TREE_BLESS = s => s >= 5 ? 18 : s >= 3 ? 12 : 0; // crops within this many tiles grow 20% faster
-const TREE_SPREAD = [0, 0, 3.5, 5.5, 7.5, 9.5]; // moss and little flowers creep over the bare ground around the roots
+export const TREE_STAGE = ['잠든 나무', '새순', '잎이 차오름', '첫 꽃', '빛 열매', '완성'];
+export const TREE_BLESS = s => s >= 5 ? 18 : s >= 3 ? 12 : 0; // crops within this many tiles grow 20% faster
+export const TREE_SPREAD = [0, 0, 3.5, 5.5, 7.5, 9.5]; // moss and little flowers creep over the bare ground around the roots
 // leaf palettes: dark, mid, light, lighter, shine, underside
-const TREE_PAL = [
+export const TREE_PAL = [
   ['#56605a', '#68736b', '#7a857c', '#8c968d', '#a4ada4', '#454e48'],
   ['#3f7a4c', '#5ea35a', '#8fd66a', '#b8f08a', '#e4ffc4', '#2f5e3a'],
   ['#2c7454', '#38896a', '#46a07a', '#5cb98c', '#9ee3bb', '#22593f'],
@@ -100,9 +108,9 @@ const TREE_PAL = [
   ['#1d5740', '#276c4d', '#33845c', '#46a06f', '#7cc99a', '#163f2e'],
   ['#164a35', '#1e6044', '#287752', '#349064', '#56b47f', '#0f3626'],
 ];
-const TREE_BARK = [['#7a7078', '#958b93', '#564d58'], ['#8c6a52', '#a8856a', '#5e4436'], [C.wood, C.woodL, C.woodD], [C.wood, C.woodL, C.woodD], ['#a86c3a', '#cf9860', '#74462a'], ['#a46838', '#cd955c', '#6e4127']];
+export const TREE_BARK = [['#7a7078', '#958b93', '#564d58'], ['#8c6a52', '#a8856a', '#5e4436'], [C.wood, C.woodL, C.woodD], [C.wood, C.woodL, C.woodD], ['#a86c3a', '#cf9860', '#74462a'], ['#a46838', '#cd955c', '#6e4127']];
 // w,h: sprite size · cx/tw/top: trunk · br: branches [x0,y0,x1,y1,thick] · bl: leaf blobs back→front [cx,cy,rx,ry] · lan: seed lanterns (top of string) · small: extra lanterns · fruit: light fruits
-const TREE_SPEC = [
+export const TREE_SPEC = [
   { w: 48, h: 60, cx: 24, tw: 10, top: 24, br: [[23, 32, 10, 17, 2], [10, 17, 5, 13, 1], [14, 22, 7, 23, 1], [25, 30, 38, 15, 2], [38, 15, 43, 11, 1], [34, 21, 41, 22, 1], [24, 27, 23, 8, 2], [23, 12, 18, 6, 1], [23, 10, 28, 5, 1]],
     tuft: [[5, 12], [43, 10], [18, 5], [28, 4], [41, 21]], lan: [[11, 17], [37, 16], [8, 23]] },
   { w: 48, h: 60, cx: 24, tw: 10, top: 24, br: [[23, 32, 10, 17, 2], [10, 17, 5, 13, 1], [14, 22, 7, 23, 1], [25, 30, 38, 15, 2], [38, 15, 43, 11, 1], [34, 21, 41, 22, 1], [24, 27, 23, 8, 2], [23, 12, 18, 6, 1], [23, 10, 28, 5, 1]],
@@ -113,7 +121,7 @@ const TREE_SPEC = [
   { w: 80, h: 84, cx: 40, tw: 17, top: 46, br: [[40, 58, 9, 46, 3], [9, 46, 3, 42, 2], [40, 56, 71, 46, 3], [71, 46, 77, 42, 2]], bl: [[11, 42, 12, 10], [69, 42, 12, 10], [22, 30, 15, 13], [58, 30, 15, 13], [40, 31, 33, 21], [40, 16, 22, 12]], lan: [[13, 49], [40, 54], [67, 49], [25, 40], [55, 40]],
     small: [[5, 38], [75, 38], [16, 27], [64, 27], [31, 18], [49, 18], [40, 8]], flowers: 6, fruit: [[20, 34], [33, 25], [47, 25], [60, 34], [40, 42]], base: 4, rim: 1 },
 ];
-function leafBlob(A, R, cx, cy, rx, ry, P) {
+export function leafBlob(A, R, cx, cy, rx, ry, P) {
   const n = Math.max(6, Math.round((rx + ry) / 2.6));
   A.e(cx, cy, rx * .86, ry * .84, P[0]);
   for (let k = 0; k < n; k++) { const a = k / n * 6.283 + R() * .35; A.e(cx + Math.cos(a) * rx * .7, cy + Math.sin(a) * ry * .68, rx * .3 + R() * 1.1, ry * .33 + R() * .9, P[0]); }
@@ -125,7 +133,7 @@ function leafBlob(A, R, cx, cy, rx, ry, P) {
   A.e(cx - rx * .38, cy - ry * .62, Math.max(1.3, rx * .1), Math.max(.8, ry * .06), P[4]); A.p(cx + rx * .1, cy - ry * .7, P[4]);
   for (let k = 0; k < rx * ry / 7; k++) { const a = R() * 6.283, d = Math.sqrt(R()) * .78, x = Math.round(cx + Math.cos(a) * rx * d), y = Math.round(cy + Math.sin(a) * ry * d), col = y < cy - ry * .25 ? P[1] : P[0]; A.p(x, y, col); A.p(x + 1, y - 1, col); }
 }
-function treeSprs(s) {
+export function treeSprs(s) {
   const S = TREE_SPEC[s], P = TREE_PAL[s], B = TREE_BARK[s], R = rng(4021 + s * 97), hl = (S.cx - S.tw / 2) | 0, hr = hl + S.tw;
   const trunk = mk(S.w, S.h, A => {
     const by = S.h - 1;
@@ -155,17 +163,17 @@ function treeSprs(s) {
   for (let y = 0; y < S.h; y++) for (let x = 0; x < S.w; x++) if (d[(y * S.w + x) * 4 + 3]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   return { s, w: S.w, h: S.h, trunk, canopy, lan: S.lan, small: S.small || [], fruit: S.fruit || [], box: { x0, x1, y0, y1 } };
 }
-const lanternSpr = on => mk(9, 11, A => { A.r(4, 0, 1, 3, C.woodD); A.r(2, 3, 5, 1, C.woodD); A.r(2, 4, 5, 5, on ? '#ffcf6b' : '#5a4a52'); A.r(3, 5, 3, 3, on ? '#fff3c4' : '#6e5c66'); A.r(2, 9, 5, 1, C.woodD); });
-const lanternSmallSpr = () => mk(5, 8, A => { A.r(2, 0, 1, 2, C.woodD); A.r(1, 2, 3, 1, C.woodD); A.r(1, 3, 3, 3, '#ffcf6b'); A.p(2, 4, '#fff3c4'); A.r(1, 6, 3, 1, C.woodD); });
-function spreadSprs() {
+export const lanternSpr = on => mk(9, 11, A => { A.r(4, 0, 1, 3, C.woodD); A.r(2, 3, 5, 1, C.woodD); A.r(2, 4, 5, 5, on ? '#ffcf6b' : '#5a4a52'); A.r(3, 5, 3, 3, on ? '#fff3c4' : '#6e5c66'); A.r(2, 9, 5, 1, C.woodD); });
+export const lanternSmallSpr = () => mk(5, 8, A => { A.r(2, 0, 1, 2, C.woodD); A.r(1, 2, 3, 1, C.woodD); A.r(1, 3, 3, 3, '#ffcf6b'); A.p(2, 4, '#fff3c4'); A.r(1, 6, 3, 1, C.woodD); });
+export function spreadSprs() {
   const mo = ['#4a8a50', '#62ad62', '#7cc271', '#9be37a'];
   SPR.tmoss = [0, 1, 2].map(v => mk(10, 6, A => { const R = rng(311 + v); for (let k = 0; k < 5 + v; k++) { const x = 1 + R() * 8, y = 2 + R() * 3; A.p(x, y, mo[(R() * 2) | 0]); A.p(x, y - 1, mo[2]); if (R() < .4) A.p(x + 1, y - 2, mo[3]); } }, null));
   SPR.tflower = {}; for (const c of ['R', 'B', 'Y', 'W']) { const F = FLOWERS[c]; SPR.tflower[c] = mk(5, 6, A => { A.p(2, 5, '#4a8a50'); A.p(2, 4, '#62ad62'); A.p(1, 2, F[2]); A.p(3, 2, F[2]); A.p(2, 1, F[2]); A.p(2, 3, F[4]); A.p(2, 2, c === 'Y' ? '#fff1b0' : '#ffe27a'); }, null); }
 }
 
 // tiles
-const FPAL = { 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
-function floorTex(t, v) {
+export const FPAL = { 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
+export function floorTex(t, v) {
   if (t >= 17) return regFloorTex(t, v);
   if (t >= 11) return natFloorTex(t, v);
   const R = rng(t * 977 + v * 131 + 7), pal = FPAL[t];
@@ -211,9 +219,9 @@ function floorTex(t, v) {
     if (t === 4) { for (let k = 0; k < 2; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#a99cf0'); A.r(0, 0, 16, 1, '#454e72'); A.r(0, 0, 1, 16, '#454e72'); }
   }, null);
 }
-const WPAL = { 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
-const WFRONT_COL = { 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
-function wallTop(t, v) {
+export const WPAL = { 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
+export const WFRONT_COL = { 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
+export function wallTop(t, v) {
   const R = rng(t * 733 + v * 97 + 3), pal = WPAL[t];
   return mk(16, 16, A => {
     A.r(0, 0, 16, 16, pal[0]);
@@ -232,15 +240,15 @@ function wallTop(t, v) {
     if (t === 12) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.poly([[x, y - 2.5], [x + 1.6, y], [x, y + 2], [x - 1.6, y]], '#5ad8f0'); A.p(x | 0, (y - 1) | 0, '#ffffff'); }
   }, null);
 }
-function wallFront(t) {
+export function wallFront(t) {
   return mk(16, 5, A => { const c = WFRONT_COL[t]; A.r(0, 0, 16, 5, c); for (let x = 1; x < 16; x += 3) A.r(x, 1, 1, 3, 'rgba(255,255,255,0.07)'); A.r(0, 4, 16, 1, '#1d1424'); A.r(0, 0, 16, 1, 'rgba(255,255,255,0.06)');
     if (t === 4) A.p(6, 2, C.copper); if (t === 5) A.p(9, 2, C.iron); if (t === 10) A.p(7, 2, '#ffd25c'); if (t === 12) A.p(10, 2, '#7ff0ff'); if (t === 9) A.p(4, 3, '#c4441a'); if (t === 3) { A.p(4, 2, '#8a7ab0'); A.p(11, 1, '#8a7ab0'); } if (t === 13) { A.p(4, 2, '#e8e0ff'); A.p(11, 1, '#e8e0ff'); } if (t === 7) { A.r(0, 2, 16, 1, '#5e5a74'); A.r(7, 0, 1, 2, '#5e5a74'); } }, null);
 }
-function crackSpr(n) { return mk(16, 16, A => { const c = 'rgba(30,18,34,0.75)'; A.line(8, 8, 4, 4, c); A.line(8, 8, 12, 6, c); if (n > 0) { A.line(8, 8, 6, 13, c); A.line(4, 4, 2, 6, c); } if (n > 1) { A.line(8, 8, 13, 12, c); A.line(12, 6, 14, 2, c); A.line(6, 13, 3, 14, c); } }, null); }
+export function crackSpr(n) { return mk(16, 16, A => { const c = 'rgba(30,18,34,0.75)'; A.line(8, 8, 4, 4, c); A.line(8, 8, 12, 6, c); if (n > 0) { A.line(8, 8, 6, 13, c); A.line(4, 4, 2, 6, c); } if (n > 1) { A.line(8, 8, 13, 12, c); A.line(12, 6, 14, 2, c); A.line(6, 13, 3, 14, c); } }, null); }
 
-const PRI = { 1: 4, 3: 3, 4: 2, 2: 1, 18: .5, 19: .6 };
-function rotCanvas(c, q) { if (!q) return c; const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; const g = k.getContext('2d'); g.translate(8, 8); g.rotate(q * Math.PI / 2); g.drawImage(c, -8, -8); return k; }
-function makeFringe(t, mode, part = 'all') {
+export const PRI = { 1: 4, 3: 3, 4: 2, 2: 1, 18: .5, 19: .6 };
+export function rotCanvas(c, q) { if (!q) return c; const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; const g = k.getContext('2d'); g.translate(8, 8); g.rotate(q * Math.PI / 2); g.drawImage(c, -8, -8); return k; }
+export function makeFringe(t, mode, part = 'all') {
   // mode: 'edge' (land over land), 'water' (land over water with foam)
   const src = SPR.floor[t][1].getContext('2d').getImageData(0, 0, 16, 16).data, R = rng(t * 53 + (mode === 'water' ? 7 : 1));
   const depth = []; let d = 2.5; for (let i = 0; i < 16; i++) { d += (R() - .5) * 1.5; d = clamp(d, 1.2, 4.2); depth.push(Math.round(d)); }
@@ -253,7 +261,7 @@ function makeFringe(t, mode, part = 'all') {
   }
   g.putImageData(im, 0, 0); return [0, 1, 2, 3].map(q => rotCanvas(c, q));
 }
-function makeCorner(t, mode) {
+export function makeCorner(t, mode) {
   const src = SPR.floor[t][2].getContext('2d').getImageData(0, 0, 16, 16).data;
   const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'), im = g.createImageData(16, 16), D = im.data;
   for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) { const r = Math.hypot(x + .5, y + .5), k = (y * 16 + x) * 4;
@@ -261,7 +269,7 @@ function makeCorner(t, mode) {
     else if (r < 4.3) { if (mode === 'water') { D[k] = 225; D[k + 1] = 244; D[k + 2] = 255; D[k + 3] = 170; } else { D[k] = 20; D[k + 1] = 12; D[k + 2] = 30; D[k + 3] = 60; } } }
   g.putImageData(im, 0, 0); return [0, 1, 2, 3].map(q => rotCanvas(c, q));
 }
-const DECO_DEF = {
+export const DECO_DEF = {
   1: [A => { A.p(2, 1, C.rose); A.p(1, 2, C.rose); A.p(3, 2, C.rose); A.p(2, 3, C.rose); A.p(2, 2, C.amber); A.p(2, 4, C.leafD); },
       A => { A.p(2, 1, '#ffffff'); A.p(1, 2, '#ffffff'); A.p(3, 2, '#ffffff'); A.p(2, 3, '#ffffff'); A.p(2, 2, '#ffd36b'); A.p(2, 4, C.leafD); },
       A => { A.p(2, 1, '#ffd36b'); A.p(1, 2, '#ffd36b'); A.p(3, 2, '#ffd36b'); A.p(2, 2, '#fff1b0'); A.p(2, 3, C.leafD); },
@@ -279,15 +287,15 @@ const DECO_DEF = {
       A => { A.poly([[2, 1], [3.4, 4], [2, 5], [.8, 4]], '#8fb8f0'); A.poly([[4.5, 2.5], [5.6, 4.5], [4.5, 5.5], [3.6, 4.5]], C.cry); A.p(2, 2, '#e6f2ff'); },
       A => { A.r(2, 3, 2, 1, '#6c74a0'); A.p(2, 2, '#9aa2cc'); }],
 };
-const SPR = {};
-function buildTerrain() {
+export const SPR = {};
+export function buildTerrain() {
   SPR.fringe = {}; SPR.fringeW = {}; SPR.corner = {}; SPR.cornerW = {}; SPR.fringeL = {}; SPR.fringeX = {}; SPR.fringeWL = {}; SPR.fringeWX = {};
   for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
   SPR.deco = {}; for (const t in DECO_DEF) SPR.deco[t] = DECO_DEF[t].map(f => mk(7, 7, f, 'soft'));
   SPR.lily = [mk(9, 7, A => { A.e(4.5, 3.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 2.8, 1.6, 1, '#6cbb76'); A.poly([[4.5, 3.5], [8.5, 1.8], [8.5, 3.4]], '#00000000'); A.g.globalCompositeOperation = 'destination-out'; A.poly([[4.5, 3.5], [8.6, 1.6], [8.6, 3.6]], '#000'); A.g.globalCompositeOperation = 'source-over'; }, 'sel'),
     mk(9, 8, A => { A.e(4.5, 4.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 3.8, 1.6, 1, '#6cbb76'); A.e(5, 2.6, 1.5, 1.3, '#ffb3c6'); A.p(5, 2, '#ffe0ea'); A.p(5, 3, C.amber); }, 'sel')];
 }
-function buildSprites() {
+export function buildSprites() {
   buildPlayer(0);
   SPR.slimeG = slimeSpr('#86d96b', '#d2f7b8', '#4f9e45'); SPR.slimeO = slimeSpr('#f2a65a', '#ffe0b8', '#c06e2c'); SPR.slimeP = slimeSpr('#b58cf0', '#ecdfff', '#7a55c4');
   for (const c in FLOWERS) { const F = FLOWERS[c]; SPR['bloom' + c] = bloomSpr(F[2], F[3], F[4]); }
@@ -329,25 +337,25 @@ function buildSprites() {
 }
 // sprites that can't take hand-drawn art yet (floors/walls come with the 32px floor template; characters are built from parts)
 // v54: floors and walls take drawn art too (floor/<type>/<n>, any number of variants; wtop/<type>/0-3; wfront/<type>)
-const ART_SKIP = new Set(['crack', 'deco', 'water', 'fringe', 'fringeL', 'fringeX', 'fringeW', 'fringeWL', 'fringeWX', 'corner', 'cornerW', 'player', 'playerW', 'playerSit', 'sleepHead', 'treeSt', 'glow', 'animal']);
-const ART_SEL = new Set(['item', 'ui', 'obj', 'objOff', 'crop', 'giant', 'young', 'bush', 'wild', 'lantern', 'lanternS', 'lily', 'tmoss', 'tflower']);
-const artSeg = path => { const s = path.split('/'); if (s[0] === 'mon' || s[0] === 'etc') s.shift(); return s; }; // mon/slimeG → SPR.slimeG
-function artPaint(path, ol) { // the drawn picture plus the outline the old sprite had (ol), unless it was packed as .raw
+export const ART_SKIP = new Set(['crack', 'deco', 'water', 'fringe', 'fringeL', 'fringeX', 'fringeW', 'fringeWL', 'fringeWX', 'corner', 'cornerW', 'player', 'playerW', 'playerSit', 'sleepHead', 'treeSt', 'glow', 'animal']);
+export const ART_SEL = new Set(['item', 'ui', 'obj', 'objOff', 'crop', 'giant', 'young', 'bush', 'wild', 'lantern', 'lanternS', 'lily', 'tmoss', 'tflower']);
+export const artSeg = path => { const s = path.split('/'); if (s[0] === 'mon' || s[0] === 'etc') s.shift(); return s; }; // mon/slimeG → SPR.slimeG
+export function artPaint(path, ol) { // the drawn picture plus the outline the old sprite had (ol), unless it was packed as .raw
   const key = path + '|' + ol; if (ARTP[key]) return ARTP[key]; const src = ARTC[path], c = document.createElement('canvas'); c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src, 0, 0); c.hd = true;
   if (!ART[path][1]) ol = null; if (ol === 'soft') softShadow(c); else if (ol) { if (HD > 1) outlineHD(c); else if (ol === 'sel') outlineSel(c); else outline(c, ol); } // 16px art gets the old sprite's own outline; 32px art the soft one
   c.ol = ol; return ARTP[key] = c; }
-const olOf = v => { if (v instanceof HTMLCanvasElement) return v.ol; if (v && typeof v === 'object') for (const k in v) { const o = olOf(v[k]); if (o !== undefined) return o; } return undefined; };
-function setArt(o, key, c) { const v = o[key]; if (v == null || v instanceof HTMLCanvasElement) o[key] = c; else if (typeof v === 'object') for (const k in v) setArt(v, k, c); }
-function cropArt(path, ol) { // a drawn crop is only the plant: the game puts the right soil (dry · watered · fertilized) under it
+export const olOf = v => { if (v instanceof HTMLCanvasElement) return v.ol; if (v && typeof v === 'object') for (const k in v) { const o = olOf(v[k]); if (o !== undefined) return o; } return undefined; };
+export function setArt(o, key, c) { const v = o[key]; if (v == null || v instanceof HTMLCanvasElement) o[key] = c; else if (typeof v === 'object') for (const k in v) setArt(v, k, c); }
+export function cropArt(path, ol) { // a drawn crop is only the plant: the game puts the right soil (dry · watered · fertilized) under it
   const art = artPaint(path, ol); return [0, 1, 2, 3].map(v => { const soil = mk(16, 16, A => cropSoil(A, v), ol === undefined ? 'sel' : ol), S = 16 * HD, w = Math.max(S, art.width), h = Math.max(S, art.height), c = document.createElement('canvas'); c.width = w; c.height = h;
     const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(soil, (w - S) >> 1, h - S, S, S); g.drawImage(art, (w - art.width) >> 1, h - art.height); c.hd = true; c.ol = art.ol; return c; }); }
-function applyArt() { // shallow paths first so crop/berry/3 wins over crop/berry
+export function applyArt() { // shallow paths first so crop/berry/3 wins over crop/berry
   for (const path of Object.keys(ARTC).sort((a, b) => a.split('/').length - b.split('/').length)) { const seg = artSeg(path); if (!seg.length || ART_SKIP.has(seg[0])) continue;
     if (seg[0] === 'crop' && (seg.length === 2 || seg.length === 3) && SPR.crop[seg[1]]) { const C0 = SPR.crop[seg[1]]; for (const st of seg.length === 3 ? [+seg[2]] : [0, 1, 2, 3]) if (C0[st]) C0[st] = cropArt(path, olOf(C0[st])); continue; }
     let o = SPR; for (let i = 0; i < seg.length - 1; i++) { if (o[seg[i]] == null || o[seg[i]] instanceof HTMLCanvasElement) o[seg[i]] = {}; o = o[seg[i]]; }
     const last = seg[seg.length - 1]; let ol = olOf(o[last]); if (ol === undefined) ol = ART_SEL.has(seg[0]) ? 'sel' : INK; setArt(o, last, artPaint(path, ol)); } }
-function youngOf(src) { const w2 = Math.max(1, Math.round(src.width * .78)), h2 = Math.max(1, Math.round(src.height * .78)), c = document.createElement('canvas'); c.width = w2; c.height = h2; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(src, 0, 0, w2, h2); c.hd = src.hd; return c; }
-function glowSprite(col) {
+export function youngOf(src) { const w2 = Math.max(1, Math.round(src.width * .78)), h2 = Math.max(1, Math.round(src.height * .78)), c = document.createElement('canvas'); c.width = w2; c.height = h2; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(src, 0, 0, w2, h2); c.hd = src.hd; return c; }
+export function glowSprite(col) {
   if (SPR.glow[col]) return SPR.glow[col];
   const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
   const [r, gg, b] = hexRgb(col).map(v => Math.round(v * 255));

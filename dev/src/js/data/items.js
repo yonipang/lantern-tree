@@ -2,7 +2,6 @@
 // 벽·아이템·물체·레시피·무기·희귀도·가방 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
 // 순서가 중요해요: RECIPES에 넣는 순서 = 제작 창 순서, 아래쪽의 일괄 보정(REQ_FIX·금속 → 구리 제작대)은 그 줄보다 앞의 레시피에만 적용돼요.
 // 이 파일은 shell.html에서 content/items.js 바로 앞에 와요 (예전과 같은 실행 순서).
-import { C, INK } from '../engine/canvas.js';
 import { rand } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
 
@@ -236,18 +235,18 @@ addBuildPieces();
 
 // ---- more decorations, spread over early (wood/stone/fiber/dirt) and later (copper/iron) materials ----
 export const DECOR = {
-  woodCrate: { n: '나무 상자', d: '차곡차곡 쌓아 두는 장식용 상자.', req: [['wood', 3]], spr: [16, 16, A => { A.r(2, 4, 12, 11, C.wood); A.r(2, 4, 12, 1, C.woodL); A.r(2, 14, 12, 1, C.woodD); A.r(2, 4, 1, 11, C.woodD); A.r(13, 4, 1, 11, C.woodD); A.r(3, 9, 10, 1, C.woodD); A.line(3, 5, 12, 13, C.woodD); A.p(4, 6, '#ffd1a0'); }] },
-  logBench: { n: '통나무 벤치', d: '앉아서 쉴 수 있어요.', req: [['wood', 5]], use: 'sit', spr: [16, 16, A => { A.r(3, 11, 2, 3, C.woodD); A.r(11, 11, 2, 3, C.woodD); A.r(1, 8, 14, 4, C.wood); A.r(1, 8, 14, 1, C.woodL); A.r(1, 11, 14, 1, C.woodD); A.e(1.6, 9.8, 1.2, 1.8, '#e8b97a'); A.e(14.4, 9.8, 1.2, 1.8, '#e8b97a'); A.p(6, 9, C.woodD); A.p(10, 10, C.woodD); A.e(11, 7.6, 1.6, .8, C.leaf); }] },
-  stoneBench: { n: '돌 벤치', d: '서늘하고 단단한 돌 의자. 앉을 수 있어요.', req: [['stone', 6]], use: 'sit', spr: [16, 16, A => { A.r(2, 11, 3, 3, C.stoneD); A.r(11, 11, 3, 3, C.stoneD); A.r(1, 8, 14, 3, C.stone); A.r(1, 8, 14, 1, C.stoneL); A.r(1, 10, 14, 1, C.stoneD); A.p(4, 9, C.stoneL); A.p(12, 9, C.stoneD); }] },
-  stoneLantern: { n: '돌 등롱', d: '정원을 은은하게 밝히는 돌 등. 눌러서 켜고 꺼요.', req: [['stone', 4], ['wood', 1]], use: 'lamp', light: [5, '#ffd27a'], flick: 1, spr: [16, 24, A => { A.r(5, 20, 6, 2, C.stoneD); A.r(7, 13, 2, 7, C.stone); A.r(7, 13, 1, 7, C.stoneL); A.r(4, 8, 8, 5, C.stone); A.r(6, 9, 4, 3, '#ffd27a'); A.p(7, 10, '#fff1c0'); A.poly([[2, 8.5], [8, 3.5], [14, 8.5]], C.stoneD); A.r(3, 8, 10, 1, C.stoneL); A.p(8, 3, C.stone); }] },
-  flowerBox: { n: '꽃 화단', d: '알록달록한 꽃이 핀 화단. 물을 줄 수 있어요.', req: [['wood', 2], ['dirt', 2], ['fiber', 2]], use: 'water', spr: [16, 16, A => { A.r(1, 9, 14, 5, C.wood); A.r(1, 9, 14, 1, C.woodL); A.r(1, 13, 14, 1, C.woodD); A.r(2, 9, 12, 1, C.dirt); [[3, 6, C.rose], [6, 5, '#fff1d6'], [9, 6, '#ffd25c'], [12, 5, C.cry]].forEach(([x, y, c]) => { A.line(x, y + 1, x, 9, C.leafD); A.p(x, y, c); A.p(x - 1, y, c); A.p(x + 1, y, c); A.p(x, y - 1, c); A.p(x, y + 1, c); A.p(x, y, '#ffc861'); }); A.p(4, 8, C.leaf); A.p(10, 8, C.leaf); }] },
-  strawBasket: { n: '짚 바구니', d: '이끼 섬유로 엮은 바구니.', req: [['fiber', 4]], spr: [16, 16, A => { A.line(4, 8, 6, 3, C.leafD); A.line(10, 8, 11, 4, C.leaf); A.p(6, 3, C.leafL); A.e(8, 11, 6, 3.6, '#d9b26a'); for (let x = 3; x < 14; x += 2) A.line(x, 9, x + 1, 14, '#b08a45'); A.e(8, 8.6, 6, 1.4, '#e8c98a'); A.e(8, 8.6, 4.6, .8, '#9a7438'); }] },
-  pictureFrame: { n: '이젤 액자', d: '풍경화가 담긴 작은 이젤.', req: [['wood', 2], ['fiber', 1]], spr: [16, 16, A => { A.line(5, 11, 3, 15, C.woodD); A.line(11, 11, 13, 15, C.woodD); A.line(8, 10, 8, 15, C.woodD); A.r(3, 1, 10, 10, C.woodD); A.r(4, 2, 8, 8, '#a8dcf5'); A.e(6, 9, 3, 2, C.leaf); A.e(10.5, 9.5, 3, 2.2, C.leafD); A.e(10, 4, 1.3, 1.3, C.amber); A.p(5, 4, '#ffffff'); A.p(6, 4, '#ffffff'); }] },
-  copperLamp: { n: '구리 스탠드', d: '반짝이는 구리 스탠드 조명. 눌러서 켜고 꺼요.', req: [['copperBar', 2], ['wood', 1]], use: 'lamp', light: [6, '#ffd9a0'], spr: [16, 24, A => { A.e(8, 21.5, 3.4, 1.4, C.copperD); A.r(7, 9, 2, 12, C.copper); A.r(7, 9, 1, 12, C.copperL); A.poly([[3, 10], [5, 3.5], [11, 3.5], [13, 10]], C.copper); A.line(5, 4, 4, 9, C.copperL); A.r(4, 10, 8, 1, C.copperD); A.r(6, 11, 4, 1, '#fff1c0'); }] },
-  copperKettle: { n: '구리 주전자', d: '따뜻한 차를 마실 수 있어요.', req: [['copperBar', 2]], use: 'tea', spr: [16, 16, A => { A.line(12, 10, 15, 6, C.copperD, 2); A.line(4, 7, 2, 9, C.copperD); A.line(2, 9, 4, 12, C.copperD); A.e(8, 10.5, 5, 4, C.copper); A.e(6.5, 9, 1.6, 1.4, C.copperL); A.r(4, 14, 8, 1, C.copperD); A.e(8, 6.6, 2.6, 1, C.copperD); A.p(8, 5, C.copperL); }] },
-  grandClock: { n: '괘종시계', d: '똑딱똑딱 시간을 알려 주는 커다란 시계.', req: [['copperBar', 1], ['wood', 6]], spr: [16, 24, A => { A.r(4, 3, 8, 19, C.woodD); A.r(3, 2, 10, 2, C.woodL); A.r(3, 21, 10, 2, C.wood); A.e(8, 7.5, 3, 3, C.cream); A.e(8, 7.5, 3, 3, C.cream); A.p(8, 6, INK); A.p(8, 7, INK); A.p(9, 7, INK); A.r(6, 12, 4, 7, '#5a3a24'); A.line(8, 12, 8, 16, C.copper); A.e(8, 17, 1.2, 1.2, C.copperL); A.p(5, 4, C.copper); A.p(10, 4, C.copper); }] },
-  ironStove: { n: '무쇠 난로', d: '집 안을 따뜻하게 밝혀요. 눌러서 켜고 꺼요.', req: [['ironBar', 3], ['stone', 4]], use: 'lamp', light: [5.5, '#ff9a4a'], flick: 1, spr: [16, 24, A => { A.r(9, 1, 3, 8, '#4a4558'); A.r(9, 1, 3, 1, C.iron); A.r(3, 8, 10, 12, '#5a5468'); A.r(2, 8, 12, 2, C.iron); A.r(5, 12, 6, 5, '#2e2b3a'); A.r(6, 14, 4, 3, C.fire); A.r(7, 15, 2, 2, C.amber); A.r(4, 20, 2, 2, '#3d3a4a'); A.r(10, 20, 2, 2, '#3d3a4a'); A.p(4, 10, C.ironL); }] },
-  ironChair: { n: '철제 의자', d: '돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요.', req: [['ironBar', 2], ['fiber', 1]], use: 'sit', spr: [16, 16, A => { A.line(4, 2, 4, 9, C.ironD); A.line(11, 2, 11, 9, C.ironD); A.r(4, 2, 8, 1, C.ironD); A.e(7, 5, 1.5, 1.5, C.ironD); A.e(7, 5, .6, .6, '#00000000'); A.e(9.5, 5, 1.5, 1.5, C.ironD); A.r(3, 9, 10, 2, C.iron); A.r(4, 9, 8, 1, '#7fb3e0'); A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); }] },
+  woodCrate: { n: '나무 상자', d: '차곡차곡 쌓아 두는 장식용 상자.', req: [['wood', 3]] },
+  logBench: { n: '통나무 벤치', d: '앉아서 쉴 수 있어요.', req: [['wood', 5]], use: 'sit' },
+  stoneBench: { n: '돌 벤치', d: '서늘하고 단단한 돌 의자. 앉을 수 있어요.', req: [['stone', 6]], use: 'sit' },
+  stoneLantern: { n: '돌 등롱', d: '정원을 은은하게 밝히는 돌 등. 눌러서 켜고 꺼요.', req: [['stone', 4], ['wood', 1]], use: 'lamp', light: [5, '#ffd27a'], flick: 1 },
+  flowerBox: { n: '꽃 화단', d: '알록달록한 꽃이 핀 화단. 물을 줄 수 있어요.', req: [['wood', 2], ['dirt', 2], ['fiber', 2]], use: 'water' },
+  strawBasket: { n: '짚 바구니', d: '이끼 섬유로 엮은 바구니.', req: [['fiber', 4]] },
+  pictureFrame: { n: '이젤 액자', d: '풍경화가 담긴 작은 이젤.', req: [['wood', 2], ['fiber', 1]] },
+  copperLamp: { n: '구리 스탠드', d: '반짝이는 구리 스탠드 조명. 눌러서 켜고 꺼요.', req: [['copperBar', 2], ['wood', 1]], use: 'lamp', light: [6, '#ffd9a0'] },
+  copperKettle: { n: '구리 주전자', d: '따뜻한 차를 마실 수 있어요.', req: [['copperBar', 2]], use: 'tea' },
+  grandClock: { n: '괘종시계', d: '똑딱똑딱 시간을 알려 주는 커다란 시계.', req: [['copperBar', 1], ['wood', 6]] },
+  ironStove: { n: '무쇠 난로', d: '집 안을 따뜻하게 밝혀요. 눌러서 켜고 꺼요.', req: [['ironBar', 3], ['stone', 4]], use: 'lamp', light: [5.5, '#ff9a4a'], flick: 1 },
+  ironChair: { n: '철제 의자', d: '돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요.', req: [['ironBar', 2], ['fiber', 1]], use: 'sit' },
 };
 for (const id in DECOR) { const D = DECOR[id]; ITEMS[id] = { n: D.n, kind: 'place', obj: id, d: D.d }; OBJ[id] = { n: D.n, solid: 1, item: id }; if (D.light) OBJ[id].light = D.light; if (D.flick) OBJ[id].flick = 1; if (D.use) USE[id] = D.use; RECIPES.push(Rc(id, 1, D.req, 'bench', 'furn')); }
 RECIPES.push(
@@ -299,36 +298,36 @@ export const WTYPE = {
 };
 for (const id of ['swordWood', 'swordCopper', 'swordIron', 'swordCrystal']) ITEMS[id].wt = 'sword';
 export const rarDefault = () => { for (const id in ITEMS) if ((ITEMS[id].kind === 'sword' || ITEMS[id].kind === 'pick') && RAR[id] == null) RAR[id] = 0; };
-// id: [name, type, damage, recipe, durability, repair, icon, description, orb colour]
+// id: [name, type, damage, recipe, durability, repair, description, orb colour] (아이콘은 art/content.js의 WEAPON_ICON)
 export const WEAPONS = {
-  daggerWood: ['나무 단검', 'dagger', 4, [['wood', 3], ['fiber', 2]], 150, [['wood', 2]], daggerIcon(C.woodL, '#f0c890', C.woodD), '짧지만 아주 빠르게 찔러요. 치명타가 잘 터져요.'],
-  spearWood: ['나무 창', 'spear', 6, [['wood', 5], ['rope', 1]], 180, [['wood', 3]], spearIcon(C.stone, C.stoneL), '멀리 있는 적을 콕 찔러요. 앞쪽 좁은 곳만 맞혀요.'],
-  bowWood: ['나무 활', 'bow', 4, [['wood', 4], ['rope', 2]], 160, [['rope', 1]], bowIcon(C.wood, C.woodL), '멀리 화살을 쏴요. 화살은 따로 필요 없어요.'],
-  daggerCopper: ['구리 단검', 'dagger', 8, [['copperBar', 3], ['wood', 1], ['rope', 1]], 300, [['copperBar', 1]], daggerIcon(C.copper, C.copperL, C.woodD), '빠르게 콕콕! 치명타가 잘 터져요.'],
-  spearCopper: ['구리 창', 'spear', 12, [['copperBar', 4], ['wood', 3], ['rope', 1]], 320, [['copperBar', 2]], spearIcon(C.copper, C.copperL), '긴 창으로 멀리서 안전하게 찔러요.'],
-  hammerCopper: ['구리 망치', 'hammer', 20, [['copperBar', 6], ['wood', 2], ['stone', 4]], 300, [['copperBar', 2]], hammerIcon(C.copper, C.copperL, C.copperD), '느리지만 넓게 쾅! 적을 멀리 밀어내요.'],
-  staffGlow: ['빛버섯 지팡이', 'staff', 9, [['wood', 4], ['glowcap', 4], ['gel', 3], ['copperBar', 1]], 250, [['glowcap', 2]], staffIcon(C.glow, C.glowL), '기력을 조금 써서 적을 꿰뚫는 빛 구슬을 쏴요. 지혜가 높을수록 세져요.', '#9ff2e6'],
-  spearIron: ['철 창', 'spear', 19, [['ironBar', 4], ['wood', 3], ['rope', 2]], 550, [['ironBar', 2]], spearIcon(C.iron, C.ironL), '묵직한 철 창. 멀리서 깊게 찔러요.'],
-  hammerIron: ['철 망치', 'hammer', 32, [['ironBar', 7], ['wood', 2], ['resin', 2]], 600, [['ironBar', 3]], hammerIcon(C.iron, C.ironL, C.ironD), '바닥이 울릴 만큼 강한 한 방.'],
-  bowIron: ['사냥꾼의 활', 'bow', 11, [['ironBar', 3], ['wood', 4], ['rope', 3], ['gel', 2]], 450, [['ironBar', 1], ['rope', 1]], bowIcon(C.woodD, C.wood, C.iron), '팽팽한 시위로 빠른 화살을 쏴요.'],
-  staffCrystal: ['수정 지팡이', 'staff', 17, [['crystal', 10], ['ironBar', 4], ['glowcap', 4]], 700, [['crystal', 3]], staffIcon(C.cry, C.cryL), '보랏빛 구슬이 적 여럿을 꿰뚫어요.', '#d6c2ff'],
-  bowCrystal: ['별빛 활', 'bow', 18, [['crystal', 10], ['ironBar', 4], ['rope', 4], ['glowcap', 2]], 800, [['crystal', 3]], bowIcon(C.cry, C.cryL, C.cryL), '별빛처럼 반짝이는 화살을 쏴요.'],
-  axeStone: ['돌 도끼', 'axe', 8, [['stone', 4], ['wood', 3], ['rope', 1]], 200, [['stone', 2]], axeIcon(C.stone, C.stoneL), '묵직하게 내려찍어요. 들고 있으면 나무도 더 빨리 베요.'],
-  axeCopper: ['구리 도끼', 'axe', 15, [['copperBar', 4], ['wood', 2], ['rope', 1]], 350, [['copperBar', 2]], axeIcon(C.copper, C.copperL), '단단한 구리 도끼. 적을 멀리 밀어내고 나무도 잘 베요.'],
-  axeIron: ['철 도끼', 'axe', 23, [['ironBar', 4], ['wood', 2], ['resin', 1]], 550, [['ironBar', 2]], axeIcon(C.iron, C.ironL), '날이 선 철 도끼. 한 번에 크게 찍어요.'],
+  daggerWood: ['나무 단검', 'dagger', 4, [['wood', 3], ['fiber', 2]], 150, [['wood', 2]], '짧지만 아주 빠르게 찔러요. 치명타가 잘 터져요.'],
+  spearWood: ['나무 창', 'spear', 6, [['wood', 5], ['rope', 1]], 180, [['wood', 3]], '멀리 있는 적을 콕 찔러요. 앞쪽 좁은 곳만 맞혀요.'],
+  bowWood: ['나무 활', 'bow', 4, [['wood', 4], ['rope', 2]], 160, [['rope', 1]], '멀리 화살을 쏴요. 화살은 따로 필요 없어요.'],
+  daggerCopper: ['구리 단검', 'dagger', 8, [['copperBar', 3], ['wood', 1], ['rope', 1]], 300, [['copperBar', 1]], '빠르게 콕콕! 치명타가 잘 터져요.'],
+  spearCopper: ['구리 창', 'spear', 12, [['copperBar', 4], ['wood', 3], ['rope', 1]], 320, [['copperBar', 2]], '긴 창으로 멀리서 안전하게 찔러요.'],
+  hammerCopper: ['구리 망치', 'hammer', 20, [['copperBar', 6], ['wood', 2], ['stone', 4]], 300, [['copperBar', 2]], '느리지만 넓게 쾅! 적을 멀리 밀어내요.'],
+  staffGlow: ['빛버섯 지팡이', 'staff', 9, [['wood', 4], ['glowcap', 4], ['gel', 3], ['copperBar', 1]], 250, [['glowcap', 2]], '기력을 조금 써서 적을 꿰뚫는 빛 구슬을 쏴요. 지혜가 높을수록 세져요.', '#9ff2e6'],
+  spearIron: ['철 창', 'spear', 19, [['ironBar', 4], ['wood', 3], ['rope', 2]], 550, [['ironBar', 2]], '묵직한 철 창. 멀리서 깊게 찔러요.'],
+  hammerIron: ['철 망치', 'hammer', 32, [['ironBar', 7], ['wood', 2], ['resin', 2]], 600, [['ironBar', 3]], '바닥이 울릴 만큼 강한 한 방.'],
+  bowIron: ['사냥꾼의 활', 'bow', 11, [['ironBar', 3], ['wood', 4], ['rope', 3], ['gel', 2]], 450, [['ironBar', 1], ['rope', 1]], '팽팽한 시위로 빠른 화살을 쏴요.'],
+  staffCrystal: ['수정 지팡이', 'staff', 17, [['crystal', 10], ['ironBar', 4], ['glowcap', 4]], 700, [['crystal', 3]], '보랏빛 구슬이 적 여럿을 꿰뚫어요.', '#d6c2ff'],
+  bowCrystal: ['별빛 활', 'bow', 18, [['crystal', 10], ['ironBar', 4], ['rope', 4], ['glowcap', 2]], 800, [['crystal', 3]], '별빛처럼 반짝이는 화살을 쏴요.'],
+  axeStone: ['돌 도끼', 'axe', 8, [['stone', 4], ['wood', 3], ['rope', 1]], 200, [['stone', 2]], '묵직하게 내려찍어요. 들고 있으면 나무도 더 빨리 베요.'],
+  axeCopper: ['구리 도끼', 'axe', 15, [['copperBar', 4], ['wood', 2], ['rope', 1]], 350, [['copperBar', 2]], '단단한 구리 도끼. 적을 멀리 밀어내고 나무도 잘 베요.'],
+  axeIron: ['철 도끼', 'axe', 23, [['ironBar', 4], ['wood', 2], ['resin', 1]], 550, [['ironBar', 2]], '날이 선 철 도끼. 한 번에 크게 찍어요.'],
 };
 export const WEAPON_DUR = {}, DUR2 = {};
-for (const id in WEAPONS) { const [n, wt, dmg, req, dur, fix, , d, orb] = WEAPONS[id];
+for (const id in WEAPONS) { const [n, wt, dmg, req, dur, fix, d, orb] = WEAPONS[id];
   ITEMS[id] = { n, kind: 'sword', wt, dmg, stack: 1, d, orb }; WEAPON_DUR[id] = [dur, fix]; RECIPES.push(Rc(id, 1, req, 'bench', 'weapon')); }
 // ---- boss-only weapons (epic) with on-hit effects ----
 export const FXN = { poison: '독: 맞은 적이 몇 초 동안 계속 아파요', slow: '끈적끈적: 맞은 적이 느려져요', split: '수정 파편: 맞은 곳에서 파편 3개가 튀어 주변 적도 맞혀요', burn: '불꽃: 맞은 적이 불타올라요', chill: '서리: 맞은 적이 꽁꽁 얼어 아주 느려져요' };
 export const UNIQ = {
-  daggerQueen: ['포자 여왕의 단검', 'dagger', 18, 650, [['shroomCap', 3]], daggerIcon('#c58cf0', '#f6e6ff', '#7d3fa3'), '버섯 여왕이 남긴 단검. 찌를 때마다 독 포자가 퍼져요.', 'poison', 'queen'],
-  hammerSlime: ['말랑대왕 망치', 'hammer', 34, 700, [['gel', 6]], hammerIcon('#86d96b', '#d2f7b8', '#4f9e45'), '말랑대왕의 왕관 조각으로 만든 망치. 맞은 적이 끈적해져 느려져요.', 'slow', 'slime'],
-  bowGolem: ['수정 거인의 활', 'bow', 24, 900, [['crystal', 4]], bowIcon('#6a6488', C.cryL, C.cry), '수정골렘의 팔로 만든 활. 화살이 맞으면 수정 파편이 튀어요.', 'split', 'golem'],
+  daggerQueen: ['포자 여왕의 단검', 'dagger', 18, 650, [['shroomCap', 3]], '버섯 여왕이 남긴 단검. 찌를 때마다 독 포자가 퍼져요.', 'poison', 'queen'],
+  hammerSlime: ['말랑대왕 망치', 'hammer', 34, 700, [['gel', 6]], '말랑대왕의 왕관 조각으로 만든 망치. 맞은 적이 끈적해져 느려져요.', 'slow', 'slime'],
+  bowGolem: ['수정 거인의 활', 'bow', 24, 900, [['crystal', 4]], '수정골렘의 팔로 만든 활. 화살이 맞으면 수정 파편이 튀어요.', 'split', 'golem'],
 };
 export const UNIQ_OF = {};
-for (const id in UNIQ) { const [n, wt, dmg, dur, fix, , d, fx, boss] = UNIQ[id];
+for (const id in UNIQ) { const [n, wt, dmg, dur, fix, d, fx, boss] = UNIQ[id];
   ITEMS[id] = { n, kind: 'sword', wt, dmg, stack: 1, d, fx, orb: '#d6c2ff' }; WEAPON_DUR[id] = [dur, fix]; UNIQ_OF[boss] = id; }
 ITEMS.golemCore = { n: '수정 핵', d: '수정골렘의 가슴에서 빛나던 핵. 수정 곡괭이를 만드는 데 써요.' };
 ITEMS.pickCrystal = { n: '수정 곡괭이', kind: 'pick', power: 4, tier: 3, stack: 1, d: '아주 단단한 곡괭이. 용암·얼음 지역의 벽까지 캘 수 있어요.' };

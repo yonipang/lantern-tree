@@ -82,17 +82,6 @@ function hitBoss(b, dmg, crit, fx) {
 }
 function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   toast(`${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
-const SUMMON = {
-  queenIdol: ['포자 여왕 부름 버섯', 'queen', [['shroomCap', 10], ['glowcap', 6], ['spore', 4]], '#b673de', '#fbe7ff'],
-  slimeIdol: ['말랑 왕관 조각상', 'slime', [['gel', 30], ['copperBar', 6]], '#86d96b', '#ffd25c'],
-  golemIdol: ['수정 심장 조각상', 'golem', [['crystal', 20], ['ironBar', 6]], '#9d7fe0', '#7ff0e6'],
-  turtleIdol: ['용암 등껍질 조각상', 'turtle', [['obsidian', 8], ['goldBar', 4], ['fireBerry', 4]], '#ff8a3d', '#ffc861'],
-  spiritIdol: ['서리 결정 조각상', 'spirit', [['frostShard', 16], ['goldBar', 4]], '#9fd8f0', '#ffffff'],
-};
-for (const id in SUMMON) { const [n, k, req, c1, c2] = SUMMON[id];
-  ITEMS[id] = { n, kind: 'summon', boss: k, d: `${BOSSES[k].n}을 물리친 뒤 보스방에서 쓰면 ${BOSSES[k].n}이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 전용 장비가 떨어져요.` };
-  ICON[id] = A => { A.r(4, 12, 8, 3, '#625d78'); A.r(4, 12, 8, 1, '#8f8aa3'); A.e(8, 8, 4, 4.6, c1); A.e(7, 6.6, 1.8, 1.6, c2); A.p(6, 6, '#ffffff'); A.p(10, 10, '#00000033'); };
-  RECIPES.push(Rc(id, 1, req, 'forge', 'tool')); }
 function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
   if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
   if (!G.bossDead[k]) return { k: 'info', lbl: '깨어 있음', icon: 'dots', msg: `${BOSSES[k].n}이 이미 보스방에 있어요`, t };

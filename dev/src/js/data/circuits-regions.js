@@ -70,14 +70,14 @@ export const SPAWN_CAP = [6, 8, 9, 10, 10], SPAWN_EVERY = [2.6, 2.3, 2.0, 1.6, 1
 CATCH[3] = CATCH[2]; CATCH[4] = [['smelt', 50], ['shrimp', 26], ['crucian', 10], ['boot', 6], ['koi', 8]];
 // deep gear (영웅) and legendary (전설)
 export const GEAR2 = {
-  swordGold: ['황금 검', 'sword', 36, [['goldBar', 6], ['obsidian', 2], ['ironBar', 2]], 1100, [['goldBar', 2]], swordIcon('#ffd25c', '#fff1b0', '#c9902a'), '묵직하게 빛나는 황금 검.'],
-  daggerObsidian: ['흑요석 단검', 'dagger', 24, [['obsidian', 4], ['goldBar', 1], ['rope', 1]], 900, [['obsidian', 2]], daggerIcon('#3a2a4a', '#9a8ad0', '#c9902a'), '유리처럼 날카로운 단검. 치명타가 잘 터져요.'],
-  hammerObsidian: ['흑요석 망치', 'hammer', 54, [['obsidian', 6], ['goldBar', 3], ['wood', 2]], 1000, [['obsidian', 3]], hammerIcon('#3a2a4a', '#6a5a8a', '#1a1424'), '땅이 갈라질 만큼 무거운 한 방.'],
-  spearFrost: ['서리 창', 'spear', 34, [['frostShard', 8], ['goldBar', 2], ['wood', 3]], 1000, [['frostShard', 3]], spearIcon('#7fd8f0', '#e8f8ff'), '찌르면 적이 꽁꽁 얼어붙어요.', null, 'chill'],
-  staffFrost: ['눈꽃 지팡이', 'staff', 28, [['frostShard', 6], ['crystal', 4], ['glowcap', 3]], 1000, [['frostShard', 3]], staffIcon('#9fd8f0', '#ffffff'), '눈꽃 구슬이 적을 꿰뚫고 얼려요.', '#d4f6ff', 'chill'],
-  bowGold: ['황금 활', 'bow', 28, [['goldBar', 4], ['rope', 3], ['frostShard', 2]], 1000, [['goldBar', 2]], bowIcon('#c9902a', '#ffd25c', '#fff1b0'), '황금빛 화살이 멀리 날아가요.'],
+  swordGold: ['황금 검', 'sword', 36, [['goldBar', 6], ['obsidian', 2], ['ironBar', 2]], 1100, [['goldBar', 2]], '묵직하게 빛나는 황금 검.'],
+  daggerObsidian: ['흑요석 단검', 'dagger', 24, [['obsidian', 4], ['goldBar', 1], ['rope', 1]], 900, [['obsidian', 2]], '유리처럼 날카로운 단검. 치명타가 잘 터져요.'],
+  hammerObsidian: ['흑요석 망치', 'hammer', 54, [['obsidian', 6], ['goldBar', 3], ['wood', 2]], 1000, [['obsidian', 3]], '땅이 갈라질 만큼 무거운 한 방.'],
+  spearFrost: ['서리 창', 'spear', 34, [['frostShard', 8], ['goldBar', 2], ['wood', 3]], 1000, [['frostShard', 3]], '찌르면 적이 꽁꽁 얼어붙어요.', null, 'chill'],
+  staffFrost: ['눈꽃 지팡이', 'staff', 28, [['frostShard', 6], ['crystal', 4], ['glowcap', 3]], 1000, [['frostShard', 3]], '눈꽃 구슬이 적을 꿰뚫고 얼려요.', '#d4f6ff', 'chill'],
+  bowGold: ['황금 활', 'bow', 28, [['goldBar', 4], ['rope', 3], ['frostShard', 2]], 1000, [['goldBar', 2]], '황금빛 화살이 멀리 날아가요.'],
 };
-for (const id in GEAR2) { const [n, wt, dmg, req, dur, fix, , d, orb, fx] = GEAR2[id]; ITEMS[id] = { n, kind: 'sword', wt, dmg, stack: 1, d, orb, fx }; DUR2[id] = [dur, fix]; RAR[id] = 3; RECIPES.push(Rc(id, 1, req, 'forge', 'weapon')); }
+for (const id in GEAR2) { const [n, wt, dmg, req, dur, fix, d, orb, fx] = GEAR2[id]; ITEMS[id] = { n, kind: 'sword', wt, dmg, stack: 1, d, orb, fx }; DUR2[id] = [dur, fix]; RAR[id] = 3; RECIPES.push(Rc(id, 1, req, 'forge', 'weapon')); }
 ITEMS.pickGold = { n: '황금 곡괭이', kind: 'pick', power: 5, tier: 3, stack: 1, d: '깊은 동굴의 벽도 빠르게 캐는 곡괭이.' }; DUR2.pickGold = [1800, [['goldBar', 2]]]; RAR.pickGold = 3;
 RECIPES.push(Rc('pickGold', 1, [['goldBar', 6], ['obsidian', 2], ['frostShard', 2]], 'forge', 'tool'));
 Object.assign(UNIQ_OF, { turtle: 'swordLava', spirit: 'bowFrost' });

@@ -1,7 +1,6 @@
 // ================= 성장·스킬·몬스터·자연 데이터 (구조 변경 2단계: content/rpg-nature.js에서 데이터만 옮김) =================
 // 레벨·능력치 이름·스킬·낚시 표·몬스터 수치·꽃·나무 자라는 시간·자연 꾸미기 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
 // 이 파일은 shell.html에서 content/rpg-nature.js 바로 앞에 와요 (예전과 같은 실행 순서).
-import { C } from '../engine/canvas.js';
 import { ITEMS, OBJ, RECIPES, Rc } from './items.js';
 
 // ---- level, stats and skills ----
@@ -65,33 +64,14 @@ export const NFLOOR = { 11: ['waterShallow', '얕은 물 타일', '자갈이 비
   15: ['waterPetal', '꽃잎 물 타일', '벚꽃잎이 떠다니는 물.', [['gWater', 1], ['petalW', 1], ['petalR', 1]]], 16: ['floorCherry', '벚꽃 타일', '벚꽃잎이 흩날린 이끼 바닥.', [['dirt', 1], ['gMoss', 1], ['petalW', 1], ['petalR', 1]]] };
 for (const f in NFLOOR) { const [id, n, d, req] = NFLOOR[f]; ITEMS[id] = { n, kind: 'floor', floor: +f, d }; RECIPES.push(Rc(id, 4, req, req.some(([m]) => m === 'crystal') ? 'forge' : 'bench', 'nature')); }
 export const NATURE = {
-  cherryTree: ['벚꽃나무', '분홍 꽃잎이 흩날리는 커다란 벚꽃나무.', [['dirt', 6], ['gMoss', 6], ['wood', 10], ['petalW', 8], ['petalR', 6]], 0, [32, 40, A => {
-    A.poly([[12, 39], [15, 26], [17, 26], [20, 39]], C.woodD); A.r(14, 21, 4, 18, C.wood); A.r(14, 21, 1, 18, C.woodL); A.line(16, 24, 9, 16, C.wood, 2); A.line(17, 23, 24, 15, C.wood, 2);
-    for (const [x, y, r] of [[9, 15, 6.5], [23, 14, 6.5], [16, 9, 7.5], [6, 10, 5], [26, 9, 5], [16, 17, 6], [11, 5, 5], [21, 4, 5]]) A.e(x, y, r, r * .85, '#f49ab8');
-    for (const [x, y, r] of [[9, 13, 4.5], [22, 12, 4.5], [15, 7, 5.5], [7, 9, 3], [25, 8, 3], [11, 4, 3], [20, 3, 3]]) A.e(x, y, r, r * .8, '#f7b8cf');
-    for (const [x, y] of [[8, 11], [13, 5], [19, 9], [24, 11], [16, 14], [10, 16], [22, 5], [5, 8], [27, 12]]) { A.p(x, y, '#ffffff'); A.p(x + 1, y, '#fcd9e6'); }
-    A.p(18, 13, '#d9607d'); A.p(6, 14, '#d9607d'); A.p(26, 13, '#d9607d'); }]],
-  roundTree: ['둥근 나무', '동글동글한 초록 나무.', [['dirt', 4], ['gMoss', 4]], 0, [24, 32, A => {
-    A.poly([[8, 31], [11, 24], [13, 24], [16, 31]], C.woodD); A.r(10, 17, 4, 14, C.wood); A.r(10, 17, 1, 14, C.woodL);
-    A.e(12, 11, 10, 9, C.leafD); A.e(10.5, 9.5, 7.5, 6.5, C.leaf); A.e(15, 8, 5, 4, C.leaf); A.e(8, 6, 2.6, 1.6, C.leafL); A.p(15, 5, C.leafL); A.p(5, 11, C.leafL); A.p(17, 14, '#2f6e33'); }]],
-  shrub: ['덤불', '푸릇푸릇한 작은 덤불.', [['dirt', 2], ['gMoss', 2]], 0, [16, 14, A => {
-    A.e(8, 9, 7, 4.6, C.leafD); A.e(5.5, 7.5, 3.6, 3, C.leaf); A.e(10.5, 7, 3.8, 3.2, C.leaf); A.e(8, 5.5, 3, 2.4, C.leaf); A.p(5, 6, C.leafL); A.p(10, 5, C.leafL); A.p(8, 4, C.leafL); }]],
-  hydrangea: ['수국 덤불', '파란 꽃송이가 탐스러운 수국.', [['dirt', 1], ['gMoss', 1], ['petalB', 3]], 0, [16, 16, A => {
-    A.e(8, 11, 7, 4.4, C.leafD); A.e(8, 10, 5.6, 3.4, C.leaf);
-    for (const [x, y] of [[4.5, 7], [11, 6.5], [8, 4.5]]) { A.e(x, y, 3, 2.6, '#6fa8ff'); A.p(x - 1 | 0, y - 1 | 0, '#c2dcff'); A.p(x + 1 | 0, y | 0, '#c2dcff'); A.p(x | 0, y + 1 | 0, '#4a78d0'); } }]],
-  roseBlack: ['흑장미 덤불', '신비로운 검은 장미가 핀 덤불.', [['dirt', 1], ['gMoss', 1], ['petalK', 2], ['petalR', 1]], 0, [16, 16, A => {
-    A.e(8, 11, 7, 4.4, '#2f6e33'); A.e(8, 10, 5.6, 3.4, C.leafD);
-    for (const [x, y] of [[4.5, 7.5], [11, 7], [8, 4.5]]) { A.e(x, y, 2.4, 2.2, '#4a3f5c'); A.p(x | 0, y | 0, '#8a7aa6'); A.p(x - 1 | 0, y | 0, '#2a2238'); A.p(x + 1 | 0, y - 1 | 0, '#d0485e'); } }]],
-  sunflower: ['해바라기', '키가 큰 노란 해바라기.', [['dirt', 1], ['gMoss', 1], ['petalY', 3]], 0, [16, 28, A => {
-    A.line(8, 27, 8, 11, C.leafD, 2); A.e(5, 20, 3, 1.4, C.leaf); A.e(11, 16, 3, 1.4, C.leaf);
-    for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283; A.e(8 + Math.cos(a) * 4.2, 7 + Math.sin(a) * 4.2, 1.8, 1.8, k % 2 ? '#ffd25c' : '#f2b83a'); }
-    A.e(8, 7, 2.8, 2.8, '#7a4a2a'); A.p(7, 6, '#a06a3a'); A.p(9, 8, '#5a3420'); }]],
-  daisies: ['데이지 무리', '작고 하얀 데이지. 위로 걸어 다닐 수 있어요.', [['gMoss', 1], ['petalW', 2]], 1, [16, 16, A => {
-    for (const [x, y] of [[4, 5], [11, 4], [7, 10], [13, 11], [3, 13]]) { A.line(x, y + 1, x, y + 3, C.leaf); A.p(x - 1, y, '#ffffff'); A.p(x + 1, y, '#ffffff'); A.p(x, y - 1, '#ffffff'); A.p(x, y + 1, '#f4f0f8'); A.p(x, y, '#ffd25c'); } }]],
-  flowerBed: ['꽃밭', '빨강·파랑·노랑 꽃이 가득한 꽃밭. 위로 걸어 다닐 수 있어요.', [['dirt', 2], ['gMoss', 2], ['petalR', 2], ['petalB', 2], ['petalY', 2]], 1, [16, 16, A => {
-    A.e(4, 12, 3.4, 2, C.leafD); A.e(11, 13, 4, 2, C.leafD); A.e(8, 7, 4, 2, C.leafD); A.e(3, 5, 2.6, 1.6, C.leaf); A.e(13, 6, 2.6, 1.6, C.leaf);
-    const cs = ['#ff6b81', '#6fa8ff', '#ffd25c'];
-    [[3, 4], [7, 3], [12, 4], [5, 8], [10, 8], [14, 9], [2, 11], [7, 12], [12, 13], [9, 15]].forEach(([x, y], k) => { const c = cs[k % 3]; A.p(x - 1, y, c); A.p(x + 1, y, c); A.p(x, y - 1, c); A.p(x, y + 1, c); A.p(x, y, k % 3 === 2 ? '#d9a53a' : '#fff1d6'); }); }]],
+  cherryTree: ['벚꽃나무', '분홍 꽃잎이 흩날리는 커다란 벚꽃나무.', [['dirt', 6], ['gMoss', 6], ['wood', 10], ['petalW', 8], ['petalR', 6]], 0],
+  roundTree: ['둥근 나무', '동글동글한 초록 나무.', [['dirt', 4], ['gMoss', 4]], 0],
+  shrub: ['덤불', '푸릇푸릇한 작은 덤불.', [['dirt', 2], ['gMoss', 2]], 0],
+  hydrangea: ['수국 덤불', '파란 꽃송이가 탐스러운 수국.', [['dirt', 1], ['gMoss', 1], ['petalB', 3]], 0],
+  roseBlack: ['흑장미 덤불', '신비로운 검은 장미가 핀 덤불.', [['dirt', 1], ['gMoss', 1], ['petalK', 2], ['petalR', 1]], 0],
+  sunflower: ['해바라기', '키가 큰 노란 해바라기.', [['dirt', 1], ['gMoss', 1], ['petalY', 3]], 0],
+  daisies: ['데이지 무리', '작고 하얀 데이지. 위로 걸어 다닐 수 있어요.', [['gMoss', 1], ['petalW', 2]], 1],
+  flowerBed: ['꽃밭', '빨강·파랑·노랑 꽃이 가득한 꽃밭. 위로 걸어 다닐 수 있어요.', [['dirt', 2], ['gMoss', 2], ['petalR', 2], ['petalB', 2], ['petalY', 2]], 1],
 };
 for (const id in NATURE) { const [n, d, req, flat] = NATURE[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = flat ? { n, flat: 1, item: id } : { n, solid: 1, item: id }; RECIPES.push(Rc(id, 1, req, 'bench', 'nature')); }
 RECIPES.push(Rc('sapling', 1, [['wood', 3], ['dirt', 2], ['fiber', 2]], 'bench', 'nature'));

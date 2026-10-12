@@ -13150,7 +13150,6 @@
 2
 ]
 ],
-"[함수]",
 "짧지만 아주 빠르게 찔러요. 치명타가 잘 터져요."
 ],
 "spearWood": [
@@ -13174,7 +13173,6 @@
 3
 ]
 ],
-"[함수]",
 "멀리 있는 적을 콕 찔러요. 앞쪽 좁은 곳만 맞혀요."
 ],
 "bowWood": [
@@ -13198,7 +13196,6 @@
 1
 ]
 ],
-"[함수]",
 "멀리 화살을 쏴요. 화살은 따로 필요 없어요."
 ],
 "daggerCopper": [
@@ -13226,7 +13223,6 @@
 1
 ]
 ],
-"[함수]",
 "빠르게 콕콕! 치명타가 잘 터져요."
 ],
 "spearCopper": [
@@ -13254,7 +13250,6 @@
 2
 ]
 ],
-"[함수]",
 "긴 창으로 멀리서 안전하게 찔러요."
 ],
 "hammerCopper": [
@@ -13282,7 +13277,6 @@
 2
 ]
 ],
-"[함수]",
 "느리지만 넓게 쾅! 적을 멀리 밀어내요."
 ],
 "staffGlow": [
@@ -13314,7 +13308,6 @@
 2
 ]
 ],
-"[함수]",
 "기력을 조금 써서 적을 꿰뚫는 빛 구슬을 쏴요. 지혜가 높을수록 세져요.",
 "#9ff2e6"
 ],
@@ -13343,7 +13336,6 @@
 2
 ]
 ],
-"[함수]",
 "묵직한 철 창. 멀리서 깊게 찔러요."
 ],
 "hammerIron": [
@@ -13371,7 +13363,6 @@
 3
 ]
 ],
-"[함수]",
 "바닥이 울릴 만큼 강한 한 방."
 ],
 "bowIron": [
@@ -13407,7 +13398,6 @@
 1
 ]
 ],
-"[함수]",
 "팽팽한 시위로 빠른 화살을 쏴요."
 ],
 "staffCrystal": [
@@ -13435,7 +13425,6 @@
 3
 ]
 ],
-"[함수]",
 "보랏빛 구슬이 적 여럿을 꿰뚫어요.",
 "#d6c2ff"
 ],
@@ -13468,7 +13457,6 @@
 3
 ]
 ],
-"[함수]",
 "별빛처럼 반짝이는 화살을 쏴요."
 ],
 "axeStone": [
@@ -13496,7 +13484,6 @@
 2
 ]
 ],
-"[함수]",
 "묵직하게 내려찍어요. 들고 있으면 나무도 더 빨리 베요."
 ],
 "axeCopper": [
@@ -13524,7 +13511,6 @@
 2
 ]
 ],
-"[함수]",
 "단단한 구리 도끼. 적을 멀리 밀어내고 나무도 잘 베요."
 ],
 "axeIron": [
@@ -13552,7 +13538,6 @@
 2
 ]
 ],
-"[함수]",
 "날이 선 철 도끼. 한 번에 크게 찍어요."
 ]
 },
@@ -14120,11 +14105,6 @@
 "wood",
 3
 ]
-],
-"spr": [
-16,
-16,
-"[함수]"
 ]
 },
 "logBench": {
@@ -14136,12 +14116,7 @@
 5
 ]
 ],
-"use": "sit",
-"spr": [
-16,
-16,
-"[함수]"
-]
+"use": "sit"
 },
 "stoneBench": {
 "n": "돌 벤치",
@@ -14152,12 +14127,7 @@
 6
 ]
 ],
-"use": "sit",
-"spr": [
-16,
-16,
-"[함수]"
-]
+"use": "sit"
 },
 "stoneLantern": {
 "n": "돌 등롱",
@@ -14177,12 +14147,7 @@
 5,
 "#ffd27a"
 ],
-"flick": 1,
-"spr": [
-16,
-24,
-"[함수]"
-]
+"flick": 1
 },
 "flowerBox": {
 "n": "꽃 화단",
@@ -14201,12 +14166,7 @@
 2
 ]
 ],
-"use": "water",
-"spr": [
-16,
-16,
-"[함수]"
-]
+"use": "water"
 },
 "strawBasket": {
 "n": "짚 바구니",
@@ -14216,11 +14176,6 @@
 "fiber",
 4
 ]
-],
-"spr": [
-16,
-16,
-"[함수]"
 ]
 },
 "pictureFrame": {
@@ -14235,11 +14190,6 @@
 "fiber",
 1
 ]
-],
-"spr": [
-16,
-16,
-"[함수]"
 ]
 },
 "copperLamp": {
@@ -14259,11 +14209,6 @@
 "light": [
 6,
 "#ffd9a0"
-],
-"spr": [
-16,
-24,
-"[함수]"
 ]
 },
 "copperKettle": {
@@ -14275,12 +14220,7 @@
 2
 ]
 ],
-"use": "tea",
-"spr": [
-16,
-16,
-"[함수]"
-]
+"use": "tea"
 },
 "grandClock": {
 "n": "괘종시계",
@@ -14294,11 +14234,6 @@
 "wood",
 6
 ]
-],
-"spr": [
-16,
-24,
-"[함수]"
 ]
 },
 "ironStove": {
@@ -14319,12 +14254,7 @@
 5.5,
 "#ff9a4a"
 ],
-"flick": 1,
-"spr": [
-16,
-24,
-"[함수]"
-]
+"flick": 1
 },
 "ironChair": {
 "n": "철제 의자",
@@ -14339,12 +14269,7 @@
 1
 ]
 ],
-"use": "sit",
-"spr": [
-16,
-16,
-"[함수]"
-]
+"use": "sit"
 }
 },
 "ARROWS": {
@@ -14477,12 +14402,7 @@
 6
 ]
 ],
-0,
-[
-32,
-40,
-"[함수]"
-]
+0
 ],
 "roundTree": [
 "둥근 나무",
@@ -14497,12 +14417,7 @@
 4
 ]
 ],
-0,
-[
-24,
-32,
-"[함수]"
-]
+0
 ],
 "shrub": [
 "덤불",
@@ -14517,12 +14432,7 @@
 2
 ]
 ],
-0,
-[
-16,
-14,
-"[함수]"
-]
+0
 ],
 "hydrangea": [
 "수국 덤불",
@@ -14541,12 +14451,7 @@
 3
 ]
 ],
-0,
-[
-16,
-16,
-"[함수]"
-]
+0
 ],
 "roseBlack": [
 "흑장미 덤불",
@@ -14569,12 +14474,7 @@
 1
 ]
 ],
-0,
-[
-16,
-16,
-"[함수]"
-]
+0
 ],
 "sunflower": [
 "해바라기",
@@ -14593,12 +14493,7 @@
 3
 ]
 ],
-0,
-[
-16,
-28,
-"[함수]"
-]
+0
 ],
 "daisies": [
 "데이지 무리",
@@ -14613,12 +14508,7 @@
 2
 ]
 ],
-1,
-[
-16,
-16,
-"[함수]"
-]
+1
 ],
 "flowerBed": [
 "꽃밭",
@@ -14645,12 +14535,7 @@
 2
 ]
 ],
-1,
-[
-16,
-16,
-"[함수]"
-]
+1
 ]
 },
 "TERRAIN": {
@@ -16952,6 +16837,19 @@ null,
 "petalPancake": "[그림 16x16 eebd0b85]",
 "petalRiceCake": "[그림 16x16 f38fbc06]",
 "catfishSoup": "[그림 16x16 905c71a0]",
+"hotTea": "[그림 16x16 2e763499]",
+"hotSoup": "[그림 16x16 2c5bb33a]",
+"fireStew": "[그림 16x16 5988887c]",
+"coolTea": "[그림 16x16 a4ba4c09]",
+"coolPunch": "[그림 16x16 5bc9f26a]",
+"radishSoup": "[그림 16x16 eaffa500]",
+"fireSkewer": "[그림 16x16 d695ff54]",
+"radishSalad": "[그림 16x16 7e466454]",
+"fireBeans": "[그림 16x16 ecab39f6]",
+"fireJelly": "[그림 16x16 38ba1461]",
+"frostTea": "[그림 16x16 ca77e6d0]",
+"firePie": "[그림 16x16 c76b3446]",
+"festCake": "[그림 16x16 76823b89]",
 "rn_skewer": "[그림 16x16 e13b0dad]",
 "rn_capSteak": "[그림 16x16 e13b0dad]",
 "rn_gelSoup": "[그림 16x16 e13b0dad]",
@@ -16977,6 +16875,19 @@ null,
 "rn_petalPancake": "[그림 16x16 e13b0dad]",
 "rn_petalRiceCake": "[그림 16x16 e13b0dad]",
 "rn_catfishSoup": "[그림 16x16 e13b0dad]",
+"rn_hotTea": "[그림 16x16 e13b0dad]",
+"rn_hotSoup": "[그림 16x16 e13b0dad]",
+"rn_fireStew": "[그림 16x16 e13b0dad]",
+"rn_coolTea": "[그림 16x16 e13b0dad]",
+"rn_coolPunch": "[그림 16x16 e13b0dad]",
+"rn_radishSoup": "[그림 16x16 e13b0dad]",
+"rn_fireSkewer": "[그림 16x16 e13b0dad]",
+"rn_radishSalad": "[그림 16x16 e13b0dad]",
+"rn_fireBeans": "[그림 16x16 e13b0dad]",
+"rn_fireJelly": "[그림 16x16 e13b0dad]",
+"rn_frostTea": "[그림 16x16 e13b0dad]",
+"rn_firePie": "[그림 16x16 e13b0dad]",
+"rn_festCake": "[그림 16x16 e13b0dad]",
 "grilledS": "[그림 16x16 78bed44a]",
 "pieS": "[그림 16x16 ccec3153]",
 "stewS": "[그림 16x16 17fd3a68]",
@@ -17004,6 +16915,18 @@ null,
 "petalPancakeS": "[그림 16x16 58bf660e]",
 "petalRiceCakeS": "[그림 16x16 ab3fae22]",
 "catfishSoupS": "[그림 16x16 5b929a71]",
+"hotTeaS": "[그림 16x16 db434ae]",
+"hotSoupS": "[그림 16x16 b69e1dc2]",
+"fireStewS": "[그림 16x16 45d6b6e8]",
+"coolTeaS": "[그림 16x16 cac7f9ec]",
+"coolPunchS": "[그림 16x16 c28dee08]",
+"radishSoupS": "[그림 16x16 e67da814]",
+"fireSkewerS": "[그림 16x16 c6797ca0]",
+"radishSaladS": "[그림 16x16 494ef3b5]",
+"fireBeansS": "[그림 16x16 4bdc7bc]",
+"fireJellyS": "[그림 16x16 1496f25a]",
+"frostTeaS": "[그림 16x16 cfd434a0]",
+"firePieS": "[그림 16x16 970cc126]",
 "anyPetal": "[그림 16x16 25ee977b]",
 "bottle": "[그림 16x16 37e82b80]",
 "fireSeed": "[그림 16x16 717ca4b9]",
@@ -17027,45 +16950,7 @@ null,
 "friedEgg": "[그림 16x16 73dae76b]",
 "pancake": "[그림 16x16 9adb68a3]",
 "woolHat": "[그림 16x16 7b6cb4e0]",
-"hotTea": "[그림 16x16 2e763499]",
-"rn_hotTea": "[그림 16x16 e13b0dad]",
-"hotTeaS": "[그림 16x16 db434ae]",
-"hotSoup": "[그림 16x16 2c5bb33a]",
-"rn_hotSoup": "[그림 16x16 e13b0dad]",
-"hotSoupS": "[그림 16x16 b69e1dc2]",
-"fireStew": "[그림 16x16 5988887c]",
-"rn_fireStew": "[그림 16x16 e13b0dad]",
-"fireStewS": "[그림 16x16 45d6b6e8]",
-"coolTea": "[그림 16x16 a4ba4c09]",
-"rn_coolTea": "[그림 16x16 e13b0dad]",
-"coolTeaS": "[그림 16x16 cac7f9ec]",
-"coolPunch": "[그림 16x16 5bc9f26a]",
-"rn_coolPunch": "[그림 16x16 e13b0dad]",
-"coolPunchS": "[그림 16x16 c28dee08]",
-"radishSoup": "[그림 16x16 eaffa500]",
-"rn_radishSoup": "[그림 16x16 e13b0dad]",
-"radishSoupS": "[그림 16x16 e67da814]",
-"fireSkewer": "[그림 16x16 d695ff54]",
-"rn_fireSkewer": "[그림 16x16 e13b0dad]",
-"fireSkewerS": "[그림 16x16 c6797ca0]",
-"radishSalad": "[그림 16x16 7e466454]",
-"rn_radishSalad": "[그림 16x16 e13b0dad]",
-"radishSaladS": "[그림 16x16 494ef3b5]",
-"fireBeans": "[그림 16x16 ecab39f6]",
-"rn_fireBeans": "[그림 16x16 e13b0dad]",
-"fireBeansS": "[그림 16x16 4bdc7bc]",
-"fireJelly": "[그림 16x16 38ba1461]",
-"rn_fireJelly": "[그림 16x16 e13b0dad]",
-"fireJellyS": "[그림 16x16 1496f25a]",
-"frostTea": "[그림 16x16 ca77e6d0]",
-"rn_frostTea": "[그림 16x16 e13b0dad]",
-"frostTeaS": "[그림 16x16 cfd434a0]",
-"firePie": "[그림 16x16 c76b3446]",
-"rn_firePie": "[그림 16x16 e13b0dad]",
-"firePieS": "[그림 16x16 970cc126]",
 "homeStone": "[그림 16x16 6347d443]",
-"festCake": "[그림 16x16 76823b89]",
-"rn_festCake": "[그림 16x16 e13b0dad]",
 "rotate": "[그림 16x16 18936c89]",
 "bThinWood": "[그림 16x16 b7f87c5b]",
 "bHalfWood": "[그림 16x16 b2cd0ac3]",

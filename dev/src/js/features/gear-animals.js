@@ -1,17 +1,5 @@
-Object.assign(ICON, {
-  fireSeed: packet('#ecd6a8', A => { A.e(8, 9, 2.2, 2.2, '#ff8a3d'); A.p(7, 8, '#ffd25c'); A.p(9, 6, C.leaf); }),
-  radishSeed: packet('#ecd6a8', A => { A.e(8, 9, 2.2, 2.2, '#e8f8ff'); A.p(7, 8, '#ffffff'); A.p(9, 6, '#9fd8f0'); }),
-  radish: A => { A.e(8, 10, 3.6, 4.4, '#e8f8ff'); A.e(7, 9, 2, 2.6, '#ffffff'); A.line(8, 14, 9, 15, '#c8e6f5'); A.p(10, 11, '#bfe6ff'); A.e(6, 4, 1.6, 2.6, '#7fc0e0'); A.e(10, 4, 1.6, 2.6, '#9fd8f0'); A.e(8, 3, 1.4, 2.4, '#bfe6ff'); },
-  fireBerryS: A => { ICON.fireBerry(A); starMark(A); }, radishS: A => { ICON.radish(A); starMark(A); },
-});
 // ---- clothes (body) and charms (accessory): two slots; clothes halve the cold or heat gauge, charms come from the deep bosses ----
 const WEAR_PAL = { obsCoat: ['#5a4a78', '#3a2f52', '#8a7ab0'], frostRobe: ['#8fd0f0', '#5a9ac8', '#d8f2ff'] };
-Object.assign(ICON, {
-  obsCoat: A => { A.poly([[4, 3], [12, 3], [14, 14], [2, 14]], '#3a2f52'); A.poly([[5, 3], [11, 3], [12.5, 13], [3.5, 13]], '#5a4a78'); A.r(7, 3, 2, 11, '#2a2238'); A.p(6, 6, '#8a7ab0'); A.p(6, 9, '#8a7ab0'); A.r(4, 2, 8, 2, '#8a7ab0'); A.p(10, 5, '#b99bff'); },
-  frostRobe: A => { A.poly([[5, 2], [11, 2], [14, 14], [2, 14]], '#5a9ac8'); A.poly([[6, 2], [10, 2], [12.5, 13], [3.5, 13]], '#8fd0f0'); A.r(7, 2, 2, 12, '#d8f2ff'); A.p(5, 8, '#ffffff'); A.p(11, 10, '#ffffff'); A.r(3, 12, 10, 1, '#d8f2ff'); },
-  turtleCharm: A => { A.line(8, 1, 8, 4, '#c9a46b'); A.e(8, 9, 5, 4.6, '#2f6e33'); A.e(8, 8.6, 4, 3.6, '#ff8a3d'); for (const [x, y] of [[6, 7], [10, 7], [8, 10]]) A.e(x, y, 1.3, 1.1, '#c4441a'); A.p(7, 6, '#ffd25c'); },
-  snowBrooch: A => { for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; A.line(8, 8, 8 + Math.cos(a) * 5.4, 8 + Math.sin(a) * 5.4, '#9fd8f0'); } A.e(8, 8, 2.2, 2.2, '#ffffff'); A.p(8, 8, '#7fc0e0'); },
-});
 const freshEquip = () => ({ body: null, head: null, neck: null, ring: null });
 const eqSlotOf = id => { const it = ITEMS[id]; return !it ? null : it.kind === 'wear' ? it.slot : null; };
 const wearing = id => !!(G && G.equip && EQ_SLOTS.some(([sl]) => G.equip[sl] && G.equip[sl].id === id));
@@ -39,10 +27,6 @@ function setFootprints(v) { FPV = v === 2 ? 2 : 1;
     if (FPV === 2) { d.sz = [w, h]; if (rv) d.rotV = 1; } else { delete d.sz; delete d.rotV; }
     const f = SPR.fp && SPR.fp[id]; if (f) { SPR.obj[id] = FPV === 2 ? f.big : f.small; if (FPV === 2 && f.bigV) SPR.obj[id + 'V'] = f.bigV; else delete SPR.obj[id + 'V']; delete ICONURL[id]; } } }
 setFootprints(2);
-OSPR.smelter = [16, 22, A => { A.r(2, 9, 12, 12, '#5a5468'); A.r(2, 9, 12, 2, '#8d97a8'); A.r(2, 9, 1, 12, '#787090'); A.r(13, 9, 1, 12, '#36334a'); for (const [x, y] of [[4, 13], [9, 12], [6, 17], [11, 16]]) A.r(x, y, 2, 1, '#46405a');
-  A.r(5, 3, 6, 7, '#46405a'); A.r(5, 3, 6, 1, '#8d97a8'); A.r(6, 1, 4, 2, '#36334a'); A.r(5, 14, 6, 5, '#2a1810'); A.e(8, 16.5, 2.4, 1.8, '#ff8a3d'); A.e(8, 17, 1.4, 1, '#ffe08a'); A.r(3, 20, 10, 1, '#24222e'); A.p(4, 11, '#ffd25c'); }];
-for (const id in RINGS) { const [, , , , , , band, gem] = RINGS[id];
-  ICON[id] = A => { A.e(8, 10, 5.2, 4.6, band); A.e(8, 10.4, 3.4, 2.8, 'rgba(0,0,0,0)'); A.g.globalCompositeOperation = 'destination-out'; A.e(8, 10.6, 3.2, 2.6, '#000'); A.g.globalCompositeOperation = 'source-over'; A.p(5, 8, '#ffffff'); A.poly([[8, 1.5], [11, 4.5], [8, 7.5], [5, 4.5]], gem); A.p(7, 3, '#ffffff'); }; }
 const lvOf = s => (s && s.lv) || 0;
 const upgOk = id => { const it = ITEMS[id]; return !!it && (it.kind === 'sword' || it.kind === 'pick' || it.kind === 'axe' || it.kind === 'wear'); };
 const upgTier = id => { const r = rarOf(id); return r >= 0 ? Math.min(4, r) : 3; }; // clothes and charms from the deep caves count as heroic
@@ -61,19 +45,7 @@ function upgText(id, lv) { const it = ITEMS[id];
   if (id === 'woolHat') return `추위 게이지 ${pct2(.85 - .03 * lv)} 속도`;
   return ''; }
 const petIs = k => !!(G && G.petOn === k);
-ICON.lasso = A => { A.e(10, 6, 4.4, 4, '#b8903f'); A.e(10, 6, 3, 2.6, 'rgba(0,0,0,0)'); A.g.globalCompositeOperation = 'destination-out'; A.e(10, 6, 3, 2.6, '#000'); A.g.globalCompositeOperation = 'source-over'; A.e(5, 12, 3.6, 2.6, '#d9b66a'); A.e(5, 12, 2.2, 1.4, '#b8903f'); A.line(7, 9, 8, 10, '#b8903f', 2); A.p(9, 3, '#f0d898'); A.p(13, 5, '#f0d898'); };
 const animalSpr = {};
-const ANIM_DRAW = {
-    dog: A => { A.r(3, 8, 9, 5, '#c98a5a'); A.r(3, 8, 9, 1, '#e0a878'); A.r(10, 4, 5, 5, '#c98a5a'); A.r(10, 4, 5, 1, '#e0a878'); A.r(9, 4, 2, 4, '#8a5a3e'); A.r(13, 7, 3, 2, '#fff1d6'); A.p(15, 7, INK); A.p(12, 5, INK); A.r(4, 13, 2, 2, '#8a5a3e'); A.r(9, 13, 2, 2, '#8a5a3e'); A.line(3, 9, 1, 6, '#c98a5a', 2); A.r(5, 10, 3, 2, '#fff1d6'); },
-    rabbit: A => { A.e(7, 10.5, 4.5, 3.4, '#f4f0f8'); A.e(11.5, 8, 3, 2.8, '#f4f0f8'); A.r(10, 1, 2, 6, '#f4f0f8'); A.r(12, 2, 2, 5, '#e8e2f0'); A.p(10.5, 3, '#ff9ab0'); A.p(10, 4, '#ff9ab0'); A.p(13, 7, INK); A.p(14, 9, '#ff8fa3'); A.e(2.6, 10, 1.6, 1.5, '#ffffff'); A.r(5, 13, 3, 1, '#d9d2e6'); A.r(9, 13, 3, 1, '#d9d2e6'); },
-    cat: A => { A.r(3, 8, 8, 5, '#f0a860'); A.r(3, 8, 8, 1, '#ffc88a'); A.e(12, 7, 3.4, 3.2, '#f0a860'); A.poly([[9, 5], [10, 1.5], [11.5, 4.5]], '#f0a860'); A.poly([[12.5, 4.5], [14, 1.5], [15, 5]], '#f0a860'); A.p(10, 3, '#ff9ab0'); A.p(14, 3, '#ff9ab0'); A.p(11, 7, INK); A.p(14, 7, INK); A.p(12, 8, '#ff8fa3');
-      for (const x of [4, 7]) A.r(x, 9, 1, 3, '#d9884a'); A.r(4, 13, 2, 2, '#d9884a'); A.r(9, 13, 2, 2, '#d9884a'); A.line(3, 10, 1, 4, '#f0a860', 2); A.p(1, 4, '#ffc88a'); },
-  cow: A => { A.r(2, 6, 10, 6, '#f4f0f0'); A.r(2, 6, 10, 1, '#ffffff'); A.r(4, 7, 3, 3, '#3a3340'); A.r(8, 9, 3, 2, '#3a3340'); A.r(11, 4, 4, 6, '#f4f0f0'); A.r(10, 4, 1, 2, '#3a3340'); A.r(12, 8, 4, 3, '#f7b8c8'); A.p(13, 9, '#d9607d'); A.p(15, 9, '#d9607d'); A.p(13, 6, INK); A.p(11, 2, '#e8d8b0'); A.p(14, 2, '#e8d8b0'); A.r(11, 3, 4, 1, '#e8d8b0');
-    for (const x of [3, 5, 8, 10]) A.r(x, 12, 1, 3, '#d9d2e6'); A.r(3, 14, 1, 1, '#3a3340'); A.r(10, 14, 1, 1, '#3a3340'); A.line(2, 7, 1, 11, '#d9d2e6'); A.p(1, 12, '#3a3340'); A.r(6, 11, 2, 1, '#f7b8c8'); },
-  chicken: A => { A.e(7, 10, 4.4, 3.4, '#ffffff'); A.e(6, 9, 2.6, 1.6, '#f0ecf4'); A.e(11, 6.5, 2.4, 2.4, '#ffffff'); A.r(10, 3, 3, 2, '#ff5a5a'); A.p(11, 2, '#ff5a5a'); A.r(13, 6, 2, 1, '#ffc23a'); A.p(11, 9, '#ff5a5a'); A.p(12, 6, INK); A.poly([[2, 7], [4, 9], [2.5, 11]], '#e8e2f0'); A.r(6, 13, 1, 2, '#ffa53a'); A.r(9, 13, 1, 2, '#ffa53a'); },
-  sheep: A => { for (const [x, y] of [[4, 8], [7, 7], [10, 8], [5, 11], [9, 11], [3, 10], [11, 10]]) A.e(x, y, 2.6, 2.4, '#fff4e0'); A.e(7, 9.5, 4.8, 3.2, '#fff4e0'); for (const [x, y] of [[5, 7], [9, 8], [6, 11]]) A.p(x, y, '#ffffff'); A.e(13, 7.5, 2.2, 2.4, '#5a4a52'); A.p(14, 7, '#fff4e0'); A.r(11, 6, 2, 1, '#5a4a52');
-    for (const x of [4, 6, 9, 11]) A.r(x, 12, 1, 3, '#5a4a52'); },
-};
 function animalImg(k) { if (animalSpr[k]) return animalSpr[k]; if (ARTC['animal/' + k]) return animalSpr[k] = artPaint('animal/' + k, MKDEF || INK); return animalSpr[k] = ANIM_DRAW[k] ? mk(16, 16, ANIM_DRAW[k]) : null; }
 const wildNear = r => { const p = G.p; let best = null, bd = r; for (const w of G.wild || []) { const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w; } } return best; };
 let wildT = 0;
@@ -114,16 +86,6 @@ function catchLoop() { if (!panel || panel.kind !== 'catch') return; const cv2 =
 function catchHTML() { const c = panel, W2 = ANIMALS[c.w.k]; return head(`${W2.n} 포획`, 'lasso') + `<div class="sh-body" style="text-align:center"><p class="hint">빙글빙글 도는 밧줄이 <b style="color:#7fe0b5">초록 구간</b>에 왔을 때 던져요. 세 번 성공하면 친구가 되고, 두 번 놓치면 도망가요.</p>
   <canvas id="catchCv" width="220" height="220" style="width:220px;height:220px;margin:4px auto;display:block"></canvas><p class="prose">성공 ${'●'.repeat(c.hits)}${'○'.repeat(3 - c.hits)} · 실패 ${'✕'.repeat(c.miss)}${'·'.repeat(2 - c.miss)}</p>
   <button type="button" class="btn" data-a="catchThrow" style="min-height:64px;font-size:22px;width:100%">던지기!</button></div>`; }
-for (const k of ['cow', 'chicken', 'sheep']) OSPR[k] = [16, 16, ANIM_DRAW[k]];
-OSPR.woolRug = [16, 16, A => { A.r(1, 2, 14, 12, '#e8dcc4'); A.r(2, 3, 12, 10, '#fff4e0'); for (let y = 4; y < 12; y += 3) for (let x = 3 + (y % 2); x < 13; x += 3) A.p(x, y, '#e8dcc4'); A.r(1, 13, 14, 1, '#c9b89a'); for (const x of [1, 4, 7, 10, 13]) A.p(x, 14, '#c9b89a'); }];
-Object.assign(ICON, {
-  milk: A => { A.r(5, 4, 6, 10, '#f4f0f8'); A.r(5, 4, 6, 1, '#ffffff'); A.r(6, 2, 4, 2, '#c8d0dc'); A.r(5, 8, 6, 3, '#7fb8ff'); A.r(6, 9, 4, 1, '#bfe0ff'); A.r(10, 4, 1, 10, '#d9d2e6'); },
-  egg: A => { A.e(8, 9, 4.4, 5.4, '#fff4e0'); A.e(7, 7.4, 1.6, 2.2, '#ffffff'); A.e(9.5, 11.5, 2, 1.4, '#efe2c8'); },
-  wool: A => { for (const [x, y] of [[5, 9], [8, 7], [11, 9], [7, 11], [10, 11]]) A.e(x, y, 3, 2.8, '#fff4e0'); A.p(6, 7, '#ffffff'); A.p(9, 6, '#ffffff'); A.e(8, 10, 2, 1.4, '#efe2c8'); },
-  friedEgg: A => { A.e(8, 9, 6.4, 4.6, '#ffffff'); A.e(6, 7.6, 2, 1.2, '#f4f0f8'); A.e(9, 9, 2.6, 2.2, '#ffc23a'); A.p(8, 8, '#fff1b0'); },
-  pancake: A => { A.e(8, 12, 6.6, 2.4, '#d9d2e6'); for (const y of [10, 8, 6]) { A.e(8, y, 5.4, 2, '#d9944a'); A.e(8, y - .6, 4.8, 1.3, '#f0b870'); } A.e(8, 4.6, 2.4, 1.2, '#fff4e0'); A.p(6, 4, '#ff7aa2'); A.p(10, 4, '#ff7aa2'); A.p(8, 3, '#ff7aa2'); },
-  woolHat: A => { A.e(8, 10, 6, 4.4, '#ff8fa3'); A.r(2, 10, 12, 3, '#d9607d'); for (const x of [3, 6, 9, 12]) A.p(x, 11, '#ffb3c6'); A.e(8, 4, 2.2, 2.2, '#fff4e0'); A.p(7, 3, '#ffffff'); A.p(6, 8, '#ffb3c6'); },
-});
 const hatMul = () => wearing('woolHat') ? .85 - .03 * eqLv('woolHat') : 1;
 function ranchReady(o) { return G.time >= (o.p || 0); }
 function ranchCollect(t, o) { const d = OBJ[o.t]; if (!ranchReady(o)) return; o.p = G.time + d.every; const l = addItem(d.ranch, 1); if (l) spawnDrop(d.ranch, l, t.x + .5, t.y + .5);

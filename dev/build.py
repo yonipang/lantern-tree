@@ -9,7 +9,7 @@
 # 모듈 파일 (구조 변경 계획 dev/PLAN.md, 0단계부터): import/export가 있는 .js 파일은 모듈로 다뤄요.
 #   import { a, b } from './x.js';   export function f() {…}   export const c = …;   export { a, b };
 # 묶을 때 import 줄은 지우고 export 낱말만 떼어 내 같은 자리에 넣어요 (이름은 그대로 — 테스트도 그대로 들여다볼 수 있어요).
-# 대신 묶기 전에 확인해요: 가져오는 파일이 shell.html에서 더 앞에 있는지, 그 이름을 정말 내보내는지,
+# 대신 묶기 전에 확인해요: 가져오는 파일이 shell.html에 있는지, 그 이름을 정말 내보내는지,
 # 맨 위 이름이 다른 파일과 겹치지 않는지. 모듈이 아직 옛 전역 이름(모듈이 아닌 파일의 이름)을 쓰면 개수를 알려 줘요.
 import os, re, sys
 
@@ -158,8 +158,8 @@ def check(js, report):
                 raise BuildError(f'{rel}: {target}은(는) shell.html에 없어요 (import {{ {n} }})')
             if target not in mods:
                 raise BuildError(f'{rel}: {target}은(는) 아직 모듈이 아니라 가져올 수 없어요 — 옛 파일의 이름은 import 없이 그대로 써요')
-            if order[target] > order[rel]:
-                raise BuildError(f'{rel}: {target}이(가) shell.html에서 더 뒤에 있어요 — 가져오는 파일이 먼저 와야 해요')
+            # 뒤 파일에서 가져오는 것도 돼요 (서로 부르는 함수처럼 나중에 쓰는 이름). 다만 맨 위에서 바로 쓰면
+            # 불러오자마자 오류가 나요 — 그건 게임을 켜 보면(비교 테스트) 바로 드러나요
             if n not in mods[target][1]:
                 raise BuildError(f'{rel}: {target}은(는) {n}을(를) 내보내지 않아요 (export 확인)')
         mine = set(top_names(s)) | {n for n, _ in imports}
