@@ -1,0 +1,3949 @@
+{
+"bosses_beaten": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26280자 e1b666ca6801]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+{
+"id": "daggerQueen",
+"c": 1
+},
+{
+"id": "hammerSlime",
+"c": 1
+},
+{
+"id": "bowGolem",
+"c": 1
+},
+{
+"id": "golemCore",
+"c": 1
+},
+{
+"id": "swordLava",
+"c": 1
+},
+{
+"id": "bowFrost",
+"c": 1
+},
+{
+"id": "turtleCharm",
+"c": 1
+},
+{
+"id": "snowBrooch",
+"c": 1
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"qv": 1,
+"beaten": {
+"slime": 1,
+"queen": 1,
+"golem": 1,
+"turtle": 1,
+"spirit": 1
+},
+"uniq": {
+"queen": 1,
+"slime": 1,
+"golem": 1,
+"turtle": 1,
+"spirit": 1
+},
+"deepSeed": {},
+"accGot": {
+"turtle": 1,
+"spirit": 1
+}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 3,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": true,
+"queen": true,
+"golem": true,
+"turtle": true,
+"spirit": true
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {
+"catfishSoup": 1,
+"shrimpDango": 1,
+"fireStew": 1,
+"fireSkewer": 1,
+"fireBeans": 1,
+"radishSoup": 1,
+"radishSalad": 1,
+"frostTea": 1
+},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"no_mapV": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26280자 e1b666ca6801]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"qv": 1,
+"beaten": {},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"old_bag": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26280자 e1b666ca6801]",
+"inv": [
+{
+"id": "berry",
+"c": 3
+},
+null,
+null,
+null,
+null,
+{
+"id": "torch",
+"c": 2
+},
+null,
+null,
+null,
+{
+"id": "wood",
+"c": 9
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "stone",
+"c": 4
+}
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 5,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"qv": 1,
+"beaten": {},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"old_fields": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20358자 d487be0727ec]",
+"floor": "[큰 값 7856자 9e3694864a2e]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26528자 588451eb5569]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"qv": 1,
+"nm58": 1,
+"beaten": {},
+"nm61": 1,
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cw0f63hn",
+"playT": 0,
+"playTEst": true,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 122,
+"y": 54,
+"dx": 123,
+"dy": 53,
+"cx": 124,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 126,
+"y": 130,
+"dx": 130,
+"dy": 131,
+"cx": 127,
+"cy": 130,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 68,
+"y": 150,
+"dx": 67,
+"dy": 151,
+"cx": 70,
+"cy": 150,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 96,
+"y": 128,
+"dx": 100,
+"dy": 129,
+"cx": 97,
+"cy": 128,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 122,
+"dx": 182,
+"dy": 123,
+"cx": 179,
+"cy": 122,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 166,
+"y": 50,
+"dx": 167,
+"dy": 53,
+"cx": 168,
+"cy": 50,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 168,
+"y": 156,
+"dx": 172,
+"dy": 157,
+"cx": 169,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 14,
+"y": 120,
+"dx": 18,
+"dy": 121,
+"cx": 15,
+"cy": 120,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"old_roof_drill_weapon": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26280자 e1b666ca6801]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+{
+"id": "wood",
+"c": 2
+},
+{
+"id": "stone",
+"c": 2
+},
+{
+"id": "quarry",
+"c": 2
+},
+{
+"id": "pitCu",
+"c": 1
+},
+{
+"id": "swordCopper",
+"c": 1
+},
+{
+"id": "bowIron",
+"c": 1,
+"dur": 77
+},
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"qv": 1,
+"roofBack": 7,
+"beaten": {},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"old_stations": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26334자 f70522ca44ec]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+{
+"id": "forge",
+"c": 2
+},
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+{
+"id": "smelterCu",
+"c": 1
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"qv": 1,
+"beaten": {},
+"nm61": 1,
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"v1": {
+"v": 3,
+"seed": 20261008,
+"wall": "[큰 값 20446자 db40c5bcc67b]",
+"floor": "[큰 값 9161자 4efe56b9e152]",
+"biome": "[큰 값 4211자 2784536e693c]",
+"explored": [
+0,
+18497,
+1,
+3,
+0,
+197,
+1,
+4,
+0,
+196,
+1,
+4,
+0,
+196,
+1,
+5,
+0,
+195,
+1,
+7,
+0,
+193,
+1,
+8,
+0,
+191,
+1,
+10,
+0,
+189,
+1,
+12,
+0,
+187,
+1,
+13,
+0,
+178,
+1,
+3,
+0,
+6,
+1,
+14,
+0,
+177,
+1,
+3,
+0,
+5,
+1,
+15,
+0,
+177,
+1,
+3,
+0,
+5,
+1,
+15,
+0,
+185,
+1,
+14,
+0,
+186,
+1,
+14,
+0,
+186,
+1,
+7,
+0,
+2,
+1,
+5,
+0,
+187,
+1,
+5,
+0,
+4,
+1,
+3,
+0,
+18494
+],
+"objs": "[큰 값 17561자 be8ca49a0d92]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1
+},
+{
+"id": "swordWood",
+"c": 1
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 0,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 95,
+"y": 83,
+"c": "R",
+"dead": []
+},
+{
+"x": 134,
+"y": 80,
+"c": "B",
+"dead": []
+},
+{
+"x": 113,
+"y": 82,
+"c": "Y",
+"dead": []
+},
+{
+"x": 71,
+"y": 110,
+"c": "W",
+"dead": []
+},
+{
+"x": 149,
+"y": 74,
+"c": "K",
+"dead": []
+},
+{
+"x": 119,
+"y": 109,
+"c": "R",
+"dead": []
+},
+{
+"x": 123,
+"y": 125,
+"c": "B",
+"dead": []
+},
+{
+"x": 108,
+"y": 56,
+"c": "Y",
+"dead": []
+},
+{
+"x": 82,
+"y": 102,
+"c": "W",
+"dead": []
+},
+{
+"x": 151,
+"y": 90,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"qv": 1,
+"nm58": 1,
+"beaten": {},
+"nm61": 1,
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 1.1332999999999998,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cw0f63hn",
+"playT": 1,
+"playTEst": true,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 108,
+"y": 114,
+"dx": 112,
+"dy": 115,
+"cx": 109,
+"cy": 114,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 86,
+"y": 124,
+"dx": 88,
+"dy": 127,
+"cx": 87,
+"cy": 124,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 80,
+"y": 150,
+"dx": 82,
+"dy": 149,
+"cx": 81,
+"cy": 152,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 82,
+"y": 60,
+"dx": 81,
+"dy": 61,
+"cx": 84,
+"cy": 60,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 144,
+"y": 34,
+"dx": 148,
+"dy": 35,
+"cx": 145,
+"cy": 34,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 172,
+"y": 66,
+"dx": 174,
+"dy": 65,
+"cx": 173,
+"cy": 68,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 134,
+"y": 176,
+"dx": 133,
+"dy": 177,
+"cx": 136,
+"cy": 176,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 26,
+"y": 78,
+"dx": 25,
+"dy": 79,
+"cx": 28,
+"cy": 78,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"v2": {
+"v": 3,
+"seed": 20261008,
+"wall": "[큰 값 20437자 44a997620791]",
+"floor": "[큰 값 9025자 72135abd4f31]",
+"biome": "[큰 값 4211자 2784536e693c]",
+"explored": [
+0,
+18497,
+1,
+3,
+0,
+197,
+1,
+4,
+0,
+196,
+1,
+4,
+0,
+196,
+1,
+5,
+0,
+195,
+1,
+7,
+0,
+193,
+1,
+8,
+0,
+191,
+1,
+10,
+0,
+189,
+1,
+12,
+0,
+187,
+1,
+13,
+0,
+178,
+1,
+3,
+0,
+6,
+1,
+14,
+0,
+177,
+1,
+3,
+0,
+5,
+1,
+15,
+0,
+177,
+1,
+3,
+0,
+5,
+1,
+15,
+0,
+185,
+1,
+14,
+0,
+186,
+1,
+14,
+0,
+186,
+1,
+7,
+0,
+2,
+1,
+5,
+0,
+187,
+1,
+5,
+0,
+4,
+1,
+3,
+0,
+18494
+],
+"objs": "[큰 값 16421자 24ef401710a1]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1
+},
+{
+"id": "swordWood",
+"c": 1
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 0,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 95,
+"y": 83,
+"c": "R",
+"dead": []
+},
+{
+"x": 134,
+"y": 80,
+"c": "B",
+"dead": []
+},
+{
+"x": 113,
+"y": 82,
+"c": "Y",
+"dead": []
+},
+{
+"x": 71,
+"y": 110,
+"c": "W",
+"dead": []
+},
+{
+"x": 149,
+"y": 74,
+"c": "K",
+"dead": []
+},
+{
+"x": 119,
+"y": 109,
+"c": "R",
+"dead": []
+},
+{
+"x": 123,
+"y": 125,
+"c": "B",
+"dead": []
+},
+{
+"x": 108,
+"y": 56,
+"c": "Y",
+"dead": []
+},
+{
+"x": 82,
+"y": 102,
+"c": "W",
+"dead": []
+},
+{
+"x": 151,
+"y": 90,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"qv": 1,
+"nm58": 1,
+"beaten": {},
+"nm61": 1,
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 1.0165740000000003,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cw0f63hn",
+"playT": 1,
+"playTEst": true,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 108,
+"y": 114,
+"dx": 112,
+"dy": 115,
+"cx": 109,
+"cy": 114,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 86,
+"y": 124,
+"dx": 88,
+"dy": 127,
+"cx": 87,
+"cy": 124,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 80,
+"y": 150,
+"dx": 82,
+"dy": 149,
+"cx": 81,
+"cy": 152,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 82,
+"y": 60,
+"dx": 81,
+"dy": 61,
+"cx": 84,
+"cy": 60,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 144,
+"y": 34,
+"dx": 148,
+"dy": 35,
+"cx": 145,
+"cy": 34,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 172,
+"y": 66,
+"dx": 174,
+"dy": 65,
+"cx": 173,
+"cy": 68,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 134,
+"y": 176,
+"dx": 133,
+"dy": 177,
+"cx": 136,
+"cy": 176,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 26,
+"y": 78,
+"dx": 25,
+"dy": 79,
+"cx": 28,
+"cy": 78,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"v3": {
+"v": 3,
+"seed": 20261008,
+"wall": "[큰 값 20437자 44a997620791]",
+"floor": "[큰 값 9025자 72135abd4f31]",
+"biome": "[큰 값 4211자 2784536e693c]",
+"explored": [
+0,
+18497,
+1,
+3,
+0,
+197,
+1,
+4,
+0,
+196,
+1,
+4,
+0,
+196,
+1,
+5,
+0,
+195,
+1,
+7,
+0,
+193,
+1,
+8,
+0,
+191,
+1,
+10,
+0,
+189,
+1,
+12,
+0,
+187,
+1,
+13,
+0,
+178,
+1,
+3,
+0,
+6,
+1,
+14,
+0,
+177,
+1,
+3,
+0,
+5,
+1,
+15,
+0,
+177,
+1,
+3,
+0,
+5,
+1,
+15,
+0,
+185,
+1,
+14,
+0,
+186,
+1,
+14,
+0,
+186,
+1,
+7,
+0,
+2,
+1,
+5,
+0,
+187,
+1,
+5,
+0,
+4,
+1,
+3,
+0,
+18494
+],
+"objs": "[큰 값 16421자 24ef401710a1]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1
+},
+null,
+null,
+{
+"id": "swordWood",
+"c": 1
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 0,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 95,
+"y": 83,
+"c": "R",
+"dead": []
+},
+{
+"x": 134,
+"y": 80,
+"c": "B",
+"dead": []
+},
+{
+"x": 113,
+"y": 82,
+"c": "Y",
+"dead": []
+},
+{
+"x": 71,
+"y": 110,
+"c": "W",
+"dead": []
+},
+{
+"x": 149,
+"y": 74,
+"c": "K",
+"dead": []
+},
+{
+"x": 119,
+"y": 109,
+"c": "R",
+"dead": []
+},
+{
+"x": 123,
+"y": 125,
+"c": "B",
+"dead": []
+},
+{
+"x": 108,
+"y": 56,
+"c": "Y",
+"dead": []
+},
+{
+"x": 82,
+"y": 102,
+"c": "W",
+"dead": []
+},
+{
+"x": 151,
+"y": 90,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"qv": 1,
+"nm58": 1,
+"beaten": {},
+"nm61": 1,
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0.9999760000000003,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cw0f63hn",
+"playT": 1,
+"playTEst": true,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 108,
+"y": 114,
+"dx": 112,
+"dy": 115,
+"cx": 109,
+"cy": 114,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 86,
+"y": 124,
+"dx": 88,
+"dy": 127,
+"cx": 87,
+"cy": 124,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 80,
+"y": 150,
+"dx": 82,
+"dy": 149,
+"cx": 81,
+"cy": 152,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 82,
+"y": 60,
+"dx": 81,
+"dy": 61,
+"cx": 84,
+"cy": 60,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 144,
+"y": 34,
+"dx": 148,
+"dy": 35,
+"cx": 145,
+"cy": 34,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 172,
+"y": 66,
+"dx": 174,
+"dy": 65,
+"cx": 173,
+"cy": 68,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 134,
+"y": 176,
+"dx": 133,
+"dy": 177,
+"cx": 136,
+"cy": 176,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 26,
+"y": 78,
+"dx": 25,
+"dy": 79,
+"cx": 28,
+"cy": 78,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"v62_layout1": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26280자 e1b666ca6801]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"qv": 1,
+"beaten": {},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
+"v62_layout2": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 95532자 e064f218ba74]",
+"floor": "[큰 값 37919자 17b073e72ec5]",
+"biome": "[큰 값 8868자 96a846808eb4]",
+"explored": [
+0,
+65535,
+0,
+65535,
+0,
+65535,
+0,
+65535,
+0,
+65535,
+0,
+32325
+],
+"objs": "[큰 값 77770자 5c13437823be]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"bagLv": 0,
+"sel": 3,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 300.5,
+"y": 301.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 313,
+"y": 324,
+"c": "R",
+"dead": []
+},
+{
+"x": 275,
+"y": 313,
+"c": "B",
+"dead": []
+},
+{
+"x": 292,
+"y": 328,
+"c": "Y",
+"dead": []
+},
+{
+"x": 297,
+"y": 272,
+"c": "W",
+"dead": []
+},
+{
+"x": 247,
+"y": 269,
+"c": "K",
+"dead": []
+},
+{
+"x": 261,
+"y": 282,
+"c": "R",
+"dead": []
+},
+{
+"x": 330,
+"y": 309,
+"c": "B",
+"dead": []
+},
+{
+"x": 290,
+"y": 314,
+"c": "Y",
+"dead": []
+},
+{
+"x": 319,
+"y": 293,
+"c": "W",
+"dead": []
+},
+{
+"x": 240,
+"y": 282,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"qv": 1,
+"beaten": {},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 264,
+"y": 198,
+"dx": 263,
+"dy": 199,
+"cx": 266,
+"cy": 198,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 346,
+"y": 240,
+"dx": 350,
+"dy": 241,
+"cx": 347,
+"cy": 240,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 314,
+"y": 370,
+"dx": 313,
+"dy": 371,
+"cx": 316,
+"cy": 370,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 280,
+"y": 374,
+"dx": 284,
+"dy": 375,
+"cx": 281,
+"cy": 374,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 420,
+"y": 138,
+"dx": 421,
+"dy": 141,
+"cx": 422,
+"cy": 138,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 222,
+"y": 158,
+"dx": 221,
+"dy": 159,
+"cx": 224,
+"cy": 158,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 490,
+"y": 206,
+"dx": 491,
+"dy": 209,
+"cx": 492,
+"cy": 206,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 194,
+"y": 346,
+"dx": 195,
+"dy": 349,
+"cx": 196,
+"cy": 346,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 2,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+}
+}

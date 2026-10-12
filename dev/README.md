@@ -43,14 +43,18 @@
 
 1. **원본 수정**: `dev/src/` (어느 파일인지는 `dev/src/README.md`의 파일 지도)
 2. **묶기·문법 확인**: `python3 dev/build.py && node dev/qa/syn.js dev/index.html` → `ok`가 나와야 해요 (테스트·배포 도구도 시작할 때 알아서 묶어요)
-3. **테스트**: `bash dev/qa/run_all.sh` (qa2~qa59 전체, 약 25분 — 백그라운드로 돌리고 결과 확인) 또는 `bash dev/qa/run_all.sh 23 24`처럼 일부만
+3. **비교 테스트 (먼저, 약 20초)**: `python3 dev/qa/snapshot.py`
+   - 게임 데이터(아이템·레시피 순서와 재료·몬스터·퀘스트·그림 지문)와 옛 세이브 불러오기 결과가 `dev/qa/snapshot/`의 기록과 같은지 봐요. 다르면 바뀐 곳(예: `data.RECIPES[0].req[0][1]: 6 → 7`)을 보여 줘요
+   - 코드 정리·옮기기만 했다면 반드시 통과해야 해요. 일부러 바꾼 거라면(밸런스 조정, 새 아이템 …) 바뀐 곳이 의도와 맞는지 확인한 뒤 `python3 dev/qa/snapshot.py --update`로 기록을 갱신하고 함께 커밋해요
+   - 세이브 입력(`dev/qa/snapshot/saves/`: v1~v3, v62, 옛 기능이 남은 세이브)은 고정이에요. 세이브 구조를 바꾸면 옛 세이브 사례를 여기에 추가해요(`snapshot.py`의 `LEGACY`)
+4. **테스트**: `bash dev/qa/run_all.sh` (qa2~qa59 전체, 약 25분 — 백그라운드로 돌리고 결과 확인) 또는 `bash dev/qa/run_all.sh 23 24`처럼 일부만
    - 새 기능을 넣으면 `dev/qa/qa29.py`처럼 테스트를 새로 추가해요 (`qa28.py`를 본보기로)
    - 스크린샷과 로그는 `dev/qa/out/`에 생겨요 (저장소에는 안 올라가요)
    - `qa15`(클라우드 충돌), `qa16`(클릭 방향)은 타이밍 때문에, `qa29`(지팡이·활 한 발 피해)는 치명타(10%)가 터지면, `qa18`의 꽃망울 구역·`qa24`의 용암 웅덩이·`qa45`의 쓰다듬기는 세계 모양·몬스터 등장에 따라, `qa47`은 가끔 한 번 떨어져요. 다시 돌려서 통과하면 정상이에요
    - `qa18`의 「PC 상자 → 가방 원하는 칸」 끌기는 v40부터 계속 실패하는 알려진 문제예요
    - 테스트는 한 번에 하나씩만 돌려요 (같은 테스트 페이지를 써서 동시에 돌리면 서로 덮어써요)
-4. **배포용 만들기**: `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
-5. **올리기**
+5. **배포용 만들기**: `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
+6. **올리기**
    - 깃허브: `git add -A && git commit && git push origin main` (작성자 Juyeon / yon2pang@gmail.com)
    - Claude 게임 페이지(아티팩트): `python3 dev/build.py`로 묶은 `dev/index.html`을 기존 주소 `https://claude.ai/artifact/RBFeEeaCo7T5a6LgZCb9ga`에 다시 게시 (다운로드 기능 유지)
    - 위키 페이지(아티팩트): 저장소 맨 위 `wiki.html`을 기존 주소 `https://claude.ai/artifact/6uDujDPR1jG1DLBBg4Nn6g`에 다시 게시
