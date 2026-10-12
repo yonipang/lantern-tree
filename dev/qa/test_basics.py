@@ -207,8 +207,9 @@ def test_walk_over():
             b=await p.chromium.launch()
             ctx,pg,errs=await new_ctx(b,390,844,True)
             CX,CY=100,100
+            # (v65: 새로 얻은 물건은 빈 단축칸부터 — 앞 단계에서 이끼풀을 베다 씨앗이 나오면 비워 둔 5번 칸(맨손)에 들어가요. 그래서 매번 비우고 시작)
             async def setup(obj, extra=''):
-                await ev(pg,f"()=>{{const G=__T.G;for(let y=108;y<114;y++)for(let x=106;x<114;x++){{const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}}G.objs.set(__T.idx(110,110),{obj});G.enemies.length=0;G.fish=null;{extra}}}")
+                await ev(pg,f"()=>{{const G=__T.G;for(let y=108;y<114;y++)for(let x=106;x<114;x++){{const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}}G.objs.set(__T.idx(110,110),{obj});G.enemies.length=0;G.fish=null;G.inv[5]=null;{extra}}}")
             for (name,obj,lbl,gone) in [('이끼풀',"{t:'grass'}",'베기',True),('빛버섯',"{t:'glow'}",'줍기',True),('다 자란 작물',"{t:'cropBerry',p:-999}",'수확',True)]:
                 for (px,py,fx,fy,desc) in [(110.5,110.5,0,1,'가운데'),(110.2,110.85,1,0,'아래쪽 가장자리'),(110.8,110.15,0,-1,'위쪽 가장자리')]:
                     await setup(obj, f"G.p.x={px};G.p.y={py};G.p.face={{x:{fx},y:{fy}}};G.sel=5")
