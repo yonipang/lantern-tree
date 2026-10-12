@@ -207,7 +207,9 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
     async def ctx_with(b, cloud=None, auth=False, local=None):
         ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
         await ctx.add_init_script(MOCK)
-        init="if(!sessionStorage.getItem('qa_init')){sessionStorage.setItem('qa_init','1');"
+        # 예전 세이브는 이 브라우저 창(context)에서 처음 열 때 한 번만 깔아요. 표시는 localStorage에 둬요
+        # (sessionStorage에 두면 바쁠 때 다시 열면서 표시가 사라져, 예전 세이브를 다시 깔아 버리는 일이 있었어요 — qa32가 가끔 실패하던 원인)
+        init="if(!localStorage.getItem('qa_seeded')){localStorage.setItem('qa_seeded','1');"
         if cloud is not None: init+="localStorage.setItem('mockcloud',JSON.stringify("+json.dumps(cloud)+"));"
         if auth: init+="localStorage.setItem('mockauth',JSON.stringify({uid:'"+UID+"',email:'juyeon@test.kr'}));"
         if local is not None: init+="localStorage.setItem('lantern-tree-save-v1',"+json.dumps(local)+");"
