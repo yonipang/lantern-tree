@@ -1,5 +1,7 @@
 // ================= 공통 도구 (v65 다음 구조 변경 1단계: core.js에서 나눔) =================
 export const $ = s => document.querySelector(s);
+// UI 크기 배율 (style.css의 --ui: 글자 기준 크기 16px에 곱하는 값). 화면 쪽 px 계산(조이스틱 등)에 곱해요
+export const uiScale = () => (parseFloat(getComputedStyle(document.documentElement).fontSize) / 16) || 1;
 export const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 export function hexRgb(h) { const n = parseInt(h.slice(1, 7), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
 

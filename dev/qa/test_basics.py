@@ -13,9 +13,10 @@ def test_core_play():
                 ctx,pg,errs=await new_ctx(b,w,h,touch)
                 r=await ev(pg,LAYOUT_JS)
                 await pg.screenshot(path=SP+f'qa_layout_{w}x{h}.png')
+                ui=await ev(pg,"()=>parseFloat(getComputedStyle(document.documentElement).fontSize)/16")  # UI 크기 배율 (style.css --ui)
                 rec('레이아웃',f'{name} {w}x{h} 겹침 없음', not r['over'], ','.join(r['over']) or '-')
                 rec('레이아웃',f'{name} 화면 밖 요소 없음', not r['out'] and not r['hscroll'], ','.join(r['out']) or '-')
-                rec('레이아웃',f'{name} 버튼 크기 ≥44px', r['minSlot']>=44 and (not touch or r['actW']>=88), f"slot {r['minSlot']}px, action {round(r['actW'])}px")
+                rec('레이아웃',f'{name} 버튼 크기 ≥44px', r['minSlot']>=44 and (not touch or r['actW']>=88*ui-.5), f"slot {r['minSlot']}px, action {round(r['actW'])}px")
                 if errs: rec('레이아웃',f'{name} 콘솔 오류', False, errs[0])
                 await ctx.close()
             # ---------- A2. layout with the pickup button visible ----------

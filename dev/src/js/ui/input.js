@@ -4,7 +4,7 @@ import { buildPlayer } from '../art/characters.js';
 import { ensureAudio } from '../engine/audio.js';
 import { toast } from '../engine/effects.js';
 import { rand } from '../engine/random.js';
-import { $ } from '../engine/util.js';
+import { $, uiScale } from '../engine/util.js';
 import { cv, DPR, LIFT, resize, TP, VIEW } from '../render/view.js';
 import { deserialize, G, newGame, paused, SAVE_KEY, started } from '../save/state.js';
 import { applyImport, clearImport, CLOUD, cloudAuth, cloudKeepLocal, cloudTakePending, cloudTitleClick, cloudTitleRefresh, cloudUpload, escHTML, loadBackups, loadLocal, pickSaveFile, pushBackup, readSaveFile, saveLocal } from '../save/storage.js';
@@ -51,7 +51,7 @@ export function subAction() { if (!started || paused || !G || G.p.dead > 0) retu
 export function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
 export function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
 export function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
-export function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 96 : 80) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 150)) + 'px'; }
+export function placeJoyIdle() { const j = $('#joy'), u = uiScale(); j.style.left = (innerHeight > 600 ? 96 : 80) * u + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 255 : 150) * u) + 'px'; }
 export function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
@@ -64,7 +64,7 @@ export function setupInput() {
   document.addEventListener('mouseleave', () => { mouse.over = false; });
   cv.addEventListener('pointermove', e => {
     if (e.pointerType === 'mouse') return;
-    if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 50; if (l > R) { joy.ox += dx * (1 - R / l) * 0.35; joy.oy += dy * (1 - R / l) * 0.35; dx = e.clientX - joy.ox; dy = e.clientY - joy.oy; const l2 = Math.hypot(dx, dy); if (l2 > R) { dx *= R / l2; dy *= R / l2; } const j = $('#joy'); j.style.left = joy.ox + 'px'; j.style.top = joy.oy + 'px'; }
+    if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 50 * uiScale(); if (l > R) { joy.ox += dx * (1 - R / l) * 0.35; joy.oy += dy * (1 - R / l) * 0.35; dx = e.clientX - joy.ox; dy = e.clientY - joy.oy; const l2 = Math.hypot(dx, dy); if (l2 > R) { dx *= R / l2; dy *= R / l2; } const j = $('#joy'); j.style.left = joy.ox + 'px'; j.style.top = joy.oy + 'px'; }
       const m = Math.hypot(dx, dy) / R; joy.vx = m > 0.15 ? dx / R : 0; joy.vy = m > 0.15 ? dy / R : 0; $('#joyKnob').style.transform = `translate(${dx}px,${dy}px)`; }
   });
   const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
@@ -103,7 +103,7 @@ export function setupInput() {
   window.addEventListener('blur', () => { keys.clear(); btnHeld = false; atkBtnHeld = false; mouse.down = false; joyEnd(); padEnd(); });
   const dp = $('#dpad');
   const padMove = e => { if (dpad.id !== e.pointerId) return; const r = dp.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-    if (Math.hypot(dx, dy) < 14) { dpad.vx = dpad.vy = 0; } else { const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4); dpad.vx = Math.abs(Math.cos(a)) < 1e-6 ? 0 : Math.cos(a); dpad.vy = Math.abs(Math.sin(a)) < 1e-6 ? 0 : Math.sin(a); }
+    if (Math.hypot(dx, dy) < 14 * uiScale()) { dpad.vx = dpad.vy = 0; } else { const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4); dpad.vx = Math.abs(Math.cos(a)) < 1e-6 ? 0 : Math.cos(a); dpad.vy = Math.abs(Math.sin(a)) < 1e-6 ? 0 : Math.sin(a); }
     dp.querySelector('.u').classList.toggle('on', dpad.vy < -.1); dp.querySelector('.d').classList.toggle('on', dpad.vy > .1); dp.querySelector('.l').classList.toggle('on', dpad.vx < -.1); dp.querySelector('.r').classList.toggle('on', dpad.vx > .1); };
   dp.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); document.body.classList.add('touch'); if (paused || dpad.id != null) return; dpad.id = e.pointerId; try { dp.setPointerCapture(e.pointerId); } catch (_) { } padMove(e); });
   dp.addEventListener('pointermove', padMove);
@@ -129,7 +129,7 @@ export function setupInput() {
     if (newAsk) pushBackup('새 모험 시작 전'); newAsk = false; $('#btnNew').textContent = '새 모험 시작'; $('#btnNew').classList.remove('warn'); showPicker(); });
   $('#btnBackups').addEventListener('click', () => { const el = $('#bkList'); if (!el.hidden) { el.hidden = true; return; } const b = loadBackups();
     const fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
-    el.innerHTML = `<div style="color:var(--muted);font-size:14px">되돌리면 지금 세이브도 백업해 둬요.</div>` + b.map((x, k) => `<div class="bk"><span>${fmt(x.at)}<br><small style="color:var(--muted)">${escHTML(x.reason || '')}</small></span><button class="btn ghost" type="button" data-bk="${k}">되돌리기</button></div>`).join(''); el.hidden = false; });
+    el.innerHTML = `<div style="color:var(--muted);font-size:.875rem">되돌리면 지금 세이브도 백업해 둬요.</div>` + b.map((x, k) => `<div class="bk"><span>${fmt(x.at)}<br><small style="color:var(--muted)">${escHTML(x.reason || '')}</small></span><button class="btn ghost" type="button" data-bk="${k}">되돌리기</button></div>`).join(''); el.hidden = false; });
   $('#btnCloud').addEventListener('click', () => { ensureAudio(); cloudTitleClick(); });
   $('#cloudTitle').addEventListener('click', e => { const b = e.target.closest('[data-ct]'); if (!b) return; const k = b.dataset.ct;
     if (k === 'emailT') { UIS.clTitleEmail = !UIS.clTitleEmail; cloudTitleRefresh(); return; }
