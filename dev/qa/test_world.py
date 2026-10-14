@@ -80,6 +80,54 @@ def test_ring_map_boss_room():
     return main
 
 
+def test_random_world():
+    import asyncio, sys
+    # v70 (BF-04): 새 세계는 지도 버전 3 — 지역은 그대로, 지역 안 지형이 시드마다 다르고 보스방 5곳(제단)이 지역 안에서 시드마다 다른 자리
+    # (말랑대왕·버섯 여왕 55~80칸, 깊은 세 보스 150~200칸, 서로 60칸 이상), 길·지역·자원 점검 20번까지, 안 되면 고정 자리. 옛 세계(1·2)는 그대로
+    H2=HOOK.replace("computeLight}","computeLight,newGame,makeWorld3,checkWorld,genWorld,setLayout,naturalWalls,BKEYS,GUIDE,dirKo,ANCH2,BF04,get L(){return {LAY,MAPV,ANCH,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=3)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # the world the player starts in
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.L,A=L.ANCH,deg=P=>Math.atan2(P.y-L.CY,P.x-L.CX)*180/Math.PI,dist=P=>Math.hypot(P.x-L.CX,P.y-L.CY);
+          const P={B:{x:L.BX,y:L.BY},A:L.SA,SB:L.SB,SL:L.SL,SI:L.SI},win=[];for(const k in P){const [a0,a1]=T.BF04.ang[k],[d0,d1]=k==='B'||k==='A'?T.BF04.near:T.BF04.far;win.push(deg(P[k])>=a0-1&&deg(P[k])<=a1+1&&dist(P[k])>=d0-1&&dist(P[k])<=d1+1)}
+          let gap=1e9;const ks=Object.keys(P);for(const a of ks)for(const c of ks)if(a<c)gap=Math.min(gap,Math.hypot(P[a].x-P[c].x,P[a].y-P[c].y));
+          const sh=[L.SA,L.SB,L.SL,L.SI].map(S=>(G.objs.get(T.idx(S.x,S.y))||{}).t);const home=T.BKEYS.map(k=>{const h=T.BOSSES[k].home();return Math.round(Math.min(...Object.values(P).map(S=>Math.hypot(h.x-S.x,h.y-S.y))))});
+          const bio=[G.biome[T.idx(L.BX,L.BY)],G.biome[T.idx(L.SA.x,L.SA.y)],G.biome[T.idx(L.SB.x,L.SB.y)],G.biome[T.idx(L.SL.x,L.SL.y)],G.biome[T.idx(L.SI.x,L.SI.y)]];
+          return [L.MAPV,L.LAY,L.W,!!A,win,Math.round(gap),sh,home,bio,G.rooms.length]}""")
+            rec('새 세계','지도 버전 3, 600×600 고리 지도, 보스방 자리를 저장', r[0:4]==[3,2,600,True], str(r[:4]))
+            rec('보스방','다섯 보스방이 정해 둔 각도·거리 안 (말랑대왕·여왕 55~80칸, 깊은 보스 150~200칸), 서로 60칸 이상', all(r[4]) and r[5]>=60, str(r[4:6]))
+            rec('보스방','제단 4곳이 보스방에 있고 보스 자리도 방 안, 각 방이 자기 지역 (이끼·버섯숲·수정·용암·얼음)', r[6]==['shrine']*4 and all(d<=5 for d in r[7]) and r[8]==[0,1,2,3,4], str(r[6:9]))
+            rec('숨은 방','숨은 방 8곳', r[9]==8, str(r[9]))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const w=T.genWorld(G.seed);let same=0;for(let i=0;i<w.wall.length;i++)if(w.wall[i]===T.naturalWalls()[i])same++;return [T.checkWorld(w),same===w.wall.length]}""")
+            rec('점검','시작한 세계는 길·지역·자원 점검 통과, 같은 시드·자리로 다시 만들면 같은 지형 (자연 바위 판정과 일치)', r==['',True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.L;const g=T.GUIDE.map(q=>typeof q.t==='function'?q.t():q.t).join('|')+T.GUIDE.map(q=>typeof q.h==='function'?q.h():q.h).join('|');
+          return [g.includes(T.dirKo(L.SA.x,L.SA.y)+' 버섯숲'),g.includes(T.dirKo(L.BX,L.BY)+' 이끼 동굴의 말랑대왕'),g.includes(T.dirKo(L.SB.x,L.SB.y)+' 수정동굴')]}""")
+            rec('퀘스트','퀘스트 방향 글이 이 세계의 보스방 쪽 (버섯숲·말랑대왕·수정동굴)', r==[True,True,True], str(r))
+            # save and load keep the places and the land
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.L;const a=JSON.stringify(L.ANCH),pos=JSON.stringify([L.BX,L.BY,L.SA,L.SB,L.SL,L.SI]);const s=JSON.parse(JSON.stringify(T.serialize()));
+          const wall=G.wall.slice();T.deserialize(s);const G2=T.G;let same=1;for(let i=0;i<wall.length;i++)if(wall[i]!==G2.wall[i]){same=0;break}
+          return [s.mapV,JSON.stringify(s.mapA)===a,JSON.stringify([L.BX,L.BY,L.SA,L.SB,L.SL,L.SI])===pos,T.L.MAPV,same,G2.rooms.length]}""")
+            rec('저장','저장에 mapV 3·보스방 자리(mapA), 불러와도 같은 자리·같은 지형', r==[3,True,True,3,1,8], str(r))
+            # 20 worlds: every one passes, the same seed gives the same world, places differ between seeds
+            r=await ev(pg,"""()=>{const T=__T,out=[];for(let k=0;k<20;k++){const seed=9001+k*7717;const m=T.makeWorld3(seed);const a=JSON.stringify(T.L.ANCH);const m2=T.makeWorld3(seed);
+            let same=JSON.stringify(T.L.ANCH)===a&&m2.tries===m.tries;for(let i=0;i<m.w.wall.length&&same;i+=97)if(m.w.wall[i]!==m2.w.wall[i])same=false;out.push([m.tries,T.checkWorld(m.w),same,a,seed,m.why])}
+          return [out.filter(o=>o[0]>=1&&o[0]<=20&&o[1]==='').length,out.filter(o=>o[2]).length,new Set(out.map(o=>o[3])).size,out.filter(o=>!(o[0]>=1&&o[1]==='')).map(o=>[o[4],o[0],o[1],o[5]])]}""")
+            rec('20개 세계','20개 시드 모두 점검 통과 (고정 자리로 돌아간 세계 없음), 같은 시드는 같은 세계, 자리는 세계마다 다름', r[:3]==[20,20,20], str(r))
+            # when no try passes: layout 2's fixed places (the world is still version 3)
+            r=await ev(pg,"""()=>{const T=__T;const m=T.makeWorld3(31337,()=>'x');const L=T.L;return [m.tries,m.why.length,L.MAPV,JSON.stringify(L.ANCH)===JSON.stringify({...T.ANCH2,t:-1}),L.BX,L.BY,L.SB.x,L.SB.y]}""")
+            rec('실패 대비','20번 모두 안 되면 예전 고정 자리 (말랑대왕 352,263 · 수정골렘 300,128)', r==[0,20,3,True,352,263,300,128], str(r))
+            # old worlds stay as they were
+            r=await ev(pg,"""()=>{const T=__T;T.setLayout(2);const w=T.genWorld(4242);
+          localStorage.setItem('lantern-tree-layout','2');T.newGame(4242);const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);const L=T.L;let same=1;for(let i=0;i<w.biome.length;i++)if(w.biome[i]!==T.G.biome[i]){same=0;break}
+          const r=[L.MAPV,L.ANCH,L.BX,L.BY,L.SA.x,L.SA.y,s2.mapV,'mapA' in s2,same];localStorage.setItem('lantern-tree-layout','3');return r}""")
+            rec('옛 세계','지도 버전 2 세계는 고정 자리·예전 지형 그대로, mapA 없음', r==[2,None,352,263,249,342,2,False,1], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_deep_caves():
     import asyncio, sys
     # 깊은 동굴 준비 (v37): 불꽃 열매·서리 무 재배, 장비 칸·옷·장신구, 대비 요리, 깊은 동굴 재료 요리, 더위·추위 게이지와 화면 가장자리
