@@ -1248,6 +1248,7 @@ function buildSprites() {
   setFootprints(FPV);
   buildTerrain();
   setMkDef(null);
+  SPR.obj.refundBox = SPR.obj.chest; // v69: the refund box looks like a chest (hand-drawn chest art included)
 }
 // sprites that can't take hand-drawn art yet (floors/walls come with the 32px floor template; characters are built from parts)
 // v54: floors and walls take drawn art too (floor/<type>/<n>, any number of variants; wtop/<type>/0-3; wfront/<type>)
@@ -1482,14 +1483,16 @@ const BMAT = { wood: { n: '나무', res: 'wood', f: '#b0743f', fd: '#7d4d2a', fl
   stone: { n: '돌', res: 'stone', f: '#8f8aa3', fd: '#625d78', fl: '#b9b4cc', c: '#d3cee3', cd: '#6d6884', door: '#6d6884' } };
 const BMAT_X = { metal: { n: '금속', f: '#8d97a8', fd: '#5a5468', fl: '#c8d0dc', c: '#dfe5ee', cd: '#6c7688', door: '#a9b6c8' } };
 const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft
-  thin: { n: '얇은 벽', h: 16, cnt: 2, cost: 2, d: '얇고 아늑한 실내 벽. 옆 칸과 자동으로 이어지고, 바위벽과 높이가 같아요.' },
-  half: { n: '반벽', h: 9, cnt: 2, cost: 1, d: '허리 높이의 낮은 벽. 옆 칸과 자동으로 이어져요.' },
-  win: { n: '창문벽', h: 16, cnt: 2, cost: 3, d: '작은 창이 난 얇은 벽. 나란히 놓으면 긴 창이 돼요.' },
-  frame: { n: '창문 틀', h: 16, cnt: 1, cost: 2, d: '벽 대신 세우는 큰 유리창.' },
   fence: { n: '울타리', h: 10, cnt: 2, cost: 1, d: '마당을 두르는 울타리. 울타리·기둥·문과 이어져요.' },
   door: { n: '문', h: 16, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요.' },
-  pillar: { n: '기둥', h: 22, cnt: 2, cost: 1, d: '가느다란 기둥. 벽과 울타리가 이어져요.' },
 };
+// v69 (BF-05): thin walls, half walls, pillars, window walls and window frames were removed. What they cost per piece, to hand back
+// (recipes as they were: wood thin 2→2, half/pillar 1→2, window wall 3→2, frame 2→1; stone after the terrain ×2: 4, 2, 6, 4).
+// Old saves turn every one of them — placed, in a bag, a chest or a lost bundle — back into these materials (save/migrations.js).
+const OLD_PIECES = { bThinWood: ['wood', 1], bThinStone: ['stone', 2], bHalfWood: ['wood', .5], bHalfStone: ['stone', 1], bPillarWood: ['wood', .5], bPillarStone: ['stone', 1],
+  bWinWood: ['wood', 1.5], bWinStone: ['stone', 3], bFrameWood: ['wood', 2], bFrameStone: ['stone', 4] };
+// the box the refund goes into when it does not all fit in the bag: opens like a chest, only for its owner, nothing can be put back in
+OBJ.refundBox = { n: '환급 상자', solid: 1, refund: 1 };
 const TW_H = { slide: 16 }; // pieces outside the wood/stone sets
 const BCAP = s => s[0].toUpperCase() + s.slice(1);
 const bId = (type, mat) => 'b' + BCAP(type) + BCAP(mat); // e.g. bThinWood
@@ -2254,6 +2257,7 @@ function deserialize(s) {
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null;
   G.look = cleanLook(s.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; emit('look');
   const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
+  refundPieces(); // v69 (BF-05): removed building pieces turn back into their materials — before unknown items are cleared out just below
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   G.tools = G.tools.filter(x => known(x) && isTool(x.id)).map(x => ({ ...x, c: 1 })); if (!(G.tsel >= 0 && G.tsel < G.tools.length)) G.tsel = 0;
@@ -2396,6 +2400,38 @@ function migrateTools65() { G.stats.nm65 = 1; const held = G.sel >= 0 ? G.inv[G.
   if (held && isTool(held.id)) { G.tsel = G.tools.findIndex(x => x.id === held.id && x.dur === held.dur); if (G.tsel < 0) G.tsel = 0; G.sel = -1; G.tHand = true; } // the tool that was in hand stays in hand
   if (!G.lastW && held && ITEMS[held.id] && ITEMS[held.id].kind === 'sword') G.lastW = held.id; // otherwise the strongest weapon is used
   setTimeout(() => { if (G && started) emit('toast', '조작이 바뀌었어요 · 칼 버튼은 공격, 손 버튼은 열기·캐기·놓기예요' + (moved ? ` · 도구 ${moved}개는 도구 주머니로 옮겼어요 (단축칸 맨 앞 도구 칸)` : ''), 'good', 'nm65'); }, 1600); }
+// v69 (BF-05): thin walls, half walls, pillars, window walls and window frames were removed. Every one still in the save — placed in the
+// world, in the bag or hotbar, in a chest, in a lost bundle — turns back into what it cost to make (OLD_PIECES, summed per material and
+// rounded up). Pieces inside a chest or a bundle come back into that same chest or bundle. The rest (placed ones and the bag's) go into
+// the bag first; what does not fit goes into a refund box (saved, opens like a chest, only for its owner) next to the lantern tree —
+// never onto the ground, which is not saved. Saves before multiplayer have one player, so the bag and the placed pieces are theirs (ME).
+// Nothing is left afterwards, so loading the same save again hands nothing back twice.
+function refundPieces() {
+  const add = (m, k, v) => { m[k] = (m[k] || 0) + v; }, own = {}, total = {}; let n = 0, placed = 0;
+  const take = (s, into) => { if (!s || !OLD_PIECES[s.id]) return false; const [m, v] = OLD_PIECES[s.id], c = s.c || 1; add(into, m, v * c); n += c; return true; };
+  for (const o of G.objs.values()) if (Array.isArray(o.items)) { const back = {}; let hit = false;
+    o.items = o.items.map(s => take(s, back) ? (hit = true, null) : s);
+    if (hit) for (const m in back) { const c = Math.ceil(back[m]); add(total, m, c); const left = moveInto(o.items, { id: m, c }); if (left) add(own, m, left); } }
+  G.inv = G.inv.map(s => take(s, own) ? null : s);
+  for (const [i, o] of [...G.objs]) if (OLD_PIECES[o.t]) { const [m, v] = OLD_PIECES[o.t]; add(own, m, v); G.objs.delete(i); placed++; n++; }
+  if (!n) return null;
+  let over = []; for (const m in own) { const c = Math.ceil(own[m]); add(total, m, c); const left = moveInto(G.inv, { id: m, c }); if (left) over.push({ id: m, c: left }); }
+  let boxes = 0;
+  while (over.length) { const at = freeTileNear(CX, CY + 7); if (at < 0) break; const items = Array(18).fill(null), next = [];
+    for (const s of over) { const left = moveInto(items, s); if (left) next.push({ id: s.id, c: left }); }
+    G.objs.set(at, { t: 'refundBox', items, own: ME }); boxes++; over = next; }
+  G.stats.bf05 = { n: (G.stats.bf05 ? G.stats.bf05.n : 0) + n, placed, back: total, boxes };
+  const mats = Object.entries(total).map(([m, c]) => `${ITEMS[m].n} ${c}`).join(' · ');
+  setTimeout(() => { try { emit('toast', `반벽·기둥·얇은 벽·창문이 없어져서, 가지고 있던 ${n}개를 재료(${mats})로 돌려받았어요${boxes ? ' · 가방에 다 안 들어간 건 등불나무 옆 환급 상자에 있어요' : ''}${placed ? ' · 세워 둔 벽이 없어진 곳은 다시 쌓아 주세요' : ''}`, 'good', 'bf05'); } catch (e) { } }, 1600);
+  return G.stats.bf05;
+}
+// the free tile nearest to (x, y) — no wall, no object, not water or lava, not on the lantern tree or the starter deck
+function freeTileNear(x0, y0) {
+  for (let r = 0; r <= 60; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; const x = x0 + dx, y = y0 + dy;
+    if (!inB(x, y) || Math.hypot(x - CX, y - CY) < 3.5 || (y >= CY + 1 && y <= CY + 5 && Math.abs(x - CX) <= 5)) continue;
+    const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || G.floor[i] === WATER || G.floor[i] === LAVA) continue; return i; }
+  return -1;
+}
 let saveFailWarned = false;
 function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
@@ -3100,7 +3136,7 @@ function moveSlot(A, B) {
 const slotArr = s => s.o == null ? G.inv : (G.objs.get(s.o) || {}).items; // 칸 위치 { o: 상자 칸(가방이면 null), i }
 // ---- 가방 ----
 defineCmd('invSwap', c => { const A = G.inv[c.a], B = G.inv[c.b]; if (A && B && A.id === B.id && B.c < stackMax(B.id)) { const k = Math.min(stackMax(B.id) - B.c, A.c); B.c += k; A.c -= k; if (!A.c) G.inv[c.a] = null; } else { G.inv[c.a] = B; G.inv[c.b] = A; } emit('sfx', 'place'); emit('inv'); });
-defineCmd('move', c => { const A = slotArr(c.a), B = slotArr(c.b); return !!A && !!B && moveSlot({ arr: A, i: c.a.i }, { arr: B, i: c.b.i }); }); // 끌어 옮기기
+defineCmd('move', c => { const A = slotArr(c.a), B = slotArr(c.b); { const oa = c.a.o != null && G.objs.get(c.a.o), ob = c.b.o != null && G.objs.get(c.b.o); if ((isRefund(oa) || isRefund(ob)) && c.a.o !== c.b.o && (isRefund(ob) || (isRefund(oa) && (!refundMine(oa) || (B && B[c.b.i] && A && A[c.a.i] && B[c.b.i].id !== A[c.a.i].id))))) return false; } /* v69: nothing goes into a refund box */ return !!A && !!B && moveSlot({ arr: A, i: c.a.i }, { arr: B, i: c.b.i }); }); // 끌어 옮기기
 defineCmd('sortBag', () => { sortBag(); emit('sfx', 'place'); emit('toast', '가방을 정리했어요', null, 'sortbag'); });
 defineCmd('wear', c => { if (G.inv[c.i]) wearItem(c.i); });
 defineCmd('unwear', c => { if (G.equip[c.sl]) unwear(c.sl); });
@@ -3109,10 +3145,14 @@ defineCmd('toHot', c => { const from = c.i; let to = G.inv.slice(0, HOT).findInd
 defineCmd('trash', c => { G.inv[c.i] = null; emit('inv'); });
 defineCmd('trashTool', c => clearSlot('t:' + c.i));
 // ---- 상자 ----
-defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items) return false; const r = stashBag(o, c.same);
+// v69 (BF-05): the refund box — only its owner opens it, and nothing can be put back into it (take-only)
+const refundMine = o => !!o && (o.own || ME) === ((curPl && curPl.id) || ME);
+const isRefund = o => !!o && o.t === 'refundBox';
+function clearRefundBox(i) { const o = G.objs.get(i); if (!isRefund(o) || !refundMine(o) || (o.items || []).some(x => x)) return false; delObj(i); emit('sfx', 'pick'); emit('puff', i % W + .5, ((i / W) | 0) + .6, '#e8d8c0', 5, 2); markLight(); emit('close'); return true; }
+defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items || isRefund(o)) return false; const r = stashBag(o, c.same);
   emit('toast', r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : c.same ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) emit('sfx', 'place'); emit('inv'); });
-defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
-defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
+defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o || (isRefund(o) && (!c.out || !refundMine(o)))) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
+defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (isRefund(o)) { clearRefundBox(c.o); return; } if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
 defineCmd('markAdd', () => { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); });
 defineCmd('markDel', c => { G.marks.splice(c.i, 1); });
 const isTool = id => !!ITEMS[id] && TOOL_KINDS.includes(ITEMS[id].kind);
@@ -3718,6 +3758,7 @@ function autoOptions(t, i, o) {
     if (d.tchest) { A(o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o }); return L; }
     if (d.ranch) { A(ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t });
       if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
+    if (d.refund) { if (!refundMine(o)) A({ k: 'info', lbl: d.n, icon: 'dots', msg: '다른 사람의 환급 상자예요', t }); else { A({ k: 'open', lbl: '열기', icon: 'hand', t, o }); if (!(o.items || []).some(x => x)) A({ k: 'refundClear', lbl: '치우기', icon: 'hand', t, o }); } return L; } // v69 (BF-05)
     if (d.station || d.chest) { if (d.station && o.job && jobDone(o.job) > 0) A({ k: 'jobTake', lbl: '꺼내기', icon: o.job.out, t, o }); // v59
       A({ k: 'open', lbl: '열기', icon: 'hand', t, o }); if (!(d.chest && o.items && o.items.some(x => x))) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
     if (d.crop) { const cs = Math.max(0, cropStage(o));
@@ -3765,7 +3806,8 @@ function perform(a) {
     case 'place': placeItem(a.t); G.actCd = 0.14; break;
     case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); G.actCd = 0.22; break;
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
-    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
+    case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
+    case 'open': if (a.o.t === 'chest' || OBJ[a.o.t].refund) emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); G.actCd = 0.3; break;
     case 'treasure': openTreasure(a.t, a.o); G.actCd = 0.4; break;
     case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); G.actCd = 0.35; break;
@@ -5596,7 +5638,7 @@ function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; 
 const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['tool', '도구', 'bagUp1'], ['stn', '제작대', 'bench'], ['furn', '가구', 'chair'], ['build', '건축', 'wallBrick'], ['conv', '편의', 'lever']];
 const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], ['cook', '요리']],
   furn: [['all', '전체'], ['seat', '의자'], ['table', '탁자'], ['bed', '침대'], ['store', '수납'], ['light', '조명'], ['deco', '장식']],
-  build: [['all', '전체'], ['wall', '벽'], ['floor', '바닥'], ['fence', '울타리'], ['pillar', '기둥'], ['door', '문'], ['win', '창문'], ['nature', '자연']],
+  build: [['all', '전체'], ['wall', '벽'], ['floor', '바닥'], ['fence', '울타리'], ['door', '문'], ['nature', '자연']], // v69: thin walls, pillars and windows were removed
   conv: [['all', '전체'], ['circuit', '회로'], ['farm', '농사'], ['mine', '채굴장']] };
 const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
 const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
@@ -5690,8 +5732,10 @@ function renderPanel() {
     }
   } else if (k === 'chest') {
     const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
-    const empty = o.items.every(x => !x);
-    h += head('보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:2.875rem;padding:0 .75rem;font-size:.9375rem">회수</button>` : '');
+    const empty = o.items.every(x => !x), rf = o.t === 'refundBox'; // v69 (BF-05): the refund box — take-only
+    h += head(rf ? '환급 상자' : '보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:2.875rem;padding:0 .75rem;font-size:.9375rem">${rf ? '치우기' : '회수'}</button>` : '');
+    if (rf) h += `<div class="sh-body"><p class="hint">없어진 건축 조각(반벽·기둥·얇은 벽·창문벽·창문 틀)을 재료로 돌려받은 것 중 가방에 다 들어가지 않은 것이에요. 누르면 가방으로 옮겨져요. 이 상자에는 물건을 넣을 수 없고, 다 꺼내면 치울 수 있어요.</p><div class="lbl">환급 상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'inv', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'inv', i + HOT)).join('')}</div></div>`;
+    else
     h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="menu-two stash"><button class="btn" data-a="stash" data-i="all" type="button">가방 → 모두 넣기</button><button class="btn ghost" data-a="stash" data-i="same" type="button">같은 것만 넣기</button></div><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'cin', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'cin', i + HOT)).join('')}</div></div>`;
   } else if (k === 'map') {
     h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:2.875rem;padding:0 .75rem;font-size:.9375rem">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span><label class="lgchk"><input type="checkbox" data-a="mapChest" ${mapChestOn() ? 'checked' : ''} aria-label="찾았지만 안 연 보물상자 표시"><i style="background:#ffd25c"></i>찾았지만 안 연 보물상자</label><span><i style="background:#ff9b4a"></i>잃어버린 꾸러미</span><span><i style="background:#b99bff"></i>귀환 표지</span></div>${regionMatHTML()}</div>`;
