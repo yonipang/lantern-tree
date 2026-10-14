@@ -479,7 +479,15 @@ function hdCtx(g) { if (g.__hd) return g; const orig = g.drawImage.bind(g); g.dr
 // ================= 소리 (SFX.hit() 같은 효과음) =================
 
 let AC = null, noiseBuf = null;
-function ensureAudio() { try { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 0.4; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = fxRand() * 2 - 1; } if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } }
+// v66 (BF-02): after the phone is locked or the app is switched, the sound device can come back 'suspended', 'interrupted' (iPhone)
+// or 'closed'. Anything but 'running' is resumed (a closed one is made again); a browser that only allows it from a tap is tried
+// again on the next tap (ui/input.js). The sound on/off setting is not touched.
+function ensureAudio() { try { if (AC && AC.state === 'closed') AC = null;
+  if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 0.4; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = fxRand() * 2 - 1; }
+  if (AC.state !== 'running') { const r = AC.resume(); if (r && r.catch) r.catch(() => { }); unlockTick(); } } catch (e) { AC = null; } }
+// a silent one-sample sound: iPhone Safari only really wakes the sound device once something plays during a tap
+function unlockTick() { try { const b = AC.createBuffer(1, 1, AC.sampleRate), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch (e) { } }
+const audioState = () => AC ? AC.state : 'none';
 function tone(f, dur, type = 'square', vol = 0.05, slide = 0) { if (!AC || !soundOn) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02); }
 function nz(dur, vol, freq) { if (!AC || !soundOn) return; const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02); }
 let lastPickSfx = 0;
@@ -1320,7 +1328,7 @@ const ITEMS = {
   lightSeed: { n: '빛씨앗', kind: 'key', d: '등불나무에 심으면 빛이 돌아와요.' },
   pickWood: { n: '나무 곡괭이', kind: 'pick', power: 1, tier: 0, stack: 1, d: '흙벽과 구리 광맥을 캘 수 있어요.' },
   pickCopper: { n: '구리 곡괭이', kind: 'pick', power: 2, tier: 1, stack: 1, d: '돌벽과 철 광맥도 캘 수 있어요.' },
-  pickIron: { n: '철 곡괭이', kind: 'pick', power: 3, tier: 2, stack: 1, d: '수정 동굴의 단단한 화강암 벽과 석영 광맥까지 캘 수 있어요.' },
+  pickIron: { n: '철 곡괭이', kind: 'pick', power: 3, tier: 2, stack: 1, d: '수정 동굴의 단단한 화강암 벽과 석영 광맥, 수정 결정까지 캘 수 있어요.' },
   swordWood: { n: '나무 검', kind: 'sword', dmg: 6, stack: 1, d: '처음부터 가진 검. 칼 버튼으로 휘둘러요.' },
   swordCopper: { n: '구리 검', kind: 'sword', dmg: 11, stack: 1, d: '가볍고 튼튼한 검.' },
   swordIron: { n: '철 검', kind: 'sword', dmg: 17, stack: 1, d: '묵직한 한 방.' },
@@ -1366,7 +1374,7 @@ const OBJ = {
   bush: { n: '베리덤불', solid: 1, bush: 1 },
   grass: { n: '이끼풀', hp: 1, nat: 'chop', drops: [['fiber', 1, 2, 1], ['berrySeed', 1, 1, 0.08]] },
   glow: { n: '빛버섯', hp: 1, nat: 'pick', light: [3, '#6ff2e6'], drops: [['glowcap', 1, 1, 1], ['spore', 1, 1, 0.2]] },
-  cluster: { n: '수정 결정', solid: 1, hp: 4, tier: 1, nat: 'mine', light: [3.5, '#b99bff'], drops: [], dropFn: (x, y) => spawnDrop(rand() < CRYGEM_P ? 'cryGem' : 'crystal', 1, x, y) },
+  cluster: { n: '수정 결정', solid: 1, hp: 4, tier: 2, nat: 'mine', light: [3.5, '#b99bff'], drops: [], dropFn: (x, y) => spawnDrop(rand() < CRYGEM_P ? 'cryGem' : 'crystal', 1, x, y) },
   cropBerry: { n: '베리', crop: 'berry', grow: 110, yield: [['berry', 2, 3, 1], ['berrySeed', 1, 2, 1]] },
   cropShroom: { n: '버섯', crop: 'shroom', grow: 130, yield: [['mushroom', 2, 3, 1], ['spore', 1, 1, 0.8], ['glowcap', 1, 1, 0.3]] },
   shrine: { n: '고대 제단', solid: 1, shrine: 1 },
@@ -1633,6 +1641,8 @@ BAG_UPS.forEach(([id, n, req, at], k) => { ITEMS[id] = { n, bagUp: k + 1, d: `�
 
 // ---- level, stats and skills ----
 const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
+// v66 (BF-03): natural healing (2.5 s per HP, hunger 55+, not in strong heat) waits this long after the last hit
+const REGEN_WAIT = 5;
 const STATN = { str: ['힘', '근접 무기 피해 +5% · 캐는 힘 +3%'], dex: ['민첩', '활 피해 +3% · 공격 속도 +1% (최대 20%) · 이동 속도 +1%'], vit: ['체력', '최대 체력 +8 · 배고파지는 속도 −2%'], int: ['지혜', '지팡이·스킬 피해 +3.5% · 최대 기력 +6'] };
 const SKILLS = {
   dash: { n: '구르기', act: 1, lv: 2, max: 3, mp: l => 12 - l * 2, cd: () => 1.4, d: l => `바라보는 쪽으로 데굴 굴러요. 구르는 동안은 다치지 않아요${l > 1 ? ` · 거리 +${(l - 1) * 15}%` : ''}` },
@@ -3006,6 +3016,8 @@ function pickHot(i) { // 단축칸 고르기 (같은 칸을 한 번 더 고르�
   G.sel = i; emit('inv');
 }
 defineCmd('hot', c => pickHot(c.i));
+// v66 (BF-06): a hotbar slot tapped inside the bag becomes the held slot — only picked, never eaten or worn (unlike tapping it twice on the hotbar)
+defineCmd('selHot', c => { const i = c.i; if (!Number.isInteger(i) || i < 0 || i >= HOT) return; const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; G.sel = i; emit('inv'); });
 defineCmd('sel', c => { const d = c.d, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); emit('inv'); }); // 마우스 휠
 // ================= 가방·상자·제작 명령 (구조 변경 7-2: ui/panel-actions.js·ui/panels.js에서 옮김) =================
 // 창 안 버튼(ui/panel-actions.js의 onSheetClick)과 칸 끌어 옮기기는 명령만 보내고(runCmd), 규칙은 여기서 처리해요.
@@ -3377,11 +3389,13 @@ function eat(slot) {
   emit('sfx', 'eat'); emit('ftext', p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) emit('ftext', p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
   if (bc === 'ok') applyBuff(it, s.id);
 }
+// v66 (BF-03): hit by something in the last REGEN_WAIT seconds (only the time of the last hit, not saved — after loading, healing goes on)
+const hitRecently = p => p.hitAt != null && G.time - p.hitAt < REGEN_WAIT;
 function hurtPlayer(dmg, sx, sy, kind) {
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
   const p = G.p; if (p.inv > 0 || p.dead > 0 || p.sleep) return; if (p.sit) standUp(); dmg = Math.max(1, Math.round(dmg * (1 - skl('tough') * 0.07) * (1 - bval('def'))));
-  p.hp -= dmg; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
+  p.hp -= dmg; p.hitAt = G.time; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
   emit('shake', 0.28); emit('sfx', 'hurt'); emit('ftext', p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');
   if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; emit('fade', 'faint'); }
 }
@@ -3414,7 +3428,7 @@ onFrame('player', dt => {
 onFrame('hunger', dt => {
   const p = G.p;
   G.hungerT += dt; if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
-  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
+  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2 && !hitRecently(p)) p.hp = Math.min(maxHp(), p.hp + 1); }
 });
 // ================= 생존: 더위·추위, 귀환석, 긴급 탈출·갇힘 풀기, 잃어버린 꾸러미 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
@@ -5853,6 +5867,7 @@ function onSheetClick(e) {
   if (a === 'close') { closePanel(); return; }
   if (a === 'inv') {
     UIS.trash = false;
+    if (Number.isInteger(i) && i < HOT) runCmd({ k: 'selHot', i }); // v66 (BF-06): the hotbar slot picked here stays in hand after the bag closes
     if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
     else if (UIS.invSel === i) UIS.invSel = null;
     else { runCmd({ k: 'invSwap', a: UIS.invSel, b: i }); UIS.invSel = null; }
@@ -6108,6 +6123,12 @@ function setupInput() {
   window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
   let hiddenAt = 0; document.addEventListener('visibilitychange', () => { if (document.hidden && started) { hiddenAt = Date.now(); saveLocal(true); cloudUpload(false); } else if (!document.hidden && hiddenAt) { if (G && started) advanceOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; } });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
+  // v66 (BF-02): wake the sound again when coming back (lock screen · app switch · back/forward cache), and on the next tap or key if the
+  // browser only allows it from one. Only an already made sound device is woken here — the very first one still waits for a tap.
+  const wake = () => { if (audioState() !== 'none' && audioState() !== 'running') ensureAudio(); };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+  window.addEventListener('pageshow', wake); window.addEventListener('focus', wake);
+  for (const ev of ['pointerup', 'touchend', 'keydown']) document.addEventListener(ev, wake, true);
 }
 // ================= 캐릭터 고르기·시작하기(beginPlay) =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
