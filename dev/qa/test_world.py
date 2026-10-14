@@ -285,6 +285,53 @@ def test_recall_faint():
     return main
 
 
+def test_lost_bag_owner():
+    import asyncio, sys
+    # v68 (BF-01·08): 잃어버린 꾸러미는 쓰러진 사람 것 — 주인만 되찾고 화살표를 봐요. 발밑·옆의 내 꾸러미는 작은 버튼에 「되찾기」
+    # (바라보는 꾸러미는 예전처럼 큰 버튼). 주인 정보가 없는 옛 꾸러미는 이 세계의 내 것
+    H2=HOOK.replace("computeLight}","computeLight,perform,pickLost,respawn,nearestBag,bagNear,myBag,bagsChanged}")
+    SET="""(o)=>{const T=__T,G=T.G,X=T.CX+10,Y=T.CY+6;for(let y=Y-4;y<=Y+4;y++)for(let x=X-4;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i)}
+  for(const [i,q] of [...G.objs])if(q.t==='lostBag')G.objs.delete(i);G.enemies.length=0;G.p.dead=0;G.p.sit=null;G.fish=null;G.actCd=0;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.sel=0;G.tHand=false;
+  G.p.x=X+.5;G.p.y=Y+.5;G.p.face={x:1,y:0};for(const b of o.bags||[]){const q={t:'lostBag',items:[{id:'wood',c:b.c||5}],at:1};if(b.own!==undefined)q.own=b.own;G.objs.set(T.idx(X+b.dx,Y+b.dy),q)}
+  for(const f of o.objs||[])G.objs.set(T.idx(X+f.dx,Y+f.dy),{t:f.t});T.bagsChanged();return [X,Y]}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,f"()=>{{window.SET={SET};window.wood=()=>__T.G.inv.filter(s=>s&&s.id==='wood').reduce((a,s)=>a+s.c,0)}}")
+            # BF-01: the bundle under my feet while a chair is in front
+            r=await ev(pg,"()=>{const T=__T,G=T.G;SET({bags:[{dx:0,dy:0,own:'me'}],objs:[{dx:1,dy:0,t:'chair'}]});const d=T.decide();const a=G.alts.find(x=>x.k==='lost');if(a)T.perform(a);return [d.k,!!a,wood()]}")
+            rec('꾸러미','발밑 꾸러미 + 앞에 의자: 큰 버튼은 의자, 작은 버튼에 「되찾기」 → 되찾음', r[0]!='lost' and r[1] is True and r[2]==5, str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;SET({bags:[{dx:0,dy:1,own:'me'}]});const d=T.decide();return [d.k,G.alts.map(a=>a.k)]}")
+            rec('꾸러미','바로 옆 꾸러미도 작은 버튼 후보', 'lost' in r[1], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;SET({bags:[{dx:1,dy:0,own:'me'}]});const d=T.decide();return [d.k,d.lbl]}")
+            rec('꾸러미','바라보는 꾸러미는 예전처럼 큰 버튼 「되찾기」', r==['lost','되찾기'], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;SET({bags:[{dx:1,dy:0}]});const d=T.decide();return [d.k,T.myBag(G.objs.get(T.idx(T.CX+11,T.CY+6)))]}")
+            rec('꾸러미','주인 정보가 없는 옛 꾸러미는 이 세계의 내 것', r==['lost',True], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:1,dy:0,own:'p2'},{dx:0,dy:0,own:'p2'}]});const d=T.decide();const o=G.objs.get(T.idx(X+1,Y));T.pickLost({x:X+1,y:Y},o);return [d.k,G.alts.some(a=>a.k==='lost'),!!G.objs.get(T.idx(X+1,Y)),wood()]}")
+            rec('꾸러미','다른 사람 꾸러미는 후보에 없고 되찾을 수도 없음', r[0]!='lost' and r[1] is False and r[2] is True and r[3]==0, str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:1,dy:0,own:'me',c:40}]});for(let k=0;k<G.inv.length;k++)G.inv[k]={id:'stone',c:999};G.inv[5]={id:'wood',c:990};const o=G.objs.get(T.idx(X+1,Y));T.pickLost({x:X+1,y:Y},o);const left=G.objs.get(T.idx(X+1,Y));return [wood(),left&&left.items[0].c]}")
+            rec('꾸러미','가방이 차면 들어간 만큼만, 나머지는 꾸러미에 남음 (사라지지 않음)', r==[999,31], str(r))
+            # dropping: the owner is written down, five bundles per player
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[1,2,3,4,5].map(k=>({dx:k-3,dy:-3,own:'p2'}))});G.guide=6;G.inv[12]={id:'wood',c:40};G.p.x=X+.5;G.p.y=Y+.5;G.p.dead=.01;T.respawn();const all=[...G.objs.values()].filter(o=>o.t==='lostBag');return [all.length,all.filter(o=>o.own==='me').length,all.filter(o=>o.own==='p2').length]}")
+            rec('꾸러미','쓰러지면 주인(나)이 적힌 꾸러미, 다른 사람 꾸러미 5개는 그대로 (5개는 사람마다)', r==[6,1,5], str(r))
+            # BF-08: the nearest of my own bundles
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:3,dy:0,own:'p2'},{dx:8,dy:0,own:'me'},{dx:-4,dy:-4,own:'me'}]});const a=T.nearestBag(G.p.x,G.p.y);G.p.x=X+7.5;const b=T.nearestBag(G.p.x,G.p.y);return [a&&[a.x-X,a.y-Y],b&&[b.x-X,b.y-Y]]}")
+            rec('꾸러미 안내','가장 가까운 「내」 꾸러미 (다른 사람 꾸러미는 빼고)', r[0]==[-3.5,-3.5], str(r))
+            rec('꾸러미 안내','움직이면 안내 대상이 바뀜', r[1]==[8.5,0.5], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:1,dy:0,own:'me'}]});T.pickLost({x:X+1,y:Y},G.objs.get(T.idx(X+1,Y)));return T.nearestBag(G.p.x,G.p.y)}")
+            rec('꾸러미 안내','되찾으면 안내가 사라짐', r is None, str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:6,dy:2,own:'me'},{dx:-6,dy:0,own:'p2'}]});const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const n=T.nearestBag(T.G.p.x,T.G.p.y);return [n&&[n.x-X,n.y-Y],[...T.G.objs.values()].filter(o=>o.t==='lostBag').map(o=>o.own).sort()]}")
+            rec('저장','꾸러미 주인·안내는 저장·불러오기 뒤에도 그대로', r==[[6.5,2.5],['me','p2']], str(r))
+            # quest arrow and bundle arrow both on screen (just make sure drawing works)
+            await ev(pg,"()=>{const T=__T,G=T.G;SET({bags:[{dx:-12,dy:-2,own:'me'}]});G.enemies.length=0}")
+            await pg.wait_for_timeout(700); await pg.screenshot(path=SP+'bag_arrow.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_two_players():
     import asyncio, sys
     # 구조 변경 8단계: 한 세계에 플레이어 여럿 (멀티플레이 준비) — 둘째 플레이어를 넣어 각자 따로인지, 세계가 가까운 플레이어를 보는지

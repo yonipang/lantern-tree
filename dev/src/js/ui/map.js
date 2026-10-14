@@ -6,6 +6,7 @@ import { INK } from '../engine/canvas.js';
 import { $, clamp } from '../engine/util.js';
 import { flushMap, mapCv } from '../render/map.js';
 import { G } from '../save/state.js';
+import { myBag } from '../sim/survival.js';
 import { UIS } from './panels.js';
 import { CX, CY, H, idx, SA, SB, W } from '../world/map.js';
 export let mapChestPref = null;
@@ -23,7 +24,7 @@ export function drawMap() {
   for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) dot(h.x, h.y, BOSSES[k].col, 6); }
   for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) dot(sp.x + .5, sp.y + .5, '#fff1b0', 5);
   if (mapChestOn()) for (const r of G.rooms || []) if (r.found && !r.open) dot(r.cx + .5, r.cy + .5, '#ffd25c', 5);
-  for (const [i, o] of G.objs) if (o.t === 'lostBag') dot(i % W + .5, ((i / W) | 0) + .5, '#ff9b4a', 5);
+  for (const [i, o] of G.objs) if (myBag(o)) dot(i % W + .5, ((i / W) | 0) + .5, '#ff9b4a', 5); // v68: only my own bundles
   if (G.backPt) dot(G.backPt.x, G.backPt.y, '#b99bff', 5);
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
 }

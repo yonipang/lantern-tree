@@ -24,7 +24,7 @@ import { wearItem, wtOf } from './gear.js';
 import { addItem, bestTool, countItem, holdTool, isBroken, moveInto, refillHot, removeItem, returnObj, selItem, wear } from './inventory.js';
 import { digPlant, isYoung, treeStep, WATER } from './nature.js';
 import { eat, maxHp, sleepIn, standUp } from './player.js';
-import { pickLost, recallDecide, startRecall } from './survival.js';
+import { bagNear, myBag, pickLost, recallDecide, startRecall } from './survival.js';
 import { onFrame } from './systems.js';
 import { insertSeeds } from './tree.js';
 import { openTreasure } from '../world/gen.js';
@@ -86,7 +86,7 @@ export function decide() {
   { const ox = Math.floor(p.x), oy = Math.floor(p.y), own = inB(ox, oy) ? G.objs.get(idx(ox, oy)) : null;
     const front = o || (i >= 0 && (G.wall[i] || G.floor[i] === WATER)) || (md === 'build' && placeable(t.x, t.y, it));
     if (own && isGround(own) && !front) { t = { x: ox, y: oy }; i = idx(ox, oy); o = own; } }
-  if (o && OBJ[o.t] && OBJ[o.t].lost) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold
+  if (o && OBJ[o.t] && OBJ[o.t].lost && myBag(o)) return { k: 'lost', lbl: '되찾기', icon: 'hand', t, o }; // your own dropped bundle comes back whatever you hold (v68: only your own)
   if (G.holdT >= .3 && (G.holdK === 'harvest' || G.holdK === 'harvest3')) { const sk = bestTool('sickle'); if (sk) { const list = ripeAround(t.x, t.y); if (list.length) return { k: 'harvest3', lbl: '모두 거두기', icon: 'sickle', t, list, tool: sk }; } }
   const main = [], alt = [], has = a => main.concat(alt).some(b => b.k === a.k && b.lbl === a.lbl), push = a => { if (a && !has(a)) (a.onlyAlt ? alt : main).push(a); };
   let h = null, hInfo = null;
@@ -97,6 +97,7 @@ export function decide() {
   const auto = autoOptions(t, i, o), quiet = (auto[0] && auto[0].k === 'info') || (md === 'build' && !h);
   for (const a of auto) if (a.k !== 'info') push(quiet && (a.k === 'pickup' || a.k === 'dig') ? { ...a, onlyAlt: 1 } : a);
   if (h && NOTGT.includes(h.k)) push(h); // food, clothes …: after a real action in front, or first when there is nothing to do
+  { const nb = bagNear(); if (nb) push({ k: 'lost', lbl: '되찾기', icon: 'hand', t: nb.t, o: nb.o, onlyAlt: 1 }); } // v68 (BF-01): my bundle under my feet or beside me → the small button
   // a held watering can, rod, fertiliser … explains itself first ("가득 참", "물 없음"); a pickaxe or axe with nothing to do lets the thing in front speak
   const info = (hInfo && !['pick', 'axe', 'sickle', 'shovel'].includes(md) && hInfo) || auto.find(a => a.k === 'info') || hInfo;
   if (!main.length) { G.alts = alt; return info || { k: 'none', lbl: '…', icon: 'dots' }; }
@@ -167,7 +168,7 @@ export function autoOptions(t, i, o) {
     if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
     if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
     if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
-    if (d.lost) { A({ k: 'lost', lbl: '되찾기', icon: 'hand', t, o }); return L; }
+    if (d.lost) { if (myBag(o)) A({ k: 'lost', lbl: '되찾기', icon: 'hand', t, o }); return L; } // v68: someone else's bundle: nothing to do
     if (d.tchest) { A(o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o }); return L; }
     if (d.ranch) { A(ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t });
       if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
