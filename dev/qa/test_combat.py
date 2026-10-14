@@ -381,3 +381,50 @@ def test_light_seeds():
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_natural_regen():
+    import asyncio, sys
+    # v66 (BF-03): 자연 회복(2.5초마다 +1, 배고픔 55 이상, 강한 더위 아님)은 마지막으로 맞은 뒤 5초 동안 멈춰요
+    H2=HOOK.replace("computeLight}","computeLight,hurtPlayer,maxHp,REGEN_WAIT}")
+    SAFE="G.enemies.length=0;G.shots.length=0;G.hz=[];G.p.inv=0;G.p.dead=0;G.p.sit=null;G.fish=null;G.p.hunger=100;G.env={k:null,v:0,lv:0,t:0};G.buffs=[];G.p.x=T.CX+.5;G.p.y=T.CY+3.2;"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>[__T.REGEN_WAIT]")
+            rec('자연 회복','기다리는 시간 5초', r==[5], str(r))
+            # healing goes on as before when nothing has hit you
+            await ev(pg,"()=>{const T=__T,G=T.G;"+SAFE+"G.p.hp=50;G.p.hitAt=null}")
+            await wait_game(pg,5.2)
+            r=await ev(pg,"()=>__T.G.p.hp")
+            rec('자연 회복','맞지 않았으면 예전처럼 회복 (5초에 +2 안팎)', 51<=r<=53, str(r))
+            # hit: nothing for 5 s, then it starts again
+            r=await ev(pg,"()=>{const T=__T,G=T.G;"+SAFE+"G.p.hp=60;T.hurtPlayer(10,G.p.x+1,G.p.y);G.p.kx=G.p.ky=0;window.__h0=G.p.hp;window.__t0=G.time;return [G.p.hp<60,G.p.hitAt===G.time]}")
+            rec('자연 회복','맞으면 그 시각을 기억', r==[True,True], str(r))
+            await wait_game(pg,4.6)
+            r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;return [G.p.hp,window.__h0]}")
+            rec('자연 회복','맞은 뒤 5초 안에는 회복 안 함', r[0]==r[1], str(r))
+            ok=await wait_until(pg,"()=>{__T.G.enemies.length=0;return __T.G.p.hp>window.__h0}",timeout=15000)
+            r=await ev(pg,"()=>Math.round((__T.G.time-window.__t0)*10)/10")
+            rec('자연 회복','5초가 지나면 다시 회복 (다음 2.5초 박자에, 5~7.5초 사이)', ok and 5<=r<=7.6, str(r))
+            # a second hit starts the wait again
+            r=await ev(pg,"()=>{const T=__T,G=T.G;"+SAFE+"T.hurtPlayer(10,G.p.x+1,G.p.y);G.p.kx=G.p.ky=0;window.__h1=G.p.hp;return G.p.hp}")
+            await wait_game(pg,4.6)
+            r=await ev(pg,"()=>[__T.G.p.hp,window.__h1]")
+            rec('자연 회복','다시 맞으면 5초를 처음부터', r[0]==r[1], str(r))
+            # the old conditions still apply
+            await ev(pg,"()=>{const T=__T,G=T.G;"+SAFE+"G.p.hitAt=null;G.p.hp=50;G.p.hunger=40}")
+            await wait_game(pg,5.2)
+            r=await ev(pg,"()=>{__T.G.p.hunger=100;return __T.G.p.hp}")
+            rec('자연 회복','배고픔 55 아래면 예전처럼 회복 안 함', r==50, str(r))
+            await ev(pg,"()=>{const T=__T,G=T.G;"+SAFE+"G.p.hitAt=null;G.p.hp=T.maxHp()}")
+            await wait_game(pg,5.2)
+            r=await ev(pg,"()=>[__T.G.p.hp,__T.maxHp()]")
+            rec('자연 회복','최대 체력을 넘지 않음', r[0]==r[1], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;T.hurtPlayer(5,G.p.x+1,G.p.y);const s=JSON.stringify(T.serialize());return s.includes('hitAt')}")
+            rec('저장','맞은 시각은 저장하지 않음 (불러오면 바로 회복)', r is False, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

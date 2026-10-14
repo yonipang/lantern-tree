@@ -2,7 +2,7 @@ import { buildPlayer } from '../art/characters.js';
 import { DUR } from '../data/circuits-regions.js';
 import { JOB_MAX, TIMED } from '../data/farming-cooking.js';
 import { EQ_N } from '../data/gear-animals.js';
-import { RECIPES } from '../data/items.js';
+import { HOT, RECIPES } from '../data/items.js';
 import { ensureAudio, SFX } from '../engine/audio.js';
 import { toast } from '../engine/effects.js';
 import { rand } from '../engine/random.js';
@@ -30,6 +30,7 @@ export function onSheetClick(e) {
   if (a === 'close') { closePanel(); return; }
   if (a === 'inv') {
     UIS.trash = false;
+    if (Number.isInteger(i) && i < HOT) runCmd({ k: 'selHot', i }); // v66 (BF-06): the hotbar slot picked here stays in hand after the bag closes
     if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
     else if (UIS.invSel === i) UIS.invSel = null;
     else { runCmd({ k: 'invSwap', a: UIS.invSel, b: i }); UIS.invSel = null; }
