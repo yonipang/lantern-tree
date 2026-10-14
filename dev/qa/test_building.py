@@ -497,3 +497,50 @@ def test_circuits():
             rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_place_pushes_player():
+    import asyncio, sys
+    # v67 (BF-09): 벽·문·가구를 놓을 칸에 내 몸이 걸치면, 선 칸 옆 4칸(뒤 → 좌우 → 앞) 중 빈 곳으로 비켜서고 놓아요. 빈 곳이 없으면 안 놓고 재료도 그대로.
+    # 다른 플레이어·몬스터는 밀지 않아요 (걸리면 놓지 않음)
+    H2=HOOK.replace("computeLight}","computeLight,perform,addPlayer,pushSpot,canPlace,placeTiles,boxHits}")
+    SET="""(o)=>{const T=__T,G=T.G,X=T.CX+8,Y=T.CY+8;for(let y=Y-4;y<=Y+4;y++)for(let x=X-4;x<=X+4;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.wire.delete(i)}
+  for(const k of Object.keys(G.players))if(k!=='me')delete G.players[k];G.enemies.length=0;G.drops.length=0;G.p.dead=0;G.p.sit=null;G.fish=null;G.p.kx=G.p.ky=0;G.p.dash=null;G.actCd=0;
+  for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:o.id,c:5};G.sel=0;G.tHand=false;G.p.x=X+.9;G.p.y=Y+.5;G.p.face={x:1,y:0};G.pRot=0;
+  for(const [dx,dy] of o.walls||[])G.wall[T.idx(X+dx,Y+dy)]=1;
+  if(o.mob){const e={k:'slimeG',x:X+o.mob[0]+.5,y:Y+o.mob[1]+.5,hp:999,vx:0,vy:0};G.enemies.push(e)}
+  if(o.p2)T.addPlayer('p2',X+o.p2[0],Y+o.p2[1]);
+  const d=T.decide();const before=G.inv[0]&&G.inv[0].c;if(d.k==='place')T.perform(d);
+  const t=G.objs.get(T.idx(X+1,Y)),w=G.wall[T.idx(X+1,Y)];const at=[+(G.p.x-X).toFixed(2),+(G.p.y-Y).toFixed(2)];
+  const res={k:d.k,placed:!!(t||w),left:G.inv[0]?G.inv[0].c:0,before,at,inside:T.boxHits(G.p.x,G.p.y,.28)};G.enemies.length=0;for(const k of Object.keys(G.players))if(k!=='me')delete G.players[k];return res}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,f"()=>{{window.SET={SET}}}")
+            r=await ev(pg,"()=>SET({id:'wallWood'})")
+            rec('밀어내기','몸이 걸친 칸에 벽: 뒤 칸으로 비켜서고 놓음 (재료 1개 씀)', r['k']=='place' and r['placed'] and r['left']==4 and r['at']==[-0.5,0.5] and not r['inside'], str(r))
+            r=await ev(pg,"()=>SET({id:'wallWood',walls:[[-1,0]]})")
+            rec('밀어내기','뒤가 막히면 옆 칸으로', r['placed'] and r['at'][0]==0.5 and abs(r['at'][1]-0.5)==1 and not r['inside'], str(r))
+            r=await ev(pg,"()=>SET({id:'wallWood',walls:[[-1,0],[0,1],[0,-1]]})")
+            rec('밀어내기','네 방향 모두 막히면 안 놓고 재료·자리 그대로', not r['placed'] and r['left']==5 and r['at']==[0.9,0.5], str(r))
+            r=await ev(pg,"()=>SET({id:'wallWood',mob:[-1,0]})")
+            rec('밀어내기','몬스터가 있는 칸으로는 안 감 (다음 후보로)', r['placed'] and r['at'][0]==0.5 and not r['inside'], str(r))
+            r=await ev(pg,"()=>SET({id:'wallWood',p2:[1.5,.5]})")
+            rec('밀어내기','다른 플레이어가 놓을 칸에 있으면 밀지 않고 안 놓음', not r['placed'] and r['left']==5 and r['at']==[0.9,0.5], str(r))
+            r=await ev(pg,"()=>SET({id:'wallWood',p2:[-.5,.5]})")
+            rec('밀어내기','다른 플레이어가 서 있는 칸으로는 안 감 (다음 후보로)', r['placed'] and r['at'][0]==0.5 and not r['inside'], str(r))
+            r=await ev(pg,"()=>SET({id:'bDoorWood'})")
+            rec('밀어내기','문도 같은 규칙', r['placed'] and r['at']==[-0.5,0.5], str(r))
+            r=await ev(pg,"()=>SET({id:'rug'})")
+            rec('밀어내기','지나갈 수 있는 것(러그)은 겹쳐도 그대로 놓고 안 움직임', r['placed'] and r['at']==[0.9,0.5], str(r))
+            # a piece of furniture that takes several tiles
+            r=await ev(pg,"""()=>{const T=__T;const id=Object.keys(T.ITEMS).find(k=>{const it=T.ITEMS[k];const d=it.kind==='place'&&T.OBJ[it.obj];return d&&d.sz&&d.solid&&!d.station&&(d.sz[0]*d.sz[1])>=2});const r=SET({id});const G=T.G;
+              const X=T.CX+8,Y=T.CY+8,tiles=T.placeTiles(X+1,Y,T.ITEMS[id]);const ptx=Math.floor(G.p.x),pty=Math.floor(G.p.y);return [id,r.k,r.left,tiles.some(([a,b])=>a===ptx&&b===pty),r.inside]}""")
+            rec('밀어내기','여러 칸 가구: 차지하는 칸 밖으로 비켜서고 놓음', r[1]=='place' and r[2]==4 and r[3] is False and r[4] is False, str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const s=JSON.stringify(T.serialize());T.deserialize(JSON.parse(s));return [+(G.p.x).toFixed(2)===+(T.G.p.x).toFixed(2)]}")
+            rec('저장','비켜선 자리는 저장·불러오기 뒤에도 그대로', r==[True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

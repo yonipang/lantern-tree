@@ -21,8 +21,26 @@ export function moveEnt(e, dx, dy, r) {
   }
   return bx || by;
 }
-export function occupied(tx, ty) {
-  const r = 0.28; for (const pl of playerList()) { const p = pl.p; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true; } // 플레이어 누구든 (8단계)
+// v67 (BF-10): moving (almost) straight into the corner of a wall or a piece of furniture slides the body round it, like Core Keeper.
+// Only when the way ahead is free a little to one side (at most SLIDE_MAX of a tile): a wall that blocks the whole front still stops you,
+// and the sideways step is never more than what was left of this frame's step (no extra speed, no jumping through gaps).
+export const SLIDE_MAX = 0.4, SLIDE_AXIS = 2.5; // how far round the corner · how straight the push must be (main axis ≥ 2.5 × the other)
+export function moveSlide(e, dx, dy, r) {
+  const x0 = e.x, y0 = e.y, hit = moveEnt(e, dx, dy, r); if (!hit) return false;
+  const ax = Math.abs(dx), ay = Math.abs(dy), left = Math.hypot(dx, dy) - Math.hypot(e.x - x0, e.y - y0);
+  if (left <= 1e-6) return true;
+  if (ax > ay * SLIDE_AXIS) slideSide(e, Math.sign(dx), 0, left, r);
+  else if (ay > ax * SLIDE_AXIS) slideSide(e, 0, Math.sign(dy), left, r);
+  return true;
+}
+export function slideSide(e, sx, sy, step, r) {
+  const ahead = .05; if (!boxHits(e.x + sx * ahead, e.y + sy * ahead, r)) return; // not blocked straight ahead any more
+  for (let d = .02; d <= SLIDE_MAX + 1e-9; d += .02) for (const s of [-1, 1]) { const ox = sy ? s * d : 0, oy = sx ? s * d : 0;
+    if (!boxHits(e.x + ox, e.y + oy, r) && !boxHits(e.x + ox + sx * ahead, e.y + oy + sy * ahead, r)) { const m = Math.min(step, d) * s; moveEnt(e, sy ? m : 0, sx ? m : 0, r); return; } }
+}
+// someone's body is in this tile (skip = the body to leave out: the player who is placing something, BF-09)
+export function occupied(tx, ty, skip) {
+  const r = 0.28; for (const pl of playerList()) { const p = pl.p; if (p === skip) continue; if (p.x + r > tx && p.x - r < tx + 1 && p.y + r * .7 > ty && p.y - r < ty + 1) return true; } // 플레이어 누구든 (8단계)
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
 export const isPlacedFloor = f => !!FLOOR_ITEM[f];
@@ -44,8 +62,8 @@ export function digGround(t) {
     emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === WATER ? '#8fd0ff' : f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : '#b9a8ff', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
-export function canPlace(tx, ty, it) {
-  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid); }
+export function canPlace(tx, ty, it, skip) {
+  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid, null, skip); }
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
   if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && (!o || !OBJ[o.t].tree);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
@@ -53,10 +71,26 @@ export function canPlace(tx, ty, it) {
   if (o) return false;
   if ((G.floor[i] === WATER || G.floor[i] === LAVA) && it.kind !== 'wall') return false;
   if (it.kind === 'seed') return it.crop === 'cropMoss' ? G.floor[i] === 21 : [1, 2, 3, 4, 21].includes(G.floor[i]);
-  if (it.kind === 'wall') return !occupied(tx, ty);
-  if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty)); }
+  if (it.kind === 'wall') return !occupied(tx, ty, skip);
+  if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty, skip)); }
   return false;
 }
+// v67 (BF-09): a wall, door or piece of furniture that would land on the placing player's own body: find one of the four tiles next to
+// the tile the player stands on (behind → left/right → ahead, as the player faces) where the body fits — free ground, not a placed tile,
+// no monster, no other player. Other players and monsters are never moved: if they are in the way, nothing is placed.
+export function placeTiles(tx, ty, it) { if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const fp = placeFp(OBJ[it.obj]), a = placeAnchor({ x: tx, y: ty }, fp), out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push([a.x + dx, a.y + dy]); return out; } return [[tx, ty]]; }
+export function pushSpot(tx, ty, it) {
+  const p = G.p; if (!p || canPlace(tx, ty, it) || !canPlace(tx, ty, it, p)) return null; // free already, or blocked by something else
+  const r = 0.28, ptx = Math.floor(p.x), pty = Math.floor(p.y), taken = placeTiles(tx, ty, it), f = p.face || { x: 0, y: 1 };
+  const fw = Math.abs(f.x) >= Math.abs(f.y) ? [Math.sign(f.x) || 1, 0] : [0, Math.sign(f.y) || 1];
+  for (const [dx, dy] of [[-fw[0], -fw[1]], [-fw[1], fw[0]], [fw[1], -fw[0]], fw]) { const nx = ptx + dx, ny = pty + dy, x = nx + .5, y = ny + .5;
+    if (!inB(nx, ny) || taken.some(([a, b]) => a === nx && b === ny) || boxHits(x, y, r)) continue;
+    if (playerList().some(pl => pl.p !== p && Math.abs(pl.p.x - x) < r * 2 && Math.abs(pl.p.y - y) < r * 1.7)) continue;
+    if (G.enemies.some(e => Math.floor(e.x) === nx && Math.floor(e.y) === ny)) continue;
+    return { x, y }; }
+  return null;
+}
+export const placeable = (tx, ty, it) => canPlace(tx, ty, it) || !!pushSpot(tx, ty, it);
 
 export const fpOf = o => { const d = OBJ[o.t]; if (!d || !d.sz) return [1, 1]; return o.rot && d.sz[0] !== d.sz[1] ? [d.sz[1], d.sz[0]] : d.sz; };
 export function fpTiles(i, o, fp) { fp = fp || fpOf(o); const x = i % W, y = (i / W) | 0, out = []; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) out.push(idx(x + dx, y + dy)); return out; }
@@ -64,5 +98,5 @@ export function setParts(i, o) { for (const j of fpTiles(i, o)) if (j !== i) G.o
 export function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i) continue; const q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); } }
 export function delObj(i) { const o = G.objs.get(i); if (o && OBJ[o.t] && OBJ[o.t].sz) clearParts(i, o); G.objs.delete(i); }
 export function anchorAt(i) { const o = G.objs.get(i); if (o && o.t === '_part') { const a = G.objs.get(o.a); return a && a.t !== '_part' ? o.a : -1; } return o ? i : -1; }
-export function fpFree(x, y, fp, solid, own) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA) return false; const q = G.objs.get(j); if (q && !(own != null && (j === own || (q.t === '_part' && q.a === own)))) return false; if (solid && occupied(tx, ty)) return false; } return true; }
+export function fpFree(x, y, fp, solid, own, skip) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA) return false; const q = G.objs.get(j); if (q && !(own != null && (j === own || (q.t === '_part' && q.a === own)))) return false; if (solid && occupied(tx, ty, skip)) return false; } return true; }
 export function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math.abs(f.x) >= Math.abs(f.y)) { if (f.x < 0) x -= fp[0] - 1; y -= Math.floor((fp[1] - 1) / 2); } else { if (f.y < 0) y -= fp[1] - 1; x -= Math.floor((fp[0] - 1) / 2); } return { x, y }; }

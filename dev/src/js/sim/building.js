@@ -12,7 +12,7 @@ import { emit } from './events.js';
 import { refillHot, returnObj, selItem } from './inventory.js';
 import { WATER } from './nature.js';
 import { idx, inB, LAVA } from '../world/map.js';
-import { delObj, fpOf, isPlacedFloor, placeAnchor, setParts } from '../world/tiles.js';
+import { canPlace, delObj, fpOf, isPlacedFloor, placeAnchor, pushSpot, setParts } from '../world/tiles.js';
 import { markLight } from './loop.js';
 export const bmat = m => BMAT[m] || BMAT_X[m];
 export const twH = type => (BTYPE[type] || {}).h || TW_H[type];
@@ -67,6 +67,8 @@ export function pickupObj(t, o) {
 export const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
 export function placeItem(t) {
   const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
+  // v67 (BF-09): the placing player steps to a free tile next to them first, in the same moment (nothing placed or used up if there is none)
+  if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }
   if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
   else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }

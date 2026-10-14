@@ -17,7 +17,7 @@ import { refillHot } from './inventory.js';
 import { dropLost, envLv, unstick } from './survival.js';
 import { onFrame } from './systems.js';
 import { CX, CY, idx } from '../world/map.js';
-import { boxHits, moveEnt } from '../world/tiles.js';
+import { boxHits, moveEnt, moveSlide } from '../world/tiles.js';
 export const spDue = lv => lv - 1 + (lv >= MAX_LV ? 1 : 0);
 export const freshRpg = () => ({ lv: 1, xp: 0, pts: 0, sp: 0, str: 0, dex: 0, vit: 0, int: 0, sk: {}, slot: [null, null] });
 export function cleanRpg(r) {
@@ -94,7 +94,7 @@ onFrame('player', dt => {
   if (p.sit) { if (mag > 0.3) standUp(); else { mag = 0; p.sitT = (p.sitT || 0) + dt; if (p.sitT > 0.8) { p.sitT = 0; if (p.hp < maxHp()) p.hp = Math.min(maxHp(), p.hp + 1); } } }
   p.moving = mag > 0.12;
   p.slowT = Math.max(0, (p.slowT || 0) - dt);
-  if (p.moving) { const sp = 4.4 * moveMul() * Math.max(0.5, mag) * (p.slowT > 0 ? .55 : 1); moveEnt(p, mx * sp * dt, my * sp * dt, 0.28); p.anim += dt; if (!ctl.aim) p.face = { x: mx / mag, y: my / mag }; }
+  if (p.moving) { const sp = 4.4 * moveMul() * Math.max(0.5, mag) * (p.slowT > 0 ? .55 : 1); moveSlide(p, mx * sp * dt, my * sp * dt, 0.28); /* v67 (BF-10): slides round corners */ p.anim += dt; if (!ctl.aim) p.face = { x: mx / mag, y: my / mag }; }
   if (ctl.aim && p.dead <= 0 && !p.sit && !p.sleep) faceTo(ctl.aim.x - p.x, ctl.aim.y - (p.y - .4));
   const f = p.face; if (Math.abs(f.x) > Math.abs(f.y) * 1.05) { p.dir = 'side'; p.flip = f.x < 0; } else p.dir = f.y < 0 ? 'up' : 'down';
   if (Math.abs(p.kx) + Math.abs(p.ky) > 0.05) { moveEnt(p, p.kx * dt, p.ky * dt, 0.28); const k = Math.pow(0.0015, dt); p.kx *= k; p.ky *= k; } else p.kx = p.ky = 0;
