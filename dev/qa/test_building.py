@@ -334,7 +334,7 @@ def test_building_cleanup():
             # ---- thin wall height & bottom line ----
             r=await ev(pg,"""()=>{const T=__T;const rows=(img)=>{const g=img.getContext('2d').getImageData(0,0,img.width,img.height).data;let top=-1,bot=-1;for(let y=0;y<img.height;y++){let any=false;for(let x=0;x<img.width;x++)if(g[(y*img.width+x)*4+3]>0)any=true;if(any){if(top<0)top=y;bot=y}}return [top-26,bot-26]};
           const wall=[-T.LIFT,15];return [rows(T.twSprite('bDoorWood',10,false)),rows(T.twSprite('slideDoor',10,0)),wall]}""")
-            rec('문 높이','문·자동 미닫이문 윗면·바닥선이 바위벽과 같음 (위 -5px, 바닥 칸 맨 아래)', r[0]==r[2] and r[1]==r[2], str(r))
+            rec('문 높이','문·자동 미닫이문 윗면·바닥선이 바위벽과 같음 (위 = 벽 높이, 바닥 칸 맨 아래)', r[0]==r[2] and r[1]==r[2], str(r))
             # ---- floor stops at the wall line ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x0,y0]=__room();const px=(cv,x,y)=>Array.from(cv.getContext('2d').getImageData(x,y,1,1).data).join(',');
           const at=(x,y,qx,qy)=>{const cv=T.getChunk(Math.floor(x/16),Math.floor(y/16));return px(cv,(x%16)*16+qx,(y%16)*16+qy)};

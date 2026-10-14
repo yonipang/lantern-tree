@@ -9,6 +9,7 @@ import { hash2, rng } from '../engine/random.js';
 import { bloomSpr, bossExtraSprites, emberSpr, giantSpr, natFloorTex, regFloorTex, snowSpr, spiritSpr, turtleSpr, wildSpr } from './content.js';
 import { rot90, twIcon, twSprite } from '../render/parts.js';
 import { FPV, GREW, GROW_SPR, setFootprints } from '../sim/building.js';
+import { buildTilemap } from './tilemap.js';
 export const OSPR = {
   bench: [16, 16, A => { A.r(3, 9, 2, 5, C.woodD); A.r(11, 9, 2, 5, C.woodD); A.r(1, 6, 14, 4, C.wood); A.r(1, 6, 14, 1, C.woodL); A.r(1, 9, 14, 1, C.woodD); A.r(3, 4, 4, 2, C.iron); A.r(3, 4, 4, 1, C.ironL); A.r(9, 3, 1, 3, C.woodD); A.r(8, 3, 3, 1, C.stoneD); A.r(12, 5, 2, 1, C.amber); }],
   furnace: [16, 20, A => { A.r(10, 1, 3, 5, C.stoneD); A.r(10, 1, 3, 1, C.stone); A.e(8, 9, 6.2, 5, C.stone); A.r(2, 9, 12, 9, C.stone); A.e(6, 6.5, 2.5, 1.4, C.stoneL); A.r(2, 17, 12, 1, C.stoneD); for (const [x, y] of [[3, 10], [9, 9], [6, 12], [12, 13], [3, 15]]) A.r(x, y, 2, 1, C.stoneD); A.e(8, 14.5, 3.2, 2.6, '#2a1d2f'); A.r(5, 15, 6, 2, '#2a1d2f'); A.e(8, 15.5, 2.2, 1.4, C.fire); A.p(8, 15, C.amber); A.p(7, 16, C.amber); }],
@@ -335,12 +336,13 @@ export function buildSprites() {
   SPR.fp = {}; for (const id in GREW) if (SPR.obj[id] && OSPR[id]) { const [w, h, f, o] = OSPR[id]; SPR.fp[id] = { big: SPR.obj[id], bigV: SPR.obj[id + 'V'] || (GREW[id][2] ? rot90(SPR.obj[id]) : null), small: ARTC['obj/' + id] ? SPR.obj[id] : mk(w, h, f, o) }; }
   setFootprints(FPV);
   buildTerrain();
+  buildTilemap(); // v71: drawn floor tilesets, tall walls, water per region
   setMkDef(null);
   SPR.obj.refundBox = SPR.obj.chest; // v69: the refund box looks like a chest (hand-drawn chest art included)
 }
 // sprites that can't take hand-drawn art yet (floors/walls come with the 32px floor template; characters are built from parts)
 // v54: floors and walls take drawn art too (floor/<type>/<n>, any number of variants; wtop/<type>/0-3; wfront/<type>)
-export const ART_SKIP = new Set(['crack', 'deco', 'water', 'fringe', 'fringeL', 'fringeX', 'fringeW', 'fringeWL', 'fringeWX', 'corner', 'cornerW', 'player', 'playerW', 'playerSit', 'sleepHead', 'treeSt', 'glow', 'animal']);
+export const ART_SKIP = new Set(['tiles', 'crack', 'deco', 'water', 'fringe', 'fringeL', 'fringeX', 'fringeW', 'fringeWL', 'fringeWX', 'corner', 'cornerW', 'player', 'playerW', 'playerSit', 'sleepHead', 'treeSt', 'glow', 'animal']);
 export const ART_SEL = new Set(['item', 'ui', 'obj', 'objOff', 'crop', 'giant', 'young', 'bush', 'wild', 'lantern', 'lanternS', 'lily', 'tmoss', 'tflower']);
 export const artSeg = path => { const s = path.split('/'); if (s[0] === 'mon' || s[0] === 'etc') s.shift(); return s; }; // mon/slimeG → SPR.slimeG
 export function artPaint(path, ol) { // the drawn picture plus the outline the old sprite had (ol), unless it was packed as .raw

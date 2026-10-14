@@ -30,8 +30,8 @@ export const aimMouse = () => mouse.used && mouse.over && (mouse.down || perform
 export function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
 export function mouseTile() {
   const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
-  // wall tops are drawn lifted, so the lower strip of a floor tile visually belongs to the wall below it
-  if (inB(tx, ty + 1) && G.wall[idx(tx, ty + 1)] && !(inB(tx, ty) && G.wall[idx(tx, ty)]) && m.y - ty > 1 - LIFT / 16) ty += 1;
+  // wall tops are drawn lifted (v71: by 20px, more than a tile), so a floor tile above a wall visually belongs to the nearest wall below that reaches it
+  if (!(inB(tx, ty) && G.wall[idx(tx, ty)])) { const lf = LIFT / 16; for (let r = ty + 1; r <= ty + Math.ceil(lf); r++) if (inB(tx, r) && G.wall[idx(tx, r)] && m.y >= r - lf) { ty = r; break; } }
   return { x: tx, y: ty, mx: m.x, my: m.y };
 }
 // 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)

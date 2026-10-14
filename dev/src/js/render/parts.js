@@ -50,8 +50,8 @@ export function twDraw(A, type, mat, mask, open, h, y0) {
     if (type === 'win') { const a = jw ? 0 : Math.max(x0, 4), b = je ? 16 : Math.min(x1, 12); if (b - a >= 4) { R(a, 12 - h + 3, b - a, 8, M.fl); R(a + (jw ? 0 : 1), 12 - h + 4, b - a - (jw ? 0 : 1) - (je ? 0 : 1), 6, '#a8dcf5'); P(a + 2, 12 - h + 5, '#eaf8ff'); P(a + 3, 12 - h + 6, '#eaf8ff'); if (!jw && !je) R((a + b) >> 1, 12 - h + 4, 1, 6, M.fl); } }
     if (type === 'frame') { R(x0 + (Wm ? 0 : 1), 12 - h + 1, x1 - x0 - (Wm ? 0 : 1) - (E ? 0 : 1), h - 3, '#a8dcf5'); R(x0, 12 - h + Math.round(h / 2), x1 - x0, 1, M.fl); if (x1 - x0 >= 8) R(8, 12 - h + 1, 1, h - 3, M.fl); P(x0 + 2, 12 - h + 3, '#eaf8ff'); P(x0 + 3, 12 - h + 4, '#eaf8ff'); }
     if (type === 'door') { const a = jw ? 0 : 3, b = je ? 16 : 13; R(a, 12 - h + 1, b - a, h - 2, M.door); R(a, 12 - h + 1, b - a, 1, M.fl);
-      if (!jw && !je) { R(8, 12 - h + 1, 1, h - 2, M.fd); P(10, 12 - h + 10, '#ffc861'); P(6, 12 - h + 10, '#ffc861'); }
-      else { if (je) R(15, 12 - h + 1, 1, h - 2, M.fd); P(je ? 13 : 2, 12 - h + 10, '#ffc861'); } }
+      if (!jw && !je) { R(8, 12 - h + 1, 1, h - 2, M.fd); P(10, 6, '#ffc861'); P(6, 6, '#ffc861'); } // knobs stay at hand height
+      else { if (je) R(15, 12 - h + 1, 1, h - 2, M.fd); P(je ? 13 : 2, 6, '#ffc861'); } }
   } else { cap(6, 10, 8, 12); if (!S) { face(6, 10); if (type === 'win' || type === 'frame') R(7, 12 - h + 3, 2, 8, '#a8dcf5'); if (type === 'door') R(7, 12 - h + 1, 2, h - 2, M.door); } }
   if (S) cap(6, 10, 12, 16);
   if (!ew) { if (type === 'win' || type === 'frame') R(7, (N ? 0 : 8) - h + 1, 2, (S ? 16 : 12) - (N ? 0 : 8) - 2, '#a8dcf5'); if (type === 'door') R(7, (N ? 0 : 8) - h, 2, (S ? 16 : 12) - (N ? 0 : 8), M.door); }
