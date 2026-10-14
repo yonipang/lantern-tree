@@ -196,6 +196,50 @@ def test_hotbar_bag():
     return main
 
 
+def test_bag_keeps_hotbar_pick():
+    import asyncio, sys
+    # v66 (BF-06): 가방에서 누른 단축칸이 가방을 닫은 뒤에도 손에 든 칸으로 남아요 (고르기만 — 먹거나 입지 않아요)
+    async def main():
+        mkpage(SRC,'qa.html',HOOK)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            for touch in (True, False):
+                name='모바일' if touch else 'PC'
+                ctx,pg,errs=await new_ctx(b,390 if touch else 1280,844 if touch else 800,touch)
+                await ev(pg,"()=>{const G=__T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'berry',c:4};G.inv[2]={id:'torch',c:3};G.inv[12]={id:'wood',c:5};G.sel=0;G.p.hunger=50}")
+                async def press(i):
+                    # the sheet slides in: wait until the slot stops moving, then press its middle (measured right before)
+                    sel=f'#sheet [data-a=inv][data-i="{i}"]'; last=None
+                    for _ in range(40):
+                        bx=await pg.locator(sel).bounding_box()
+                        if bx and last and abs(bx['x']-last['x'])<.5 and abs(bx['y']-last['y'])<.5: break
+                        last=bx; await pg.wait_for_timeout(60)
+                    if touch: await pg.tap(sel)
+                    else: await pg.click(sel)
+                    await pg.wait_for_timeout(150)
+                async def bag(): await ev(pg,"()=>__T.openPanel('inv')"); await pg.wait_for_timeout(350)
+                async def close(): await ev(pg,"()=>__T.closePanel()"); await pg.wait_for_timeout(200)
+                await bag(); await press(2); await close()
+                r=await ev(pg,"()=>[__T.G.sel,__T.G.inv[2]&&__T.G.inv[2].c]")
+                rec('단축칸',f'{name} 가방에서 누른 단축칸(3번)이 닫은 뒤에도 손에', r==[2,3], str(r))
+                await bag(); await press(0); await press(0); await close()
+                r=await ev(pg,"()=>[__T.G.sel,__T.G.inv[0]&&__T.G.inv[0].c,Math.round(__T.G.p.hunger)]")
+                rec('단축칸',f'{name} 음식 칸을 두 번 눌러도 먹지 않고 고르기만', r[0]==0 and r[1]==4 and r[2]<=50, str(r))
+                await bag(); await press(5); await close()
+                r=await ev(pg,"()=>[__T.G.sel,__T.G.inv[5]]")
+                rec('단축칸',f'{name} 빈 단축칸도 고를 수 있음', r==[5,None], str(r))
+                await bag(); await press(12); await press(12); await close()
+                r=await ev(pg,"()=>__T.G.sel")
+                rec('단축칸',f'{name} 가방 아래 칸(단축칸 아님)을 눌러도 손에 든 칸은 그대로', r==5, str(r))
+                await bag(); await press(2); await press(12); await close()
+                r=await ev(pg,"()=>{const G=__T.G;return [G.sel,G.inv[2]&&G.inv[2].id,G.inv[12]&&G.inv[12].id]}")
+                rec('단축칸',f'{name} 단축칸과 가방 칸 자리 바꾸기 뒤에도 그 단축칸', r==[2,'wood','torch'], str(r))
+                rec('기능',f'{name} 콘솔 오류 없음', not errs, errs[:3]); await ctx.close()
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_chests():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,canCraft,nearStations,maxCraft,linkedChests,availCount}")
@@ -499,6 +543,43 @@ def test_map_markers():
             await pg.click('#sheet [data-a=mapChest]'); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>[document.querySelector('#sheet [data-a=mapChest]').checked,"+px+"==="+str(n_on)+"]")
             rec('지도','다시 켜면 다시 표시', r==[True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_audio_resume():
+    import asyncio, sys
+    # v66 (BF-02): 화면 잠금·앱 전환 뒤 소리 장치가 「멈춤·끊김(아이폰)·닫힘」이면 다시 켜요. 브라우저가 막으면 다음 터치에서 다시. 소리 끔 설정은 그대로
+    H2=HOOK.replace("computeLight}","computeLight,SFX,setSound,get soundOn(){return soundOn},audioState}")
+    FAKE="""(()=>{window.__acs=[];window.__osc=0;window.__deny=false;const node=()=>({connect:x=>x||node(),start(){},stop(){},type:'',buffer:null,frequency:{value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}},gain:{value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}},Q:{value:0}});
+ class FakeAC{constructor(){this.state='running';this.sampleRate=8000;this.currentTime=0;this.destination={};this.resumes=0;window.__acs.push(this)}
+  resume(){this.resumes++;if(window.__deny)return Promise.reject(new Error('needs a tap'));this.state='running';return Promise.resolve()}
+  createBuffer(c,n){return{getChannelData:()=>new Float32Array(n)}} createBufferSource(){return node()} createOscillator(){window.__osc++;return node()} createGain(){return node()} createBiquadFilter(){return node()}}
+ window.AudioContext=FakeAC;window.webkitAudioContext=FakeAC;})()"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
+            await ctx.add_init_script(FAKE)
+            pg=await ctx.new_page(); errs=[]
+            pg.on('pageerror',lambda e: errs.append(str(e)))
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400)
+            await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>[window.__acs.length,__T.audioState()]")
+            rec('소리','첫 터치에서 소리 장치를 만들고 켬', r==[1,'running'], str(r))
+            r=await ev(pg,"async()=>{const a=window.__acs[0];a.state='interrupted';document.dispatchEvent(new Event('visibilitychange'));await new Promise(r=>setTimeout(r,50));return [a.state,a.resumes>0]}")
+            rec('소리','화면으로 돌아오면 「끊김」(아이폰 잠금) 상태를 다시 켬', r==['running',True], str(r))
+            r=await ev(pg,"async()=>{const a=window.__acs[0];a.state='suspended';a.resumes=0;window.__deny=true;window.dispatchEvent(new Event('pageshow'));await new Promise(r=>setTimeout(r,50));const s1=a.state,n1=a.resumes;window.__deny=false;document.dispatchEvent(new Event('pointerup'));await new Promise(r=>setTimeout(r,50));return [s1,n1,a.state,a.resumes]}")
+            rec('소리','브라우저가 막으면 멈춘 채로 두고, 다음 터치에서 다시 켬', r[0]=='suspended' and r[1]>=1 and r[2]=='running' and r[3]>r[1], str(r))
+            r=await ev(pg,"async()=>{window.__acs[0].state='closed';document.dispatchEvent(new Event('touchend'));await new Promise(r=>setTimeout(r,50));return [window.__acs.length,__T.audioState()]}")
+            rec('소리','닫혀 버린 소리 장치는 새로 만듦', r==[2,'running'], str(r))
+            r=await ev(pg,"async()=>{const T=__T;T.setSound(false);const a=window.__acs[window.__acs.length-1];a.state='interrupted';document.dispatchEvent(new Event('visibilitychange'));await new Promise(r=>setTimeout(r,50));const n=window.__osc;T.SFX.hit();const quiet=window.__osc===n;T.setSound(true);T.SFX.hit();return [a.state,T.soundOn,quiet,window.__osc>n]}")
+            rec('소리','소리 끔 설정은 그대로 (끈 동안은 소리 안 남, 켜면 다시 남)', r==['running',True,True,True], str(r))
+            r=await ev(pg,"async()=>{const n=window.__acs.length;document.dispatchEvent(new Event('visibilitychange'));document.dispatchEvent(new Event('pointerup'));await new Promise(r=>setTimeout(r,50));return window.__acs.length===n}")
+            rec('소리','잘 켜져 있으면 아무것도 하지 않음 (장치를 겹쳐 만들지 않음)', r is True, str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

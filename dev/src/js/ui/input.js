@@ -1,7 +1,7 @@
 // ================= input wiring =================
 // ---- 입력 상태 (구조 변경 7단계: game/actions.js에서 옮김) — 규칙은 이걸 직접 읽지 않고 매 프레임 조작 의도(ctl)를 받아요 ----
 import { buildPlayer } from '../art/characters.js';
-import { ensureAudio } from '../engine/audio.js';
+import { audioState, ensureAudio } from '../engine/audio.js';
 import { toast } from '../engine/effects.js';
 import { rand } from '../engine/random.js';
 import { $, uiScale } from '../engine/util.js';
@@ -151,4 +151,10 @@ export function setupInput() {
   window.addEventListener('resize', () => { resize(); if (!joy.active) placeJoyIdle(); });
   let hiddenAt = 0; document.addEventListener('visibilitychange', () => { if (document.hidden && started) { hiddenAt = Date.now(); saveLocal(true); cloudUpload(false); } else if (!document.hidden && hiddenAt) { if (G && started) advanceOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; } });
   window.addEventListener('pagehide', () => { if (started) saveLocal(true); });
+  // v66 (BF-02): wake the sound again when coming back (lock screen · app switch · back/forward cache), and on the next tap or key if the
+  // browser only allows it from one. Only an already made sound device is woken here — the very first one still waits for a tap.
+  const wake = () => { if (audioState() !== 'none' && audioState() !== 'running') ensureAudio(); };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+  window.addEventListener('pageshow', wake); window.addEventListener('focus', wake);
+  for (const ev of ['pointerup', 'touchend', 'keydown']) document.addEventListener(ev, wake, true);
 }

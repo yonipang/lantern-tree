@@ -7,6 +7,8 @@ import { G, beat } from '../save/state.js';
 
 // ---- level, stats and skills ----
 export const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
+// v66 (BF-03): natural healing (2.5 s per HP, hunger 55+, not in strong heat) waits this long after the last hit
+export const REGEN_WAIT = 5;
 export const STATN = { str: ['힘', '근접 무기 피해 +5% · 캐는 힘 +3%'], dex: ['민첩', '활 피해 +3% · 공격 속도 +1% (최대 20%) · 이동 속도 +1%'], vit: ['체력', '최대 체력 +8 · 배고파지는 속도 −2%'], int: ['지혜', '지팡이·스킬 피해 +3.5% · 최대 기력 +6'] };
 export const SKILLS = {
   dash: { n: '구르기', act: 1, lv: 2, max: 3, mp: l => 12 - l * 2, cd: () => 1.4, d: l => `바라보는 쪽으로 데굴 굴러요. 구르는 동안은 다치지 않아요${l > 1 ? ` · 거리 +${(l - 1) * 15}%` : ''}` },

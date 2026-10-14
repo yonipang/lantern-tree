@@ -69,6 +69,8 @@ export function pickHot(i) { // 단축칸 고르기 (같은 칸을 한 번 더 �
   G.sel = i; emit('inv');
 }
 defineCmd('hot', c => pickHot(c.i));
+// v66 (BF-06): a hotbar slot tapped inside the bag becomes the held slot — only picked, never eaten or worn (unlike tapping it twice on the hotbar)
+defineCmd('selHot', c => { const i = c.i; if (!Number.isInteger(i) || i < 0 || i >= HOT) return; const s = G.inv[i]; if (s && ITEMS[s.id] && ITEMS[s.id].kind === 'sword' && !isBroken(s)) G.lastW = s.id; G.sel = i; emit('inv'); });
 defineCmd('sel', c => { const d = c.d, n = HOT + (G.tools && G.tools.length ? 1 : 0), off = n > HOT ? 1 : 0; G.sel = ((G.sel + off + d + n) % n) - off; if (G.sel < 0) G.tsel = Math.min(G.tsel || 0, G.tools.length - 1); emit('inv'); }); // 마우스 휠
 // ================= 가방·상자·제작 명령 (구조 변경 7-2: ui/panel-actions.js·ui/panels.js에서 옮김) =================
 // 창 안 버튼(ui/panel-actions.js의 onSheetClick)과 칸 끌어 옮기기는 명령만 보내고(runCmd), 규칙은 여기서 처리해요.

@@ -4,7 +4,15 @@ import { soundOn } from '../save/state.js';
 import { eat } from '../sim/player.js';
 
 let AC = null, noiseBuf = null;
-export function ensureAudio() { try { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 0.4; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = fxRand() * 2 - 1; } if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } }
+// v66 (BF-02): after the phone is locked or the app is switched, the sound device can come back 'suspended', 'interrupted' (iPhone)
+// or 'closed'. Anything but 'running' is resumed (a closed one is made again); a browser that only allows it from a tap is tried
+// again on the next tap (ui/input.js). The sound on/off setting is not touched.
+export function ensureAudio() { try { if (AC && AC.state === 'closed') AC = null;
+  if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 0.4; noiseBuf = AC.createBuffer(1, n, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = fxRand() * 2 - 1; }
+  if (AC.state !== 'running') { const r = AC.resume(); if (r && r.catch) r.catch(() => { }); unlockTick(); } } catch (e) { AC = null; } }
+// a silent one-sample sound: iPhone Safari only really wakes the sound device once something plays during a tap
+function unlockTick() { try { const b = AC.createBuffer(1, 1, AC.sampleRate), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch (e) { } }
+export const audioState = () => AC ? AC.state : 'none';
 function tone(f, dur, type = 'square', vol = 0.05, slide = 0) { if (!AC || !soundOn) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02); }
 function nz(dur, vol, freq) { if (!AC || !soundOn) return; const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02); }
 let lastPickSfx = 0;

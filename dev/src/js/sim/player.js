@@ -4,7 +4,7 @@
 import { CHARS, cleanLook, lookDef } from '../art/characters.js';
 import { turtleCut } from '../data/gear-animals.js';
 import { ITEMS, OBJ } from '../data/items.js';
-import { BKEYS, MAX_LV, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
+import { BKEYS, MAX_LV, REGEN_WAIT, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
 import { fxRand } from '../engine/random.js';
 import { clamp, roJosa } from '../engine/util.js';
 import { alivePlayers, cam, freshBoss, G } from '../save/state.js';
@@ -66,11 +66,13 @@ export function eat(slot) {
   emit('sfx', 'eat'); emit('ftext', p.x, p.y - 1.3, `+${fd}`, '#ffb15c'); if (hl) emit('ftext', p.x + .4, p.y - 1.0, `♥${hl}`, '#ff8fa3');
   if (bc === 'ok') applyBuff(it, s.id);
 }
+// v66 (BF-03): hit by something in the last REGEN_WAIT seconds (only the time of the last hit, not saved — after loading, healing goes on)
+export const hitRecently = p => p.hitAt != null && G.time - p.hitAt < REGEN_WAIT;
 export function hurtPlayer(dmg, sx, sy, kind) {
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
   const p = G.p; if (p.inv > 0 || p.dead > 0 || p.sleep) return; if (p.sit) standUp(); dmg = Math.max(1, Math.round(dmg * (1 - skl('tough') * 0.07) * (1 - bval('def'))));
-  p.hp -= dmg; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
+  p.hp -= dmg; p.hitAt = G.time; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
   emit('shake', 0.28); emit('sfx', 'hurt'); emit('ftext', p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');
   if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; emit('fade', 'faint'); }
 }
@@ -103,5 +105,5 @@ onFrame('player', dt => {
 onFrame('hunger', dt => {
   const p = G.p;
   G.hungerT += dt; if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
-  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2) p.hp = Math.min(maxHp(), p.hp + 1); }
+  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2 && !hitRecently(p)) p.hp = Math.min(maxHp(), p.hp + 1); }
 });
