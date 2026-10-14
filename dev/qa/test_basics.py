@@ -243,6 +243,45 @@ def test_walk_over():
     return main
 
 
+def test_corner_slide():
+    import asyncio, sys
+    # v67 (BF-10): 거의 똑바로 걷다가 벽·가구 모서리에 살짝 걸리면 옆으로 미끄러져 빠져나가요 (0.4칸까지). 정면이 막힌 벽에서는 멈춰요.
+    # 옆으로 가는 양은 그 프레임에 남은 걸음보다 크지 않아요 (빨라지지 않음)
+    H2=HOOK.replace("computeLight}","computeLight,moveSlide,boxHits,SLIDE_MAX}")
+    ARENA="""(o)=>{const T=__T,G=T.G,X=T.CX+8,Y=T.CY+8;for(let y=Y-5;y<=Y+5;y++)for(let x=X-5;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i)}
+  for(const [dx,dy] of o.walls)G.wall[T.idx(X+dx,Y+dy)]=1;G.enemies.length=0;const p={x:X+.5,y:Y+o.y};const y0=p.y;let maxStep=0,inside=false;
+  for(let k=0;k<70;k++){const ox=p.x,oy=p.y;T.moveSlide(p,(o.dx||0)*.07,(o.dy||0)*.07,.28);maxStep=Math.max(maxStep,Math.hypot(p.x-ox,p.y-oy));if(T.boxHits(p.x,p.y,.28))inside=true}
+  return {x:+(p.x-X).toFixed(3),dy:+(p.y-y0).toFixed(3),maxStep:+maxStep.toFixed(4),inside}}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,1280,800,False)
+            await ev(pg,f"()=>{{window.ARENA={ARENA}}}")
+            r=await ev(pg,"()=>__T.SLIDE_MAX")
+            rec('미끄러지기','옆으로 최대 0.4칸', r==0.4, str(r))
+            # wall tile at (X+2, Y); the body (y from p.y−0.28 to p.y+0.2) overlaps its row by 0.08 when p.y = Y+1.2
+            r=await ev(pg,"()=>ARENA({walls:[[2,0]],y:1.2,dx:1})")
+            rec('미끄러지기','모서리에 0.08칸 걸리면 옆으로 비켜 지나감', r['x']>3.5 and 0<r['dy']<=0.4 and not r['inside'], str(r))
+            rec('미끄러지기','빨라지지 않음 (한 걸음 0.07칸 넘지 않음)', r['maxStep']<=0.0701, str(r))
+            r=await ev(pg,"()=>ARENA({walls:[[2,-2],[2,-1],[2,0],[2,1],[2,2]],y:.5,dx:1})")
+            rec('미끄러지기','정면이 다 막힌 벽에서는 멈춤 (뚫거나 돌아가지 않음)', r['x']<1.73 and r['dy']==0 and not r['inside'], str(r))
+            r=await ev(pg,"()=>ARENA({walls:[[2,0]],y:.8,dx:1})")
+            rec('미끄러지기','많이 걸리면(0.4칸 넘게) 미끄러지지 않고 멈춤', r['x']<1.73 and r['dy']==0, str(r))
+            r=await ev(pg,"()=>ARENA({walls:[[2,-1],[2,1]],y:.62,dx:1})")
+            rec('미끄러지기','한 칸 틈으로 조금 비켜 들어감 (틈 안으로 맞춰서 지나감)', r['x']>3.5 and abs(r['dy'])<=0.4 and not r['inside'], str(r))
+            r=await ev(pg,"()=>ARENA({walls:[[0,-2]],y:-.28,dy:-1})")
+            rec('미끄러지기','위아래로 걸을 때도 같음', not r['inside'], str(r))
+            # with real key presses (PC)
+            await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+8,Y=T.CY+8;for(let y=Y-5;y<=Y+5;y++)for(let x=X-5;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i)}G.wall[T.idx(X+2,Y)]=1;G.enemies.length=0;G.p.x=X+.5;G.p.y=Y+1.2;G.p.sit=null;G.p.dead=0;G.p.kx=G.p.ky=0}""")
+            await pg.keyboard.down('KeyD'); await wait_game(pg,1.2); await pg.keyboard.up('KeyD')
+            r=await ev(pg,"()=>{const T=__T,G=T.G;return [+(G.p.x-T.CX-8).toFixed(2),+(G.p.y-T.CY-8).toFixed(2),T.boxHits(G.p.x,G.p.y,.28)]}")
+            rec('미끄러지기','PC 키보드로 걸어도 모서리를 빠져나감', r[0]>3 and 1.2<=r[1]<=1.6 and r[2] is False, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_held_item_actions():
     import asyncio, sys
     # v65: 상호작용 버튼은 일부러 든 물건을 먼저 쓰고(쓸 곳이 있을 때), 아니면 앞에 있는 것에 맞춰 자동 추천. 공격은 따로(칼 버튼)
