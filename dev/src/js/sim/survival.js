@@ -6,7 +6,7 @@ import { guardMul } from '../data/gear-animals.js';
 import { ITEMS, OBJ } from '../data/items.js';
 import { fxRand } from '../engine/random.js';
 import { $, clamp } from '../engine/util.js';
-import { cam, G, started } from '../save/state.js';
+import { cam, curPl, G, ME, started } from '../save/state.js';
 import { D4 } from './circuits.js';
 import { defineCmd } from './commands.js';
 import { emit } from './events.js';
@@ -97,17 +97,32 @@ export function recallTick(dt) { const R = G.recall; if (!R) return; const p = G
   let to; if (R.mode === 'back' && G.backPt) { to = G.backPt; G.backPt = null; } else { G.backPt = { x: p.x, y: p.y }; to = homePt(); }
   emit('puff', p.x, p.y - .3, '#b99bff', 18, 3, .4); p.x = to.x; p.y = to.y; p.kx = p.ky = 0; if (R.mode !== 'back') unstick(p, '집이 사방으로 막혀 있어서 바로 바깥으로 왔어요'); /* bug fix (v49.1): going back to the marker (a spot you stood on) never moves you out of a closed cave pocket */ cam.x = p.x; cam.y = p.y; G.enemies.length = 0; G.fish = null; markLight(); emit('puff', p.x, p.y - .3, '#e3d4ff', 18, 3, .4); emit('sfx', 'win');
   emit('toast', R.mode === 'back' ? '표지가 있던 곳으로 돌아왔어요' : '집으로 돌아왔어요 · 집 근처에서 귀환석을 다시 쓰면 떠난 자리로 갈 수 있어요', 'good', 'recall'); }
+// v68 (BF-01·08): every bundle belongs to the player who fainted there (o.own = that player's id). Bundles from before v68 have no
+// owner: every save before multiplayer had one player, so they belong to this world's own player (ME). Only the owner takes it back,
+// sees it on the small/big button and gets the arrow. Each player keeps up to LOST_MAX bundles of their own.
+export const bagOwner = o => (o && o.own) || ME;
+export const meId = () => (curPl && curPl.id) || ME;
+export const myBag = o => !!o && o.t === 'lostBag' && bagOwner(o) === meId();
+let bagScan = { at: -1, n: -1, list: [] }; // all bundles in the world, looked up again at most twice a second (or when one is dropped or emptied)
+export const bagsChanged = () => { bagScan.at = -1; };
+function allBags() { if (G.time - bagScan.at < .5 && bagScan.at >= 0 && bagScan.g === G) return bagScan.list; const list = []; for (const [i, o] of G.objs) if (o.t === 'lostBag') list.push(i); bagScan = { at: G.time, g: G, list }; return list; }
+// my nearest bundle (straight-line distance), or null
+export function nearestBag(x, y) { let best = null; for (const i of allBags()) { const o = G.objs.get(i); if (!myBag(o)) continue; const bx = i % W + .5, by = ((i / W) | 0) + .5, d = Math.hypot(bx - x, by - y); if (!best || d < best.d) best = { i, o, x: bx, y: by, d }; } return best; }
+// my bundle under my feet or right next to me (the 3×3 tiles around me, nearest first)
+export function bagNear() { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let best = null;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = px + dx, y = py + dy; if (!inB(x, y)) continue; const i = idx(x, y), o = G.objs.get(i); if (!myBag(o)) continue; const d = Math.hypot(x + .5 - p.x, y + .5 - p.y); if (!best || d < best.d) best = { t: { x, y }, o, d }; }
+  return best; }
 export function dropLost() {
   if ((G.guide || 0) < 6) return 0; // no loss before the copper pickaxe
   const p = G.p, items = []; for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (!s || bagCat(s.id) !== 'mat' || ITEMS[s.id].kind === 'key') continue; const n = Math.floor(s.c * LOST_SHARE); if (n <= 0) continue; s.c -= n; if (!s.c) G.inv[i] = null; const e = items.find(x => x.id === s.id); if (e) e.c += n; else items.push({ id: s.id, c: n }); }
   if (!items.length) return 0; emit('inv');
-  const bags = []; for (const [i, o] of G.objs) if (o.t === 'lostBag') bags.push([i, o]);
+  const bags = []; for (const [i, o] of G.objs) if (myBag(o)) bags.push([i, o]); // v68: up to LOST_MAX of my own
   if (bags.length >= LOST_MAX) { bags.sort((a, b) => (a[1].at || 0) - (b[1].at || 0)); const [oi, oo] = bags[0]; for (const s of oo.items) if (s) { const e = items.find(x => x.id === s.id); if (e) e.c += s.c; else items.push({ ...s }); } G.objs.delete(oi); }
   const px = Math.floor(p.x), py = Math.floor(p.y); let at = -1;
   for (let r = 0; r <= 4 && at < 0; r++) for (let dy = -r; dy <= r && at < 0; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; const x = px + dx, y = py + dy; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || G.floor[i] === WATER || G.floor[i] === LAVA) continue; at = i; break; }
   if (at < 0) { for (const s of items) moveInto(G.inv, s); return 0; }
-  G.objs.set(at, { t: 'lostBag', items, at: Date.now() }); emit('tile', at % W, (at / W) | 0); return items.reduce((a, s) => a + s.c, 0);
+  G.objs.set(at, { t: 'lostBag', items, at: Date.now(), own: meId() }); bagsChanged(); emit('tile', at % W, (at / W) | 0); return items.reduce((a, s) => a + s.c, 0);
 }
-export function pickLost(t, o) { const i = idx(t.x, t.y); let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
+export function pickLost(t, o) { const i = idx(t.x, t.y); if (!myBag(o) || G.objs.get(i) !== o) return; let got = 0; for (let k = 0; k < o.items.length; k++) { const s = o.items[k]; if (!s) continue; const left = moveInto(G.inv, s); got += s.c - left; if (left) s.c = left; else o.items[k] = null; }
   o.items = o.items.filter(Boolean); emit('inv'); emit('sfx', 'pick');
-  if (!o.items.length) { G.objs.delete(i); markLight(); emit('puff', t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); emit('toast', `잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else emit('toast', `가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }
+  if (!o.items.length) { G.objs.delete(i); bagsChanged(); markLight(); emit('puff', t.x + .5, t.y + .6, '#ffe9a8', 10, 2, .3); emit('toast', `잃어버린 재료를 모두 되찾았어요 (${got}개)`, 'good', 'lost'); } else emit('toast', `가방이 가득 차서 일부만 되찾았어요 (${got}개)`, null, 'lost'); }

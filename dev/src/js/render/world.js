@@ -18,6 +18,7 @@ import { G, guardOf, paused } from '../save/state.js';
 import { canDev } from '../save/storage.js';
 import { cropStage, curAlt, inReach } from '../sim/actions.js';
 import { ranchReady } from '../sim/animals.js';
+import { nearestBag } from '../sim/survival.js';
 import { canRotObj, isGround, placeFp, pRot, rotN, rotOf, slideStep, twMask } from '../sim/building.js';
 import { CIRC, wirePowered } from '../sim/circuits.js';
 import { jobDone, nowS } from '../sim/crafting.js';
@@ -209,6 +210,12 @@ export function renderOverlay(cw, ch) {
   drawHitBars(T, camX, camY); // v65: hit to recover
   // goal arrow (drawn at screen resolution so it stays crisp)
   if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
+  // v68 (BF-08): my nearest lost bundle — an orange arrow with the bundle's own picture, a little further out than the quest arrow so both
+  // can show at once; hidden when the bundle is close (it is in sight then)
+  { const bag = p.dead <= 0 ? nearestBag(p.x, p.y) : null; if (bag && bag.d > 3) { const a = Math.atan2(bag.y - p.y, bag.x - p.x), r = 2.05, cx = (p.x + Math.cos(a) * r) * T - camX, cy = (p.y - .4 + Math.sin(a) * r) * T - camY;
+    ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 230)) * Z; ctx.fillStyle = '#ff9b4a'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(7 * Z + bob, 0); ctx.lineTo(3 * Z + bob, -3 * Z); ctx.lineTo(3 * Z + bob, 3 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    const im = SPR.obj.lostBag; if (im) { const sz = 9 * Z; ctx.imageSmoothingEnabled = false; ctx.drawImage(im, Math.round(cx - sz / 2), Math.round(cy - sz / 2), sz, sz); } } }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${Math.round(6.2 * Z)}px Jua, sans-serif`; ctx.lineJoin = 'round';
   for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); const X = tx.x * T - camX, Y = tx.y * T - camY; ctx.lineWidth = 1.6 * Z; ctx.strokeStyle = INK; ctx.strokeText(tx.txt, X, Y); ctx.fillStyle = tx.col; ctx.fillText(tx.txt, X, Y); }
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
