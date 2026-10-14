@@ -16,7 +16,7 @@ import { WATER } from './nature.js';
 import { standUp } from './player.js';
 import { onFrame } from './systems.js';
 import { genWorld } from '../world/gen.js';
-import { CX, CY, H, idx, inB, LAVA, SI, SL, W } from '../world/map.js';
+import { ANCH, CX, CY, H, idx, inB, LAVA, MAPV, SI, SL, W } from '../world/map.js';
 import { boxHits, fpOf, isSolid } from '../world/tiles.js';
 import { markLight } from './loop.js';
 defineCmd('escape', () => emergencyEscape());
@@ -46,7 +46,7 @@ export function envTick(dt) {
 // turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
 // Some new worlds start in a rock-ringed clearing. Used by closedIn (fainting, recall, loading — v64) and regionOf (emergency escape — v63).
 export let NATW = null, NATW_K = '';
-export function naturalWalls() { const k = G.seed + '|' + W + 'x' + H; if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
+export function naturalWalls() { const k = G.seed + '|' + W + 'x' + H + '|' + MAPV + (ANCH ? JSON.stringify(ANCH) : ''); if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
 export function shutsIn(x, y, j, nat) { if (!isSolid(x, y)) return false; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o); if (a && OBJ[a.t] && OBJ[a.t].door) return false;
   return !(nat && nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && G.wall[j] !== 6 && G.wall[j] !== 7); } // nat null: every solid tile shuts you in
 // bug fix: a home point (the lantern tree or a bed) fenced in on every side left you stuck after fainting or recalling;
