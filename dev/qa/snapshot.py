@@ -59,6 +59,8 @@ async def ready(pg):
 
 # ---- 세이브 입력 만들기 (--fixtures): 한 번 만들어 저장해 두고 계속 같은 파일로 비교해요 ----
 LEGACY = {
+    # v69 전 세이브: 반벽·기둥·얇은 벽·창문벽·창문 틀이 세워져 있고 가방·상자·꾸러미에도 있음 → 재료로 돌려받음 (가방이 차면 환급 상자)
+    'old_build_pieces': "s.objs.push([I(2,0),{t:'bThinWood'}],[I(3,0),{t:'bWinStone'}],[I(4,0),{t:'bPillarWood'}],[I(5,0),{t:'bFrameStone'}],[I(2,2),{t:'chest',items:[{id:'bThinStone',c:3},{id:'bHalfWood',c:3}].concat(Array(16).fill(null))}],[I(4,2),{t:'lostBag',items:[{id:'bFrameWood',c:2},{id:'wood',c:4}],at:1}]);s.inv[3]={id:'bHalfStone',c:5};s.inv[4]={id:'bWinWood',c:2};for(let k=9;k<s.inv.length;k++)s.inv[k]={id:'gel',c:99}",
     # 옛 기능이 남아 있는 세이브: 각각 불러올 때 고쳐 주는 코드(옛 세이브 보정)가 돌아요
     'old_bag': "s.invV=undefined;s.bagLv=undefined;s.inv=Array(30).fill(null);s.inv[0]={id:'berry',c:3};s.inv[5]={id:'torch',c:2};s.inv[6]={id:'wood',c:9};s.inv[29]={id:'stone',c:4};s.sel=5",
     'old_fields': "for(const k of ['rpg','fzones','regen','under','terrain','rooms','pets','petOn','run','playT','qt','playTEst','look','char','equip'])delete s[k];for(const k of ['uniq','nm58','nm61'])delete s.stats[k]",

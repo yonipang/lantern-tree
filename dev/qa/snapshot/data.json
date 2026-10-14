@@ -547,30 +547,6 @@
 "set": "crystal",
 "d": "반짝이는 수정 타일을 깔아요."
 },
-"bThinWood": {
-"n": "나무 얇은 벽",
-"kind": "place",
-"obj": "bThinWood",
-"d": "얇고 아늑한 실내 벽. 옆 칸과 자동으로 이어지고, 바위벽과 높이가 같아요."
-},
-"bHalfWood": {
-"n": "나무 반벽",
-"kind": "place",
-"obj": "bHalfWood",
-"d": "허리 높이의 낮은 벽. 옆 칸과 자동으로 이어져요."
-},
-"bWinWood": {
-"n": "나무 창문벽",
-"kind": "place",
-"obj": "bWinWood",
-"d": "작은 창이 난 얇은 벽. 나란히 놓으면 긴 창이 돼요."
-},
-"bFrameWood": {
-"n": "나무 창문 틀",
-"kind": "place",
-"obj": "bFrameWood",
-"d": "벽 대신 세우는 큰 유리창."
-},
 "bFenceWood": {
 "n": "나무 울타리",
 "kind": "place",
@@ -583,36 +559,6 @@
 "obj": "bDoorWood",
 "d": "바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요."
 },
-"bPillarWood": {
-"n": "나무 기둥",
-"kind": "place",
-"obj": "bPillarWood",
-"d": "가느다란 기둥. 벽과 울타리가 이어져요."
-},
-"bThinStone": {
-"n": "돌 얇은 벽",
-"kind": "place",
-"obj": "bThinStone",
-"d": "얇고 아늑한 실내 벽. 옆 칸과 자동으로 이어지고, 바위벽과 높이가 같아요."
-},
-"bHalfStone": {
-"n": "돌 반벽",
-"kind": "place",
-"obj": "bHalfStone",
-"d": "허리 높이의 낮은 벽. 옆 칸과 자동으로 이어져요."
-},
-"bWinStone": {
-"n": "돌 창문벽",
-"kind": "place",
-"obj": "bWinStone",
-"d": "작은 창이 난 얇은 벽. 나란히 놓으면 긴 창이 돼요."
-},
-"bFrameStone": {
-"n": "돌 창문 틀",
-"kind": "place",
-"obj": "bFrameStone",
-"d": "벽 대신 세우는 큰 유리창."
-},
 "bFenceStone": {
 "n": "돌 울타리",
 "kind": "place",
@@ -624,12 +570,6 @@
 "kind": "place",
 "obj": "bDoorStone",
 "d": "바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요."
-},
-"bPillarStone": {
-"n": "돌 기둥",
-"kind": "place",
-"obj": "bPillarStone",
-"d": "가느다란 기둥. 벽과 울타리가 이어져요."
 },
 "slideDoor": {
 "n": "자동 미닫이문",
@@ -3340,45 +3280,10 @@
 "flat": 1,
 "item": "starRug"
 },
-"bThinWood": {
-"n": "나무 얇은 벽",
+"refundBox": {
+"n": "환급 상자",
 "solid": 1,
-"item": "bThinWood",
-"tw": {
-"type": "thin",
-"mat": "wood"
-},
-"door": 0
-},
-"bHalfWood": {
-"n": "나무 반벽",
-"solid": 1,
-"item": "bHalfWood",
-"tw": {
-"type": "half",
-"mat": "wood"
-},
-"door": 0
-},
-"bWinWood": {
-"n": "나무 창문벽",
-"solid": 1,
-"item": "bWinWood",
-"tw": {
-"type": "win",
-"mat": "wood"
-},
-"door": 0
-},
-"bFrameWood": {
-"n": "나무 창문 틀",
-"solid": 1,
-"item": "bFrameWood",
-"tw": {
-"type": "frame",
-"mat": "wood"
-},
-"door": 0
+"refund": 1
 },
 "bFenceWood": {
 "n": "나무 울타리",
@@ -3400,56 +3305,6 @@
 },
 "door": 1
 },
-"bPillarWood": {
-"n": "나무 기둥",
-"solid": 1,
-"item": "bPillarWood",
-"tw": {
-"type": "pillar",
-"mat": "wood"
-},
-"door": 0
-},
-"bThinStone": {
-"n": "돌 얇은 벽",
-"solid": 1,
-"item": "bThinStone",
-"tw": {
-"type": "thin",
-"mat": "stone"
-},
-"door": 0
-},
-"bHalfStone": {
-"n": "돌 반벽",
-"solid": 1,
-"item": "bHalfStone",
-"tw": {
-"type": "half",
-"mat": "stone"
-},
-"door": 0
-},
-"bWinStone": {
-"n": "돌 창문벽",
-"solid": 1,
-"item": "bWinStone",
-"tw": {
-"type": "win",
-"mat": "stone"
-},
-"door": 0
-},
-"bFrameStone": {
-"n": "돌 창문 틀",
-"solid": 1,
-"item": "bFrameStone",
-"tw": {
-"type": "frame",
-"mat": "stone"
-},
-"door": 0
-},
 "bFenceStone": {
 "n": "돌 울타리",
 "solid": 1,
@@ -3469,16 +3324,6 @@
 "mat": "stone"
 },
 "door": 1
-},
-"bPillarStone": {
-"n": "돌 기둥",
-"solid": 1,
-"item": "bPillarStone",
-"tw": {
-"type": "pillar",
-"mat": "stone"
-},
-"door": 0
 },
 "slideDoor": {
 "n": "자동 미닫이문",
@@ -4789,58 +4634,6 @@
 "cat": "food"
 },
 {
-"out": "bThinWood",
-"n": 2,
-"req": [
-[
-"wood",
-2
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bHalfWood",
-"n": 2,
-"req": [
-[
-"wood",
-1
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bWinWood",
-"n": 2,
-"req": [
-[
-"wood",
-3
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bFrameWood",
-"n": 1,
-"req": [
-[
-"wood",
-2
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
 "out": "bFenceWood",
 "n": 2,
 "req": [
@@ -4859,71 +4652,6 @@
 "req": [
 [
 "wood",
-4
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bPillarWood",
-"n": 2,
-"req": [
-[
-"wood",
-1
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bThinStone",
-"n": 2,
-"req": [
-[
-"stone",
-4
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bHalfStone",
-"n": 2,
-"req": [
-[
-"stone",
-2
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bWinStone",
-"n": 2,
-"req": [
-[
-"stone",
-6
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bFrameStone",
-"n": 1,
-"req": [
-[
-"stone",
 4
 ]
 ],
@@ -4951,19 +4679,6 @@
 [
 "stone",
 8
-]
-],
-"at": "bench",
-"cat": "build",
-"tier": 0
-},
-{
-"out": "bPillarStone",
-"n": 2,
-"req": [
-[
-"stone",
-2
 ]
 ],
 "at": "bench",
@@ -14787,16 +14502,8 @@ null,
 "울타리"
 ],
 [
-"pillar",
-"기둥"
-],
-[
 "door",
 "문"
-],
-[
-"win",
-"창문"
 ],
 [
 "nature",
@@ -16952,20 +16659,10 @@ null,
 "woolHat": "[그림 16x16 7b6cb4e0]",
 "homeStone": "[그림 16x16 6347d443]",
 "rotate": "[그림 16x16 18936c89]",
-"bThinWood": "[그림 16x16 b7f87c5b]",
-"bHalfWood": "[그림 16x16 b2cd0ac3]",
-"bWinWood": "[그림 16x16 d0496f0f]",
-"bFrameWood": "[그림 16x16 8a7baf68]",
 "bFenceWood": "[그림 16x16 cd55148]",
 "bDoorWood": "[그림 16x16 16676570]",
-"bPillarWood": "[그림 16x16 633529ae]",
-"bThinStone": "[그림 16x16 1597f7bd]",
-"bHalfStone": "[그림 16x16 65c7efcf]",
-"bWinStone": "[그림 16x16 6d73ba85]",
-"bFrameStone": "[그림 16x16 17de375f]",
 "bFenceStone": "[그림 16x16 1b87a867]",
 "bDoorStone": "[그림 16x16 4e34f303]",
-"bPillarStone": "[그림 16x16 88ca9b36]",
 "slideDoor": "[그림 16x16 ebc54ea0]",
 "granite": "[그림 16x16 fa147dc1]",
 "basalt": "[그림 16x16 b5813069]",
@@ -17184,20 +16881,10 @@ null,
 "icePillar": "[그림 16x26 22a106d6]",
 "sprinkler": "[그림 16x18 4b873be]",
 "harvester": "[그림 16x20 d061fc16]",
-"bThinWood": "[그림 16x42 34cfbf54]",
-"bHalfWood": "[그림 16x42 ad2cc10a]",
-"bWinWood": "[그림 16x42 2a74896d]",
-"bFrameWood": "[그림 16x42 a5f49447]",
 "bFenceWood": "[그림 16x42 dac4d609]",
 "bDoorWood": "[그림 16x42 3f1ad9c3]",
-"bPillarWood": "[그림 16x42 665fcec5]",
-"bThinStone": "[그림 16x42 8356eaae]",
-"bHalfStone": "[그림 16x42 601a0143]",
-"bWinStone": "[그림 16x42 7333309a]",
-"bFrameStone": "[그림 16x42 bd74218b]",
 "bFenceStone": "[그림 16x42 7dd1a0e0]",
 "bDoorStone": "[그림 16x42 5663c102]",
-"bPillarStone": "[그림 16x42 3522024e]",
 "slideDoor": "[그림 16x42 418ffde1]",
 "logBenchV": "[그림 16x32 1a6dafd3]",
 "stoneBenchV": "[그림 16x32 c8400e2e]",
@@ -17206,7 +16893,8 @@ null,
 "chairUb": "[그림 9x11 e16e55ac]",
 "mossSofaUb": "[그림 16x16 b2f46bd3]",
 "cryChairUb": "[그림 16x16 c9c8dc06]",
-"bush": "[그림 16x16 6e00801f]"
+"bush": "[그림 16x16 6e00801f]",
+"refundBox": "[그림 16x16 8771657f]"
 },
 "bush": [
 "[그림 16x16 ed451414]",
@@ -18758,20 +18446,10 @@ null,
 "cryMirror": "75deebfb",
 "starRug": "e87307b0",
 "floorCrystal": "15703831",
-"bThinWood": "b7f87c5b",
-"bHalfWood": "b2cd0ac3",
-"bWinWood": "d0496f0f",
-"bFrameWood": "8a7baf68",
 "bFenceWood": "cd55148",
 "bDoorWood": "16676570",
-"bPillarWood": "633529ae",
-"bThinStone": "1597f7bd",
-"bHalfStone": "65c7efcf",
-"bWinStone": "6d73ba85",
-"bFrameStone": "17de375f",
 "bFenceStone": "1b87a867",
 "bDoorStone": "4e34f303",
-"bPillarStone": "88ca9b36",
 "slideDoor": "ebc54ea0",
 "woodCrate": "2217aa90",
 "logBench": "2b6a326b",

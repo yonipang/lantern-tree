@@ -1051,6 +1051,429 @@ null
 "v": 0
 }
 },
+"old_build_pieces": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20228자 1a678e5e59cd]",
+"floor": "[큰 값 7660자 5b579088fcd4]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 26174자 cc3d390b9c84]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+{
+"id": "stone",
+"c": 12
+},
+{
+"id": "wood",
+"c": 5
+},
+null,
+null,
+null,
+null,
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+},
+{
+"id": "gel",
+"c": 99
+}
+],
+"invV": 2,
+"tools": [
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+}
+],
+"tsel": 0,
+"tHand": false,
+"lastW": "swordWood",
+"bagLv": 0,
+"sel": -1,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"nm65": 1,
+"qv": 1,
+"bf05": {
+"n": 19,
+"placed": 4,
+"back": {
+"stone": 18,
+"wood": 11
+},
+"boxes": 0
+},
+"beaten": {},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+}
+},
 "old_fields": {
 "v": 3,
 "seed": 20261012,
