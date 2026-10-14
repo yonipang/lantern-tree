@@ -463,3 +463,60 @@ def test_save_split():
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_build_piece_refund():
+    import asyncio, sys
+    # v69 (BF-05): 얇은 벽·반벽·기둥·창문벽·창문 틀은 없어지고, 옛 세이브의 것은 만들 때 든 재료로 돌려받아요.
+    # 상자·꾸러미 속 것은 그 상자·꾸러미로, 세워 둔 것과 가방 속 것은 가방에 먼저, 넘치면 등불나무 옆 환급 상자(주인만 열고, 넣을 수 없음)
+    H2=HOOK.replace("computeLight}","computeLight,runCmd,perform,W}")
+    OLD="""()=>{const T=__T,G=T.G,X=T.CX+12,Y=T.CY+8;for(let y=Y-3;y<=Y+3;y++)for(let x=X-3;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i)}
+  for(const [i,o] of [...G.objs])if(o.t==='refundBox'||o.t==='lostBag')G.objs.delete(i);G.enemies.length=0;
+  for(let k=0;k<G.inv.length;k++)G.inv[k]={id:'gel',c:999};G.inv[3]={id:'bHalfStone',c:5};
+  // placed: 2 thin wood (2) · pillar wood (.5) · window frame stone (4) · window wall stone (3)
+  [['bThinWood',0],['bThinWood',1],['bPillarWood',2],['bFrameStone',3],['bWinStone',4]].forEach(([t,dx])=>G.objs.set(T.idx(X+dx,Y),{t}));
+  G.objs.set(T.idx(X,Y+2),{t:'chest',items:[{id:'bThinStone',c:3},{id:'bHalfWood',c:3},{id:'berry',c:2}].concat(Array(15).fill(null))});
+  G.objs.set(T.idx(X+2,Y+2),{t:'lostBag',items:[{id:'bFrameWood',c:2},{id:'wood',c:4}],at:1,own:'me'});
+  const s=JSON.stringify(T.serialize());T.deserialize(JSON.parse(s));return s}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            old=await ev(pg,OLD)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+12,Y=T.CY+8,ids=['bThinWood','bThinStone','bHalfWood','bHalfStone','bPillarWood','bPillarStone','bWinWood','bWinStone','bFrameWood','bFrameStone'];
+          const left=[...G.objs.values()].some(o=>ids.includes(o.t)||(o.items||[]).some(s=>s&&ids.includes(s.id)))||G.inv.some(s=>s&&ids.includes(s.id));
+          const ch=G.objs.get(T.idx(X,Y+2)).items.filter(Boolean).map(s=>s.id+':'+s.c).sort().join(','),bag=G.objs.get(T.idx(X+2,Y+2)).items.filter(Boolean).map(s=>s.id+':'+s.c).join(',');
+          const boxes=[...G.objs.entries()].filter(([i,o])=>o.t==='refundBox').map(([i,o])=>[o.own,o.items.filter(Boolean).map(s=>s.id+':'+s.c).sort().join(','),Math.hypot(i%T.W-T.CX,((i/T.W)|0)-T.CY)<20]);
+          return {left,ch,bag,boxes,st:G.stats.bf05,inv:[T.countItem('wood'),T.countItem('stone')]}}""")
+            rec('환급','옛 조각이 세계·가방·상자·꾸러미 어디에도 남지 않음', r['left'] is False, str(r['left']))
+            rec('환급','상자 속 조각은 그 상자로 (얇은 돌벽 3 → 돌 6, 나무 반벽 3 → 나무 2)', r['ch']=='berry:2,stone:6,wood:2', r['ch'])
+            rec('환급','꾸러미 속 조각은 그 꾸러미로 (나무 창문 틀 2 → 나무 4, 있던 나무와 합침)', r['bag']=='wood:8', r['bag'])
+            # placed: wood 2+.5 = 2.5→3, stone 4+3 = 7 · bag: half stone 5 → stone 5 → stone 12 fits in the freed bag slot, wood 3 does not (bag full of gel)
+            rec('환급','세워 둔 것·가방 속 것은 재료별로 합쳐 올림, 가방에 먼저 (돌 12)', r['inv'][1]==12, str(r['inv']))
+            rec('환급','가방이 차서 남은 것(나무 3)은 환급 상자로 (주인 나, 등불나무 근처)', r['boxes']==[['me','wood:3',True]], str(r['boxes']))
+            rec('환급','기록: 조각 18개, 세워 둔 것 5개, 돌려준 재료 합계 (돌 18 · 나무 9)', r['st']['n']==18 and r['st']['placed']==5 and r['st']['back']=={'stone':18,'wood':9} and r['st']['boxes']==1, str(r['st']))
+            await pg.wait_for_timeout(1800)
+            t=await ev(pg,"()=>document.querySelector('#toasts').innerText")
+            rec('환급','불러올 때 한 번 알림 (재료·환급 상자·벽 다시 쌓기)', '돌려받았어요' in t and '환급 상자' in t and '다시 쌓아' in t, t[:160])
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const n=G.stats.bf05.n,w=T.countItem('wood');const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return [T.G.stats.bf05.n===n,T.countItem('wood')===w,[...T.G.objs.values()].filter(o=>o.t==='refundBox').length]}")
+            rec('환급','저장·불러오기를 여러 번 해도 두 번 돌려주지 않음', r==[True,True,1], str(r))
+            # the refund box: only the owner, take-only, cleared when empty
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;let bi=-1;for(const [i,o] of G.objs)if(o.t==='refundBox')bi=i;const bx=bi%T.W,by=(bi/T.W)|0;
+          for(const [dx,dy] of [[-1,0]]){const i=T.idx(bx+dx,by+dy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.p.x=bx-.5;G.p.y=by+.5;G.p.face={x:1,y:0};G.enemies.length=0;
+          const d=T.decide();window.__bi=bi;return [d.k,d.lbl]}""")
+            rec('환급 상자','앞에서 「열기」', r==['open','열기'], str(r))
+            await ev(pg,"()=>{const d=__T.decide();__T.perform(d)}"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,o=G.objs.get(window.__bi);const t=document.querySelector('#sheet').innerText;G.inv[20]={id:'torch',c:3};G.inv[21]=null;G.inv[22]=null;
+          const put=T.runCmd({k:'chest',o:window.__bi,i:20,out:false}),drag=T.runCmd({k:'move',a:{o:null,i:20},b:{o:window.__bi,i:5}}),stash=T.runCmd({k:'stash',o:window.__bi,same:false});
+          const take=T.runCmd({k:'chest',o:window.__bi,i:o.items.findIndex(Boolean),out:true});return [t.includes('환급 상자'),t.includes('넣기'),put,drag,stash,take!==false,o.items.some(s=>s&&s.id==='torch')]}""")
+            rec('환급 상자','창 제목 「환급 상자」, 넣기 버튼 없음', r[0] is True and r[1] is False, str(r))
+            rec('환급 상자','넣을 수 없음 (누르기·끌기·모두 넣기 모두 막힘), 꺼내기는 됨', r[2] is False and r[3] is False and r[4] is False and r[5] is True and r[6] is False, str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"()=>{const T=__T,G=T.G,o=G.objs.get(window.__bi);o.own='p2';const d=T.decide();const t=T.runCmd({k:'chest',o:window.__bi,i:o.items.findIndex(Boolean),out:true});o.own='me';return [d.k,d.msg||'',t]}")
+            rec('환급 상자','다른 사람 상자는 열 수도 꺼낼 수도 없음', r[0]=='info' and '다른 사람' in r[1] and r[2] is False, str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G,o=G.objs.get(window.__bi);o.items.fill(null);const d=T.decide();const c=[d.k].concat((G.alts||[]).map(a=>a.k));const a=(G.alts||[]).find(x=>x.k==='refundClear');if(a)T.perform(a);return [c,!!G.objs.get(window.__bi)]}")
+            rec('환급 상자','다 꺼내면 「치우기」로 없앨 수 있음 (아무것도 안 생김)', 'refundClear' in r[0] and r[1] is False, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

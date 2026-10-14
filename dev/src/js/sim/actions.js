@@ -21,7 +21,7 @@ import { cropMsg, farmHarvest, farmLbl, farmStage, farmT, fertCrop, fillCan, gro
 import { reel, startFish } from './fishing.js';
 import { harvest, hitObj, mineWall } from './gathering.js';
 import { wearItem, wtOf } from './gear.js';
-import { addItem, bestTool, countItem, holdTool, isBroken, moveInto, refillHot, removeItem, returnObj, selItem, wear } from './inventory.js';
+import { addItem, bestTool, clearRefundBox, countItem, holdTool, isBroken, moveInto, refillHot, refundMine, removeItem, returnObj, selItem, wear } from './inventory.js';
 import { digPlant, isYoung, treeStep, WATER } from './nature.js';
 import { eat, maxHp, sleepIn, standUp } from './player.js';
 import { bagNear, myBag, pickLost, recallDecide, startRecall } from './survival.js';
@@ -172,6 +172,7 @@ export function autoOptions(t, i, o) {
     if (d.tchest) { A(o.open ? { k: 'info', lbl: '빈 보물상자', icon: 'dots', msg: '이미 열어 본 보물상자예요', t } : { k: 'treasure', lbl: '상자 열기', icon: 'hand', t, o }); return L; }
     if (d.ranch) { A(ranchReady(o) ? { k: 'ranch', lbl: ANIMALS[o.t].verb, icon: d.ranch, t, o } : { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${Math.max(1, Math.ceil(((o.p || 0) - G.time) / 60))}분쯤 뒤에 ${ITEMS[d.ranch].n}${josa(ITEMS[d.ranch].n, '을', '를').slice(ITEMS[d.ranch].n.length)} 얻을 수 있어요`, t });
       if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
+    if (d.refund) { if (!refundMine(o)) A({ k: 'info', lbl: d.n, icon: 'dots', msg: '다른 사람의 환급 상자예요', t }); else { A({ k: 'open', lbl: '열기', icon: 'hand', t, o }); if (!(o.items || []).some(x => x)) A({ k: 'refundClear', lbl: '치우기', icon: 'hand', t, o }); } return L; } // v69 (BF-05)
     if (d.station || d.chest) { if (d.station && o.job && jobDone(o.job) > 0) A({ k: 'jobTake', lbl: '꺼내기', icon: o.job.out, t, o }); // v59
       A({ k: 'open', lbl: '열기', icon: 'hand', t, o }); if (!(d.chest && o.items && o.items.some(x => x))) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
     if (d.crop) { const cs = Math.max(0, cropStage(o));
@@ -219,7 +220,8 @@ export function perform(a) {
     case 'place': placeItem(a.t); G.actCd = 0.14; break;
     case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); G.actCd = 0.22; break;
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
-    case 'open': if (a.o.t === 'chest') emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
+    case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
+    case 'open': if (a.o.t === 'chest' || OBJ[a.o.t].refund) emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); G.actCd = 0.3; break;
     case 'treasure': openTreasure(a.t, a.o); G.actCd = 0.4; break;
     case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); G.actCd = 0.35; break;

@@ -7,7 +7,7 @@ import { STAR_OF } from '../data/farming-cooking.js';
 import { UPG_POW } from '../data/gear-animals.js';
 import { BAG0, BAG_STEP, HOT, ITEMS, OBJ } from '../data/items.js';
 import { josa } from '../engine/util.js';
-import { G } from '../save/state.js';
+import { curPl, G, ME } from '../save/state.js';
 import { defineCmd } from './commands.js';
 import { learnRecipe } from './cooking.js';
 import { cancelJob } from './crafting.js';
@@ -119,7 +119,7 @@ export function moveSlot(A, B) {
 export const slotArr = s => s.o == null ? G.inv : (G.objs.get(s.o) || {}).items; // 칸 위치 { o: 상자 칸(가방이면 null), i }
 // ---- 가방 ----
 defineCmd('invSwap', c => { const A = G.inv[c.a], B = G.inv[c.b]; if (A && B && A.id === B.id && B.c < stackMax(B.id)) { const k = Math.min(stackMax(B.id) - B.c, A.c); B.c += k; A.c -= k; if (!A.c) G.inv[c.a] = null; } else { G.inv[c.a] = B; G.inv[c.b] = A; } emit('sfx', 'place'); emit('inv'); });
-defineCmd('move', c => { const A = slotArr(c.a), B = slotArr(c.b); return !!A && !!B && moveSlot({ arr: A, i: c.a.i }, { arr: B, i: c.b.i }); }); // 끌어 옮기기
+defineCmd('move', c => { const A = slotArr(c.a), B = slotArr(c.b); { const oa = c.a.o != null && G.objs.get(c.a.o), ob = c.b.o != null && G.objs.get(c.b.o); if ((isRefund(oa) || isRefund(ob)) && c.a.o !== c.b.o && (isRefund(ob) || (isRefund(oa) && (!refundMine(oa) || (B && B[c.b.i] && A && A[c.a.i] && B[c.b.i].id !== A[c.a.i].id))))) return false; } /* v69: nothing goes into a refund box */ return !!A && !!B && moveSlot({ arr: A, i: c.a.i }, { arr: B, i: c.b.i }); }); // 끌어 옮기기
 defineCmd('sortBag', () => { sortBag(); emit('sfx', 'place'); emit('toast', '가방을 정리했어요', null, 'sortbag'); });
 defineCmd('wear', c => { if (G.inv[c.i]) wearItem(c.i); });
 defineCmd('unwear', c => { if (G.equip[c.sl]) unwear(c.sl); });
@@ -128,10 +128,14 @@ defineCmd('toHot', c => { const from = c.i; let to = G.inv.slice(0, HOT).findInd
 defineCmd('trash', c => { G.inv[c.i] = null; emit('inv'); });
 defineCmd('trashTool', c => clearSlot('t:' + c.i));
 // ---- 상자 ----
-defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items) return false; const r = stashBag(o, c.same);
+// v69 (BF-05): the refund box — only its owner opens it, and nothing can be put back into it (take-only)
+export const refundMine = o => !!o && (o.own || ME) === ((curPl && curPl.id) || ME);
+export const isRefund = o => !!o && o.t === 'refundBox';
+export function clearRefundBox(i) { const o = G.objs.get(i); if (!isRefund(o) || !refundMine(o) || (o.items || []).some(x => x)) return false; delObj(i); emit('sfx', 'pick'); emit('puff', i % W + .5, ((i / W) | 0) + .6, '#e8d8c0', 5, 2); markLight(); emit('close'); return true; }
+defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items || isRefund(o)) return false; const r = stashBag(o, c.same);
   emit('toast', r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : c.same ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) emit('sfx', 'place'); emit('inv'); });
-defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
-defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
+defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o || (isRefund(o) && (!c.out || !refundMine(o)))) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
+defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (isRefund(o)) { clearRefundBox(c.o); return; } if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
 defineCmd('markAdd', () => { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); });
 defineCmd('markDel', c => { G.marks.splice(c.i, 1); });
 export const isTool = id => !!ITEMS[id] && TOOL_KINDS.includes(ITEMS[id].kind);

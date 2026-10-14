@@ -336,6 +336,7 @@ export function buildSprites() {
   setFootprints(FPV);
   buildTerrain();
   setMkDef(null);
+  SPR.obj.refundBox = SPR.obj.chest; // v69: the refund box looks like a chest (hand-drawn chest art included)
 }
 // sprites that can't take hand-drawn art yet (floors/walls come with the 32px floor template; characters are built from parts)
 // v54: floors and walls take drawn art too (floor/<type>/<n>, any number of variants; wtop/<type>/0-3; wfront/<type>)

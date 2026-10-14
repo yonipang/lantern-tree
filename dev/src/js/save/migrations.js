@@ -9,15 +9,16 @@
 import { ACC_OF } from '../data/gear-animals.js';
 import { BKEYS } from '../data/rpg-nature.js';
 import { DISHES } from '../data/farming-cooking.js';
-import { G, beat, started } from './state.js';
+import { G, ME, beat, started } from './state.js';
 import { GEAR_IT } from '../data/automation-tiers.js';
-import { HOT, ITEMS, OBJ, UNIQ_OF } from '../data/items.js';
+import { HOT, ITEMS, OBJ, OLD_PIECES, UNIQ_OF } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
-import { BX, BY, CX, CY, H, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
+import { BX, BY, CX, CY, H, LAVA, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
 import { addPond, addWater, genWorld } from '../world/gen.js';
 import { fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
 import { josa } from '../engine/util.js';
 import { emit } from '../sim/events.js';
+import { WATER } from '../sim/nature.js';
 import { GREW } from '../sim/building.js';
 import { bossNoteIds, learnRecipe, roomNotes } from '../sim/cooking.js';
 import { eqCopy, freshEquip } from '../sim/gear.js';
@@ -125,3 +126,35 @@ export function migrateTools65() { G.stats.nm65 = 1; const held = G.sel >= 0 ? G
   if (held && isTool(held.id)) { G.tsel = G.tools.findIndex(x => x.id === held.id && x.dur === held.dur); if (G.tsel < 0) G.tsel = 0; G.sel = -1; G.tHand = true; } // the tool that was in hand stays in hand
   if (!G.lastW && held && ITEMS[held.id] && ITEMS[held.id].kind === 'sword') G.lastW = held.id; // otherwise the strongest weapon is used
   setTimeout(() => { if (G && started) emit('toast', '조작이 바뀌었어요 · 칼 버튼은 공격, 손 버튼은 열기·캐기·놓기예요' + (moved ? ` · 도구 ${moved}개는 도구 주머니로 옮겼어요 (단축칸 맨 앞 도구 칸)` : ''), 'good', 'nm65'); }, 1600); }
+// v69 (BF-05): thin walls, half walls, pillars, window walls and window frames were removed. Every one still in the save — placed in the
+// world, in the bag or hotbar, in a chest, in a lost bundle — turns back into what it cost to make (OLD_PIECES, summed per material and
+// rounded up). Pieces inside a chest or a bundle come back into that same chest or bundle. The rest (placed ones and the bag's) go into
+// the bag first; what does not fit goes into a refund box (saved, opens like a chest, only for its owner) next to the lantern tree —
+// never onto the ground, which is not saved. Saves before multiplayer have one player, so the bag and the placed pieces are theirs (ME).
+// Nothing is left afterwards, so loading the same save again hands nothing back twice.
+export function refundPieces() {
+  const add = (m, k, v) => { m[k] = (m[k] || 0) + v; }, own = {}, total = {}; let n = 0, placed = 0;
+  const take = (s, into) => { if (!s || !OLD_PIECES[s.id]) return false; const [m, v] = OLD_PIECES[s.id], c = s.c || 1; add(into, m, v * c); n += c; return true; };
+  for (const o of G.objs.values()) if (Array.isArray(o.items)) { const back = {}; let hit = false;
+    o.items = o.items.map(s => take(s, back) ? (hit = true, null) : s);
+    if (hit) for (const m in back) { const c = Math.ceil(back[m]); add(total, m, c); const left = moveInto(o.items, { id: m, c }); if (left) add(own, m, left); } }
+  G.inv = G.inv.map(s => take(s, own) ? null : s);
+  for (const [i, o] of [...G.objs]) if (OLD_PIECES[o.t]) { const [m, v] = OLD_PIECES[o.t]; add(own, m, v); G.objs.delete(i); placed++; n++; }
+  if (!n) return null;
+  let over = []; for (const m in own) { const c = Math.ceil(own[m]); add(total, m, c); const left = moveInto(G.inv, { id: m, c }); if (left) over.push({ id: m, c: left }); }
+  let boxes = 0;
+  while (over.length) { const at = freeTileNear(CX, CY + 7); if (at < 0) break; const items = Array(18).fill(null), next = [];
+    for (const s of over) { const left = moveInto(items, s); if (left) next.push({ id: s.id, c: left }); }
+    G.objs.set(at, { t: 'refundBox', items, own: ME }); boxes++; over = next; }
+  G.stats.bf05 = { n: (G.stats.bf05 ? G.stats.bf05.n : 0) + n, placed, back: total, boxes };
+  const mats = Object.entries(total).map(([m, c]) => `${ITEMS[m].n} ${c}`).join(' · ');
+  setTimeout(() => { try { emit('toast', `반벽·기둥·얇은 벽·창문이 없어져서, 가지고 있던 ${n}개를 재료(${mats})로 돌려받았어요${boxes ? ' · 가방에 다 안 들어간 건 등불나무 옆 환급 상자에 있어요' : ''}${placed ? ' · 세워 둔 벽이 없어진 곳은 다시 쌓아 주세요' : ''}`, 'good', 'bf05'); } catch (e) { } }, 1600);
+  return G.stats.bf05;
+}
+// the free tile nearest to (x, y) — no wall, no object, not water or lava, not on the lantern tree or the starter deck
+function freeTileNear(x0, y0) {
+  for (let r = 0; r <= 60; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; const x = x0 + dx, y = y0 + dy;
+    if (!inB(x, y) || Math.hypot(x - CX, y - CY) < 3.5 || (y >= CY + 1 && y <= CY + 5 && Math.abs(x - CX) <= 5)) continue;
+    const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || G.floor[i] === WATER || G.floor[i] === LAVA) continue; return i; }
+  return -1;
+}

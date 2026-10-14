@@ -71,9 +71,9 @@ def test_workbench_tabs():
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             await ev(pg,"()=>{"+SET+"}")
-            r=await ev(pg,"()=>{const T=__T,f=id=>T.bcat(T.RECIPES.find(r=>r.out===id)).join('/');return ['chair','table','bed','chest','torch','plant','mossBed','cryTable','wallBrick','floorMoss','bFenceWood','bPillarStone','bDoorWood','slideDoor','bWinWood','bFrameStone','bThinWood','roundTree','waterPond','gDirt','wire','sprinkler','quarry','treeFarm','pot','furnace','smelter','bench','rope','bagUp1'].map(f).join(' ')}")
+            r=await ev(pg,"()=>{const T=__T,f=id=>T.bcat(T.RECIPES.find(r=>r.out===id)).join('/');return ['chair','table','bed','chest','torch','plant','mossBed','cryTable','wallBrick','floorMoss','bFenceWood','bDoorWood','slideDoor','roundTree','waterPond','gDirt','wire','sprinkler','quarry','treeFarm','pot','furnace','smelter','bench','rope','bagUp1'].map(f).join(' ')}")
             rec('분류','가구·건축(자연 포함)·편의·제작대·재료·도구 2단 분류',
-                r=='furn/seat furn/table furn/bed furn/store furn/light furn/deco furn/bed furn/table build/wall build/floor build/fence build/pillar build/door build/door build/win build/win build/wall build/nature build/nature build/floor conv/circuit conv/farm conv/mine conv/mine stn/cook stn/smelt stn/make stn/make mat tool', r)
+                r=='furn/seat furn/table furn/bed furn/store furn/light furn/deco furn/bed furn/table build/wall build/floor build/fence build/door build/door build/nature build/nature build/floor conv/circuit conv/farm conv/mine conv/mine stn/cook stn/smelt stn/make stn/make mat tool', r)
             await ev(pg,"()=>{const T=__T,bi=__set();T.openPanel('craft',{st:'bench',i:bi})}"); await pg.wait_for_timeout(600)
             r=await ev(pg,"()=>[__row(0),__lbl(),document.querySelectorAll('#sheet .itabs .tab img').length,document.querySelectorAll('#sheet .tabs').length,__ids().includes('rope'),__ids().includes('chair')]")
             rec('1줄 탭','작업대: 아이콘 탭 7개, 고른 탭(전체)만 이름, 2줄 탭은 없음, 손 제작(이끼 끈)도 보임',
@@ -91,7 +91,7 @@ def test_workbench_tabs():
             await pg.screenshot(path=SP+'seat.png')
             await ev(pg,"()=>__clk('tab','build')"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>[__lbl(),__row(1)]")
-            rec('건축','건축: 2줄 탭이 전체로 돌아가고 전체·벽·바닥·울타리·기둥·문·창문·자연', r==['건축','all*,wall,floor,fence,pillar,door,win,nature'], str(r))
+            rec('건축','건축: 2줄 탭이 전체로 돌아가고 전체·벽·바닥·울타리·문·자연 (v69: 기둥·창문 삭제)', r==['건축','all*,wall,floor,fence,door,nature'], str(r))
             await ev(pg,"()=>__clk('tab2','nature')"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>__ids()")
             rec('건축','자연 탭: 나무·꽃·물 타일 (가구 아님)', 'roundTree' in r and 'waterPond' in r and 'chair' not in r and 'treeFarm' not in r, str(r))
