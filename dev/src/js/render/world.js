@@ -32,6 +32,7 @@ import { aimMouse } from '../ui/input.js';
 import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { fpOf, placeAnchor } from '../world/tiles.js';
+import { wallShade } from '../art/tilemap.js';
 export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
 export function updateAmbient(dt) {
@@ -58,7 +59,7 @@ export function renderWorld(cw, ch) {
     const i = idx(x, y); if (G.wall[i]) continue; const sx = x * T - camX, sy = y * T - camY;
     if (spIn && Math.abs(x - CX) <= spR && Math.abs(y - CY) <= spR) drawSpread(x, y, sx, sy, spR);
     if (G.floor[i] === WATER) {
-      ctx.drawImage(SPR.water[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy);
+      ctx.drawImage((SPR.waterB[G.biome[i]] || SPR.water)[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy); // v71: water colour per region
       const land = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return -1; const j = idx(xx, yy); if (G.wall[j]) return -1; return G.floor[j] === WATER || WFLOOR.has(G.floor[j]) ? 0 : G.floor[j]; };
       if (y > 0 && G.wall[i - W]) { ctx.fillStyle = 'rgba(10,20,45,0.6)'; ctx.fillRect(sx, sy, 16, 3); }
       const wl = [land(0, -1), land(1, 0), land(0, 1), land(-1, 0)];
@@ -96,6 +97,7 @@ export function renderWorld(cw, ch) {
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
       ctx.drawImage(SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
+      ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
       const below = y + 1 < H ? G.wall[i + W] : 1;
       if (!below) ctx.drawImage(SPR.wfront[w], sx, sy + T - L);
       ctx.fillStyle = 'rgba(20,12,30,0.55)';
@@ -196,6 +198,9 @@ export function renderWorld(cw, ch) {
       ctx.globalAlpha = 1; } }
   }
 }
+// v71: which of the 8 neighbours are open (not a wall) — 1 N · 2 E · 4 S · 8 W · 16 NE · 32 SE · 64 SW · 128 NW (outside the map counts as wall)
+function wallOpen(x, y) { const o = (dx, dy) => { const xx = x + dx, yy = y + dy; return inB(xx, yy) && !G.wall[idx(xx, yy)]; };
+  return (o(0, -1) ? 1 : 0) | (o(1, 0) ? 2 : 0) | (o(0, 1) ? 4 : 0) | (o(-1, 0) ? 8 : 0) | (o(1, -1) ? 16 : 0) | (o(1, 1) ? 32 : 0) | (o(-1, 1) ? 64 : 0) | (o(-1, -1) ? 128 : 0); }
 export function renderOverlay(cw, ch) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT * Z; ctx.imageSmoothingEnabled = true;
   // soft vignette

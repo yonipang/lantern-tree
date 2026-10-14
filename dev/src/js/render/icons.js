@@ -18,7 +18,7 @@ export function iconCanvas(id) {
   const it = ITEMS[id];
   if (it.blv) { const b = iconCanvas(it.obj === 'smelter' ? 'smelter' : 'bench'), c = document.createElement('canvas'); c.width = b.width; c.height = b.height; c.hd = b.hd; const g = c.getContext('2d'); g.drawImage(b, 0, 0); const z = Math.max(4, Math.round(b.width / 4)); g.fillStyle = INK; g.fillRect(b.width - z - 1, 0, z + 1, z + 1); g.fillStyle = BENCH_COL[it.blv]; g.fillRect(b.width - z, 1, z - 1, z - 1); return SPR.item[id] = c; } // v60: tier workbench = workbench + tier colour plate
   if (it.kind === 'place') { const f = SPR.fp && SPR.fp[it.obj]; return squareIcon(f && !ARTC['obj/' + it.obj] ? f.small : SPR.obj[it.obj]); }
-  if (it.kind === 'wall') { const c = mk(16, 16, A => { A.g.drawImage(SPR.wtop[it.wall][0], 0, 0, 16, 11, 1, 1, 14, 10); A.g.drawImage(SPR.wfront[it.wall], 0, 0, 16, 5, 1, 11, 14, 4); }); return SPR.item[id] = c; }
+  if (it.kind === 'wall') { const c = mk(16, 16, A => { const [top, front] = SPR.wallIcon[it.wall]; A.g.drawImage(top, 0, 0, 16, 11, 1, 1, 14, 10); A.g.drawImage(front, 0, 0, 16, 5, 1, 11, 14, 4); }); return SPR.item[id] = c; }
   if (it.kind === 'floor') { const c = mk(16, 16, A => { A.g.drawImage(SPR.floor[it.floor][1], 0, 0, 16, 16, 1, 3, 14, 11); }); return SPR.item[id] = c; }
   if (it.kind === 'ground') { const c = it.ground === WATER
       ? mk(16, 16, A => { A.r(3, 6, 10, 8, C.woodD); A.r(4, 6, 8, 7, C.wood); A.r(3, 8, 10, 1, C.stoneD); A.r(3, 12, 10, 1, C.stoneD); A.e(8, 6, 4.6, 1.6, '#4f9ad8'); A.p(6, 6, '#bfe6ff'); A.p(9, 5, '#bfe6ff'); A.line(3, 6, 6, 1, C.stoneD); A.line(13, 6, 10, 1, C.stoneD); A.r(6, 1, 5, 1, C.stoneD); })
