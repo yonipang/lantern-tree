@@ -599,12 +599,18 @@ function runFrame(dt) {
 // the crystal cave (north), lava cave (south-east) and ice cave (south-west), a sea ring, and hard rock at the edge
 let LAY = 1, W = 200, H = 200, CX = 100, CY = 100, BX = 144, BY = 102, SA = { x: 54, y: 118 }, SB = { x: 106, y: 24 }, SL = { x: 96, y: 184 }, SI = { x: 16, y: 104 };
 const L2 = { r1: 34, r2: 100, r3: 250, r4: 272 }; // ring radii of layout 2 (start · moss/mushroom · crystal/lava/ice · sea; rock beyond)
-function setLayout(v) { LAY = v === 2 ? 2 : 1;
-  if (LAY === 2) { W = H = 600; CX = CY = 300; const at = (deg, r) => ({ x: Math.round(CX + Math.cos(deg * Math.PI / 180) * r), y: Math.round(CY + Math.sin(deg * Math.PI / 180) * r) });
-    const b = at(-35, 64); BX = b.x; BY = b.y; SA = at(140, 66); SB = at(-90, 172); SL = at(30, 172); SI = at(150, 172); }
+// v70 (BF-04): map version 3 = the ring map of layout 2 whose five boss rooms (and their altars) sit at places picked per seed inside
+// their own region (world/anchors.js), saved with the world as mapA. Versions 1 and 2 keep their fixed places forever.
+let MAPV = 1, ANCH = null;
+const angAt = deg => ({ x: Math.round(CX + Math.cos(deg[0] * Math.PI / 180) * deg[1]), y: Math.round(CY + Math.sin(deg[0] * Math.PI / 180) * deg[1]) });
+const ANCH2 = { B: [-35, 64], A: [140, 66], SB: [-90, 172], SL: [30, 172], SI: [150, 172] }; // layout 2's fixed places (angle°, distance)
+const goodAnch = a => !!a && ['B', 'A', 'SB', 'SL', 'SI'].every(k => Array.isArray(a[k]) && a[k].length === 2 && a[k].every(Number.isFinite));
+function setLayout(v, a) { MAPV = v === 3 ? 3 : v === 2 ? 2 : 1; LAY = MAPV >= 2 ? 2 : 1; ANCH = null;
+  if (LAY === 2) { W = H = 600; CX = CY = 300; const an = MAPV === 3 && goodAnch(a) ? a : ANCH2; if (MAPV === 3) ANCH = { B: an.B.slice(), A: an.A.slice(), SB: an.SB.slice(), SL: an.SL.slice(), SI: an.SI.slice(), t: Number.isInteger(an.t) ? an.t : -1 }; // t: which try made the caves (-1 = layout 2's cave shape)
+    const b = angAt(an.B); BX = b.x; BY = b.y; SA = angAt(an.A); SB = angAt(an.SB); SL = angAt(an.SL); SI = angAt(an.SI); }
   else { W = H = 200; CX = CY = 100; BX = CX + 44; BY = CY + 2; SA = { x: CX - 46, y: CY + 18 }; SB = { x: CX + 6, y: CY - 76 }; SL = { x: CX - 4, y: CY + 84 }; SI = { x: CX - 84, y: CY + 4 }; }
   layoutTexts(); }
-const devLayout = () => { try { const v = +localStorage.getItem('lantern-tree-layout'); return v === 1 || v === 2 ? v : 0; } catch (_) { return 0; } }; // tests pin the old layout
+const devLayout = () => { try { const v = +localStorage.getItem('lantern-tree-layout'); return v === 1 || v === 2 || v === 3 ? v : 0; } catch (_) { return 0; } }; // tests pin the old layout
 const DIR8 = ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'];
 const dirKo = (x, y) => DIR8[((Math.round(Math.atan2(y - CY, x - CX) / (Math.PI / 4)) % 8) + 8) % 8];
 const LAVA = 17;
@@ -1902,29 +1908,36 @@ function region2(x, y, seed) { const dx = x - CX, dy = y - CY, d = Math.hypot(dx
   if (d < L2.r2 + n) return Math.sin(ang + .35) < 0 ? 0 : 1;
   let deg = ang * 180 / Math.PI; if (deg < -150) deg += 360; return deg < -30 ? 2 : deg < 90 ? 3 : 4; }
 // layout 2 walls: plenty of plain dirt and stone in every region, with that region's own rock and ore veins in between
-function wallFor2(b, x, y, s) { const v22 = k => vn(x * .1, y * .1, s + k), v06 = k => vn(x * .035, y * .035, s + k);
-  if (b === 0) return v22(21) > .75 ? 4 : v06(33) > .62 ? 2 : 1;
-  if (b === 1) return v22(41) > .75 ? 5 : v22(21) > .8 ? 4 : v06(35) > .6 ? 1 : 2;
-  if (b === 2) return v06(51) > .55 ? (quartzAt(x, y, s) ? 13 : 3) : v22(41) > .76 ? 5 : v06(37) > .62 ? 1 : 2;
-  if (b === 3) return v22(61) > .76 ? 10 : v06(63) > .55 ? 9 : v06(65) > .62 ? 1 : 2;
-  return v22(71) > .76 ? 12 : v06(73) > .55 ? 11 : v06(75) > .6 ? 1 : 2; }
-function smoothCaves(wall, floor, biome, seed) {
+// q (map version 3 only): a small per-seed shift of the ore thresholds, so ore is a little richer or poorer from world to world
+function wallFor2(b, x, y, s, q = 0) { const v22 = k => vn(x * .1, y * .1, s + k), v06 = k => vn(x * .035, y * .035, s + k);
+  if (b === 0) return v22(21) > .75 + q ? 4 : v06(33) > .62 ? 2 : 1;
+  if (b === 1) return v22(41) > .75 + q ? 5 : v22(21) > .8 + q ? 4 : v06(35) > .6 ? 1 : 2;
+  if (b === 2) return v06(51) > .55 ? (quartzAt(x, y, s) ? 13 : 3) : v22(41) > .76 + q ? 5 : v06(37) > .62 ? 1 : 2;
+  if (b === 3) return v22(61) > .76 + q ? 10 : v06(63) > .55 ? 9 : v06(65) > .62 ? 1 : 2;
+  return v22(71) > .76 + q ? 12 : v06(73) > .55 ? 11 : v06(75) > .6 ? 1 : 2; }
+// v70 (BF-04) map version 3: every region gets its own cave shape per seed (and per try, t) — how big the caves are (noise scale), how open (threshold),
+// how wide and how winding the long tunnels are, and the ore shift above. Layouts 1 and 2 never use this.
+function terr3(seed, t) { if (!(t >= 0)) return null; const R = rng(((seed ^ 0x5eed3) + 7919 * t) >>> 0), o = [];
+  for (let b = 0; b < 5; b++) o.push({ sc: .055 * (.85 + .3 * R()), op: .6 + (R() - .5) * .06, tsc: .025 * (.8 + .4 * R()), tw: .02 * (.75 + .5 * R()), ore: (R() - .5) * .04 });
+  return o; }
+function smoothCaves(wall, floor, biome, seed, T3) {
   for (let pass = 0; pass < 2; pass++) { const next = wall.slice();
     for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) { const i = idx(x, y), w = wall[i]; if (w === 8 || floor[i] === WATER) continue;
       let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && wall[i + dy * W + dx]) n++;
-      if (w && n <= 2) next[i] = 0; else if (!w && n >= 6) next[i] = wallFor2(biome[i], x, y, seed); }
+      if (w && n <= 2) next[i] = 0; else if (!w && n >= 6) next[i] = wallFor2(biome[i], x, y, seed, T3 ? T3[biome[i]].ore : 0); }
     wall.set(next); } }
 function genWorld(seed) {
   const wall = new Uint8Array(W * H), floor = new Uint8Array(W * H), biome = new Uint8Array(W * H), objs = new Map();
+  const T3 = LAY === 2 && MAPV === 3 && ANCH ? terr3(seed, ANCH.t) : null;
   if (LAY === 2) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { // the ring map
     const i = idx(x, y), d = Math.hypot(x - CX, y - CY), b = region2(x, y, seed), sea = d + (vn(x * .04, y * .04, seed + 17) - .5) * 10 >= L2.r3; biome[i] = b;
     floor[i] = b === 0 ? (vn(x * .07, y * .07, seed + 3) > 0.66 ? 2 : 1) : b === 1 ? 3 : b === 3 ? 18 : b === 4 ? 19 : 4;
     if (d >= L2.r4 || x < 2 || y < 2 || x > W - 3 || y > H - 3) { wall[i] = 8; continue; }
     if (sea) { floor[i] = WATER; if (vn(x * .06, y * .06, seed + 19) > .78) wall[i] = 2; continue; }
-    const open = fbm(x * 0.055, y * 0.055, seed) > 0.6 || Math.abs(vn(x * 0.025, y * 0.025, seed + 11) - 0.5) < 0.02;
-    if (!open) wall[i] = wallFor2(b, x, y, seed);
+    const k = T3 && T3[b], open = k ? fbm(x * k.sc, y * k.sc, seed) > k.op || Math.abs(vn(x * k.tsc, y * k.tsc, seed + 11) - 0.5) < k.tw : fbm(x * 0.055, y * 0.055, seed) > 0.6 || Math.abs(vn(x * 0.025, y * 0.025, seed + 11) - 0.5) < 0.02;
+    if (!open) wall[i] = wallFor2(b, x, y, seed, k ? k.ore : 0);
   }
-  if (LAY === 2) smoothCaves(wall, floor, biome, seed); // clean up lone specks of rock and pinholes so the map reads in big shapes
+  if (LAY === 2) smoothCaves(wall, floor, biome, seed, T3); // clean up lone specks of rock and pinholes so the map reads in big shapes
   else for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = idx(x, y), dx = x - CX, dy = y - CY, d = Math.hypot(dx, dy);
     const dd = d + (vn(x * 0.05, y * 0.05, seed + 7) - 0.5) * 18, ca = d > 0 ? dx / d : 1;
@@ -1940,7 +1953,13 @@ function genWorld(seed) {
   const carve = (x, y) => { if (x < 2 || y < 2 || x > W - 3 || y > H - 3) return; const i = idx(x, y); if (wall[i] !== 8) wall[i] = 0; };
   const walk = (sx, sy, tx, ty, s) => { const R = rng(s); let x = sx, y = sy, n = 0; while ((Math.abs(x - tx) + Math.abs(y - ty)) > 1 && n++ < 5000) { if (R() < 0.6) { if (Math.abs(tx - x) > Math.abs(ty - y)) x += Math.sign(tx - x); else y += Math.sign(ty - y); } else { const k = R() * 4 | 0; x += [1, -1, 0, 0][k]; y += [0, 0, 1, -1][k]; } carve(x, y); carve(x + 1, y); carve(x, y + 1); carve(x + 1, y + 1); } };
   const walks2 = () => { walk(CX + 6, CY - 4, BX - 6, BY + 5, seed + 5); walk(CX - 6, CY + 4, SA.x + 6, SA.y - 4, seed + 6); for (let k = 6; k <= 10; k++) { carve(BX, BY - k); carve(BX + 1, BY - k); } walk(BX, BY - 9, SB.x, SB.y + 9, seed + 8); };
-  if (LAY === 2) { walks2(); walk(CX + 5, CY + 9, SL.x - 7, SL.y - 5, seed + 9); walk(SA.x - 4, SA.y + 8, SI.x + 7, SI.y - 4, seed + 10); }
+  // map version 3: the same five tunnels, from room to room in whatever direction the rooms now lie (lava and ice end inside their
+  // rooms' rock ring, which is drawn over them below, so the deep rooms stay sealed as before)
+  const edge = (P, Q, r) => { const d = Math.hypot(Q.x - P.x, Q.y - P.y) || 1; return { x: Math.round(P.x + (Q.x - P.x) / d * r), y: Math.round(P.y + (Q.y - P.y) / d * r) }; };
+  const tun = (P, Q, rp, rq, s) => { const a = edge(P, Q, rp), b = edge(Q, P, rq); walk(a.x, a.y, b.x, b.y, s); };
+  const walks3 = () => { const C0 = { x: CX, y: CY }, Bp = { x: BX, y: BY }; tun(C0, Bp, 6, 6, seed + 5); tun(C0, SA, 6, 6, seed + 6); tun(Bp, SB, 6, 6, seed + 8); };
+  if (LAY === 2 && MAPV === 3) { walks3(); tun({ x: CX, y: CY }, SL, 6, 7, seed + 9); tun(SA, SI, 6, 7, seed + 10); }
+  else if (LAY === 2) { walks2(); walk(CX + 5, CY + 9, SL.x - 7, SL.y - 5, seed + 9); walk(SA.x - 4, SA.y + 8, SI.x + 7, SI.y - 4, seed + 10); }
   else { walk(CX + 8, CY, BX - 9, BY, seed + 5); walk(CX - 8, CY + 2, SA.x + 5, SA.y, seed + 6); }
   circ(CX + .5, CY + .5, 8.5, (x, y, i) => { wall[i] = 0; floor[i] = 1; biome[i] = 0; });
   circ(BX + .5, BY + .5, 9.6, (x, y, i, d) => { biome[i] = 0; if (d < 7.6 || (x < BX && Math.abs(y - BY) <= 1)) { wall[i] = 0; floor[i] = d < 3 ? 6 : 2; } else wall[i] = (x * 7 + y * 3) % 5 === 0 ? 4 : 1; });
@@ -1950,7 +1969,7 @@ function genWorld(seed) {
   if (LAY === 1) for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) { const i = idx(x, y); if (biome[i] < 3 || wall[i] === 8 || Math.hypot(x - SL.x - .5, y - SL.y - .5) <= 9.6 || Math.hypot(x - SI.x - .5, y - SI.y - .5) <= 9.6) continue; let edge = false; for (let dy = -2; dy <= 2 && !edge; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; if (biome[idx(xx, yy)] < 3) { edge = true; break; } } if (edge) wall[i] = wallFor(biome[i], x, y, seed); }
   for (const [S, b, fl] of [[SL, 3, 18], [SI, 4, 19]]) circ(S.x + .5, S.y + .5, 9.6, (x, y, i, d) => { if (wall[i] === 8) return; biome[i] = b; if (d < 7.6) { wall[i] = 0; floor[i] = d < 3 ? 6 : fl; } else wall[i] = b === 3 ? 9 : 11; });
   // bug fix (v49.1): on the ring map the slime king's rock ring was drawn over the tunnels, so his room (and the golem's tunnel, which starts there) was often sealed — carve them through again
-  if (LAY === 2) walks2();
+  if (LAY === 2) (MAPV === 3 ? walks3 : walks2)();
   // natural objects
   const nearSafe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5 || Math.hypot(x - SL.x, y - SL.y) < 10.5 || Math.hypot(x - SI.x, y - SI.y) < 10.5;
   addWater({ wall, floor, objs }, seed, nearSafe, null);
@@ -2035,6 +2054,44 @@ function openTreasure(t, o) {
   for (const [id, c] of loot) spawnDrop(id, c, t.x + .5, t.y + .9);
   G.stats.chests = (G.stats.chests || 0) + 1; emit('sfx', 'win'); emit('puff', t.x + .5, t.y + .4, '#ffe9a8', 18, 2.8, .5); gainXp(20); emit('toast', '보물상자를 열었어요!', 'good'); markLight(); checkGuide();
 }
+
+// ================= v70 (BF-04): map version 3 — boss rooms and altars at per-seed places, checked before play =================
+// Places (angle in degrees, 0 = east, -90 = north; distance from the lantern tree in tiles), approved 2026-10-14:
+// slime king (moss) and mushroom queen 55–80 tiles out, within ±40° of their old angle; golem (crystal), turtle (lava) and spirit (ice)
+// 150–200 tiles out, within ±25° of their sector's middle. Every room keeps 15° or more from its region's edges (so the angle ranges
+// below are those windows cut to stay inside the region), and the five rooms are 60 tiles or more apart.
+// A world passes when the tunnels really lead from the tree to the slime king, the queen and the golem, and to the rock rings of the
+// lava and ice rooms (which stay sealed as before); each room sits in its own region; and every resource has at least 80% of the
+// smallest amount seen on the fixed ring map (layout 2, 130 seeds). Up to 20 tries, then the fixed places of layout 2.
+const BF04 = { tries: 20, gap: 60, near: [55, 80], far: [150, 200],
+  ang: { B: [-75, -35], A: [100, 145], SB: [-115, -65], SL: [5, 55], SI: [125, 175] }, reg: { B: 0, A: 1, SB: 2, SL: 3, SI: 4 },
+  minWall: { 4: 1460, 5: 2176, 10: 2402, 12: 2852, 13: 1276 }, minObj: { root: 252, bigShroom: 68, cluster: 201, glow: 208, fireBloom: 220, iceCluster: 176 } };
+const AKEYS = ['B', 'A', 'SB', 'SL', 'SI'];
+function rollAnch(seed, k) { const R = rng((Math.imul(seed | 0, 31) + 977 * (k + 1)) >>> 0), u = (a, b) => a + (b - a) * R(), o = {};
+  for (const key of AKEYS) { const [a0, a1] = BF04.ang[key], [d0, d1] = key === 'B' || key === 'A' ? BF04.near : BF04.far; o[key] = [Math.round(u(a0, a1)), Math.round(u(d0, d1))]; }
+  o.t = k; return o; } // each try also gets its own cave shape (terr3), so a world short of some resource can be fixed by trying again
+const anchPts = () => ({ B: { x: BX, y: BY }, A: SA, SB, SL, SI });
+// why a world fails ('' = it passes); call after setLayout(3, anchors) and genWorld
+function checkWorld(w) { const P = anchPts();
+  for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) if (Math.hypot(P[AKEYS[i]].x - P[AKEYS[j]].x, P[AKEYS[i]].y - P[AKEYS[j]].y) < BF04.gap) return 'gap ' + AKEYS[i] + '-' + AKEYS[j];
+  for (const k of AKEYS) { const S = P[k]; let n = 0, ok = 0; // the region around the room (outside its own circle)
+    for (let y = S.y - 14; y <= S.y + 14; y++) for (let x = S.x - 14; x <= S.x + 14; x++) { const d = Math.hypot(x - S.x, y - S.y); if (d < 10 || d > 14 || !inB(x, y)) continue; n++; if (w.biome[idx(x, y)] === BF04.reg[k]) ok++; }
+    if (ok < n * .9) return 'region ' + k; }
+  const N = W * H, seen = new Uint8Array(N), q = [idx(CX, CY + 2)]; seen[q[0]] = 1; // walk without digging or swimming
+  for (let k = 0; k < q.length; k++) { const i = q[k], x = i % W; for (const [d, dx] of [[1, 1], [-1, -1], [W, 0], [-W, 0]]) { const j = i + d; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N || seen[j] || w.wall[j] || w.floor[j] === WATER || w.floor[j] === LAVA) continue; seen[j] = 1; q.push(j); } }
+  const near = (S, r) => { for (let y = S.y - r; y <= S.y + r; y++) for (let x = S.x - r; x <= S.x + r; x++) if (inB(x, y) && Math.hypot(x - S.x, y - S.y) <= r && seen[idx(x, y)]) return true; return false; };
+  for (const k of ['B', 'A', 'SB']) if (!seen[idx(P[k].x, P[k].y)]) return 'path ' + k;
+  for (const k of ['SL', 'SI']) if (!near(P[k], 12)) return 'path ' + k;
+  const wc = {}; for (let i = 0; i < N; i++) { const v = w.wall[i]; if (BF04.minWall[v]) wc[v] = (wc[v] || 0) + 1; }
+  for (const v in BF04.minWall) if ((wc[v] || 0) < BF04.minWall[v]) return 'wall ' + v;
+  const oc = {}; for (const o of w.objs.values()) if (BF04.minObj[o.t]) oc[o.t] = (oc[o.t] || 0) + 1;
+  for (const t in BF04.minObj) if ((oc[t] || 0) < BF04.minObj[t]) return 'obj ' + t;
+  return ''; }
+// a new world on map version 3: try up to 20 sets of places and cave shapes; if none passes, layout 2's fixed places and cave shape
+// (still saved as map version 3 with t = -1; the tunnels are drawn the version-3 way, from room edge to room edge)
+function makeWorld3(seed, chk = checkWorld) { const why = [];
+  for (let k = 0; k < BF04.tries; k++) { setLayout(3, rollAnch(seed, k)); const w = genWorld(seed), r = chk(w); if (!r) return { w, tries: k + 1, why }; why.push(r); }
+  setLayout(3, { ...ANCH2, t: -1 }); return { w: genWorld(seed), tries: 0, why }; }
 // ================= 칸·충돌·움직임·놓기 (구조 변경 5단계: world.js와 content/circuits-regions.js에서 옮김) =================
 // 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 땅 파기·지형 배우기, 놓을 수 있는지(canPlace)
 
@@ -2146,7 +2203,8 @@ const freshBosses = () => Object.fromEntries(BKEYS.map(k => [k, freshBoss(k)]));
 const freshDead = () => Object.fromEntries(BKEYS.map(k => [k, false]));
 const guardOf = (x, y) => (x === SA.x && y === SA.y) ? 'queen' : (x === SB.x && y === SB.y) ? 'golem' : (x === SL.x && y === SL.y) ? 'turtle' : (x === SI.x && y === SI.y) ? 'spirit' : null;
 function newGame(seed) {
-  setLayout(devLayout() || 2); setFootprints(2); const w = genWorld(seed);
+  const lv = devLayout() || 3; setFootprints(2); let w; // v70 (BF-04): new worlds get map version 3 (boss rooms at per-seed places, world/gen.js makeWorld3)
+  if (lv === 3) w = makeWorld3(seed).w; else { setLayout(lv); w = genWorld(seed); }
   G = { seed, ...w, explored: new Uint8Array(W * H), inv: Array(HOT + BAG0).fill(null), sel: 0, bagLv: 0, tools: [], tsel: 0, lastW: null,
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
@@ -2163,7 +2221,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
 const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
@@ -2233,10 +2291,10 @@ function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: LAY, fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
 }
 function deserialize(s) {
-  setLayout(s.mapV === 2 ? 2 : 1); // saves from before v47 keep the original 200×200 map
+  setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
   setFootprints(2); const oldFp = s.fpV !== 2; // v56: saves from before v50 get the 2×1 workbench and benches too (growFootprints below)
   const N = W * H;
   G = { seed: s.seed, wall: unrle(s.wall, N), floor: unrle(s.floor, N), biome: unrle(s.biome, N), explored: unrle(s.explored, N), objs: new Map(s.objs), inv: s.inv, sel: Number.isInteger(s.sel) ? s.sel : 0, tools: Array.isArray(s.tools) ? s.tools : [], tsel: Number.isInteger(s.tsel) ? s.tsel : 0, tHand: !!s.tHand, lastW: typeof s.lastW === 'string' ? s.lastW : null,
@@ -3535,7 +3593,7 @@ function envTick(dt) {
 // turn granite into quartz later). Wood/brick walls, walls built on open ground, fences, furniture, bedrock, water and lava still close you in.
 // Some new worlds start in a rock-ringed clearing. Used by closedIn (fainting, recall, loading — v64) and regionOf (emergency escape — v63).
 let NATW = null, NATW_K = '';
-function naturalWalls() { const k = G.seed + '|' + W + 'x' + H; if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
+function naturalWalls() { const k = G.seed + '|' + W + 'x' + H + '|' + MAPV + (ANCH ? JSON.stringify(ANCH) : ''); if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
 function shutsIn(x, y, j, nat) { if (!isSolid(x, y)) return false; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o); if (a && OBJ[a.t] && OBJ[a.t].door) return false;
   return !(nat && nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && G.wall[j] !== 6 && G.wall[j] !== 7); } // nat null: every solid tile shuts you in
 // bug fix: a home point (the lantern tree or a bed) fenced in on every side left you stuck after fainting or recalling;
