@@ -75,6 +75,7 @@
 5. **배포**: `main`에 올리면 GitHub Actions가 테스트 후 배포 파일을 만들어 줘요 (위 「자동 반영·배포」). 직접 만들 때는 `python3 dev/build_web.py` — 위키(`wiki.html`)도 함께 다시 만들어져요
 6. **올리기**
    - 깃허브: `git add -A && git commit && git push origin main` (작성자 Juyeon / yon2pang@gmail.com)
+   - Claude 게임·위키 페이지(아티팩트)는 사용자가 요청할 때만 다시 게시해요
    - Claude 게임 페이지(아티팩트): `python3 dev/build.py`로 묶은 `dev/index.html`을 기존 주소 `https://claude.ai/artifact/RBFeEeaCo7T5a6LgZCb9ga`에 다시 게시 (다운로드 기능 유지)
    - 위키 페이지(아티팩트): 저장소 맨 위 `wiki.html`을 기존 주소 `https://claude.ai/artifact/6uDujDPR1jG1DLBBg4Nn6g`에 다시 게시
 
