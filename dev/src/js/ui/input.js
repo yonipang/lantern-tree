@@ -30,7 +30,7 @@ export const aimMouse = () => mouse.used && mouse.over && (mouse.down || perform
 export function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
 export function mouseTile() {
   const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
-  // wall tops are drawn lifted (v71: by 20px, more than a tile), so a floor tile above a wall visually belongs to the nearest wall below that reaches it
+  // wall tops are drawn lifted (v72: by 12px — LIFT), so a floor tile above a wall visually belongs to the nearest wall below that reaches it
   if (!(inB(tx, ty) && G.wall[idx(tx, ty)])) { const lf = LIFT / 16; for (let r = ty + 1; r <= ty + Math.ceil(lf); r++) if (inB(tx, r) && G.wall[idx(tx, r)] && m.y >= r - lf) { ty = r; break; } }
   return { x: tx, y: ty, mx: m.x, my: m.y };
 }

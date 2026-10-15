@@ -8,7 +8,9 @@
 import { ARTC } from './hand-art.js';
 import { SPR } from './world.js';
 
-export const WALL_H = 20; // v71: 벽 앞면 높이 px (예전 5) — 벽 윗면이 그만큼 위로 올라가 뒤(북쪽)에 선 것을 가려요
+export const WALL_H = 16; // 벽 앞면 높이 px (v71: 5 → 20, v72: 20 → 16 = 한 칸) — 앞면이 벽 칸에 딱 맞게 서요
+export const WALL_TOP = 12; // v72: 벽 윗면 높이 px (예전 16) — 앞면 바로 위에 얹혀요
+export const WALL_LIFT = WALL_H + WALL_TOP - 16; // 벽이 자기 칸 위(북쪽 칸)로 올라오는 높이: 12px — 그만큼 뒤에 선 것을 가려요
 export const BUILT_WALLS = new Set([6, 7]); // 나무 벽·돌벽돌 벽: 바닥 테두리 없이 바로 닿아요
 export const ROCK_FILL = '#28202c';
 // 지역별 물 색 [바탕, 잔물결, 반짝임] — 이끼 동굴은 청록, 얼음 동굴은 차가운 짙은 파랑. 나머지 지역은 예전 물 그림
@@ -59,7 +61,8 @@ function buildWater() {
     SPR.waterB[b] = [0, 1].map(k => cnv(16, 16, g => { g.fillStyle = c0; g.fillRect(0, 0, 16, 16); g.fillStyle = c1;
       for (const [a, y] of k ? [[2, 4], [9, 10], [12, 3]] : [[4, 6], [11, 12], [7, 2]]) g.fillRect(a, y, 3, 1); g.fillStyle = c2; g.fillRect(k ? 6 : 10, k ? 13 : 9, 2, 1); })); }
 }
-// 벽: 앞면은 WALL_H 높이 — 손그림(wfront/<번호>, 16×WALL_H)이 없으면 윗면 무늬로 임시 앞면을 만들어요. 윗면은 조금 어둡게.
+// 벽: 앞면은 WALL_H 높이 — 손그림(wfront/<번호>, 16×WALL_H)이 없으면 윗면 무늬로 임시 앞면을 만들어요.
+// 윗면은 16×WALL_TOP으로, 조금 어둡게. 윗면 그림(wtop)이 더 높으면(예전 16×16) 가운데 WALL_TOP줄만 써요.
 function buildWalls() {
   SPR.wallIcon = {}; // the wall item icons keep the old (untinted, 5px front) look
   for (const t in SPR.wtop) { const tops = SPR.wtop[t], src = tops[1] || tops[0]; SPR.wallIcon[t] = [tops[0], SPR.wfront[t]];
@@ -71,19 +74,20 @@ function buildWalls() {
       g.fillStyle = 'rgba(20,12,30,0.16)'; for (let y = 6; y < WALL_H - 2; y += 6) g.fillRect(0, y, 16, 1);
       g.fillStyle = 'rgba(20,12,30,0.7)'; g.fillRect(0, WALL_H - 1, 16, 1);
       g.fillStyle = 'rgba(20,12,30,0.18)'; for (let x = 2; x < 16; x += 5) g.fillRect(x, 2, 1, WALL_H - 4); });
-    SPR.wtop[t] = tops.map(c => cnv(16, 16, g => { g.drawImage(c, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = WALL_LOOK.topTint; g.fillRect(0, 0, 16, 16); g.globalCompositeOperation = 'destination-in'; g.drawImage(c, 0, 0); }));
+    SPR.wtop[t] = tops.map(c => cnv(16, WALL_TOP, g => { const sy = Math.max(0, (c.height - WALL_TOP) >> 1), sh = Math.min(WALL_TOP, c.height), top = () => g.drawImage(c, 0, sy, 16, sh, 0, 0, 16, sh);
+      top(); g.globalCompositeOperation = 'multiply'; g.fillStyle = WALL_LOOK.topTint; g.fillRect(0, 0, 16, WALL_TOP); g.globalCompositeOperation = 'destination-in'; top(); }));
   }
   TM.shade.clear();
 }
-// 벽 윗면 그늘: 열린 쪽(벽이 아닌 칸) 가장자리 2px만 벽 무늬가 보이고 안쪽으로 5px에 걸쳐 까매져요.
+// 벽 윗면 그늘(16×WALL_TOP): 열린 쪽(벽이 아닌 칸) 가장자리 2px만 벽 무늬가 보이고 안쪽으로 5px에 걸쳐 까매져요.
 // mask = 열린 이웃: 1 북 · 2 동 · 4 남 · 8 서 · 16 북동 · 32 남동 · 64 남서 · 128 북서
 export function wallShade(mask) {
   let c = TM.shade.get(mask); if (c) return c;
-  const o = b => mask & b, L = WALL_LOOK;
-  c = cnv(16, 16, g => { const im = g.createImageData(16, 16);
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const cx = x + .5, cy = y + .5; let d = 99;
-      if (o(1)) d = Math.min(d, cy); if (o(4)) d = Math.min(d, 16 - cy); if (o(8)) d = Math.min(d, cx); if (o(2)) d = Math.min(d, 16 - cx);
-      if (o(16)) d = Math.min(d, Math.hypot(16 - cx, cy)); if (o(32)) d = Math.min(d, Math.hypot(16 - cx, 16 - cy)); if (o(64)) d = Math.min(d, Math.hypot(cx, 16 - cy)); if (o(128)) d = Math.min(d, Math.hypot(cx, cy));
+  const o = b => mask & b, L = WALL_LOOK, TH = WALL_TOP;
+  c = cnv(16, TH, g => { const im = g.createImageData(16, TH);
+    for (let y = 0; y < TH; y++) for (let x = 0; x < 16; x++) { const cx = x + .5, cy = y + .5; let d = 99;
+      if (o(1)) d = Math.min(d, cy); if (o(4)) d = Math.min(d, TH - cy); if (o(8)) d = Math.min(d, cx); if (o(2)) d = Math.min(d, 16 - cx);
+      if (o(16)) d = Math.min(d, Math.hypot(16 - cx, cy)); if (o(32)) d = Math.min(d, Math.hypot(16 - cx, TH - cy)); if (o(64)) d = Math.min(d, Math.hypot(cx, TH - cy)); if (o(128)) d = Math.min(d, Math.hypot(cx, cy));
       const a = Math.max(0, Math.min(1, (d - L.rim) / L.fade)), k = (y * 16 + x) * 4; im.data[k] = 8; im.data[k + 1] = 6; im.data[k + 2] = 12; im.data[k + 3] = Math.round(a * 255 * L.black); }
     g.putImageData(im, 0, 0); });
   TM.shade.set(mask, c); return c;
