@@ -1293,7 +1293,9 @@ function glowSprite(col) {
 // 자연 벽에 닿는 곳은 바닥이 둥글게 끝나고 그 바깥은 어두운 바위색(ROCK_FILL)이에요. 사람이 쌓은 벽(나무·돌벽돌)은 바닥이 그대로 닿아요.
 // 그리기는 render/chunks.js(바닥)·render/world.js(벽·물). 그림이 없으면(타일셋 PNG를 빼면) 예전 바닥 그대로예요.
 
-const WALL_H = 20; // v71: 벽 앞면 높이 px (예전 5) — 벽 윗면이 그만큼 위로 올라가 뒤(북쪽)에 선 것을 가려요
+const WALL_H = 16; // 벽 앞면 높이 px (v71: 5 → 20, v72: 20 → 16 = 한 칸) — 앞면이 벽 칸에 딱 맞게 서요
+const WALL_TOP = 12; // v72: 벽 윗면 높이 px (예전 16) — 앞면 바로 위에 얹혀요
+const WALL_LIFT = WALL_H + WALL_TOP - 16; // 벽이 자기 칸 위(북쪽 칸)로 올라오는 높이: 12px — 그만큼 뒤에 선 것을 가려요
 const BUILT_WALLS = new Set([6, 7]); // 나무 벽·돌벽돌 벽: 바닥 테두리 없이 바로 닿아요
 const ROCK_FILL = '#28202c';
 // 지역별 물 색 [바탕, 잔물결, 반짝임] — 이끼 동굴은 청록, 얼음 동굴은 차가운 짙은 파랑. 나머지 지역은 예전 물 그림
@@ -1344,7 +1346,8 @@ function buildWater() {
     SPR.waterB[b] = [0, 1].map(k => cnv(16, 16, g => { g.fillStyle = c0; g.fillRect(0, 0, 16, 16); g.fillStyle = c1;
       for (const [a, y] of k ? [[2, 4], [9, 10], [12, 3]] : [[4, 6], [11, 12], [7, 2]]) g.fillRect(a, y, 3, 1); g.fillStyle = c2; g.fillRect(k ? 6 : 10, k ? 13 : 9, 2, 1); })); }
 }
-// 벽: 앞면은 WALL_H 높이 — 손그림(wfront/<번호>, 16×WALL_H)이 없으면 윗면 무늬로 임시 앞면을 만들어요. 윗면은 조금 어둡게.
+// 벽: 앞면은 WALL_H 높이 — 손그림(wfront/<번호>, 16×WALL_H)이 없으면 윗면 무늬로 임시 앞면을 만들어요.
+// 윗면은 16×WALL_TOP으로, 조금 어둡게. 윗면 그림(wtop)이 더 높으면(예전 16×16) 가운데 WALL_TOP줄만 써요.
 function buildWalls() {
   SPR.wallIcon = {}; // the wall item icons keep the old (untinted, 5px front) look
   for (const t in SPR.wtop) { const tops = SPR.wtop[t], src = tops[1] || tops[0]; SPR.wallIcon[t] = [tops[0], SPR.wfront[t]];
@@ -1356,19 +1359,20 @@ function buildWalls() {
       g.fillStyle = 'rgba(20,12,30,0.16)'; for (let y = 6; y < WALL_H - 2; y += 6) g.fillRect(0, y, 16, 1);
       g.fillStyle = 'rgba(20,12,30,0.7)'; g.fillRect(0, WALL_H - 1, 16, 1);
       g.fillStyle = 'rgba(20,12,30,0.18)'; for (let x = 2; x < 16; x += 5) g.fillRect(x, 2, 1, WALL_H - 4); });
-    SPR.wtop[t] = tops.map(c => cnv(16, 16, g => { g.drawImage(c, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = WALL_LOOK.topTint; g.fillRect(0, 0, 16, 16); g.globalCompositeOperation = 'destination-in'; g.drawImage(c, 0, 0); }));
+    SPR.wtop[t] = tops.map(c => cnv(16, WALL_TOP, g => { const sy = Math.max(0, (c.height - WALL_TOP) >> 1), sh = Math.min(WALL_TOP, c.height), top = () => g.drawImage(c, 0, sy, 16, sh, 0, 0, 16, sh);
+      top(); g.globalCompositeOperation = 'multiply'; g.fillStyle = WALL_LOOK.topTint; g.fillRect(0, 0, 16, WALL_TOP); g.globalCompositeOperation = 'destination-in'; top(); }));
   }
   TM.shade.clear();
 }
-// 벽 윗면 그늘: 열린 쪽(벽이 아닌 칸) 가장자리 2px만 벽 무늬가 보이고 안쪽으로 5px에 걸쳐 까매져요.
+// 벽 윗면 그늘(16×WALL_TOP): 열린 쪽(벽이 아닌 칸) 가장자리 2px만 벽 무늬가 보이고 안쪽으로 5px에 걸쳐 까매져요.
 // mask = 열린 이웃: 1 북 · 2 동 · 4 남 · 8 서 · 16 북동 · 32 남동 · 64 남서 · 128 북서
 function wallShade(mask) {
   let c = TM.shade.get(mask); if (c) return c;
-  const o = b => mask & b, L = WALL_LOOK;
-  c = cnv(16, 16, g => { const im = g.createImageData(16, 16);
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const cx = x + .5, cy = y + .5; let d = 99;
-      if (o(1)) d = Math.min(d, cy); if (o(4)) d = Math.min(d, 16 - cy); if (o(8)) d = Math.min(d, cx); if (o(2)) d = Math.min(d, 16 - cx);
-      if (o(16)) d = Math.min(d, Math.hypot(16 - cx, cy)); if (o(32)) d = Math.min(d, Math.hypot(16 - cx, 16 - cy)); if (o(64)) d = Math.min(d, Math.hypot(cx, 16 - cy)); if (o(128)) d = Math.min(d, Math.hypot(cx, cy));
+  const o = b => mask & b, L = WALL_LOOK, TH = WALL_TOP;
+  c = cnv(16, TH, g => { const im = g.createImageData(16, TH);
+    for (let y = 0; y < TH; y++) for (let x = 0; x < 16; x++) { const cx = x + .5, cy = y + .5; let d = 99;
+      if (o(1)) d = Math.min(d, cy); if (o(4)) d = Math.min(d, TH - cy); if (o(8)) d = Math.min(d, cx); if (o(2)) d = Math.min(d, 16 - cx);
+      if (o(16)) d = Math.min(d, Math.hypot(16 - cx, cy)); if (o(32)) d = Math.min(d, Math.hypot(16 - cx, TH - cy)); if (o(64)) d = Math.min(d, Math.hypot(cx, TH - cy)); if (o(128)) d = Math.min(d, Math.hypot(cx, cy));
       const a = Math.max(0, Math.min(1, (d - L.rim) / L.fade)), k = (y * 16 + x) * 4; im.data[k] = 8; im.data[k + 1] = 6; im.data[k + 2] = 12; im.data[k + 3] = Math.round(a * 255 * L.black); }
     g.putImageData(im, 0, 0); });
   TM.shade.set(mask, c); return c;
@@ -1577,9 +1581,9 @@ const RECIPES = [
 const BMAT = { wood: { n: '나무', res: 'wood', f: '#b0743f', fd: '#7d4d2a', fl: '#d9a066', c: '#e0b07a', cd: '#8a5a33', door: '#8f5a32' },
   stone: { n: '돌', res: 'stone', f: '#8f8aa3', fd: '#625d78', fl: '#b9b4cc', c: '#d3cee3', cd: '#6d6884', door: '#6d6884' } };
 const BMAT_X = { metal: { n: '금속', f: '#8d97a8', fd: '#5a5468', fl: '#c8d0dc', c: '#dfe5ee', cd: '#6c7688', door: '#a9b6c8' } };
-const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft (v71: door 16 → 31, as tall as a natural wall)
+const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft (door as tall as a natural wall: v71 16 → 31, v72 31 → 23)
   fence: { n: '울타리', h: 10, cnt: 2, cost: 1, d: '마당을 두르는 울타리. 울타리·기둥·문과 이어져요.' },
-  door: { n: '문', h: 31, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요.' },
+  door: { n: '문', h: 23, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요.' },
 };
 // v69 (BF-05): thin walls, half walls, pillars, window walls and window frames were removed. What they cost per piece, to hand back
 // (recipes as they were: wood thin 2→2, half/pillar 1→2, window wall 3→2, frame 2→1; stone after the terrain ×2: 4, 2, 6, 4).
@@ -1588,7 +1592,7 @@ const OLD_PIECES = { bThinWood: ['wood', 1], bThinStone: ['stone', 2], bHalfWood
   bWinWood: ['wood', 1.5], bWinStone: ['stone', 3], bFrameWood: ['wood', 2], bFrameStone: ['stone', 4] };
 // the box the refund goes into when it does not all fit in the bag: opens like a chest, only for its owner, nothing can be put back in
 OBJ.refundBox = { n: '환급 상자', solid: 1, refund: 1 };
-const TW_H = { slide: 31 }; // pieces outside the wood/stone sets — v71: doors 16 → 31px, as tall as a natural wall (20px front)
+const TW_H = { slide: 23 }; // pieces outside the wood/stone sets — doors as tall as a natural wall (v71: 31px, v72: 23px with the 16px front + 12px top)
 const BCAP = s => s[0].toUpperCase() + s.slice(1);
 const bId = (type, mat) => 'b' + BCAP(type) + BCAP(mat); // e.g. bThinWood
 function addBuildPieces() {
@@ -5196,7 +5200,7 @@ let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoo
 const setZoomPref = v => { zoomPref = v; };
 let vignette = null;
 let TP = 48, Z = 3, DPR = 1; // 화면 배율 (save/state.js에서 옮김, 11단계)
-const LIFT = WALL_H; // v71: 벽 높이 20px (art/tilemap.js)
+const LIFT = WALL_LIFT; // 벽이 자기 칸 위로 올라오는 높이 (v71: 20px, v72: 12px — art/tilemap.js)
 function resize() {
   DPR = Math.min(3, window.devicePixelRatio || 1);
   const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
@@ -5391,14 +5395,15 @@ function renderWorld(cw, ch) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
       ctx.drawImage(SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
       ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
-      const below = y + 1 < H ? G.wall[i + W] : 1;
-      if (!below) ctx.drawImage(SPR.wfront[w], sx, sy + T - L);
+      const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
+      if (!below) ctx.drawImage(SPR.wfront[w], sx, fy);
       ctx.fillStyle = 'rgba(20,12,30,0.55)';
-      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, T);
-      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, T);
+      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, WALL_TOP);
+      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, WALL_TOP);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
-      const dm = G.wdmg.get(i); if (dm) ctx.drawImage(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))], sx, sy - L);
-      if (DOORS.has(i)) { if (!dm) ctx.drawImage(SPR.crack[0], sx, sy - L); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, sy + T - L, 1, 2); ctx.fillRect(sx + 8, sy + T - L + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, sy + T - L + 2, 1, 2); ctx.fillRect(sx + 6, sy + T - L + 1, 1, 1); } }
+      const ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); // cracks: the middle rows on the 12px top
+      const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+      if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
     }
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
     for (const it of list) drawEntity(it, t);
@@ -6307,7 +6312,7 @@ const aimMouse = () => mouse.used && mouse.over && (mouse.down || performance.no
 function mouseWorld() { return { x: (mouse.x * DPR + VIEW.baseX) / TP, y: (mouse.y * DPR + VIEW.baseY) / TP }; }
 function mouseTile() {
   const m = mouseWorld(); let tx = Math.floor(m.x), ty = Math.floor(m.y);
-  // wall tops are drawn lifted (v71: by 20px, more than a tile), so a floor tile above a wall visually belongs to the nearest wall below that reaches it
+  // wall tops are drawn lifted (v72: by 12px — LIFT), so a floor tile above a wall visually belongs to the nearest wall below that reaches it
   if (!(inB(tx, ty) && G.wall[idx(tx, ty)])) { const lf = LIFT / 16; for (let r = ty + 1; r <= ty + Math.ceil(lf); r++) if (inB(tx, r) && G.wall[idx(tx, r)] && m.y >= r - lf) { ty = r; break; } }
   return { x: tx, y: ty, mx: m.x, my: m.y };
 }
