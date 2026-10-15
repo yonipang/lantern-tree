@@ -205,9 +205,9 @@ export const RECIPES = [
 export const BMAT = { wood: { n: '나무', res: 'wood', f: '#b0743f', fd: '#7d4d2a', fl: '#d9a066', c: '#e0b07a', cd: '#8a5a33', door: '#8f5a32' },
   stone: { n: '돌', res: 'stone', f: '#8f8aa3', fd: '#625d78', fl: '#b9b4cc', c: '#d3cee3', cd: '#6d6884', door: '#6d6884' } };
 export const BMAT_X = { metal: { n: '금속', f: '#8d97a8', fd: '#5a5468', fl: '#c8d0dc', c: '#dfe5ee', cd: '#6c7688', door: '#a9b6c8' } };
-export const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft (v71: door 16 → 31, as tall as a natural wall)
+export const BTYPE = { // h: height in px · cnt: pieces per craft · cost: material per craft (door as tall as a natural wall: v71 16 → 31, v72 31 → 23)
   fence: { n: '울타리', h: 10, cnt: 2, cost: 1, d: '마당을 두르는 울타리. 울타리·기둥·문과 이어져요.' },
-  door: { n: '문', h: 31, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요.' },
+  door: { n: '문', h: 23, cnt: 1, cost: 4, d: '바라보고 누르면 열고 닫아요. 두 칸을 나란히 놓으면 양문이 되어 함께 열려요.' },
 };
 // v69 (BF-05): thin walls, half walls, pillars, window walls and window frames were removed. What they cost per piece, to hand back
 // (recipes as they were: wood thin 2→2, half/pillar 1→2, window wall 3→2, frame 2→1; stone after the terrain ×2: 4, 2, 6, 4).
@@ -216,7 +216,7 @@ export const OLD_PIECES = { bThinWood: ['wood', 1], bThinStone: ['stone', 2], bH
   bWinWood: ['wood', 1.5], bWinStone: ['stone', 3], bFrameWood: ['wood', 2], bFrameStone: ['stone', 4] };
 // the box the refund goes into when it does not all fit in the bag: opens like a chest, only for its owner, nothing can be put back in
 OBJ.refundBox = { n: '환급 상자', solid: 1, refund: 1 };
-export const TW_H = { slide: 31 }; // pieces outside the wood/stone sets — v71: doors 16 → 31px, as tall as a natural wall (20px front)
+export const TW_H = { slide: 23 }; // pieces outside the wood/stone sets — doors as tall as a natural wall (v71: 31px, v72: 23px with the 16px front + 12px top)
 export const BCAP = s => s[0].toUpperCase() + s.slice(1);
 export const bId = (type, mat) => 'b' + BCAP(type) + BCAP(mat); // e.g. bThinWood
 export function addBuildPieces() {

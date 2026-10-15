@@ -32,7 +32,7 @@ import { aimMouse } from '../ui/input.js';
 import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { fpOf, placeAnchor } from '../world/tiles.js';
-import { wallShade } from '../art/tilemap.js';
+import { WALL_H, WALL_TOP, wallShade } from '../art/tilemap.js';
 export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
 export function updateAmbient(dt) {
@@ -98,14 +98,15 @@ export function renderWorld(cw, ch) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
       ctx.drawImage(SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
       ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
-      const below = y + 1 < H ? G.wall[i + W] : 1;
-      if (!below) ctx.drawImage(SPR.wfront[w], sx, sy + T - L);
+      const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
+      if (!below) ctx.drawImage(SPR.wfront[w], sx, fy);
       ctx.fillStyle = 'rgba(20,12,30,0.55)';
-      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, T);
-      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, T);
+      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, WALL_TOP);
+      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, WALL_TOP);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
-      const dm = G.wdmg.get(i); if (dm) ctx.drawImage(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))], sx, sy - L);
-      if (DOORS.has(i)) { if (!dm) ctx.drawImage(SPR.crack[0], sx, sy - L); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, sy + T - L, 1, 2); ctx.fillRect(sx + 8, sy + T - L + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, sy + T - L + 2, 1, 2); ctx.fillRect(sx + 6, sy + T - L + 1, 1, 1); } }
+      const ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); // cracks: the middle rows on the 12px top
+      const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+      if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
     }
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
     for (const it of list) drawEntity(it, t);

@@ -8,7 +8,7 @@ import { cam, G } from '../save/state.js';
 import { onFrame } from '../sim/systems.js';
 import { shake } from '../ui/feedback.js';
 import { markLight } from '../sim/loop.js';
-import { WALL_H } from '../art/tilemap.js';
+import { WALL_LIFT } from '../art/tilemap.js';
 onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드럽게 따라가요
   const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
 });
@@ -21,7 +21,7 @@ export let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-t
 export const setZoomPref = v => { zoomPref = v; };
 export let vignette = null;
 export let TP = 48, Z = 3, DPR = 1; // 화면 배율 (save/state.js에서 옮김, 11단계)
-export const LIFT = WALL_H; // v71: 벽 높이 20px (art/tilemap.js)
+export const LIFT = WALL_LIFT; // 벽이 자기 칸 위로 올라오는 높이 (v71: 20px, v72: 12px — art/tilemap.js)
 export function resize() {
   DPR = Math.min(3, window.devicePixelRatio || 1);
   const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
