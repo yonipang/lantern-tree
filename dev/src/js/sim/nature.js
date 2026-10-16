@@ -96,7 +96,9 @@ export function regrow() {
     let nat = 0, built = false;
     for (let dy = -3; dy <= 3 && !built; dy++) for (let dx = -3; dx <= 3; dx++) { const j = idx(x + dx, y + dy), o = G.objs.get(j); if (isPlacedFloor(G.floor[j])) { built = true; break; } if (!o) continue; const od = OBJ[o.t]; if (od.nat || od.bush) nat++; else if (od.item || od.tw) { built = true; break; } }
     if (built || nat >= 6) continue;
-    G.objs.set(i, { t: rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass' }); return;
+    const nt = rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass';
+    if (rand() >= (nt === 'root' ? 1 / 3 : 0.5)) return; // v74: root pillars regrow 1/3 as often, moss grass 1/2
+    G.objs.set(i, { t: nt }); return;
   }
 }
 onFrame('regrow', dt => {
