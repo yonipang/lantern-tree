@@ -47,6 +47,43 @@ def test_ring_map():
     return main
 
 
+def test_new_light_terrain():
+    import asyncio, sys
+    # v73: 새 바닥·벽·광석 그림 + 새 빛 효과(WebGL2). 그래픽 칩이 없으면 예전 빛으로 돌아가요
+    H2=HOOK.replace("computeLight}","computeLight,TR,oreHost,wallArt,bakeFloor,glDebug,setLightPref,get lightPref(){return lightPref},ROCKS}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # 광석은 주변 바위(흙·돌·화강암·현무암) 속 그림, 바위·광맥 모두 새 그림 (얼음벽·암반은 예전 그림)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const hosts=new Set(),miss=[];let n=0;for(let i=0;i<G.wall.length&&n<4000;i++){const w=G.wall[i];if(![4,5,10,12,13].includes(w))continue;n++;const x=i%600,y=(i/600)|0,h=T.oreHost(x,y);hosts.add(h);const a=T.wallArt(x,y,w);if(!a||!a.top||!a.front||a.ore!==w)miss.push(w)}
+              return [T.TR.ready,n>100,[...hosts].every(h=>T.ROCKS.includes(h)),miss.length,[1,2,3,9].every(w=>!!T.wallArt(5,5,w)),T.wallArt(5,5,11)===null,T.wallArt(5,5,8)===null]}""")
+            rec('그림','광맥은 주변 바위(흙·돌·화강암·현무암) 속 그림, 바위 4종 새 그림, 얼음벽·암반은 예전', r==[True,True,True,0,True,True,True], str(r))
+            # 바닥은 조각마다 따로 구워도 이어 붙이면 한 번에 구운 것과 같아요 (조각 경계에 이음매 없음)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const x0=Math.floor(G.p.x/16)*16-16,y0=Math.floor(G.p.y/16)*16-16;
+              const a=T.bakeFloor(x0,y0,x0+15,y0+15),b2=T.bakeFloor(x0+16,y0,x0+31,y0+15),w=T.bakeFloor(x0,y0,x0+31,y0+15);let diff=0;
+              for(let y=0;y<256;y++)for(let x=0;x<512;x++){const s=x<256?a:b2,sx=x<256?x:x-256,k=(y*256+sx)*4,k2=(y*512+x)*4;for(let c=0;c<4;c++)if(s.data[k+c]!==w.data[k2+c])diff++}
+              const again=T.bakeFloor(x0,y0,x0+15,y0+15);let d2=0;for(let k=0;k<a.data.length;k++)if(a.data[k]!==again.data[k])d2++;return [diff,d2]}""")
+            rec('바닥','바닥 조각을 따로 구워도 경계가 이어지고(차이 0), 다시 구워도 같음', r==[0,0], str(r))
+            # 새 빛: 그래픽 칩이 있으면 매 장 빛을 계산하고 GL 오류 없음, 없으면 예전 빛
+            ok=await wait_until(pg,"()=>{const d=__T.glDebug();return d.failed||d.frames>10}")
+            r=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.failed,d.err2,d.frames>10]}")
+            rec('빛','새 빛이 돌아감 (GL 오류 없음) — 그래픽 칩이 없는 브라우저면 예전 빛으로', ok and ((r[0] and not r[1] and r[2]==0 and r[3]) or (r[1] and not r[0])), str(r))
+            # 메뉴에서 예전 빛 ↔ 새 빛 (기기에 저장)
+            await ev(pg,"()=>{__T.openPanel('menu')}"); await pg.wait_for_timeout(300)
+            n_tabs=await ev(pg,"()=>document.querySelectorAll('[data-a=light]').length")
+            await pg.click('[data-a=light][data-i=old]'); await pg.wait_for_timeout(200)
+            f0=await ev(pg,"()=>__T.glDebug().frames"); await ev(pg,"()=>__T.closePanel()"); await wait_game(pg,.6)
+            r=await ev(pg,"()=>[__T.lightPref,localStorage.getItem('lantern-tree-light'),__T.glDebug().frames]")
+            rec('빛','메뉴 「빛 효과」에서 예전 빛을 고르면 새 빛 계산을 멈추고 기기에 기억', n_tabs==2 and r[0]=='old' and r[1]=='old' and r[2]==f0, f'{n_tabs} {r} {f0}')
+            await ev(pg,"()=>__T.setLightPref('new')"); await wait_game(pg,.3)
+            await pg.screenshot(path=SP+'new_light.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_ring_map_boss_room():
     import asyncio, sys
     # v49.1 버그 수정: 고리 지도에서 말랑대왕 방(과 그 방에서 시작하는 수정골렘 길)이 바위 고리에 막히던 문제 / 귀환석으로 표지에 돌아갈 때 막힌 굴이면 엉뚱한 곳으로 옮겨지던 문제

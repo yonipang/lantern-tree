@@ -109,7 +109,8 @@ async def collect(b, src):
     pg = await b.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     await pg.goto(page(src, 'snap.html', HOOK)); await ready(pg)
-    data = await pg.evaluate("(C)=>{const canon=eval(C);const R=__S.reg();R.SPR=__S.SPR;R.icons={};for(const id of Object.keys(R.ITEMS))try{R.icons[id]=__S.iconURL(id)}catch(e){R.icons[id]='[오류]'}"
+    # v73: SPR.glow(빛 번짐 그림)는 그리는 동안 채워지는 임시 저장소라 빼요 — 새 빛(GPU)으로 그리면 비어 있고 예전 빛이면 채워져요
+    data = await pg.evaluate("(C)=>{const canon=eval(C);const R=__S.reg();R.SPR=Object.assign({},__S.SPR);delete R.SPR.glow;R.icons={};for(const id of Object.keys(R.ITEMS))try{R.icons[id]=__S.iconURL(id)}catch(e){R.icons[id]='[오류]'}"
                              "const h=s=>{let x=2166136261;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619)}return (x>>>0).toString(16)};for(const k in R.icons)R.icons[k]=h(R.icons[k]);return canon(R)}", CANON)
     saves = {}
     for name, s in json.load(open(FIXTURES)).items():

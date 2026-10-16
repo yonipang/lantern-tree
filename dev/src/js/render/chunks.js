@@ -6,16 +6,22 @@ import { hash2 } from '../engine/random.js';
 import { G } from '../save/state.js';
 import { wallPiece } from '../sim/building.js';
 import { WATER, WFLOOR } from '../sim/nature.js';
-import { idx, inB, LAVA, W } from '../world/map.js';
+import { H, idx, inB, LAVA, W } from '../world/map.js';
 import { BIOME_WATER, BUILT_WALLS, OLD_WATER, ROCK_FILL, TM, tileSetOf } from '../art/tilemap.js';
 import { cv } from './view.js';
+import { bakeFloor, isNewFloor, terrainReady } from './terrain.js';
 export const CHN = 16, chunks = new Map();
-export function chunkSig(cx, cy) { let h = 7; for (let y = cy * CHN - 1; y <= cy * CHN + CHN; y++) for (let x = cx * CHN - 1; x <= cx * CHN + CHN; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
+const CH_KEEP = 96; let chunkClock = 0;
+export function chunkSig(cx, cy) { let h = 7; const m = terrainReady() ? 2 : 1; for (let y = cy * CHN - m; y < cy * CHN + CHN + m; y++) for (let x = cx * CHN - m; x < cx * CHN + CHN + m; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
 export const natural = f => !!PRI[f];
 export function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
+  const NEW = terrainReady(); // v73: grass·dirt·water·wood·stone floors baked per pixel (render/terrain.js), other floors drawn per tile on top
+  if (NEW) g.putImageData(bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1), 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
-    const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i]) continue; const f = G.floor[i]; if (f === WATER) continue;
+    const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i]) continue; const f = G.floor[i];
+    if (NEW && isNewFloor(f)) { newShadows(g, x, y, tx * 16, ty * 16, f); continue; }
+    if (f === WATER) continue;
     const X = tx * 16, Y = ty * 16, hv = hash2(x, y, 5), vr = (hv * (SPR.floor[f] ? SPR.floor[f].length : 4)) | 0; // drawn floors can have more than 4 variants (v54)
     const tset = TM.ready && !wallPiece(i) ? tileSetOf(f) : null; // v71: drawn tileset floors
     if (tset) drawTileFloor(g, tset, x, y, X, Y, f);
@@ -42,7 +48,15 @@ export function drawChunk(c, cx, cy) {
     if (x > 0 && G.wall[i - 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
     if (x < W - 1 && G.wall[i + 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
   }
-  if (TM.ready) drawPatches(g, cx, cy);
+  if (TM.ready && !NEW) drawPatches(g, cx, cy);
+}
+// v73: contact shadows on the new floors (as in the light demo) — under a wall to the north, and beside walls left / right
+function newShadows(g, x, y, X, Y, f) {
+  const wl = (dx, dy) => !inB(x + dx, y + dy) || !!G.wall[idx(x + dx, y + dy)];
+  if (f === WATER) { if (wl(0, -1)) { g.fillStyle = 'rgba(10,20,45,0.6)'; g.fillRect(X, Y, 16, 3); } return; }
+  if (wl(0, -1)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
+  if (wl(-1, 0)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
+  if (wl(1, 0)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
 }
 // ---- v71 tileset floors (art/tilemap.js): each tile is four 8px quarters picked by its two side neighbours and the diagonal ----
 const isWaterish = n => n === WATER || n === LAVA || WFLOOR.has(n);
@@ -95,7 +109,16 @@ function drawPatches(g, cx, cy) {
 }
 export function getChunk(cx, cy) {
   const key = cx * 1000 + cy; let c = chunks.get(key);
-  if (!c) { c = { cv: document.createElement('canvas'), sig: null }; c.cv.width = c.cv.height = 256; chunks.set(key, c); }
+  if (!c) { c = { cv: document.createElement('canvas'), sig: null }; c.cv.width = c.cv.height = 256; chunks.set(key, c);
+    if (chunks.size > CH_KEEP) { let old = null, ot = Infinity; for (const [k, v] of chunks) if (v.used < ot) { ot = v.used; old = k; } chunks.delete(old); } } // v73: keep only the chunks seen lately (memory)
+  c.used = ++chunkClock;
   const sig = chunkSig(cx, cy); if (sig !== c.sig) { c.sig = sig; drawChunk(c, cx, cy); }
   return c.cv;
+}
+// v73: bake at most one chunk a frame just outside the screen, so walking into a new area rarely has to bake on screen
+export function prefetchChunk(cx0, cy0, cx1, cy1) {
+  for (let cy = cy0 - 1; cy <= cy1 + 1; cy++) for (let cx = cx0 - 1; cx <= cx1 + 1; cx++) {
+    if (cx >= cx0 && cx <= cx1 && cy >= cy0 && cy <= cy1) continue; if (cx < 0 || cy < 0 || cx * CHN >= W || cy * CHN >= H) continue;
+    const c = chunks.get(cx * 1000 + cy); if (c && c.sig === chunkSig(cx, cy)) continue;
+    getChunk(cx, cy); return; }
 }

@@ -76,6 +76,8 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
 | `js/art/content.js` | **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
+| `js/render/terrain.js` | v73 바닥·벽·광석 새 그림(`dev/art/terrain/`): 바닥을 픽셀 단위로 굽기(`bakeFloor`), 벽 그림 고르기(`wallArt`), 광석이 박힐 바위(`oreHost`) |
+| `js/render/glight.js` | v73 새 빛 효과(WebGL2): 면 정보·발광 캔버스(`beginGB`·`drawKind`), 픽셀마다 빛·벽 그림자·번짐(`shadeGL`), 메뉴 「빛 효과」(`lightPref`) — 못 쓰면 예전 빛 |
 | `js/render/map.js` | 지도 그림: 칸 색(`MAPF`·`MAPW`), 지도 다시 만들기(`rebuildMap`)·한 점 고치기(`mapPixel`) |
 | `js/render/view.js` | 화면: 캔버스·배율(`resize`·`VIEW`)·카메라 따라가기, 한 장 그리기(`render`) |
 | `js/render/chunks.js` | 바닥 조각: 바닥·벽 타일을 큰 조각으로 미리 그려 두기(`drawChunk`·`getChunk`) |

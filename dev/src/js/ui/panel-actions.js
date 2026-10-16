@@ -1,3 +1,4 @@
+import { setLightPref } from '../render/glight.js';
 import { buildPlayer } from '../art/characters.js';
 import { DUR } from '../data/circuits-regions.js';
 import { JOB_MAX, TIMED } from '../data/farming-cooking.js';
@@ -103,6 +104,7 @@ export function onSheetClick(e) {
   if (a === 'markAdd' && canDev()) { runCmd({ k: 'markAdd' }); saveLocal(true); renderPanel(); return; }
   if (a === 'markDel' && canDev()) { runCmd({ k: 'markDel', i }); saveLocal(true); renderPanel(); return; }
   if (a === 'ctrl') { setCtrlPref(i === 'pad' ? 'pad' : 'joy'); try { localStorage.setItem('lantern-tree-ctrl', ctrlPref); } catch (e) { } applyCtrl(); renderPanel(); return; }
+  if (a === 'light') { setLightPref(i); renderPanel(); return; } // v73: new light (GPU) or the old light
   if (a === 'zoom') { setZoomPref(i); try { localStorage.setItem('lantern-tree-zoom', i); } catch (e) { } resize(); renderPanel(); return; }
   if (a === 'sound') { setSound(!soundOn); try { localStorage.setItem('lantern-tree-sound', soundOn ? '1' : '0'); } catch (e) { } renderPanel(); return; }
   if (a === 'newgame') { if (!UIS.confirmNew) { UIS.confirmNew = true; renderPanel(); return; } saveLocal(true); pushBackup('처음부터 다시 하기 전'); { const keepC = G.char; newGame((rand() * 1e9) | 0); G.char = keepC; buildPlayer(0); } setStarted(true); closePanel(); markInv(); resetGoalText(); checkGuide(); saveLocal(true); toast('새로운 모험을 시작해요'); return; }

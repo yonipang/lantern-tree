@@ -3,7 +3,8 @@
 import { effH, effW, HD, hdCtx } from '../engine/canvas.js';
 import { fxRand } from '../engine/random.js';
 import { $, clamp } from '../engine/util.js';
-import { renderOverlay, renderWorld } from './world.js';
+import { renderOverlay, renderWorld, renderWorldPost } from './world.js';
+import { beginGB, endGB, glActive, GLST, shadeGL } from './glight.js';
 import { cam, G } from '../save/state.js';
 import { onFrame } from '../sim/systems.js';
 import { shake } from '../ui/feedback.js';
@@ -15,6 +16,7 @@ onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드�
 // ================= render =================
 export const cv = $('#cv'), mainCtx = cv.getContext('2d');
 export let ctx = mainCtx;
+export const setCtx = c => { ctx = c; }; // v73: the world pass can draw its glows into the light pass's glow layer
 export const lowCv = document.createElement('canvas'), lowCtx = lowCv.getContext('2d');
 export let VIEW = { camX: 0, camY: 0, baseX: 0, baseY: 0 };
 export let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoom') || 'normal'; } catch (e) { }
@@ -50,7 +52,15 @@ export function render() {
   ctx = hdCtx(lowCtx); Z = 1; TP = 16; VIEW = { camX: ix, camY: iy, baseX: ix, baseY: iy };
   lowCtx.setTransform(HD, 0, 0, HD, 0, 0); lowCtx.globalCompositeOperation = 'source-over'; lowCtx.globalAlpha = 1; lowCtx.imageSmoothingEnabled = false;
   lowCtx.fillStyle = '#120f1c'; lowCtx.fillRect(0, 0, bw, bh);
-  try { renderWorld(bw, bh); } finally { ctx = mainCtx; Z = RZ; TP = 16 * RZ; lowCtx.setTransform(1, 0, 0, 1, 0, 0); }
+  let glOn = glActive(); // v73: the new light (render/glight.js) — falls back to the old light if the GPU can't
+  try {
+    if (glOn) beginGB(lowCtx, bw * HD, bh * HD);
+    try { renderWorld(bw, bh, glOn); } finally { endGB(); }
+    if (glOn) { let out = null; try { out = shadeGL(lowCv, bw * HD, bh * HD, ix, iy); } catch (e) { GLST.failed = true; GLST.err = String(e && e.message || e); console.warn('새 빛 효과 오류 — 예전 빛으로 그려요:', e); }
+      lowCtx.setTransform(1, 0, 0, 1, 0, 0); lowCtx.globalCompositeOperation = 'source-over'; lowCtx.globalAlpha = 1;
+      if (out) lowCtx.drawImage(out, 0, 0); lowCtx.setTransform(HD, 0, 0, HD, 0, 0); }
+    renderWorldPost(bw, bh);
+  } finally { ctx = mainCtx; Z = RZ; TP = 16 * RZ; lowCtx.setTransform(1, 0, 0, 1, 0, 0); }
   mainCtx.drawImage(lowCv, Math.round((ix - gx) * RZ), Math.round((iy - gy) * RZ), bw * RZ, bh * RZ);
   VIEW = { camX: gx * RZ, camY: gy * RZ, baseX: bx0 * RZ, baseY: by0 * RZ };
   renderOverlay(cw, ch);
