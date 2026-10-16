@@ -6,14 +6,15 @@ import { BENCH_COL, TIERED } from '../data/automation-tiers.js';
 import { BATT_MAX } from '../data/circuits-regions.js';
 import { ITEMS, OBJ, WALLS, WTYPE } from '../data/items.js';
 import { BKEYS, BOSSES, ENEMY } from '../data/rpg-nature.js';
-import { effH, effW, INK, whiten } from '../engine/canvas.js';
+import { effH, effW, hdCtx, INK, whiten } from '../engine/canvas.js';
 import { fxRand, hash2 } from '../engine/random.js';
 import { clamp } from '../engine/util.js';
-import { CHN, getChunk } from './chunks.js';
+import { CHN, getChunk, prefetchChunk } from './chunks.js';
 import { iconCanvas } from './icons.js';
 import { LH, lightCv, LIGHTS, LW, LX0, LY0 } from './light.js';
 import { animalImg, drawHazards, drawHitBars, drawSpread, drawTree, drawTreeGlow, drawTreeLeaves, rotImg, twSprite, visibleShakers } from './parts.js';
-import { ctx, drawImg, LIFT, shadow, TP, VIEW, Z } from './view.js';
+import { ctx, drawImg, LIFT, setCtx, shadow, TP, VIEW, Z } from './view.js';
+import { drawKind, emCtxFor } from './glight.js';
 import { G, guardOf, paused } from '../save/state.js';
 import { canDev } from '../save/storage.js';
 import { cropStage, curAlt, inReach } from '../sim/actions.js';
@@ -33,6 +34,7 @@ import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { fpOf, placeAnchor } from '../world/tiles.js';
 import { WALL_H, WALL_TOP, wallShade } from '../art/tilemap.js';
+import { rippleOf, TR, wallArt } from './terrain.js';
 export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
 export function updateAmbient(dt) {
@@ -46,12 +48,14 @@ export function updateAmbient(dt) {
       const k = water ? 0 : b; AMB.push({ k, x, y, vx: k === 1 || k === 3 ? (fxRand() - .5) * .2 : (fxRand() - .5) * .4, vy: k === 1 ? -.25 - fxRand() * .2 : k === 3 ? -.6 - fxRand() * .4 : k === 4 ? .35 + fxRand() * .3 : (fxRand() - .5) * .4, t: 0, life: 4 + fxRand() * 5, ph: fxRand() * 6.28 }); }
   }
 }
-export function renderWorld(cw, ch) {
+export function renderWorld(cw, ch, glOn = false) {
+  drawKind('floor'); // v73: what the light pass should treat these pixels as (render/glight.js)
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, t = G.time;
   const x0 = Math.max(0, Math.floor(camX / T) - 1), x1 = Math.min(W - 1, Math.ceil((camX + cw) / T) + 1);
   const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(H - 1, Math.ceil((camY + ch) / T) + 3);
   // floors (cached chunks)
   for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) ctx.drawImage(getChunk(cx, cy), cx * 256 - camX, cy * 256 - camY);
+  prefetchChunk(Math.floor(x0 / CHN), Math.floor(y0 / CHN), Math.floor(x1 / CHN), Math.floor(y1 / CHN));
   drawHazards(T, camX, camY);
   // water, rugs and ground plants (change often, drawn live)
   const spR = TREE_SPREAD[treeStage()], spIn = spR && Math.abs((x0 + x1) / 2 - CX) < (x1 - x0) / 2 + spR + 1 && Math.abs((y0 + y1) / 2 - CY) < (y1 - y0) / 2 + spR + 1;
@@ -59,12 +63,15 @@ export function renderWorld(cw, ch) {
     const i = idx(x, y); if (G.wall[i]) continue; const sx = x * T - camX, sy = y * T - camY;
     if (spIn && Math.abs(x - CX) <= spR && Math.abs(y - CY) <= spR) drawSpread(x, y, sx, sy, spR);
     if (G.floor[i] === WATER) {
-      ctx.drawImage((SPR.waterB[G.biome[i]] || SPR.water)[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy); // v71: water colour per region
       const land = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return -1; const j = idx(xx, yy); if (G.wall[j]) return -1; return G.floor[j] === WATER || WFLOOR.has(G.floor[j]) ? 0 : G.floor[j]; };
+      if (TR.ready) { const wb = SPR.waterB[G.biome[i]] || SPR.water; if (land(0, -1) === 0 && land(1, 0) === 0 && land(0, 1) === 0 && land(-1, 0) === 0) ctx.drawImage(rippleOf(G.biome[i], wb)[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy); } // v73: still water is in the baked floor, ripples only away from the shore
+      else {
+      ctx.drawImage((SPR.waterB[G.biome[i]] || SPR.water)[(Math.floor(t * 1.4 + hash2(x, y, 3) * 2)) % 2], sx, sy); // v71: water colour per region
       if (y > 0 && G.wall[i - W]) { ctx.fillStyle = 'rgba(10,20,45,0.6)'; ctx.fillRect(sx, sy, 16, 3); }
       const wl = [land(0, -1), land(1, 0), land(0, 1), land(-1, 0)];
       wl.forEach((b, q) => { if (b > 0) ctx.drawImage(SPR.fringeWX[b][q], sx, sy); }); wl.forEach((b, q) => { if (b > 0) ctx.drawImage(SPR.fringeWL[b][q], sx, sy); });
       [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = land(dx, dy); if (b > 0 && land(dx, 0) === 0 && land(0, dy) === 0) ctx.drawImage(SPR.cornerW[b][q], sx, sy); });
+      }
       const hl = hash2(x, y, 43); if (hl < .12 && land(0, -1) === 0 && land(0, 1) === 0) { const lp = SPR.lily[hl < .04 ? 1 : 0]; ctx.drawImage(lp, sx + 3 + ((hash2(x, y, 44) * 4) | 0), sy + 4 + Math.round(Math.sin(t * 1.3 + hl * 50) * .6)); }
     }
     if (G.floor[i] === LAVA) { const ph = (t * .7 + hash2(x, y, 6)) % 1; if (hash2(x, y, 8) < .5) { ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = '#ffe0a0'; const bx = sx + 3 + ((hash2(x, y, 7) * 9) | 0), by = sy + 3 + ((hash2(x, y, 9) * 9) | 0); ctx.fillRect(bx, by, 2 + Math.round(ph * 2), 2); ctx.globalAlpha = 1; } }
@@ -77,6 +84,7 @@ export function renderWorld(cw, ch) {
   }
   for (let y = y0 - 3; y <= y1; y++) for (let x = x0 - 3; x <= x1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o || o.t === '_part') continue; const d = OBJ[o.t]; if (!d || !d.sz || !d.flat) continue; const [img] = rotImg(o.t, rotOf(o), SPR.obj[o.t]); if (img) ctx.drawImage(img, x * T - camX, y * T - camY); }
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i]) continue; const o = G.objs.get(i); if (o && isGround(o)) drawEntity({ k: 'o', x, y, o }, t); }
+  drawKind('up');
   // rows: walls interleaved with everything that stands
   const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
   const push = (y, item) => { const r = Math.floor(y) - y0; if (r >= 0 && r < rows.length) rows[r].push(item); };
@@ -96,10 +104,12 @@ export function renderWorld(cw, ch) {
     const y = y0 + r, sy = y * T - camY;
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
-      ctx.drawImage(SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
-      ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
+      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
+      drawKind('top', wa ? wa.ore : 0); ctx.drawImage(wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
+      drawKind('shade'); ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
-      if (!below) ctx.drawImage(SPR.wfront[w], sx, fy);
+      if (!below) { drawKind('front', wa ? wa.ore : 0); ctx.drawImage(wa ? wa.front : SPR.wfront[w], sx, fy); }
+      drawKind('up');
       ctx.fillStyle = 'rgba(20,12,30,0.55)';
       if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, WALL_TOP);
       if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, WALL_TOP);
@@ -142,11 +152,12 @@ export function renderWorld(cw, ch) {
   }
   if (G.fishFx) { const fx = G.fishFx, pr = Math.min(1, fx.t / .5); drawImg(iconCanvas(fx.id), fx.x0 + (fx.x1 - fx.x0) * pr, fx.y0 + (fx.y1 - fx.y0) * pr + .3, { sx: .8, sy: .8, z: Math.sin(pr * Math.PI) * 1.4 }); }
   // lighting (per game pixel)
+  const lowG = ctx; drawKind('off'); if (glOn) setCtx(hdCtx(emCtxFor(lowG))); // v73 new light: the glows below go into the glow layer (render/glight.js), the darkness is worked out on the GPU
   if (lightCv && LW) {
-    ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(lightCv, 0, 0, LW, LH, LX0 * T - camX, LY0 * T - camY - L * 0.5, LW * T, LH * T);
+    if (!glOn) { ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(lightCv, 0, 0, LW, LH, LX0 * T - camX, LY0 * T - camY - L * 0.5, LW * T, LH * T); }
     ctx.globalCompositeOperation = 'lighter';
-    for (const Lt of LIGHTS) { if (!Lt.col) continue; const gx = Lt.x * T - camX, gy = (Lt.y - (Lt.tall ? .9 : .35)) * T - camY, rr = Math.min(Lt.r, 7) * T * 0.38; if (gx < -rr || gy < -rr || gx > cw + rr || gy > ch + rr) continue; ctx.drawImage(glowSprite(Lt.col), gx - rr, gy - rr, rr * 2, rr * 2); }
+    if (!glOn) for (const Lt of LIGHTS) { if (!Lt.col) continue; const gx = Lt.x * T - camX, gy = (Lt.y - (Lt.tall ? .9 : .35)) * T - camY, rr = Math.min(Lt.r, 7) * T * 0.38; if (gx < -rr || gy < -rr || gx > cw + rr || gy > ch + rr) continue; ctx.drawImage(glowSprite(Lt.col), gx - rr, gy - rr, rr * 2, rr * 2); }
     // light shafts over water
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i] || G.floor[i] !== WATER) continue; const h = hash2(x, y, 41); if (h > .07) continue;
       const a = .07 + .05 * Math.sin(t * .6 + h * 90), sx = x * T - camX + 4, sy = y * T - camY + 14, gr = ctx.createLinearGradient(0, sy - 46, 0, sy);
@@ -162,6 +173,11 @@ export function renderWorld(cw, ch) {
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
   }
   drawTreeGlow(t, T, camX, camY, cw, ch);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false; setCtx(lowG);
+}
+// v73: drawn after the light (also after the new light pass): boss shots, marks, reach area, target highlight
+export function renderWorldPost(cw, ch) {
+  const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT;
   // boss shots (after lighting so they read in the dark)
   if (G.shots.length) { ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true; for (const s of G.shots) { const gx = s.x * T - camX, gy = (s.y - .3) * T - camY, rr = .55 * T; ctx.drawImage(glowSprite(s.k === 'spore' ? '#d59bff' : '#b9a8ff'), gx - rr, gy - rr, rr * 2, rr * 2); } ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
     for (const s of G.shots) { const img = SPR.shot[s.k], w = effW(img), gx = Math.round(s.x * T - camX), gy = Math.round((s.y - .3) * T - camY); if (s.k === 'shard' || s.k === 'ice') { ctx.save(); ctx.translate(gx, gy); ctx.rotate((s.a || 0) + Math.PI / 2); ctx.drawImage(img, -w / 2, -w / 2); ctx.restore(); } else ctx.drawImage(img, gx - w / 2, gy - w / 2); } }

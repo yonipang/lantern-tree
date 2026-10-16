@@ -306,7 +306,7 @@ def test_furniture_size():
 def test_building_cleanup():
     import asyncio, sys
     # 건축 정리 (v41): 지붕 삭제, 문 높이·바닥선, 바닥 벽선 맞춤, 양문, 자동 미닫이문 + 최고 레벨 스킬 포인트 (v69: 얇은 벽·창문은 삭제되어 집 벽은 나무 벽)
-    H2=HOOK.replace("computeLight}","computeLight,RECIPES,twSprite,twMask,getChunk,hash2,SPR,circuitTick,gainXp,cleanRpg,MAX_LV,SKILLS,LIFT,cam}")
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,twSprite,twMask,getChunk,hash2,SPR,circuitTick,gainXp,cleanRpg,MAX_LV,SKILLS,LIFT,cam,TR,floorPx}")
     ROOM="""window.__room=()=>{const T=__T,G=T.G,x0=T.CX+14,y0=T.CY+6;
   for(let y=y0-2;y<y0+12;y++)for(let x=x0-3;x<x0+12;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.wire.delete(i)}
   for(let y=y0+1;y<y0+7;y++)for(let x=x0+1;x<x0+8;x++)G.floor[T.idx(x,y)]=5;
@@ -338,7 +338,7 @@ def test_building_cleanup():
             # ---- floor stops at the wall line ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x0,y0]=__room();const px=(cv,x,y)=>Array.from(cv.getContext('2d').getImageData(x,y,1,1).data).join(',');
           const at=(x,y,qx,qy)=>{const cv=T.getChunk(Math.floor(x/16),Math.floor(y/16));return px(cv,(x%16)*16+qx,(y%16)*16+qy)};
-          const ref=(f,x,y,qx,qy)=>px(T.SPR.floor[f][(T.hash2(x,y,5)*4)|0],qx,qy);
+          const ref=(f,x,y,qx,qy)=>T.TR.ready&&[1,2,5,6].includes(f)?T.floorPx(f,x*16+qx,y*16+qy):px(T.SPR.floor[f][(T.hash2(x,y,5)*4)|0],qx,qy); // v73: grass·dirt·wood·stone are the new floor textures
           const out=[];const y=y0+3;G.wall[T.idx(x0,y)]=0;G.wall[T.idx(x0+8,y)]=0;G.objs.set(T.idx(x0,y),{t:'bDoorWood'});G.objs.set(T.idx(x0+8,y),{t:'bDoorWood'});
           // a door in the left wall: outside grass on the left half, wood floor on the right half
           out.push(at(x0,y,3,5)===ref(1,x0,y,3,5), at(x0,y,12,5)===ref(5,x0,y,12,5));

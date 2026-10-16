@@ -342,7 +342,7 @@ export function buildSprites() {
 }
 // sprites that can't take hand-drawn art yet (floors/walls come with the 32px floor template; characters are built from parts)
 // v54: floors and walls take drawn art too (floor/<type>/<n>, any number of variants; wtop/<type>/0-3; wfront/<type>)
-export const ART_SKIP = new Set(['tiles', 'crack', 'deco', 'water', 'fringe', 'fringeL', 'fringeX', 'fringeW', 'fringeWL', 'fringeWX', 'corner', 'cornerW', 'player', 'playerW', 'playerSit', 'sleepHead', 'treeSt', 'glow', 'animal']);
+export const ART_SKIP = new Set(['tiles', 'terrain', 'crack', 'deco', 'water', 'fringe', 'fringeL', 'fringeX', 'fringeW', 'fringeWL', 'fringeWX', 'corner', 'cornerW', 'player', 'playerW', 'playerSit', 'sleepHead', 'treeSt', 'glow', 'animal']);
 export const ART_SEL = new Set(['item', 'ui', 'obj', 'objOff', 'crop', 'giant', 'young', 'bush', 'wild', 'lantern', 'lanternS', 'lily', 'tmoss', 'tflower']);
 export const artSeg = path => { const s = path.split('/'); if (s[0] === 'mon' || s[0] === 'etc') s.shift(); return s; }; // mon/slimeG → SPR.slimeG
 export function artPaint(path, ol) { // the drawn picture plus the outline the old sprite had (ol), unless it was packed as .raw

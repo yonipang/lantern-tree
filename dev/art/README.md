@@ -6,3 +6,4 @@
 - 외곽선·바닥 그림자는 그리지 않기 (게임이 옛 그림과 같은 테두리를 붙임). 그린 그대로 쓰려면 `이름.raw.png`
 - 바닥·벽 그림 넣는 법은 `dev/README.md`의 「16px 그림」, Fantasyville에서 넣은 그림 목록은 `FANTASYVILLE.md`
 - `tiles/`: 바닥 타일맵 시트(v71). 자리 설명은 `dev/src/js/art/tilemap.js`의 `TILESETS`
+- `terrain/`: v73 바닥·벽·광석 그림. 손으로 넣지 않고 `python3 dev/art_src/terrain/make_terrain.py`로 만들어요 (원본: 사용자가 직접 그린 텍스처 1번 시트 `dev/art_src/terrain/sheet1_16px.png`). 쓰는 곳은 `dev/src/js/render/terrain.js`
