@@ -160,3 +160,9 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
       if (wallPx[kk] || (r < tr_CLIFF.h ? !Gm[kk] : Gm[kk])) continue; putT(o, CL, X0 + x, r); } }
   return out;
 }
+// 얇은 벽·문 칸: 4등분 조각마다 그쪽 바닥을 무늬 그대로 (render/chunks.js) — 바닥 무늬의 그 자리 8×8
+const TQ = { 1: 'grass', 2: 'dirt', 5: 'fwood', 6: 'fstone' };
+export function newQuarter(g, f, X, Y, wx, wy) { const img = ARTC['terrain/' + TQ[f]]; if (!img) return false;
+  g.drawImage(img, ((wx % img.width) + img.width) % img.width, ((wy % img.height) + img.height) % img.height, 8, 8, X, Y, 8, 8); return true; }
+// 테스트용: 새 바닥 무늬의 한 픽셀 ('r,g,b,a')
+export function floorPx(f, wx, wy) { if (!TR.tex) bakeFloor(0, 0, 0, 0); const t = TR.tex[{ 1: 'grass', 2: 'dirt', 5: 5, 6: 6 }[f]], k = tr_at(t, wx, wy); return [t.d[k], t.d[k + 1], t.d[k + 2], t.d[k + 3]].join(','); }

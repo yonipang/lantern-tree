@@ -12,7 +12,7 @@ import { GLOW_RULE } from './terrain.js';
 
 export let lightPref = 'new'; try { lightPref = localStorage.getItem('lantern-tree-light') || 'new'; } catch (e) { }
 export const setLightPref = v => { lightPref = v; try { localStorage.setItem('lantern-tree-light', v); } catch (e) { } };
-export const GLST = { failed: false, err: '', frames: 0 };
+export const GLST = { failed: false, err: '', frames: 0, renderer: '', soft: false };
 // ---------------- G-buffer (2D 캔버스 두 장) ----------------
 export const GB = { on: false, kind: 'floor', ore: 0 };
 const matCv = document.createElement('canvas'), emCv = document.createElement('canvas');
@@ -155,6 +155,9 @@ function gxinitGL() {
   glCv = document.createElement('canvas'); glCv.width = glCv.height = 1;
   gl = glCv.getContext('webgl2', { antialias: false, premultipliedAlpha: false, alpha: false, depth: false, stencil: false, preserveDrawingBuffer: false });
   if (!gl) throw new Error('WebGL2를 쓸 수 없어요');
+  // 그래픽 칩 없이 CPU로 흉내 내는 WebGL(SwiftShader·llvmpipe …)은 너무 느려서 예전 빛을 써요 ('force'면 그래도 새 빛 — 테스트용)
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info'); GLST.renderer = String(dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+  if (/swiftshader|llvmpipe|softpipe|software|microsoft basic/i.test(GLST.renderer) && lightPref !== 'force') { GLST.soft = true; throw new Error('그래픽 칩 없이 그리는 브라우저라 느려요: ' + GLST.renderer); }
   glCv.addEventListener('webglcontextlost', e => { e.preventDefault(); GLST.failed = true; GLST.err = 'context lost'; gl = null; });
   PV = gxprog(gxVIS); PL = gxprog(gxLIT); PB = gxprog(gxBRIGHT); PBl = gxprog(gxBLUR); PF = gxprog(gxFINAL);
   gxvao = gl.createVertexArray(); gl.bindVertexArray(gxvao);
@@ -171,7 +174,7 @@ export function glReady() {
   if (gl) return true; if (GLST.failed) return false;
   try { gxinitGL(); return true; } catch (e) { GLST.failed = true; GLST.err = String(e && e.message || e); gl = null; console.warn('새 빛 효과를 쓸 수 없어 예전 빛으로 그려요:', GLST.err); return false; }
 }
-export const glActive = () => lightPref === 'new' && glReady();
+export const glActive = () => (lightPref === 'new' || lightPref === 'force') && glReady();
 function gxsizeTargets(w, h) {
   if (w === gxcurW && h === gxcurH) return; gxcurW = w; gxcurH = h;
   for (const b of [fbLit, fbB1, fbB2]) gxfreeFb(b);
@@ -258,7 +261,7 @@ export function shadeGL(albCv, bw, bh, camX, camY) {
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   return glCv;
 }
-export const glDebug = () => ({ on: !!gl, failed: GLST.failed, err: GLST.err, frames: GLST.frames, err2: gl ? gl.getError() : -1, slots: gxSLOTS.size, gxoccVer });
+export const glDebug = () => ({ on: !!gl, failed: GLST.failed, soft: GLST.soft, renderer: GLST.renderer, err: GLST.err, frames: GLST.frames, err2: gl ? gl.getError() : -1, slots: gxSLOTS.size, gxoccVer });
 // 테스트·확인용: 지금 면 정보·발광 캔버스와 빛을 입힌 결과 (data URL)
 export const glDump = () => ({ mat: matCv.toDataURL(), em: emCv.toDataURL(), out: gxglCvURL() });
 function gxglCvURL() { try { return glCv ? glCv.toDataURL() : ''; } catch (e) { return ''; } }

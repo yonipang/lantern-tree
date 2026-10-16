@@ -54,7 +54,21 @@ def test_new_light_terrain():
     async def main():
         mkpage(SRC,'qa.html',H2,layout=2)
         async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            b=await p.chromium.launch()
+            # 그래픽 칩이 없는 브라우저(테스트용)는 원래 예전 빛으로 돌아가요 — 그 판단부터 확인
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            await wait_until(pg,"()=>{const d=__T.glDebug();return d.failed||d.frames>3}")
+            r=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.soft,d.failed,d.renderer]}")
+            rec('빛','그래픽 칩 없이 흉내 내는 WebGL이면 자동으로 예전 빛 (실제 칩이면 새 빛)', (r[1] and r[2] and not r[0]) or (r[0] and not r[1]), str(r))
+            await ctx.close()
+            # 아래는 새 빛을 억지로 켜고('force') 확인해요
+            ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
+            await ctx.add_init_script("try{localStorage.setItem('lantern-tree-light','force')}catch(e){}")
+            pg=await ctx.new_page(); errs=[]
+            pg.on('console',lambda m: errs.append(m.text) if m.type=='error' and 'TUNNEL' not in m.text and 'fonts' not in m.text else None)
+            pg.on('pageerror',lambda e: errs.append(str(e)))
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400)
+            await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
             # 광석은 주변 바위(흙·돌·화강암·현무암) 속 그림, 바위·광맥 모두 새 그림 (얼음벽·암반은 예전 그림)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const hosts=new Set(),miss=[];let n=0;for(let i=0;i<G.wall.length&&n<4000;i++){const w=G.wall[i];if(![4,5,10,12,13].includes(w))continue;n++;const x=i%600,y=(i/600)|0,h=T.oreHost(x,y);hosts.add(h);const a=T.wallArt(x,y,w);if(!a||!a.top||!a.front||a.ore!==w)miss.push(w)}
               return [T.TR.ready,n>100,[...hosts].every(h=>T.ROCKS.includes(h)),miss.length,[1,2,3,9].every(w=>!!T.wallArt(5,5,w)),T.wallArt(5,5,11)===null,T.wallArt(5,5,8)===null]}""")
@@ -68,7 +82,7 @@ def test_new_light_terrain():
             # 새 빛: 그래픽 칩이 있으면 매 장 빛을 계산하고 GL 오류 없음, 없으면 예전 빛
             ok=await wait_until(pg,"()=>{const d=__T.glDebug();return d.failed||d.frames>10}")
             r=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.failed,d.err2,d.frames>10]}")
-            rec('빛','새 빛이 돌아감 (GL 오류 없음) — 그래픽 칩이 없는 브라우저면 예전 빛으로', ok and ((r[0] and not r[1] and r[2]==0 and r[3]) or (r[1] and not r[0])), str(r))
+            rec('빛','새 빛이 돌아감 (매 장 빛 계산, GL 오류 없음)', ok and r[0] and not r[1] and r[2]==0 and r[3], str(r))
             # 메뉴에서 예전 빛 ↔ 새 빛 (기기에 저장)
             await ev(pg,"()=>{__T.openPanel('menu')}"); await pg.wait_for_timeout(300)
             n_tabs=await ev(pg,"()=>document.querySelectorAll('[data-a=light]').length")
@@ -76,7 +90,7 @@ def test_new_light_terrain():
             f0=await ev(pg,"()=>__T.glDebug().frames"); await ev(pg,"()=>__T.closePanel()"); await wait_game(pg,.6)
             r=await ev(pg,"()=>[__T.lightPref,localStorage.getItem('lantern-tree-light'),__T.glDebug().frames]")
             rec('빛','메뉴 「빛 효과」에서 예전 빛을 고르면 새 빛 계산을 멈추고 기기에 기억', n_tabs==2 and r[0]=='old' and r[1]=='old' and r[2]==f0, f'{n_tabs} {r} {f0}')
-            await ev(pg,"()=>__T.setLightPref('new')"); await wait_game(pg,.3)
+            await ev(pg,"()=>__T.setLightPref('force')"); await wait_game(pg,.3)
             await pg.screenshot(path=SP+'new_light.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()

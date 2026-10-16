@@ -9,7 +9,7 @@ import { WATER, WFLOOR } from '../sim/nature.js';
 import { H, idx, inB, LAVA, W } from '../world/map.js';
 import { BIOME_WATER, BUILT_WALLS, OLD_WATER, ROCK_FILL, TM, tileSetOf } from '../art/tilemap.js';
 import { cv } from './view.js';
-import { bakeFloor, isNewFloor, terrainReady } from './terrain.js';
+import { bakeFloor, isNewFloor, newQuarter, terrainReady } from './terrain.js';
 export const CHN = 16, chunks = new Map();
 const CH_KEEP = 96; let chunkClock = 0;
 export function chunkSig(cx, cy) { let h = 7; const m = terrainReady() ? 2 : 1; for (let y = cy * CHN - m; y < cy * CHN + CHN + m; y++) for (let x = cx * CHN - m; x < cx * CHN + CHN + m; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
@@ -20,14 +20,14 @@ export function drawChunk(c, cx, cy) {
   if (NEW) g.putImageData(bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1), 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i]) continue; const f = G.floor[i];
-    if (NEW && isNewFloor(f)) { newShadows(g, x, y, tx * 16, ty * 16, f); continue; }
+    if (NEW && isNewFloor(f) && !wallPiece(i)) { newShadows(g, x, y, tx * 16, ty * 16, f); continue; }
     if (f === WATER) continue;
     const X = tx * 16, Y = ty * 16, hv = hash2(x, y, 5), vr = (hv * (SPR.floor[f] ? SPR.floor[f].length : 4)) | 0; // drawn floors can have more than 4 variants (v54)
     const tset = TM.ready && !wallPiece(i) ? tileSetOf(f) : null; // v71: drawn tileset floors
     if (tset) drawTileFloor(g, tset, x, y, X, Y, f);
     else if (wallPiece(i)) { // a thin wall's tile: each quarter takes the floor of the open side it faces, so floors stop right at the wall line
       const side = (hx, vy) => { for (const [dx, dy] of [[hx, 0], [0, vy], [hx, vy]]) { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) continue; const j = idx(xx, yy); if (G.wall[j] || wallPiece(j)) continue; const nf = G.floor[j]; if (nf === WATER || nf === LAVA || !SPR.floor[nf]) continue; return nf; } return f; };
-      for (const [qx, qy] of [[0, 0], [8, 0], [0, 8], [8, 8]]) { const qf = side(qx ? 1 : -1, qy ? 1 : -1); const FQ = SPR.floor[qf]; g.drawImage(FQ[(hv * FQ.length) | 0], qx, qy, 8, 8, X + qx, Y + qy, 8, 8); } }
+      for (const [qx, qy] of [[0, 0], [8, 0], [0, 8], [8, 8]]) { const qf = side(qx ? 1 : -1, qy ? 1 : -1); if (NEW && isNewFloor(qf) && newQuarter(g, qf, X + qx, Y + qy, x * 16 + qx, y * 16 + qy)) continue; const FQ = SPR.floor[qf]; g.drawImage(FQ[(hv * FQ.length) | 0], qx, qy, 8, 8, X + qx, Y + qy, 8, 8); } }
     else g.drawImage(SPR.floor[f][vr], X, Y);
     if (!tset && natural(f) && !wallPiece(i)) {
       const nb = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return 0; const j = idx(xx, yy); return G.wall[j] ? 0 : G.floor[j]; };
