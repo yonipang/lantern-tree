@@ -772,6 +772,18 @@ def test_arrow_keys_trees():
             await ev(pg,"()=>{__T.openPanel('menu')}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=ctrl][data-i=joy]'); await ev(pg,"()=>__T.closePanel()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>[document.body.classList.contains('padmode'),getComputedStyle(document.querySelector('#dpad')).display]")
             rec('방향키','조이스틱으로 되돌리기', r==[False,'none'], str(r))
+            # v75: the joystick base stays where it was pressed, even when dragged far outside the ring
+            await ev(pg,ARENA)
+            x0=await ev(pg,"()=>{const G=__T.G;G.p.x=104.5;G.p.y=106.5;return G.p.x}")
+            await pg.dispatch_event('#cv','pointerdown',{'pointerId':23,'pointerType':'touch','isPrimary':True,'clientX':100,'clientY':500})
+            j0=await ev(pg,"()=>{const j=document.querySelector('#joy');return [j.style.left,j.style.top,j.classList.contains('on')]}")
+            for k in range(1,6):
+                await pg.dispatch_event('#cv','pointermove',{'pointerId':23,'pointerType':'touch','isPrimary':True,'clientX':100+60*k,'clientY':500})
+            await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const j=document.querySelector('#joy'),kn=document.querySelector('#joyKnob');return [j.style.left,j.style.top,kn.style.transform,__T.G.p.x]}")
+            await pg.dispatch_event('#cv','pointerup',{'pointerId':23,'pointerType':'touch','isPrimary':True,'clientX':400,'clientY':500})
+            knob=float(r[2].split('(')[1].split('px')[0]) if 'translate' in r[2] else 0
+            rec('조이스틱','끌어도 받침은 누른 곳에 고정, 손잡이는 테두리 안, 그 방향으로 계속 걸음(v75)', j0[:2]==['100px','500px'] and j0[2] and r[:2]==j0[:2] and 0<knob<=41 and r[3]>x0+0.5, f'{j0} {r} knob={knob}')
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
