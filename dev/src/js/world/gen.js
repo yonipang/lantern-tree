@@ -104,8 +104,9 @@ export function genWorld(seed) {
     if (home && (dT < 3.2 || (y >= CY + 1 && y <= CY + 5 && x >= CX - 5 && x <= CX + 5))) continue; // keep the tree and the starter deck clear
     const r = hash2(x, y, seed + 99), b = biome[i]; let t = null;
     const grove = 0.45 + 1.3 * vn(x * 0.09, y * 0.09, seed + 31), mead = 0.5 + 1.2 * vn(x * 0.07, y * 0.07, seed + 57); // woods and meadows come in patches
-    if (b === 0) { const rt = 0.05 * grove, bu = rt + 0.014, gr = bu + 0.13 * mead; t = r < rt ? 'root' : r < bu ? 'bush' : r < gr ? 'grass' : r < gr + 0.01 ? 'glow' : null; }
-    else if (b === 1) t = r < 0.03 ? 'bigShroom' : r < 0.03 + 0.02 * grove ? 'root' : r < 0.072 ? 'glow' : r < 0.072 + 0.08 * mead ? 'grass' : r < 0.16 ? 'bush' : null;
+    // v74: root pillars 1/3, moss grass 1/2 of before (bush·glow·big shroom amounts unchanged)
+    if (b === 0) { const rt = 0.05 * grove / 3, bu = rt + 0.014, gr = bu + 0.13 * mead / 2; t = r < rt ? 'root' : r < bu ? 'bush' : r < gr ? 'grass' : r < gr + 0.01 ? 'glow' : null; }
+    else if (b === 1) { const re = 0.03 + 0.02 * grove / 3, ge = re + Math.max(0, 0.042 - 0.02 * grove), gre = ge + 0.04 * mead, be = gre + Math.max(0, 0.088 - 0.08 * mead); t = r < 0.03 ? 'bigShroom' : r < re ? 'root' : r < ge ? 'glow' : r < gre ? 'grass' : r < be ? 'bush' : null; }
     else if (b === 3) t = r < 0.022 ? 'fireBloom' : null;
     else if (b === 4) t = r < 0.02 ? 'iceCluster' : null;
     else t = r < 0.024 ? 'cluster' : r < 0.036 ? 'glow' : null;
@@ -114,10 +115,10 @@ export function genWorld(seed) {
   for (let y = CY - 1; y <= CY; y++) for (let x = CX - 1; x <= CX + 1; x++) objs.set(idx(x, y), { t: 'treeP' });
   for (let y = CY + 2; y <= CY + 4; y++) for (let x = CX - 4; x <= CX + 4; x++) floor[idx(x, y)] = 5;
   const put = (dx, dy, o) => objs.set(idx(CX + dx, CY + dy), o);
-  [[7, -1], [-7, 1], [5, -5], [-5, -6], [1, -7], [-6, 5], [7, 4], [-3, 7], [8, 2], [-8, -3], [3, 8], [-2, -8], [8, -4], [-7, 6]].forEach(([a, b]) => put(a, b, { t: 'root' }));
+  [[7, -1], [-7, 1], [5, -5], [-6, 5], [3, 8]].forEach(([a, b]) => put(a, b, { t: 'root' }));
   [[-3, -6], [6, -3]].forEach(([a, b]) => put(a, b, { t: 'bush', r: 0 }));
   [[-2, -7], [4, 6]].forEach(([a, b]) => put(a, b, { t: 'glow' }));
-  [[-7, -2], [6, 1], [-5, 3], [3, -6], [-1, 6], [5, 6], [-4, -4], [4, -3], [-6, -5], [7, -6], [2, 7], [-4, 6], [6, 5], [-8, 1]].forEach(([a, b]) => put(a, b, { t: 'grass' }));
+  [[-7, -2], [-5, 3], [-1, 6], [-4, -4], [-6, -5], [2, 7], [6, 5]].forEach(([a, b]) => put(a, b, { t: 'grass' }));
   put(-4, 2, { t: 'plant' }); put(-3, 3, { t: 'chair' }); put(-2, 3, { t: 'table' }); put(0, 3, { t: 'rug' }); put(4, 2, { t: 'lampShroom' }); put(-4, 4, { t: 'torch' });
   const starter = [['bed', 1], ['chair', 1], ['table', 1], ['plant', 1], ['rug', 2], ['cushion', 1], ['vase', 1], ['shelf', 1], ['lampShroom', 1], ['torch', 4], ['wallWood', 10], ['floorWood', 12]];
   put(2, 3, { t: 'chest', items: starter.map(([id, c]) => ({ id, c })).concat(Array(18 - starter.length).fill(null)) });
@@ -187,10 +188,10 @@ export function openTreasure(t, o) {
 // below are those windows cut to stay inside the region), and the five rooms are 60 tiles or more apart.
 // A world passes when the tunnels really lead from the tree to the slime king, the queen and the golem, and to the rock rings of the
 // lava and ice rooms (which stay sealed as before); each room sits in its own region; and every resource has at least 80% of the
-// smallest amount seen on the fixed ring map (layout 2, 130 seeds). Up to 20 tries, then the fixed places of layout 2.
+// smallest amount seen on the fixed ring map (layout 2, 130 seeds; root pillars cut to 1/3 in v74, so 252 → 84). Up to 20 tries, then the fixed places of layout 2.
 export const BF04 = { tries: 20, gap: 60, near: [55, 80], far: [150, 200],
   ang: { B: [-75, -35], A: [100, 145], SB: [-115, -65], SL: [5, 55], SI: [125, 175] }, reg: { B: 0, A: 1, SB: 2, SL: 3, SI: 4 },
-  minWall: { 4: 1460, 5: 2176, 10: 2402, 12: 2852, 13: 1276 }, minObj: { root: 252, bigShroom: 68, cluster: 201, glow: 208, fireBloom: 220, iceCluster: 176 } };
+  minWall: { 4: 1460, 5: 2176, 10: 2402, 12: 2852, 13: 1276 }, minObj: { root: 84, bigShroom: 68, cluster: 201, glow: 208, fireBloom: 220, iceCluster: 176 } };
 const AKEYS = ['B', 'A', 'SB', 'SL', 'SI'];
 export function rollAnch(seed, k) { const R = rng((Math.imul(seed | 0, 31) + 977 * (k + 1)) >>> 0), u = (a, b) => a + (b - a) * R(), o = {};
   for (const key of AKEYS) { const [a0, a1] = BF04.ang[key], [d0, d1] = key === 'B' || key === 'A' ? BF04.near : BF04.far; o[key] = [Math.round(u(a0, a1)), Math.round(u(d0, d1))]; }
