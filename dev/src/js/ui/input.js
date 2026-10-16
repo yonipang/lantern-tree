@@ -64,7 +64,7 @@ export function setupInput() {
   document.addEventListener('mouseleave', () => { mouse.over = false; });
   cv.addEventListener('pointermove', e => {
     if (e.pointerType === 'mouse') return;
-    if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 50 * uiScale(); if (l > R) { joy.ox += dx * (1 - R / l) * 0.35; joy.oy += dy * (1 - R / l) * 0.35; dx = e.clientX - joy.ox; dy = e.clientY - joy.oy; const l2 = Math.hypot(dx, dy); if (l2 > R) { dx *= R / l2; dy *= R / l2; } const j = $('#joy'); j.style.left = joy.ox + 'px'; j.style.top = joy.oy + 'px'; }
+    if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 50 * uiScale(); if (l > R) { dx *= R / l; dy *= R / l; } /* v75: the base stays where it was pressed; only the knob is held inside the ring, and the walk keeps that direction at full speed */
       const m = Math.hypot(dx, dy) / R; joy.vx = m > 0.15 ? dx / R : 0; joy.vy = m > 0.15 ? dy / R : 0; $('#joyKnob').style.transform = `translate(${dx}px,${dy}px)`; }
   });
   const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
