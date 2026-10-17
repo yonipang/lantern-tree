@@ -100,7 +100,7 @@ export function cloudKeepLocal() { CLOUD.pending = null; CLOUD.diffRun = false; 
 export function showCloudAsk() { const el = $('#cloudAsk'); if (!el) return; const d = CLOUD.pending; el.hidden = !d || started; if (!d) return;
   const hasLocal = started || !!loadLocal(), t = CLOUD.diffRun ? '☁ 클라우드에 다른 모험이 있어요' : hasLocal ? '☁ 클라우드에 더 최근 세이브가 있어요' : '☁ 클라우드에 저장된 모험이 있어요';
   const sub = CLOUD.diffRun ? '어느 쪽으로 할까요? 고르지 않은 쪽은 백업해 둬요.' : hasLocal ? '불러오면 이 기기 세이브는 백업해 둬요.' : '불러와서 이어서 할 수 있어요.';
-  el.innerHTML = `<p>${t}<br><span style="color:var(--muted);font-size:14px">${sub}</span></p>${cloudCompareHTML(d)}<div class="menu-two"><button class="btn" type="button" data-cl="take">클라우드 것 불러오기</button><button class="btn ghost" type="button" data-cl="keep">이 기기 것 쓰기</button></div>`; }
+  el.innerHTML = `<p>${t}<br><span style="color:var(--muted);font-size:16px">${sub}</span></p>${cloudCompareHTML(d)}<div class="menu-two"><button class="btn" type="button" data-cl="take">클라우드 것 불러오기</button><button class="btn ghost" type="button" data-cl="keep">이 기기 것 쓰기</button></div>`; }
 // title screen: log in and continue from the cloud without starting a new game first
 export function cloudTitleRefresh() {
   const bt = $('#btnCloud'), box = $('#cloudTitle'); if (!bt || !box) return;
@@ -132,7 +132,7 @@ export function cloudMenuHTML() {
     if (UIS.clEmail) h += `<div class="cl-form"><input id="clEm" type="email" placeholder="이메일" autocomplete="email"><input id="clPw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password"><div class="menu-two"><button class="btn" data-a="clIn" type="button">로그인</button><button class="btn ghost" data-a="clUp" type="button">새로 가입</button></div></div>`;
     return h;
   }
-  if (CLOUD.pending) h += `<div class="impbox"><p>${CLOUD.diffRun ? '클라우드에 다른 모험이 있어요' : `클라우드에 더 최근 세이브가 있어요`}<br><span style="color:var(--muted);font-size:14px">${CLOUD.diffRun ? '어느 쪽으로 할까요? 고르기 전까지는 클라우드에 올리지 않아요. 고르지 않은 쪽은 백업해 둬요.' : '불러오면 지금 세이브는 백업해 둬요.'}</span></p>${cloudCompareHTML(CLOUD.pending)}<div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
+  if (CLOUD.pending) h += `<div class="impbox"><p>${CLOUD.diffRun ? '클라우드에 다른 모험이 있어요' : `클라우드에 더 최근 세이브가 있어요`}<br><span style="color:var(--muted);font-size:16px">${CLOUD.diffRun ? '어느 쪽으로 할까요? 고르기 전까지는 클라우드에 올리지 않아요. 고르지 않은 쪽은 백업해 둬요.' : '불러오면 지금 세이브는 백업해 둬요.'}</span></p>${cloudCompareHTML(CLOUD.pending)}<div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
   h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
   if (CLOUD.prev && !CLOUD.pending) { const i = saveInfo(parseSave(CLOUD.prev.data), CLOUD.prev.at);
     h += `<p class="hint" style="margin-top:10px">클라우드 백업 · 덮어쓰기 전 세이브<br>${infoLine(i)}</p><div class="menu-list"><button class="btn ${UIS.prevAsk ? 'warn' : 'ghost'}" data-a="clPrev" type="button">${UIS.prevAsk ? '정말 되돌릴까요? (지금 세이브는 백업돼요)' : '클라우드 백업으로 되돌리기'}</button></div>`; }
@@ -174,7 +174,7 @@ export function readSaveFile(file) {
   }).catch(() => toast('파일을 읽지 못했어요'));
 }
 export function showTitleAsk() { const el = $('#impAsk'); el.hidden = !pendingImp; if (!pendingImp) return;
-  el.innerHTML = `<p>「${escHTML(pendingImp.name)}」 파일을 불러올까요?<br><span style="color:var(--muted);font-size:14px">지금 세이브는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn" type="button" data-imp="yes">불러오기</button><button class="btn ghost" type="button" data-imp="no">취소</button></div>`; }
+  el.innerHTML = `<p>「${escHTML(pendingImp.name)}」 파일을 불러올까요?<br><span style="color:var(--muted);font-size:16px">지금 세이브는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn" type="button" data-imp="yes">불러오기</button><button class="btn ghost" type="button" data-imp="no">취소</button></div>`; }
 export function escHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 export function applyImport() {
   if (!pendingImp) return; const sv = pendingImp.save; pendingImp = null; $('#impAsk').hidden = true;

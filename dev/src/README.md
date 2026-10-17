@@ -26,7 +26,8 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | 파일 | 맡은 일 |
 |---|---|
 | `shell.html` | 페이지 뼈대: `<head>`, HUD·버튼·타이틀 화면 HTML, CSS/JS를 넣는 순서 |
-| `style.css` | 화면 모양 전부: 색·글꼴 → HUD(체력·목표·보스바·토스트) → 단축칸·터치 버튼·조이스틱 → 시트 창(제작·지도·메뉴) → 타이틀·캐릭터 고르기·능력 창, 작은 화면 규칙 |
+| `font.css` | v78 도트 글꼴 Neo둥근모 Pro(woff2를 글자로 넣은 `@font-face` 한 줄, 라이선스 `dev/art_src/fonts/`). 손으로 고치지 않아요 |
+| `style.css` | 화면 모양 전부: 색·글꼴 → HUD(체력·목표·보스바·토스트) → 단축칸·터치 버튼·조이스틱 → 시트 창(제작·지도·메뉴) → 타이틀·캐릭터 고르기·능력 창, 작은 화면 규칙, 맨 끝에 v78 도트 GUI 영역별 크기(와이어프레임 v2)·계단 모서리 |
 | `js/engine/util.js` | 공통 도구: `$`·`clamp`·`hexRgb`, 한국어 조사 `josa`·`roJosa`(으로/로) |
 | `js/engine/random.js` | 난수·노이즈: **`rand()` 게임 결과용 · `fxRand()` 보이기용** (`Math.random`은 여기서만, `build.py`가 확인), `rint`, 시드 노이즈 `hash2`·`vn`·`fbm`·`rng` |
 | `js/engine/canvas.js` | 그림 붓: 색(`C`·`INK`), 캔버스 그림(`mk`)·외곽선, `whiten`, 화면 배율 `HD` |

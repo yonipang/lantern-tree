@@ -13,7 +13,7 @@ import { CHN, getChunk, prefetchChunk } from './chunks.js';
 import { iconCanvas } from './icons.js';
 import { LH, lightCv, LIGHTS, LW, LX0, LY0 } from './light.js';
 import { animalImg, drawHazards, drawHitBars, drawSpread, drawTree, drawTreeGlow, drawTreeLeaves, rotImg, twSprite, visibleShakers } from './parts.js';
-import { ctx, DPR, drawImg, LIFT, setCtx, shadow, TP, VIEW, Z } from './view.js';
+import { ctx, DPR, drawImg, LIFT, pxFont, pxText, setCtx, shadow, TP, VIEW, Z } from './view.js';
 import { drawKind, emCtxFor } from './glight.js';
 import { G, guardOf, paused } from '../save/state.js';
 import { canDev } from '../save/storage.js';
@@ -245,11 +245,11 @@ export function renderOverlay(cw, ch) {
   // soft vignette
   if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit) { const tt = G.act.t;
     if (tt && tt.far) { const X = tt.far.x * T - camX, Y = tt.far.y * T - camY - (inB(tt.far.x, tt.far.y) && G.wall[idx(tt.far.x, tt.far.y)] ? L : 0);
-      ctx.font = `${Math.round(4.6 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 1.4 * Z; ctx.strokeStyle = INK; const tw2 = ctx.measureText('닿지 않아요').width / 2 + 3 * Z, LX = clamp(X + T / 2, tw2, cw - tw2), LY = clamp(Y - 3.5 * Z, 4 * Z, ch - 4 * Z); ctx.strokeText('닿지 않아요', LX, LY); ctx.fillStyle = '#ffb4c0'; ctx.fillText('닿지 않아요', LX, LY); } }
+      ctx.font = pxFont(4.6); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw2 = ctx.measureText('닿지 않아요').width / 2 + 3 * Z, LX = clamp(X + T / 2, tw2, cw - tw2), LY = clamp(Y - 3.5 * Z, 4 * Z, ch - 4 * Z); pxText('닿지 않아요', LX, LY, '#ffb4c0', INK); } }
   if (G.act && G.act.t && p.dead <= 0 && !paused && !document.body.classList.contains('touch') && G.act.lbl) {
     const tt = G.act.t, k = G.act.k, hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
-    const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
+    const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = pxFont(5.4); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const fh = parseFloat(ctx.font), tw = Math.round(ctx.measureText(lb).width + 6 * Z), lx = Math.round(hx + T / 2), ly = Math.round(hy - 5 * Z), bh = Math.round(Math.max(9 * Z, fh + 2 * Z)); ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.fillRect(lx - Math.round(tw / 2), ly - Math.round(bh / 2), tw, bh); pxText(lb, lx, ly, `rgb(${col})`); /* v78: 도트 글꼴, 네모 상자 */
   }
   drawHitBars(T, camX, camY); // v65: hit to recover
   drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
@@ -261,8 +261,8 @@ export function renderOverlay(cw, ch) {
     ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 230)) * Z; ctx.fillStyle = '#ff9b4a'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(7 * Z + bob, 0); ctx.lineTo(3 * Z + bob, -3 * Z); ctx.lineTo(3 * Z + bob, 3 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
     const im = SPR.obj.lostBag; if (im) { const sz = 9 * Z; ctx.imageSmoothingEnabled = false; ctx.drawImage(im, Math.round(cx - sz / 2), Math.round(cy - sz / 2), sz, sz); } } }
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${Math.round(6.2 * Z)}px Jua, sans-serif`; ctx.lineJoin = 'round';
-  for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); const X = tx.x * T - camX, Y = tx.y * T - camY; ctx.lineWidth = 1.6 * Z; ctx.strokeStyle = INK; ctx.strokeText(tx.txt, X, Y); ctx.fillStyle = tx.col; ctx.fillText(tx.txt, X, Y); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = pxFont(6.2); ctx.lineJoin = 'round';
+  for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); pxText(tx.txt, tx.x * T - camX, tx.y * T - camY, tx.col, INK); } // v78: 도트 글꼴 + 도트 테두리
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 }
 export function drawEntity(it, t) {
@@ -299,7 +299,7 @@ export function drawEntity(it, t) {
     if (d.dev === 'drill' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
-    if (d.bed && G.p.sleep && G.p.sleep.x === it.x && G.p.sleep.y === it.y) { drawImg(SPR.sleepHead, wx, it.y - .2); ctx.font = `${Math.round(6 * Z)}px Jua, sans-serif`; ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (wx + .5 + zz * .3) * T - camX, (it.y - 1.2 - zz * .5) * T - camY); ctx.globalAlpha = 1; }
+    if (d.bed && G.p.sleep && G.p.sleep.x === it.x && G.p.sleep.y === it.y) { drawImg(SPR.sleepHead, wx, it.y - .2); ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (wx + .5 + zz * .3) * T - camX, (it.y - 1.2 - zz * .5) * T - camY); ctx.globalAlpha = 1; }
     if (d.shrine && o.has) { const gk = guardOf(it.x, it.y), sealed = gk && !G.bossDead[gk]; const bob = Math.sin(t * 2.5) * 0.08; drawImg(SPR.item.lightSeed, wx, it.y + .25 + bob, { sx: .9, sy: .9, alpha: sealed ? .55 : 1 });
       if (sealed) { ctx.strokeStyle = `rgba(190,140,255,${.45 + Math.sin(t * 3) * .2})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.arc(wx * T - camX, (it.y - .3) * T - camY, .55 * T, 0, 6.283); ctx.stroke(); } }
     if (d.crop && cropStage(o) >= 3) { ctx.fillStyle = `rgba(255,241,214,${0.5 + Math.sin(t * 5) * 0.3})`; ctx.fillRect(Math.round((it.x + .78) * T - camX), Math.round((it.y + .1) * T - camY), Z, Z);
@@ -342,7 +342,7 @@ export function drawEntity(it, t) {
     const sk = b.k === 'turtle' ? (b.ph === 'shell' ? 'turtleS' : 'turtle') + ((b.stage || 1) >= 2 ? 'C' : '') : def.spr, bz = b.k === 'spirit' ? .45 + Math.sin(t * 2) * .12 : (b.z || 0), ba = b.k === 'spirit' && b.ph === 'fade' ? Math.max(.1, b.t / .6) : null;
     if (b.k === 'spirit' && b.st === 'fight' && b.ph === 'ring') { const pr = 1 - Math.max(0, b.t) / .7; ctx.strokeStyle = `rgba(191,230,255,${.3 + pr * .5})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.5 + pr * 1.5) * T, (.3 + pr * .8) * T, 0, 0, 6.283); ctx.stroke(); }
     drawImg(b.hurt > 0 ? SPR[sk + 'W'] : SPR[sk], b.x, b.y + .3, { sx: sx * def.scale, sy: sy * def.scale, z: bz, alpha: ba }); ctx.globalAlpha = 1;
-    if (b.st === 'sleep') { ctx.font = `${Math.round(7 * Z)}px Jua, sans-serif`; ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
+    if (b.st === 'sleep') { ctx.font = pxFont(7); ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
     if (b.k === 'golem' && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
     return;
   }

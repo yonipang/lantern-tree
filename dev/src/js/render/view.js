@@ -24,6 +24,15 @@ export const setZoomPref = v => { zoomPref = v; };
 export let vignette = null;
 export let TP = 48, Z = 3, DPR = 1; // 화면 배율 (save/state.js에서 옮김, 11단계)
 export const LIFT = WALL_LIFT; // 벽이 자기 칸 위로 올라오는 높이 (v71: 20px, v72: 12px — art/tilemap.js)
+export const PXFONT = '"NeoDunggeunmo Pro"'; // v78 도트 글꼴
+// 캔버스 글자 크기: 예전 크기(n 게임 픽셀)에 가장 가까운 「16px × 화면 배율」의 배수 (도트 글꼴은 16px 단위에서만 또렷해요)
+export function pxFont(n) { const u = 16 * DPR; return `${Math.max(1, Math.round(n * Z / u)) * u}px ${PXFONT}, sans-serif`; }
+// 도트 글자 + 도트 테두리(굵기 = 글자 도트 1칸). 자리는 화면 픽셀에 맞춰요
+export function pxText(t, x, y, col, ink) {
+  const d = Math.max(1, Math.round(parseFloat(ctx.font) / 16)); x = Math.round(x); y = Math.round(y);
+  if (ink) { ctx.fillStyle = ink; for (const [a, b] of [[-d, 0], [d, 0], [0, -d], [0, d], [-d, -d], [d, -d], [-d, d], [d, d]]) ctx.fillText(t, x + a, y + b); }
+  ctx.fillStyle = col; ctx.fillText(t, x, y);
+}
 export function resize() {
   DPR = Math.min(3, window.devicePixelRatio || 1);
   const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
