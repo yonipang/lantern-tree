@@ -2052,8 +2052,8 @@ Object.assign(ENEMY, {
   snowling: { n: '눈뭉치', hp: 85, dmg: 18, spd: 2.3, r: 0.32, hop: 0, drops: [['frostShard', 1, 1, 0.35], ['fiber', 1, 2, 0.4]], col: '#e8f4ff' },
 });
 // tougher monsters everywhere (bloom critters stay gentle); deeper places notice you from farther away
-Object.assign(ENEMY.slimeG, { hp: 18, dmg: 7 }); Object.assign(ENEMY.slimeO, { hp: 40, dmg: 12, aggro: 8.5 }); Object.assign(ENEMY.slimeP, { hp: 75, dmg: 18, aggro: 9 }); Object.assign(ENEMY.shroomy, { hp: 34, dmg: 11, spd: 2.3, aggro: 8.5 });
-Object.assign(ENEMY.magmaSlime, { hp: 120, dmg: 24, aggro: 10 }); Object.assign(ENEMY.cinder, { hp: 105, dmg: 22, spd: 2.7, aggro: 10 }); Object.assign(ENEMY.frostSlime, { hp: 115, dmg: 22, aggro: 10 }); Object.assign(ENEMY.snowling, { hp: 110, dmg: 22, spd: 2.5, aggro: 10 });
+Object.assign(ENEMY.slimeG, { hp: 18, dmg: 7 }); Object.assign(ENEMY.slimeO, { hp: 40, dmg: 12, aggro: 5.5 }); Object.assign(ENEMY.slimeP, { hp: 75, dmg: 18, aggro: 6 }); Object.assign(ENEMY.shroomy, { hp: 34, dmg: 11, spd: 2.3, aggro: 5.5 });
+Object.assign(ENEMY.magmaSlime, { hp: 120, dmg: 24, aggro: 6.5 }); Object.assign(ENEMY.cinder, { hp: 105, dmg: 22, spd: 2.7, aggro: 6.5 }); Object.assign(ENEMY.frostSlime, { hp: 115, dmg: 22, aggro: 6.5 }); Object.assign(ENEMY.snowling, { hp: 110, dmg: 22, spd: 2.5, aggro: 6.5 });
 const SPAWN_CAP = [6, 8, 9, 10, 10], SPAWN_EVERY = [2.6, 2.3, 2.0, 1.6, 1.6], SPAWN_PACK = [0, .2, .3, .4, .4];
 CATCH[3] = CATCH[2]; CATCH[4] = [['smelt', 50], ['shrimp', 26], ['crucian', 10], ['boot', 6], ['koi', 8]];
 // deep gear (영웅) and legendary (전설)
@@ -2336,6 +2336,14 @@ function makeWorld3(seed, chk = checkWorld) { const why = [];
 // 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 땅 파기·지형 배우기, 놓을 수 있는지(canPlace)
 
 function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
+// v85: 시야를 가리는 칸 = 벽·닫힌 문 (물·용암·가구는 너머가 보여요)
+function blocksSight(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i]) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].door && !o.open); }
+// v85: (ax, ay)에서 (bx, by)가 보이나 — 두 점 사이를 0.25칸마다 짚어 벽·닫힌 문이 있으면 안 보여요 (양쪽 끝 칸은 빼요)
+function canSee(ax, ay, bx, by) {
+  const sx = Math.floor(ax), sy = Math.floor(ay), ex = Math.floor(bx), ey = Math.floor(by), n = Math.ceil(Math.hypot(bx - ax, by - ay) / 0.25);
+  for (let k = 1; k < n; k++) { const tx = Math.floor(ax + (bx - ax) * k / n), ty = Math.floor(ay + (by - ay) * k / n); if ((tx === sx && ty === sy) || (tx === ex && ty === ey)) continue; if (blocksSight(tx, ty)) return false; }
+  return true;
+}
 function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
 function moveEnt(e, dx, dy, r) {
   const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.15)); let bx = false, by = false;
@@ -4366,7 +4374,7 @@ function dotTick(e, dt, boss) {
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
 function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
 function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ e.hp -= dmg; e.hurt = 0.14; if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
   if (fx === 'split') applyFx(e, fx, dmg);
   if (e.hp <= 0) enemyDie(e);
@@ -4399,7 +4407,15 @@ function enemyStep(e, dt) {
   if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
   dotTick(e, dt); if (!G.enemies.includes(e)) return; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
   if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0); if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
+  // v85: 알아채는 거리 aggro(기본 5칸) 안에서 벽·닫힌 문에 가리지 않아야 알아채요. 한번 쫓으면(또는 맞으면 4초 동안) 3칸 더 멀리까지 쫓고, 안 보여도 1초는 계속 쫓아요
+  const alerted = e.alertAt != null && G.time - e.alertAt < 4;
+  let chase = false;
+  if (d < (def.aggro || 5) + (e.chasing || alerted ? 3 : 0) && p.dead <= 0 && (!def.calm || e.angry > 0)) {
+    e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = canSee(e.x, e.y, p.x, p.y); }
+    if (e.sees) e.seenAt = G.time;
+    chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
+  } else e.losT = 0;
+  e.chasing = chase; if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
   if (def.hop) {
     if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
     else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
@@ -7578,7 +7594,8 @@ function setupDrag() {
   document.addEventListener('dragstart', e => e.preventDefault());
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.slot, #hotbar, #sheet')) e.preventDefault(); });
   document.addEventListener('pointerdown', e => {
-    if (DRAG.st || !G || !started || (e.pointerType === 'mouse' && e.button !== 0)) return; const el = e.target.closest && e.target.closest('.slot[data-a]'); if (!el) return;
+    if (DRAG.st) dragEnd(false); /* v86: 새로 누르면 남아 있던 끌기·스크롤을 버리고 새 손가락으로 시작해요 (아이폰에서 「손 뗌」이 빠지면 그 뒤로 가방이 안 넘어가던 문제) */
+    if (!G || !started || (e.pointerType === 'mouse' && e.button !== 0)) return; const el = e.target.closest && e.target.closest('.slot[data-a]'); if (!el) return;
     const A = slotRef(el), item = A && A.arr[A.i]; if (!item && !(e.pointerType !== 'mouse' && (el.closest('.sh-body') || el.closest('#hbSlots')))) return;
     DRAG.st = { el, item, x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, mode: null, touch: e.pointerType !== 'mouse', body: el.closest('.sh-body'), hb: el.closest('#hbSlots'), sy: 0, sx: 0 };
   }, true);
@@ -7590,14 +7607,22 @@ function setupDrag() {
       else if (!D.item) { D.mode = 'none'; }
       else { D.mode = 'drag'; D.el.classList.add('dragging'); const g = document.createElement('img'); g.id = 'dragGhost'; g.className = 'px'; g.alt = ''; g.src = iconURL(D.item.id); document.body.appendChild(g); D.ghost = g; }
     }
-    if (D.mode === 'scroll') D.body.scrollTop = D.sy - dy;
-    else if (D.mode === 'hscroll') D.hb.scrollLeft = D.sx - dx;
+    // v86: 넘기는 중에 창이 다시 그려지면(물건을 주움 등) 새로 그려진 목록을 이어서 넘겨요 — 예전에는 사라진 옛 목록을 넘겨서 멈춘 것처럼 보였어요
+    if (D.body && !D.body.isConnected) { const nb = document.querySelector('#sheet .sh-body'); D.body = nb; if (nb && D.mode === 'scroll') D.sy = nb.scrollTop + (D.ldy || 0); }
+    if (D.hb && !D.hb.isConnected) { const nh = document.querySelector('#hbSlots'); D.hb = nh; if (nh && D.mode === 'hscroll') D.sx = nh.scrollLeft + (D.ldx || 0); }
+    if (D.mode === 'scroll') { if (D.body) { D.body.scrollTop = D.sy - dy; D.ldy = dy; } }
+    else if (D.mode === 'hscroll') { if (D.hb) { D.hb.scrollLeft = D.sx - dx; D.ldx = dx; } }
     else if (D.mode === 'drag') { D.lx = e.clientX; D.ly = e.clientY; if (D.body && !D.raf) { const step = () => { if (DRAG.st !== D) return; const r = D.body.getBoundingClientRect(); if (D.ly < r.top + 44) D.body.scrollTop -= 9; else if (D.ly > r.bottom - 44) D.body.scrollTop += 9; D.raf = requestAnimationFrame(step); }; D.raf = requestAnimationFrame(step); }
       D.ghost.style.left = e.clientX + 'px'; D.ghost.style.top = e.clientY + 'px'; const t = document.elementFromPoint(e.clientX, e.clientY), tEl = t && t.closest('.slot[data-a]');
       document.querySelectorAll('.slot.dropT').forEach(x => { if (x !== tEl) x.classList.remove('dropT'); }); if (tEl && tEl !== D.el && slotRef(tEl)) tEl.classList.add('dropT'); }
   });
   window.addEventListener('pointerup', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(true, e); });
   window.addEventListener('pointercancel', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(false); });
+  // v86: 화면에 손가락이 하나도 없는데 끌기가 남아 있으면 풀어요 (「손 뗌」을 놓쳤을 때). 손 뗌이 먼저 와서 놓기가 끝나도록 한 박자 뒤에 봐요
+  const noTouch = e => { if (e.touches && e.touches.length === 0 && DRAG.st) { const D = DRAG.st; setTimeout(() => { if (DRAG.st === D) dragEnd(false); }, 0); } };
+  window.addEventListener('touchend', noTouch, true); window.addEventListener('touchcancel', noTouch, true);
+  const dropAll = () => dragEnd(false); // 앱을 내리거나 창을 떠나면 풀어요
+  window.addEventListener('blur', dropAll); window.addEventListener('pagehide', dropAll); document.addEventListener('visibilitychange', () => { if (document.hidden) dropAll(); });
 }
 function hotClick(i) {
   ensureAudio(); runCmd({ k: 'hot', i });
