@@ -40,43 +40,57 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain}
 .rmat{display:grid;gap:.5rem;margin-bottom:.5rem}.rmat>div{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;font-size:.875rem}.rmat b{min-width:4.875rem;font-size:.9375rem}.rmat span{display:inline-flex;align-items:center;gap:.25rem;color:var(--muted)}.rmat img{width:1.375rem;height:1.375rem}.skcat{margin:.875rem 0 .375rem;font-size:.9375rem;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:.25rem}.eqlist{display:grid;gap:.5rem;margin:2px 0 .75rem}.eqlist.eq2{grid-template-columns:repeat(auto-fit,minmax(min(100%,9.375rem),1fr))}.eq2 .eqr{padding:.375rem .5rem;gap:.5rem}.eq2 .slot{flex:none}.eq2 .eqr b{font-size:.9375rem}.eq2 .eqr small{font-size:.8125rem}.eqr{display:flex;align-items:center;gap:.75rem;padding:.5rem .625rem;border-radius:.875rem;background:rgba(255,255,255,.04);border:2px solid var(--line)}.eqr>div{min-width:0}.eqr b{display:block;font-size:1rem}.eqr small{display:block;color:var(--muted);font-size:.875rem;line-height:1.35}.slot.eq.empty span{font-size:.8125rem;color:var(--muted)}
 #bossbar .track{position:relative}#bossbar .tk{display:none;position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:rgba(255,255,255,.75)}#bossbar.phased .tk{display:block}
 .rc .rn small.bfx{color:#9fe0c8}.rc.lockd{opacity:.62}.dbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(6rem,1fr));gap:.5rem}.dbook .dk{position:relative;background:rgba(255,255,255,.06);border-radius:.75rem;padding:.5rem .375rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}.dbook .dk img{width:2.5rem;height:2.5rem}.dbook .dk b{font-weight:400;font-size:.875rem}.dbook .dk small{font-size:.6875rem;color:var(--muted);line-height:1.25}.dbook .dk.unk img{opacity:.45}.dbook .dk.done{background:rgba(255,210,92,.12);box-shadow:inset 0 0 0 2px rgba(255,210,92,.5)}.dbook .dk i{position:absolute;top:.25rem;right:.375rem;font-style:normal;color:#ffd25c}
-.bars{display:grid;gap:.375rem;width:min(15.625rem,60vw)}
+/* v77: 왼쪽 위 — 얼굴(누르면 캐릭터)·경험치 줄·레벨, 배고픔·더위추위 동그라미, 버프 2개 + 「+N」, 진행 중인 이야기 한 줄 */
+.stat{display:grid;gap:.375rem;justify-items:start;max-width:min(62vw,20rem);min-width:0}
+.stat .top{display:flex;align-items:center;gap:.375rem}
+.face{position:relative;flex:none;width:3.5rem;height:3.5rem;padding:0;border-radius:.875rem;background:rgba(42,33,57,.92);border:2px solid var(--line);box-shadow:0 .1875rem 0 rgba(0,0,0,.35)}
+.face img{position:absolute;left:.25rem;top:.125rem;width:calc(100% - .5rem);height:calc(100% - .625rem)}
+.face .xpbar{position:absolute;left:.1875rem;right:.1875rem;bottom:.1875rem;height:.3125rem;background:#140f1d;border-radius:2px;overflow:hidden}
+.face .xpbar b{display:block;height:100%;width:0;background:#ffd25c;transition:width .3s}
+.face .lv{position:absolute;left:.1875rem;top:.0625rem;font-size:.6875rem;line-height:1;color:#ffe9a8;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}
+.face:active{transform:translateY(2px);box-shadow:none}
+.ring{position:relative;flex:none;width:2.75rem;height:2.75rem;border-radius:50%;padding:.1875rem;box-sizing:border-box;background:conic-gradient(var(--rc) calc(var(--f,1) * 1turn),rgba(20,15,29,.88) 0);box-shadow:0 0 0 2px var(--line)}
+.ring img{display:block;width:100%;height:100%;box-sizing:border-box;padding:.25rem;border-radius:50%;background:#2a2038}
+.ring.hu{--rc:var(--hunger)}.ring.hu.low{--rc:#ff6b7a;animation:ringLow 1s ease-in-out infinite}
+.ring.env{--rc:#ff8a3d}.ring.env.hot{--rc:#ff6a3d}.ring.env.cold{--rc:#8fd0f0}
+@keyframes ringLow{50%{box-shadow:0 0 0 2px #ff6b7a,0 0 .75rem rgba(255,107,122,.6)}}
+#buffs .bf.more{display:grid;place-items:center;background:rgba(42,33,57,.92);box-shadow:inset 0 0 0 2px var(--line);font-size:.875rem;color:#ffe9a8}
 .bar{display:flex;align-items:center;gap:.375rem;background:rgba(27,20,38,.78);border:2px solid var(--line);border-radius:.875rem;padding:.1875rem .5625rem .1875rem .1875rem}
 .bar img{width:1.75rem;height:1.75rem;flex:none}
 .track{flex:1;height:.75rem;background:#140f1d;border-radius:.4375rem;overflow:hidden;box-shadow:inset 0 2px 0 rgba(0,0,0,.35)}
 .fill{height:100%;width:100%;border-radius:.4375rem;transition:width .2s}
 .hp .fill{background:linear-gradient(#ffb0bf,var(--rose) 45%,#e0647d)}
-.hu .fill{background:linear-gradient(#ffd59a,var(--hunger) 45%,#e08a3a)}
-.mp .fill{background:linear-gradient(#cdeaff,#6fb6f0 45%,#4a86d0)}
-.mp .track{position:relative}
-.mp .xp{position:absolute;left:0;bottom:0;height:.1875rem;background:#ffd25c;border-radius:2px;transition:width .3s}
-.bar .lv{flex:none;width:1.75rem;height:1.75rem;display:grid;place-items:center;font-size:.75rem;color:#ffe9a8;letter-spacing:-.02em}
 .bar span{font-size:.9375rem;min-width:1.875rem;text-align:right;font-variant-numeric:tabular-nums}
 .goal{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:rgba(42,33,57,.9);border:2px solid #6c5585;border-radius:.875rem;padding:.375rem .6875rem .4375rem;font-size:.9375rem;line-height:1.3;min-width:0}
-.goal b{font-weight:400;font-size:.75rem;letter-spacing:.06em;color:var(--amber)}
+.goal b{font-weight:400;font-size:.75rem;letter-spacing:.06em;color:var(--amber);display:flex;align-items:center;gap:.375rem}
+.goal .ql{font-style:normal;letter-spacing:0;padding:0 .3125rem;border-radius:.375rem;background:rgba(255,255,255,.1);color:var(--muted);font-size:.6875rem;line-height:1.35}
 .side{display:grid;gap:.5rem}
 .sbtn{width:3.625rem;height:3.625rem;border-radius:1.0625rem;background:rgba(42,33,57,.92);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.75rem;padding:0;box-shadow:0 .1875rem 0 rgba(0,0,0,.35)}
 .sbtn img{width:1.875rem;height:1.875rem}
 .sbtn:active{transform:translateY(2px);box-shadow:none}
 .sbtn{position:relative}
+.sbtn .k{display:none;position:absolute;left:.1875rem;top:.0625rem;font-style:normal;font-size:.625rem;line-height:1;color:#ffe9a8}
+body:not(.touch) .sbtn .k{display:block}
+.sbtn .full{display:none;position:absolute;left:50%;bottom:-.375rem;transform:translateX(-50%);font-style:normal;font-size:.625rem;line-height:1;padding:.125rem .25rem;border-radius:.375rem;background:#ff9b4a;color:#3a1a08;white-space:nowrap}
+.sbtn.isfull .full{display:block}
+.face{position:relative}.face.dot::after{content:'';position:absolute;top:-.25rem;right:-.25rem;width:.8125rem;height:.8125rem;border-radius:50%;background:#ff4f64;border:2px solid #241b2f}
 .slot{touch-action:none}
 .slot.dragging{opacity:.35}
 .slot.dropT{border-color:var(--mint);background:#3c4a55}
 #dragGhost{position:fixed;z-index:60;width:3.5rem;height:3.5rem;margin:-1.75rem 0 0 -1.75rem;pointer-events:none;filter:drop-shadow(0 .25rem .25rem rgba(0,0,0,.5))}
-@media (min-height:521px){body.touch #bCraft{position:fixed;right:calc(env(safe-area-inset-right,0px) + 1.125rem);z-index:2;bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 14.875rem)}}
 .goal{position:relative}.goal.dot::after{content:'';position:absolute;top:.375rem;right:.5rem;width:.75rem;height:.75rem;border-radius:50%;background:#7fe0b5;border:2px solid #241b2f}
 .qrow{display:grid;grid-template-columns:auto 1fr auto;gap:.625rem;align-items:center;padding:.625rem .25rem;border-bottom:1px solid #3a2f4d}.qrow.lock{opacity:.45}
 .qrow .st{font-size:.75rem;border-radius:.625rem;padding:.1875rem .5rem;white-space:nowrap}.qrow .st.done{background:#2f5a46;color:#a5ecc9}.qrow .st.cur{background:#5a4a20;color:#ffd25c}.qrow .st.lock{background:#2a2139;color:var(--muted)}
 .qrow h4{margin:0;font-weight:400;font-size:1rem;line-height:1.3}.qrow p{margin:.1875rem 0 0;font-size:.8125rem;color:var(--muted);line-height:1.4}.qrw{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.3125rem}.qrw span{display:inline-flex;align-items:center;gap:.1875rem;font-size:.75rem;background:#2a2139;border-radius:.5rem;padding:2px .375rem}.qrw img{width:1.125rem;height:1.125rem}
 .qrow .btn{min-height:2.625rem;padding:0 .75rem;font-size:.875rem}.qrow .got{font-size:.8125rem;color:#a5ecc9;white-space:nowrap}
-.sbtn.dot::after{content:'';position:absolute;top:.1875rem;right:.1875rem;width:.8125rem;height:.8125rem;border-radius:50%;background:#ff8fa3;border:2px solid #241b2f}
+.sbtn.dot::after{content:'';position:absolute;top:-.25rem;right:-.25rem;width:.8125rem;height:.8125rem;border-radius:50%;background:#ff4f64;border:2px solid #241b2f} /* v77: 빨간 점 = 확인 안 한 새 정보 */
 
-#bossbar{background:rgba(27,20,38,.85);border:2px solid #8c4a5e;border-radius:.875rem;padding:.375rem .625rem .5rem}
+#bossbar{position:absolute;top:calc(env(safe-area-inset-top,0px) + .75rem);left:calc(env(safe-area-inset-left,0px) + 11.25rem);right:calc(env(safe-area-inset-right,0px) + 5rem);max-width:24rem;margin:0 auto;box-sizing:border-box;background:rgba(27,20,38,.85);border:2px solid #8c4a5e;border-radius:.875rem;padding:.375rem .625rem .5rem}
 #bossbar .bn{font-size:.875rem;color:#ffc2cf;margin-bottom:.25rem}
 #bossbar .fill{background:linear-gradient(#ffd0a0,#ff7a5c)}
 
-#toasts{position:absolute;left:calc(env(safe-area-inset-left,0px) + .875rem);top:calc(env(safe-area-inset-top,0px) + 11.875rem);display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;pointer-events:none;width:min(66vw,23.75rem)}
-.toast{font-size:.9375rem;line-height:1.35;text-align:left;color:#fff1d6;animation:tin .25s ease-out;text-wrap:pretty;text-shadow:0 0 2px #120f1c,0 0 2px #120f1c,1px 1px 0 #120f1c,-1px -1px 0 #120f1c,1px -1px 0 #120f1c,-1px 1px 0 #120f1c,0 2px .25rem rgba(0,0,0,.6)}
+#toasts{position:absolute;left:50%;transform:translateX(-50%);bottom:var(--toastB,55%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:.25rem;pointer-events:none;width:min(88vw,26rem);z-index:5} /* v77: 캐릭터 머리 위 체력 막대 살짝 위, 가운데 (ui/hud.js가 높이를 맞춰요) */
+.toast{font-size:.9375rem;line-height:1.35;text-align:center;color:#fff1d6;animation:tin .25s ease-out;text-wrap:pretty;text-shadow:0 0 2px #120f1c,0 0 2px #120f1c,1px 1px 0 #120f1c,-1px -1px 0 #120f1c,1px -1px 0 #120f1c,-1px 1px 0 #120f1c,0 2px .25rem rgba(0,0,0,.6)}
 .toast.good{color:#a5ecc9}
 .toast.warn{color:#ffb4c0;font-size:1rem}
 .toast.out{opacity:0;transform:translateY(.375rem);transition:all .3s}
@@ -88,13 +102,23 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain}
 #hbSlots{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;touch-action:pan-x;min-width:0;scroll-behavior:smooth}
 #hbSlots::-webkit-scrollbar{display:none}
 #hbSlots .slot{flex:none}
-#hotbar #bInv{flex:none;width:var(--slotS);height:var(--slotS);border-radius:.875rem;margin-left:2px;border-color:var(--amber)}
-#hotbar #bInv img{width:58%;height:58%}
+/* v77: 폰은 도구 칸 + 일반 5칸 + 넘기기 버튼(1–5 ↔ 6–9), PC는 9칸 다 보임 */
+#hbFlip,#hbSlots .spacer{display:none}
+body.touch #hotbar{gap:.375rem;padding:.375rem}
+body.touch #hbSlots{gap:.375rem;overflow:visible}
+body.touch #hbSlots:not(.p2) .slot[data-i="5"],body.touch #hbSlots:not(.p2) .slot[data-i="6"],body.touch #hbSlots:not(.p2) .slot[data-i="7"],body.touch #hbSlots:not(.p2) .slot[data-i="8"]{display:none}
+body.touch #hbSlots.p2 .slot[data-i="0"],body.touch #hbSlots.p2 .slot[data-i="1"],body.touch #hbSlots.p2 .slot[data-i="2"],body.touch #hbSlots.p2 .slot[data-i="3"],body.touch #hbSlots.p2 .slot[data-i="4"]{display:none}
+body.touch #hbSlots.p2 .spacer{display:block;flex:none;width:var(--slotS);height:var(--slotS)}
+body.touch #hbFlip{display:grid;place-items:center;position:relative;flex:none;width:2.25rem;height:var(--slotS);padding:0;border-radius:.75rem;background:var(--panel2);border:2px solid var(--line);font-size:.75rem;color:var(--muted);touch-action:manipulation}
+#hbFlip span{font-size:.6875rem;letter-spacing:-.04em;line-height:1.1;text-align:center}
+#hbFlip:active{transform:translateY(2px)}
+#hbFlip.dot::after{content:'';position:absolute;top:-.25rem;right:-.25rem;width:.75rem;height:.75rem;border-radius:50%;background:#ff4f64;border:2px solid #241b2f}
+body.touch{--slotS:clamp(44px, calc((100vw - 1rem - .75rem - 4px - 2.25rem - 6 * .375rem) / 6), 3.75rem)}
 img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 .slot img{pointer-events:none}
 #hotbar,#sheet,.slot{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .slot.dim{opacity:.22}
-.slot.new::before{content:'';position:absolute;top:.25rem;left:.25rem;width:.5rem;height:.5rem;border-radius:50%;background:#7fe0b5;box-shadow:0 0 0 2px #241b2f}
+.slot.new::before{content:'';position:absolute;top:.25rem;left:.25rem;width:.5rem;height:.5rem;border-radius:50%;background:#ff4f64;box-shadow:0 0 0 2px #241b2f} /* v77: 처음 얻은 물건 — 한 번 누르면 사라져요 */
 .invtools{display:flex;gap:.5rem;align-items:center;margin:2px 0 .375rem}
 .invtools .tabs{flex:1;margin:0}
 .invtools .btn{min-height:2.625rem;padding:0 .875rem;font-size:.9375rem;flex:none}
@@ -115,8 +139,8 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 .slot.pick{border-color:var(--mint);background:#3c4a55}
 
 /* Touch controls */
-/* v65: attack (bottom right) and interact (up-left of it) — two big buttons on a diagonal; skills above attack; the small button left of interact */
-#altWrap{position:absolute;right:calc(env(safe-area-inset-right,0px) + 7.375rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 14.875rem);display:flex;align-items:center;gap:.25rem;pointer-events:none}
+/* v77: attack at the bottom right, interact right above it, the two skills stacked left of attack, the small button just left of interact */
+#altWrap{position:absolute;right:calc(env(safe-area-inset-right,0px) + 7.25rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 10.25rem);display:flex;align-items:center;gap:.25rem;pointer-events:none}
 #altWrap>*{pointer-events:auto}
 #subBtn{position:relative;width:3.75rem;height:3.75rem;border-radius:50%;background:radial-gradient(circle at 50% 35%,#4b3c63,#2f2440 70%);border:.1875rem solid #8a7aa6;box-shadow:0 .25rem 0 rgba(0,0,0,.4);opacity:.92;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;touch-action:none}
 #subBtn img{width:1.5rem;height:1.5rem}
@@ -136,13 +160,14 @@ body:not(.touch) #altNext::after{content:' Q';font-size:.6875rem;color:#ffe9a8}
 #actBtn,#atkBtn{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:none}
 #atkBtn{right:calc(env(safe-area-inset-right,0px) + 1rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 2.5rem);width:6rem;height:6rem;
   background:radial-gradient(circle at 50% 35%,#7a4458,#4f2b3e 70%);border:.1875rem solid #ff8fa3;box-shadow:0 .3125rem 0 rgba(0,0,0,.4),0 0 1.375rem rgba(255,143,163,.25)}
-#actBtn{right:calc(env(safe-area-inset-right,0px) + 6.5rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 8.75rem);width:5.5rem;height:5.5rem;
+#actBtn{right:calc(env(safe-area-inset-right,0px) + 1.25rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 9.25rem);width:5.5rem;height:5.5rem;
   background:radial-gradient(circle at 50% 35%,#5a4774,#3a2c52 70%);border:.1875rem solid var(--amber);box-shadow:0 .3125rem 0 rgba(0,0,0,.4),0 0 1.5rem rgba(255,200,97,.25)}
 #actBtn img,#atkBtn img{width:2.5rem;height:2.5rem}
 #actBtn span,#atkBtn span{font-size:.875rem;max-width:5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #actBtn.dim img,#actBtn.dim span{opacity:.5}
 #actBtn.on,#atkBtn.on{transform:translateY(.1875rem) scale(.96);box-shadow:0 2px 0 rgba(0,0,0,.4)}
-#skBar{position:absolute;right:calc(env(safe-area-inset-right,0px) + 7.375rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 2.5rem);display:flex;flex-direction:row-reverse;gap:.5rem}
+#skBar{position:absolute;right:calc(env(safe-area-inset-right,0px) + 7.625rem);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 2.5rem);display:flex;flex-direction:column-reverse;gap:.5rem}
+body.touch .skb{width:3.25rem;height:3.25rem}body.touch .skb img{width:1.875rem;height:1.875rem}
 #skBar[hidden]{display:none}
 .skb{position:relative;width:3.625rem;height:3.625rem;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3f5a74,#2a3a52 70%);border:.1875rem solid #8fc4f0;box-shadow:0 .25rem 0 rgba(0,0,0,.4);display:grid;place-items:center;padding:0;touch-action:none;overflow:hidden}
 .skb img{width:2.125rem;height:2.125rem}
@@ -153,9 +178,9 @@ body:not(.touch) #altNext::after{content:' Q';font-size:.6875rem;color:#ffe9a8}
 .skb .k{position:absolute;bottom:1px;font-size:.6875rem;color:#dfefff;text-shadow:0 1px 0 #000}
 .skb:active{transform:translateY(2px);box-shadow:none}
 body.touch .skb .k{display:none}
-body:not(.touch) #skBar{right:1.125rem;bottom:1.125rem;flex-direction:row}
+body:not(.touch) #skBar{left:calc(50% + (10 * var(--slotS) + 11 * .5rem + 4px) / 2 + .5rem);right:auto;bottom:calc(.75rem + .5rem + 2px + (var(--slotS) - 3.375rem) / 2);flex-direction:row} /* v77: PC는 단축칸 바로 오른쪽 (F·G) */
 body:not(.touch) .skb{width:3.375rem;height:3.375rem}
-@media (max-width:1120px){body:not(.touch) #skBar{bottom:calc(var(--slotS) + 2.5rem)}} /* v65: the hotbar got a tool slot, so on narrow PCs the skills sit above it */
+@media (max-width:820px){body:not(.touch) #skBar{left:auto;right:1.125rem;bottom:calc(var(--slotS) + 2.5rem)}} /* 좁은 PC는 단축칸 위 오른쪽 */
 body.intro #skBar{display:none}
 .joy{position:absolute;width:8rem;height:8rem;margin:-4rem 0 0 -4rem;border-radius:50%;border:.1875rem solid rgba(255,241,214,.35);background:rgba(27,20,38,.35);pointer-events:none;opacity:.55;transition:opacity .15s}
 .joy.on{opacity:.95}
@@ -324,7 +349,7 @@ body.touch #pcHint{display:none}
 .skslots .btn{min-height:2.375rem;padding:0 .75rem;font-size:.875rem}
 #title .ver{font-size:.75rem;color:var(--muted)}
 #fade{position:absolute;inset:0;z-index:25;background:rgba(14,10,22,.8);display:grid;place-items:center;font-size:1.5rem;color:var(--rose);text-align:center;padding:1.25rem}
-@media (max-height:520px){:root{--slotS:max(44px, 2.75rem)}.side{grid-auto-flow:column}.goal{max-width:46vw;padding:.25rem .625rem .3125rem;font-size:.875rem}.bars{gap:.25rem}.bar{padding:1px .5rem 1px 2px;border-radius:.75rem}.bar img,.bar .lv{width:1.375rem;height:1.375rem}.bar span{font-size:.8125rem}#atkBtn{width:5.5rem;height:5.5rem;bottom:calc(var(--slotS) + 1.375rem)}#actBtn{width:5.5rem;height:5.5rem;right:7rem;bottom:calc(var(--slotS) + 6rem)}#actBtn img,#atkBtn img{width:2.125rem;height:2.125rem}#skBar{right:7rem;bottom:calc(var(--slotS) + 2.5rem);flex-direction:row-reverse}.skb{width:3.125rem;height:3.125rem}#altWrap{right:13rem;bottom:calc(var(--slotS) + 7.5rem)}#subBtn{width:3.25rem;height:3.25rem}}
+@media (max-height:520px){:root{--slotS:max(44px, 2.75rem)}body.touch{--slotS:max(44px, 2.75rem)}.side{grid-auto-flow:column}#bossbar{right:calc(env(safe-area-inset-right,0px) + 17.5rem)}.goal{max-width:46vw;padding:.25rem .625rem .3125rem;font-size:.875rem}.face{width:3rem;height:3rem}.ring{width:2.375rem;height:2.375rem}#atkBtn{width:5.5rem;height:5.5rem;bottom:calc(var(--slotS) + 1.375rem)}#actBtn{width:5.5rem;height:5.5rem;right:1rem;bottom:calc(var(--slotS) + 7.375rem)}#actBtn img,#atkBtn img{width:2.125rem;height:2.125rem}#skBar{right:7rem;bottom:calc(var(--slotS) + 1.375rem)}body.touch .skb{width:2.875rem;height:2.875rem}#altWrap{right:6.75rem;bottom:calc(var(--slotS) + 8.5rem)}#subBtn{width:3.25rem;height:3.25rem}}
 @media (prefers-reduced-motion:reduce){.toast,.sheet{animation:none}.fill{transition:none}}
 
 /* v65 tool slot + tool row */
@@ -335,26 +360,31 @@ body.touch #pcHint{display:none}
 #toolRow{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS) + 2.125rem);display:flex;gap:.5rem;padding:.5rem;background:rgba(27,20,38,.94);border:2px solid #7fe0b5;border-radius:1.125rem;z-index:4;max-width:calc(100vw - 1rem);overflow-x:auto}
 #toolRow[hidden]{display:none}
 #toolRow .slot{flex:none}
+
+/* v77 가방 창 위 탭 「가방 | 제작」 */
+.tabs.bagnav{margin:-.25rem 0 .5rem}
+.bagnav .tab{display:inline-flex;align-items:center;gap:.375rem;padding:0 .875rem}
+.bagnav .tab img{width:1.5rem;height:1.5rem}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
   <canvas id="cv" aria-label="게임 화면"></canvas><div id="vig"></div><div id="envFx"></div><button id="wearAsk" class="btn" type="button" hidden></button>
   <div id="hud">
-    <div class="bars">
-      <div class="bar hp" title="체력"><img class="px" id="icHp" alt="체력"><div class="track"><div class="fill" id="hpFill"></div></div><span id="hpTxt">100</span></div>
-      <div class="bar hu" title="포만감"><img class="px" id="icHu" alt="포만감"><div class="track"><div class="fill" id="huFill"></div></div><span id="huTxt">100</span></div>
-      <div class="bar env" id="envBar" title="더위·추위" hidden><img class="px" id="icEnv" alt="더위·추위"><div class="track"><div class="fill" id="envFill"></div></div><span id="envTxt">0</span></div>
-      <div class="bar mp" title="기력 · 경험치"><span class="lv" id="lvTxt">Lv.1</span><div class="track"><div class="fill" id="mpFill"></div><i class="xp" id="xpFill"></i></div><span id="mpTxt">40</span></div>
+    <div class="stat">
+      <div class="top">
+        <button class="face" id="face" type="button" aria-label="캐릭터"><img class="px" id="faceImg" alt=""><span class="lv" id="lvTxt">1</span><i class="xpbar"><b id="xpFill"></b></i></button>
+        <div class="ring hu" id="huRing" title="배고픔"><img class="px" id="icHu" alt="배고픔"></div>
+        <div class="ring env" id="envRing" title="더위·추위" hidden><img class="px" id="icEnv" alt="더위·추위"></div>
+      </div>
       <div id="buffs" hidden></div>
-      <button class="goal" id="goal" type="button"><b>지금 할 일</b><span id="goalTxt">…</span></button>
-      <div id="bossbar" hidden><div class="bn">말랑대왕</div><div class="track"><div class="fill" id="bossFill"></div><i class="tk" style="left:33.3%"></i><i class="tk" style="left:66.7%"></i></div></div>
+      <button class="goal" id="goal" type="button"><b>진행 중인 이야기<i class="ql">목록 ›</i></b><span id="goalTxt">…</span></button>
     </div>
+    <div id="bossbar" hidden><div class="bn">말랑대왕</div><div class="track"><div class="fill" id="bossFill"></div><i class="tk" style="left:33.3%"></i><i class="tk" style="left:66.7%"></i></div></div>
     <div class="side">
-      <button class="sbtn" id="bCraft" type="button"><img class="px" alt="">제작</button>
-      <button class="sbtn" id="bQuest" type="button"><img class="px" alt="">퀘스트</button>
-      <button class="sbtn" id="bStat" type="button"><img class="px" alt="">능력</button>
-      <button class="sbtn" id="bMap" type="button"><img class="px" alt="">지도</button>
-      <button class="sbtn" id="bMenu" type="button"><img class="px" alt="">메뉴</button>
+      <button class="sbtn" id="bStat" type="button"><img class="px" alt=""><span>캐릭터</span><i class="k">C</i></button>
+      <button class="sbtn" id="bMap" type="button"><img class="px" alt=""><span>지도</span><i class="k">M</i></button>
+      <button class="sbtn" id="bInv" type="button"><img class="px" alt=""><span>가방</span><i class="k">I</i><em class="full">가득</em></button>
+      <button class="sbtn" id="bMenu" type="button"><img class="px" alt=""><span>설정</span><i class="k">Esc</i></button>
     </div>
   </div>
   <div id="toasts" aria-live="polite"></div>
@@ -362,10 +392,10 @@ body.touch #pcHint{display:none}
   <div id="dpad" aria-hidden="true"><i class="u"></i><i class="r"></i><i class="d"></i><i class="l"></i><b></b></div>
   <button id="actBtn" type="button" aria-label="상호작용"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
   <button id="atkBtn" type="button" aria-label="공격"><img class="px" id="atkIcon" alt=""><span id="atkLbl">공격</span></button>
-  <div id="hotbar"><div id="hbSlots"></div><button class="sbtn" id="bInv" type="button" aria-label="가방"><img class="px" alt=""></button></div>
+  <div id="hotbar"><div id="hbSlots"></div><button id="hbFlip" type="button" aria-label="단축칸 6–9 보기"><span>›<br>6–9</span></button></div>
   <div id="skBar" hidden><button class="skb" type="button" data-n="0"><img class="px" alt=""><i class="cd"></i><span class="k">F</span></button><button class="skb" type="button" data-n="1"><img class="px" alt=""><i class="cd"></i><span class="k">G</span></button></div>
   <div id="altWrap"><button id="altNext" type="button" hidden aria-label="다음 선택지">▸</button><button id="subBtn" type="button" hidden aria-label="다른 행동"><img class="px" id="subIcon" alt=""><span id="subLbl"></span><i class="k">R</i></button></div>
-  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭: 공격 · E(스페이스): 상호작용<br>R 다른 행동 · Q 다음 선택지 · Tab 도구<br>1–9 단축칸 · I 가방 · C 제작 · M 지도<br>F·G(오른쪽 클릭) 스킬 · K 능력</div>
+  <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭: 공격 · E(스페이스): 상호작용<br>R 다른 행동 · Q 다음 선택지 · Tab 도구<br>1–9 단축칸 · F·G(오른쪽 클릭) 스킬<br>C 캐릭터 · I 가방 · M 지도 · L 퀘스트</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="hurtEdge" aria-hidden="true"></div>
   <div id="fade" hidden>기절했어요…</div>
@@ -515,10 +545,9 @@ const SFX = {
 function puff(x, y, col, n = 6, spd = 2.5, z = 0.3) { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = spd * (0.4 + fxRand() * 0.8); G.parts.push({ x, y, z: z + fxRand() * .2, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, vz: 1.5 + fxRand() * 2, life: .5 + fxRand() * .35, max: .8, col, sz: 1 + (fxRand() * 2 | 0) }); } }
 function ftext(x, y, txt, col = '#fff1d6') { G.texts.push({ x, y, txt, col, life: 1, vy: -1.1 }); }
 const toastKeys = {};
-function placeToasts() { const g = document.querySelector('#goal'), box = $('#toasts'); if (!g || !box) return; const r = g.getBoundingClientRect(); if (r.width) { box.style.top = Math.round(r.bottom + 10) + 'px'; box.style.left = Math.round(r.left + 2) + 'px'; } }
 function toast(msg, cls, key) {
   const now = performance.now(); if (key) { if (toastKeys[key] && now - toastKeys[key] < 2200) return; toastKeys[key] = now; }
-  const box = $('#toasts'); placeToasts(); const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : ''); el.textContent = msg; box.appendChild(el);
+  const box = $('#toasts'); const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : ''); el.textContent = msg; box.appendChild(el);
   while (box.children.length > 3) box.firstChild.remove();
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, cls === 'warn' ? 6500 : 2300);
 }
@@ -574,6 +603,7 @@ const FRAME_ORDER = [
   'pshots',   // 내 화살·마법 (game/actions.js)
   'fish',     // 낚시 (game/combat.js)
   'drops', 'fx', // 떨어진 물건 줍기 · 반짝이·떠오르는 글자 (game/update.js)
+  'seen',     // v77: 처음 얻은 물건 찾기 — 빨간 점 (sim/inventory.js)
   'ambient',  // 주변 반딧불이 같은 보이기용 (render.js)
   'tree',     // 등불나무 연출 (game/update.js)
   'spawn', 'regrow', // 몬스터 생기기 · 자연 다시 자라기 (game/update.js)
@@ -585,7 +615,7 @@ const FRAME_ORDER = [
   'shake',    // 화면 흔들림 줄이기 (ui/feedback.js)
 ];
 // 플레이어마다 한 번씩 도는 칸 (그동안 G.p·G.inv … 가 그 플레이어 것). 나머지 칸은 세계에 한 번 (화면 쪽은 내 플레이어 기준)
-const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'hunger', 'pshots', 'fish', 'spawn']);
+const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'hunger', 'pshots', 'fish', 'spawn', 'seen']);
 const SYS = new Map();
 function onFrame(name, fn) {
   if (!FRAME_ORDER.includes(name)) throw new Error('매 프레임 순서표(sim/systems.js)에 없는 이름이에요: ' + name);
@@ -2311,7 +2341,7 @@ function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
-  G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
+  G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
   G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
@@ -2323,9 +2353,9 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
-const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env']);
+const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
 const ME = 'me'; // 내 플레이어 (13단계에서 캐릭터마다 이름표)
@@ -2335,9 +2365,9 @@ const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 // 옛 코드의 G.inv·G.p·G.actCd … (PER_PLAYER)는 「지금 플레이어」(curPl)의 것을 가리켜요:
 //   명령은 보낸 플레이어(sim/commands.js), 매 프레임 플레이어별 일은 한 명씩(sim/systems.js), 그 밖(화면·저장)은 내 플레이어(ME).
 // 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
-const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env',
+const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen',
   'explored', 'spawnPt', 'backPt', // 세계 안 플레이어별 (PLAYER_KEYS)
-  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'newIds', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
+  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
   'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
 const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0, spawnT: 0 });
 let curPl = null;
@@ -2361,8 +2391,8 @@ function bindPlayers(g, id = ME) {
 function addPlayer(id, x, y) {
   const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(),
-    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
-    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0, newIds: {} };
+    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, seen: {}, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
+    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0 };
   G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
 }
 function splitSave(s, id = ME) {
@@ -2393,7 +2423,7 @@ function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
 }
 function deserialize(s) {
   setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
@@ -2421,7 +2451,7 @@ function deserialize(s) {
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   G.tools = G.tools.filter(x => known(x) && isTool(x.id)).map(x => ({ ...x, c: 1 })); if (!(G.tsel >= 0 && G.tsel < G.tools.length)) G.tsel = 0;
-  if (!(G.sel >= (G.tools.length ? -1 : 0) && G.sel < HOT)) G.sel = 0; G.newIds = {};
+  if (!(G.sel >= (G.tools.length ? -1 : 0) && G.sel < HOT)) G.sel = 0;
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   convertDrills(); // v46: old stone drills become stone pits
   if (oldWp) moveOldWeapon(oldWp);
@@ -2445,6 +2475,7 @@ function deserialize(s) {
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
+  G.seen = {}; if (s.seen && typeof s.seen === 'object') { for (const k in s.seen) if (ITEMS[k] && [1, 2, 3].includes(s.seen[k])) G.seen[k] = s.seen[k]; } else migrateSeen77(); // v77: 본 적 있는 물건 (빨간 점)
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing
@@ -2592,10 +2623,12 @@ function freeTileNear(x0, y0) {
     const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || G.floor[i] === WATER || G.floor[i] === LAVA) continue; return i; }
   return -1;
 }
+// v77: 세이브에 「본 적 있는 물건」이 없으면 지금 가진 것(가방·도구·장비·상자)을 모두 본 것으로 — 빨간 점이 한꺼번에 뜨지 않게
+function migrateSeen77() { seenAll(true); }
 let saveFailWarned = false;
 function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
-  catch (e) { if (!silent || !saveFailWarned) { saveFailWarned = true; toast('이 화면에서는 저장이 되지 않아요! 메뉴 → 세이브 파일로 내보내기로 꼭 백업해 주세요', 'warn', 'savefail'); } return false; }
+  catch (e) { if (!silent || !saveFailWarned) { saveFailWarned = true; toast('이 화면에서는 저장이 되지 않아요! 설정 → 세이브 파일로 내보내기로 꼭 백업해 주세요', 'warn', 'savefail'); } return false; }
 }
 // keeps the last 3 saves that were about to be replaced (new game, import, and a snapshot every 20 minutes of play)
 const BACKUP_KEY = 'lantern-tree-backups';
@@ -2649,12 +2682,12 @@ async function cloudCheck() {
   if (!local || !localRun || !CLOUD.docRun || localRun !== CLOUD.docRun) {
     if (local && local.run && CLOUD.docRun === local.run) { /* same */ } else {
       CLOUD.pending = doc; CLOUD.diffRun = !!local; showCloudAsk();
-      if (started) toast(local ? '클라우드에 다른 모험이 있어요. 메뉴에서 어느 쪽을 쓸지 골라 주세요' : '클라우드에 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew');
+      if (started) toast(local ? '클라우드에 다른 모험이 있어요. 설정에서 어느 쪽을 쓸지 골라 주세요' : '클라우드에 세이브가 있어요. 설정에서 확인해 주세요', 'good', 'cloudnew');
       cloudRefresh(); return;
     }
   }
   CLOUD.diffRun = false;
-  if ((doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
+  if ((doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 설정에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
   CLOUD.lastUp = doc.at || 0; cloudUpload(true);
 }
 async function cloudUpload(force, quiet = true) {
@@ -2796,7 +2829,7 @@ for (const id in SUMMON) { const [n, k, req] = SUMMON[id];
 
 const GUIDE = [
   { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 손 버튼(PC는 E)을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
-  { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [제작] → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
+  { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [가방] → [제작] 탭 → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
   { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '횃불은 어디서나 만들 수 있어요. 밝은 곳에는 몬스터가 생기지 않아요.', done: () => G.stats.torch > 0 },
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽을 찾아 캐요. 흙은 용광로 재료가 돼요.', done: () => G.stats.copperOre >= 6 },
   { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만든 뒤 설치하고, 용광로를 열어 구리괴를 만들어요.', done: () => G.stats.copperBar >= 1 },
@@ -3195,6 +3228,20 @@ for (const r of RECIPES) if (AXE_TOOL[r.out]) r.cat = 'tool';
 const RECOVER_HITS = 3, RECOVER_GAP = 2; // hits · seconds (game time) the hits may be apart
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+// ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
+// 값: 1 본 것 · 2 새것 (가방 창의 그 칸에 작은 점, 한 번 누르면 1) · 3 새것 + 가방 버튼에 빨간 점 (가방을 열면 2)
+// 가방·도구 주머니에 처음 들어온 물건을 매 프레임 찾아요 — 줍기·제작·상자·보상 … 어느 길로 들어와도 같이 잡혀요
+function noteSeen() { const S = G.seen || (G.seen = {}); let n = false;
+  const see = s => { if (s && ITEMS[s.id] && !S[s.id]) { S[s.id] = 3; n = true; } }; G.inv.forEach(see); (G.tools || []).forEach(see);
+  if (n) emit('inv'); }
+onFrame('seen', noteSeen);
+// 지금 가진 것 (가방·도구 주머니·장비, chests면 내가 놓은 상자 안까지 — 숨은 방 보물상자는 빼고)은 모두 본 것으로 — 새 게임과 v77 전 세이브
+function seenAll(chests) { const S = G.seen || (G.seen = {}); const see = s => { if (s && ITEMS[s.id]) S[s.id] = 1; };
+  G.inv.forEach(see); (G.tools || []).forEach(see); for (const k in (G.equip || {})) see(G.equip[k]);
+  if (chests) for (const o of G.objs.values()) if (o.items && o.t !== 'tchest') o.items.forEach(see); }
+const bagNew = () => { const S = G.seen || {}; for (const k in S) if (S[k] === 3) return true; return false; };
+defineCmd('seenBag', () => { const S = G.seen || {}; for (const k in S) if (S[k] === 3) S[k] = 2; }); // 가방을 열었어요 → 가방 버튼의 빨간 점 끄기
+defineCmd('seenItem', c => { const S = G.seen || {}; if (S[c.id] > 1) S[c.id] = 1; }); // 가방 창에서 그 물건을 눌렀어요 → 칸의 작은 점 끄기
 function returnObj(o, x, y) {
   if (o.job) cancelJob(o, x, y); // v59: a furnace / pot picked up mid-job gives back the finished items and the unused materials
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
@@ -3211,12 +3258,12 @@ const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['f
 function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'axe', 'lasso', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 function addItem(id, c, count = true) {
   if (ITEMS[id] && ITEMS[id].note) { learnRecipe(ITEMS[id].note); return 0; } // recipe notes teach a dish instead of taking a bag slot
-  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } G.newIds = G.newIds || {}; G.newIds[id] = 1; emit('inv'); return 0; } // v65: tools go into the tool pouch
+  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } emit('inv'); return 0; } // v65: tools go into the tool pouch
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
   // v65: new stacks go into an empty hotbar slot first, then the bag
   const order = [...Array(HOT).keys()].concat([...Array(inv.length - HOT).keys()].map(k => k + HOT));
-  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; G.newIds = G.newIds || {}; G.newIds[id] = 1; } }
+  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; } }
   const got = c - left;
   if (got > 0 && rarOf(id) >= 3 && (ITEMS[id].kind === 'sword' || ITEMS[id].kind === 'pick')) { G.stats.epicSeen = G.stats.epicSeen || {}; G.stats.epicSeen[id] = 1; }
   if (got > 0 && ITEMS[id].kind === 'sword') autoHotWeapon(id);
@@ -3603,7 +3650,7 @@ function gainXp(n, x, y) {
   if (x != null && n >= 3) emit('ftext', x, y - 0.9, `+${n} 경험치`, '#b8e0ff');
   let up = 0; while (R.lv < MAX_LV && R.xp >= XP_NEED(R.lv)) { R.xp -= XP_NEED(R.lv); R.lv++; R.pts += 2; R.sp += 1; up++; }
   if (R.lv >= MAX_LV) { R.xp = 0; if (up) R.sp += 1; } // reaching the top level gives one more skill point (since v44 there are more skills than points: 스킬 다시 배우기 is free)
-  if (up) { const p = G.p; p.hp = maxHp(); p.mp = maxMp(); emit('puff', p.x, p.y - .5, '#ffe9a8', 26, 3.5, .8); emit('ftext', p.x, p.y - 1.6, `Lv.${R.lv}!`, '#ffd25c'); emit('sfx', 'seed'); emit('toast', R.lv >= MAX_LV ? `최고 레벨 Lv.${R.lv}! 보너스 스킬 포인트 +1 · [능력]에서 올려요` : `레벨 업! Lv.${R.lv} · [능력]에서 능력치와 스킬을 올려요`, 'good'); emit('refresh', 'stat'); }
+  if (up) { const p = G.p; p.hp = maxHp(); p.mp = maxMp(); emit('puff', p.x, p.y - .5, '#ffe9a8', 26, 3.5, .8); emit('ftext', p.x, p.y - 1.6, `Lv.${R.lv}!`, '#ffd25c'); emit('sfx', 'seed'); emit('toast', R.lv >= MAX_LV ? `최고 레벨 Lv.${R.lv}! 보너스 스킬 포인트 +1 · [캐릭터]에서 올려요` : `레벨 업! Lv.${R.lv} · [캐릭터]에서 능력치와 스킬을 올려요`, 'good'); emit('refresh', 'stat'); }
 }
 defineCmd('statUp', c => { const R = G.rpg, i = c.s; if (R.pts > 0 && STATN[i]) { R[i]++; R.pts--; if (i === 'vit') G.p.hp = Math.min(maxHp(), G.p.hp + 8); emit('sfx', 'click'); } });
 defineCmd('statReset', () => { const R = G.rpg; R.pts += R.str + R.dex + R.vit + R.int; R.str = R.dex = R.vit = R.int = 0; G.p.hp = Math.min(G.p.hp, maxHp()); G.p.mp = Math.min(G.p.mp, maxMp()); emit('sfx', 'craft'); emit('toast', '능력치 포인트를 모두 돌려받았어요'); });
@@ -4151,7 +4198,7 @@ function dotTick(e, dt, boss) {
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
 function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
 function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; e.hp -= dmg; e.hurt = 0.14; if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ e.hp -= dmg; e.hurt = 0.14; if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
   if (fx === 'split') applyFx(e, fx, dmg);
   if (e.hp <= 0) enemyDie(e);
@@ -4184,7 +4231,7 @@ function enemyStep(e, dt) {
   if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
   dotTick(e, dt); if (!G.enemies.includes(e)) return; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
   if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
+  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0); if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
   if (def.hop) {
     if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
     else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }
@@ -4228,6 +4275,7 @@ function updateHazards(dt) {
 }
 function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; emit('ftext', b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
 function hitBoss(b, dmg, crit, fx) {
+  if (dmg > 0) G.p.fightAt = G.time; // v77: 싸우는 중 → 머리 위 체력 막대
   if ((b.inv || 0) > 0) { if (dmg > 0) emit('ftext', b.x, b.y - 2.3, '막힘', '#bfe6ff'); return; }
   if (b.k === 'turtle' && b.ph === 'open' && dmg > 0) { dmg = Math.round(dmg * 1.5); crit = true; }
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
@@ -5866,14 +5914,17 @@ function renderWorld(cw, ch, glOn = false) {
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
       const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
-      drawKind('top', wa ? wa.ore : 0); ctx.drawImage(wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
-      drawKind('shade'); ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
+      const topImg = wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], shd = wallShade(wallOpen(x, y));
+      // v77 버그 수정: 아래도 벽이면 앞면을 안 그려서, 내 칸의 위쪽 4px(윗면 12px 아래 ~ 아래 벽 윗면 시작)이 비어 틈이 보였어요 → 윗면을 4px 내려 한 번 더 깔아 메워요
+      if (below) { const gap = T - WALL_TOP; drawKind('top', wa ? wa.ore : 0); ctx.drawImage(topImg, sx, sy - L + gap); drawKind('shade'); ctx.drawImage(shd, sx, sy - L + gap); }
+      drawKind('top', wa ? wa.ore : 0); ctx.drawImage(topImg, sx, sy - L);
+      drawKind('shade'); ctx.drawImage(shd, sx, sy - L); // v71: the top fades to black away from its open edges
       if (!below) { drawKind('front', wa ? wa.ore : 0); ctx.drawImage(wa ? wa.front : SPR.wfront[w], sx, fy); }
       drawKind('up');
       ctx.fillStyle = 'rgba(20,12,30,0.55)';
-      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, WALL_TOP);
-      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, WALL_TOP);
+      const th = WALL_TOP + (below ? T - WALL_TOP : 0); if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, th);
+      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, th);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
       const ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); // cracks: the middle rows on the 12px top
       const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
@@ -5965,10 +6016,12 @@ function renderWorldPost(cw, ch) {
   }
   // target highlight
   if (G.act && G.act.t && p.dead <= 0 && !paused) {
-    const tt = G.act.t, k = G.act.k; const hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
+    const tt = G.act.t, k = G.act.k; let hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0), hw = T, hh = T;
+    // v77: 여러 칸 가구(작업대 2×1·부엌 세트 3×1 …)는 놓은 뒤에도 차지한 칸 전체를 표시해요 (놓기 전 테두리와 같은 크기)
+    if (k !== 'place' && inB(tt.x, tt.y)) { const ai = anchorAt(idx(tt.x, tt.y)), o = ai >= 0 ? G.objs.get(ai) : null; if (o && OBJ[o.t] && OBJ[o.t].sz) { const fp = fpOf(o); hx = (ai % W) * T - camX; hy = ((ai / W) | 0) * T - camY; hw = fp[0] * T; hh = fp[1] * T; } }
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
-    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse * .16})`; ctx.fillRect(hx, hy, T, T); ctx.fillStyle = `rgba(${col},${pulse})`; // v65: the target tile shows clearly
-    for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + T, hy, -1, 1], [hx, hy + T, 1, -1], [hx + T, hy + T, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
+    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse * .16})`; ctx.fillRect(hx, hy, hw, hh); ctx.fillStyle = `rgba(${col},${pulse})`; // v65: the target tile shows clearly
+    for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + hw, hy, -1, 1], [hx, hy + hh, 1, -1], [hx + hw, hy + hh, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
     if (k === 'place') { const s = selItem(); if (s) { const it = ITEMS[s.id], d = it.kind === 'place' ? OBJ[it.obj] : null; ctx.globalAlpha = 0.45;
       if (d && d.sz) { const fp = placeFp(d), a = placeAnchor(tt, fp), [img] = rotImg(it.obj, pRot() % rotN(it.obj), SPR.obj[it.obj]), X = a.x * T - camX, Y = a.y * T - camY; if (d.flat) ctx.drawImage(img, X, Y); else ctx.drawImage(img, X + fp[0] * T / 2 - effW(img) / 2, Y + fp[1] * T - effH(img)); ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(127,224,181,.85)'; ctx.lineWidth = 1; ctx.strokeRect(X + .5, Y + .5, fp[0] * T - 1, fp[1] * T - 1); }
       else { let img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id), fl = false; const pr = pRot(); if (d && pr && canRotObj(it.obj)) [img, fl] = rotImg(it.obj, pr % rotN(it.obj), img);
@@ -5979,6 +6032,22 @@ function renderWorldPost(cw, ch) {
 // v71: which of the 8 neighbours are open (not a wall) — 1 N · 2 E · 4 S · 8 W · 16 NE · 32 SE · 64 SW · 128 NW (outside the map counts as wall)
 function wallOpen(x, y) { const o = (dx, dy) => { const xx = x + dx, yy = y + dy; return inB(xx, yy) && !G.wall[idx(xx, yy)]; };
   return (o(0, -1) ? 1 : 0) | (o(1, 0) ? 2 : 0) | (o(0, 1) ? 4 : 0) | (o(-1, 0) ? 8 : 0) | (o(1, -1) ? 16 : 0) | (o(1, 1) ? 32 : 0) | (o(-1, 1) ? 64 : 0) | (o(-1, -1) ? 128 : 0); }
+// ---- v77: 머리 위 체력(빨강)·기력(주황) 막대 ----
+// 싸우는 중(맞음·내가 때림·몬스터가 쫓음 — 끝나고 3초까지, 보스와 싸우는 동안)이거나 체력이 덜 찼을 때만 보여요. 가득 찬 채 안 싸울 때는 숨김
+const FIGHT_HOLD = 3;
+const ago = t => Number.isFinite(t) ? G.time - t : 1e9;
+function inFight(p = G.p) { if (Math.min(ago(p.hitAt), ago(p.fightAt), ago(p.chasedAt)) < FIGHT_HOLD) return true;
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b && b.st === 'fight' && Math.hypot(b.x - p.x, b.y - p.y) < 18) return true; } return false; }
+const headBarsOn = (p = G.p) => p.dead <= 0 && !p.sleep && (inFight(p) || p.hp < maxHp() - .5);
+const headTop = p => p.y + .15 - (SPR.player ? effH(SPR.player.down[0]) : 24) / 16; // 머리 꼭대기 (칸 단위)
+const HB = () => ({ hh: Math.max(3, Math.round(Z * 1.6)), mh: Math.max(2, Math.round(Z)), gap: Math.round(Z * 3) }); // 막대 높이·머리와 띄우기 (화면 픽셀)
+function drawHeadBars(T, camX, camY) { const p = G.p; if (!headBarsOn(p)) return;
+  const { hh, mh, gap } = HB(), b = Math.max(1, Math.round(Z / 2)), w = Math.round(T * .95), x = Math.round(p.x * T - camX - w / 2), y = Math.round(headTop(p) * T - camY) - gap - hh - mh - b;
+  ctx.fillStyle = 'rgba(20,14,30,.92)'; ctx.fillRect(x - b, y - b, w + b * 2, hh + mh + b * 3);
+  ctx.fillStyle = '#4a1d2a'; ctx.fillRect(x, y, w, hh); ctx.fillStyle = '#ff4f64'; ctx.fillRect(x, y, Math.round(w * clamp(p.hp / maxHp(), 0, 1)), hh);
+  ctx.fillStyle = '#4a3418'; ctx.fillRect(x, y + hh + b, w, mh); ctx.fillStyle = '#ffa640'; ctx.fillRect(x, y + hh + b, Math.round(w * clamp((p.mp || 0) / maxMp(), 0, 1)), mh); }
+// 알림 자리: 머리 위 막대 살짝 위 (화면 CSS 픽셀, 화면 흔들림은 무시)
+function headNoteY() { if (!G || !SPR.player) return null; const { hh, mh, gap } = HB(); return (headTop(G.p) * TP - VIEW.baseY - gap - hh - mh - Math.round(Z * 2)) / DPR - 4; }
 function renderOverlay(cw, ch) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT * Z; ctx.imageSmoothingEnabled = true;
   // soft vignette
@@ -5991,6 +6060,7 @@ function renderOverlay(cw, ch) {
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
   }
   drawHitBars(T, camX, camY); // v65: hit to recover
+  drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)
   if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
   // v68 (BF-08): my nearest lost bundle — an orange arrow with the bundle's own picture, a little further out than the quest arrow so both
@@ -6317,12 +6387,14 @@ onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = 
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
-function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) setTimeout(() => { if (G) G.newIds = {}; }, 50); if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; panelAt = performance.now(); UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) runCmd({ k: 'seenBag' }); /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 function sheetHpHTML() { if (!G || !started) return ''; const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
+// v77: 가방 창 위 탭 「가방 | 제작」 — 손제작은 가방 안에서 (제작대 창은 그대로)
+const bagNavHTML = on => `<div class="tabs bagnav">${[['inv', '가방', 'bag'], ['craft', '제작', 'hammer']].map(([k, n, ic]) => `<button type="button" class="tab ${on === k ? 'on' : ''}" data-a="bagNav" data-i="${k}"><img class="px" src="${iconURL(ic)}" alt="">${n}</button>`).join('')}</div>`;
 function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon ? `<img class="px" src="${iconURL(icon)}" alt="">` : ''}${title}</h2><div style="display:flex;gap:.5rem;align-items:center">${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div></div>`; }
 function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up + (s && it.kind === 'sword' && wtOf(it).ranged === 'arrow' ? arrowInfo() : ''); }
 const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; };
@@ -6352,9 +6424,9 @@ function renderPanel() {
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (UIS.tab2 || 'all') + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
   if (k === 'inv') {
-    h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:2.875rem;padding:0 .875rem;font-size:.9375rem">정렬</button>`);
+    h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:2.875rem;padding:0 .875rem;font-size:.9375rem">정렬</button>`) + bagNavHTML('inv');
     h += `<div class="sh-body"><p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칼 버튼은 언제나 공격해요(든 무기, 안 들었으면 마지막에 쓴 무기). 손 버튼은 앞에 있는 것에 맞춰 열기·캐기·놓기를 하고, 필요한 도구를 도구 주머니에서 꺼내 들어요.</p><div class="lbl">단축칸</div><div class="grid">`;
-    const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && G.newIds && G.newIds[s0.id] && i >= HOT) c += ' new'; return c; };
+    const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && (G.seen || {})[s0.id] > 1) c += ' new'; return c; }; // v77: 처음 얻은 물건 — 한 번 누르면 꺼져요
     h = h.replace(`<div class="lbl">단축칸</div>`, eqRowHTML() + `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
     for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
     h += `</div>` + pouchHTML(); // v65: the tool pouch
@@ -6370,7 +6442,7 @@ function renderPanel() {
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; resetPool(); const nCh = linkedChests().length;
     const ctier = craftTier(), bo = TIERED[st] && panel.i != null ? G.objs.get(panel.i) : null, inTier = r => !TIERED[r.at] || (r.tier || 0) <= ctier;
-    h += head(TIERED[st] ? TIERED[st][ctier] : st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:2.875rem;padding:0 .75rem;font-size:.9375rem">회수</button>` : '');
+    h += head(TIERED[st] ? TIERED[st][ctier] : st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:2.875rem;padding:0 .75rem;font-size:.9375rem">회수</button>` : '') + (st ? '' : bagNavHTML('craft')); // v77: 손제작은 가방 안 제작 탭
     if (bo) h += benchUpHTML(bo); // v60: upgrade the workbench at the top of its window
     const hereR = RECIPES.filter(r => atHere(r, st) && recipeOn(r) && inTier(r)), benchy = st === 'bench' || st === 'forge', smel = st === 'smelter';
     const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['farm', '농사'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['mine', '채굴장'], ['upg', '강화'], ['ring', '반지'], ['fix', '수리'], ['salv', '분해'], ['book', '요리 도감']].filter(([id]) => id === 'all' || (id === 'book' ? st === 'pot' : id === 'upg' ? smel : id === 'fix' ? smel : id === 'salv' ? smel : hereR.some(r => r.cat === id)));
@@ -6439,12 +6511,12 @@ function renderPanel() {
     const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:.875rem">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
     const marks = G.marks || [];
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:.5rem">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
-    h += head('<span data-a="devtap">메뉴</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
+    h += head('<span data-a="devtap">설정</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
       ${playRecordHTML()}
       <div class="lbl" style="margin-top:1rem">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:.5rem">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
       <div class="lbl" style="margin-top:1rem">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:.5rem">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:1rem">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:1rem">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:1rem">빛 효과${GLST.failed ? ' <span style="opacity:.7">(이 기기에서는 새 빛을 쓸 수 없어 예전 빛으로 보여요)</span>' : ''}</div><div class="tabs">${[['new', '새 빛 (부드러운 그림자)'], ['old', '예전 빛 (가볍게)']].map(([k, n]) => `<button type="button" class="tab ${(lightPref === 'force' ? 'new' : lightPref) === k ? 'on' : ''}" data-a="light" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:1rem">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>공격</b><span>칼 버튼 · 클릭. 든 무기로, 안 들었으면 마지막에 쓴 무기로 가까운 몬스터를 노려요. 몬스터가 없을 때 놓아 둔 가구·벽을 세 번 치면 바닥에 떨어져요</span><b>상호작용</b><span>손 버튼 · E · 스페이스. 일부러 든 물건(씨앗·가구·물뿌리개·음식 …)을 먼저 쓰고, 아니면 앞에 있는 것에 맞춰 열기·캐기·베기·거두기·회수를 해요. 곡괭이·도끼·낫·삽은 도구 주머니에서 알아서 꺼내 들어요</span><b>작은 버튼</b><span>같은 곳에서 할 수 있는 다른 일(회수·물 주기·낚시 …). ▸로 다음 것 (PC는 R · Q)</span><b>도구 칸</b><span>단축칸 맨 앞. 누르면 가진 도구가 펼쳐져요 (PC는 Tab)</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요. 작은 [방향] 버튼으로 놓기 전에 돌려요</span><b>먹기</b><span>음식을 고르고 손 버튼, 또는 골라 둔 음식을 한 번 더 눌러요</span><b>단축키</b><span>1–9 단축칸 · Tab 도구 · I 가방 · C 제작 · M 지도</span></div>
+      <div class="lbl" style="margin-top:1rem">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>공격</b><span>칼 버튼 · 클릭. 든 무기로, 안 들었으면 마지막에 쓴 무기로 가까운 몬스터를 노려요. 몬스터가 없을 때 놓아 둔 가구·벽을 세 번 치면 바닥에 떨어져요</span><b>상호작용</b><span>손 버튼 · E · 스페이스. 일부러 든 물건(씨앗·가구·물뿌리개·음식 …)을 먼저 쓰고, 아니면 앞에 있는 것에 맞춰 열기·캐기·베기·거두기·회수를 해요. 곡괭이·도끼·낫·삽은 도구 주머니에서 알아서 꺼내 들어요</span><b>작은 버튼</b><span>같은 곳에서 할 수 있는 다른 일(회수·물 주기·낚시 …). ▸로 다음 것 (PC는 R · Q)</span><b>도구 칸</b><span>단축칸 맨 앞. 누르면 가진 도구가 펼쳐져요 (PC는 Tab)</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요. 작은 [방향] 버튼으로 놓기 전에 돌려요</span><b>먹기</b><span>음식을 고르고 손 버튼, 또는 골라 둔 음식을 한 번 더 눌러요</span><b>단축칸</b><span>폰은 다섯 칸씩 보여요. 옆의 [6–9] 버튼으로 넘겨요 (안 보이는 쪽에 새 물건이 들어오면 빨간 점)</span><b>단축키</b><span>1–9 단축칸 · Tab 도구 · F·G 스킬 · C 캐릭터 · I 가방(제작은 가방 안 제작 탭) · M 지도 · L 퀘스트 · Esc 설정</span></div>
       <div class="lbl" style="margin-top:1rem">갇혔을 때</div><div class="menu-list"><button class="btn ${UIS.confirmEsc ? 'warn' : 'ghost'}" data-a="escape" type="button">${UIS.confirmEsc ? '한 번 더 누르면 트인 곳으로 옮겨요' : '긴급 탈출'}</button></div><p class="hint" style="margin-top:.5rem">벽·울타리에 갇혀 나갈 수 없을 때 써요. 막힌 곳 바깥의 가장 가까운 트인 곳으로 옮겨 줘요 (30초에 한 번).</p>
       <div class="menu-list" style="margin-top:1rem"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
@@ -6474,13 +6546,13 @@ function renderPanel() {
     h += `</div>`;
   } else if (k === 'stat') {
     const R = G.rpg, need = XP_NEED(R.lv), touch = document.body.classList.contains('touch');
-    h += head('능력', 'star') + `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
+    h += head('캐릭터', 'star') + `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
       <p class="hint">몬스터를 물리치고, 광석을 캐고, 물건을 만들고, 낚시하면 경험치가 쌓여요. 레벨이 오르면 능력치 포인트 2개와 스킬 포인트 1개를 받아요.</p>
       <div class="lbl">능력치<span class="pt">남은 포인트 ${R.pts}</span></div>`;
     for (const st in STATN) h += `<div class="strow"><b>${STATN[st][0]}</b><span class="v">${R[st]}</span><small>${STATN[st][1]}</small><button type="button" class="btn" data-a="statUp" data-i="${st}" ${R.pts > 0 ? '' : 'disabled'} aria-label="${STATN[st][0]} 올리기">+</button></div>`;
     h += `<div class="stsum">최대 체력 ${maxHp()} · 최대 기력 ${maxMp()} · 근접 피해 ×${meleeMul().toFixed(2)} · 활 ×${rangeMul().toFixed(2)} · 마법 ×${magicMul().toFixed(2)} · 공격 속도 +${Math.round((1 / atkSpd() - 1) * 100)}% · 이동 +${Math.round((moveMul() - 1) * 100)}%</div>`;
     if (R.str + R.dex + R.vit + R.int) h += `<div class="menu-list"><button type="button" class="btn ${UIS.statAsk ? 'warn' : 'ghost'}" data-a="statReset">${UIS.statAsk ? '정말 포인트를 모두 돌려받을까요?' : '능력치 다시 나누기 (무료)'}</button></div>`;
-    h += `<div class="lbl" style="margin-top:1rem">스킬<span class="pt">스킬 포인트 ${R.sp}</span></div><p class="hint">사용 스킬은 스킬 칸 두 곳에 넣어 ${touch ? '칼 버튼 위 파란 버튼으로' : 'F · G 키(오른쪽 클릭은 첫째 칸)로'} 써요. 기력은 가만히 있어도 천천히 차요.</p>`;
+    h += `<div class="lbl" id="skLbl" style="margin-top:1rem">스킬<span class="pt">스킬 포인트 ${R.sp}</span></div><p class="hint">사용 스킬은 스킬 칸 두 곳에 넣어 ${touch ? '칼 버튼 왼쪽 파란 버튼으로' : 'F · G 키(오른쪽 클릭은 첫째 칸)로'} 써요. 기력은 가만히 있어도 천천히 차요.</p>`;
     const skOrder = SK_CAT.flatMap(([c, cn, ids]) => ids.map((id, n) => [id, n ? null : cn])).concat(Object.keys(SKILLS).filter(id => !SK_CAT.some(c => c[2].includes(id))).map(id => [id, null]));
     for (const [id, catName] of skOrder) { const S = SKILLS[id], l = R.sk[id] || 0, lock = R.lv < S.lv, can = !lock && R.sp > 0 && l < S.max, L1 = Math.max(1, l); if (catName) h += `<div class="skcat">${catName} 스킬</div>`;
       const slots = S.act && l ? `<div class="skslots">${[0, 1].map(n => `<button type="button" class="btn ${R.slot[n] === id ? '' : 'ghost'}" data-a="skSlot" data-i="${id}:${n}">${n + 1}칸${R.slot[n] === id ? ' ✓' : ''}</button>`).join('')}</div>` : '';
@@ -6498,6 +6570,7 @@ function renderPanel() {
   if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
+  if (k === 'stat' && panel.sk) { panel.sk = 0; const el = sh.querySelector('#skLbl'), b = sh.querySelector('.sh-body'); if (el && b) b.scrollTop = el.offsetTop - b.offsetTop - 8; } // v77: K = 캐릭터의 스킬 쪽
 }
 let craftNoteT = 0;
 function craftNote(id, n, msg) {
@@ -6511,7 +6584,7 @@ const craftCtx = () => panel && panel.kind === 'craft' ? (panel.st || null) : nu
 const craftPanel = () => panel && panel.kind === 'craft' ? panel : null;
 const craftTier = () => stationTier(craftPanel());
 function canCraft(r, near) { return craftable(r, near, craftPanel()); } // 규칙: game/bag.js
-// ================= HUD: 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시 =================
+// ================= HUD: 시간 작업 칸, 버프·더위추위 동그라미, 옷 권하기, 도구 칸·도구 줄, 버튼 표시, v77 얼굴·빨간 점·단축칸 넘기기·알림 자리 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // the job card updates itself while the panel is open
 let jobUiT = 0;
@@ -6524,14 +6597,15 @@ let buffDirty = true, lastBuffKey = ''; // 버프 막대를 다시 그릴 때 (�
 onEvent('buffs', onlyMe(() => { buffDirty = true; }));
 function drawBuffs() { const el = $('#buffs'); if (!el) return; const act = activeBuffs(); const key = act.map(b => b.id + ':' + Math.ceil((b.end - G.time) / b.max * 24)).join('|');
   if (key === lastBuffKey && !buffDirty) return; lastBuffKey = key; buffDirty = false; el.hidden = !act.length;
-  el.innerHTML = act.map(b => `<span class="bf" title="${EFF[b.ef].n} ${EFF[b.ef].t(EFF[b.ef].v[b.tier - 1])}" style="--f:${Math.max(0, (b.end - G.time) / b.max).toFixed(3)}"><img class="px" src="${iconURL(b.id)}" alt="${EFF[b.ef].n}"><i>${b.tier}</i></span>`).join(''); }
+  const more = act.length > 2 ? act.length - 2 : 0; // v77: 버프는 2개까지 보이고 나머지는 「+N」
+  el.innerHTML = act.slice(0, 2).map(b => `<span class="bf" title="${EFF[b.ef].n} ${EFF[b.ef].t(EFF[b.ef].v[b.tier - 1])}" style="--f:${Math.max(0, (b.end - G.time) / b.max).toFixed(3)}"><img class="px" src="${iconURL(b.id)}" alt="${EFF[b.ef].n}"><i>${b.tier}</i></span>`).join('') + (more ? `<span class="bf more" title="${act.slice(2).map(b => EFF[b.ef].n).join(' · ')}">+${more}</span>` : ''); }
 let wearAskT = 0;
 function suggestWear(b) { const need = b === 3 ? 'hot' : b === 4 ? 'cold' : null, el = $('#wearAsk'); if (!need || !started) return; const cur = G.equip.body;
   if (cur && ITEMS[cur.id].guard === need) return; const k = G.inv.findIndex(x => x && ITEMS[x.id].kind === 'wear' && ITEMS[x.id].guard === need); if (k < 0) return;
   el.textContent = `${ITEMS[G.inv[k].id].n}${roJosa(ITEMS[G.inv[k].id].n).slice(ITEMS[G.inv[k].id].n.length)} 갈아입을까요?`; el.dataset.id = G.inv[k].id; el.hidden = false; clearTimeout(wearAskT); wearAskT = setTimeout(() => { el.hidden = true; }, 8000); }
 let envFxShown = -1;
-function drawEnv() { const E = G.env || {}, bar = $('#envBar'), on = !!E.k; if (bar.hidden === on) bar.hidden = !on;
-  if (on) { const k = E.k + '|' + Math.round(E.v); if (bar.dataset.k !== k) { bar.dataset.k = k; bar.className = 'bar env ' + E.k; $('#envFill').style.width = E.v + '%'; $('#envTxt').textContent = Math.round(E.v); const ic = E.k === 'hot' ? 'fireBerry' : 'frostShard'; if ($('#icEnv').dataset.ic !== ic) { $('#icEnv').dataset.ic = ic; $('#icEnv').src = iconURL(ic); } } }
+function drawEnv() { const E = G.env || {}, bar = $('#envRing'), on = !!E.k; if (bar.hidden === on) bar.hidden = !on; // v77: 배고픔 옆 동그라미 (그 지역에 있을 때만)
+  if (on) { const k = E.k + '|' + Math.round(E.v); if (bar.dataset.k !== k) { bar.dataset.k = k; bar.className = 'ring env ' + E.k; bar.style.setProperty('--f', (clamp(E.v, 0, 100) / 100).toFixed(3)); bar.title = (E.k === 'hot' ? '더위 ' : '추위 ') + Math.round(E.v); const ic = E.k === 'hot' ? 'fireBerry' : 'frostShard'; if ($('#icEnv').dataset.ic !== ic) { $('#icEnv').dataset.ic = ic; $('#icEnv').src = iconURL(ic); } } }
   const fx = $('#envFx'), v = Math.round(envFxV * 200) / 200; if (v !== envFxShown) { envFxShown = v; fx.style.opacity = (v / .45).toFixed(3); } const cls = E.k || (envFxV > .005 ? fx.dataset.k : ''); if (fx.dataset.k !== cls) { fx.dataset.k = cls || ''; fx.className = cls || ''; } }
 // ---- the tool slot (front of the hotbar) and its row ----
 let toolRowOpen = false;
@@ -6556,28 +6630,52 @@ function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.
 let invDirty = true; // 단축칸을 다시 그릴 때 (규칙은 emit('inv'), 8단계부터 내 플레이어 것만)
 const markInv = () => { invDirty = true; };
 onEvent('inv', onlyMe(() => { invDirty = true; }));
+// v77: 폰은 단축칸을 다섯 칸씩 넘겨 봐요 (0: 1–5칸 · 1: 6–9칸, PC는 9칸 다). 안 보이는 쪽에 물건이 새로 들어오면 넘기기 버튼에 빨간 점
+let hbPage = 0; let hbSig = ['', ''];
+const PAGE = [[0, 1, 2, 3, 4], [5, 6, 7, 8]], pageOf = i => i >= 5 ? 1 : 0;
+const pageIds = pg => PAGE[pg].map(i => G.inv[i] ? G.inv[i].id : '');
+function flipHotbar(pg) { hbPage = pg != null ? pg : 1 - hbPage; hbSig[hbPage] = pageIds(hbPage).join(','); drawFlip(); }
+function drawFlip() { const hb = $('#hbSlots'), fb = $('#hbFlip'); if (!hb || !fb || !G) return; hb.classList.toggle('p2', hbPage === 1);
+  const other = 1 - hbPage, seen = hbSig[other].split(','), now = pageIds(other), fresh = now.some((id, k) => id && id !== seen[k]);
+  fb.classList.toggle('dot', fresh); const t = hbPage ? '1–5' : '6–9'; if (fb.dataset.t !== t) { fb.dataset.t = t; fb.querySelector('span').innerHTML = (hbPage ? '‹<br>' : '›<br>') + t; fb.setAttribute('aria-label', `단축칸 ${t} 보기`); } }
+function resetHotbarPage() { hbPage = 0; hbSig = [pageIds(0).join(','), pageIds(1).join(',')]; hbSel = -1; }
 function refreshHotbar() {
   sweepTools(); // v65: a tool that landed in the bag goes to the pouch
   const hb = $('#hbSlots'); let h = '';
   h += toolSlotHTML(); // v65: the tool slot
   for (let i = 0; i < HOT; i++) { const s = G.inv[i]; h += slotHTML(s, 'hot', i, i === G.sel ? 'sel' : '').replace('</button>', `<span class="key">${document.body.classList.contains('touch') ? '' : i + 1}</span></button>`); }
+  h += '<i class="spacer"></i>'; // v77: 6–9칸 쪽은 네 칸이라 한 칸 자리를 비워 둬요 (단축칸 폭이 그대로)
   hb.innerHTML = h; invDirty = false; if (panel) renderPanel(); if (toolRowOpen) renderToolRow();
-  if (hbSel !== G.sel) { hbSel = G.sel; const el = G.sel < 0 ? hb.querySelector('[data-tool]') : hb.querySelector(`[data-i="${G.sel}"]`); if (el && hb.scrollWidth > hb.clientWidth) { const l = el.offsetLeft - hb.offsetLeft, r = l + el.offsetWidth; if (l < hb.scrollLeft) hb.scrollLeft = l - 4; else if (r > hb.scrollLeft + hb.clientWidth) hb.scrollLeft = r - hb.clientWidth + 4; } }
-  const full = G.inv.slice(HOT).every(Boolean); $('#bInv').classList.toggle('dot', full);
+  if (hbSel !== G.sel) { hbSel = G.sel; if (G.sel >= 0 && pageOf(G.sel) !== hbPage) flipHotbar(pageOf(G.sel)); } // 고른 칸이 안 보이는 쪽이면 그쪽으로 넘겨요
+  hbSig[hbPage] = pageIds(hbPage).join(','); drawFlip();
+  $('#bInv').classList.toggle('isfull', G.inv.slice(HOT).every(Boolean)); // v77: 가방이 가득 차면 「가득」 (빨간 점은 새 물건)
 }
 let lastHud = '', lastAct = '', hbSel = -1;
+// ---- v77: 왼쪽 위 얼굴 (내 캐릭터 그림의 윗부분) ----
+let faceOf = null;
+function drawFace() { const f = SPR.player && SPR.player.down && SPR.player.down[0]; if (!f || f === faceOf) return; faceOf = f;
+  const c = document.createElement('canvas'), w = f.width, h = Math.min(f.height, Math.round(f.width * 15 / 16)); c.width = w; c.height = h; c.getContext('2d').drawImage(f, 0, 0, w, h, 0, 0, w, h); $('#faceImg').src = c.toDataURL(); }
+// ---- v77: 캐릭터 빨간 점 = 올릴 수 있는 능력치·스킬 포인트가 새로 생김 (캐릭터 화면을 열면 꺼져요) ----
+let ptsSeen = 0;
+onEvent('loaded', () => { ptsSeen = 0; faceOf = null; lastHud = lastMp = ''; if (G) resetHotbarPage(); });
+let toastY = null;
 function updateHud() {
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
-  drawBuffs(); drawEnv();
-  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); const sf = document.getElementById('shHpFill'); if (sf) { sf.style.width = Math.max(0, p.hp / maxHp() * 100) + '%'; $('#shHpTxt').textContent = Math.round(p.hp); } }
+  drawBuffs(); drawEnv(); drawFace();
+  if (k !== lastHud) { lastHud = k; const hu = $('#huRing'); hu.style.setProperty('--f', (clamp(p.hunger, 0, 100) / 100).toFixed(3)); hu.classList.toggle('low', p.hunger < 25); hu.title = '배고픔 ' + Math.round(p.hunger); const sf = document.getElementById('shHpFill'); if (sf) { sf.style.width = Math.max(0, p.hp / maxHp() * 100) + '%'; $('#shHpTxt').textContent = Math.round(p.hp); } }
   const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
   updateCtrlHud(); // v65: attack button · small button
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }
-  const R = G.rpg, mk2 = Math.round(p.mp) + '|' + maxMp() + '|' + R.lv + '|' + R.xp + '|' + (R.pts > 0 || R.sp > 0);
-  if (mk2 !== lastMp) { lastMp = mk2; $('#mpFill').style.width = (p.mp / maxMp() * 100) + '%'; $('#mpTxt').textContent = Math.round(p.mp); $('#lvTxt').textContent = 'Lv.' + R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#bStat').classList.toggle('dot', R.pts > 0 || R.sp > 0); }
+  const R = G.rpg, pts = (R.pts || 0) + (R.sp || 0);
+  if (panel && panel.kind === 'stat') ptsSeen = pts; else if (pts < ptsSeen) ptsSeen = pts;
+  const mk2 = R.lv + '|' + R.xp + '|' + (pts > ptsSeen);
+  if (mk2 !== lastMp) { lastMp = mk2; $('#lvTxt').textContent = R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#face').title = `Lv.${R.lv} · 경험치 ${R.lv >= MAX_LV ? '최고' : R.xp + '/' + XP_NEED(R.lv)}`; for (const id of ['#bStat', '#face']) $(id).classList.toggle('dot', pts > ptsSeen); }
+  // 가방 빨간 점 = 처음 얻은 물건 (가방을 열면 꺼져요, 열려 있는 동안 들어온 것도)
+  const bn = bagNew(); if (bn && panel && panel.kind === 'inv') runCmd({ k: 'seenBag' }); const bd = bn && !(panel && panel.kind === 'inv'); if ($('#bInv').classList.contains('dot') !== bd) $('#bInv').classList.toggle('dot', bd);
   updateSkBar();
   if (G.time - (G.__qt || 0) > .5 || G.__qt == null) { G.__qt = G.time; $('#goal').classList.toggle('dot', canClaim()); }
   if (invDirty) refreshHotbar();
+  const ty = headNoteY(); if (ty != null) { const v = Math.round(clamp(innerHeight - ty, 80, innerHeight - 60)); if (v !== toastY) { toastY = v; $('#toasts').style.setProperty('--toastB', v + 'px'); } } // 알림: 머리 위 막대 살짝 위
 }
 let lastMp = '';
 function updateSkBar() {
@@ -6628,7 +6726,7 @@ function benchUpHTML(o) { const lv = benchLv(o); if (lv < 0) return ''; const st
   return `<div class="rc ${ok ? 'ok' : 'no'} benchup" style="margin-bottom:.625rem"><div class="ri"><img class="px" src="${iconURL(IT[lv + 1])}" alt=""></div><div class="rn">${NM[lv + 1]}로 올리기<small>새 ${st === 'smelter' ? '장비가' : '물건이'} 더 생겨요</small><div class="ings">${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="benchUp" ${ok ? '' : 'disabled'}>올리기</button></div>`; }
 // ---- the tool pouch in the bag window ----
 function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요 · 단축칸 맨 앞 도구 칸에서 골라 들어요)</span></div><div class="grid">`;
-  T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '')); });
+  T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '') + ((G.seen || {})[s.id] > 1 ? ' new' : '')); }); // v77: 처음 얻은 도구
   if (!T.length) h += `<p class="prose" style="grid-column:1/-1;color:var(--muted);font-size:.875rem">아직 도구가 없어요</p>`;
   h += `</div>`; const s = UIS.toolSel != null ? T[UIS.toolSel] : null;
   if (s) { const it = ITEMS[s.id], st = itemStat(it, s); h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}</h3><p>${it.d || ''}</p>${st ? `<div class="st">${st}</div>` : ''}</div><div class="btns">${isBroken(s) ? '' : `<button class="btn" data-a="holdTool" type="button">${s === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
@@ -6661,8 +6759,9 @@ function onSheetClick(e) {
   const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, i = b.dataset.i != null ? (isNaN(+b.dataset.i) ? b.dataset.i : +b.dataset.i) : null;
   ensureAudio();
   if (a === 'close') { closePanel(); return; }
+  if (a === 'bagNav') { if (panel && panel.kind !== i) openPanel(i, { nav: 1 }); return; } // v77: 가방 | 제작 탭
   if (a === 'inv') {
-    UIS.trash = false;
+    UIS.trash = false; if (G.inv[i]) runCmd({ k: 'seenItem', id: G.inv[i].id }); // v77: 새 물건 표시는 한 번 누르면 꺼져요
     if (Number.isInteger(i) && i < HOT) runCmd({ k: 'selHot', i }); // v66 (BF-06): the hotbar slot picked here stays in hand after the bag closes
     if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
     else if (UIS.invSel === i) UIS.invSel = null;
@@ -6677,7 +6776,7 @@ function onSheetClick(e) {
   if (a === 'catchThrow') { catchThrow(); return; }
   if (a === 'petOn') { if (runCmd({ k: 'pet', id: i }) === false) return; renderPanel(); return; }
   if (a === 'eqPick') { runCmd({ k: 'wear', i }); renderPanel(); return; }
-  if (a === 'pouch') { UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
+  if (a === 'pouch') { if (G.tools[i]) runCmd({ k: 'seenItem', id: G.tools[i].id }); UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
   if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { runCmd({ k: 'hold', i: UIS.toolSel }); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
   if (a === 'trashTool') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } runCmd({ k: 'trashTool', i: UIS.toolSel }); UIS.toolSel = null; UIS.trash = false; renderPanel(); return; }
   if (a === 'eat') { runCmd({ k: 'eat', i: UIS.invSel }); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }
@@ -6854,10 +6953,12 @@ function setupInput() {
     if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
-    if (panel) { if (e.code === 'KeyI' && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'inv') closePanel(); return; }
+    if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
+      if (['KeyI', 'KeyB', 'KeyU'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
-    if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
+    if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽
+    if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; } if (e.code === 'KeyL') { openPanel('quest'); return; } // v77: L = 퀘스트
     if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
@@ -6886,13 +6987,13 @@ function setupInput() {
   $('#sheet').addEventListener('click', onSheetClick);
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
-  $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
+  $('#face').addEventListener('click', () => started && openPanel('stat')); // v77: 얼굴도 캐릭터 화면
+  $('#hbFlip').addEventListener('click', () => { if (!started) return; ensureAudio(); flipHotbar(); });
   $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); command({ k: 'skill', n: +b.dataset.n }); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
-  $('#goal').addEventListener('click', () => started && openPanel('quest'));
-  $('#bQuest').addEventListener('click', () => started && openPanel('quest'));
+  $('#goal').addEventListener('click', () => started && openPanel('quest')); // v77: 진행 중인 이야기 한 줄을 누르면 퀘스트
   let newAsk = false;
   $('#btnNew').addEventListener('click', () => { ensureAudio();
     if (loadLocal() && !newAsk) { newAsk = true; $('#btnNew').textContent = '정말 새로 시작할까요? (지금 세이브는 백업돼요)'; $('#btnNew').classList.add('warn'); return; }
@@ -6965,8 +7066,8 @@ async function start(data) {
   initLight();
   try { setSound(localStorage.getItem('lantern-tree-sound') !== '0'); } catch (e) { }
   if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
-  $('#icHp').src = iconURL('heart'); $('#icHu').src = iconURL('food');
-  ['bInv', 'bCraft', 'bQuest', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'hammer', 'quest', 'star', 'map', 'gear'][k]); });
+  $('#icHu').src = iconURL('food');
+  ['bInv', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'star', 'map', 'gear'][k]); });
   if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
   for (const ev of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) window.addEventListener(ev, () => { noteInput(); }, { capture: true, passive: true });
@@ -6975,7 +7076,7 @@ async function start(data) {
   if (saved) { try { deserialize(saved); $('#btnContinue').hidden = false; } catch (e) { pushBackup('불러오기 실패한 세이브'); newGame(20261008); } } else newGame(20261008);
   if (loadBackups().length) $('#btnBackups').hidden = false;
   setTimeout(() => cloudInit(), 50);
-  if (!storageWorks()) { const w = $('#saveWarn'); w.hidden = false; w.textContent = '⚠ 이 화면에서는 진행 상황이 저장되지 않아요. 홈 화면 앱이나 브라우저에서 열거나, 플레이 중 메뉴 → 세이브 파일로 내보내기로 백업해 주세요.'; }
+  if (!storageWorks()) { const w = $('#saveWarn'); w.hidden = false; w.textContent = '⚠ 이 화면에서는 진행 상황이 저장되지 않아요. 홈 화면 앱이나 브라우저에서 열거나, 플레이 중 설정 → 세이브 파일로 내보내기로 백업해 주세요.'; }
   cam.x = G.p.x; cam.y = G.p.y - .3; computeLight();
   if (data && data.save && data.playing) beginPlay();
   requestAnimationFrame(loop);
