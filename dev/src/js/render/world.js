@@ -13,7 +13,7 @@ import { CHN, getChunk, prefetchChunk } from './chunks.js';
 import { iconCanvas } from './icons.js';
 import { LH, lightCv, LIGHTS, LW, LX0, LY0 } from './light.js';
 import { animalImg, drawHazards, drawHitBars, drawSpread, drawTree, drawTreeGlow, drawTreeLeaves, rotImg, twSprite, visibleShakers } from './parts.js';
-import { ctx, drawImg, LIFT, setCtx, shadow, TP, VIEW, Z } from './view.js';
+import { ctx, DPR, drawImg, LIFT, setCtx, shadow, TP, VIEW, Z } from './view.js';
 import { drawKind, emCtxFor } from './glight.js';
 import { G, guardOf, paused } from '../save/state.js';
 import { canDev } from '../save/storage.js';
@@ -25,6 +25,7 @@ import { CIRC, wirePowered } from '../sim/circuits.js';
 import { jobDone, nowS } from '../sim/crafting.js';
 import { farmStage, growOf } from '../sim/farming.js';
 import { selItem } from '../sim/inventory.js';
+import { maxHp, maxMp } from '../sim/player.js';
 import { isYoung, treeStep, WATER, WFLOOR } from '../sim/nature.js';
 import { goalTarget } from '../sim/quests.js';
 import { onFrame } from '../sim/systems.js';
@@ -32,7 +33,7 @@ import { treeStage } from '../sim/tree.js';
 import { aimMouse } from '../ui/input.js';
 import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
-import { fpOf, placeAnchor } from '../world/tiles.js';
+import { anchorAt, fpOf, placeAnchor } from '../world/tiles.js';
 import { WALL_H, WALL_TOP, wallShade } from '../art/tilemap.js';
 import { rippleOf, TR, wallArt } from './terrain.js';
 export const AMB = [];
@@ -105,14 +106,17 @@ export function renderWorld(cw, ch, glOn = false) {
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
       const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
-      drawKind('top', wa ? wa.ore : 0); ctx.drawImage(wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], sx, sy - L);
-      drawKind('shade'); ctx.drawImage(wallShade(wallOpen(x, y)), sx, sy - L); // v71: the top fades to black away from its open edges
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
+      const topImg = wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], shd = wallShade(wallOpen(x, y));
+      // v77 버그 수정: 아래도 벽이면 앞면을 안 그려서, 내 칸의 위쪽 4px(윗면 12px 아래 ~ 아래 벽 윗면 시작)이 비어 틈이 보였어요 → 윗면을 4px 내려 한 번 더 깔아 메워요
+      if (below) { const gap = T - WALL_TOP; drawKind('top', wa ? wa.ore : 0); ctx.drawImage(topImg, sx, sy - L + gap); drawKind('shade'); ctx.drawImage(shd, sx, sy - L + gap); }
+      drawKind('top', wa ? wa.ore : 0); ctx.drawImage(topImg, sx, sy - L);
+      drawKind('shade'); ctx.drawImage(shd, sx, sy - L); // v71: the top fades to black away from its open edges
       if (!below) { drawKind('front', wa ? wa.ore : 0); ctx.drawImage(wa ? wa.front : SPR.wfront[w], sx, fy); }
       drawKind('up');
       ctx.fillStyle = 'rgba(20,12,30,0.55)';
-      if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, WALL_TOP);
-      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, WALL_TOP);
+      const th = WALL_TOP + (below ? T - WALL_TOP : 0); if (x > 0 && !G.wall[i - 1]) ctx.fillRect(sx, sy - L, 1, th);
+      if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, th);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
       const ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); // cracks: the middle rows on the 12px top
       const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
@@ -204,10 +208,12 @@ export function renderWorldPost(cw, ch) {
   }
   // target highlight
   if (G.act && G.act.t && p.dead <= 0 && !paused) {
-    const tt = G.act.t, k = G.act.k; const hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
+    const tt = G.act.t, k = G.act.k; let hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0), hw = T, hh = T;
+    // v77: 여러 칸 가구(작업대 2×1·부엌 세트 3×1 …)는 놓은 뒤에도 차지한 칸 전체를 표시해요 (놓기 전 테두리와 같은 크기)
+    if (k !== 'place' && inB(tt.x, tt.y)) { const ai = anchorAt(idx(tt.x, tt.y)), o = ai >= 0 ? G.objs.get(ai) : null; if (o && OBJ[o.t] && OBJ[o.t].sz) { const fp = fpOf(o); hx = (ai % W) * T - camX; hy = ((ai / W) | 0) * T - camY; hw = fp[0] * T; hh = fp[1] * T; } }
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
-    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse * .16})`; ctx.fillRect(hx, hy, T, T); ctx.fillStyle = `rgba(${col},${pulse})`; // v65: the target tile shows clearly
-    for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + T, hy, -1, 1], [hx, hy + T, 1, -1], [hx + T, hy + T, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
+    const pulse = 0.6 + Math.sin(performance.now() / 160) * 0.25; ctx.fillStyle = `rgba(${col},${pulse * .16})`; ctx.fillRect(hx, hy, hw, hh); ctx.fillStyle = `rgba(${col},${pulse})`; // v65: the target tile shows clearly
+    for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + hw, hy, -1, 1], [hx, hy + hh, 1, -1], [hx + hw, hy + hh, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
     if (k === 'place') { const s = selItem(); if (s) { const it = ITEMS[s.id], d = it.kind === 'place' ? OBJ[it.obj] : null; ctx.globalAlpha = 0.45;
       if (d && d.sz) { const fp = placeFp(d), a = placeAnchor(tt, fp), [img] = rotImg(it.obj, pRot() % rotN(it.obj), SPR.obj[it.obj]), X = a.x * T - camX, Y = a.y * T - camY; if (d.flat) ctx.drawImage(img, X, Y); else ctx.drawImage(img, X + fp[0] * T / 2 - effW(img) / 2, Y + fp[1] * T - effH(img)); ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(127,224,181,.85)'; ctx.lineWidth = 1; ctx.strokeRect(X + .5, Y + .5, fp[0] * T - 1, fp[1] * T - 1); }
       else { let img = it.kind === 'place' ? SPR.obj[it.obj] : iconCanvas(s.id), fl = false; const pr = pRot(); if (d && pr && canRotObj(it.obj)) [img, fl] = rotImg(it.obj, pr % rotN(it.obj), img);
@@ -218,6 +224,22 @@ export function renderWorldPost(cw, ch) {
 // v71: which of the 8 neighbours are open (not a wall) — 1 N · 2 E · 4 S · 8 W · 16 NE · 32 SE · 64 SW · 128 NW (outside the map counts as wall)
 function wallOpen(x, y) { const o = (dx, dy) => { const xx = x + dx, yy = y + dy; return inB(xx, yy) && !G.wall[idx(xx, yy)]; };
   return (o(0, -1) ? 1 : 0) | (o(1, 0) ? 2 : 0) | (o(0, 1) ? 4 : 0) | (o(-1, 0) ? 8 : 0) | (o(1, -1) ? 16 : 0) | (o(1, 1) ? 32 : 0) | (o(-1, 1) ? 64 : 0) | (o(-1, -1) ? 128 : 0); }
+// ---- v77: 머리 위 체력(빨강)·기력(주황) 막대 ----
+// 싸우는 중(맞음·내가 때림·몬스터가 쫓음 — 끝나고 3초까지, 보스와 싸우는 동안)이거나 체력이 덜 찼을 때만 보여요. 가득 찬 채 안 싸울 때는 숨김
+export const FIGHT_HOLD = 3;
+const ago = t => Number.isFinite(t) ? G.time - t : 1e9;
+export function inFight(p = G.p) { if (Math.min(ago(p.hitAt), ago(p.fightAt), ago(p.chasedAt)) < FIGHT_HOLD) return true;
+  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b && b.st === 'fight' && Math.hypot(b.x - p.x, b.y - p.y) < 18) return true; } return false; }
+export const headBarsOn = (p = G.p) => p.dead <= 0 && !p.sleep && (inFight(p) || p.hp < maxHp() - .5);
+const headTop = p => p.y + .15 - (SPR.player ? effH(SPR.player.down[0]) : 24) / 16; // 머리 꼭대기 (칸 단위)
+const HB = () => ({ hh: Math.max(3, Math.round(Z * 1.6)), mh: Math.max(2, Math.round(Z)), gap: Math.round(Z * 3) }); // 막대 높이·머리와 띄우기 (화면 픽셀)
+function drawHeadBars(T, camX, camY) { const p = G.p; if (!headBarsOn(p)) return;
+  const { hh, mh, gap } = HB(), b = Math.max(1, Math.round(Z / 2)), w = Math.round(T * .95), x = Math.round(p.x * T - camX - w / 2), y = Math.round(headTop(p) * T - camY) - gap - hh - mh - b;
+  ctx.fillStyle = 'rgba(20,14,30,.92)'; ctx.fillRect(x - b, y - b, w + b * 2, hh + mh + b * 3);
+  ctx.fillStyle = '#4a1d2a'; ctx.fillRect(x, y, w, hh); ctx.fillStyle = '#ff4f64'; ctx.fillRect(x, y, Math.round(w * clamp(p.hp / maxHp(), 0, 1)), hh);
+  ctx.fillStyle = '#4a3418'; ctx.fillRect(x, y + hh + b, w, mh); ctx.fillStyle = '#ffa640'; ctx.fillRect(x, y + hh + b, Math.round(w * clamp((p.mp || 0) / maxMp(), 0, 1)), mh); }
+// 알림 자리: 머리 위 막대 살짝 위 (화면 CSS 픽셀, 화면 흔들림은 무시)
+export function headNoteY() { if (!G || !SPR.player) return null; const { hh, mh, gap } = HB(); return (headTop(G.p) * TP - VIEW.baseY - gap - hh - mh - Math.round(Z * 2)) / DPR - 4; }
 export function renderOverlay(cw, ch) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT * Z; ctx.imageSmoothingEnabled = true;
   // soft vignette
@@ -230,6 +252,7 @@ export function renderOverlay(cw, ch) {
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = `${Math.round(5.4 * Z)}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw = ctx.measureText(lb).width + 6 * Z, lx = hx + T / 2, ly = hy - 5 * Z; ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z, 4 * Z) : ctx.rect(lx - tw / 2, ly - 4.5 * Z, tw, 9 * Z); ctx.fill(); ctx.fillStyle = `rgb(${col})`; ctx.fillText(lb, lx, ly + Z * .3);
   }
   drawHitBars(T, camX, camY); // v65: hit to recover
+  drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)
   if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
   // v68 (BF-08): my nearest lost bundle — an orange arrow with the bundle's own picture, a little further out than the quest arrow so both

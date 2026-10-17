@@ -471,7 +471,7 @@ def test_weapons_skills():
                 await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1}}")
                 await pg.wait_for_timeout(500)
                 r=await ev(pg,"""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
-              const E={sk:q('#skBar'),act:q('#actBtn'),sub:q('#subBtn'),hot:q('#hotbar'),bars:q('#hud .bars'),side:q('#hud .side'),joy:q('#joy'),hint:q('#pcHint')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+              const E={sk:q('#skBar'),act:q('#actBtn'),sub:q('#subBtn'),hot:q('#hotbar'),bars:q('#hud .stat'),side:q('#hud .side'),joy:q('#joy'),hint:q('#pcHint')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
               const bad=Object.keys(E).filter(k=>k!=='sk'&&ov(E.sk,E[k]));const out=E.sk&&(E.sk.x<0||E.sk.y<0||E.sk.r>innerWidth||E.sk.b>innerHeight);const sideOut=E.side&&(E.side.b>innerHeight||E.side.r>innerWidth);return [!!E.sk,bad,!!out,!!sideOut,!!(E.bars&&E.side&&ov(E.bars,E.side))]}""")
                 rec('레이아웃',f'{name} 스킬 버튼 겹침 없음', r[0] and not r[1] and not r[2], str(r))
                 rec('레이아웃',f'{name} 능력 버튼 포함 사이드 메뉴가 화면 안', not r[3] and not r[4], str(r))

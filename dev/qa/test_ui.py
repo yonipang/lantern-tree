@@ -97,10 +97,11 @@ def test_hotbar_bag():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,refreshHotbar,perform,decide,HOT,invSize,stackMax:id=>(ITEMS[id].stack||((!ITEMS[id].kind||ITEMS[id].kind==='ground'||id==='dirt')?999:99)),sortBag,hotClick}")
     LAYOUT="""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
- const E={hot:q('#hotbar'),bag:q('#bInv'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),craft:q('#bCraft'),joy:q('#joy'),side:q('#hud .side'),bars:q('#hud .bars')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
- const bad=[];for(const [a,b] of [['hot','act'],['hot','sub'],['hot','sk'],['hot','craft'],['hot','joy'],['bag','act'],['bag','sk'],['craft','act'],['craft','sub'],['craft','sk'],])if(ov(E[a],E[b]))bad.push(a+'/'+b);
+ const E={hot:q('#hotbar'),bag:q('#bInv'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),flip:q('#hbFlip'),joy:q('#joy'),side:q('#hud .side'),bars:q('#hud .stat')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+ const bad=[];for(const [a,b] of [['hot','act'],['hot','sub'],['hot','sk'],['hot','joy'],['bag','act'],['bag','sk'],['side','bars']])if(ov(E[a],E[b]))bad.push(a+'/'+b);
  const out=Object.keys(E).filter(k=>E[k]&&k!=='joy'&&(E[k].x<-1||E[k].r>innerWidth+1||E[k].b>innerHeight+1));const hb=document.querySelector('#hbSlots');
- return {bad,out,bagRight:E.bag&&E.hot?E.bag.r<=E.hot.r+1&&E.bag.x>document.querySelector('#hbSlots').getBoundingClientRect().right-2:false,scroll:hb.scrollWidth>hb.clientWidth+2,slots:hb.children.length}}"""
+ const vis=[...hb.querySelectorAll('.slot')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.dataset.tool?'t':e.dataset.i);
+ return {bad,out,bagTop:!!(E.bag&&E.side&&E.bag.b<=E.side.b+1&&E.bag.y<innerHeight/2),flip:!!E.flip,scroll:hb.scrollWidth>hb.clientWidth+2,slots:hb.querySelectorAll('.slot').length,vis:vis.join(',')}}"""
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -109,17 +110,20 @@ def test_hotbar_bag():
             r=await ev(pg,"()=>[__T.G.inv.length,__T.G.inv.slice(0,9).map(s=>s&&s.id).join(','),__T.G.inv.slice(9).filter(Boolean).map(s=>s.id).join(','),(__T.G.tools||[]).map(s=>s.id).join(','),__T.G.sel]")
             rec('시작','단축칸 9 + 가방 24, 음식·씨앗은 단축칸, 도구는 도구 주머니(나무 곡괭이를 든 채 시작, v65)', r[0]==33 and r[1].startswith('berry,berrySeed') and 'pickWood' not in r[2] and r[3]=='pickWood' and r[4]==-1, str(r))
             await ev(pg,"()=>document.body.classList.add('touch')"); await pg.wait_for_timeout(300)
-            r=await ev(pg,LAYOUT); rec('단축칸','도구 칸 + 9칸 · 모바일 가로 스크롤 · 가방 버튼이 오른쪽 고정', r['slots']==10 and r['scroll'] and r['bagRight'] and not r['bad'] and not r['out'], str(r))
+            r=await ev(pg,LAYOUT); rec('단축칸','v77 폰: 도구 칸 + 일반 1–5칸 + 넘기기 버튼 (스크롤 없음) · 가방 버튼은 오른쪽 위', r['slots']==10 and r['vis']=='t,0,1,2,3,4' and r['flip'] and not r['scroll'] and r['bagTop'] and not r['bad'] and not r['out'], str(r))
+            await pg.tap('#hbFlip'); await pg.wait_for_timeout(250)
+            r=await ev(pg,LAYOUT); rec('단축칸','v77 넘기기 버튼 → 6–9칸이 보임 (도구 칸은 그대로)', r['vis']=='t,5,6,7,8' and not r['out'], str(r))
+            await pg.tap('#hbFlip'); await pg.wait_for_timeout(250)
             await ev(pg,"()=>{__T.hotClick(8)}"); await pg.wait_for_timeout(400)
-            r=await ev(pg,"()=>{const hb=document.querySelector('#hbSlots'),el=hb.children[9],a=el.getBoundingClientRect(),c=hb.getBoundingClientRect();return [a.right<=c.right+1,a.left>=c.left-1,__T.G.sel]}")
-            rec('단축칸','9번 칸을 고르면 보이도록 자동 스크롤', r==[True,True,8], str(r))
-            await ev(pg,"()=>{document.querySelector('#hbSlots').scrollLeft=0}"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const hb=document.querySelector('#hbSlots'),el=hb.querySelector('[data-i=\"8\"]');return [getComputedStyle(el).display!=='none',__T.G.sel]}")
+            rec('단축칸','9번 칸을 고르면 6–9쪽으로 넘어가 보임', r==[True,8], str(r))
+            await ev(pg,"()=>{__T.hotClick(0)}"); await pg.wait_for_timeout(300)
             bx=await pg.locator('#hotbar [data-i="2"]').bounding_box(); x0,y0=bx['x']+bx['width']/2,bx['y']+bx['height']/2
             await pg.dispatch_event('#hotbar [data-i="2"]','pointerdown',{'pointerId':7,'pointerType':'touch','isPrimary':True,'clientX':x0,'clientY':y0,'bubbles':True})
             for k in range(1,7): await pg.evaluate("([x,y])=>window.dispatchEvent(new PointerEvent('pointermove',{pointerId:7,pointerType:'touch',clientX:x,clientY:y,bubbles:true}))",[x0-25*k,y0]); await pg.wait_for_timeout(16)
             await pg.evaluate("([x,y])=>window.dispatchEvent(new PointerEvent('pointerup',{pointerId:7,pointerType:'touch',clientX:x,clientY:y,bubbles:true}))",[x0-150,y0]); await pg.wait_for_timeout(200)
             r=await ev(pg,"()=>[document.querySelector('#hbSlots').scrollLeft>20,__T.G.inv[0]&&__T.G.inv[0].id,!document.querySelector('#dragGhost')]")
-            rec('단축칸','모바일에서 빠르게 옆으로 밀면 스크롤 (아이템은 그대로)', r==[True,'berry',True], str(r))
+            rec('단축칸','모바일에서 빠르게 옆으로 밀어도 물건은 그대로 (v77: 스크롤 대신 넘기기 버튼)', r[1:]==['berry',True], str(r))
             r=await ev(pg,"()=>{const ev=new Event('dragstart',{cancelable:true,bubbles:true});document.querySelector('#hotbar .slot img').dispatchEvent(ev);const cs=getComputedStyle(document.querySelector('#hotbar .slot img'));return [ev.defaultPrevented,cs.pointerEvents,cs.webkitUserDrag||cs.getPropertyValue('-webkit-user-drag')]}")
             rec('드래그','브라우저 기본 이미지 끌기 차단 (원본 이미지가 따라오지 않음)', r[0] and r[1]=='none', str(r))
             # placing new items
@@ -180,17 +184,131 @@ def test_hotbar_bag():
             rec('기능','콘솔 오류 없음 (모바일)', not errs, errs[:3]); await ctx.close()
             # PC
             ctx,pg,errs=await new_ctx(b,1280,800,False)
-            r=await ev(pg,LAYOUT); rec('단축칸','PC 도구 칸 + 9칸 한 줄 · 가방 버튼 오른쪽', r['slots']==10 and not r['scroll'] and r['bagRight'] and not r['bad'], str(r))
+            r=await ev(pg,LAYOUT); rec('단축칸','PC 도구 칸 + 9칸 한 줄 (넘기기 없음) · 가방 버튼은 오른쪽 위', r['slots']==10 and r['vis']=='t,0,1,2,3,4,5,6,7,8' and not r['flip'] and not r['scroll'] and r['bagTop'] and not r['bad'], str(r))
             await pg.keyboard.press('Digit9'); r=await ev(pg,"()=>__T.G.sel"); rec('단축칸','PC 숫자 9로 9번 칸 선택', r==8, r)
             await pg.mouse.move(640,400); await pg.mouse.wheel(0,100); await pg.wait_for_timeout(100); r=await ev(pg,"()=>__T.G.sel"); rec('단축칸','휠로 순환 (9번 칸 다음은 도구 칸, v65)', r==-1, r)
-            await pg.click('#bInv'); await pg.wait_for_timeout(500); r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('가방','단축칸 옆 가방 버튼으로 가방 열기', '가방' in r, r)
+            await pg.click('#bInv'); await pg.wait_for_timeout(500); r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('가방','오른쪽 위 가방 버튼으로 가방 열기', '가방' in r, r)
             await pg.screenshot(path=SP+'pc_bag.png')
             rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await ctx.close()
             for (w,h,name) in [(360,640,'small Android'),(375,667,'iPhone SE'),(430,932,'Pro Max'),(844,390,'landscape')]:
                 ctx,pg,errs=await new_ctx(b,w,h,True)
                 await ev(pg,"()=>{document.body.classList.add('touch');const G=__T.G;G.rpg.sk.dash=1;G.rpg.slot=['dash',null];G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1}}"); await pg.wait_for_timeout(500)
-                r=await ev(pg,LAYOUT); rec('레이아웃',f'{name} 단축칸·가방 버튼 겹침 없음', not r['bad'] and not r['out'] and r['bagRight'], str(r))
+                r=await ev(pg,LAYOUT); rec('레이아웃',f'{name} 단축칸·가방 버튼 겹침 없음', not r['bad'] and not r['out'] and r['bagTop'], str(r))
                 await pg.screenshot(path=SP+f'{w}x{h}.png'); await ctx.close()
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_hud_layout_v77():
+    import asyncio, sys
+    # v77 HUD 배치: 왼쪽 위(얼굴·배고픔·더위추위·버프·이야기 한 줄), 오른쪽 위 4버튼, 머리 위 체력·기력, 보스 막대, 알림 자리, 빨간 점, 단축칸 넘기기, C·L·K 키
+    H2=HOOK.replace("computeLight}","computeLight,inFight,headBarsOn,headNoteY,mkEnemy,enemyStep,hotClick,refreshHotbar,bagNew,get panel(){return panel}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>document.body.classList.add('touch')"); await pg.wait_for_timeout(300)
+            q="(s=>{const e=document.querySelector(s);if(!e||e.hidden||getComputedStyle(e).display==='none')return null;const r=e.getBoundingClientRect();return {x:r.left,y:r.top,r:r.right,b:r.bottom}})"
+            # 왼쪽 위
+            r=await ev(pg,"()=>{const f="+q+";return [!!f('#face'),!!f('#huRing'),!f('#envRing'),!!f('#goal'),document.querySelector('#goal b').textContent,document.querySelector('#goalTxt').textContent,!document.querySelector('#bCraft'),!document.querySelector('#bQuest')]}")
+            rec('HUD','왼쪽 위: 얼굴·배고픔 동그라미·진행 중인 이야기 한 줄 (더위·추위는 그 지역에서만, 제작·퀘스트 버튼은 없음)', r[0] and r[1] and r[2] and r[3] and '진행 중인 이야기' in r[4] and '뿌리기둥' in r[5] and r[6] and r[7], str(r))
+            r=await ev(pg,"()=>{const G=__T.G;G.p.hunger=20;G.env={k:'cold',v:50,lv:1,t:0};return 0}")
+            ok=await wait_until(pg,"()=>{const h=document.querySelector('#huRing'),e=document.querySelector('#envRing');return h.classList.contains('low')&&Math.abs(parseFloat(h.style.getPropertyValue('--f'))-.2)<.01&&!e.hidden&&e.classList.contains('cold')&&Math.abs(parseFloat(e.style.getPropertyValue('--f'))-.5)<.01}")
+            rec('HUD','배고픔 20 → 동그라미 20%·경고 / 추운 곳 → 배고픔 옆에 추위 동그라미 50%', ok, '')
+            await ev(pg,"()=>{const G=__T.G;G.p.hunger=100;G.env={k:null,v:0,lv:0,t:0};G.buffs=['atk','def','move'].map((ef,k)=>({ef,tier:1,end:G.time+100,max:100,id:'berry'}));__T.G.__qt=null}")
+            ok=await wait_until(pg,"()=>{const b=document.querySelectorAll('#buffs .bf');return b.length===3&&b[2].classList.contains('more')&&b[2].textContent==='+1'&&document.querySelector('#envRing').hidden}")
+            rec('HUD','버프 3개 → 2개 + 「+1」', ok, await ev(pg,"()=>document.querySelector('#buffs').innerText"))
+            await ev(pg,"()=>{__T.G.buffs=[]}")
+            # 오른쪽 위 4버튼, 보스 막대는 그 사이 맨 위 가운데
+            await ev(pg,"()=>{document.querySelector('#bossbar').hidden=false}"); await pg.wait_for_timeout(100)
+            r=await ev(pg,"()=>{const f="+q+",ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;const s=['#bStat','#bMap','#bInv','#bMenu'].map(f),bb=f('#bossbar'),top=f('#hud .stat .top'),side=f('#hud .side');return [s.map(e=>e&&Math.round(e.y)).join(','),[...document.querySelectorAll('#hud .side .sbtn span')].map(e=>e.textContent).join(','),!ov(bb,top)&&!ov(bb,side),bb.y<top.b,Math.round(bb.r-bb.x)]}")
+            rec('HUD','오른쪽 위 세로로 캐릭터·지도·가방·설정', r[1]=='캐릭터,지도,가방,설정' and all(int(a)<int(b) for a,b in zip(r[0].split(',')[:-1],r[0].split(',')[1:])), str(r))
+            rec('HUD','보스 체력 막대는 맨 위, 얼굴 쪽 정보와 오른쪽 버튼 사이 (겹치지 않음)', r[2] and r[3] and r[4]>120, str(r))
+            await ev(pg,"()=>{document.querySelector('#bossbar').hidden=true}")
+            # 머리 위 체력·기력: 가득 찬 채 안 싸우면 숨김, 맞거나 때리거나 쫓기면 보임, 3초 뒤 숨김, 덜 차면 늘 보임
+            r=await ev(pg,"()=>{const T=__T,G=T.G,p=G.p;G.enemies.length=0;p.hp=T.maxHp?T.maxHp():p.hp;p.hitAt=p.fightAt=p.chasedAt=undefined;const a=T.headBarsOn();p.hitAt=G.time-1;const b=T.headBarsOn();p.hitAt=G.time-3.2;const c=T.headBarsOn();p.fightAt=G.time-.5;const d=T.headBarsOn();p.fightAt=undefined;p.hp-=10;const e=T.headBarsOn();p.hp+=10;return [a,b,c,d,e]}")
+            rec('HUD','머리 위 막대: 평소 숨김 · 맞으면 보임 · 3초 뒤 숨김 · 내가 때리면 보임 · 체력이 덜 차면 보임', r==[False,True,False,True,True], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G,p=G.p;p.chasedAt=undefined;const e=T.mkEnemy('slimeG',p.x+3,p.y);G.enemies.push(e);T.enemyStep(e,.016);const a=T.inFight();G.enemies.length=0;p.chasedAt=undefined;p.fightAt=undefined;p.hitAt=undefined;return [a,T.inFight()]}")
+            rec('HUD','몬스터가 나를 쫓으면 싸우는 중', r==[True,False], str(r))
+            # 알림 자리: 캐릭터 머리 위, 가운데
+            await ev(pg,"()=>{window.__toastT=1}"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const t=document.querySelector('#toasts').getBoundingClientRect(),y=__T.headNoteY();return [Math.round(Math.abs((t.left+t.right)/2-innerWidth/2)),Math.round(t.bottom-y),Math.round(y),innerHeight]}")
+            rec('HUD','알림은 머리 위 막대 살짝 위 가운데', r[0]<=2 and abs(r[1])<=2 and r[2]<r[3]*0.6 and r[2]>r[3]*0.2, str(r))
+            # 캐릭터 빨간 점: 포인트가 새로 생기면 → 캐릭터 화면을 열면 꺼짐
+            await ev(pg,"()=>{__T.G.rpg.pts=2}")
+            ok=await wait_until(pg,"()=>document.querySelector('#bStat').classList.contains('dot')&&document.querySelector('#face').classList.contains('dot')")
+            rec('빨간 점','올릴 포인트가 생기면 캐릭터 버튼·얼굴에 빨간 점', ok, '')
+            await pg.tap('#face'); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>[__T.panel&&__T.panel.kind,document.querySelector('.sh-head h2').textContent]")
+            rec('빨간 점','얼굴을 누르면 캐릭터 화면', r[0]=='stat' and '캐릭터' in r[1], str(r))
+            await ev(pg,"()=>__T.closePanel()"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[document.querySelector('#bStat').classList.contains('dot'),__T.G.rpg.pts]")
+            rec('빨간 점','캐릭터 화면을 열었으면 (포인트가 남아도) 점이 꺼짐', r==[False,2], str(r))
+            await ev(pg,"()=>{__T.G.rpg.pts=4}")
+            ok=await wait_until(pg,"()=>document.querySelector('#bStat').classList.contains('dot')"); rec('빨간 점','포인트가 또 생기면 다시 점', ok, '')
+            await ev(pg,"()=>{__T.G.rpg.pts=0}")
+            # 가방 빨간 점: 처음 얻은 물건 → 가방을 열면 버튼 점이 꺼지고, 칸의 작은 점은 그 물건을 누르면 꺼짐
+            r=await ev(pg,"()=>{const G=__T.G;return [__T.bagNew(),JSON.stringify(G.seen)]}")
+            rec('빨간 점','새 게임: 처음 가진 물건은 모두 본 것 (점 없음)', r[0] is False and '\"berry\":1' in r[1] and '\"pickWood\":1' in r[1], str(r))
+            await ev(pg,"()=>{__T.addItem('berry',2);__T.addItem('crystal',2);__T.G.inv[30]={id:'gel',c:1}}")
+            ok=await wait_until(pg,"()=>document.querySelector('#bInv').classList.contains('dot')")
+            r=await ev(pg,"()=>[__T.G.seen.berry,__T.G.seen.crystal,__T.G.seen.gel]")
+            rec('빨간 점','처음 얻은 물건(줍기·가방에 바로 넣기 모두) → 가방 버튼에 빨간 점, 이미 본 것은 그대로', ok and r==[1,3,3], str(r))
+            await pg.tap('#bInv'); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>[document.querySelector('#bInv').classList.contains('dot'),[...document.querySelectorAll('#sheet .slot.new')].map(e=>e.getAttribute('aria-label').split(' ')[0]).join(','),__T.G.seen.crystal]")
+            rec('빨간 점','가방을 열면 버튼 점은 꺼지고, 새 물건 칸에 작은 점', r[0] is False and len(r[1].split(','))==2 and r[2]==2, str(r))
+            i=await ev(pg,"()=>__T.G.inv.findIndex(s=>s&&s.id==='crystal')")
+            await ev(pg,f"()=>document.querySelector('#sheet [data-a=inv][data-i=\"{i}\"]').scrollIntoView({{block:'center'}})"); await pg.wait_for_timeout(150)
+            await pg.tap(f'#sheet [data-a=inv][data-i="{i}"]'); await pg.wait_for_timeout(250)
+            r=await ev(pg,f"()=>[__T.G.seen.crystal,document.querySelector('#sheet [data-a=inv][data-i=\"{i}\"]').classList.contains('new'),__T.G.seen.gel]")
+            rec('빨간 점','그 물건을 한 번 누르면 칸의 점이 꺼짐 (다른 새 물건은 그대로)', r==[1,False,2], str(r))
+            await ev(pg,"()=>{__T.addItem('torch',1)}"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[__T.G.seen.torch,document.querySelector('#bInv').classList.contains('dot')]")
+            rec('빨간 점','가방이 열려 있는 동안 들어온 새 물건은 버튼 점 없이 칸 점만', r==[2,False], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            # 저장·옛 세이브
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));const a=JSON.stringify(s.seen);__T.deserialize(s);return [a===JSON.stringify(__T.G.seen),__T.G.seen.gel]}")
+            rec('저장','본 적 있는 물건이 저장·불러오기 됨', r==[True,2], str(r))
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));delete s.seen;s.inv[20]={id:'ironBar',c:1};const i=__T.idx(Math.floor(s.p.x)+2,Math.floor(s.p.y));s.objs.push([i,{t:'chest',items:[{id:'goldBar',c:1},...Array(17).fill(null)]}]);__T.deserialize(s);const S=__T.G.seen;return [S.ironBar,S.goldBar,S.gel,__T.bagNew()]}")
+            rec('옛 세이브','v77 전 세이브: 가방·상자에 있던 물건은 모두 본 것 (점이 한꺼번에 뜨지 않음)', r==[1,1,1,False], str(r))
+            # 단축칸 넘기기: 안 보이는 6–9칸에 새 물건이 들어오면 넘기기 버튼에 점, 넘기면 꺼짐
+            await ev(pg,"()=>{const G=__T.G;for(let i=0;i<9;i++)G.inv[i]=null;G.inv[0]={id:'berry',c:1};G.sel=0;__T.refreshHotbar()}"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>document.querySelector('#hbFlip').classList.contains('dot')")
+            await ev(pg,"()=>{const G=__T.G;for(let i=1;i<5;i++)G.inv[i]={id:'stone',c:1};__T.addItem('wood',1);__T.refreshHotbar()}"); await pg.wait_for_timeout(200)
+            r2=await ev(pg,"()=>[__T.G.inv[5]&&__T.G.inv[5].id,document.querySelector('#hbFlip').classList.contains('dot')]")
+            await pg.tap('#hbFlip'); await pg.wait_for_timeout(200); await pg.tap('#hbFlip'); await pg.wait_for_timeout(200)
+            r3=await ev(pg,"()=>document.querySelector('#hbFlip').classList.contains('dot')")
+            rec('단축칸','안 보이는 6–9칸에 새 물건 → 넘기기 버튼에 점, 넘겨 보면 꺼짐', r is False and r2==['wood',True] and r3 is False, f'{r} {r2} {r3}')
+            # 가방이 가득 차면 「가득」
+            await ev(pg,"()=>{const G=__T.G;for(let i=9;i<G.inv.length;i++)G.inv[i]={id:'stone',c:1};__T.refreshHotbar()}"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[document.querySelector('#bInv').classList.contains('isfull'),getComputedStyle(document.querySelector('#bInv .full')).display]")
+            rec('가방','가방이 가득 차면 가방 버튼에 「가득」', r==[True,'block'], str(r))
+            rec('기능','콘솔 오류 없음 (폰)', not errs, errs[:3]); await ctx.close()
+            # PC: 키 C 캐릭터 · K 캐릭터 스킬 쪽 · L 퀘스트 · I 가방(제작 탭) · Esc 설정, 단축키 글자
+            ctx,pg,errs=await new_ctx(b,1280,800,False)
+            res=[]
+            for key,want in [('KeyC','캐릭터'),('KeyL','퀘스트'),('KeyI','가방'),('Escape','설정')]:
+                await pg.keyboard.press(key); await pg.wait_for_timeout(450)
+                t=await ev(pg,"()=>{const h=document.querySelector('#sheetWrap:not([hidden]) .sh-head h2');return h?h.textContent:''}"); res.append(t)
+                await pg.keyboard.press(key if key!='Escape' else 'Escape'); await pg.wait_for_timeout(300)
+                if key!='Escape': res.append(await ev(pg,"()=>document.querySelector('#sheetWrap').hidden"))
+                else: await ev(pg,"()=>__T.closePanel()")
+            rec('PC','C 캐릭터 · L 퀘스트 · I 가방 · Esc 설정 (같은 키로 닫기)', '캐릭터' in res[0] and res[1] is True and '퀘스트' in res[2] and res[3] is True and '가방' in res[4] and res[5] is True and '설정' in res[6], str(res))
+            await ev(pg,"()=>{__T.G.rpg.lv=12}"); await pg.keyboard.press('KeyK'); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const b=document.querySelector('.sh-body'),l=document.querySelector('#skLbl');return [b.scrollTop>50,Math.abs(l.getBoundingClientRect().top-b.getBoundingClientRect().top)<60]}")
+            rec('PC','K → 캐릭터 화면의 스킬 쪽으로', r==[True,True], str(r)); await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"()=>[...document.querySelectorAll('#hud .side .sbtn .k')].map(e=>getComputedStyle(e).display==='block'?e.textContent:'').join(',')")
+            rec('PC','오른쪽 위 버튼에 단축키 글자 (C·M·I·Esc)', r=='C,M,I,Esc', r)
+            await pg.keyboard.press('KeyI'); await pg.wait_for_timeout(600); await pg.click('[data-a=bagNav][data-i=craft]'); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[__T.panel&&__T.panel.kind,__T.panel&&__T.panel.st||null]"); await pg.keyboard.press('KeyI'); await pg.wait_for_timeout(300)
+            r2=await ev(pg,"()=>document.querySelector('#sheetWrap').hidden")
+            rec('PC','가방 → 제작 탭(손제작), I로 닫힘', r==['craft',None] and r2, f'{r} {r2}')
+            await ev(pg,"()=>{const G=__T.G;G.rpg.sk.dash=1;G.rpg.slot=['dash',null]}"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const h=document.querySelector('#hotbar').getBoundingClientRect(),s=document.querySelector('#skBar').getBoundingClientRect();return [s.left>=h.right,s.left-h.right<24,Math.abs((s.top+s.bottom)/2-(h.top+h.bottom)/2)<8]}")
+            rec('PC','스킬 2칸은 단축칸 바로 오른쪽', r==[True,True,True], str(r))
+            rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await ctx.close()
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
@@ -534,20 +652,25 @@ def test_drag_zones_layout():
                 await ev(pg,"()=>{document.body.classList.add('touch');const G=__T.G;G.rpg.sk.dash=1;G.rpg.slot=['dash',null];G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1};for(let k=0;k<3;k++)window.__toast&&0}")
                 await pg.wait_for_timeout(500)
                 r=await ev(pg,"""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
-              const E={craft:q('#bCraft'),equip:q('#bEquip'),quest:q('#bQuest'),stat:q('#bStat'),map:q('#bMap'),menu:q('#bMenu'),act:q('#actBtn'),sub:q('#subBtn'),sk:q('#skBar'),hot:q('#hotbar'),bars:q('#hud .bars'),joy:q('#joy')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
-              const bad=[];const ks=Object.keys(E);for(let a=0;a<ks.length;a++)for(let b=a+1;b<ks.length;b++)if(ov(E[ks[a]],E[ks[b]]))bad.push(ks[a]+'/'+ks[b]);
+              const E={stat:q('#bStat'),map:q('#bMap'),bag:q('#bInv'),menu:q('#bMenu'),face:q('#face'),bars:q('#hud .stat'),act:q('#actBtn'),atk:q('#atkBtn'),sub:q('#subBtn'),sk:q('#skBar'),hot:q('#hotbar'),joy:q('#joy')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+              const bad=[];const ks=Object.keys(E).filter(k=>!(k==='face'));for(let a=0;a<ks.length;a++)for(let b=a+1;b<ks.length;b++)if(ov(E[ks[a]],E[ks[b]]))bad.push(ks[a]+'/'+ks[b]);
               const out=ks.filter(k=>E[k]&&k!=='joy'&&(E[k].x<0||E[k].y<0||E[k].r>innerWidth+1||E[k].b>innerHeight+1));
-              return {bad,out,low:E.craft?[0,Math.round(E.craft.y),Math.round(E.sub.y),Math.round(E.act.y)]:null,right:E.craft?innerWidth-E.craft.r:null}}""")
-                land = w>h
+              const cx=e=>(e.x+e.r)/2,cy=e=>(e.y+e.b)/2;
+              // v77: 오른쪽 위 세로(가로 화면은 가로) 캐릭터·지도·가방·설정 / 공격 위에 상호작용 / 스킬은 공격 왼쪽 / 작은 버튼은 상호작용 왼쪽
+              const order=['stat','map','bag','menu'].map(k=>E[k]);const top=order.every(e=>e&&e.b<innerHeight*.6&&innerWidth-e.r<(innerWidth>innerHeight?innerWidth*.4:40));
+              const seq=innerWidth>innerHeight?order.every((e,k)=>!k||e.x>order[k-1].x):order.every((e,k)=>!k||e.y>order[k-1].y);
+              return {bad,out,top,seq,actAbove:E.act.b<=E.atk.y+1&&Math.abs(cx(E.act)-cx(E.atk))<16,skLeft:!E.sk||(E.sk.r<=E.atk.x+1&&E.sk.b>=E.atk.y),subLeft:!E.sub||(E.sub.r<=E.act.x+1&&cy(E.sub)>E.act.y&&cy(E.sub)<E.act.b)}}""")
                 rec('레이아웃',f'{name} 버튼 겹침 없음', not r['bad'] and not r['out'], str(r))
-                if not land: rec('레이아웃',f'{name} 가방·제작이 우측 하단(상호작용 버튼 위)', r['low'][1]<r['low'][3] and r['low'][1]>h*0.4 and r['right']<30, str(r))
+                rec('레이아웃',f'{name} v77 오른쪽 위 캐릭터·지도·가방·설정 순서', r['top'] and r['seq'], str(r))
+                rec('레이아웃',f'{name} v77 공격 위 상호작용 · 스킬은 공격 왼쪽 · 작은 버튼은 상호작용 옆', r['actAbove'] and r['skLeft'] and r['subLeft'], str(r))
                 await pg.screenshot(path=SP+f'layout_{w}x{h}.png')
-                await pg.tap('#bCraft'); await pg.wait_for_timeout(500)
-                r=await ev(pg,"()=>!!document.querySelector('#sheetWrap:not([hidden]) .sh-head')"); rec('레이아웃',f'{name} 옮긴 제작 버튼 동작', r, r)
+                await pg.tap('#bInv'); await pg.wait_for_timeout(600); await pg.tap('[data-a=bagNav][data-i=craft]'); await pg.wait_for_timeout(400)
+                r=await ev(pg,"()=>[document.querySelector('.sh-head h2').textContent,!!document.querySelector('.bagnav [data-i=craft].on')]"); rec('레이아웃',f'{name} 가방 → 제작 탭으로 손제작', '제작' in r[0] and r[1], str(r))
                 if name=='iPhone 14':
                     await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=build]'); await pg.wait_for_timeout(250); await pg.tap('[data-a=tab2][data-i=nature]'); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'nature_tab.png')  # v62: 자연은 건축 탭의 2줄
+                    r=await ev(pg,"()=>!document.querySelector('.bagnav')"); rec('레이아웃','작업대 창에는 가방|제작 탭이 없음', r, r)
                 await ev(pg,"()=>__T.closePanel()"); await pg.tap('#bInv'); await pg.wait_for_timeout(500)
-                r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('레이아웃',f'{name} 옮긴 가방 버튼 동작', '가방' in r, r)
+                r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('레이아웃',f'{name} 가방 버튼 동작', '가방' in r, r)
                 rec('기능',f'{name} 콘솔 오류 없음', not errs, errs[:3]); await ctx.close()
             # ---------- save ----------
             ctx,pg,errs=await new_ctx(b,390,844,True)

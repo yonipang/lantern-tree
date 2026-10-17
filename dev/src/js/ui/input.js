@@ -13,7 +13,7 @@ import { catchThrow } from '../sim/animals.js';
 import { runCmd } from '../sim/commands.js';
 import { advanceOffline } from '../sim/crafting.js';
 import { wearItem } from '../sim/gear.js';
-import { toggleToolRow, toolSlotClick } from './hud.js';
+import { flipHotbar, toggleToolRow, toolSlotClick } from './hud.js';
 import { DRAG, hotClick, onSheetClick, setupDrag } from './panel-actions.js';
 import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
 import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
@@ -85,10 +85,12 @@ export function setupInput() {
     if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
-    if (panel) { if (e.code === 'KeyI' && panel.kind === 'inv') { e.preventDefault(); closePanel(); } else if (e.code === 'KeyC' && panel.kind === 'craft') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyK' && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyU' && panel.kind === 'inv') closePanel(); return; }
+    if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
+      if (['KeyI', 'KeyB', 'KeyU'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
-    if (e.code === 'KeyC') { openPanel('craft'); return; } if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyK') { openPanel('stat'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; }
+    if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽
+    if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; } if (e.code === 'KeyL') { openPanel('quest'); return; } // v77: L = 퀘스트
     if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
@@ -117,13 +119,13 @@ export function setupInput() {
   $('#sheet').addEventListener('click', onSheetClick);
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
-  $('#bCraft').addEventListener('click', () => started && openPanel('craft'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
+  $('#face').addEventListener('click', () => started && openPanel('stat')); // v77: 얼굴도 캐릭터 화면
+  $('#hbFlip').addEventListener('click', () => { if (!started) return; ensureAudio(); flipHotbar(); });
   $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); command({ k: 'skill', n: +b.dataset.n }); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
   $('#bMenu').addEventListener('click', () => started && openPanel('menu'));
-  $('#goal').addEventListener('click', () => started && openPanel('quest'));
-  $('#bQuest').addEventListener('click', () => started && openPanel('quest'));
+  $('#goal').addEventListener('click', () => started && openPanel('quest')); // v77: 진행 중인 이야기 한 줄을 누르면 퀘스트
   let newAsk = false;
   $('#btnNew').addEventListener('click', () => { ensureAudio();
     if (loadLocal() && !newAsk) { newAsk = true; $('#btnNew').textContent = '정말 새로 시작할까요? (지금 세이브는 백업돼요)'; $('#btnNew').classList.add('warn'); return; }

@@ -18,6 +18,21 @@ import { eat } from './player.js';
 import { idx, inB, W } from '../world/map.js';
 import { delObj, fpTiles } from '../world/tiles.js';
 import { markLight } from './loop.js';
+import { onFrame } from './systems.js';
+// ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
+// 값: 1 본 것 · 2 새것 (가방 창의 그 칸에 작은 점, 한 번 누르면 1) · 3 새것 + 가방 버튼에 빨간 점 (가방을 열면 2)
+// 가방·도구 주머니에 처음 들어온 물건을 매 프레임 찾아요 — 줍기·제작·상자·보상 … 어느 길로 들어와도 같이 잡혀요
+export function noteSeen() { const S = G.seen || (G.seen = {}); let n = false;
+  const see = s => { if (s && ITEMS[s.id] && !S[s.id]) { S[s.id] = 3; n = true; } }; G.inv.forEach(see); (G.tools || []).forEach(see);
+  if (n) emit('inv'); }
+onFrame('seen', noteSeen);
+// 지금 가진 것 (가방·도구 주머니·장비, chests면 내가 놓은 상자 안까지 — 숨은 방 보물상자는 빼고)은 모두 본 것으로 — 새 게임과 v77 전 세이브
+export function seenAll(chests) { const S = G.seen || (G.seen = {}); const see = s => { if (s && ITEMS[s.id]) S[s.id] = 1; };
+  G.inv.forEach(see); (G.tools || []).forEach(see); for (const k in (G.equip || {})) see(G.equip[k]);
+  if (chests) for (const o of G.objs.values()) if (o.items && o.t !== 'tchest') o.items.forEach(see); }
+export const bagNew = () => { const S = G.seen || {}; for (const k in S) if (S[k] === 3) return true; return false; };
+defineCmd('seenBag', () => { const S = G.seen || {}; for (const k in S) if (S[k] === 3) S[k] = 2; }); // 가방을 열었어요 → 가방 버튼의 빨간 점 끄기
+defineCmd('seenItem', c => { const S = G.seen || {}; if (S[c.id] > 1) S[c.id] = 1; }); // 가방 창에서 그 물건을 눌렀어요 → 칸의 작은 점 끄기
 export function returnObj(o, x, y) {
   if (o.job) cancelJob(o, x, y); // v59: a furnace / pot picked up mid-job gives back the finished items and the unused materials
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
@@ -34,12 +49,12 @@ export const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료
 export function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'axe', 'lasso', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 export function addItem(id, c, count = true) {
   if (ITEMS[id] && ITEMS[id].note) { learnRecipe(ITEMS[id].note); return 0; } // recipe notes teach a dish instead of taking a bag slot
-  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } G.newIds = G.newIds || {}; G.newIds[id] = 1; emit('inv'); return 0; } // v65: tools go into the tool pouch
+  if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } emit('inv'); return 0; } // v65: tools go into the tool pouch
   let left = c; const inv = G.inv, mx = stackMax(id);
   for (let i = 0; i < inv.length && left > 0; i++) { const s = inv[i]; if (s && s.id === id && s.c < mx) { const k = Math.min(mx - s.c, left); s.c += k; left -= k; } }
   // v65: new stacks go into an empty hotbar slot first, then the bag
   const order = [...Array(HOT).keys()].concat([...Array(inv.length - HOT).keys()].map(k => k + HOT));
-  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; G.newIds = G.newIds || {}; G.newIds[id] = 1; } }
+  for (const i of order) { if (left <= 0) break; if (!inv[i]) { const k = Math.min(mx, left); inv[i] = { id, c: k }; if (DUR[id]) inv[i].dur = DUR[id][0]; left -= k; } }
   const got = c - left;
   if (got > 0 && rarOf(id) >= 3 && (ITEMS[id].kind === 'sword' || ITEMS[id].kind === 'pick')) { G.stats.epicSeen = G.stats.epicSeen || {}; G.stats.epicSeen[id] = 1; }
   if (got > 0 && ITEMS[id].kind === 'sword') autoHotWeapon(id);
