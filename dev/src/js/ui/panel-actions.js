@@ -139,7 +139,8 @@ export function setupDrag() {
   document.addEventListener('dragstart', e => e.preventDefault());
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.slot, #hotbar, #sheet')) e.preventDefault(); });
   document.addEventListener('pointerdown', e => {
-    if (DRAG.st || !G || !started || (e.pointerType === 'mouse' && e.button !== 0)) return; const el = e.target.closest && e.target.closest('.slot[data-a]'); if (!el) return;
+    if (DRAG.st) dragEnd(false); /* v86: 새로 누르면 남아 있던 끌기·스크롤을 버리고 새 손가락으로 시작해요 (아이폰에서 「손 뗌」이 빠지면 그 뒤로 가방이 안 넘어가던 문제) */
+    if (!G || !started || (e.pointerType === 'mouse' && e.button !== 0)) return; const el = e.target.closest && e.target.closest('.slot[data-a]'); if (!el) return;
     const A = slotRef(el), item = A && A.arr[A.i]; if (!item && !(e.pointerType !== 'mouse' && (el.closest('.sh-body') || el.closest('#hbSlots')))) return;
     DRAG.st = { el, item, x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, mode: null, touch: e.pointerType !== 'mouse', body: el.closest('.sh-body'), hb: el.closest('#hbSlots'), sy: 0, sx: 0 };
   }, true);
@@ -151,14 +152,22 @@ export function setupDrag() {
       else if (!D.item) { D.mode = 'none'; }
       else { D.mode = 'drag'; D.el.classList.add('dragging'); const g = document.createElement('img'); g.id = 'dragGhost'; g.className = 'px'; g.alt = ''; g.src = iconURL(D.item.id); document.body.appendChild(g); D.ghost = g; }
     }
-    if (D.mode === 'scroll') D.body.scrollTop = D.sy - dy;
-    else if (D.mode === 'hscroll') D.hb.scrollLeft = D.sx - dx;
+    // v86: 넘기는 중에 창이 다시 그려지면(물건을 주움 등) 새로 그려진 목록을 이어서 넘겨요 — 예전에는 사라진 옛 목록을 넘겨서 멈춘 것처럼 보였어요
+    if (D.body && !D.body.isConnected) { const nb = document.querySelector('#sheet .sh-body'); D.body = nb; if (nb && D.mode === 'scroll') D.sy = nb.scrollTop + (D.ldy || 0); }
+    if (D.hb && !D.hb.isConnected) { const nh = document.querySelector('#hbSlots'); D.hb = nh; if (nh && D.mode === 'hscroll') D.sx = nh.scrollLeft + (D.ldx || 0); }
+    if (D.mode === 'scroll') { if (D.body) { D.body.scrollTop = D.sy - dy; D.ldy = dy; } }
+    else if (D.mode === 'hscroll') { if (D.hb) { D.hb.scrollLeft = D.sx - dx; D.ldx = dx; } }
     else if (D.mode === 'drag') { D.lx = e.clientX; D.ly = e.clientY; if (D.body && !D.raf) { const step = () => { if (DRAG.st !== D) return; const r = D.body.getBoundingClientRect(); if (D.ly < r.top + 44) D.body.scrollTop -= 9; else if (D.ly > r.bottom - 44) D.body.scrollTop += 9; D.raf = requestAnimationFrame(step); }; D.raf = requestAnimationFrame(step); }
       D.ghost.style.left = e.clientX + 'px'; D.ghost.style.top = e.clientY + 'px'; const t = document.elementFromPoint(e.clientX, e.clientY), tEl = t && t.closest('.slot[data-a]');
       document.querySelectorAll('.slot.dropT').forEach(x => { if (x !== tEl) x.classList.remove('dropT'); }); if (tEl && tEl !== D.el && slotRef(tEl)) tEl.classList.add('dropT'); }
   });
   window.addEventListener('pointerup', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(true, e); });
   window.addEventListener('pointercancel', e => { if (DRAG.st && e.pointerId === DRAG.st.id) dragEnd(false); });
+  // v86: 화면에 손가락이 하나도 없는데 끌기가 남아 있으면 풀어요 (「손 뗌」을 놓쳤을 때). 손 뗌이 먼저 와서 놓기가 끝나도록 한 박자 뒤에 봐요
+  const noTouch = e => { if (e.touches && e.touches.length === 0 && DRAG.st) { const D = DRAG.st; setTimeout(() => { if (DRAG.st === D) dragEnd(false); }, 0); } };
+  window.addEventListener('touchend', noTouch, true); window.addEventListener('touchcancel', noTouch, true);
+  const dropAll = () => dragEnd(false); // 앱을 내리거나 창을 떠나면 풀어요
+  window.addEventListener('blur', dropAll); window.addEventListener('pagehide', dropAll); document.addEventListener('visibilitychange', () => { if (document.hidden) dropAll(); });
 }
 export function hotClick(i) {
   ensureAudio(); runCmd({ k: 'hot', i });

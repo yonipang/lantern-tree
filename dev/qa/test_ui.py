@@ -504,7 +504,7 @@ def test_craft_quantity():
 
 def test_drag_zones_layout():
     import asyncio, sys
-    H2=HOOK.replace("computeLight}","computeLight,RECIPES,ENEMY,FLOWERS,zoneTick,growTick,perform,canPlace,isSolid,mkEnemy,hitEnemy,genFlowerZones,maxHp,FLOOR_ITEM,refreshHotbar}")
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,ENEMY,FLOWERS,zoneTick,growTick,perform,canPlace,isSolid,mkEnemy,hitEnemy,genFlowerZones,maxHp,FLOOR_ITEM,refreshHotbar,renderPanel}")
     ARENA="()=>{const G=__T.G;for(let y=96;y<124;y++)for(let x=96;x<126;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.drops.length=0;G.p.x=105.5;G.p.y=110.5;G.p.face={x:1,y:0};G.p.dir='side';G.p.hp=__T.maxHp();for(let i=0;i<30;i++)G.inv[i]=null;G.sel=0;G.fzones=[{x:112,y:110,c:'R',dead:[]}]}"
     async def main():
         mkpage(SRC,'qa.html',H2)
@@ -640,6 +640,15 @@ def test_drag_zones_layout():
                     await drag('#sheet [data-a=inv][data-i="26"]','#sheet [data-a=inv][data-i="14"]',steps=6)
                     r=await ev(pg,"()=>[__T.G.inv[26]&&__T.G.inv[26].id,__T.G.inv[14]]")
                     rec('드래그','모바일 빠르게 위로 밀면 옮기지 않고 스크롤', r[0]=='dirt' and r[1] is None, str(r))
+                    # v86: 아이폰에서 「손 뗌」이 빠져 끌기 상태가 남아도, 다시 누르면 새 손가락으로 넘어가요 / 넘기는 중에 창이 다시 그려져도 계속 넘어가요
+                    SW="""(o)=>{const b0=document.querySelector('#sheet .sh-body');b0.scrollTop=60;const el=()=>document.querySelector('#sheet [data-a=inv][data-i="20"]');
+                      const r=el().getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,P=(t,id,yy,tg)=>(tg||window).dispatchEvent(new PointerEvent(t,{pointerId:id,pointerType:'touch',isPrimary:true,clientX:x,clientY:yy,button:0,bubbles:true}));
+                      if(o.stuck)P('pointerdown',7,y,el()); /* 떼는 신호 없이 남은 손가락 */
+                      P('pointerdown',8,y,el());P('pointermove',8,y-12);if(o.redraw)__T.renderPanel();P('pointermove',8,y-40);const b=document.querySelector('#sheet .sh-body'),top=b.scrollTop;P('pointerup',8,y-40);return [top,b0.isConnected]}"""
+                    r=await ev(pg,SW,{'stuck':True,'redraw':False})
+                    rec('드래그','v86 모바일 끌기가 남은 채(손 뗌 놓침) 다시 밀어도 가방이 넘어감', r[0]>=90, str(r))
+                    r=await ev(pg,SW,{'stuck':False,'redraw':True})
+                    rec('드래그','v86 모바일 넘기는 중에 창이 다시 그려져도 계속 넘어감', r[0]>=90 and not r[1], str(r))
                 await ev(pg,"()=>__T.closePanel()")
                 # chest
                 await ev(pg,"()=>{const G=__T.G;const i=__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1);G.objs.set(i,{t:'chest',items:Array(18).fill(null)});G.objs.get(i).items[0]={id:'crystal',c:7};__T.openPanel('chest',{i})}")
