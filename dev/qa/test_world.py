@@ -101,7 +101,8 @@ def test_new_light_terrain():
 def test_ice_cave_art():
     import asyncio, sys
     # v79: 얼음 동굴 새 방식 시험 — 얼음벽 가장자리 기울기·앞면, 얼음 조각 바닥, 벽 옆 청록빛 / 켜진 횃불 불꽃은 새 빛에서 스스로 빛남
-    H2=HOOK.replace("computeLight}","computeLight,getChunk,chunkGlow,iceWallArt,iceWallPx,iceSolidPx,isIceShard,GLOW_RULE,glDebug,CHN}")
+    # v80: 흙·돌·화강암·현무암·광맥도 기울어진 가장자리 + 벽 옆 그림자, 얼어붙은 물(20)은 새 얼음판, 꺼진 횃불은 불꽃 없음
+    H2=HOOK.replace("computeLight}","computeLight,getChunk,chunkEdge,slantWallArt,slantWallPx,wallSolidPx,isIceShard,GLOW_RULE,glDebug,CHN,wallArt,SPR}")
     async def main():
         mkpage(SRC,'qa.html',H2,layout=2)
         async with async_playwright() as p:
@@ -113,36 +114,48 @@ def test_ice_cave_art():
             pg.on('pageerror',lambda e: errs.append(str(e)))
             await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400)
             await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
-            # 얼음 동굴 안에 9×9 얼음벽 덩어리를 만들고 가운데 3×3을 비워요 (지도 모양에 기대지 않게 직접 깔아요)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ox=-1,oy=-1;
+            # 얼음 동굴 안에 9×9 벽 덩어리를 만들고 가운데 3×3을 비워요 (지도 모양에 기대지 않게 직접 깔아요). wt: 벽 종류
+            SETUP="""(wt)=>{const T=__T,G=T.G;let ox=-1,oy=-1;
               for(let y=40;y<560&&ox<0;y+=7)for(let x=40;x<560;x+=7){let ok=true;for(let dy=-3;dy<12&&ok;dy++)for(let dx=-3;dx<12;dx++)if(G.biome[T.idx(x+dx,y+dy)]!==4){ok=false;break}if(ok){ox=x;oy=y;break}}
               if(ox<0)return null;
-              for(let y=-2;y<11;y++)for(let x=-2;x<11;x++){const i=T.idx(ox+x,oy+y);G.objs.delete(i);G.floor[i]=19;G.wall[i]=(x>=0&&x<9&&y>=0&&y<9&&!(x>=3&&x<6&&y>=3&&y<6))?11:0}
+              const c0x=Math.floor((ox+4)/T.CHN)*T.CHN,c0y=Math.floor((oy+4)/T.CHN)*T.CHN; // 그 바닥 조각(16×16칸)과 둘레 2칸을 모두 비워요 — 둘레의 다른 벽에 기대지 않게
+              for(let y=c0y-2;y<c0y+T.CHN+2;y++)for(let x=c0x-2;x<c0x+T.CHN+2;x++){const i=T.idx(x,y);G.objs.delete(i);G.floor[i]=19;G.wall[i]=0;G.biome[i]=4}
+              for(let y=-2;y<11;y++)for(let x=-2;x<11;x++){const i=T.idx(ox+x,oy+y);G.objs.delete(i);G.floor[i]=19;G.wall[i]=(x>=0&&x<9&&y>=0&&y<9&&!(x>=3&&x<6&&y>=3&&y<6))?wt:0}
               G.p.x=ox+4.5;G.p.y=oy+4.5;G.enemies.length=0;
-              const full=T.iceWallPx(ox+1,oy+1), north=T.iceWallPx(ox+4,oy+2), corner=T.iceWallPx(ox,oy);
-              const aN=T.iceWallArt(ox+4,oy+2), aIn=T.iceWallArt(ox+1,oy+1), aS=T.iceWallArt(ox+4,oy+8);
-              // 바닥: 방 안 칸은 얼음 조각, 칸 그림의 픽셀은 파란색
+              const art=(x,y)=>{const w=G.wall[T.idx(x,y)];return T.slantWallArt(x,y,w,w===11?null:T.wallArt(x,y,w))};
+              const full=T.slantWallPx(ox+1,oy+1), north=T.slantWallPx(ox+4,oy+2), corner=T.slantWallPx(ox,oy);
+              const aN=art(ox+4,oy+2), aIn=art(ox+1,oy+1), aS=art(ox+4,oy+8);
               const cx=Math.floor((ox+4)/T.CHN),cy=Math.floor((oy+4)/T.CHN),cv=T.getChunk(cx,cy),g=cv.getContext('2d');
-              const px=g.getImageData((ox+4)%16*16+8,(oy+4)%16*16+8,1,1).data;
-              const glow=T.chunkGlow(cx,cy);
-              // 깎인 곳은 벽 안이 아니지만, 부딪히는 판정은 칸 단위 그대로
-              return {full,north,corner,frontN:!!aN.front,frontIn:!!aIn.front,frontS:!!aS.front,shard:T.isIceShard(T.idx(ox+4,oy+4)),blue:px[2]>px[0]+60&&px[2]>px[1],glow:!!glow,
-                cut:!T.iceSolidPx((ox+4)*16+8,(oy+3)*16-1)||!T.iceSolidPx((ox+3)*16-1,(oy+3)*16+1), wall:G.wall[T.idx(ox+4,oy+2)]}}""")
+              const px=g.getImageData((ox+4)%16*16+8,(oy+4)%16*16+8,1,1).data, ed=T.chunkEdge(cx,cy);
+              return {full,north,corner,frontN:!!aN.front,frontIn:!!aIn.front,frontS:!!aS.front,shard:T.isIceShard(T.idx(ox+4,oy+4)),blue:px[2]>px[0]+60&&px[2]>px[1],glow:!!(ed&&ed.glow),shadow:!!(ed&&ed.shadow),
+                wall:G.wall[T.idx(ox+4,oy+2)],ox,oy}}"""
+            r=await ev(pg,SETUP,11)
             ok=r and r['full']==256 and r['north']<256 and r['corner']<256 and r['wall']==11
             rec('얼음 동굴','얼음벽은 열린 쪽 가장자리만 안쪽으로 비스듬히 깎이고(둘러싸인 칸은 그대로), 벽 칸은 그대로', ok, str(r))
-            rec('얼음 동굴','남쪽이 드러난 얼음벽만 앞면이 있음 (방 북쪽 벽 ○, 안쪽 벽 ×, 바깥 남쪽 벽 ○)', r and r['frontN'] and not r['frontIn'] and r['frontS'], str(r))
-            rec('얼음 동굴','얼음 동굴 바닥은 파란 얼음 조각, 벽 옆에 청록빛 조각이 있음', r and r['shard'] and r['blue'] and r['glow'], str(r))
-            # 횃불 불꽃은 빛나고 나무 손잡이는 안 빛남
-            r2=await ev(pg,"()=>{const L=__T.GLOW_RULE.lamp;return [L(169,37,10),L(245,187,32),L(255,253,230),L(156,93,58),L(35,28,24)]}")
-            rec('빛','켜진 횃불의 불꽃 픽셀만 스스로 빛남 (손잡이·몸통은 아님)', r2==[True,True,True,False,False], str(r2))
+            rec('얼음 동굴','바닥 위로 드러난 얼음벽만 앞면이 있음 (방 북쪽 벽 ○, 안쪽 벽 ×, 바깥 남쪽 벽 ○)', r and r['frontN'] and not r['frontIn'] and r['frontS'], str(r))
+            rec('얼음 동굴','얼음 동굴 바닥은 파란 얼음 조각, 얼음벽 옆에 청록빛 (그림자 아님)', r and r['shard'] and r['blue'] and r['glow'] and not r['shadow'], str(r))
+            r=await ev(pg,SETUP,2)
+            rec('바위','돌벽도 열린 쪽만 기울어지고 드러난 쪽에 앞면, 벽 옆엔 청록빛 대신 그림자', r and r['full']==256 and r['north']<256 and r['frontN'] and not r['frontIn'] and r['shadow'] and not r['glow'], str(r))
+            # 얼어붙은 물(20): 물과 같은 덩어리로 구워지고, 가운데는 얼음판 파랑
+            r2=await ev(pg,"""()=>{const T=__T,G=T.G;let ox=-1,oy=-1;
+              for(let y=40;y<560&&ox<0;y+=7)for(let x=40;x<560;x+=7){let ok=true;for(let dy=-3;dy<12&&ok;dy++)for(let dx=-3;dx<12;dx++)if(G.biome[T.idx(x+dx,y+dy)]!==4){ok=false;break}if(ok){ox=x;oy=y;break}}
+              for(let y=0;y<9;y++)for(let x=0;x<9;x++){const i=T.idx(ox+x,oy+y);G.objs.delete(i);G.wall[i]=0;G.floor[i]=(x>=2&&x<7&&y>=2&&y<7)?20:19}
+              const tx=ox+4,ty=oy+4,cx=Math.floor(tx/T.CHN),cy=Math.floor(ty/T.CHN),g=T.getChunk(cx,cy).getContext('2d');let n=0,blue=0;
+              for(let v=2;v<14;v+=3)for(let u=2;u<14;u+=3){const d=g.getImageData(tx%16*16+u,ty%16*16+v,1,1).data;n++;if(d[2]>200&&d[2]>d[0]+100)blue++}return [n,blue]}""")
+            rec('얼음 동굴','얼어붙은 물은 새 얼음판(밝은 파랑)으로 구워짐', r2[1]>=r2[0]*.8, str(r2))
+            # 횃불: 켜진 불꽃만 빛나고, 꺼진 횃불은 불꽃 픽셀이 없음
+            r3=await ev(pg,"""()=>{const L=__T.GLOW_RULE.lamp,c=__T.SPR.objOff.torch,g=c.getContext('2d'),d=g.getImageData(0,0,c.width,c.height).data;let fl=0;
+              for(let k=0;k<d.length;k+=4)if(d[k+3]>200&&L(d[k],d[k+1],d[k+2]))fl++;return [L(169,37,10),L(245,187,32),L(255,253,230),L(156,93,58),L(35,28,24),fl]}""")
+            rec('빛','켜진 횃불의 불꽃 픽셀만 스스로 빛나고(손잡이·몸통 아님), 꺼진 횃불은 불꽃이 없음', r3==[True,True,True,False,False,0], str(r3))
             ok=await wait_until(pg,"()=>{const d=__T.glDebug();return d.failed||d.frames>10}")
-            r3=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.failed,d.err2]}")
-            rec('빛','얼음 동굴에서 새 빛이 돌아감 (GL 오류 없음, 칩이 없으면 예전 빛)', ok and ((r3[0] and not r3[1] and r3[2]==0) or (r3[1] and not r3[0])), str(r3))
+            r4=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.failed,d.err2]}")
+            rec('빛','얼음 동굴에서 새 빛이 돌아감 (GL 오류 없음, 칩이 없으면 예전 빛)', ok and ((r4[0] and not r4[1] and r4[2]==0) or (r4[1] and not r4[0])), str(r4))
             await pg.screenshot(path=SP+'ice_cave.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
 
 def test_ring_map_boss_room():
     import asyncio, sys

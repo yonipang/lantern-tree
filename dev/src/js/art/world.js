@@ -328,7 +328,13 @@ export function buildSprites() {
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];
-  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
+  // v80: a turned-off torch has no flame (the dimmed flame looked like a broken one): flame pixels go, the base keeps a dark ember, a faint wisp of smoke
+  const snuffed = c => { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; k.hd = c.hd; const g = k.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, k.width, k.height), a = d.data, w = k.width, h = k.height;
+    let cx = 0, n = 0; for (let i = 0; i < a.length; i += 4) { if (!a[i + 3]) continue; const r = a[i], gg = a[i + 1], b = a[i + 2], fl = (r > 150 && r - b > 100) || (r * .3 + gg * .59 + b * .11) > 215; if (!fl) continue;
+      const y = (i / 4 / w) | 0; if (y >= h - 3) { a[i] = 74; a[i + 1] = 44; a[i + 2] = 40; } else { a[i + 3] = 0; cx += (i / 4) % w; n++; } }
+    const sx = n ? Math.round(cx / n) : w >> 1; for (const [dx, dy, al] of [[0, 5, 150], [1, 7, 120], [0, 9, 90], [-1, 11, 60]]) { const x = sx + dx, y = h - 3 - dy; if (x < 0 || y < 0 || x >= w) continue; const i = (y * w + x) * 4; a[i] = 150; a[i + 1] = 144; a[i + 2] = 160; a[i + 3] = al; }
+    g.putImageData(d, 0, 0); return k; };
+  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = k === 'torch' ? snuffed(SPR.obj[k]) : dimmed(SPR.obj[k]);
   SPR.giant = {}; for (const k in SPR.crop) SPR.giant[k] = giantSpr(k);
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
