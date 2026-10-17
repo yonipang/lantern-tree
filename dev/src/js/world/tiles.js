@@ -10,6 +10,7 @@ import { placeFp } from '../sim/building.js';
 import { addItem, selItem, wear } from '../sim/inventory.js';
 import { WATER } from '../sim/nature.js';
 import { flowNear } from '../sim/digging.js';
+import { nearWarpPt } from '../sim/warp.js';
 
 export function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA || G.floor[i] === PIT) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); } // v87: 구덩이도 막혀요 (발사체는 벽만 봐서 지나가요)
 // v85: 시야를 가리는 칸 = 벽·닫힌 문 (물·용암·가구는 너머가 보여요)
@@ -64,6 +65,7 @@ export function digWhy(x, y) {
   if (f === WATER) return '물은 빈 양동이로 떠요'; if (f === LAVA) return '용암은 팔 수 없어요'; if (f === PIT) return '이미 판 구덩이예요 · 바닥 재료로 메울 수 있어요';
   if (!isPlacedFloor(f) && !DIG_YIELD[f]) return '여기는 팔 수 없어요';
   if (occupied(x, y)) return '누가 서 있는 칸은 팔 수 없어요';
+  if (nearWarpPt(x, y)) return '워프포인트 둘레는 팔 수 없어요'; // v89
   const z = noDigZone(x, y); if (z && !isPlacedFloor(f)) return z === 'tree' ? '등불나무 둘레는 팔 수 없어요' : '보스방은 팔 수 없어요'; // 깔아 둔 바닥은 어디서나 걷을 수 있어요
   return null; }
 // 바닥이 돌려주는 아이템 (자연 바닥 = 그 한 삽, 깐 바닥 = 그 바닥 아이템, 물·용암·구덩이 = 없음)
@@ -93,6 +95,7 @@ export function canPlace(tx, ty, it, skip) {
   if (G.floor[i] === PIT) return false; // v87: 구덩이에는 벽·가구·씨앗을 놓지 못해요 (먼저 메워요)
   if ((G.floor[i] === WATER || G.floor[i] === LAVA) && it.kind !== 'wall') return false;
   if (it.kind === 'seed') return it.crop === 'cropMoss' ? G.floor[i] === 21 : [1, 2, 3, 4, 21].includes(G.floor[i]);
+  if ((it.kind === 'wall' || (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].tw)) && nearWarpPt(tx, ty)) return false; // v89: 워프포인트 둘레에는 벽·문·울타리를 못 세워요
   if (it.kind === 'wall') return !occupied(tx, ty, skip);
   if (it.kind === 'place') { const d = OBJ[it.obj]; return !(d.solid && occupied(tx, ty, skip)); }
   return false;

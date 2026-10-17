@@ -9,7 +9,7 @@
 0,
 40000
 ],
-"objs": "[큰 값 26280자 e1b666ca6801]",
+"objs": "[큰 값 26749자 b16dc20787ee]",
 "inv": [
 {
 "id": "berry",
@@ -215,6 +215,7 @@ null
 "spirit": 1
 },
 "deepSeed": {},
+"warpV": 1,
 "accGot": {
 "turtle": 1,
 "spirit": 1
@@ -436,7 +437,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26280자 e1b666ca6801]",
+"objs": "[큰 값 26749자 b16dc20787ee]",
 "inv": [
 {
 "id": "berry",
@@ -606,6 +607,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -807,7 +809,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26280자 e1b666ca6801]",
+"objs": "[큰 값 26749자 b16dc20787ee]",
 "inv": [
 {
 "id": "berry",
@@ -973,6 +975,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -1173,7 +1176,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26174자 cc3d390b9c84]",
+"objs": "[큰 값 26643자 8e45c5090350]",
 "inv": [
 {
 "id": "berry",
@@ -1430,6 +1433,7 @@ null
 "beaten": {},
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -1622,7 +1626,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 19488자 777b2ebad828]",
+"objs": "[큰 값 19957자 c9f848557ba0]",
 "inv": [
 {
 "id": "berry",
@@ -1792,6 +1796,7 @@ null
 "beaten": {},
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -1991,7 +1996,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26528자 588451eb5569]",
+"objs": "[큰 값 26997자 f29f0fe84af1]",
 "inv": [
 {
 "id": "berry",
@@ -2161,6 +2166,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -2362,7 +2368,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 19488자 777b2ebad828]",
+"objs": "[큰 값 19957자 c9f848557ba0]",
 "inv": [
 {
 "id": "berry",
@@ -2532,6 +2538,7 @@ null
 "beaten": {},
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -2721,7 +2728,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26280자 e1b666ca6801]",
+"objs": "[큰 값 26749자 b16dc20787ee]",
 "inv": [
 {
 "id": "berry",
@@ -2911,6 +2918,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -3118,7 +3126,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26334자 f70522ca44ec]",
+"objs": "[큰 값 26803자 efa79a5f6886]",
 "inv": [
 {
 "id": "berry",
@@ -3294,6 +3302,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -3497,7 +3506,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26280자 e1b666ca6801]",
+"objs": "[큰 값 26749자 b16dc20787ee]",
 "inv": [
 {
 "id": "berry",
@@ -3692,6 +3701,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -3982,7 +3992,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 17561자 be8ca49a0d92]",
+"objs": "[큰 값 18030자 8ca4f8e2ffa5]",
 "inv": [
 {
 "id": "berry",
@@ -4150,6 +4160,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 1.1332999999999998,
@@ -4435,7 +4446,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 16421자 24ef401710a1]",
+"objs": "[큰 값 16890자 fadf34174715]",
 "inv": [
 {
 "id": "berry",
@@ -4603,6 +4614,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 1.0165740000000003,
@@ -4888,7 +4900,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 16421자 24ef401710a1]",
+"objs": "[큰 값 16890자 fadf34174715]",
 "inv": [
 {
 "id": "berry",
@@ -5056,6 +5068,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0.9999760000000003,
@@ -5257,7 +5270,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 26280자 e1b666ca6801]",
+"objs": "[큰 값 26749자 b16dc20787ee]",
 "inv": [
 {
 "id": "berry",
@@ -5427,6 +5440,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,
@@ -5638,7 +5652,7 @@ null
 0,
 32325
 ],
-"objs": "[큰 값 77770자 5c13437823be]",
+"objs": "[큰 값 78250자 4b8fc79813eb]",
 "inv": [
 {
 "id": "berry",
@@ -5808,6 +5822,7 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"warpV": 1,
 "accGot": {}
 },
 "time": 0,

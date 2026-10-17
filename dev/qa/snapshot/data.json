@@ -2894,6 +2894,12 @@
 "kind": "bucket",
 "stack": 1,
 "d": "물을 바라보고 누르면 「물 한 동이」를 떠요. 물은 줄지 않아요. 용암은 뜰 수 없어요. 닳지 않아요."
+},
+"portal": {
+"n": "포탈",
+"kind": "place",
+"obj": "portal",
+"d": "놓으면 워프 목적지가 하나 늘어요. 포탈이나 켜진 워프포인트 앞에서 누르면 지도에서 켜진 곳을 골라 이동해요. 한 사람당 5개까지 · 보스방 가까이에는 못 놓아요."
 }
 },
 "OBJ": {
@@ -4151,6 +4157,17 @@
 ],
 "solid": 1,
 "giant": 1
+},
+"warpPt": {
+"n": "워프포인트",
+"solid": 1,
+"warp": "pt"
+},
+"portal": {
+"n": "포탈",
+"solid": 1,
+"item": "portal",
+"warp": "portal"
 }
 },
 "RECIPES": [
@@ -9136,6 +9153,31 @@
 "cat": "tool",
 "tier": 1,
 "need": "[함수]"
+},
+{
+"out": "portal",
+"n": 1,
+"req": [
+[
+"crystal",
+8
+],
+[
+"ironBar",
+4
+],
+[
+"cryGem",
+2
+],
+[
+"glowcap",
+4
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 3
 }
 ],
 "ENEMY": {
@@ -16908,6 +16950,8 @@ null,
 "chicken": "[그림 16x16 680afed2]",
 "sheep": "[그림 16x16 37050ab7]",
 "woolRug": "[그림 16x16 18f01c62]",
+"warpPt": "[그림 16x16 760e3142]",
+"portal": "[그림 16x16 28c2dfc0]",
 "lostBag": "[그림 16x16 a18bfe28]",
 "icePillar": "[그림 16x26 22a106d6]",
 "sprinkler": "[그림 16x18 4b873be]",
@@ -17642,6 +17686,10 @@ null,
 "[그림 16x16 565c8f29]",
 "[그림 16x16 8a3b20db]"
 ],
+"portalGlow": "[그림 384x16 4a0678db]",
+"portalStrip": "[그림 384x16 bccb4634]",
+"warpGlow": "[그림 96x16 c76ce972]",
+"warpStrip": "[그림 96x16 d5d45a61]",
 "bloomRW": "[그림 16x16 d4b223ac]",
 "bloomBW": "[그림 16x16 d4b223ac]",
 "bloomYW": "[그림 16x16 d4b223ac]",
@@ -17669,7 +17717,8 @@ null,
 "sporeLamp": "[그림 16x24 48524b4a]",
 "stoneLantern": "[그림 16x24 f46cb3fe]",
 "copperLamp": "[그림 16x24 d6096ecf]",
-"ironStove": "[그림 16x24 f39383cc]"
+"ironStove": "[그림 16x24 f39383cc]",
+"warpPt": "[그림 16x16 681e476e]"
 },
 "giant": {
 "berry": "[그림 32x32 bdc47506]",
@@ -17693,6 +17742,82 @@ null,
 "turtleSCW": "[그림 40x32 61be2b0a]",
 "spiritClone": "[그림 32x36 283fcf3a]",
 "spiritCloneW": "[그림 32x36 29b1f260]",
+"warpF": {
+"pt": {
+"base": [
+"[그림 16x16 760e3142]",
+"[그림 16x16 4694bf87]",
+"[그림 16x16 9a4c3c83]",
+"[그림 16x16 60bd1d89]",
+"[그림 16x16 d9555413]",
+"[그림 16x16 1a9ec1ee]"
+],
+"glow": [
+"[그림 16x16 cee0b686]",
+"[그림 16x16 2b82746f]",
+"[그림 16x16 1ba0622]",
+"[그림 16x16 6c1087d8]",
+"[그림 16x16 dd501e7f]",
+"[그림 16x16 6f0ac779]"
+],
+"off": "[그림 16x16 681e476e]"
+},
+"portal": {
+"base": [
+"[그림 16x16 28c2dfc0]",
+"[그림 16x16 3ad668fe]",
+"[그림 16x16 f7ae29ff]",
+"[그림 16x16 b11ad478]",
+"[그림 16x16 c7527acd]",
+"[그림 16x16 371e17e5]",
+"[그림 16x16 81511358]",
+"[그림 16x16 4db3385b]",
+"[그림 16x16 8e501bb7]",
+"[그림 16x16 6fb755c8]",
+"[그림 16x16 947e012f]",
+"[그림 16x16 5c962e05]",
+"[그림 16x16 1ff35d15]",
+"[그림 16x16 4e1a45c]",
+"[그림 16x16 7181d70b]",
+"[그림 16x16 3bb84027]",
+"[그림 16x16 3989b340]",
+"[그림 16x16 f3f746ac]",
+"[그림 16x16 a242e587]",
+"[그림 16x16 e117462e]",
+"[그림 16x16 dc688ca2]",
+"[그림 16x16 963dc95a]",
+"[그림 16x16 2b001d51]",
+"[그림 16x16 6e0d7d54]"
+],
+"glow": [
+null,
+null,
+null,
+null,
+null,
+"[그림 16x16 5d2882cd]",
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"off": "[그림 16x16 6274c061]"
+}
+},
 "fp": {
 "bench": {
 "big": "[그림 32x27 5336031d]",
@@ -18837,6 +18962,7 @@ null,
 "smelterQ": "52cb2ffa",
 "smelterAu": "7c11d58a",
 "smelterFr": "5e5b1d6f",
-"bucket": "7584a5ea"
+"bucket": "7584a5ea",
+"portal": "28c2dfc0"
 }
 }

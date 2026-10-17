@@ -443,6 +443,53 @@ def test_recall_faint():
     return main
 
 
+def test_warp_portal():
+    import asyncio, sys
+    # v89 워프포인트·포탈 (dev/design/워프포탈.md): 놓기(새·옛 세계)·켜기·이동(1초, 맞으면 취소)·포탈 제작·놓기 제한·둘레 규칙·저장
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,W,SL,SI,liveWarps,warpName,warpDests,startWarp,warpTick,portalWhy,warpSafe,nearWarpPt,digWhy,canPlace,perform,hurtPlayer,placeWarps,warpsChanged}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{__T.G.enemies.length=0}")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.liveWarps(),per=[0,1,2,3,4].map(b=>L.filter(e=>e.o.t==='warpPt'&&!e.o.home&&e.o.b===b).length),h=L.filter(e=>e.o.home);
+              return [per,h.length,h[0]&&h[0].o.on,L.filter(e=>!e.o.home).every(e=>!e.o.on),h[0]&&Math.round(Math.hypot(h[0].x-T.CX,h[0].y-T.CY)),!!G.stats.warpV,T.warpName(h[0]),L.filter(e=>!e.o.home).every(e=>!T.digWhy||Math.hypot(e.x-T.CX,e.y-T.CY)>=16)]}""")
+            rec('워프포인트','새 세계: 지역마다 2개(이끼·버섯·수정·용암·얼음) + 등불나무 곁 1개(처음부터 켜짐), 나머지는 꺼진 채', r[0]==[2,2,2,2,2] and r[1]==1 and r[2]==1 and r[3] is True and 4<=r[4]<=9 and r[5] and r[6]=='등불나무 워프' and r[7], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));s.objs=s.objs.filter(([i,o])=>o.t!=='warpPt');delete s.stats.warpV;T.deserialize(s);const n1=T.liveWarps().length;
+              const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return [n1,T.liveWarps().length,T.liveWarps().filter(e=>e.o.home&&e.o.on).length]}""")
+            rec('워프포인트','옛 세계(워프 전 세이브)는 불러올 때 한 번 놓고, 다시 불러와도 늘지 않음', r==[11,11,1], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const e=T.liveWarps().find(e=>!e.o.home&&e.o.b===1);G.p.x=e.x+.5;G.p.y=e.y+1.6;G.p.face={x:0,y:-1};G.sel=-1;const a=T.decide();T.perform(a);const a2=T.decide();window.__w=e.i;return [a.k,a.lbl,e.o.on,a2.k]}""")
+            rec('워프포인트','앞에서 누르면 [켜기] → 켜진 뒤에는 [워프]', r==['warpOn','켜기',1,'warp'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.liveWarps(),h=L.find(e=>e.o.home),e=L.find(e=>e.i===window.__w);T.openPanel('map',{warp:h.i});const t=document.querySelector('#sheet').innerText;const nb=document.querySelectorAll('[data-a=warpGo]').length;T.closePanel();
+              const off=L.find(q=>!q.o.on&&q.o.t==='warpPt');return [t.includes(T.warpName(e)),nb,T.warpDests(h.i).some(q=>q.i===off.i)]}""")
+            rec('워프 고르기','켜진 워프 앞에서 열면 지도 창에 갈 수 있는 곳(켜진 것만) 목록', r==[True,1,False], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const L=T.liveWarps(),h=L.find(e=>e.o.home),e=L.find(e=>e.i===window.__w);G.p.x=h.x+.5;G.p.y=h.y+1.6;G.p.hitAt=null;
+              const ok=T.startWarp(h.i,e.i);T.warpTick(.5);const mid=[!!G.warpGo,Math.hypot(G.p.x-h.x,G.p.y-h.y)<3];T.warpTick(.6);return [ok,mid,!G.warpGo,Math.hypot(G.p.x-e.x-.5,G.p.y-e.y-.5)<2.2,G.stats.warps]}""")
+            rec('워프 이동','켜진 곳을 고르면 1초 뒤 그 앞으로 이동 (무료)', r==[True,[True,True],True,True,1], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const L=T.liveWarps(),h=L.find(e=>e.o.home),e=L.find(e=>e.i===window.__w);G.p.inv=0;const x0=G.p.x,y0=G.p.y;const ok=T.startWarp(e.i,h.i);T.warpTick(.3);T.hurtPlayer(3,G.p.x+1,G.p.y);G.p.kx=G.p.ky=0;const px=G.p.x,py=G.p.y;T.warpTick(.3);T.warpTick(.6);
+              const stay=Math.hypot(G.p.x-px,G.p.y-py)<.5&&Math.hypot(G.p.x-h.x-.5,G.p.y-h.y-.5)>2.5;G.p.x=e.x+12.5;const far=T.startWarp(e.i,h.i);return [ok,!G.warpGo,stay,far]}""")
+            rec('워프 이동','기다리는 1초 사이에 맞으면 멈춤 · 워프 앞이 아니면 출발 못 함', r==[True,True,True,False], str(r))
+            r=await ev(pg,"()=>{const rc=__T.RECIPES.find(r=>r.out==='portal');return [rc.at,rc.tier,JSON.stringify(rc.req),__T.ITEMS.portal.kind,!!__T.OBJ.warpPt.item]}")
+            rec('포탈','석영 작업대(3단계): 석영 8·철괴 4·수정결정 2·빛버섯 4, 워프포인트는 회수할 수 없음', r==['bench',3,'[["crystal",8],["ironBar",4],["cryGem",2],["glowcap",4]]','place',False], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const x=T.CX+14,y=T.CY+12;for(let yy=y-2;yy<=y+3;yy++)for(let xx=x-2;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=2}
+              G.inv[0]={id:'portal',c:2};G.sel=0;G.p.x=x+.5;G.p.y=y+1.6;G.p.face={x:0,y:-1};const a=T.decide();T.perform(a);const o=G.objs.get(T.idx(x,y));const h=T.liveWarps().find(e=>e.o.home);
+              const d=T.warpDests(h.i).find(q=>q.i===T.idx(x,y));window.__p=T.idx(x,y);return [a.k,o&&o.t,o&&o.own,d&&d.name.endsWith('포탈 1'),T.decide().k]}""")
+            rec('포탈','놓으면 목적지가 하나 늘고(놓은 사람 기록, 「지역 이름 포탈 1」), 앞에서 누르면 [워프]', r[0]=='place' and r[1]=='portal' and r[2]=='me' and r[3] is True and r[4]=='warp', str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const base=T.CX+30;for(let k=0;k<4;k++)G.objs.set(T.idx(base+k*2,T.CY+30),{t:'portal',own:'me',at:G.time});T.warpsChanged();const lim=T.portalWhy(T.CX+14,T.CY+20);for(let k=0;k<4;k++)G.objs.delete(T.idx(base+k*2,T.CY+30));T.warpsChanged();
+              const boss=T.portalWhy(T.SA.x,T.SA.y+5),ok=T.portalWhy(T.CX+14,T.CY+20);return [lim&&lim.includes('5개'),boss&&boss.includes('보스방'),ok]}""")
+            rec('포탈','한 사람당 5개까지 · 보스방 12칸 안에는 못 놓음', r==[True,True,None], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const e=T.liveWarps().find(e=>e.i===window.__w);const x=e.x+1,y=e.y;return [T.nearWarpPt(x,y),String(T.digWhy(x,y)).includes('워프포인트'),T.canPlace(x,y,T.ITEMS.wallWood),T.warpSafe(e.x+.5+4,e.y+.5),(()=>{for(let r=9;r<60;r++){const fx=e.x+.5+r,fy=e.y+.5;if(T.liveWarps().every(q=>Math.hypot(q.x+.5-fx,q.y+.5-fy)>=6.5))return T.warpSafe(fx,fy)}return false})()]}""")
+            rec('워프포인트','둘레 칸은 파기·벽 쌓기 불가, 둘레 6칸에는 몬스터가 안 생김', r==[True,True,False,True,False], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G,o=G2.objs.get(window.__w),pt=G2.objs.get(window.__p);return [o&&o.t,o&&o.on,pt&&pt.t,pt&&pt.own,T.liveWarps().length]}""")
+            rec('세이브','켜진 워프포인트·놓은 포탈이 저장·불러오기 뒤에도 그대로', r==['warpPt',1,'portal','me',12], str(r))
+            await ev(pg,"()=>{const T=__T,G=T.G;const e=T.liveWarps().find(e=>e.i===window.__w);G.p.x=e.x+.5;G.p.y=e.y+1.7;G.enemies.length=0}")
+            await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'warp.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_lost_bag_owner():
     import asyncio, sys
     # v68 (BF-01·08): 잃어버린 꾸러미는 쓰러진 사람 것 — 주인만 되찾고 화살표를 봐요. 발밑·옆의 내 꾸러미는 작은 버튼에 「되찾기」

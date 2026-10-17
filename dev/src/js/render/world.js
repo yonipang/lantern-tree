@@ -8,6 +8,7 @@ import { ITEMS, OBJ, WALLS, WTYPE } from '../data/items.js';
 import { BKEYS, BOSSES, ENEMY } from '../data/rpg-nature.js';
 import { effH, effW, hdCtx, INK, whiten } from '../engine/canvas.js';
 import { fxRand, hash2 } from '../engine/random.js';
+import { WARP_FRAME } from '../data/warp.js';
 import { clamp } from '../engine/util.js';
 import { CHN, chunkEdge, getChunk, prefetchChunk } from './chunks.js';
 import { iconCanvas } from './icons.js';
@@ -282,7 +283,7 @@ export function renderOverlay(cw, ch) {
 export function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
-    const o = it.o, d = OBJ[o.t]; if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), d.dev === 'slide' ? slideStep(o, t) : !!o.open), it.x + .5, it.y + 1); return; }
+    const o = it.o, d = OBJ[o.t]; if (d.warp) { drawWarp(it, o, d, t); return; } if (d.tw) { drawImg(twSprite(o.t, twMask(it.x, it.y, d.tw.type), d.dev === 'slide' ? slideStep(o, t) : !!o.open), it.x + .5, it.y + 1); return; }
     let img = o.off && SPR.objOff[o.t] ? SPR.objOff[o.t] : SPR.obj[o.t]; const fpD = d.sz ? fpOf(o) : null, wx = it.x + (fpD ? fpD[0] / 2 : .5), wy = it.y + (fpD ? fpD[1] : 1) - 1 / 16; let flipX = !!o.flip;
     if (d.dev === 'farm') img = SPR.obj[o.t + (farmStage(o) || '')] || img; { const r = rotOf(o); if (r && !d.dev) { const [im, fl] = rotImg(o.t, r, img); img = im; flipX = fl; } } // v65
     if (d.crop) img = SPR.crop[d.crop][Math.max(0, cropStage(o))][(o.w ? 1 : 0) + (o.f ? 2 : 0)];
@@ -364,3 +365,9 @@ export function drawEntity(it, t) {
   }
   if (it.k === 'd') { const d = it.d; shadow(d.x, d.y + .05, .16, .3); const bob = d.z === 0 ? Math.sin(t * 4 + d.x * 3) * 0.05 + 0.05 : 0; drawImg(iconCanvas(d.id), d.x, d.y + .05, { sx: .6, sy: .6, z: d.z + bob }); }
 }
+// v89 워프포인트·포탈: 켜진 것은 그림이 돌고(한 장 0.083초) 빛나는 부분이 새 빛에서 스스로 빛나요. 안 켜진 워프포인트는 첫 장을 어둡게, 멈춘 채.
+export function drawWarp(it, o, d, t) { const F = SPR.warpF && SPR.warpF[d.warp], on = d.warp === 'portal' || !!o.on, wx = it.x + .5, wy = it.y + 1 - 1 / 16;
+  if (!F) { drawImg(SPR.obj[o.t], wx, wy); return; }
+  const k = on ? Math.floor(t / WARP_FRAME + hash2(it.x, it.y, 3) * F.base.length) % F.base.length : 0;
+  drawKind('up'); drawImg(on ? F.base[k] : F.off, wx, wy, { sx: o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1 });
+  if (on && F.glow[k]) { drawKind('fglow'); drawImg(F.glow[k], wx, wy); drawKind('up'); } }
