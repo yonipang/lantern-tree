@@ -36,7 +36,7 @@ LAYOUT_JS="""()=>{
  const pairs=[['bars','side'],['hotbar','belt'],['hotbar','act'],['belt','act'],['side','belt'],['side','act'],['bars','belt'],['joy','belt'],['joy','bars'],['joy','act'],['joy','hotbar'],['hint','hotbar'],['hint','belt'],['toast','belt'],['toast','act'],['atk','act'],['atk','hotbar'],['atk','belt'],['atk','sk'],['sk','act'],['sk','hotbar'],['joy','atk'],['joy','sk'],['side','atk'],['bars','boss'],['boss','side'],['hotbar','sk'],['joy','sk']];
  const over=pairs.filter(([a,b])=>ov(els[a],els[b])).map(p=>p.join('/'));
  const out=Object.entries(els).filter(([k,v])=>v&&(v.x<-1||v.y<-1||v.r>innerWidth+1||v.b>innerHeight+1)&&k!=='joy').map(([k])=>k);
- const slots=[...document.querySelectorAll('#hotbar .slot')].map(e=>Math.round(e.getBoundingClientRect().width));
+ const slots=[...document.querySelectorAll('#hotbar .slot')].map(e=>Math.round(e.getBoundingClientRect().width)).filter(w=>w>0); // v77: 폰은 안 보이는 쪽 단축칸(1–5 / 6–9)을 빼고
  const actW=els.act?els.act.w:0;
  return {over,out,minSlot:Math.min(...slots),actW,hscroll:document.documentElement.scrollWidth>innerWidth}
 }"""

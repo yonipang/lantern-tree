@@ -182,7 +182,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             rec('클라우드','로그인 전: 구글/이메일 로그인 버튼', '구글로 로그인' in txt and '이메일로 로그인' in txt)
             await pg.tap('#sheet [data-a=clEmailT]'); await pg.wait_for_timeout(200)
             await pg.fill('#clEm','juyeon@test.kr'); await pg.fill('#clPw','i'); await pg.wait_for_timeout(100)
-            rec('입력','입력칸에 i를 쳐도 가방이 열리지 않음', await ev(pg,"()=>document.querySelector('#sheet h2').textContent.includes('메뉴')"))
+            rec('입력','입력칸에 i를 쳐도 가방이 열리지 않음', await ev(pg,"()=>document.querySelector('#sheet h2').textContent.includes('설정')"))
             await pg.tap('#sheet [data-a=clIn]'); await pg.wait_for_timeout(300)
             rec('클라우드','틀린 비밀번호 → 알아듣기 쉬운 안내', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('이메일이나 비밀번호가 맞지 않아요')"))
             await pg.fill('#clPw','secret1'); await pg.tap('#sheet [data-a=clIn]'); await pg.wait_for_timeout(600)
