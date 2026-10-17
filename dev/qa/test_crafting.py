@@ -19,14 +19,14 @@ def test_workbench_tiers():
             r=await ev(pg,"()=>{const T=__T,t=id=>{const r=T.RECIPES.find(q=>q.out===id);return r?r.at+r.tier:'-'};return [T.BENCH_N.join(','),['chest','pot','pickCopper','pickIron','lampCrystal','swordCrystal','pickGold','swordDawn','forge'].map(t).join(','),T.RECIPES.some(r=>r.at==='forge')]}")
             rec('단계','작업대 6단계, 레시피는 재료로 단계가 정해짐 (구리 작업대 레시피는 없어짐)', r==['작업대,구리 작업대,철 작업대,석영 작업대,금 작업대,서리 작업대','bench0,bench1,smelter1,smelter2,bench3,smelter3,smelter5,smelter5,-',False], str(r))
             await ev(pg,"()=>{const T=__T,bi=__set();T.openPanel('craft',{st:'bench',i:bi})}"); await pg.wait_for_timeout(500)
-            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;const T=__T;return [document.querySelector('#sheet h2').innerText.trim(),!!document.querySelector('#sheet .benchup'),t.includes('구리 작업대로 올리기'),t.includes('구리괴 0/8'),t.includes('돌 0/20'),document.querySelector('#sheet [data-a=benchUp]').disabled,__rows().every(t=>t===0)]}")
-            rec('창','작업대 창 맨 위에 「구리 작업대로 올리기」(구리괴 8·돌 20), 재료 없으면 못 누름, 목록은 작업대 물건만', r==['작업대',True,True,True,True,True,True], str(r))
+            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;const T=__T;return [document.querySelector('#sheet h2').innerText.trim(),!!document.querySelector('#sheet .benchup'),t.includes('구리 작업대로 올리기'),t.includes('구리괴 0/8'),t.includes('흙 0/20'),document.querySelector('#sheet [data-a=benchUp]').disabled,__rows().every(t=>t===0)]}")
+            rec('창','작업대 창 맨 위에 「구리 작업대로 올리기」(구리괴 8·흙 20 — v88: 돌→흙), 재료 없으면 못 누름, 목록은 작업대 물건만', r==['작업대',True,True,True,True,True,True], str(r))
             await pg.screenshot(path=SP+'bench0.png')
-            await ev(pg,"()=>{const T=__T,G=T.G;G.inv[12]={id:'copperBar',c:8};G.inv[13]={id:'stone',c:25};T.renderPanel()}"); await pg.wait_for_timeout(200)
+            await ev(pg,"()=>{const T=__T,G=T.G;G.inv[12]={id:'copperBar',c:8};G.inv[13]={id:'dirt',c:25};G.inv[14]={id:'stone',c:7};T.renderPanel()}"); await pg.wait_for_timeout(200)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=benchUp]').click()"); await pg.wait_for_timeout(400)
             r=await ev(pg,"""()=>{const T=__T,G=T.G,o=G.objs.get(T.panel.i);const ts=__rows();
-          return [o.lv,T.countItem('copperBar'),T.countItem('stone'),G.stats.forge,document.querySelector('#sheet h2').innerText.trim(),document.querySelector('#sheet').innerText.includes('철 작업대로 올리기'),ts[0],ts.includes(0),ts.every((t,k)=>k===0||t<=ts[k-1]),!ts.includes(2)]}""")
-            rec('올리기','올리면 「구리 작업대」: 재료가 빠지고, 구리 물건이 맨 위·작업대 물건도 아래에 나옴, 다음은 철 작업대', r==[1,0,5,1,'구리 작업대',True,1,True,True,True], str(r))
+          return [o.lv,T.countItem('copperBar'),T.countItem('dirt'),T.countItem('stone'),G.stats.forge,document.querySelector('#sheet h2').innerText.trim(),document.querySelector('#sheet').innerText.includes('철 작업대로 올리기'),ts[0],ts.includes(0),ts.every((t,k)=>k===0||t<=ts[k-1]),!ts.includes(2)]}""")
+            rec('올리기','올리면 「구리 작업대」: 구리괴 8·흙 20이 빠지고 돌은 그대로(v88), 구리 물건이 맨 위·작업대 물건도 아래에 나옴, 다음은 철 작업대', r==[1,0,5,7,1,'구리 작업대',True,1,True,True,True], str(r))
             await pg.screenshot(path=SP+'bench1.png')
             r=await ev(pg,"()=>{const T=__T,G=T.G;const give=[['ironBar',8],['stone',30],['quartzR',6],['granite',20],['goldBar',6],['basalt',20],['frostShard',10],['iceBlock',20]];give.forEach(([id,c],k)=>G.inv[12+k]={id,c});T.renderPanel();return 1}")
             for _ in range(4):
@@ -54,6 +54,21 @@ def test_workbench_tiers():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+
+
+def test_bench_up_dirt():
+    # v88: 작업대·장비제작대를 구리 단계로 올리는 재료가 구리괴 8 · 흙 20 (예전 돌 20), 다른 단계는 그대로
+    H2=HOOK.replace("computeLight}","computeLight,BENCH_UP}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const T=__T;return [JSON.stringify(T.BENCH_UP),T.ITEMS.dirt.n]}")
+            rec('올리기','1단계 재료 구리괴 8·흙 20, 2~5단계는 그대로', r[0]=='[null,[["copperBar",8],["dirt",20]],[["ironBar",8],["stone",30]],[["quartzR",6],["granite",20]],[["goldBar",6],["basalt",20]],[["frostShard",10],["iceBlock",20]]]' and r[1]=='흙', str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
 
 def test_workbench_tabs():
     import asyncio, sys
@@ -147,7 +162,7 @@ def test_gear_bench_tiers():
             await ev(pg,"()=>document.querySelector('#sheet [data-a=tab][data-i=tool]').click()"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>[__tabs(),__ids().map(r=>r.cat).every(c=>c==='tool')]")
             rec('창','도구 탭은 도구만', '도구*' in r[0][1] and r[1], str(r))
-            await ev(pg,"()=>{const T=__T,G=T.G;G.inv[12]={id:'copperBar',c:8};G.inv[13]={id:'stone',c:20};T.renderPanel()}"); await pg.wait_for_timeout(200)
+            await ev(pg,"()=>{const T=__T,G=T.G;G.inv[12]={id:'copperBar',c:8};G.inv[13]={id:'dirt',c:20};T.renderPanel()}"); await pg.wait_for_timeout(200)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=benchUp]').click()"); await pg.wait_for_timeout(400)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=tab][data-i=all]').click()"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>{const T=__T,o=T.G.objs.get(T.panel.i),ts=__ids().map(r=>r.tier||0);return [o.lv,T.G.stats.gearLv,document.querySelector('#sheet h2').innerText.trim(),ts[0],ts.includes(0),ts.every((t,k)=>!k||t<=ts[k-1])]}")

@@ -453,3 +453,45 @@ def test_enemy_sight():
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_monsters_avoid_light():
+    # v88: 쫓지 않는 몬스터는 놓은 빛(횃불·램프 …)·등불나무 빛 안(밝기 0.3 넘는 칸)으로 들어가지 않고, 밝은 곳에 있으면 나가요. 쫓을 때는 들어가요
+    H2=HOOK.replace("computeLight}","computeLight,mkEnemy,enemyStep,ruleLight,markRuleLit,isLit,LIT_MIN}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=G.p,R=Math.random;Math.random=()=>0.5; /* 0.5 → 늘 서쪽(횃불 쪽)으로 걸어요 */
+              try{G.enemies.length=0;G.treeSeeds=0;P.dead=0;P.hp=999;P.inv=99;const tx=T.CX+40,ty=T.CY;
+              for(let y=ty-6;y<=ty+6;y++)for(let x=tx-12;x<=tx+26;x++){const j=T.idx(x,y);G.wall[j]=0;G.objs.delete(j);G.floor[j]=2}
+              G.objs.set(T.idx(tx,ty),{t:'torch'});T.markRuleLit();
+              const run=(e,sec,f)=>{let maxL=0;for(let k=0;k<sec*30;k++){if(f)f(k);T.enemyStep(e,1/30);if(!G.enemies.includes(e))return -1;maxL=Math.max(maxL,T.ruleLight(Math.floor(e.x),Math.floor(e.y)))}return maxL};
+              const lit=[T.isLit(tx+.5,ty+.5),T.isLit(tx+3.5,ty+.5),T.isLit(tx+5.5,ty+.5)];
+              P.x=tx+18.5;P.y=ty+.5; /* 멀리 — 알아채지 못해요 */
+              const out={lit,LIT:T.LIT_MIN};
+              for(const k of ['shroomy','slimeG']){
+                let e=T.mkEnemy(k,tx+6.5,ty+.5);e.hp=999;G.enemies.push(e);const x0=e.x;out[k+'_wander']=[run(e,8),+(x0-e.x).toFixed(2),!!e.chasing];G.enemies.length=0;
+                e=T.mkEnemy(k,tx+1.5,ty+.5);e.hp=999;G.enemies.push(e);const st=T.isLit(e.x,e.y);run(e,10);out[k+'_leave']=[st,T.isLit(e.x,e.y),+Math.hypot(e.x-tx-.5,e.y-ty-.5).toFixed(2)];G.enemies.length=0;}
+              /* 꺼진 횃불은 빛이 아니에요 · 내가 든 빛도 아니에요 */
+              G.objs.get(T.idx(tx,ty)).off=true;T.markRuleLit();out.snuffed=T.isLit(tx+.5,ty+.5);G.objs.get(T.idx(tx,ty)).off=false;T.markRuleLit();out.player=T.isLit(P.x,P.y);
+              /* 쫓을 때는 밝은 곳에 들어가요, 쫓기가 끝나면 나가요 */
+              P.x=tx+.5;P.y=ty+1.5;let e=T.mkEnemy('shroomy',tx+5.5,ty+1.5);e.hp=999;G.enemies.push(e);let minD=99;
+              run(e,3,()=>{P.x=tx+.5;P.y=ty+1.5;P.hp=999;P.inv=99;minD=Math.min(minD,Math.hypot(e.x-P.x,e.y-P.y))});out.chase=[T.isLit(e.x,e.y),+minD.toFixed(2),!!e.chasing];
+              P.x=tx+22.5;P.y=ty+.5;run(e,8);out.after=[!!e.chasing,T.isLit(e.x,e.y)];G.enemies.length=0;
+              /* 꽃 구역 가운데가 밝으면 끌려가지 않아요 */
+              const zs=G.fzones;G.fzones=[{x:tx,y:ty,c:'R',dead:[]}];e=T.mkEnemy('bloomR',tx+7.5,ty+.5);e.zone=0;e.t=5;G.enemies.push(e);T.enemyStep(e,1/30);out.zoneLit=[e.vx,e.vy];G.objs.delete(T.idx(tx,ty));T.markRuleLit();e.t=5;T.enemyStep(e,1/30);out.zoneDark=e.vx<0;G.fzones=zs;G.enemies.length=0;
+              return out}finally{Math.random=R}}""")
+            rec('빛','횃불 칸·3칸 옆은 밝고 5칸 옆은 어두움 (기준 0.3)', r['lit']==[True,True,False] and r['LIT']==0.3, str(r))
+            for k in ['shroomy','slimeG']:
+                w=r[k+'_wander']; l=r[k+'_leave']
+                rec('빛',k+': 쫓지 않을 때 횃불 쪽으로 걸어도 밝은 칸에 안 들어감', w[0]!=-1 and w[0]<=0.3 and w[1]>0.3 and not w[2], str(w))
+                rec('빛',k+': 밝은 곳에 놓으면 어두운 곳으로 나감', l[0] and not l[1], str(l))
+            rec('빛','꺼진 횃불·내가 든 빛은 밝은 곳으로 안 셈', not r['snuffed'] and not r['player'], str(r))
+            rec('빛','쫓을 때는 밝은 곳에 들어와 붙음', r['chase'][0] and r['chase'][1]<1 and r['chase'][2], str(r['chase']))
+            rec('빛','쫓기가 끝나면 밝은 곳에서 나감', r['after']==[False,False], str(r['after']))
+            rec('빛','꽃 구역 가운데가 밝으면 끌려가지 않고, 어두우면 돌아감', r['zoneLit']==[0,0] and r['zoneDark'], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
