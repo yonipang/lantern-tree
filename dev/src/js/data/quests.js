@@ -74,7 +74,7 @@ export const MULTI = {
   rugBig: ['큰 꽃 러그', '가운데 노란 꽃이 핀 러그 (2×2). 위로 걸어 다닐 수 있어요.', [['fiber', 12], ['petalR', 2]], 'bench', 'furn', [2, 2], { flat: 1 }],
   rugLong: ['긴 줄무늬 러그', '복도에 깔기 좋은 긴 러그 (3×2). 가로·세로로 돌릴 수 있어요.', [['fiber', 14], ['rope', 2]], 'bench', 'furn', [3, 2], { flat: 1, rotV: 1 }],
   rugRound: ['둥근 엮음 러그', '알록달록 엮은 큰 원형 러그 (3×3).', [['fiber', 18], ['petalY', 2], ['petalB', 2]], 'bench', 'furn', [3, 3], { flat: 1 }],
-  bigTree: ['큰 고목', '굵은 줄기의 커다란 나무 (2×2). 베면 그루터기가 남고 다시 자라요.', [['dirt', 8], ['gMoss', 8], ['wood', 16], ['sapling', 2]], 'bench', 'nature', [2, 2], { solid: 1, ntree: 1, nat: 'cut', hp: 10, drops: [['wood', 6, 9, 1], ['resin', 1, 2, 0.6], ['sapling', 1, 1, 0.4]] }],
+  bigTree: ['큰 고목', '굵은 줄기의 커다란 나무 (2×2). 베면 없어지고 뿌리기둥 묘목 1개를 줘요.', [['dirt', 8], ['gMoss', 8], ['wood', 16], ['sapling', 2]], 'bench', 'nature', [2, 2], { solid: 1, ntree: 1, nat: 'cut', hp: 10, drops: [['wood', 6, 9, 1], ['resin', 1, 2, 0.6]] }],
   bigRock: ['이끼 바위', '이끼가 살짝 덮인 큰 바위 (2×1).', [['stone', 16], ['gMoss', 2]], 'bench', 'nature', [2, 1], { solid: 1 }],
   flowerField: ['큰 꽃밭', '온갖 색 꽃이 가득한 꽃밭 (3×2). 위로 걸어 다닐 수 있어요.', [['dirt', 3], ['gMoss', 3], ['petalR', 2], ['petalY', 2], ['petalB', 2], ['petalW', 2]], 'bench', 'nature', [3, 2], { flat: 1, rotV: 1 }],
   pondBig: ['작은 연못', '연잎이 떠 있는 작은 연못 (2×2).', [['gWater', 4], ['stone', 8], ['gMoss', 2]], 'bench', 'nature', [2, 2], { flat: 1, solid: 1 }],

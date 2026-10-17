@@ -5,7 +5,7 @@ import { BATT_MAX, FUEL, FUEL_MAX } from '../data/circuits-regions.js';
 import { WCAN_MAX } from '../data/farming-cooking.js';
 import { ANIMALS } from '../data/gear-animals.js';
 import { COMPLIMENTS, ITEMS, OBJ, TIPS, USE, USE_LBL } from '../data/items.js';
-import { BKEYS, BOSSES, ENEMY, TERRAIN, YOUNG_T } from '../data/rpg-nature.js';
+import { BKEYS, BOSSES, ENEMY, YOUNG_T } from '../data/rpg-nature.js';
 import { fxRand } from '../engine/random.js';
 import { josa } from '../engine/util.js';
 import { G, guardOf } from '../save/state.js';
@@ -22,14 +22,15 @@ import { reel, startFish } from './fishing.js';
 import { harvest, hitObj, mineWall } from './gathering.js';
 import { wearItem, wtOf } from './gear.js';
 import { addItem, bestTool, clearRefundBox, countItem, holdTool, isBroken, moveInto, refillHot, refundMine, removeItem, returnObj, selItem, wear } from './inventory.js';
-import { digPlant, isYoung, treeStep, WATER } from './nature.js';
+import { isYoung, treeStep, WATER } from './nature.js';
+import { scoopWater } from './digging.js';
 import { eat, maxHp, sleepIn, standUp } from './player.js';
 import { bagNear, myBag, pickLost, recallDecide, startRecall } from './survival.js';
 import { onFrame } from './systems.js';
 import { insertSeeds } from './tree.js';
 import { openTreasure } from '../world/gen.js';
-import { idx, inB, W } from '../world/map.js';
-import { anchorAt, canPlace, delObj, digGround, fpOf, isPlacedFloor, occupied, placeable, terrainOk } from '../world/tiles.js';
+import { idx, inB, LAVA, PIT, W } from '../world/map.js';
+import { anchorAt, canPlace, delObj, digGround, digWhy, fpOf, isPlacedFloor, occupied, placeable } from '../world/tiles.js';
 import { markLight } from './loop.js';
 onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
   const p = G.p, ctl = ctlOf(p);
@@ -43,7 +44,7 @@ onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/syste
 export const REACH = 2.4;
 export const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
 // ================= actions =================
-export const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
+export const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig', scoop: 'scoop' };
 export function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   const aim = ctlOf(p).aim;
@@ -68,7 +69,7 @@ export function nearestEnemy(range) {
 // thing in front: an item held on purpose comes first (seed · watering can · furniture · food …), otherwise a recommendation
 // (open · harvest · chop · mine · pick up …) that takes the right tool out of the tool pouch by itself (pickaxe · axe · sickle ·
 // shovel; the fishing rod and the watering can only from the small button or when held). Other things that fit go to the small button.
-export const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
+export const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', bucket: 'bucket', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
 export const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
 export const NOTGT = ['eat', 'wear']; // held food · clothes: after a real action in front (opening a chest, …), or first when there is nothing to do
 export const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
@@ -114,15 +115,17 @@ export function heldDecide(md, s, it, t, i, o) {
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
+      if (it.kind === 'ground' && it.ground === WATER) return no('부을 수 없음', '물 한 동이는 구덩이에만 부을 수 있어요 · 삽으로 바닥을 파서 구덩이를 만들어요');
       return no(it.kind === 'seed' ? '심을 수 없음' : '놓을 수 없음', it.kind === 'seed' ? '여기엔 심을 수 없어요 · 빈 흙·이끼·버섯흙·수정 모래를 바라보고 눌러요' : '여기엔 놓을 수 없어요 · 빈 곳을 바라보고 눌러요'); }
     case 'shovel': {
       if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
-      if (d && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
-      if (i >= 0 && !G.wall[i] && !o) { const f = G.floor[i];
-        if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
-        if (f === 2) return no('흙 땅', '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요');
-        if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
-      return no('팔 수 없음', '삽으로는 깔아 둔 바닥·배운 지형·덤불·묘목만 떠요'); }
+      if (i < 0 || o) return no('팔 수 없음', '삽으로는 바닥만 파요 · 빈 바닥을 바라보고 눌러요'); // v87: 덤불·묘목 퍼내기는 없어요
+      { const why = digWhy(t.x, t.y); if (why) return no(G.floor[i] === PIT ? '구덩이' : '팔 수 없음', why); }
+      return { k: 'dig', lbl: isPlacedFloor(G.floor[i]) ? '걷기' : '파기', icon: 'shovel', t }; }
+    case 'bucket': // v87: 빈 양동이 — 물 칸에서 물 한 동이 (닳지 않아요)
+      if (water) return { k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t };
+      if (i >= 0 && !G.wall[i] && G.floor[i] === LAVA) return no('뜰 수 없음', '용암은 뜰 수 없어요');
+      return no('물 뜨기', '물을 바라보고 눌러요 · 뜬 물은 구덩이에만 부어요');
     case 'wcan':
       if (crop >= 0 && crop < 3) return o.w ? { k: 'info', lbl: `자라는 중 ${crop + 1}/4`, icon: 'dots', msg: cropMsg(o, crop, i), t } : (s.w || 0) > 0 ? { k: 'water', lbl: '물 주기', icon: 'wcan', t, o } : no('물 없음', '물뿌리개가 비었어요 · 물가를 바라보고 눌러 채워요');
       if (water) return (s.w || 0) >= WCAN_MAX ? no('가득 참', '물뿌리개에 물이 가득해요') : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
@@ -162,9 +165,9 @@ export function autoOptions(t, i, o) {
   if (o) {
     const d = OBJ[o.t];
     if (d.growTo) { const st = treeStep(o), into = d.stump && OBJ[o.g] ? OBJ[o.g].n : d.into, mins = s2 => Math.max(1, Math.ceil(s2 / 60)), r = (o.at || 0) - G.time;
-      A(st < 0 ? { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t }
+      A(st < 0 ? { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (다 자란 뒤 베면 없어져요)`, t }
         : { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t });
-      A(dig(d.stump ? '뽑기' : '퍼내기', o)); return L; }
+      return L; }
     if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
     if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
     if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
@@ -179,7 +182,7 @@ export function autoOptions(t, i, o) {
       if (cs >= 3) A({ k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o, tool: bestTool('sickle') });
       else { A({ k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs, i), t }); if (!o.w && can && (can.w || 0) > 0) A({ k: 'water', lbl: '물 주기', icon: 'wcan', t, o, tool: can, onlyAlt: 1 }); }
       return L; }
-    if (d.bush) { A((o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o, tool: bestTool('sickle') } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t }); A(dig('퍼내기', o)); return L; }
+    if (d.bush) { A((o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o, tool: bestTool('sickle') } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 열리려면 조금 기다려요 · 따면 덤불은 없어지고 베리 씨앗을 줘요', t }); return L; }
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
       else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
     if (d.nat) { A(natAct(d, o, t)); return L; }
@@ -189,7 +192,9 @@ export function autoOptions(t, i, o) {
   if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) {
     A(rod && !isBroken(rod) ? { k: 'fish', lbl: '낚시', icon: 'rod', t, tool: rod, onlyAlt: 1 } : { k: 'info', lbl: rod ? '낚싯대 고장' : '낚싯대 필요', icon: 'rod', msg: rod ? '낚싯대가 망가졌어요. 장비제작대에서 고칠 수 있어요' : '낚싯대가 있으면 낚시할 수 있어요 (장비제작대 → 도구)', t });
     if (can && (can.w || 0) < WCAN_MAX) A({ k: 'fill', lbl: '물 채우기', icon: 'wcan', t, tool: can, onlyAlt: 1 });
+    { const bk = bestTool('bucket'); if (bk) A({ k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t, tool: bk, onlyAlt: 1 }); } // v87
     if (rod) A({ k: 'info', lbl: '물가', icon: 'rod', msg: '작은 버튼의 [낚시]를 누르거나, 도구 칸에서 낚싯대를 들고 눌러요', t }); }
+  if (i >= 0 && !G.wall[i] && !o && G.floor[i] === PIT) A({ k: 'info', lbl: '구덩이', icon: 'dots', msg: '구덩이예요 · 흙 한 삽 같은 바닥 재료를 들고 눌러 메우거나, 물 한 동이를 부어요', t }); // v87
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) { const pk = bestTool('pick'); A({ k: 'mine', lbl: '캐기', icon: pk ? pk.id : 'hand', t, tool: pk }); }
   if (i >= 0 && !G.wall[i] && !o && isPlacedFloor(G.floor[i])) A(dig('걷기'));
   if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) A({ k: 'petpet', lbl: '쓰다듬기', icon: 'hand' });
@@ -207,7 +212,7 @@ defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 
 export function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
 export function perform(a) {
   const p = G.p;
-  if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
+  if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso', 'bucket'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
   switch (a.k) {
     case 'attack': {
       if (!ctlOf(p).aim) faceTo(a.en.x - p.x, a.en.y - p.y);
@@ -218,7 +223,8 @@ export function perform(a) {
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
     case 'place': placeItem(a.t); G.actCd = 0.14; break;
-    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); G.actCd = 0.22; break;
+    case 'dig': digGround(a.t); G.actCd = 0.22; break;
+    case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
     case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
     case 'open': if (a.o.t === 'chest' || OBJ[a.o.t].refund) emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;

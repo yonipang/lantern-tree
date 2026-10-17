@@ -3,7 +3,6 @@
 // 이 파일은 shell.html에서 content/rpg-nature.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { ITEMS, OBJ, RECIPES, Rc } from './items.js';
 import { BX, BY, SA, SB, SI, SL, W } from '../world/map.js';
-import { G, beat } from '../save/state.js';
 
 // ---- level, stats and skills ----
 export const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
@@ -60,7 +59,8 @@ Object.assign(ITEMS, {
   capSapling: { n: '아기 큰버섯', kind: 'seed', crop: 'capSapling', d: '흙·이끼·버섯흙 바닥에 심으면 3분쯤 뒤 큰버섯으로 자라요.' },
   berryBush: { n: '베리덤불', kind: 'place', obj: 'bush', d: '삽으로 퍼 온 베리덤불. 원하는 곳에 옮겨 심으면 다시 열매가 열려요.' },
 });
-OBJ.root.drops.push(['sapling', 1, 1, 0.22]); OBJ.bigShroom.drops.push(['capSapling', 1, 1, 0.22]);
+// v87: 벤 나무는 묘목을 꼭 1개 줘요 (sim/nature.js afterCut) — 예전 확률 드롭(뿌리기둥 22%·큰버섯 22%·둥근 나무 20%·큰 고목 40%)은 없앴어요
+export const SEED_OF = { root: 'sapling', bigShroom: 'capSapling' }; // 그 밖의 나무(ntree)는 뿌리기둥 묘목
 export const GROW_TIME = 180, REGROW_TIME = 240, YOUNG_T = 60; // each tree step lasts YOUNG_T: sapling → young sapling → young tree → grown (stumps wait one step first)
 export const YOUNG_TREES = ['root', 'bigShroom', 'cherryTree', 'roundTree', 'bigTree'];
 export const NFLOOR = { 11: ['waterShallow', '얕은 물 타일', '자갈이 비치는 맑은 물. 위로 걸어 다닐 수 있어요.', [['gWater', 1], ['stone', 1]]], 12: ['waterPond', '연못 물 타일', '연잎이 동동 떠 있는 연못.', [['gWater', 1], ['gMoss', 1]]],
@@ -80,7 +80,7 @@ export const NATURE = {
 for (const id in NATURE) { const [n, d, req, flat] = NATURE[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = flat ? { n, flat: 1, item: id } : { n, solid: 1, item: id }; RECIPES.push(Rc(id, 1, req, 'bench', 'nature')); }
 RECIPES.push(Rc('sapling', 1, [['wood', 3], ['dirt', 2], ['fiber', 2]], 'bench', 'nature'));
 Object.assign(OBJ.cherryTree, { ntree: 1, nat: 'cut', hp: 6, drops: [['wood', 3, 5, 1], ['petalW', 1, 2, 0.5], ['petalR', 1, 1, 0.3]] });
-Object.assign(OBJ.roundTree, { ntree: 1, nat: 'cut', hp: 5, drops: [['wood', 2, 4, 1], ['sapling', 1, 1, 0.2]] });
+Object.assign(OBJ.roundTree, { ntree: 1, nat: 'cut', hp: 5, drops: [['wood', 2, 4, 1]] });
 
 // ---- 보스 (구조 변경 2단계: save/state.js·game/combat.js에서 옮김) — 체력·자리·재도전 보상 ----
 export const BOSSES = {
@@ -99,11 +99,8 @@ export const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2],
 export const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
 for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
 FLOOR_ITEM[21] = 'meadow';
-// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
-export const TERRAIN = {
-  2: { n: '흙', item: 'gDirt', base: true },
-  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
-  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
-  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
-  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
-};
+// v87: 삽으로 판 자연 바닥이 주는 것 (예전 「지형 배우기」는 없앴어요 — 처음부터 모두 팔 수 있어요). 판 칸은 구덩이(PIT)가 돼요
+// 1 이끼 · 2 흙 · 3 버섯흙 · 4 수정 모래 · 18 재 바닥 · 19 눈 바닥 · 20 얼어붙은 물. 물(10)·용암(17)은 못 파요 (물은 빈 양동이로 떠요)
+export const DIG_YIELD = { 1: 'gMoss', 2: 'gDirt', 3: 'gShroom', 4: 'gCrystal', 18: 'gAsh', 19: 'gSnow', 20: 'gIce' };
+// 바닥 재료로 바꿀 때 돌려주는 것도 같아요. 물·용암을 메우면 돌려주는 것이 없어요
+export const BUCKET_FISH = 10; // 물고기를 이만큼 낚으면 빈 양동이를 만들 수 있어요 (예전 「물 뜨기 배우기」 조건)

@@ -49,7 +49,7 @@ export function harvest(t, o) {
   if (d.crop) { const i = idx(t.x, t.y); if (o.star == null) rollStar(i, o); G.objs.delete(i); // a star crop gives its main harvest as star items
     rollDrops(d.yield.map(([id, a, b, ch], k) => [!k && o.star && STAR_OF[id] ? STAR_OF[id] : id, a + (sk && !k ? 1 : 0), b + (sk && !k ? 1 : 0), id === 'glowcap' && o.f === 2 ? .6 : ch]), t.x + .5, t.y + .5);
     const S = G.stats; S.cropH = (S.cropH || 0) + 1; if (o.star) { S.starH = (S.starH || 0) + 1; emit('ftext', t.x + .5, t.y - .3, '★ 별 작물!', '#ffe9a8'); } if (o.t === 'cropBerry') S.berryH = (S.berryH || 0) + 1; if (o.w) S.wetH = (S.wetH || 0) + 1; }
-  else { o.r = G.time + 150; rollDrops([['berry', 2 + (sk ? 1 : 0), 3 + (sk ? 1 : 0), 1], ['berrySeed', 1, 1, 0.3]], t.x + .5, t.y + .6); }
+  else { delObj(idx(t.x, t.y)); rollDrops([['berry', 2 + (sk ? 1 : 0), 3 + (sk ? 1 : 0), 1]], t.x + .5, t.y + .6); spawnDrop('berrySeed', 1, t.x + .5, t.y + .6); markLight(); } // v87: 딴 베리덤불은 사라지고 베리 씨앗을 꼭 1개 줘요 (예전: 150초 뒤 다시 열림, 씨앗 30%)
   emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .5, '#9be37a', 6, 2); gainXp(2); maybeNote('gather', t.x + .5, t.y + .5);
 }
 export const HITS = new Map();

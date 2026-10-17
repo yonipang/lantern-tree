@@ -84,14 +84,14 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
             rec('나무','다 자라기 1분 전부터 젊은 나무 3/4 (벨 수 있음)', r[2][0]=='root' and r[2][1] is True and r[2][2]==2 and r[2][3]=='chop' and r[2][4]=='베기 3/4', str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const mr=Math.random;Math.random=()=>0;const t=T.targetTile();const i=T.idx(t.x,t.y);const o=G.objs.get(i);G.drops.length=0;let hits=0;while(G.objs.get(i)===o&&hits<10){T.hitObj(t,o);hits++}
           const got={};for(const d of G.drops)got[d.id]=(got[d.id]||0)+d.c;Math.random=mr;const st=G.objs.get(i);G.drops.length=0;return [hits,got,st&&st.t]}""")
-            rec('나무','젊은 나무는 금방 베이지만 나무만 조금 (묘목·송진 없음), 그루터기가 남음', r[1]=={'wood':1} and r[2]=='stump', str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const t=T.targetTile();const i=T.idx(t.x,t.y);const o=G.objs.get(i);o.at=G.time+240;const a=[T.treeStep(o),T.decide().lbl,T.decide().msg];o.at=G.time+150;const b2=[T.treeStep(o),T.decide().lbl];
+            rec('나무','젊은 나무는 금방 베이지만 나무만 조금 (송진 없음) + v87: 묘목 1개, 그루터기 없이 사라짐', r[1]=={'wood':1,'sapling':1} and r[2] is None, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const t=T.targetTile();const i=T.idx(t.x,t.y);const o={t:'stump',g:'root'};G.objs.set(i,o);o.at=G.time+240;const a=[T.treeStep(o),T.decide().lbl,T.decide().msg];o.at=G.time+150;const b2=[T.treeStep(o),T.decide().lbl];
           o.at=G.time+59;G.p.y-=2;T.growTick(2);G.p.y+=2;const n=G.objs.get(i);n.yg=G.time-1;T.growTick(2);return [a,b2,n.t,'yg' in n,T.treeStep(n),T.decide().lbl]}""")
-            rec('나무','그루터기는 기다렸다가 새순(1/4)부터 다시 자람', r[0][0]==-1 and '새순' in r[0][2] and r[1]==[0,'자라는 중 1/4'], str(r))
+            rec('나무','옛 세이브 그루터기는 기다렸다가 새순(1/4)부터 다시 자람', r[0][0]==-1 and '새순' in r[0][2] and r[1]==[0,'자라는 중 1/4'], str(r))
             rec('나무','시간이 지나면 다 자란 나무 (젊은 표시가 지워짐)', r[2]=='root' and r[3] is False and r[4]==3 and r[5]=='베기', str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const mr=Math.random;Math.random=()=>0;const t=T.targetTile();const i=T.idx(t.x,t.y);const o=G.objs.get(i);G.drops.length=0;let hits=0;while(G.objs.get(i)===o&&hits<20){T.hitObj(t,o);hits++}
           const got={};for(const d of G.drops)got[d.id]=(got[d.id]||0)+d.c;Math.random=mr;G.drops.length=0;return got}""")
-            rec('나무','다 자란 나무는 지금처럼 묘목까지 나옴', r.get('wood',0)>=2 and r.get('sapling',0)==1, str(r))
+            rec('나무','다 자란 나무는 나무 + 묘목 꼭 1개 (v87)', r.get('wood',0)>=2 and r.get('sapling',0)==1, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+6,y=Math.floor(G.p.y);__clr(x,y-2,3,4);const i=T.idx(x,y);G.objs.set(i,{t:'capStump',g:'bigShroom',at:G.time+30});G.p.y-=3;T.growTick(2);G.p.y+=3;const n=G.objs.get(i);return [n.t,T.isYoung(n)]}""")
             rec('나무','큰버섯 밑동도 같은 흐름 (젊은 큰버섯)', r==['bigShroom',True], str(r))
             # ---- old save ----

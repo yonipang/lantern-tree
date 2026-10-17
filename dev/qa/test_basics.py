@@ -306,7 +306,7 @@ def test_held_item_actions():
             # shovel first
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'shovel',c:1,dur:250};G.floor[T.idx(T.CX+9,T.CY+8)]=6;const a=__d();__en();const b2=__d();G.enemies.length=0;
           __put('bush');const c=__d();__put('chest',{items:Array(16).fill(null)});const d=__d();__put('bench');const e=__d();G.objs.delete(T.idx(T.CX+9,T.CY+8));G.wall[T.idx(T.CX+9,T.CY+8)]=1;const f=__d();G.wall[T.idx(T.CX+9,T.CY+8)]=0;return [a,b2,c,d,e,f]}""")
-            rec('손에 든 것','삽을 들면 파기가 먼저 (적이 붙어도), 덤불은 퍼내기, 상자·작업대는 열기, 벽은 곡괭이로 캐기', r==['dig:걷기','dig:걷기','dig:퍼내기','open:열기','open:열기','mine:캐기'], str(r))
+            rec('손에 든 것','삽을 들면 파기가 먼저 (적이 붙어도), 덤불은 따기(v87: 삽으로 퍼내기 없음), 상자·작업대는 열기, 벽은 곡괭이로 캐기', r==['dig:걷기','dig:걷기','harvest:따기','open:열기','open:열기','mine:캐기'], str(r))
             # food / wear / tools
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'berry',c:3};__put('chest',{items:Array(16).fill(null)});const a=__d();__en();const b2=__d();G.enemies.length=0;
           G.inv[0]={id:'wcan',c:1,w:0};const c=__d();G.inv[0]={id:'rod',c:1,dur:150};const d=__d();G.inv[0]={id:'lasso',c:1};const e=__d();G.objs.delete(T.idx(T.CX+9,T.CY+8));G.inv[0]={id:'berry',c:3};const f=__d();return [a,b2,c,d,e,f]}""")
@@ -699,14 +699,12 @@ def test_arrow_keys_trees():
             await ev(pg,ARENA)
             # trees
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'cherryTree'});G.inv[0]={id:'shovel',c:1};G.sel=0;const a=T.decide();
-          G.inv[0]={id:'pickIron',c:1};for(let k=0;k<12&&G.objs.get(i)&&G.objs.get(i).t==='cherryTree';k++)T.hitObj({x:105,y:106},G.objs.get(i));const o=G.objs.get(i);return [a.k,o&&o.t,o&&o.g,G.drops.some(d=>d.id==='wood')]}""")
-            rec('나무','다 자란 벚꽃나무는 삽으로 못 퍼고 베기를 추천(v65) → 베면 그루터기', r[0]=='chop' and r[1]=='stump' and r[2]=='cherryTree' and r[3], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.inv[0]={id:'shovel',c:1};G.sel=0;const a=T.decide();T.perform(a);return [a.k,G.objs.get(i)||null,T.countItem('cherryTree')]}""")
-            rec('나무','그루터기는 삽으로 뽑히고 나무 아이템으로 돌아옴', r[0]=='dig' and r[1] is None and r[2]==1, str(r))
+          G.inv[0]={id:'pickIron',c:1};for(let k=0;k<12&&G.objs.get(i)&&G.objs.get(i).t==='cherryTree';k++)T.hitObj({x:105,y:106},G.objs.get(i));const o=G.objs.get(i);return [a.k,o&&o.t,G.drops.some(d=>d.id==='wood'),G.drops.filter(d=>d.id==='sapling').reduce((n,d)=>n+d.c,0)]}""")
+            rec('나무','다 자란 벚꽃나무는 삽으로 못 퍼고 베기를 추천(v65) → v87: 베면 사라지고 나무 + 묘목 1개', r[0]=='chop' and r[1] is None and r[2] and r[3]==1, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'stump',g:'roundTree',at:G.time-1});G.p.x=102.5;T.growTick();const t=G.objs.get(i).t;G.p.x=104.5;return t}""")
-            rec('나무','그루터기는 시간이 지나면 원래 나무로 다시 자람', r=='roundTree', r)
+            rec('나무','옛 세이브 그루터기는 시간이 지나면 원래 나무로 다시 자람 (v87: 한 번만)', r=='roundTree', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'sapling',at:G.time-1});G.p.x=102.5;T.growTick();const o=G.objs.get(i);G.inv[0]={id:'pickIron',c:1};for(let k=0;k<12&&G.objs.get(i)&&G.objs.get(i).t==='root';k++)T.hitObj({x:105,y:106},G.objs.get(i));G.p.x=104.5;return [o.t,G.objs.get(i)&&G.objs.get(i).t]}""")
-            rec('나무','직접 심은 묘목이 자란 뿌리기둥도 베면 그루터기', r==['root','stump'], str(r))
+            rec('나무','직접 심은 묘목이 자란 뿌리기둥도 베면 사라짐 (v87)', r==['root',None], str(r))
             # chest stash
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;/* v76: 창을 열어도 세계가 가서 땅의 물건을 주워요 */for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'torch',c:5};G.inv[9]={id:'stone',c:30};G.inv[10]={id:'wood',c:20};G.inv[11]={id:'swordWood',c:1};const ci=T.idx(106,106);const o={t:'chest',items:Array(18).fill(null)};o.items[0]={id:'stone',c:10};G.objs.set(ci,o);G.p.x=104.5;G.p.y=106.5;T.openPanel('chest',{i:ci});return true}""")
             await pg.wait_for_timeout(600)

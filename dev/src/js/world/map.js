@@ -25,6 +25,7 @@ export const devLayout = () => { try { const v = +localStorage.getItem('lantern-
 export const DIR8 = ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'];
 export const dirKo = (x, y) => DIR8[((Math.round(Math.atan2(y - CY, x - CX) / (Math.PI / 4)) % 8) + 8) % 8];
 export const LAVA = 17;
+export const PIT = 22; // v87: 삽으로 판 구덩이 (사람·몬스터는 못 지나가고 발사체는 지나가요)
 export const idx = (x, y) => y * W + x;
 // ================= world helpers =================
 export const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
