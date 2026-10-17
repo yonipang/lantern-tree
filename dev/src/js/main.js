@@ -32,6 +32,7 @@ export function loop(ts) {
 }
 export async function start(data) {
   document.body.classList.add('intro');
+  try { await Promise.race([document.fonts.load('16px "NeoDunggeunmo Pro"', '등불나무 0'), new Promise(r => setTimeout(r, 1500))]); } catch (e) { } // v78: 도트 글꼴을 받은 뒤 그려요 (캔버스 글자가 예전 글꼴로 먼저 그려지지 않게)
   await loadArt();
   buildSprites();
   initLight();
