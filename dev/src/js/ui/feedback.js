@@ -68,4 +68,4 @@ onEvent('bossbar', onlyMe(on => { $('#bossbar').hidden = !on; if (on) bossName =
 onEvent('bossHp', onlyMe((k, hp, max) => { $('#bossFill').style.width = Math.max(0, hp / max * 100) + '%'; $('#bossbar').classList.toggle('phased', !!PHASE_BOSS[k]); if (bossName !== k) { bossName = k; $('#bossbar .bn').textContent = BOSSES[k].n; } }));
 let lastGoalTxt = '';
 export function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
-onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } });
+onEvent('goal', (txt, tag) => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } const t = $('#goalTag'), tg = tag || '퀘스트'; if (t && t.textContent !== tg) t.textContent = tg; }); // v84: 활성 퀘스트 한 줄 + 앞의 작은 글자(이야기·도전)

@@ -221,7 +221,7 @@ def test_hud_layout_v77():
             q="(s=>{const e=document.querySelector(s);if(!e||e.hidden||getComputedStyle(e).display==='none')return null;const r=e.getBoundingClientRect();return {x:r.left,y:r.top,r:r.right,b:r.bottom}})"
             # 왼쪽 위
             r=await ev(pg,"()=>{const f="+q+";return [!!f('#face'),!!f('#huRing'),!f('#envRing'),!!f('#goal'),document.querySelector('#goal b').textContent,document.querySelector('#goalTxt').textContent,!document.querySelector('#bCraft'),!document.querySelector('#bQuest')]}")
-            rec('HUD','왼쪽 위: 얼굴·배고픔 동그라미·진행 중인 이야기 한 줄 (더위·추위는 그 지역에서만, 제작·퀘스트 버튼은 없음)', r[0] and r[1] and r[2] and r[3] and '진행 중인 이야기' in r[4] and '뿌리기둥' in r[5] and r[6] and r[7], str(r))
+            rec('HUD','왼쪽 위: 얼굴·배고픔 동그라미·활성 퀘스트 한 줄(앞에 「이야기」) (더위·추위는 그 지역에서만, 제작·퀘스트 버튼은 없음)', r[0] and r[1] and r[2] and r[3] and '이야기' in r[4] and '뿌리기둥' in r[5] and r[6] and r[7], str(r))
             r=await ev(pg,"()=>{const G=__T.G;G.p.hunger=20;G.env={k:'cold',v:50,lv:1,t:0};return 0}")
             ok=await wait_until(pg,"()=>{const h=document.querySelector('#huRing'),e=document.querySelector('#envRing');return h.classList.contains('low')&&Math.abs(parseFloat(h.style.getPropertyValue('--f'))-.2)<.01&&!e.hidden&&e.classList.contains('cold')&&Math.abs(parseFloat(e.style.getPropertyValue('--f'))-.5)<.01}")
             rec('HUD','배고픔 20 → 동그라미 20%·경고 / 추운 곳 → 배고픔 옆에 추위 동그라미 50%', ok, '')

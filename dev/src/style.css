@@ -451,3 +451,15 @@ body.touch #hbFlip{width:var(--slotS)}
 .sheet.hasotab,.sheet.side{clip-path:none} /* v83: 바깥 탭이 계단 모서리(clip-path)에 잘리지 않게 */
 .detail.eqd.noimg{grid-template-columns:1fr}
 .sh-head.vh{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* v84: 퀘스트 카드 · 진행 막대 (ui/panels-quest.js) */
+.qcard{background:rgba(255,255,255,.04);border:2px solid var(--line);padding:8px 10px;margin:0 0 6px}
+.qcard.big{border-color:var(--amber);background:#33284a;padding:10px 12px}
+.qcard.act{box-shadow:inset 4px 0 0 var(--amber)}
+.qc-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.qc-top h4{margin:0;font-weight:400;font-size:16px;line-height:22px;flex:1;min-width:60%}
+.qcard .st{font-size:16px;padding:2px 6px;white-space:nowrap}.qcard .st.done{background:#2f5a46;color:#a5ecc9}.qcard .st.cur{background:#5a4a20;color:#ffd25c}.qcard .st.lock{background:#2a2139;color:var(--muted)}.qcard .st.act{background:var(--amber);color:#3a2410}
+.qcard p{margin:4px 0 0;font-size:16px;color:var(--muted);line-height:22px}.qcard p.qmsg{color:#ffb3c6}
+.qbar{position:relative;height:18px;margin:6px 0 2px;background:#140f1d;border:2px solid var(--line)}
+.qbar i{position:absolute;left:0;top:0;bottom:0;background:var(--amber)}
+.qbar span{position:relative;display:block;text-align:center;font-size:16px;line-height:14px;color:var(--text);text-shadow:0 1px 0 #000}
+.qbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.qbtns .btn{min-height:36px;padding:0 10px;font-size:16px}
