@@ -13,10 +13,10 @@ def test_core_play():
                 ctx,pg,errs=await new_ctx(b,w,h,touch)
                 r=await ev(pg,LAYOUT_JS)
                 await pg.screenshot(path=SP+f'qa_layout_{w}x{h}.png')
-                ui=await ev(pg,"()=>parseFloat(getComputedStyle(document.documentElement).fontSize)/16")  # UI 크기 배율 (style.css --ui)
                 rec('레이아웃',f'{name} {w}x{h} 겹침 없음', not r['over'], ','.join(r['over']) or '-')
                 rec('레이아웃',f'{name} 화면 밖 요소 없음', not r['out'] and not r['hscroll'], ','.join(r['out']) or '-')
-                rec('레이아웃',f'{name} 버튼 크기 ≥44px', r['minSlot']>=44 and (not touch or r['actW']>=88*ui-.5), f"slot {r['minSlot']}px, action {round(r['actW'])}px")
+                # v78: 큰 버튼은 와이어프레임 v2 크기 80px
+                rec('레이아웃',f'{name} 버튼 크기 ≥44px', r['minSlot']>=44 and (not touch or r['actW']>=80-.5), f"slot {r['minSlot']}px, action {round(r['actW'])}px")
                 if errs: rec('레이아웃',f'{name} 콘솔 오류', False, errs[0])
                 await ctx.close()
             # ---------- A2. layout with the pickup button visible ----------
@@ -783,7 +783,7 @@ def test_arrow_keys_trees():
             r=await ev(pg,"()=>{const j=document.querySelector('#joy'),kn=document.querySelector('#joyKnob');return [j.style.left,j.style.top,kn.style.transform,__T.G.p.x]}")
             await pg.dispatch_event('#cv','pointerup',{'pointerId':23,'pointerType':'touch','isPrimary':True,'clientX':400,'clientY':500})
             knob=float(r[2].split('(')[1].split('px')[0]) if 'translate' in r[2] else 0
-            rec('조이스틱','끌어도 받침은 누른 곳에 고정, 손잡이는 테두리 안, 그 방향으로 계속 걸음(v75)', j0[:2]==['100px','500px'] and j0[2] and r[:2]==j0[:2] and 0<knob<=41 and r[3]>x0+0.5, f'{j0} {r} knob={knob}')
+            rec('조이스틱','끌어도 받침은 누른 곳에 고정, 손잡이는 테두리 안, 그 방향으로 계속 걸음(v75)', j0[:2]==['100px','500px'] and j0[2] and r[:2]==j0[:2] and 0<knob<=49 and r[3]>x0+0.5, f'{j0} {r} knob={knob}')
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

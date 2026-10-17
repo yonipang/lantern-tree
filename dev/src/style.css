@@ -384,7 +384,7 @@ body.touch #pcHint{display:none}
 .sbtn{width:48px;height:48px;gap:0}
 .sbtn img{display:none}
 body:not(.touch) .sbtn{padding-top:12px}
-#bossbar{top:calc(env(safe-area-inset-top,0px) + 8px)}
+#bossbar{top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 16px + 52px + 8px)}
 /* 큰 버튼·스킬: 공격은 단축칸 위 32px, 상호작용은 공격 위 16px, 스킬 두 개는 공격 왼쪽 8px에 위아래(사이 8) */
 #atkBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px + var(--slotS) + 12px + 32px);width:80px;height:80px}
 #actBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px + var(--slotS) + 12px + 32px + 80px + 16px);width:80px;height:80px}
