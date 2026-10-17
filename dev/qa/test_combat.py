@@ -55,7 +55,7 @@ def test_skills():
             r=await ev(pg,"""()=>{const T=__T;const all=Object.keys(T.SKILLS),cat=T.SK_CAT.flatMap(c=>c[2]);const nw=['stomp','warrior','volley','hawk','frostRing','arcane'];
           return [all.length,cat.length,all.every(k=>cat.includes(k)),T.SK_CAT.map(c=>c[1]+':'+c[2].filter(k=>nw.includes(k)).length).join(','),nw.map(k=>T.SKILLS[k].lv).join(','),nw.filter(k=>T.SKILLS[k].act).join(',')]}""")
             rec('스킬','새 스킬 6개 (일반·마법·활 2개씩), 모두 16개, Lv.7~12에 열림', r==[16,16,True,'일반:2,마법:2,활:2,생활:0','7,8,9,10,11,12','stomp,volley,frostRing'], str(r))
-            await ev(pg,"()=>{__T.G.rpg.sp=5;__T.openPanel('stat')}"); await pg.wait_for_timeout(500)
+            await ev(pg,"()=>{__T.G.rpg.sp=5;__T.openPanel('stat',{tab:'sk'})}"); await pg.wait_for_timeout(500)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return ['일반 스킬','마법 스킬','활 스킬','생활 스킬','땅울림','화살비','서리 고리','마력 순환','매의 눈','전사의 기술'].map(x=>t.includes(x))}")
             rec('표시','능력 창에 스킬이 일반·마법·활·생활로 나뉘어 보임', all(r), str(r))
             await pg.screenshot(path=SP+'stat.png')
@@ -82,7 +82,7 @@ def test_skills():
           const r1=[T.maxMp()-mm,+(T.magicMul()/mg).toFixed(2),+(T.meleeMul()/ml).toFixed(2),+(T.atkCd()/cd).toFixed(2)];G.inv[0]={id:'bowWood',c:1};G.sel=0;const cb=T.atkCd();G.rpg.sk.warrior=0;return r1.concat([+(cb/T.atkCd()).toFixed(2)])}""")
             rec('패시브','마력 순환 3: 기력 +24·마법 +18% / 전사의 기술 2: 근접 피해 +12%·근접 공격 속도 +6% (활은 그대로)', r==[24,1.18,1.12,0.94,1.0], str(r))
             # reset
-            await ev(pg,"()=>{const G=__T.G;__clear();G.rpg.sk={stomp:2,dash:1,hawk:3};G.rpg.slot=['stomp','dash'];G.rpg.sp=1;__T.openPanel('stat')}"); await pg.wait_for_timeout(600)
+            await ev(pg,"()=>{const G=__T.G;__clear();G.rpg.sk={stomp:2,dash:1,hawk:3};G.rpg.slot=['stomp','dash'];G.rpg.sp=1;__T.openPanel('stat',{tab:'sk'})}"); await pg.wait_for_timeout(600)
             await pg.click('#sheet [data-a=skReset]'); await pg.wait_for_timeout(200)
             r0=await ev(pg,"()=>[__T.G.rpg.sp,document.querySelector('#sheet [data-a=skReset]').textContent]")
             await pg.click('#sheet [data-a=skReset]'); await pg.wait_for_timeout(300)
@@ -117,7 +117,7 @@ def test_boss_effects_rarity():
             rec('레어도','단축칸 테두리 색 (영웅/고급/일반)', 'r3' in r[0] and 'r1' in r[1] and 'r' not in r[2].replace('slot','').replace('sel','').replace('broken','').strip(), str(r))
             await ev(pg,"()=>__T.openPanel('inv')"); await pg.wait_for_timeout(500)
             await pg.tap('#sheet .slot[data-a=inv][data-i="0"]'); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>{const d=document.querySelector('.detail');return [d.querySelector('h3 span').style.color,d.textContent]}")
+            r=await ev(pg,"()=>{const d=document.querySelector('#bagTip');return [d.querySelector('b span').style.color,d.textContent]}")
             rec('레어도','가방 상세에 등급 이름 색 + ★영웅 등급 + 효과 설명', r[0]!='' and '영웅 등급' in r[1] and '독' in r[1], str(r))
             await pg.screenshot(path=SP+'detail.png'); await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='pickCrystal');return [R.at,R.req.map(x=>x[0]).join(','),__T.ITEMS.pickCrystal.tier]}")

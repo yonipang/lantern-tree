@@ -412,3 +412,42 @@ body.touch #hbFlip{width:var(--slotS)}
 .sbtn{width:52px}
 .eqlist.eq2{grid-template-columns:repeat(auto-fit,minmax(min(100%,168px),1fr))}
 #pcHint{max-width:340px;line-height:20px}
+
+/* v83: 창 위 바깥 탭 · 창 안 첫 줄 · 장비 세트 탭 · 장비 칸 · 가방 말풍선과 버튼 줄 (ui/panels-char.js) */
+.otabs{position:absolute;bottom:100%;left:10px;display:flex;gap:4px;z-index:1}
+.otab{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;background:var(--panel2);border:2px solid var(--line);border-bottom:0;color:var(--muted);font-size:16px;margin-bottom:0}
+.otab img{width:16px;height:16px}
+.otab.on{background:var(--panel);color:var(--text);height:42px;margin-bottom:-2px;position:relative}
+.sheet.hasotab{max-height:calc(86% - 42px)}
+.sh-top{flex:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.sh-top .sh-hp{flex:1;margin:0;min-width:0}
+.btn.sm{min-height:36px;padding:0 10px;font-size:16px;flex:none}
+.stabs{position:absolute;right:100%;top:56px;display:flex;flex-direction:column;gap:4px}
+.stab{width:44px;height:48px;padding:0;background:var(--panel2);border:2px solid var(--line);border-right:0;color:var(--muted);font-size:16px}
+.stab.on{background:var(--panel);color:var(--amber);width:46px;margin-right:-2px;position:relative}
+.sheet.side{width:min(calc(100% - 46px),496px);left:calc(50% + 23px)}
+.eqgrid{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(4,auto);gap:6px 14px;justify-content:center;margin:4px 0 8px}
+.eqcell{display:flex;flex-direction:column;align-items:center;gap:2px}
+.eqcell small{font-size:16px;color:var(--muted);white-space:nowrap}
+.eqcell .slot{width:56px;height:56px}
+.slot.eqc.empty span{font-size:16px;color:var(--muted);line-height:16px;text-align:center}
+.slot.eqc.new0{opacity:.55;border-style:dashed}
+.eqme{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.eqme img{width:96px;height:96px;image-rendering:pixelated}
+.eqme small{font-size:16px;color:var(--amber)}
+.detail.eqd{margin-top:4px}
+.lbl.fold{display:block;width:100%;text-align:left;background:none;border:0;padding:4px 2px;cursor:pointer}
+.lbl.hotl{flex:none;margin-top:6px}
+.grid.hot9{flex:none;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
+.bagbar{flex:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;margin-top:6px;padding-top:6px;border-top:2px solid var(--line)}
+.bagbar .bb-hint{color:var(--muted);font-size:16px}
+.btip{position:absolute;z-index:5;max-width:min(280px,calc(100% - 8px));box-sizing:border-box;background:var(--ink);border:2px solid var(--line);padding:8px 10px;font-size:16px;line-height:24px;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.btip b{font-weight:400;display:block}
+.btip p{margin:0;color:var(--muted)}
+.btip .st{color:var(--amber)}
+@media (max-width:759px),(max-height:639px){
+  .sheet[data-key^="inv"],.sheet[data-key^="quest"],.sheet[data-key^="craft"][data-key$="|"]{height:calc(66.6% - 42px);max-height:calc(66.6% - 42px)}
+}
+.sheet.hasotab,.sheet.side{clip-path:none} /* v83: 바깥 탭이 계단 모서리(clip-path)에 잘리지 않게 */
+.detail.eqd.noimg{grid-template-columns:1fr}
+.sh-head.vh{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}

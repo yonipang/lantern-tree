@@ -60,7 +60,7 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
             rec('물뿌리개','물 준 작물은 25% 빨리 자람 (3초에 4초만큼)', r==[0,1], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.tools.find(x=>x.id==='wcan').w=0;const t=T.targetTile();const o=__crop(t.x,t.y,'cropBerry',10);const a=T.decide();return [a.k,a.lbl,a.msg]}""")
             rec('물뿌리개','비었으면 물을 줄 수 없고 채우라는 안내', r[0]=='info' and r[1]=='물 없음' and '채워요' in r[2], str(r))
-            r=await ev(pg,"()=>{const T=__T,G=T.G;const wc=G.tools.find(x=>x.id==='wcan');wc.w=7;T.openPanel('inv');const h=document.querySelector('#sheet').innerHTML;T.closePanel();const arr=Array(4).fill(null);T.moveInto(arr,{...wc});return [h.includes('#6fb8ff'),arr[0].w]}")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const wc=G.tools.find(x=>x.id==='wcan');wc.w=7;try{localStorage.setItem('lantern-tree-pouch','1')}catch(e){};T.openPanel('inv');const h=document.querySelector('#sheet').innerHTML;T.closePanel();const arr=Array(4).fill(null);T.moveInto(arr,{...wc});return [h.includes('#6fb8ff'),arr[0].w]}")
             rec('물뿌리개','남은 물이 칸에 파란 막대로 보이고, 상자로 옮겨도 그대로', r==[True,7], str(r))
             # ---- fertilizer ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.bossDead.queen=false;(G.stats.beaten||{}).queen=0;const f=T.RECIPES.find(x=>x.out==='fert'),fs=T.RECIPES.find(x=>x.out==='fertShroom');const before=[T.recipeOn(f),T.recipeOn(fs)];G.bossDead.queen=true;return [before,T.recipeOn(f),T.recipeOn(fs),f.n,JSON.stringify(f.req),f.at,JSON.stringify(fs.req)]}""")

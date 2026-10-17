@@ -23,6 +23,7 @@ import { markInv, refreshHotbar } from './hud.js';
 import { applyCtrl, ctrlPref, setCtrlPref } from './input.js';
 import { mapChestOn, setMapChest } from './map.js';
 import { closePanel, craftCtx, openPanel, panel, panelAt, renderPanel, UIS } from './panels.js';
+import { isNewCell, pouchOpen, setPouchOpen } from './panels-char.js';
 export function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;
@@ -31,7 +32,7 @@ export function onSheetClick(e) {
   if (a === 'close') { closePanel(); return; }
   if (a === 'bagNav') { if (panel && panel.kind !== i) openPanel(i, { nav: 1 }); return; } // v77: 가방 | 제작 탭
   if (a === 'inv') {
-    UIS.trash = false; if (G.inv[i]) runCmd({ k: 'seenItem', id: G.inv[i].id }); // v77: 새 물건 표시는 한 번 누르면 꺼져요
+    UIS.trash = false; UIS.toolSel = null; if (G.inv[i]) runCmd({ k: 'seenItem', id: G.inv[i].id }); // v77: 새 물건 표시는 한 번 누르면 꺼져요
     if (Number.isInteger(i) && i < HOT) runCmd({ k: 'selHot', i }); // v66 (BF-06): the hotbar slot picked here stays in hand after the bag closes
     if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
     else if (UIS.invSel === i) UIS.invSel = null;
@@ -42,7 +43,12 @@ export function onSheetClick(e) {
   if (a === 'stash') { if (!(panel && panel.kind === 'chest') || runCmd({ k: 'stash', o: panel.i, same: i === 'same' }) === false) return; renderPanel(); return; }
   if (a === 'sortBag') { runCmd({ k: 'sortBag' }); UIS.invSel = null; renderPanel(); return; }
   if (a === 'wearOn') { const k = UIS.invSel; if (k != null && G.inv[k]) runCmd({ k: 'wear', i: k }); UIS.invSel = null; renderPanel(); return; }
-  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) runCmd({ k: 'unwear', sl }); else toast(`${EQ_N[sl]} 칸에 낄 장비는 가방에서 고르고 [입기]·[달기]를 눌러요`, null, 'eq'); renderPanel(); return; }
+  if (a === 'chTab') { UIS.chTab = i; UIS.chSlot = null; renderPanel(); return; } // v83: 캐릭터 창 탭 장비 / 스킬 / 등불
+  if (a === 'chSlot') { UIS.chSlot = UIS.chSlot === i ? null : i; if (UIS.chSlot && isNewCell(UIS.chSlot)) toast('아직 넣을 수 있는 물건이 없어요', null, 'eqnew'); renderPanel(); return; }
+  if (a === 'eqSet') { runCmd({ k: 'eqSet', n: +i }); renderPanel(); return; } // v83: 장비 세트 I·II·III
+  if (a === 'stashNear') { runCmd({ k: 'stashNear' }); UIS.invSel = null; UIS.toolSel = null; markInv(); renderPanel(); return; } // v83: 가까운 상자에 넣기
+  if (a === 'pouchFold') { setPouchOpen(!pouchOpen()); UIS.toolSel = null; renderPanel(); return; } // v83: 도구 주머니 접기 (기억해요)
+  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) runCmd({ k: 'unwear', sl }); else toast(`${EQ_N[sl]} 칸에 낄 장비는 캐릭터 창 장비 탭에서 칸을 누르고 골라요`, null, 'eq'); renderPanel(); return; }
   if (a === 'catchThrow') { catchThrow(); return; }
   if (a === 'petOn') { if (runCmd({ k: 'pet', id: i }) === false) return; renderPanel(); return; }
   if (a === 'eqPick') { runCmd({ k: 'wear', i }); renderPanel(); return; }

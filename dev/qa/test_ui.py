@@ -31,16 +31,20 @@ def test_character_menu():
             rec('저장','불러오면 캐릭터 유지 / 예전 세이브는 새싹', r==['rumi','sprout'], str(r))
             await ev(pg,"()=>{document.getElementById('toasts').style.display=''}")
             await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>[document.querySelectorAll('#sheet .cp-card').length,document.querySelector('#sheet').innerText.includes('옷장에서')]")
+            rec('메뉴','v83: 메뉴에는 캐릭터 고르기·꾸미기가 없고 옷장 안내 한 줄', r==[0,True], str(r))
+            await ev(pg,"()=>__T.openPanel('look',{tab:'char'})"); await pg.wait_for_timeout(500) # 옷장 [꾸미기]와 같은 창 — 첫 탭이 캐릭터
             n=await ev(pg,"()=>document.querySelectorAll('#sheet .cp-card').length")
             await pg.tap('#sheet .cp-card[data-c=momo]'); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>[__T.G.char, __T.G.outfit, document.querySelector('#toasts').innerText.includes('모모로 바꿨어요'), document.querySelector('#sheet .cp-card.on').dataset.c]")
-            rec('메뉴','메뉴에서 캐릭터 바꾸기', n==8 and r==['momo',0,True,'momo'], f'{n} {r}')
+            rec('옷장','옷장 꾸미기 창의 캐릭터 탭에서 캐릭터 바꾸기', n==8 and r==['momo',0,True,'momo'], f'{n} {r}')
             await pg.screenshot(path=SP+'menu.png')
             await pg.tap('#sheet .cp-card[data-c=todak]'); await pg.wait_for_timeout(300)
-            rec('메뉴','받침 있는 이름: 토닥으로', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('토닥으로 바꿨어요')"))
+            rec('옷장','받침 있는 이름: 토닥으로', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('토닥으로 바꿨어요')"))
             await pg.tap('#sheet .cp-card[data-c=ciel]'); await pg.wait_for_timeout(300)
-            rec('메뉴','ㄹ 받침 이름: 시엘로', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('시엘로 바꿨어요')"))
+            rec('옷장','ㄹ 받침 이름: 시엘로', await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('시엘로 바꿨어요')"))
             # restart keeps char
+            await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
             await pg.tap('#sheet [data-a=newgame]'); await pg.wait_for_timeout(200); await pg.tap('#sheet [data-a=newgame]'); await pg.wait_for_timeout(500)
             rec('메뉴','처음부터 다시 해도 캐릭터 유지', await ev(pg,"()=>__T.G.char")=='ciel')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
@@ -52,7 +56,7 @@ def test_character_menu():
 def test_dress_up():
     import asyncio, sys
     async def main():
-        mkpage(SRC,'qa.html')
+        mkpage(SRC,'qa.html',HOOK.replace("computeLight}","computeLight,RECIPES}"))
         async with async_playwright() as p:
             b=await p.chromium.launch(); errs=[]
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
@@ -85,7 +89,11 @@ def test_dress_up():
             rec('가구','옷장 → 꾸미기', r==['use','꾸미기'], str(r))
             await tap(pg,1); await pg.wait_for_timeout(500)
             rec('가구','옷장을 쓰면 꾸미기 창', await ev(pg,"()=>document.querySelector('#sheet h2')?.textContent")=='꾸미기')
+            rec('가구','옷장 꾸미기 창은 캐릭터 고르기 탭부터 (v83)', await ev(pg,"()=>document.querySelectorAll('#sheet .cp-card').length")==8)
             await pg.tap('#sheet [data-a=close]'); await pg.wait_for_timeout(300)
+            # v83 나무 옷장: 작업대 기본(나무 8 + 이끼 섬유 4), 같은 꾸미기
+            r=await ev(pg,"()=>{const T=__T,G=T.G,r=T.RECIPES.find(q=>q.out==='woodWardrobe');G.objs.set(T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),{t:'woodWardrobe'});return [r&&r.at,r&&(r.tier||0),r&&JSON.stringify(r.req),T.decide().lbl]}")
+            rec('가구','나무 옷장: 작업대 기본 단계, 나무 8 + 이끼 섬유 4, [꾸미기]', r==['bench',0,'[["wood",8],["fiber",4]]','꾸미기'], str(r))
             await ev(pg,"()=>{document.getElementById('toasts').style.display='none'}"); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'game.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
@@ -665,10 +673,10 @@ def test_drag_zones_layout():
                 rec('레이아웃',f'{name} v77 공격 위 상호작용 · 스킬은 공격 왼쪽 · 작은 버튼은 상호작용 옆', r['actAbove'] and r['skLeft'] and r['subLeft'], str(r))
                 await pg.screenshot(path=SP+f'layout_{w}x{h}.png')
                 await pg.tap('#bInv'); await pg.wait_for_timeout(600); await pg.tap('[data-a=bagNav][data-i=craft]'); await pg.wait_for_timeout(400)
-                r=await ev(pg,"()=>[document.querySelector('.sh-head h2').textContent,!!document.querySelector('.bagnav [data-i=craft].on')]"); rec('레이아웃',f'{name} 가방 → 제작 탭으로 손제작', '제작' in r[0] and r[1], str(r))
+                r=await ev(pg,"()=>[document.querySelector('.sh-head h2').textContent,!!document.querySelector('.otabs [data-i=craft].on')]"); rec('레이아웃',f'{name} 가방 → 제작 탭으로 손제작', '제작' in r[0] and r[1], str(r))
                 if name=='iPhone 14':
                     await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench'})}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=tab][data-i=build]'); await pg.wait_for_timeout(250); await pg.tap('[data-a=tab2][data-i=nature]'); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'nature_tab.png')  # v62: 자연은 건축 탭의 2줄
-                    r=await ev(pg,"()=>!document.querySelector('.bagnav')"); rec('레이아웃','작업대 창에는 가방|제작 탭이 없음', r, r)
+                    r=await ev(pg,"()=>!document.querySelector('.otabs')"); rec('레이아웃','작업대 창에는 가방|제작 탭이 없음', r, r)
                 await ev(pg,"()=>__T.closePanel()"); await pg.tap('#bInv'); await pg.wait_for_timeout(500)
                 r=await ev(pg,"()=>document.querySelector('.sh-head h2').textContent"); rec('레이아웃',f'{name} 가방 버튼 동작', '가방' in r, r)
                 rec('기능',f'{name} 콘솔 오류 없음', not errs, errs[:3]); await ctx.close()
@@ -744,6 +752,74 @@ def test_audio_resume():
             rec('소리','소리 끔 설정은 그대로 (끈 동안은 소리 안 남, 켜면 다시 남)', r==['running',True,True,True], str(r))
             r=await ev(pg,"async()=>{const n=window.__acs.length;document.dispatchEvent(new Event('visibilitychange'));document.dispatchEvent(new Event('pointerup'));await new Promise(r=>setTimeout(r,50));return window.__acs.length===n}")
             rec('소리','잘 켜져 있으면 아무것도 하지 않음 (장치를 겹쳐 만들지 않음)', r is True, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_bag_character_v83():
+    import asyncio, sys
+    # v83: 가방 창(바깥 탭·말풍선·버튼 줄·도구 주머니 접기·가까운 상자에 넣기) · 캐릭터 창(장비 10칸·장비 세트 I·II·III·세트별 펫·등불 탭) · 강화에 다른 세트 장비
+    H2=HOOK.replace("computeLight}","computeLight,HOT,stashNear,switchSet,itemAt,get panel(){return panel}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # 가까운 상자에 넣기: 둘레 16칸 안, 같은 물건이 있는 상자만, 가까운 상자부터 (겹치기 → 빈칸), 단축칸은 그대로, 남으면 가방
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,px=Math.floor(G.p.x),py=Math.floor(G.p.y);for(let i=0;i<G.inv.length;i++)G.inv[i]=null;
+              const put=(dx,dy,items)=>{const i=T.idx(px+dx,py+dy);G.objs.set(i,{t:'chest',items:items.concat(Array(16-items.length).fill(null))});return i};
+              const near=put(2,0,[{id:'torch',c:98}]),far=put(6,0,[{id:'torch',c:1}]),out=put(20,0,[{id:'stone',c:1}]),other=put(-3,0,[{id:'berry',c:1}]);
+              G.inv[0]={id:'torch',c:5};G.inv[T.HOT]={id:'torch',c:10};G.inv[T.HOT+1]={id:'stone',c:7};G.inv[T.HOT+2]={id:'gel',c:3};
+              const r=T.stashNear(),c=i=>G.objs.get(i).items.filter(Boolean).map(s=>s.id+s.c).join(',');
+              const res=[r.n,r.boxes,c(near),c(far),c(out),c(other),G.inv[0]&&G.inv[0].c,G.inv[T.HOT],G.inv[T.HOT+1]&&G.inv[T.HOT+1].c,G.inv[T.HOT+2]&&G.inv[T.HOT+2].c];
+              for(const i of [near,far,out,other])G.objs.delete(i);return res}""")
+            rec('가방','가까운 상자에 넣기: 16칸 안 같은 물건 있는 상자만, 가까운 상자부터(같은 물건 칸에 겹친 뒤 그 상자 빈칸), 단축칸·다른 물건은 그대로', r==[10,1,'torch99,torch9','torch1','stone1','berry1',5,None,7,3], str(r))
+            # 가방 창: 바깥 탭, 제목 줄 없음, 장비·펫 없음, 버튼 줄과 말풍선
+            await ev(pg,"()=>{const G=__T.G;G.inv[12]={id:'berry',c:4};__T.openPanel('inv')}"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [[...s.querySelectorAll('.otabs .otab')].map(e=>e.textContent.trim()).join('|'),!!s.querySelector('.otab.on[data-i=inv]'),!!s.querySelector('[data-a=eqSlot],[data-a=petOn]'),!!s.querySelector('[data-a=stashNear]'),!!s.querySelector('.bagbar'),s.querySelectorAll('.grid.hot9 .slot').length,Math.round(s.getBoundingClientRect().top),innerHeight]}")
+            rec('가방','창 위 바깥 탭 가방|제작, 장비·펫 칸 없음, 상자에 넣기 버튼, 맨 아래 단축칸 9칸·버튼 줄, 폰은 아래 2/3', r[:6]==['가방|제작',True,False,True,True,9] and r[6]>r[7]*0.3, str(r))
+            await ev(pg,"()=>document.querySelector('#sheet .slot[data-a=inv][data-i=\"12\"]').click()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet'),t=s.querySelector('#bagTip'),sl=s.querySelector('.slot[data-a=inv][data-i=\"12\"]');if(!t)return null;const a=t.getBoundingClientRect(),b=sl.getBoundingClientRect();return [t.innerText.includes('딸기')||t.innerText.length>0,a.bottom<=b.top+1||a.top>=b.bottom-1,!!s.querySelector('.bagbar [data-a=eat]'),!!s.querySelector('.bagbar [data-a=tohot]')]}")
+            rec('가방','칸을 누르면 그 칸 위(또는 아래)에 말풍선, 버튼(먹기·단축칸으로)은 맨 아래 줄', r==[True,True,True,True], str(r))
+            await pg.screenshot(path=SP+'bag_v83.png')
+            r0=await ev(pg,"()=>!!document.querySelector('#sheet .slot[data-a=pouch]')")
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=pouchFold]').click()"); await pg.wait_for_timeout(200)
+            r1=await ev(pg,"()=>!!document.querySelector('#sheet .slot[data-a=pouch]')")
+            await ev(pg,"()=>{__T.closePanel();__T.openPanel('inv')}"); await pg.wait_for_timeout(400)
+            r2=await ev(pg,"()=>!!document.querySelector('#sheet .slot[data-a=pouch]')")
+            rec('가방','도구 주머니는 처음엔 접혀 있고, 펼친 상태를 기억', [r0,r1,r2]==[False,True,True], str([r0,r1,r2]))
+            await ev(pg,"()=>__T.closePanel()")
+            # 장비 세트: 세트마다 장비·펫을 따로, 가방 밖에 보관, 언제든 바꿈, 저장해도 그대로 (강화 단계도)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.pets={dog:1,cat:1};G.petOn='dog';G.equip.body={id:'frostRobe',c:1,lv:2};G.equip.head=null;
+              const a=T.switchSet(1);const s2=[G.eqSet,G.equip.body,G.petOn];G.equip.head={id:'woolHat',c:1};G.petOn='cat';
+              const up=T.itemAt('s:0:body');const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const L=[T.G.eqSet,T.G.equip.head&&T.G.equip.head.id,T.G.petOn,T.itemAt('s:0:body')&&T.itemAt('s:0:body').lv];
+              T.switchSet(0);const back=[T.G.equip.body&&T.G.equip.body.id,T.G.equip.body&&T.G.equip.body.lv,T.G.equip.head,T.G.petOn,T.G.inv.filter(Boolean).length];T.switchSet(1);const b2=[T.G.equip.head&&T.G.equip.head.id,T.G.petOn];T.switchSet(0);
+              return [a,s2,up&&up.id,L,back,b2]}""")
+            rec('장비 세트','세트 II로 바꾸면 빈 장비·펫 없음, 세트마다 장비·펫 따로, 저장·불러오기 그대로(강화 +2 포함), 가방은 그대로', r==[True,[1,None,None],'frostRobe',[1,'woolHat','cat',2],['frostRobe',2,None,'dog',0],['woolHat','cat']], str(r))
+            # 캐릭터 창: 바깥 탭 장비/스킬/등불, 세트 탭 왼쪽 바깥, 10칸, 새 칸은 안내, 강화에 다른 세트 장비
+            await ev(pg,"()=>__T.openPanel('stat')"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet'),R=s.getBoundingClientRect(),st=s.querySelector('.stabs');return [[...s.querySelectorAll('.otab')].map(e=>e.textContent.trim()).join('|'),s.querySelectorAll('[data-a=chSlot]').length,st?Math.round(st.getBoundingClientRect().right-R.left):null,s.querySelectorAll('.stab').length,s.querySelectorAll('.eqme img').length]}")
+            rec('캐릭터','바깥 탭 장비|스킬|등불, 세트 I·II·III는 창 왼쪽 바깥, 칸 10개 + 가운데 캐릭터', r[0]=='장비|스킬|등불' and r[1]==10 and r[2] is not None and r[2]<=2 and r[3]==3 and r[4]==1, str(r))
+            await pg.screenshot(path=SP+'char_v83.png')
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=chSlot][data-i=legs]').click()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>document.querySelector('#toasts').innerText.includes('아직 넣을 수 있는 물건이 없어요')")
+            rec('캐릭터','새 칸(하의 등)은 「아직 넣을 수 있는 물건이 없어요」', r, r)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=eqSet][data-i=\"1\"]').click()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>[__T.G.eqSet,!!document.querySelector('#sheet .stab.on[data-i=\"1\"]')]")
+            rec('캐릭터','세트 버튼을 누르면 그 세트로', r==[1,True], str(r))
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=chTab][data-i=lamp]').click()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [t.includes('빛씨앗 0/5'),t.includes('13칸 안에는 몬스터'),!document.querySelector('#sheet .stabs')]}")
+            rec('캐릭터','등불 탭: 단계·빛씨앗·몬스터 안 나오는 범위 (세트 탭은 장비 탭에만)', r==[True,True,True], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            await ev(pg,"()=>{const T=__T,G=T.G;G.objs.set(T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'smelter'});T.openPanel('craft',{st:'smelter'})}"); await pg.wait_for_timeout(600)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=tab][data-i=upg]').click()"); await pg.wait_for_timeout(200)
+            r1=await ev(pg,"()=>[document.querySelector('#sheet').innerText.includes('세트 I · 상의'),!!document.querySelector('#sheet [data-a=upg][data-i=\"s:0:body\"]')]")
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=tab][data-i=salv]').click()"); await pg.wait_for_timeout(200)
+            r2=await ev(pg,"()=>{const sv=!!document.querySelector('#sheet [data-a=salv][data-i^=\"s:\"]');const T=__T,G=T.G;T.closePanel();G.objs.delete(T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1));return sv}")
+            r=r1+[r2]
+            rec('장비 세트','강화 목록에 다른 세트 장비(세트 I 상의)가 보이고, 분해 목록에는 안 보임', r==[True,True,False], str(r))
+            await ev(pg,"()=>__T.switchSet(0)")
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

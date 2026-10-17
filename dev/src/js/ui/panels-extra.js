@@ -10,13 +10,15 @@ import { animalImg } from '../render/parts.js';
 import { G } from '../save/state.js';
 import { catchAng, inZone } from '../sim/animals.js';
 import { benchLv, fmtT, jobDone, jobLeft, nowS, tierNames } from '../sim/crafting.js';
-import { eqEffect, lvOf, rarCol, upgCost, upgOk, upgText } from '../sim/gear.js';
-import { availCount, heldTool, isBroken } from '../sim/inventory.js';
+import { eqEffect, lvOf, rarCol, SET_N, upgCost, upgOk, upgText } from '../sim/gear.js';
+import { availCount, heldTool, isBroken, slotList } from '../sim/inventory.js';
 import { slotHTML } from './hud.js';
 import { head, itemStat, panel, UIS } from './panels.js';
 export const rarName = id => { const c = rarCol(id), n = ITEMS[id].n; return c ? `<span style="color:${c}">${n}</span>` : n; };
+// v83: 다른 장비 세트에 넣어 둔 장비 (강화·수리에서 보여요, 분해에서는 안 보여요)
+export const otherSetSlots = () => (G.eqSets || []).flatMap((x, k) => k === (G.eqSet || 0) || !x || !x.e ? [] : EQ_SLOTS.map(([sl, n]) => ({ s: x.e[sl], i: `s:${k}:${sl}`, tag: `세트 ${SET_N[k]} · ${n}` })).filter(o => o.s));
 export function upgListHTML(ok) {
-  const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
+  const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...otherSetSlots(), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
   let h = `<div class="sh-body"><p class="hint">${ok ? `재료를 넣어 장비를 강화해요 (최대 +${UPG_MAX}). 무기는 공격력, 곡괭이는 캐는 힘, 옷·장신구·반지는 효과가 좋아져요.` : '장비제작대 근처에서 강화할 수 있어요.'}</p><div class="list">`;
   if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">강화할 장비가 없어요</p>`;
   for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && cost.every(([id, c]) => availCount(id) >= c);

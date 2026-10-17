@@ -262,8 +262,8 @@ window.__eat=(id)=>{const T=__T,G=T.G;G.inv[0]={id,c:1};G.sel=0;G.p.hunger=10;T.
           T.wearItem(3);const s2=[G.equip.body.id,G.inv[3]&&G.inv[3].id];T.unwear('body');const s3=[G.equip.body,G.inv.filter(Boolean).map(s=>s.id).sort().join(',')];return [a.k,a.lbl,s1,before!==after,s2,s3,T.SPR.player.down[0].toDataURL()===before]}""")
             rec('장비 칸','옷을 들고 누르면 입기 → 옷 칸으로, 캐릭터 겉모습이 바뀜', r[0]=='wear' and r[1]=='입기' and r[2]==['obsCoat',None] and r[3] is True, str(r))
             rec('장비 칸','다른 옷을 입으면 벗은 옷은 그 칸으로, 벗으면 가방으로 (겉모습도 원래대로)', r[4]==['frostRobe','obsCoat'] and r[5][0] is None and r[5][1]=='frostRobe,obsCoat' and r[6] is True, str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.openPanel('equip');const h=document.querySelector('#sheet').innerText;const n=document.querySelectorAll('#sheet [data-a=eqSlot]').length;T.closePanel();return [h.includes('장비'),n]}""")
-            rec('장비 칸','가방 맨 위 장비에 옷 칸 (v48: 무기 칸 없이 4칸, 가방 안으로)', r==[True,4], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.openPanel('equip');const h=document.querySelector('#sheet').innerText;const n=document.querySelectorAll('#sheet [data-a=chSlot]').length;T.closePanel();return [h.includes('상의'),n]}""")
+            rec('장비 칸','캐릭터 창 장비 탭에 상의 칸 (v83: 10칸, 무기 칸 없음)', r==[True,10], str(r))
             # charms
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.beaten={};G.stats.accGot={};const k='turtle';const b=G.bosses[k];Object.assign(b,T.freshBoss(k));b.st='fight';G.drops.length=0;T.hitBoss(b,99999,false);const first=G.drops.some(d=>d.id==='turtleCharm');
           let again=0;const mr=Math.random;for(let n=0;n<20;n++){Object.assign(b,T.freshBoss(k));b.st='fight';G.bossDead[k]=false;G.drops.length=0;T.hitBoss(b,99999,false);if(G.drops.some(d=>d.id==='turtleCharm'))again++}G.drops.length=0;return [first,again]}""")
@@ -671,6 +671,7 @@ def test_pets():
             rec('버프','고양이: 낚시 운 1단계 / 토끼: 희귀 이상 재료 확률 1.25배 (흔한 재료는 그대로)', r==[1,0,'cryGem',0], str(r))
             # equipment menu pet section
             await ev(pg,"()=>{__T.G.petOn='dog';__T.openPanel('equip')}"); await pg.wait_for_timeout(650)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=chSlot][data-i=pet]').click()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [t.includes('멍멍이 · 함께 다니는 중'),t.includes('야옹이'),t.includes('깡총이'),document.querySelectorAll('#sheet [data-a=petOn]').length]}")
             rec('장비 메뉴','펫 칸: 데려온 펫과 버프, 함께 다니는 펫 표시', r==[True,True,True,3], str(r))
             await pg.click('#sheet [data-a=petOn][data-i=cat]'); await pg.wait_for_timeout(250)

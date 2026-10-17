@@ -149,6 +149,21 @@ export const isRefund = o => !!o && o.t === 'refundBox';
 export function clearRefundBox(i) { const o = G.objs.get(i); if (!isRefund(o) || !refundMine(o) || (o.items || []).some(x => x)) return false; delObj(i); emit('sfx', 'pick'); emit('puff', i % W + .5, ((i / W) | 0) + .6, '#e8d8c0', 5, 2); markLight(); emit('close'); return true; }
 defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items || isRefund(o)) return false; const r = stashBag(o, c.same);
   emit('toast', r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : c.same ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) emit('sfx', 'place'); emit('inv'); });
+// v83 「가까운 상자에 넣기」: 내 둘레 16칸 안의 보관상자 중 그 물건이 이미 있는 상자에만, 가까운 상자부터 (겹치기 → 빈칸). 단축칸·도구 주머니는 그대로, 남으면 가방에
+export const STASH_R = 16;
+export function stashNear() {
+  const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), list = [];
+  for (const [j, o] of G.objs) { if (!o || o.t !== 'chest' || !o.items) continue; const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > STASH_R || Math.abs(y - py) > STASH_R) continue; list.push({ j, o, x, y, d: Math.hypot(x + .5 - p.x, y + .5 - p.y), n: 0 }); }
+  list.sort((a, b) => a.d - b.d); let n = 0, left = 0;
+  for (let i = HOT; i < G.inv.length; i++) { const s = G.inv[i]; if (!s) continue; const to = list.filter(c => c.o.items.some(x => x && x.id === s.id)); if (!to.length) continue;
+    for (const c of to) { const l = moveInto(c.o.items, s), k = s.c - l; c.n += k; n += k; s.c = l; if (!l) break; }
+    if (!s.c) G.inv[i] = null; else left++; }
+  const used = list.filter(c => c.n);
+  for (const c of used) { emit('puff', c.x + .5, c.y + .4, '#ffe9a8', 10, 2.2, .6); emit('ftext', c.x + .5, c.y - .3, `+${c.n}`, '#ffe9a8'); }
+  return { n, left, boxes: used.length, near: list.length }; }
+defineCmd('stashNear', () => { const r = stashNear();
+  emit('toast', r.n ? `${r.n}개를 상자 ${r.boxes}개에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : !r.near ? '근처(16칸 안)에 보관상자가 없어요' : r.left ? '상자가 가득 차서 넣지 못했어요' : '근처 상자에 같은 물건이 없어요', r.n ? 'good' : null, 'stash');
+  if (r.n) emit('sfx', 'place'); emit('inv'); return r; });
 defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o || (isRefund(o) && (!c.out || !refundMine(o)))) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
 defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (isRefund(o)) { clearRefundBox(c.o); return; } if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
 defineCmd('markAdd', () => { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); });
@@ -168,7 +183,9 @@ export function fixTsel(h) { if (!G.tools.length) { G.tsel = 0; if (G.sel < 0) G
 export function sweepTools() { if (!G || !G.tools) return; const h = heldTool(); for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { if (i === G.sel) { G.inv[i] = null; G.tools.push(s); G.tsel = G.tools.length - 1; G.sel = -1; } else { G.inv[i] = null; G.tools.push(s); } emit('inv'); } } if (h && G.sel < 0) fixTsel(h); }
 // the bag and the pouch together for repair · salvage · upgrade lists ('t:3' = pouch slot 3)
 export const slotList = () => G.inv.map((s, i) => ({ s, i })).concat((G.tools || []).map((s, k) => ({ s, i: 't:' + k })));
-export const itemAt = i => typeof i === 'string' ? (i.startsWith('e:') ? G.equip[i.slice(2)] : i.startsWith('t:') ? (G.tools || [])[+i.slice(2)] : null) : G.inv[i];
+// 칸 번호: 숫자 = 가방, 'e:옷칸' = 입은 장비, 't:k' = 도구 주머니, 's:세트:옷칸' = 다른 장비 세트에 넣어 둔 장비 (v83)
+export const itemAt = i => { if (typeof i !== 'string') return G.inv[i]; if (i.startsWith('e:')) return G.equip[i.slice(2)]; if (i.startsWith('t:')) return (G.tools || [])[+i.slice(2)];
+  if (i.startsWith('s:')) { const [, k, sl] = i.split(':'), S = G.eqSets && G.eqSets[+k]; return +k !== (G.eqSet || 0) && S && S.e ? S.e[sl] || null : null; } return null; };
 export function clearSlot(i) { if (typeof i === 'string' && i.startsWith('t:')) { const h = heldTool(), k = +i.slice(2), gone = G.tools[k]; G.tools.splice(k, 1); if (h && h === gone) { G.tsel = 0; if (!G.tools.length && G.sel < 0) G.sel = 0; } else fixTsel(h); } else G.inv[i] = null; emit('inv'); }
 // one of each kind for the tool row: the best working one, broken ones hidden
 export function toolRowList() { const by = {}; for (const s of G.tools || []) { if (isBroken(s)) continue; const k = ITEMS[s.id].kind; if (!by[k] || toolPow(s) > toolPow(by[k])) by[k] = s; } return TOOL_KINDS.map(k => by[k]).filter(Boolean); }

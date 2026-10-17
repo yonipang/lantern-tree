@@ -258,23 +258,25 @@ def test_equipment_weapons():
             # ---- equipment slots (v48: no weapon slot, the equipment sits at the top of the bag) ----
             r=await ev(pg,"()=>{const G=__T.G;return [Object.keys(__T.freshEquip()).join(','),'weapon' in G.equip,G.inv.slice(0,9).some(s=>s&&s.id==='swordWood')]}")
             rec('장비 칸','4칸(옷·머리장식·목걸이·반지, v48: 무기 칸 없음), 새 게임의 나무 검은 단축칸', r==['body,head,neck,ring',False,True], str(r))
-            await ev(pg,"()=>__T.openPanel('inv')"); await pg.wait_for_timeout(500)
-            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [s.querySelectorAll('[data-a=eqSlot]').length,['옷','머리장식','목걸이','반지'].every(t=>s.innerText.includes(t)),!!document.querySelector('#bEquip')]}")
-            rec('장비 메뉴','v48: 장비는 가방 맨 위 (따로 있던 [장비] 버튼 없음)', r==[4,True,False], str(r))
+            await ev(pg,"()=>__T.openPanel('stat')"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [s.querySelectorAll('[data-a=chSlot]').length,['상의','머리','목걸이','반지 1'].every(t=>s.innerText.includes(t)),!!document.querySelector('#bEquip')]}")
+            rec('장비 메뉴','v83: 장비는 캐릭터 창 장비 탭 (칸 10개, 따로 있던 [장비] 버튼 없음)', r==[10,True,False], str(r))
             await pg.screenshot(path=SP+'equip.png')
             await ev(pg,"()=>__T.closePanel()")
             await pg.keyboard.press('KeyU'); await pg.wait_for_timeout(300)
-            r=await ev(pg,"()=>{const k=document.querySelector('#sheet [data-a=eqSlot]')?1:0;__T.closePanel();return k}")
-            rec('장비 메뉴','U 키로 가방(장비)', r==1, r)
-            # wear from the bag, then take it off
+            r=await ev(pg,"()=>{const k=document.querySelector('#sheet [data-a=chSlot]')?1:0;__T.closePanel();return k}")
+            rec('장비 메뉴','U 키로 캐릭터 창 장비 탭', r==1, r)
+            # wear from the bag (bag button row), then take it off in the character window
             await ev(pg,"()=>{const G=__T.G;G.inv.fill(null);G.inv[12]={id:'obsCoat',c:1};__T.openPanel('inv')}"); await pg.wait_for_timeout(500)
             await ev(pg,"()=>document.querySelector('#sheet .slot[data-a=inv][data-i=\"12\"]').click()"); await pg.wait_for_timeout(300)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=wearOn]').click()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const G=__T.G;return [G.equip.body&&G.equip.body.id,G.inv.filter(Boolean).length]}")
-            rec('장비 칸','가방에서 옷을 골라 [입기] → 옷 칸', r==['obsCoat',0], str(r))
+            rec('장비 칸','가방에서 옷을 골라 [입기] → 상의 칸', r==['obsCoat',0], str(r))
+            await ev(pg,"()=>{__T.closePanel();__T.openPanel('stat')}"); await pg.wait_for_timeout(500)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=chSlot][data-i=body]').click()"); await pg.wait_for_timeout(300)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=eqSlot][data-i=body]').click()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const G=__T.G;return [G.equip.body,G.inv.filter(Boolean).map(s=>s.id).join(',')]}")
-            rec('장비 칸','장비 칸을 누르면 벗어서 가방으로', r==[None,'obsCoat'], str(r))
+            rec('장비 칸','캐릭터 창에서 상의 칸 → [벗기]면 가방으로', r==[None,'obsCoat'], str(r))
             await ev(pg,"()=>__T.closePanel()")
             # charms move to their own slots
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[10]={id:'turtleCharm',c:1};G.inv[11]={id:'snowBrooch',c:1};T.wearItem(10);T.wearItem(11);return [G.equip.neck&&G.equip.neck.id,G.equip.head&&G.equip.head.id,T.wearing('turtleCharm'),T.wearing('snowBrooch'),'acc' in G.equip]}")
@@ -436,6 +438,7 @@ def test_weapons_skills():
             await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>document.querySelector('#bStat').classList.contains('dot')"); rec('능력','포인트가 있으면 능력 버튼에 점', r, r)
             await pg.tap('#bStat'); await pg.wait_for_timeout(600)
+            await pg.tap('#sheet [data-a=chTab][data-i=sk]'); await pg.wait_for_timeout(200) # v83: 스킬 탭
             await pg.tap('[data-a=statUp][data-i=vit]'); await pg.wait_for_timeout(150)
             r=await ev(pg,"()=>[__T.G.rpg.vit,__T.maxHp(),__T.G.rpg.pts]"); rec('능력','체력 +1 → 최대 체력 108', r==[1,108,1], str(r))
             r=await ev(pg,"()=>document.querySelector('[data-a=skUp][data-i=spin]').disabled"); rec('능력','레벨이 모자란 스킬은 못 배움', r, r)
@@ -560,9 +563,10 @@ def test_materials_upgrades():
           G.equip.ring={id:'ringGold',c:1};const mi=T.mineMul()/mb;G.equip.ring={id:'ringGem',c:1};const R=G.rpg,lv=R.lv,xp=R.xp;R.lv=1;R.xp=0;T.gainXp(10);const gx=R.xp+(R.lv-1)*1000;R.lv=lv;R.xp=xp;
           G.equip.ring={id:'ringQ',c:1,lv:2};const q=T.ringV('mp');G.equip.ring=null;return [+a.toFixed(3),+a3.toFixed(3),def,+mi.toFixed(2),gx,+q.toFixed(2)]}""")
             rec('반지','구리 반지 공격력 +4%(+3: +7%), 철 반지 받는 피해 -4%, 금 반지 채굴 +10%, 수정결정 반지 경험치 +8%, 석영 반지 +2 기력 회복 +30%', r==[1.04,1.07,96,1.1,11,0.3], str(r))
-            await ev(pg,"()=>{const G=__T.G;G.inv.fill(null);G.inv[9]={id:'ringQ',c:1,lv:2};G.equip.ring=null;__T.G.equip.ring=__T.G.inv[9];__T.G.inv[9]=null;__T.openPanel('inv')}"); await pg.wait_for_timeout(650)
-            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText,G=__T.G;return [G.equip.ring&&G.equip.ring.lv,t.includes('석영 반지 +2'),t.includes('기력 회복 +30%'),!!document.querySelector('#sheet [data-a=eqSlot][data-i=ring] .lvb')]}")
-            rec('반지','반지를 반지 칸에 끼면 가방 맨 위 장비에 강화 단계와 효과 (+2 표시)', r==[2,True,True,True], str(r))
+            await ev(pg,"()=>{const G=__T.G;G.inv.fill(null);G.inv[9]={id:'ringQ',c:1,lv:2};G.equip.ring=null;__T.G.equip.ring=__T.G.inv[9];__T.G.inv[9]=null;__T.openPanel('stat')}"); await pg.wait_for_timeout(650)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=chSlot][data-i=ring]').click()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText,G=__T.G;return [G.equip.ring&&G.equip.ring.lv,t.includes('석영 반지 +2'),t.includes('기력 회복 +30%'),!!document.querySelector('#sheet [data-a=chSlot][data-i=ring] .lvb')]}")
+            rec('반지','반지를 반지 칸에 끼면 캐릭터 창 장비 칸에 강화 단계와 효과 (+2 표시)', r==[2,True,True,True], str(r))
             await pg.screenshot(path=SP+'equip.png')
             await ev(pg,"()=>__T.closePanel()")
             # ---- salvage at the smelter ----
@@ -622,7 +626,7 @@ def test_durability_repair():
             rec('내구도','0이 되면 망가짐 + 알림, 맨손으로 전환', r==[0,'hand',True], str(r))
             await tap(pg,1); r=await ev(pg,f"()=>[{pick}.dur, !!{pick}]")
             rec('내구도','망가져도 사라지지 않고 맨손으로 계속 캐짐', r==[0,True], str(r))
-            r=await ev(pg,"()=>{const i=__T.G.tools.findIndex(s=>s.id==='pickWood');__T.openPanel('inv');const el=document.querySelector(`#sheet .slot[data-a=pouch][data-i=\"${i}\"]`);const c=el.className;__T.closePanel();return c}")
+            r=await ev(pg,"()=>{const i=__T.G.tools.findIndex(s=>s.id==='pickWood');try{localStorage.setItem('lantern-tree-pouch','1')}catch(e){};__T.openPanel('inv');const el=document.querySelector(`#sheet .slot[data-a=pouch][data-i=\"${i}\"]`);const c=el.className;__T.closePanel();return c}")
             rec('표시','망가진 도구 칸 표시', 'broken' in r, r)
             # sword wears only on hit
             sw="(__T.G.equip.weapon||__T.G.inv.find(s=>s&&s.id==='swordWood'))"  # v42: the starting sword sits in the weapon slot

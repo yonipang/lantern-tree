@@ -649,6 +649,12 @@
 "obj": "ironChair",
 "d": "돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요."
 },
+"woodWardrobe": {
+"n": "나무 옷장",
+"kind": "place",
+"obj": "woodWardrobe",
+"d": "옷장 앞에서 [꾸미기]를 누르면 캐릭터를 바꾸고 머리·옷을 꾸밀 수 있어요."
+},
 "resin": {
 "n": "송진",
 "d": "뿌리기둥이나 큰버섯을 베면 가끔 나오는 끈적한 송진. 단단하게 붙여 줘요."
@@ -3421,6 +3427,11 @@
 "solid": 1,
 "item": "ironChair"
 },
+"woodWardrobe": {
+"n": "나무 옷장",
+"solid": 1,
+"item": "woodWardrobe"
+},
 "forge": {
 "n": "구리 작업대",
 "solid": 1,
@@ -4905,6 +4916,23 @@
 "at": "bench",
 "cat": "furn",
 "tier": 2
+},
+{
+"out": "woodWardrobe",
+"n": 1,
+"req": [
+[
+"wood",
+8
+],
+[
+"fiber",
+4
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
 },
 {
 "out": "rod",
@@ -13985,6 +14013,21 @@
 ]
 ],
 "use": "sit"
+},
+"woodWardrobe": {
+"n": "나무 옷장",
+"d": "옷장 앞에서 [꾸미기]를 누르면 캐릭터를 바꾸고 머리·옷을 꾸밀 수 있어요.",
+"req": [
+[
+"wood",
+8
+],
+[
+"fiber",
+4
+]
+],
+"use": "dress"
 }
 },
 "ARROWS": {
@@ -14533,7 +14576,7 @@ null,
 "seat": "chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool",
 "table": "table longTable kitchenSet cryTable shroomTable",
 "bed": "bed bedDouble mossBed",
-"store": "chest shelf bookcase2 woodCrate strawBasket shroomWardrobe",
+"store": "chest shelf bookcase2 woodCrate strawBasket shroomWardrobe woodWardrobe",
 "light": "torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp"
 },
 "REQ_FIX": {
@@ -16300,6 +16343,7 @@ null,
 "copperKettle": "tea",
 "ironStove": "lamp",
 "ironChair": "sit",
+"woodWardrobe": "dress",
 "battery": "batt",
 "generator": "fuel",
 "crystalGen": "cinfo",
@@ -16776,6 +16820,7 @@ null,
 "grandClock": "[그림 16x24 a01c2af4]",
 "ironStove": "[그림 16x24 42cead00]",
 "ironChair": "[그림 16x16 936fa3c2]",
+"woodWardrobe": "[그림 16x24 3fb48016]",
 "forge": "[그림 16x13 8ef2b4a2]",
 "sapling": "[그림 16x16 397a0174]",
 "saplingB": "[그림 16x18 94dad2b9]",
@@ -18521,6 +18566,7 @@ null,
 "grandClock": "12f6633",
 "ironStove": "6d269bfd",
 "ironChair": "936fa3c2",
+"woodWardrobe": "9d697b76",
 "resin": "e5db43bb",
 "rope": "66a297d0",
 "forge": "a47c3ea6",

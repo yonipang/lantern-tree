@@ -283,7 +283,7 @@ export function useObj(a) {
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;
-    case 'dress': emit('open', 'look'); break;
+    case 'dress': emit('open', 'look', { tab: 'char' }); break; // v83: 옷장 — 캐릭터 고르기 탭부터
     case 'wish': if ((o.cd || 0) > G.time) { emit('toast', '분수가 쉬고 있어요. 조금 뒤에 다시 빌어요', null, 'wish'); break; } o.cd = G.time + 120; G.luck = G.time + 120; emit('puff', x, t.y, '#bfefff', 16, 2.5, 1); emit('sfx', 'seed'); emit('toast', '행운이 깃들었어요! 2분 동안 낚시 운 2단계 (요리의 낚시 운과 겹치면 더 높은 쪽만)', 'good'); break;
     case 'water': o.shake = .3; emit('drips', x, t.y + .6); emit('sfx', 'plop'); emit('toast', '촉촉해졌어요', null, 'water'); break;
     case 'tea': if ((o.cd || 0) > G.time) { emit('toast', '찻잔이 비었어요. 조금 뒤에 다시 마셔요', null, 'tea'); break; } o.cd = G.time + 45; p.hp = Math.min(maxHp(), p.hp + 6); p.hunger = Math.min(100, p.hunger + 4); emit('ftext', p.x, p.y - 1.3, '♥ +6', '#ff8fa3'); emit('sfx', 'eat'); emit('toast', '따뜻한 차 한 잔, 기운이 나요', null, 'tea'); break;

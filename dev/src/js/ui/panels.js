@@ -26,12 +26,13 @@ import { treeStage } from '../sim/tree.js';
 import { slotHTML } from './hud.js';
 import { joyEnd, keys, mouse, releaseHeld } from './input.js';
 import { drawMap, mapChestOn } from './map.js';
-import { benchUpHTML, catchHTML, eqRowHTML, jobHTML, petHTML, pouchHTML, rarName, regionMatHTML, upgListHTML } from './panels-extra.js';
+import { benchUpHTML, catchHTML, jobHTML, otherSetSlots, rarName, regionMatHTML, upgListHTML } from './panels-extra.js';
 import { cpCards } from './picker.js';
+import { BAG_NAV, bagHTML, noteBagOpen, CH_TABS, charEqHTML, lampHTML, otabsHTML, placeTip, setTabsHTML, setupBagHover, sheetTop } from './panels-char.js';
 import { LAY, W } from '../world/map.js';
 export const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 export let panel = null, panelAt = 0;
-export function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) runCmd({ k: 'seenBag' }); /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+export function openPanel(kind, data = {}) { if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); if (!data.nav) noteBagOpen(); } if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 export function sheetHpHTML() { if (!G || !started) return ''; const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 export function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
@@ -50,7 +51,7 @@ export const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제
   furn: [['all', '전체'], ['seat', '의자'], ['table', '탁자'], ['bed', '침대'], ['store', '수납'], ['light', '조명'], ['deco', '장식']],
   build: [['all', '전체'], ['wall', '벽'], ['floor', '바닥'], ['fence', '울타리'], ['door', '문'], ['nature', '자연']], // v69: thin walls, pillars and windows were removed
   conv: [['all', '전체'], ['circuit', '회로'], ['farm', '농사'], ['mine', '채굴장']] };
-export const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
+export const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe woodWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
 export const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
 export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
   if (o.station) t = ['stn', o.station === 'furnace' ? 'smelt' : o.station === 'pot' ? 'cook' : 'make'];
@@ -63,30 +64,17 @@ export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[
   else if (c === 'build' && !FURN2_OF[id]) t = ['build', /Fence/.test(id) ? 'fence' : /Pillar/.test(id) ? 'pillar' : /Door/.test(id) ? 'door' : /Frame|Win/.test(id) ? 'win' : 'wall'];
   else t = ['furn', FURN2_OF[id] || 'deco'];
   return (r._bc = t); }
+const EQ_SLOTS_FIX = () => Object.keys(G.equip || {}).map(sl => ({ s: G.equip[sl], i: 'e:' + sl }));
 export function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (UIS.tab2 || 'all') + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
-  if (k === 'inv') {
-    h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:36px;padding:0 12px;font-size:16px">정렬</button>`) + bagNavHTML('inv');
-    h += `<div class="sh-body"><p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칼 버튼은 언제나 공격해요(든 무기, 안 들었으면 마지막에 쓴 무기). 손 버튼은 앞에 있는 것에 맞춰 열기·캐기·놓기를 하고, 필요한 도구를 도구 주머니에서 꺼내 들어요.</p><div class="lbl">단축칸</div><div class="grid">`;
-    const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && (G.seen || {})[s0.id] > 1) c += ' new'; return c; }; // v77: 처음 얻은 물건 — 한 번 누르면 꺼져요
-    h = h.replace(`<div class="lbl">단축칸</div>`, eqRowHTML() + `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
-    for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
-    h += `</div>` + pouchHTML(); // v65: the tool pouch
-    const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
-    if (s) { const it = ITEMS[s.id]; const st = itemStat(it, s);
-      h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''} <span style="color:var(--muted);font-size:16px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${rarOf(s.id) >= 0 && (it.kind === 'sword' || it.kind === 'pick' || rarOf(s.id) >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, rarOf(s.id))][1]}">★ ${RARITY[Math.max(0, rarOf(s.id))][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
-      if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
-      if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;
-      if (UIS.invSel >= HOT) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
-      h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
-    h += petHTML() + `</div>`;
+  if (k === 'inv') { h += otabsHTML(BAG_NAV, 'inv', 'bagNav') + bagHTML(); // v83: 창 위 바깥 탭 · 장비와 펫은 캐릭터 창으로 (ui/panels-char.js)
   } else if (k === 'catch') { h += catchHTML();
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; resetPool(); const nCh = linkedChests().length;
     const ctier = craftTier(), bo = TIERED[st] && panel.i != null ? G.objs.get(panel.i) : null, inTier = r => !TIERED[r.at] || (r.tier || 0) <= ctier;
-    h += head(TIERED[st] ? TIERED[st][ctier] : st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>` : '') + (st ? '' : bagNavHTML('craft')); // v77: 손제작은 가방 안 제작 탭
+    h += st ? head(TIERED[st] ? TIERED[st][ctier] : STN[st], null, `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>`) : otabsHTML(BAG_NAV, 'craft', 'bagNav') + sheetTop('', '제작'); // v77: 손제작은 가방 안 제작 탭 · v83: 탭은 창 위 바깥
     if (bo) h += benchUpHTML(bo); // v60: upgrade the workbench at the top of its window
     const hereR = RECIPES.filter(r => atHere(r, st) && recipeOn(r) && inTier(r)), benchy = st === 'bench' || st === 'forge', smel = st === 'smelter';
     const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['farm', '농사'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['mine', '채굴장'], ['upg', '강화'], ['ring', '반지'], ['fix', '수리'], ['salv', '분해'], ['book', '요리 도감']].filter(([id]) => id === 'all' || (id === 'book' ? st === 'pot' : id === 'upg' ? smel : id === 'fix' ? smel : id === 'salv' ? smel : hereR.some(r => r.cat === id)));
@@ -119,7 +107,7 @@ export function renderPanel() {
       h += `<div class="sh-body"><p class="hint">만들어 본 요리에 도장이 찍혀요 · 만든 요리 ${nMade}/${all.length} · 아는 레시피 ${nKnown}/${all.length}</p><div class="dbook">${all.map(id => { const k = knows(id), m = made(id), it = ITEMS[id];
         return `<div class="dk ${m ? 'done' : ''} ${k ? '' : 'unk'}"><img class="px" src="${iconURL(k ? id : 'rn_' + (DISH[id] ? id : 'skewer'))}" alt=""><b>${k ? it.n : '???'}</b><small>${k ? (it.buff ? buffText(it) : '회복 요리') : escHTML(noteHint(DISH[id]))}</small>${m ? '<i>✓</i>' : ''}</div>`; }).join('')}</div></div>`;
     } else if (UIS.tab === 'fix') {
-      const nb = smel && near.has('smelter'), list = slotList().filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
+      const nb = smel && near.has('smelter'), list = [...EQ_SLOTS_FIX(), ...otherSetSlots(), ...slotList()].filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]); // v83: 입은 장비·다른 세트 장비도
       h += `<div class="sh-body"><p class="hint">${nb ? '닳은 도구를 새것처럼 고쳐요. 많이 닳을수록 재료가 더 들어요.' : '장비제작대 근처에서 고칠 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">고칠 도구가 없어요</p>`;
       for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => availCount(id) >= c), mx = DUR[s.id][0];
@@ -157,7 +145,7 @@ export function renderPanel() {
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:6px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">설정</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
       ${playRecordHTML()}
-      <div class="lbl" style="margin-top:12px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:6px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
+      <p class="hint" style="margin-top:12px">캐릭터 바꾸기·꾸미기는 옷장에서 해요 (나무 옷장: 작업대 · 버섯집 옷장).</p>
       <div class="lbl" style="margin-top:12px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:6px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:12px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:12px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:12px">빛 효과${GLST.failed ? ' <span style="opacity:.7">(이 기기에서는 새 빛을 쓸 수 없어 예전 빛으로 보여요)</span>' : ''}</div><div class="tabs">${[['new', '새 빛 (부드러운 그림자)'], ['old', '예전 빛 (가볍게)']].map(([k, n]) => `<button type="button" class="tab ${(lightPref === 'force' ? 'new' : lightPref) === k ? 'on' : ''}" data-a="light" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:12px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>공격</b><span>칼 버튼 · 클릭. 든 무기로, 안 들었으면 마지막에 쓴 무기로 가까운 몬스터를 노려요. 몬스터가 없을 때 놓아 둔 가구·벽을 세 번 치면 바닥에 떨어져요</span><b>상호작용</b><span>손 버튼 · E · 스페이스. 일부러 든 물건(씨앗·가구·물뿌리개·음식 …)을 먼저 쓰고, 아니면 앞에 있는 것에 맞춰 열기·캐기·베기·거두기·회수를 해요. 곡괭이·도끼·낫·삽은 도구 주머니에서 알아서 꺼내 들어요</span><b>작은 버튼</b><span>같은 곳에서 할 수 있는 다른 일(회수·물 주기·낚시 …). ▸로 다음 것 (PC는 R · Q)</span><b>도구 칸</b><span>단축칸 맨 앞. 누르면 가진 도구가 펼쳐져요 (PC는 Tab)</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요. 작은 [방향] 버튼으로 놓기 전에 돌려요</span><b>먹기</b><span>음식을 고르고 손 버튼, 또는 골라 둔 음식을 한 번 더 눌러요</span><b>단축칸</b><span>폰은 다섯 칸씩 보여요. 옆의 [6–9] 버튼으로 넘겨요 (안 보이는 쪽에 새 물건이 들어오면 빨간 점)</span><b>단축키</b><span>1–9 단축칸 · Tab 도구 · F·G 스킬 · C 캐릭터 · I 가방(제작은 가방 안 제작 탭) · M 지도 · L 퀘스트 · Esc 설정</span></div>
@@ -165,10 +153,11 @@ export function renderPanel() {
       <div class="menu-list" style="margin-top:12px"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
-    const tabs = [['hair', '머리 모양'], ['hc', '머리 색'], ['eye', '눈 색'], ['outfit', '옷'], ['oc', '옷 색'], ['hat', '모자·소품']];
+    const tabs = [['char', '캐릭터'], ['hair', '머리 모양'], ['hc', '머리 색'], ['eye', '눈 색'], ['outfit', '옷'], ['oc', '옷 색'], ['hat', '모자·소품']];
     h += head('꾸미기', 'hand') + `<div class="look-prev">${pv('down')}${pv('side')}${pv('up')}</div><div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.lookTab === id ? 'on' : ''}" data-a="lookTab" data-i="${id}">${n}</button>`).join('')}</div><div class="sh-body"><div class="look-grid">`;
     const t = UIS.lookTab, opt = (key, val, label, inner) => `<button type="button" class="look-opt ${String(L[key]) === String(val) ? 'on' : ''}" data-a="lookSet" data-i="${key}:${val}">${inner}<span>${label}</span></button>`;
     const mini = (key, val) => { const T = Object.assign({}, L, { [key]: val }); CHARS.__mini = lookDef(T); return `<img class="px" src="${charPreview('__mini', 0, 'down')}" alt="">`; };
+    if (t === 'char') h += `</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:6px">${CHARS[curChar()].n} · ${CHARS[curChar()].d} · 고르면 바로 바뀌어요</p><div>`; // v83: 캐릭터 고르기도 옷장에서
     if (t === 'hair') for (const k in HAIRS) h += opt('hair', k, HAIRS[k].n, mini('hair', k));
     if (t === 'hat') for (const k in HATS) h += opt('hat', k, HATS[k].n, mini('hat', k));
     if (t === 'outfit') for (const k in OUTFITS2) h += opt('outfit', k, OUTFITS2[k].n, mini('outfit', k));
@@ -188,9 +177,13 @@ export function renderPanel() {
     if (tab === 'main') GUIDE.forEach((q, k) => { if (k > G.guide + 1) return; h += row(q, questState(q, k), true); });
     else { const L = QSIDE.map(q => [q, questState(q)]).sort((a, b) => (b[1].done && !b[1].claimed) - (a[1].done && !a[1].claimed) || a[1].claimed - b[1].claimed); for (const [q, st] of L) h += row(q, st, false); }
     h += `</div>`;
-  } else if (k === 'stat') {
+  } else if (k === 'stat') { // v83: 캐릭터 창 — 바깥 탭 장비 / 스킬 / 등불 (ui/panels-char.js)
+    const ct = UIS.chTab || 'eq'; h += otabsHTML(CH_TABS, ct, 'chTab') + (ct === 'eq' ? setTabsHTML() : '') + sheetTop('', '캐릭터');
+    if (ct === 'eq') h += `<div class="sh-body">${charEqHTML()}</div>`;
+    else if (ct === 'lamp') h += `<div class="sh-body">${lampHTML()}</div>`;
+    else {
     const R = G.rpg, need = XP_NEED(R.lv), touch = document.body.classList.contains('touch');
-    h += head('캐릭터', 'star') + `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
+    h += `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
       <p class="hint">몬스터를 물리치고, 광석을 캐고, 물건을 만들고, 낚시하면 경험치가 쌓여요. 레벨이 오르면 능력치 포인트 2개와 스킬 포인트 1개를 받아요.</p>
       <div class="lbl">능력치<span class="pt">남은 포인트 ${R.pts}</span></div>`;
     for (const st in STATN) h += `<div class="strow"><b>${STATN[st][0]}</b><span class="v">${R[st]}</span><small>${STATN[st][1]}</small><button type="button" class="btn" data-a="statUp" data-i="${st}" ${R.pts > 0 ? '' : 'disabled'} aria-label="${STATN[st][0]} 올리기">+</button></div>`;
@@ -203,6 +196,7 @@ export function renderPanel() {
       h += `<div class="skrow ${lock ? 'lock' : ''}"><img class="px" src="${iconURL('sk_' + id)}" alt=""><div><h4>${S.n}<small>${S.act ? '사용' : '항상 적용'} · ${l}/${S.max}</small></h4><p>${S.d(L1)}${S.act ? ` · 기력 ${S.mp(L1)} · ${S.cd(L1).toFixed(1)}초` : ''}</p>${l && l < S.max ? `<p class="nx">다음 단계: ${S.d(l + 1)}</p>` : ''}${lock ? `<p>Lv.${S.lv}부터 배울 수 있어요</p>` : ''}${slots}</div><button type="button" class="btn mk" data-a="skUp" data-i="${id}" ${can ? '' : 'disabled'}>${l ? (l >= S.max ? '최고' : '올리기') : '배우기'}</button></div>`; }
     if (Object.keys(R.sk).length) h += `<div class="menu-list"><button type="button" class="btn ${UIS.skAsk ? 'warn' : 'ghost'}" data-a="skReset">${UIS.skAsk ? '정말 스킬 포인트를 모두 돌려받을까요?' : '스킬 다시 배우기 (무료)'}</button></div>`;
     h += `</div>`;
+    }
   } else if (k === 'win2') {
     h += `<div class="sh-body" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">다섯 등불이 모두 밝아졌어요!</h2><p class="prose">용암과 얼음 깊은 곳까지 빛이 닿았어요. 땅속 세상 전체가 등불나무의 품 안에서 반짝여요. 끝까지 함께해 줘서 고마워요!</p><p class="prose" style="color:var(--muted)">전설 장비를 모으고, 남은 도전 퀘스트를 깨고, 나만의 정원을 마음껏 꾸며 보세요.</p><p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">계속 모험하기</button></div>`;
   } else if (k === 'win') {
@@ -210,7 +204,8 @@ export function renderPanel() {
   }
   resetPool();
   if (LAY === 2 && (k === 'tree' || k === 'win' || k === 'win2')) h = dirText(h);
-  sh.innerHTML = sheetHpHTML() + h; sh.dataset.key = key;
+  sh.innerHTML = (h.includes('class="sh-top"') ? '' : sheetHpHTML()) + h; sh.dataset.key = key; sh.classList.toggle('side', !!sh.querySelector('.stabs')); sh.classList.toggle('hasotab', !!sh.querySelector('.otabs'));
+  if (k === 'inv') { setupBagHover(); placeTip(sh); }
   if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
