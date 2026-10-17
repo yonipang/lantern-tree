@@ -4,9 +4,9 @@
 // so old saves load and new saves still open in older versions. Add a save to dev/qa/snapshot/saves/ for each new fix.
 //
 // order in deserialize(): migrateBagV2 · migrateV2 · migrateV3 · loadEquip · refundRoofItems · convertDrills · moveOldWeapon ·
-// noticeRename58 · refundRoofTiles · migrateGear61 · migrateForges60 (convertForges, growFootprints) · growFootprints · fixParts ·
+// (v83: loadSets right after the pets) · noticeRename58 · refundRoofTiles · migrateGear61 · migrateForges60 (convertForges, growFootprints) · growFootprints · fixParts ·
 // grantUniques · ensureDeepAltars · migrateRecipes · syncNotes · grantAccs
-import { ACC_OF } from '../data/gear-animals.js';
+import { ACC_OF, EQ_SLOTS } from '../data/gear-animals.js';
 import { BKEYS } from '../data/rpg-nature.js';
 import { DISHES } from '../data/farming-cooking.js';
 import { G, ME, beat, started } from './state.js';
@@ -21,15 +21,22 @@ import { emit } from '../sim/events.js';
 import { WATER } from '../sim/nature.js';
 import { GREW } from '../sim/building.js';
 import { bossNoteIds, learnRecipe, roomNotes } from '../sim/cooking.js';
-import { eqCopy, freshEquip } from '../sim/gear.js';
+import { eqCopy, freshEquip, freshSets } from '../sim/gear.js';
 import { addItem, isTool, moveInto, returnObj, seenAll } from '../sim/inventory.js';
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar
 export function migrateBagV2() { while (G.inv.length < 30) G.inv.push(null); G.inv.splice(6, 0, null, null, null); if (!(G.sel < 6)) G.sel = 0; }
+// v83: 장비 세트 I·II·III — 지금 세트는 G.equip·G.petOn, 다른 세트는 G.eqSets에 (옛 세이브는 모두 세트 I)
+export function loadSets(raw, cur) {
+  const k0 = Number.isInteger(cur) && cur >= 0 && cur <= 2 ? cur : 0; G.eqSet = k0; G.eqSets = freshSets();
+  if (!Array.isArray(raw)) return;
+  raw.slice(0, 3).forEach((x, k) => { if (k === k0 || !x || typeof x !== 'object') return; const e = freshEquip();
+    for (const [sl] of EQ_SLOTS) { const it = x.e && x.e[sl]; if (it && ITEMS[it.id] && ITEMS[it.id].kind === 'wear' && ITEMS[it.id].slot === sl) e[sl] = eqCopy(it); }
+    G.eqSets[k] = { e: EQ_SLOTS.some(([sl]) => e[sl]) ? e : null, pet: x.pet && (G.pets || {})[x.pet] ? x.pet : null }; }); }
 export function loadEquip(raw) {
   G.equip = freshEquip(); const se = raw && typeof raw === 'object' ? raw : {}; // v42: the old 'acc' slot moves to the slot that fits (turtle charm → neck, snow brooch → head)
-  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = { id: e.id, c: 1 }; }
+  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = eqCopy(e); } // v83 버그 수정: 강화 단계(lv)도 그대로 (예전엔 불러오면 입은 장비의 강화가 사라졌어요)
   return se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword' ? eqCopy(se.weapon) : null; // v48: no weapon slot any more
 }
 // ---- the world (map regions added in v2 / v3) ----

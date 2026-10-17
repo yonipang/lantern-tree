@@ -250,6 +250,7 @@ export const DECOR = {
   grandClock: { n: '괘종시계', d: '똑딱똑딱 시간을 알려 주는 커다란 시계.', req: [['copperBar', 1], ['wood', 6]] },
   ironStove: { n: '무쇠 난로', d: '집 안을 따뜻하게 밝혀요. 눌러서 켜고 꺼요.', req: [['ironBar', 3], ['stone', 4]], use: 'lamp', light: [5.5, '#ff9a4a'], flick: 1 },
   ironChair: { n: '철제 의자', d: '돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요.', req: [['ironBar', 2], ['fiber', 1]], use: 'sit' },
+  woodWardrobe: { n: '나무 옷장', d: '옷장 앞에서 [꾸미기]를 누르면 캐릭터를 바꾸고 머리·옷을 꾸밀 수 있어요.', req: [['wood', 8], ['fiber', 4]], use: 'dress' },
 };
 for (const id in DECOR) { const D = DECOR[id]; ITEMS[id] = { n: D.n, kind: 'place', obj: id, d: D.d }; OBJ[id] = { n: D.n, solid: 1, item: id }; if (D.light) OBJ[id].light = D.light; if (D.flick) OBJ[id].flick = 1; if (D.use) USE[id] = D.use; RECIPES.push(Rc(id, 1, D.req, 'bench', 'furn')); }
 RECIPES.push(

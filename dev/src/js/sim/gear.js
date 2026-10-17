@@ -6,6 +6,8 @@ import { josa } from '../engine/util.js';
 import { G, started } from '../save/state.js';
 import { emit } from './events.js';
 import { moveInto } from './inventory.js';
+import { defineCmd } from './commands.js';
+import { ANIMALS } from '../data/gear-animals.js';
 import { head } from '../ui/panels.js';
 export const wtOf = w => WTYPE[(w && w.wt) || 'sword'];
 export const rarOf = id => RAR[id] != null ? RAR[id] : -1;
@@ -13,6 +15,23 @@ export const rarCol = id => rarOf(id) >= 1 ? RARITY[rarOf(id)][1] : null;
 // ---- clothes (body) and charms (accessory): two slots; clothes halve the cold or heat gauge, charms come from the deep bosses ----
 export const WEAR_PAL = { obsCoat: ['#5a4a78', '#3a2f52', '#8a7ab0'], frostRobe: ['#8fd0f0', '#5a9ac8', '#d8f2ff'] };
 export const freshEquip = () => ({ body: null, head: null, neck: null, ring: null });
+// ---- v83 장비 세트 I·II·III: 세트마다 장비 칸·함께 다니는 펫을 따로 (가방 밖) ----
+// 지금 세트는 G.equip·G.petOn이 그대로 맡고, G.eqSets[k]에는 다른 세트의 것만 들어 있어요 (지금 세트 자리는 비어 있음).
+export const SET_N = ['I', 'II', 'III'];
+export const freshSets = () => [0, 1, 2].map(() => ({ e: null, pet: null }));
+// 세트 k의 장비 (지금 세트면 G.equip)
+export const setEquip = k => k === (G.eqSet || 0) ? G.equip : (G.eqSets && G.eqSets[k] && G.eqSets[k].e) || null;
+export const setPet = k => k === (G.eqSet || 0) ? G.petOn : (G.eqSets && G.eqSets[k] && G.eqSets[k].pet) || null;
+export function switchSet(n) { if (!Number.isInteger(n) || n < 0 || n > 2) return false; if (!G.eqSets) G.eqSets = freshSets(); const cur = G.eqSet || 0; if (n === cur) return false;
+  const was = G.equip.body && G.equip.body.id;
+  G.eqSets[cur] = { e: G.equip, pet: G.petOn }; const nx = G.eqSets[n] || { e: null, pet: null };
+  G.equip = nx.e || freshEquip(); G.petOn = nx.pet && (G.pets || {})[nx.pet] ? nx.pet : null; G.petE = G.petOn ? { x: G.p.x - .6, y: G.p.y + .2, flip: false, anim: 0, moving: false } : null;
+  G.eqSets[n] = { e: null, pet: null }; G.eqSet = n;
+  if ((G.equip.body && G.equip.body.id) !== was) emit('look'); emit('sfx', 'craft'); emit('inv');
+  emit('toast', `장비 세트 ${SET_N[n]}로 바꿨어요${G.petOn ? ` · ${ANIMALS[G.petOn].pn}와 함께` : ''}`, 'good', 'eqset'); return true; }
+defineCmd('eqSet', c => switchSet(c.n));
+// 다른 세트에 넣어 둔 장비도 「가진 것」 (퀘스트 확인용)
+export const inOtherSet = id => !!(G && G.eqSets && G.eqSets.some((x, k) => k !== (G.eqSet || 0) && x && x.e && EQ_SLOTS.some(([sl]) => x.e[sl] && x.e[sl].id === id)));
 export const eqSlotOf = id => { const it = ITEMS[id]; return !it ? null : it.kind === 'wear' ? it.slot : null; };
 export const wearing = id => !!(G && G.equip && EQ_SLOTS.some(([sl]) => G.equip[sl] && G.equip[sl].id === id));
 export const eqCopy = s => { const c = { id: s.id, c: 1 }; if (s.dur != null) c.dur = s.dur; if (s.lv) c.lv = s.lv; return c; };

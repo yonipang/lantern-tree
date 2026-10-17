@@ -88,6 +88,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/render/parts.js` | 그리기 조각: 얇은 벽·문 그림, 회전 그림, 위험 지대, 등불나무 그리기·잎·빛, 반짝이 진행(`updateFx`), 동물 그림, 회수 막대 |
 | `js/ui/feedback.js` | **사건 받아 보여 주기**: 소리·알림·반짝임·하트·물방울, 화면 흔들림(`shake`), 지도 점·창 열기, 기절 화면·보스 체력 막대·목표 글 |
 | `js/ui/panels.js` | 창: `UIS`(창 안 고르기 상태)·`openPanel`·`closePanel`·`renderPanel`(가방·제작·퀘스트·능력·메뉴 …), 제작 알림, 아이템 설명 |
+| `js/ui/panels-char.js` | v83 가방 창(`bagHTML`, 말풍선 `placeTip`)·캐릭터 창(장비 탭 `charEqHTML`·세트 탭·등불 탭 `lampHTML`), 창 위 바깥 탭(`otabsHTML`)·창 안 첫 줄(`sheetTop`) |
 | `js/ui/hud.js` | HUD: 단축칸(`refreshHotbar`, 규칙은 `emit('inv')`)·체력·배고픔·스킬 막대(`updateHud`), 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시 |
 | `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |
 | `js/ui/map.js` | 지도 창: 상자 표시 설정, 지도 그리기(`drawMap`) |

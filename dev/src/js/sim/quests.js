@@ -7,7 +7,7 @@ import { G, started } from '../save/state.js';
 import { defineCmd } from './commands.js';
 import { spawnDrop } from './drops.js';
 import { emit } from './events.js';
-import { rarOf, wearing } from './gear.js';
+import { inOtherSet, rarOf, wearing } from './gear.js';
 import { addItem, countItem } from './inventory.js';
 import { WATER } from './nature.js';
 import { gainXp } from './player.js';
@@ -18,7 +18,7 @@ defineCmd('claim', c => claimQuest(c.id));
 defineCmd('claimAll', () => { for (const q of [...GUIDE, ...QSIDE]) claimQuest(q.id); emit('toast', '보상을 모두 받았어요', 'good'); });
 // ================= guide =================
 export function nearestObjOf(t, rad = 24) { const p = G.p; let best = null, bd = 1e9; for (let y = Math.floor(p.y - rad); y <= p.y + rad; y++) for (let x = Math.floor(p.x - rad); x <= p.x + rad; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === t) { const d = Math.hypot(x - p.x, y - p.y); if (d < bd) { bd = d; best = { x: x + .5, y: y + .5 }; } } } return best; }
-export const hasItem = id => countItem(id) > 0 || wearing(id);
+export const hasItem = id => countItem(id) > 0 || wearing(id) || inOtherSet(id); // v83: 다른 장비 세트에 넣어 둔 것도
 // v47: quest texts name directions from the old map; on the ring map they are rewritten from where things really are
 export function dirFix() { if (LAY !== 2) return null; const d = (x, y) => dirKo(x, y);
   return { '서쪽 버섯숲': `${d(SA.x, SA.y)} 버섯숲`, '동쪽 동굴의 말랑대왕': `${d(BX, BY)} 이끼 동굴의 말랑대왕`, '화살표를 따라 서쪽으로!': `화살표를 따라 ${d(SA.x, SA.y)}으로!`, '화살표를 따라 동쪽으로!': `화살표를 따라 ${d(BX, BY)}으로!`,

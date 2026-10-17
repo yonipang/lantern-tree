@@ -30,6 +30,7 @@ export const DECOR_SPR = {
   ironChair: [16, 16, A => { A.line(4, 2, 4, 9, C.ironD); A.line(11, 2, 11, 9, C.ironD); A.r(4, 2, 8, 1, C.ironD); A.e(7, 5, 1.5, 1.5, C.ironD); A.e(7, 5, .6, .6, '#00000000'); A.e(9.5, 5, 1.5, 1.5, C.ironD); A.r(3, 9, 10, 2, C.iron); A.r(4, 9, 8, 1, '#7fb3e0'); A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); }],
 };
 for (const id in DECOR_SPR) OSPR[id] = DECOR_SPR[id];
+OSPR.woodWardrobe = OSPR.shroomWardrobe; // v83 나무 옷장: 새 그림이 오기 전까지 버섯집 옷장 그림을 임시로 (dev/art에 그림을 넣으면 바뀌어요)
 
 OSPR.forge = [16, 20, A => { A.r(2, 13, 2, 6, C.woodD); A.r(12, 13, 2, 6, C.woodD); A.r(1, 10, 14, 4, C.wood); A.r(1, 10, 14, 1, C.copperL); A.r(1, 11, 14, 1, C.copper); A.r(1, 13, 14, 1, C.woodD); A.r(4, 6, 8, 3, C.iron); A.r(3, 5, 10, 1, C.ironL); A.r(12, 6, 3, 1, C.iron); A.r(6, 9, 4, 1, C.ironD); A.line(10, 1, 13, 4, C.woodD); A.r(8, 1, 4, 2, C.ironD); A.r(2, 8, 2, 2, C.copper); A.p(2, 8, C.copperL); }];
 Object.assign(ICON, {
