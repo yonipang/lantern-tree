@@ -1,0 +1,267 @@
+{
+  "frames": [
+    {
+      "duration": 83,
+      "filename": "portal-purple_Swirl_South_00.png",
+      "frame": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "pixor": {
+        "action": "Swirl",
+        "degrees": 0.0,
+        "id": "ac7c7b20402227c1",
+        "index": 0,
+        "pivot": {
+          "x": 8,
+          "y": 11
+        },
+        "side": "South",
+        "tag": "Swirl_South"
+      },
+      "rotated": false,
+      "sourceSize": {
+        "h": 16,
+        "w": 16
+      },
+      "spriteSourceSize": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "trimmed": false
+    },
+    {
+      "duration": 84,
+      "filename": "portal-purple_Swirl_South_01.png",
+      "frame": {
+        "h": 16,
+        "w": 16,
+        "x": 16,
+        "y": 0
+      },
+      "pixor": {
+        "action": "Swirl",
+        "degrees": 0.0,
+        "id": "b940a2c81ff240b0",
+        "index": 1,
+        "pivot": {
+          "x": 8,
+          "y": 11
+        },
+        "side": "South",
+        "tag": "Swirl_South"
+      },
+      "rotated": false,
+      "sourceSize": {
+        "h": 16,
+        "w": 16
+      },
+      "spriteSourceSize": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "trimmed": false
+    },
+    {
+      "duration": 83,
+      "filename": "portal-purple_Swirl_South_02.png",
+      "frame": {
+        "h": 16,
+        "w": 16,
+        "x": 32,
+        "y": 0
+      },
+      "pixor": {
+        "action": "Swirl",
+        "degrees": 0.0,
+        "id": "4737c09a9aba18d4",
+        "index": 2,
+        "pivot": {
+          "x": 8,
+          "y": 11
+        },
+        "side": "South",
+        "tag": "Swirl_South"
+      },
+      "rotated": false,
+      "sourceSize": {
+        "h": 16,
+        "w": 16
+      },
+      "spriteSourceSize": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "trimmed": false
+    },
+    {
+      "duration": 83,
+      "filename": "portal-purple_Swirl_South_03.png",
+      "frame": {
+        "h": 16,
+        "w": 16,
+        "x": 48,
+        "y": 0
+      },
+      "pixor": {
+        "action": "Swirl",
+        "degrees": 0.0,
+        "id": "da1d1d1576d056b3",
+        "index": 3,
+        "pivot": {
+          "x": 8,
+          "y": 11
+        },
+        "side": "South",
+        "tag": "Swirl_South"
+      },
+      "rotated": false,
+      "sourceSize": {
+        "h": 16,
+        "w": 16
+      },
+      "spriteSourceSize": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "trimmed": false
+    },
+    {
+      "duration": 84,
+      "filename": "portal-purple_Swirl_South_04.png",
+      "frame": {
+        "h": 16,
+        "w": 16,
+        "x": 64,
+        "y": 0
+      },
+      "pixor": {
+        "action": "Swirl",
+        "degrees": 0.0,
+        "id": "e9148674fe7d224f",
+        "index": 4,
+        "pivot": {
+          "x": 8,
+          "y": 11
+        },
+        "side": "South",
+        "tag": "Swirl_South"
+      },
+      "rotated": false,
+      "sourceSize": {
+        "h": 16,
+        "w": 16
+      },
+      "spriteSourceSize": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "trimmed": false
+    },
+    {
+      "duration": 83,
+      "filename": "portal-purple_Swirl_South_05.png",
+      "frame": {
+        "h": 16,
+        "w": 16,
+        "x": 80,
+        "y": 0
+      },
+      "pixor": {
+        "action": "Swirl",
+        "degrees": 0.0,
+        "id": "4fd35356142c3213",
+        "index": 5,
+        "pivot": {
+          "x": 8,
+          "y": 11
+        },
+        "side": "South",
+        "tag": "Swirl_South"
+      },
+      "rotated": false,
+      "sourceSize": {
+        "h": 16,
+        "w": 16
+      },
+      "spriteSourceSize": {
+        "h": 16,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "trimmed": false
+    }
+  ],
+  "meta": {
+    "app": "Pixor",
+    "format": "I8",
+    "frameTags": [
+      {
+        "color": "#000000ff",
+        "direction": "forward",
+        "from": 0,
+        "name": "Swirl_South",
+        "to": 5
+      }
+    ],
+    "image": "portal-purple_16px_top-down_outline_lit.png",
+    "layers": [
+      {
+        "blendMode": "normal",
+        "name": "final",
+        "opacity": 255
+      }
+    ],
+    "pixor": {
+      "cell": {
+        "h": 16,
+        "w": 16
+      },
+      "emission": "s_emission.png",
+      "pivot": {
+        "x": 8,
+        "y": 11
+      }
+    },
+    "scale": "1",
+    "size": {
+      "h": 16,
+      "w": 96
+    },
+    "slices": [
+      {
+        "color": "#0000ffff",
+        "keys": [
+          {
+            "bounds": {
+              "h": 16,
+              "w": 16,
+              "x": 0,
+              "y": 0
+            },
+            "frame": 0,
+            "pivot": {
+              "x": 8,
+              "y": 11
+            }
+          }
+        ],
+        "name": "pivot"
+      }
+    ],
+    "version": "2.1.0"
+  }
+}
