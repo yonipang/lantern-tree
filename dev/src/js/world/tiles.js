@@ -1,17 +1,17 @@
 // ================= 칸·충돌·움직임·놓기 (구조 변경 5단계: world.js와 content/circuits-regions.js에서 옮김) =================
-// 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 땅 파기·지형 배우기, 놓을 수 있는지(canPlace)
-import { FLOOR_ITEM, TERRAIN } from '../data/rpg-nature.js';
+// 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 바닥 파기(v87 구덩이)·못 파는 곳, 놓을 수 있는지(canPlace)
+import { BUCKET_FISH, DIG_YIELD, FLOOR_ITEM } from '../data/rpg-nature.js';
 import { G, beat, started, playerList } from '../save/state.js';
-import { LAVA, W, idx, inB } from './map.js';
+import { BX, BY, CX, CY, LAVA, PIT, SA, SB, SI, SL, W, idx, inB } from './map.js';
 import { OBJ } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
 import { emit } from '../sim/events.js';
 import { placeFp } from '../sim/building.js';
 import { addItem, selItem, wear } from '../sim/inventory.js';
 import { WATER } from '../sim/nature.js';
-import { hasItem } from '../sim/quests.js';
+import { flowNear } from '../sim/digging.js';
 
-export function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
+export function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA || G.floor[i] === PIT) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); } // v87: 구덩이도 막혀요 (발사체는 벽만 봐서 지나가요)
 // v85: 시야를 가리는 칸 = 벽·닫힌 문 (물·용암·가구는 너머가 보여요)
 export function blocksSight(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i]) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].door && !o.open); }
 // v85: (ax, ay)에서 (bx, by)가 보이나 — 두 점 사이를 0.25칸마다 짚어 벽·닫힌 문이 있으면 안 보여요 (양쪽 끝 칸은 빼요)
@@ -52,31 +52,45 @@ export function occupied(tx, ty, skip) {
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
 export const isPlacedFloor = f => !!FLOOR_ITEM[f];
-export const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terrain[f])));
+// v87: 못 파는 곳 — 등불나무 둘레(가운데에서 9.5칸 안, 새 세계의 시작 빈터와 같은 넓이)와 보스방(방 가운데에서 12칸 안).
+// 물·용암·벽·물체·누가 서 있는 칸은 digWhy가 따로 봐요
+export const NODIG_TREE = 9.5, NODIG_BOSS = 12;
+export function noDigZone(x, y) { const cx = x + .5, cy = y + .5; if (Math.hypot(cx - CX, cy - CY) < NODIG_TREE) return 'tree';
+  for (const s of [{ x: BX, y: BY }, SA, SB, SL, SI]) if (Math.hypot(cx - s.x - .5, cy - s.y - .5) < NODIG_BOSS) return 'boss'; return null; }
+// 삽으로 이 칸을 팔 수 있나: null = 팔 수 있음, 아니면 못 파는 까닭 (actions.js가 보여 줘요)
+export function digWhy(x, y) {
+  if (!inB(x, y)) return '여기는 팔 수 없어요'; const i = idx(x, y), f = G.floor[i];
+  if (G.wall[i]) return '벽은 곡괭이로 캐요'; if (G.objs.get(i)) return '물건이 있는 칸은 팔 수 없어요';
+  if (f === WATER) return '물은 빈 양동이로 떠요'; if (f === LAVA) return '용암은 팔 수 없어요'; if (f === PIT) return '이미 판 구덩이예요 · 바닥 재료로 메울 수 있어요';
+  if (!isPlacedFloor(f) && !DIG_YIELD[f]) return '여기는 팔 수 없어요';
+  if (occupied(x, y)) return '누가 서 있는 칸은 팔 수 없어요';
+  const z = noDigZone(x, y); if (z && !isPlacedFloor(f)) return z === 'tree' ? '등불나무 둘레는 팔 수 없어요' : '보스방은 팔 수 없어요'; // 깔아 둔 바닥은 어디서나 걷을 수 있어요
+  return null; }
+// 바닥이 돌려주는 아이템 (자연 바닥 = 그 한 삽, 깐 바닥 = 그 바닥 아이템, 물·용암·구덩이 = 없음)
+export const floorItem = f => FLOOR_ITEM[f] || DIG_YIELD[f] || null;
 export function checkUnlocks() {
   if (!G.terrain) G.terrain = {};
-  for (const f in TERRAIN) { const T = TERRAIN[f]; if (T.base || G.terrain[f] || !T.when()) continue; G.terrain[f] = 1;
-    if (started) { emit('toast', `새 지형을 배웠어요: ${T.n}! 삽을 들고 떠서 다른 곳에 옮길 수 있어요${hasItem('shovel') ? '' : ' (삽은 장비제작대에서 만들어요)'}`, 'good', 'terrain' + f); emit('sfx', 'craft'); } }
+  if (started && !G.stats.bucketTip && (G.stats.fishCaught || 0) >= BUCKET_FISH) { G.stats.bucketTip = 1; emit('toast', '이제 작업대에서 빈 양동이를 만들 수 있어요! 물을 떠서 구덩이에 부어요', 'good', 'bucket'); emit('sfx', 'craft'); }
   if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => emit('toast', '이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
 }
-export function shovelDesc() {
-  const ks = Object.keys(TERRAIN).map(Number), ok = ks.filter(terrainOk).map(f => TERRAIN[f].n), no = ks.filter(f => !terrainOk(f));
-  return `삽을 들고(도구 칸) 바닥을 바라보며 누르면 깔아 둔 바닥을 걷고, 땅을 누르면 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
-}
+export function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 한 삽을 얻어요(재·눈 바닥은 흙 한 삽). 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
 export function digGround(t) {
-  const i = idx(t.x, t.y), f = G.floor[i]; if (G.wall[i] || G.objs.get(i)) return;
+  if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
   if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
-  else { if (f === 2 || !terrainOk(f)) return; const id = TERRAIN[f].item; G.floor[i] = 2; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === WATER ? '#8fd0ff' : f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : '#b9a8ff', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+  else { const id = DIG_YIELD[f]; G.floor[i] = PIT; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
+    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+  flowNear(t.x, t.y); // 새 구덩이(또는 걷어서 드러난 구덩이) 옆에 물·용암이 있으면 흘러 들어와요
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
 export function canPlace(tx, ty, it, skip) {
   if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid, null, skip); }
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
-  if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && (!o || !OBJ[o.t].tree);
-  if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
-  if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
+  if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && (!o || !OBJ[o.t].tree);
+  if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree); // 구덩이 위에도 깔 수 있어요 (걷으면 구덩이가 다시 드러나요)
+  if (it.kind === 'ground') { const f = G.floor[i]; if (o) return false; // v87: 물 한 동이는 구덩이에만 · 다른 바닥 재료는 구덩이를 메우거나, 물·용암을 메우거나, 다른 자연 바닥을 바꿔요
+    if (it.ground === WATER) return f === PIT; return f === PIT || f === WATER || f === LAVA || (!!DIG_YIELD[f] && f !== it.ground); }
   if (o) return false;
+  if (G.floor[i] === PIT) return false; // v87: 구덩이에는 벽·가구·씨앗을 놓지 못해요 (먼저 메워요)
   if ((G.floor[i] === WATER || G.floor[i] === LAVA) && it.kind !== 'wall') return false;
   if (it.kind === 'seed') return it.crop === 'cropMoss' ? G.floor[i] === 21 : [1, 2, 3, 4, 21].includes(G.floor[i]);
   if (it.kind === 'wall') return !occupied(tx, ty, skip);

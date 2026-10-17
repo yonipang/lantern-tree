@@ -6,7 +6,7 @@ import { hash2 } from '../engine/random.js';
 import { G } from '../save/state.js';
 import { wallPiece } from '../sim/building.js';
 import { WATER, WFLOOR } from '../sim/nature.js';
-import { H, idx, inB, LAVA, W } from '../world/map.js';
+import { H, idx, inB, LAVA, PIT, W } from '../world/map.js';
 import { BIOME_WATER, BUILT_WALLS, OLD_WATER, ROCK_FILL, TM, tileSetOf } from '../art/tilemap.js';
 import { cv } from './view.js';
 import { bakeFloor, basePx, floorNoise, isNewFloor, newQuarter, terrainReady } from './terrain.js';
@@ -18,13 +18,14 @@ export const natural = f => !!PRI[f];
 export function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
   const NEW = terrainReady(); // v73: grass·dirt·water·wood·stone floors baked per pixel (render/terrain.js), other floors drawn per tile on top
-  const bk = NEW ? bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1) : null, late = [];
+  const bk = NEW ? bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1) : null, late = [], pits = [];
   if (NEW) g.putImageData(bk, 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y);
     if (G.wall[i] === ICE_W) { drawIceShard(g, x, y, tx * 16, ty * 16, false); continue; } // v79: ice under the ice wall, seen where its edge slants in
     if (NEW && SLANT.has(G.wall[i])) { underWall(g, x, y, tx * 16, ty * 16); continue; } // v80: the floor next door continues under a slanted rock wall
     if (G.wall[i]) continue; const f = G.floor[i];
+    if (f === PIT) { pits.push([x, y, tx * 16, ty * 16]); continue; } // v87: 구덩이는 다른 바닥을 다 그린 뒤 위에 (drawPit)
     if (NEW && f === ICE_FROZEN && G.biome[i] === ICE_BIOME) continue; // v80: frozen water in the ice cave is baked with the water (render/terrain.js)
     if (isIceShard(i) && !wallPiece(i)) { // v79: ice cave floor = ice shards (render/icecave.js); next to water the baked floor already has them with a wavy shore
       let wet = false; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (inB(x + dx, y + dy) && !G.wall[idx(x + dx, y + dy)] && (G.floor[idx(x + dx, y + dy)] === WATER || G.floor[idx(x + dx, y + dy)] === ICE_FROZEN)) wet = true;
@@ -43,7 +44,28 @@ export function drawChunk(c, cx, cy) {
   }
   if (NEW) { softEdges(g, cx, cy, bk); for (const a of late) tileExtras(g, ...a, true); }
   if (TM.ready && !NEW) drawPatches(g, cx, cy);
+  for (const a of pits) drawPit(g, ...a);
   c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+}
+// ---- v87: 구덩이 그림 (코드로 그려요 — 지형 그림 예외와 같이). 위에서 비스듬히 내려다본 구멍: 북쪽 가장자리 아래로 안쪽 벽(위가 밝고 아래로 어두워짐),
+// 바닥은 아주 어둡게, 다른 구덩이와 이어진 쪽은 테두리 없이 이어져요. 옆·아래 가장자리는 땅의 밝은 턱 1px + 안쪽 그늘. 지역마다 흙색(얼음 동굴은 푸른 얼음, 용암 동굴은 재색)
+export const PIT_WALL = { d: ['#8a6848', '#6e5039', '#56402f', '#443226', '#33251e', '#281c19'], 4: ['#c6e2f8', '#8fb6e2', '#6a8fc6', '#4f6fa6', '#3a5486', '#2b3d66'], 3: ['#7a6870', '#625560', '#4e434e', '#3e343e', '#30282f', '#251e25'] };
+export const PIT_FLOOR = { d: ['#1c1418', '#241a1d'], 4: ['#141c2c', '#1a2438'], 3: ['#18131a', '#201a22'] };
+export function drawPit(g, x, y, X, Y) {
+  const pit = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && G.floor[j] === PIT; };
+  const b = G.biome[idx(x, y)], wc = PIT_WALL[b] || PIT_WALL.d, fc = PIT_FLOOR[b] || PIT_FLOOR.d;
+  const n = pit(0, -1), s = pit(0, 1), w = pit(-1, 0), e = pit(1, 0);
+  g.fillStyle = fc[0]; g.fillRect(X, Y, 16, 16);
+  for (let k = 0; k < 5; k++) { const hx = (hash2(x * 5 + k, y, 41) * 16) | 0, hy = (hash2(x, y * 5 + k, 42) * 16) | 0; g.fillStyle = fc[1]; g.fillRect(X + hx, Y + hy, 1, 1); } // 바닥 얼룩
+  if (!n) for (let u = 0; u < 16; u++) { // 북쪽 안쪽 벽: 4px마다 높이가 조금씩 달라요 (5~7px)
+    const h = 5 + ((hash2(x * 4 + (u >> 2), y, 43) * 3) | 0);
+    for (let v = 0; v < h; v++) { g.fillStyle = v === 0 ? wc[0] : wc[Math.min(wc.length - 1, 1 + Math.floor((v - 1) * (wc.length - 1) / Math.max(1, h - 1)))]; g.fillRect(X + u, Y + v, 1, 1); }
+    g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(X + u, Y + h, 1, 1); } // 안쪽 벽 아래 그늘
+  if (!w) { g.fillStyle = wc[1]; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(X + 1, Y + (n ? 0 : 5), 1, n ? 16 : 11); }
+  if (!e) { g.fillStyle = wc[2]; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(X + 14, Y + (n ? 0 : 5), 1, n ? 16 : 11); }
+  if (!s) { g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = wc[0]; g.fillRect(X, Y + 15, 16, 1); } // 앞쪽 턱
+  if (n && w && !pit(-1, -1)) { for (let v = 0; v < 6; v++) { g.fillStyle = wc[Math.min(wc.length - 1, v)]; g.fillRect(X, Y + v, 1, 1); } } // 안쪽 모서리: 북서쪽 칸만 땅이면 그쪽 벽이 조금
+  if (n && e && !pit(1, -1)) { for (let v = 0; v < 6; v++) { g.fillStyle = wc[Math.min(wc.length - 1, v)]; g.fillRect(X + 15, Y + v, 1, 1); } }
 }
 // fringes (old floors only), little decorations, built-water rims and contact shadows on one floor tile
 function tileExtras(g, x, y, X, Y, f, i, tset, NEW) {

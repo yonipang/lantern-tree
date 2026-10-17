@@ -16,6 +16,7 @@ export function squareIcon(c) {
 export function iconCanvas(id) {
   if (SPR.item[id]) return SPR.item[id];
   const it = ITEMS[id];
+  if (it.kind === 'bucket') return SPR.item[id] = iconCanvas('gWater'); // v87: 빈 양동이 그림이 오기 전까지 물 한 동이 그림을 임시로
   if (it.blv) { const b = iconCanvas(it.obj === 'smelter' ? 'smelter' : 'bench'), c = document.createElement('canvas'); c.width = b.width; c.height = b.height; c.hd = b.hd; const g = c.getContext('2d'); g.drawImage(b, 0, 0); const z = Math.max(4, Math.round(b.width / 4)); g.fillStyle = INK; g.fillRect(b.width - z - 1, 0, z + 1, z + 1); g.fillStyle = BENCH_COL[it.blv]; g.fillRect(b.width - z, 1, z - 1, z - 1); return SPR.item[id] = c; } // v60: tier workbench = workbench + tier colour plate
   if (it.kind === 'place') { const f = SPR.fp && SPR.fp[it.obj]; return squareIcon(f && !ARTC['obj/' + it.obj] ? f.small : SPR.obj[it.obj]); }
   if (it.kind === 'wall') { const c = mk(16, 16, A => { const [top, front] = SPR.wallIcon[it.wall]; A.g.drawImage(top, 0, 0, 16, 11, 1, 1, 14, 10); A.g.drawImage(front, 0, 0, 16, 5, 1, 11, 14, 4); }); return SPR.item[id] = c; }
