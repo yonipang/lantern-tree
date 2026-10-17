@@ -544,7 +544,7 @@ def test_drag_zones_layout():
             rec('꽃망울','구역 밖으로 나가면 돌아옴', r<5.5, f'{r:.2f}')
             # ---------- regrowth ----------
             await ev(pg,ARENA)
-            r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];const i=__T.idx(107,110);G.objs.set(i,{t:'root'});__T.addItem('pickWood',1);for(let k=0;k<6;k++)__T.perform({k:'chop',t:{x:107,y:110},o:G.objs.get(i)});return G.objs.get(i)?G.objs.get(i).t:null}")
+            r=await ev(pg,"()=>{const G=__T.G;G.fzones=[];const i=__T.idx(107,110);G.objs.set(i,{t:'root'});__T.addItem('pickWood',1);for(let k=0;k<6&&G.objs.get(i);k++)__T.perform({k:'chop',t:{x:107,y:110},o:G.objs.get(i)});return G.objs.get(i)?G.objs.get(i).t:null}")
             rec('리젠','v87: 뿌리기둥을 베면 그루터기 없이 사라짐', r is None, str(r))
             r=await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(107,110),{t:'stump',g:'root',at:G.time+200});G.p.x=106.5;G.p.face={x:1,y:0};const d=__T.decide();return [d.k,d.lbl]}")
             rec('리젠','옛 세이브 그루터기 앞 → 그루터기 안내 (새순이 돋기 전, v33)', r==['info','그루터기'], str(r))
