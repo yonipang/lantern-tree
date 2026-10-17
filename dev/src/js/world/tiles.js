@@ -73,7 +73,7 @@ export function checkUnlocks() {
   if (started && !G.stats.bucketTip && (G.stats.fishCaught || 0) >= BUCKET_FISH) { G.stats.bucketTip = 1; emit('toast', '이제 작업대에서 빈 양동이를 만들 수 있어요! 물을 떠서 구덩이에 부어요', 'good', 'bucket'); emit('sfx', 'craft'); }
   if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => emit('toast', '이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
 }
-export function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 한 삽을 얻어요(재·눈 바닥은 흙 한 삽). 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
+export function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 한 삽을 얻어요. 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
 export function digGround(t) {
   if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
   if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }

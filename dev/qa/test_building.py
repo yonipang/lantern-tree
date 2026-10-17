@@ -5,7 +5,7 @@ from harness import *
 
 def test_terrain_shovel():
     import asyncio, sys
-    H2=HOOK.replace("computeLight}","computeLight,checkGuide,subAction:()=>subAction(),get act(){return G.act},canPlace,RECIPES}")
+    H2=HOOK.replace("computeLight}","computeLight,checkGuide,subAction:()=>subAction(),get act(){return G.act},canPlace,RECIPES,isSolid,digWhy}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -42,57 +42,54 @@ def test_terrain_shovel():
             await tap(pg,1)
             r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('floorWood')]")
             rec('삽','걷으면 원래 이끼 땅으로 + 바닥 돌려받음', r==[1,1], str(r))
-            # 4. locked terrain
+            # 4. v87: 배우기 없이 모든 자연 바닥을 파서 구덩이 + 그 바닥 한 삽 (예전 지형 배우기는 없어짐)
             await setup("G.terrain={};__T.addItem('shovel',1);"+tool.format('shovel'))
-            r=await ev(pg,"()=>[__T.decide().k,__T.decide().msg]")
-            rec('지형 해금','배우기 전: 이끼 파기 막힘 + 방법 안내', r[0]=='info' and '이끼는 아직' in r[1] and '구리 곡괭이' in r[1], str(r))
+            r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+            rec('바닥 파기','v87: 배우기 없이 삽 들고 이끼 → 파기', r==['dig','파기'], str(r))
             r=await ev(pg,"()=>__T.ITEMS.shovel.d")
-            rec('지형 해금','삽 설명에 배운/아직 지형 표시', '배운 지형: 흙' in r and '아직:' in r, r[-80:])
-            # unlock moss via quest
-            await ev(pg,"()=>{__T.addItem('pickCopper',1);__T.G.stats.wood=9;__T.G.stats.bench=1;__T.G.stats.torch=1;__T.G.stats.copperOre=9;__T.G.stats.copperBar=2;__T.checkGuide()}")
-            await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>[__T.G.terrain[1], document.querySelector('#toasts').innerText.includes('새 지형을 배웠어요: 이끼')]")
-            rec('지형 해금','퀘스트 「구리 곡괭이」 완료 → 이끼 해금 + 알림', r==[1,True], str(r))
-            await ev(pg,"()=>{const G=__T.G;"+tool.format('shovel')+"}"); await pg.wait_for_timeout(150)
-            r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
-            rec('지형 해금','배운 뒤: 삽 들고 이끼 → 파기', r==['dig','파기'], str(r))
+            rec('바닥 파기','삽 설명이 구덩이를 안내', '구덩이' in r and '배운 지형' not in r, r[:60])
             await tap(pg,1)
-            r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gMoss')]")
-            rec('삽','이끼를 파면 흙이 되고 이끼 한 삽 획득', r==[2,1], str(r))
-            r=await ev(pg,"()=>__T.decide().lbl")
-            rec('삽','흙은 더 못 팜', r=='흙 땅', r)
-            # place moss elsewhere: make a dirt tile in front
-            await ev(pg,"()=>{const G=__T.G;G.floor[__T.idx(111,110)]=2;G.p.x=112.5;G.p.face={x:-1,y:0};G.floor[__T.idx(111,110)]=2;"+sel.format('gMoss')+"}"); await pg.wait_for_timeout(150)
+            r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gMoss'), __T.isSolid(111,110)]")
+            rec('바닥 파기','이끼를 파면 구덩이(22)·막힌 칸 + 이끼 한 삽', r==[22,1,True], str(r))
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
-            rec('지형 배치','이끼 한 삽 들고 흙 → 덮기', r==['place','덮기'], str(r))
-            await tap(pg,1); r=await ev(pg,f"()=>{F(111,110)}")
-            rec('지형 배치','흙이 이끼로 바뀜', r==1, r)
-            # dirt crafting recipe and fill water
+            rec('바닥 파기','구덩이는 더 못 팜', r==['info','구덩이'], str(r))
+            await ev(pg,"()=>{const G=__T.G;"+sel.format('gMoss')+"}"); await pg.wait_for_timeout(150)
+            r=await ev(pg,"()=>[__T.decide().k,__T.decide().lbl]")
+            rec('메우기','이끼 한 삽 들고 구덩이 → 덮기', r==['place','덮기'], str(r))
+            await tap(pg,1); r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gMoss'), __T.isSolid(111,110)]")
+            rec('메우기','구덩이가 이끼로 메워져 다시 걸을 수 있음', r==[1,0,False], str(r))
+            await setup("__T.addItem('gDirt',1);"+sel.format('gDirt'))
+            await tap(pg,1); r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gMoss'), __T.countItem('gDirt')]")
+            rec('바꾸기','이끼 위에 흙 한 삽 → 흙이 되고 이끼 한 삽 돌려받음', r==[2,1,0], str(r))
+            for f,it in [(2,'gDirt'),(18,'gAsh'),(19,'gSnow'),(20,'gIce')]:
+                await setup(f"G.floor[__T.idx(111,110)]={f};__T.addItem('shovel',1);"+tool.format('shovel'))
+                await tap(pg,1); r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('{it}')]")
+                rec('바닥 파기',f'바닥 {f}을 파면 구덩이 + {it}', r==[22,1], str(r))
+            await setup("__T.addItem('floorWood',1);G.floor[__T.idx(111,110)]=22;"+sel.format('floorWood'))
+            await tap(pg,1); await ev(pg,"()=>{const G=__T.G;__T.addItem('shovel',1);"+tool.format('shovel')+"}"); await pg.wait_for_timeout(150); await tap(pg,1)
+            r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('floorWood')]")
+            rec('바닥 파기','구덩이 위에 깐 나무 바닥을 걷으면 구덩이가 다시 드러남', r==[22,1], str(r))
             r=await ev(pg,"()=>!!__T.RECIPES.find(r=>r.out==='gDirt'&&r.req[0][0]==='dirt'&&r.at===null)")
             rec('지형 배치','흙 한 삽은 흙으로 어디서나 제작', r)
             await setup("__T.addItem('gDirt',2);G.floor[__T.idx(111,110)]=__T.WATER;"+sel.format('gDirt'))
             r=await ev(pg,"()=>__T.decide().lbl"); await tap(pg,1)
-            r2=await ev(pg,f"()=>{F(111,110)}")
-            rec('지형 배치','흙으로 물 메우기', r=='덮기' and r2==2, f'{r} {r2}')
-            # water unlock by fishing
-            await setup("G.terrain={1:1};G.stats.fishCaught=10;__T.addItem('shovel',1);G.floor[__T.idx(111,110)]=__T.WATER;")
-            await ev(pg,"()=>{__T.checkGuide();const G=__T.G;"+sel.format('shovel')+"}"); await pg.wait_for_timeout(150)
-            r=await ev(pg,"()=>[__T.G.terrain[10], __T.decide().lbl]")
-            rec('지형 해금','물고기 10마리 → 물 해금, 물 뜨기', r==[1,'물 뜨기'], str(r))
-            await tap(pg,1); r=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gWater')]")
-            rec('삽','물을 뜨면 흙이 되고 물 한 동이 획득', r==[2,1], str(r))
-            await ev(pg,"()=>{const G=__T.G;"+sel.format('gWater')+"}"); await pg.wait_for_timeout(150)
+            r2=await ev(pg,f"()=>[{F(111,110)}, __T.countItem('gWater')]")
+            rec('지형 배치','흙으로 물 메우기 (물은 돌려받지 않음)', r=='덮기' and r2==[2,0], f'{r} {r2}')
+            # v87: 물 한 동이는 구덩이에만, 삽으로는 물을 못 떠요
+            await setup("__T.addItem('gWater',2);"+sel.format('gWater'))
+            r=await ev(pg,"()=>[__T.decide().k,__T.decide().msg||'']")
+            rec('물 붓기','물 한 동이는 빈 땅에 못 부음 (구덩이 안내)', r[0]=='info' and '구덩이' in r[1], str(r))
+            await ev(pg,"()=>{__T.G.floor[__T.idx(111,110)]=22}"); await pg.wait_for_timeout(150)
             r=await ev(pg,"()=>__T.decide().lbl"); await tap(pg,1); r2=await ev(pg,f"()=>{F(111,110)}")
-            rec('지형 배치','물 한 동이 붓기 → 물웅덩이', r=='붓기' and r2==10, f'{r} {r2}')
-            # bosses unlock
-            await ev(pg,"()=>{__T.G.bossDead.queen=true;__T.G.bossDead.golem=true;__T.checkGuide()}")
-            r=await ev(pg,"()=>[__T.G.terrain[3],__T.G.terrain[4]]")
-            rec('지형 해금','버섯 여왕/수정골렘 → 버섯흙/수정바닥 해금', r==[1,1], str(r))
+            rec('물 붓기','구덩이에 붓기 → 물', r=='붓기' and r2==10, f'{r} {r2}')
+            await setup("G.floor[__T.idx(111,110)]=__T.WATER;__T.addItem('shovel',1);"+tool.format('shovel'))
+            r=await ev(pg,"()=>[__T.decide().k,__T.digWhy(111,110)]")
+            rec('양동이','삽으로는 물을 못 뜨고(파기 없음) 양동이 안내', r[0]!='dig' and '양동이' in r[1], str(r))
             # save roundtrip
             await setup("__T.addItem('floorStone',1);"+sel.format('floorStone'))
             await tap(pg,1)
-            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.under.get(__T.idx(111,110)), __T.G.terrain[3], __T.G.floor[__T.idx(111,110)]]}")
-            rec('저장','깔린 바닥 아래 땅·해금 정보가 저장됨', r==[1,1,6], str(r))
+            r=await ev(pg,"()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.under.get(__T.idx(111,110)), __T.G.floor[__T.idx(111,110)]]}")
+            rec('저장','깔린 바닥 아래 땅 정보가 저장됨', r==[1,6], str(r))
             # old save without new fields
             r=await ev(pg,"()=>{const s=__T.serialize();delete s.under;delete s.terrain;__T.deserialize(s);return [__T.G.under.size, typeof __T.G.terrain]}")
             rec('저장','예전 세이브(새 항목 없음)도 정상 로드', r==[0,'object'], str(r))
@@ -200,11 +197,11 @@ def test_multi_tile_rotation():
             rec('회전','의자: 4방향 (놓기 전에 세 번 돌리면 왼쪽, 앉으면 그쪽을 봄)', r[0]==3 and r[1]=='sit' and r[2]=='side' and r[3]==3, str(r))
             await pg.wait_for_timeout(400); await pg.screenshot(path=SP+'chair.png')
             await ev(pg,"()=>{const G=__T.G;G.p.sit=null}")
-            # big tree: chop -> stump -> regrow, dig stump -> item
+            # big tree (v87): 베면 부속 칸까지 사라지고 묘목 1개, 옛 세이브 그루터기는 2×2로 다시 자람
             await ev(pg,ARENA)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('bigTree');T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='bigTree')ai=i;const x=ai%200,y=(ai/200)|0;G.inv[0]={id:'pickIron',c:1};for(let k=0;k<20&&G.objs.get(ai)&&G.objs.get(ai).t==='bigTree';k++)T.hitObj({x,y},G.objs.get(ai));const o=G.objs.get(ai);const parts=[...G.objs.values()].filter(q=>q.t==='_part').length;
-          o.at=G.time-1;G.p.x=100.5;T.growTick();const o2=G.objs.get(ai);const parts2=[...G.objs.values()].filter(q=>q.t==='_part').length;return [o.t,o.g,parts,o2.t,parts2]}""")
-            rec('자연물','큰 고목: 베면 그루터기(부속 칸 정리) → 다시 2×2로 자람', r==['stump','bigTree',0,'bigTree',3], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('bigTree');T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='bigTree')ai=i;const x=ai%200,y=(ai/200)|0;G.drops.length=0;G.inv[0]={id:'pickIron',c:1};for(let k=0;k<20&&G.objs.get(ai)&&G.objs.get(ai).t==='bigTree';k++)T.hitObj({x,y},G.objs.get(ai));const o=G.objs.get(ai);const parts=[...G.objs.values()].filter(q=>q.t==='_part').length;
+          const sap=G.drops.filter(d=>d.id==='sapling').reduce((n,d)=>n+d.c,0);G.objs.set(ai,{t:'stump',g:'bigTree',at:G.time-1});G.p.x=100.5;T.growTick();const o2=G.objs.get(ai);const parts2=[...G.objs.values()].filter(q=>q.t==='_part').length;return [o?o.t:null,parts,sap,o2.t,parts2]}""")
+            rec('자연물','큰 고목: 베면 사라짐(부속 칸 정리)·묘목 1개 / 옛 그루터기 → 다시 2×2로 자람', r==[None,0,1,'bigTree',3], str(r))
             # tree workshop manual + automation
             await ev(pg,ARENA)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};GIVE('treeFarm');T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='treeFarm')ai=i;const o=G.objs.get(ai);G.inv[0]=null;const a=T.decide();const st0=T.farmStage(o);o.p=G.time-T.FARM_GROW-1;const b=T.decide();G.drops.length=0;T.perform(b);return [a.k,a.lbl,st0,b.lbl,G.drops.map(d=>d.id).join(','),T.farmStage(o)]}""")
@@ -595,3 +592,68 @@ def test_quest_active_v84():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+
+
+def test_dig_flow_v87():
+    import asyncio, sys
+    # v87 바닥 파기 (dev/design/바닥파기.md): 물·용암 흐름(물 0.5초·용암 2초, 만나면 돌 바닥, 용암은 떨어진 물건을 태움·물은 밀어냄, 불러온 뒤에도 이어짐),
+    # 빈 양동이(물고기 10마리로 열림, 물은 줄지 않음, 용암 못 뜸), 못 파는 곳(등불나무 둘레·보스방), 구덩이에 둘러싸이면 갇힘,
+    # 벤 나무·딴 덤불은 사라지고 묘목·씨앗 1개, 옛 그루터기는 한 번 자람, 하루 하나 새 자연물(최대 7개 쌓임)
+    H2=HOOK.replace("computeLight}","computeLight,flowNear,flowTick,scoopWater,digWhy,regionOf,hitObj,harvest,growTick,regrow,dayNo,recipeOn,RECIPES,canPlace,PIT,LAVA}")
+    CLR="""window.CLR=()=>{const T=__T,G=T.G,X=T.CX+20,Y=T.CY+20;for(let y=Y-6;y<=Y+6;y++)for(let x=X-6;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i);G.biome[i]=0}
+  G.enemies.length=0;G.drops.length=0;G.p.x=X+.5;G.p.y=Y-4.4;return [X,Y]}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,f"()=>{{{CLR}}}")
+            # 1. 물이 이어진 구덩이로 한 칸씩 (0.5초)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();G.floor[T.idx(X-1,Y)]=T.WATER;for(let k=0;k<4;k++)G.floor[T.idx(X+k,Y)]=T.PIT;T.flowNear(X,Y);
+              const f=()=>[0,1,2,3].map(k=>G.floor[T.idx(X+k,Y)]),out=[];G.time+=.3;T.flowTick();out.push(f());G.time+=.3;T.flowTick();out.push(f());for(let k=0;k<3;k++){G.time+=.55;T.flowTick()}out.push(f());out.push(G.floor[T.idx(X-1,Y)]);return out}""")
+            rec('흐름','물: 0.3초엔 그대로, 0.6초에 첫 칸, 이어서 끝까지 / 원래 물은 그대로', r==[[22,22,22,22],[10,22,22,22],[10,10,10,10],10], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();G.floor[T.idx(X-1,Y)]=T.LAVA;G.floor[T.idx(X,Y)]=T.PIT;T.flowNear(X,Y);const a=[];G.time+=1;T.flowTick();a.push(G.floor[T.idx(X,Y)]);G.time+=1.1;T.flowTick();a.push(G.floor[T.idx(X,Y)]);return a}""")
+            rec('흐름','용암은 2초에 한 칸', r==[22,17], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();G.floor[T.idx(X-1,Y)]=T.WATER;G.floor[T.idx(X+1,Y)]=T.LAVA;G.floor[T.idx(X,Y)]=T.PIT;T.flowNear(X,Y);G.time+=.6;T.flowTick();return [G.floor[T.idx(X,Y)]]}""")
+            rec('흐름','물과 용암이 만나는 구덩이는 돌 바닥(6)', r[0]==6, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();const d=(x,y)=>({id:'wood',c:1,x,y,vx:0,vy:0,z:0,vz:0,t:0,hold:0});
+              G.floor[T.idx(X-1,Y)]=T.LAVA;G.floor[T.idx(X,Y)]=T.PIT;G.drops.push(d(X+.5,Y+.5));G.floor[T.idx(X-1,Y+3)]=T.WATER;G.floor[T.idx(X,Y+3)]=T.PIT;G.drops.push(d(X+.5,Y+3.5));
+              T.flowNear(X,Y);T.flowNear(X,Y+3);G.time+=2.2;T.flowTick();const w=G.drops.find(q=>Math.abs(q.y-(Y+3.5))<1.6);
+              return [G.floor[T.idx(X,Y)],G.drops.filter(q=>Math.floor(q.x)===X&&Math.floor(q.y)===Y).length,G.floor[T.idx(X,Y+3)],!!w&&!(Math.floor(w.x)===X&&Math.floor(w.y)===Y+3),G.drops.length]}""")
+            rec('흐름','용암은 떨어진 물건을 태우고, 물은 옆 칸으로 밀어냄', r==[17,0,10,True,1], str(r))
+            r=await ev(pg,"""()=>{const T=__T,[X,Y]=CLR();let G=T.G;G.floor[T.idx(X-1,Y)]=T.WATER;G.floor[T.idx(X,Y)]=T.PIT;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);G=T.G;T.flowTick();G.time+=1;T.flowTick();return G.floor[T.idx(X,Y)]}""")
+            rec('흐름','불러온 뒤에도 구덩이 옆 물이 흘러 들어옴', r==10, str(r))
+            # 2. 빈 양동이
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,rc=T.RECIPES.find(r=>r.out==='bucket');G.stats.fishCaught=3;const a=T.recipeOn(rc);G.stats.fishCaught=10;const c=T.recipeOn(rc);
+              return [a,c,rc.at,rc.tier,JSON.stringify(rc.req),T.ITEMS.bucket.kind]}""")
+            rec('양동이','레시피: 물고기 10마리부터, 구리 작업대, 나무 4 + 구리괴 1', r==[False,True,'bench',1,'[["wood",4],["copperBar",1]]','bucket'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();G.floor[T.idx(X,Y)]=T.WATER;G.floor[T.idx(X+1,Y)]=T.LAVA;const n0=T.countItem('gWater');
+              const a=T.scoopWater({x:X,y:Y}),b=T.scoopWater({x:X,y:Y}),c=T.scoopWater({x:X+1,y:Y});return [a,b,c,T.countItem('gWater')-n0,G.floor[T.idx(X,Y)]]}""")
+            rec('양동이','물 칸에서 물 한 동이 (물은 그대로), 용암은 못 뜸', r==[True,True,False,2,10], str(r))
+            # 3. 못 파는 곳, 구덩이에 둘러싸이면 갇힘, 구덩이엔 벽·가구 못 놓음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,a=[T.CX+3,T.CY+4],b=[T.BX+3,T.BY];for(const [x,y] of [a,b]){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=2}
+              return [T.digWhy(...a),T.digWhy(...b)]}""")
+            rec('못 파는 곳','등불나무 둘레·보스방은 못 팜', '등불나무' in r[0] and '보스방' in r[1], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])G.floor[T.idx(X+dx,Y+dy)]=T.PIT;const reg=T.regionOf(X+.5,Y+.6);
+              return [!!reg&&reg.size,T.canPlace(X+1,Y,T.ITEMS.wallWood),T.canPlace(X+1,Y,T.ITEMS.chair),T.canPlace(X+1,Y,T.ITEMS.gDirt)]}""")
+            rec('구덩이','구덩이에 둘러싸이면 갇힘(긴급 탈출 대상), 벽·가구는 못 놓고 흙은 됨', r==[1,False,False,True], str(r))
+            # 4. 나무·덤불
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();const out=[];for(const [k,seed] of [['root','sapling'],['bigShroom','capSapling'],['roundTree','sapling']]){G.drops.length=0;const i=T.idx(X,Y),o={t:k,dmg:99};G.objs.set(i,o);T.hitObj({x:X,y:Y},o);
+              out.push([k,G.objs.get(i)?G.objs.get(i).t:null,G.drops.filter(d=>d.id===seed).reduce((n,d)=>n+d.c,0)])}return out}""")
+            rec('나무','벤 나무는 그루터기 없이 사라지고 묘목 꼭 1개', all(x[1] is None and x[2]==1 for x in r), str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();G.drops.length=0;const i=T.idx(X,Y),o={t:'bush',r:0};G.objs.set(i,o);T.harvest({x:X,y:Y},o);
+              return [!!G.objs.get(i),G.drops.filter(d=>d.id==='berrySeed').reduce((n,d)=>n+d.c,0),G.drops.some(d=>d.id==='berry')]}""")
+            rec('덤불','딴 베리덤불은 사라지고 베리 씨앗 1개 + 베리', r==[False,1,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();const i=T.idx(X,Y);G.objs.set(i,{t:'stump',g:'root',at:G.time-1});G.p.x=X+5.5;T.growTick(2);const a=G.objs.get(i)&&G.objs.get(i).t;
+              const o=G.objs.get(i);if(o){delete o.yg;o.dmg=99;T.hitObj({x:X,y:Y},o)}return [a,G.objs.get(i)?G.objs.get(i).t:null]}""")
+            rec('나무','옛 세이브 그루터기는 한 번 다 자라고, 그다음 베면 사라짐', r==['root',None], str(r))
+            # 5. 하루 하나 새 자연물
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,today=T.dayNo();G.natDay=null;let n0=G.objs.size;T.regrow();const a=[G.natDay===today,G.objs.size-n0];
+              G.natDay=today-10;n0=G.objs.size;T.regrow();a.push(G.objs.size-n0,G.natDay===today);n0=G.objs.size;T.regrow();a.push(G.objs.size-n0);
+              G.natDay=today-2;n0=G.objs.size;T.regrow();a.push(G.objs.size-n0);return a}""")
+            rec('자연 재생','처음엔 오늘부터 셈(0개), 10일 밀리면 7개까지, 같은 날 다시는 0개, 2일이면 2개', r==[True,0,7,True,0,2], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;G.natDay=T.dayNo()-1;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);return T.G.natDay===T.dayNo()-1}")
+            rec('저장','마지막으로 센 날이 저장됨', r is True, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

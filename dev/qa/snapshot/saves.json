@@ -423,7 +423,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "no_mapV": {
 "v": 3,
@@ -793,7 +794,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_bag": {
 "v": 3,
@@ -1158,7 +1160,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_build_pieces": {
 "v": 3,
@@ -1606,7 +1609,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_equip_no_sets": {
 "v": 3,
@@ -1974,7 +1978,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_fields": {
 "v": 3,
@@ -2344,7 +2349,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_no_quest_active": {
 "v": 3,
@@ -2702,7 +2708,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_roof_drill_weapon": {
 "v": 3,
@@ -3098,7 +3105,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_stations": {
 "v": 3,
@@ -3476,7 +3484,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "old_tools_in_bag": {
 "v": 3,
@@ -3876,7 +3885,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "v1": {
 "v": 3,
@@ -4328,7 +4338,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "v2": {
 "v": 3,
@@ -4780,7 +4791,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "v3": {
 "v": 3,
@@ -5232,7 +5244,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "v62_layout1": {
 "v": 3,
@@ -5602,7 +5615,8 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 },
 "v62_layout2": {
 "v": 3,
@@ -5982,6 +5996,7 @@ null
 }
 ],
 "eqSet": 0,
-"qAct": "main"
+"qAct": "main",
+"natDay": null
 }
 }

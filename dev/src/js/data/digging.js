@@ -1,13 +1,13 @@
 // ================= v87 바닥 파기 데이터: 빈 양동이, 물·용암 흐름 빠르기, 하루 하나 자연물 =================
 // 기획: dev/design/바닥파기.md (2026-10-17 확정). 동작은 sim/digging.js(구덩이·흐름·양동이)와 sim/nature.js(자연물)에 있어요.
-// 이 파일은 data/controls.js 다음에 와요: 양동이 레시피는 「지형 재료 2배」·작업대 단계 나누기(data/automation-tiers.js) 뒤라 그대로 작업대 기본 단계예요.
+// 이 파일은 data/controls.js 다음에 와요 (「지형 재료 2배」·작업대 단계 나누기 data/automation-tiers.js 뒤). 양동이는 구리괴를 써서, 다른 구리 레시피처럼 구리 작업대(1단계)예요.
 import { ITEMS, RECIPES, Rc } from './items.js';
 import { BUCKET_FISH } from './rpg-nature.js';
 import { G } from '../save/state.js';
 
 // 빈 양동이: 물 칸에 대고 쓰면 「물 한 동이」 하나 (물 칸은 줄지 않아요), 용암은 못 떠요, 닳지 않아요
 ITEMS.bucket = { n: '빈 양동이', kind: 'bucket', stack: 1, d: '물을 바라보고 누르면 「물 한 동이」를 떠요. 물은 줄지 않아요. 용암은 뜰 수 없어요. 닳지 않아요.' };
-RECIPES.push(Object.assign(Rc('bucket', 1, [['wood', 4], ['copperBar', 1]], 'bench', 'tool'), { tier: 0, need: () => (G.stats.fishCaught || 0) >= BUCKET_FISH }));
+RECIPES.push(Object.assign(Rc('bucket', 1, [['wood', 4], ['copperBar', 1]], 'bench', 'tool'), { tier: 1, need: () => (G.stats.fishCaught || 0) >= BUCKET_FISH }));
 
 // 흐름: 이어진 구덩이로 한 칸 퍼지는 데 걸리는 시간(초, 게임 시간)
 export const FLOW_SEC = { 10: 0.5, 17: 2 }; // 물 · 용암

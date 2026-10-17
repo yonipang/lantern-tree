@@ -101,6 +101,6 @@ for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
 FLOOR_ITEM[21] = 'meadow';
 // v87: 삽으로 판 자연 바닥이 주는 것 (예전 「지형 배우기」는 없앴어요 — 처음부터 모두 팔 수 있어요). 판 칸은 구덩이(PIT)가 돼요
 // 1 이끼 · 2 흙 · 3 버섯흙 · 4 수정 모래 · 18 재 바닥 · 19 눈 바닥 · 20 얼어붙은 물. 물(10)·용암(17)은 못 파요 (물은 빈 양동이로 떠요)
-export const DIG_YIELD = { 1: 'gMoss', 2: 'gDirt', 3: 'gShroom', 4: 'gCrystal', 18: 'gDirt', 19: 'gDirt', 20: 'gIce' };
+export const DIG_YIELD = { 1: 'gMoss', 2: 'gDirt', 3: 'gShroom', 4: 'gCrystal', 18: 'gAsh', 19: 'gSnow', 20: 'gIce' };
 // 바닥 재료로 바꿀 때 돌려주는 것도 같아요. 물·용암을 메우면 돌려주는 것이 없어요
 export const BUCKET_FISH = 10; // 물고기를 이만큼 낚으면 빈 양동이를 만들 수 있어요 (예전 「물 뜨기 배우기」 조건)
