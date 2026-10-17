@@ -339,6 +339,7 @@ export function buildSprites() {
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
   applyArt();
+  warpSprites(); // v89
   SPR.fp = {}; for (const id in GREW) if (SPR.obj[id] && OSPR[id]) { const [w, h, f, o] = OSPR[id]; SPR.fp[id] = { big: SPR.obj[id], bigV: SPR.obj[id + 'V'] || (GREW[id][2] ? rot90(SPR.obj[id]) : null), small: ARTC['obj/' + id] ? SPR.obj[id] : mk(w, h, f, o) }; }
   setFootprints(FPV);
   buildTerrain();
@@ -374,3 +375,13 @@ export function glowSprite(col) {
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return SPR.glow[col] = c;
 }
 
+// v89 워프포인트·포탈: 사용자가 준 그림 띠(dev/art/etc/warpStrip·warpGlow·portalStrip·portalGlow, 16×16 칸이 가로로 6장·24장)를 한 장씩 잘라요.
+// SPR.warpF.pt / .portal = { base: [평소 그림…], glow: [빛나는 부분…], off: 안 켜진 워프포인트(첫 장을 어둡게) }. 그림이 없으면 content.js의 임시 모양 한 장.
+export function warpSprites() { SPR.warpF = {};
+  const cut = S => { if (!(S instanceof HTMLCanvasElement) || !S.height) return []; const n = Math.max(1, Math.round(S.width / S.height)), w = S.width / n, out = [];
+    for (let k = 0; k < n; k++) { const c = document.createElement('canvas'); c.width = w; c.height = S.height; c.getContext('2d').drawImage(S, k * w, 0, w, S.height, 0, 0, w, S.height); c.hd = S.hd; c.ol = S.ol; out.push(c); } return out; };
+  for (const [k, o, b, g] of [['pt', 'warpPt', 'warpStrip', 'warpGlow'], ['portal', 'portal', 'portalStrip', 'portalGlow']]) {
+    const base = cut(SPR[b]); if (!base.length) { SPR.warpF[k] = { base: [SPR.obj[o]], glow: [], off: dimmed(SPR.obj[o]) }; continue; }
+    const glow = cut(SPR[g]).map(c => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return c; return null; }); // 빈 장은 null
+    SPR.obj[o] = base[0]; SPR.warpF[k] = { base, glow, off: dimmed(base[0]) }; }
+  SPR.objOff.warpPt = SPR.warpF.pt.off; }

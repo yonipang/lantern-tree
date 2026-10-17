@@ -32,6 +32,7 @@ import { openTreasure } from '../world/gen.js';
 import { idx, inB, LAVA, PIT, W } from '../world/map.js';
 import { anchorAt, canPlace, delObj, digGround, digWhy, fpOf, isPlacedFloor, occupied, placeable } from '../world/tiles.js';
 import { markLight } from './loop.js';
+import { nearWarpPt, portalWhy, warpDecide, warpTurnOn } from './warp.js';
 onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
   const p = G.p, ctl = ctlOf(p);
   G.act = decide(); G.actCd -= dt; if (G.swing) { G.swing.t -= dt; if (G.swing.t <= 0) G.swing = null; }
@@ -112,10 +113,12 @@ export function heldDecide(md, s, it, t, i, o) {
     case 'recall': return recallDecide(s);
     case 'lasso': { const wa = wildNear(2.8); return wa ? { k: 'lasso', lbl: '포획', icon: 'lasso', w: wa } : no('포획', '올가미 밧줄을 든 채 동물에게 다가가서 눌러요'); }
     case 'build': {
+      if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) return no('놓을 수 없음', why); } // v89 포탈
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
       if (it.kind === 'ground' && it.ground === WATER) return no('부을 수 없음', '물 한 동이는 구덩이에만 부을 수 있어요 · 삽으로 바닥을 파서 구덩이를 만들어요');
+      if ((it.kind === 'wall' || (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].tw)) && nearWarpPt(t.x, t.y)) return no('놓을 수 없음', '워프포인트 둘레에는 벽·문·울타리를 세울 수 없어요'); // v89
       return no(it.kind === 'seed' ? '심을 수 없음' : '놓을 수 없음', it.kind === 'seed' ? '여기엔 심을 수 없어요 · 빈 흙·이끼·버섯흙·수정 모래를 바라보고 눌러요' : '여기엔 놓을 수 없어요 · 빈 곳을 바라보고 눌러요'); }
     case 'shovel': {
       if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
@@ -185,6 +188,7 @@ export function autoOptions(t, i, o) {
     if (d.bush) { A((o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o, tool: bestTool('sickle') } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 열리려면 조금 기다려요 · 따면 덤불은 없어지고 베리 씨앗을 줘요', t }); return L; }
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
       else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
+    if (d.warp) { A(warpDecide(t, o)); if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; } // v89 워프포인트·포탈
     if (d.nat) { A(natAct(d, o, t)); return L; }
     if (d.item) { const u = USE[o.t]; if (u) A({ k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o });
       A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
@@ -243,6 +247,8 @@ export function perform(a) {
     case 'cakeTake': { if (moveInto(G.inv, { id: 'festCake', c: 1 })) { emit('toast', '가방이 가득 찼어요', null, 'full'); break; } delete a.o.cake; emit('inv'); emit('sfx', 'pick'); G.actCd = .4; break; }
     case 'insert': insertSeeds(); G.actCd = 0.4; break;
     case 'tree': emit('open', 'tree'); G.actCd = 0.3; break;
+    case 'warpOn': warpTurnOn(a.t, a.o); G.actCd = 0.4; break; // v89
+    case 'warp': emit('open', 'map', { warp: idx(a.t.x, a.t.y) }); G.actCd = 0.4; break; // v89: 지도 창에서 목적지 고르기
     case 'summon': summonBoss(a.boss); G.actCd = 0.6; break;
     case 'take': a.o.has = 0; const left = addItem('lightSeed', 1); if (left) spawnDrop('lightSeed', 1, a.t.x + .5, a.t.y + 1.2); emit('sfx', 'seed'); emit('puff', a.t.x + .5, a.t.y + .5, '#ffd25c', 14, 3); emit('toast', '빛씨앗을 찾았어요! 등불나무로 가져가요', 'good'); G.actCd = 0.4; break;
     case 'pickup': { const d = OBJ[a.o.t]; delObj(idx(a.t.x, a.t.y)); if (OBJ[a.o.t].bed && G.spawnPt && G.spawnPt.x === a.t.x && G.spawnPt.y === a.t.y) G.spawnPt = null; returnObj(a.o, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); emit('puff', a.t.x + .5, a.t.y + .6, '#e8d8c0', 5, 2); G.actCd = 0.3; markLight(); break; }

@@ -390,6 +390,9 @@ Object.assign(ICON, {
 // ---- 깊은 동굴 (features/deep-survival.js) ----
 for (const d of DEEP_DISHES) { const id = d[0]; ICON[id] = dishIcon(d[4], d[5]); ICON['rn_' + id] = noteIcon; if (d[6].some(([m]) => STAR_OF[m])) ICON[id + 'S'] = (f => A => { f(A); starMark(A); })(ICON[id]); }
 ICON.homeStone = A => { A.e(8, 9, 5.4, 5.8, '#4a4290'); A.e(8, 8.6, 4.6, 5, '#6a62b8'); A.e(7, 7, 2.4, 2.6, '#a99cf0'); A.e(8, 9, 2, 2, '#ffd27a'); A.p(8, 8, '#fff1c0'); A.p(5, 5, '#e3d4ff'); A.p(11, 12, '#3a3270'); };
+// v89 워프포인트·포탈: 그림 파일(dev/art/etc/…)이 없을 때만 쓰는 임시 모양 (그림은 art/world.js warpSprites가 잘라 써요)
+OSPR.warpPt = [16, 16, A => { A.e(8, 9, 6, 5, '#5a4a6e'); A.e(8, 8.6, 3.6, 3, '#b58cff'); A.e(8, 8.6, 1.6, 1.3, '#ead9ff'); }];
+OSPR.portal = [16, 16, A => { A.e(8, 12.5, 4.5, 1.6, '#4a5560'); A.r(6, 3, 5, 9, '#7d8fa0'); A.r(7, 5, 3, 1, '#7fe8f0'); A.r(8, 7, 1, 3, '#7fe8f0'); }];
 OSPR.lostBag = [16, 16, A => { A.e(8, 13.5, 5, 1.4, 'rgba(0,0,0,.25)'); A.e(8, 10, 5, 4, '#b8903f'); A.e(7, 9, 3.4, 2.6, '#d9b66a'); A.poly([[5, 7], [6, 3.5], [10, 3.5], [11, 7]], '#c9a46b'); A.r(5, 6, 6, 1, '#7a5a2a'); A.p(12, 3, '#fff1b0'); A.p(13, 2, '#ffffff'); A.p(3, 5, '#fff1b0'); }];
 OSPR.icePillar = [16, 26, A => { A.e(8, 24.5, 5.4, 1.6, '#7ab8d8'); A.r(4, 6, 8, 18, '#9fd8f0'); A.r(4, 6, 3, 18, '#d8f2ff'); A.r(11, 6, 1, 18, '#6a9cc8'); A.poly([[4, 6], [8, 1], [12, 6]], '#e8f8ff'); A.p(6, 10, '#ffffff'); A.p(9, 16, '#ffffff'); A.line(7, 13, 10, 18, '#bfe6ff'); }];
 export function bossExtraSprites() {

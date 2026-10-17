@@ -7,7 +7,7 @@ export const FRAME_ORDER = [
   'player',   // 움직이기·바라보기·넉백·대시·기력 (game/update.js)
   'act',      // 상호작용 버튼: 무엇을 할지 고르고 누르면 하기 (game/actions.js)
   'attack',   // 공격 버튼 (features/controls.js)
-  'buff', 'env', 'recall', // 음식 버프 (features/farming-cooking.js) · 더위·추위 · 귀환석 (features/deep-survival.js)
+  'buff', 'env', 'recall', 'warp', // 음식 버프 (features/farming-cooking.js) · 더위·추위 · 귀환석 (features/deep-survival.js) · v89 워프 이동 (sim/warp.js)
   'hunger',   // 배고픔·체력 회복 (game/update.js)
   'wild',     // 들짐승·펫 (features/gear-animals.js)
   'enemies', 'bosses', // 몬스터·보스 (game/update.js)
@@ -27,7 +27,7 @@ export const FRAME_ORDER = [
   'shake',    // 화면 흔들림 줄이기 (ui/feedback.js)
 ];
 // 플레이어마다 한 번씩 도는 칸 (그동안 G.p·G.inv … 가 그 플레이어 것). 나머지 칸은 세계에 한 번 (화면 쪽은 내 플레이어 기준)
-export const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'hunger', 'pshots', 'fish', 'spawn', 'seen']);
+export const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'warp', 'hunger', 'pshots', 'fish', 'spawn', 'seen']);
 const SYS = new Map();
 export function onFrame(name, fn) {
   if (!FRAME_ORDER.includes(name)) throw new Error('매 프레임 순서표(sim/systems.js)에 없는 이름이에요: ' + name);

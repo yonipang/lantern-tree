@@ -12,6 +12,7 @@ import { hurtPlayer } from './player.js';
 import { onFrame } from './systems.js';
 import { BX, BY, CX, CY, idx, inB, SA, SB, SI, SL, W } from '../world/map.js';
 import { canSee, fpOf, isSolid, moveEnt } from '../world/tiles.js';
+import { warpSafe } from './warp.js';
 onFrame('enemies', updateEnemies);
 onFrame('spawn', dt => { const p = G.p;
   G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
@@ -62,6 +63,7 @@ export function trySpawn() {
     if (Math.hypot(x - CX, y - CY) < 13 + G.treeSeeds * 4) continue; if (Math.hypot(x - BX, y - BY) < 11 || Math.hypot(x - SA.x, y - SA.y) < 10 || Math.hypot(x - SB.x, y - SB.y) < 10 || Math.hypot(x - SL.x, y - SL.y) < 11 || Math.hypot(x - SI.x, y - SI.y) < 11) continue;
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
+    if (warpSafe(x + .5, y + .5)) continue; // v89: 워프포인트·포탈 둘레 6칸
     const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (rand() < .55 ? 'slimeO' : 'shroomy') : b === 3 ? (rand() < .55 ? 'magmaSlime' : 'cinder') : b === 4 ? (rand() < .55 ? 'frostSlime' : 'snowling') : (rand() < .75 ? 'slimeP' : 'shroomy');
     G.enemies.push(regionEnemy(mkEnemy(kk, x + .5, y + .6), b));
     if (rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }

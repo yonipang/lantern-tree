@@ -19,6 +19,7 @@ import { addItem, invSize, isTool, moveInto, seenAll } from '../sim/inventory.js
 import { cleanZones, genFlowerZones } from '../sim/nature.js';
 import { cleanRpg, freshRpg, maxHp, maxMp } from '../sim/player.js';
 import { unstick } from '../sim/survival.js';
+import { placeWarps } from '../sim/warp.js';
 export const SAVE_KEY = 'lantern-tree-save-v1';
 // each playthrough gets its own id so cloud sync never mixes two different adventures
 export const newRunId = () => Date.now().toString(36) + rand().toString(36).slice(2, 8);
@@ -44,7 +45,7 @@ export function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); placeWarps(); /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 export const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -69,7 +70,7 @@ const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 // 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
 export const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet',
   'explored', 'spawnPt', 'backPt', 'qAct', // 세계 안 플레이어별 (PLAYER_KEYS)
-  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
+  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'warpGo', 'petE', 'pshots', 'biomeNow', 'escCd', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
   'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
 const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0, spawnT: 0 });
 export let curPl = null;
@@ -94,7 +95,7 @@ export function addPlayer(id, x, y) {
   const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(), eqSets: freshSets(), eqSet: 0,
     pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, seen: {}, explored: new Uint8Array(W * H), spawnPt: null, backPt: null, qAct: 'main',
-    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0 };
+    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, warpGo: null, petE: null, pshots: [], biomeNow: 0, escCd: 0 };
   G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
 }
 export function splitSave(s, id = ME) {
@@ -174,7 +175,7 @@ export function deserialize(s) {
   if (!G.stats.nm65) migrateTools65(); // v65 tool pouch
   migrateForges60(oldFp); // v60
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; placeWarps(); // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed

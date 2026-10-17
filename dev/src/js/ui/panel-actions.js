@@ -21,7 +21,7 @@ import { checkGuide, questById, questGo } from '../sim/quests.js';
 import { resetGoalText } from './feedback.js';
 import { markInv, refreshHotbar } from './hud.js';
 import { applyCtrl, ctrlPref, setCtrlPref } from './input.js';
-import { mapChestOn, setMapChest } from './map.js';
+import { mapChestOn, setMapChest, warpTapAt } from './map.js';
 import { closePanel, craftCtx, openPanel, panel, panelAt, renderPanel, UIS } from './panels.js';
 import { isNewCell, pouchOpen, setPouchOpen } from './panels-char.js';
 export function onSheetClick(e) {
@@ -70,7 +70,9 @@ export function onSheetClick(e) {
   if (a === 'jobCancel') { if (!UIS.jobAsk) { UIS.jobAsk = true; renderPanel(); return; } UIS.jobAsk = false; runCmd({ k: 'jobCancel', o: panel ? panel.i : null }); renderPanel(); return; }
   if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, Math.min(TIMED[r.at] ? JOB_MAX : 99, maxCraft(r))), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
   if (a === 'mapChest') { setMapChest(!mapChestOn()); try { localStorage.setItem('lantern-tree-map-chest', mapChestOn() ? '1' : '0'); } catch (_) { } renderPanel(); return; }
-  if (a === 'mapzoom') { UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
+  if (a === 'mapzoom') { if (UIS.mapWarp != null) UIS.warpNear = !UIS.warpNear; else UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
+  if (a === 'mapTap') { if (UIS.mapWarp == null) return; const e2 = warpTapAt(b, e.clientX, e.clientY); UIS.warpSel = e2 ? e2.i : null; renderPanel(); return; } // v89: 지도에서 워프 목적지 고르기
+  if (a === 'warpGo') { const from = UIS.mapWarp; if (from == null) return; runCmd({ k: 'warp', from, to: i }); closePanel(); return; } // v89
   if (a === 'craft') { // 제작 자리(어느 제작대 창인지)를 함께 보내요
     const res = runCmd({ k: 'craft', r: i, q: UIS.qty[i] || 1, st: craftCtx(), i: panel.i, tier: panel.tier }); if (res === false) return;
     if (res === 'reorder') UIS.craftOrder = null; renderPanel(); return;

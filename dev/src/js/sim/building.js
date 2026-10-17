@@ -15,6 +15,8 @@ import { idx, inB, LAVA, PIT } from '../world/map.js';
 import { canPlace, delObj, floorItem, fpOf, isPlacedFloor, placeAnchor, pushSpot, setParts } from '../world/tiles.js';
 import { flowNear } from './digging.js';
 import { markLight } from './loop.js';
+import { meId } from './survival.js';
+import { portalWhy, warpsChanged } from './warp.js';
 export const bmat = m => BMAT[m] || BMAT_X[m];
 export const twH = type => (BTYPE[type] || {}).h || TW_H[type];
 export const twType = o => o && OBJ[o.t] && OBJ[o.t].tw ? OBJ[o.t].tw.type : null;
@@ -68,6 +70,7 @@ export function pickupObj(t, o) {
 export const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
 export function placeItem(t) {
   const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
+  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) { emit('toast', why, 'warn', 'portal'); return; } } // v89 포탈
   // v67 (BF-09): the placing player steps to a free tile next to them first, in the same moment (nothing placed or used up if there is none)
   if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }
   if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
@@ -76,11 +79,12 @@ export function placeItem(t) {
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
-  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
+  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
     const pr = pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
-    if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); } }
+    if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
+    if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } emit('inv');
   emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); markLight(); emit('tile', t.x, t.y);
 }
