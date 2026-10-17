@@ -5293,9 +5293,8 @@ function computeLight() {
 // 그리는 방식(2D 캔버스 + 칸 그림)은 그대로, 얼음 동굴의 그림만 새로 만들어요. 그림 파일 없이 처음 쓸 때 코드로 만들고 칸마다 기억해요.
 //   벽(얼음벽 11): 밝은 얼음 파랑 큰 면 + 대각선 어두운 금 그물 + 연한 줄·드문 반짝임, 윗면 가장자리 1px 밝은 테두리(군데군데 청록),
 //     앞면은 위 #2552c2 → 아래 #122c82, 맨 위 줄 밝게·맨 아래 줄 청록.
-//     모양: 열린 쪽 가장자리가 칸 모양 그대로가 아니라 비스듬히 기울어짐 — 칸 꼭짓점마다 안쪽으로 들어가는 정도(1~5px)를 꼭짓점 자리로 정하고
-//     (옆 칸과 같은 꼭짓점을 쓰니 이음매가 맞음) 그 사이를 직선으로 + 1px 요철, 바깥 모서리는 반지름 5px로 둥글게. 들어가는 건 칸 안쪽으로만
-//     (부딪히는 판정은 칸 단위 그대로). 벽 칸 아래에도 얼음 바닥을 깔아 깎인 곳에 바닥이 보여요.
+//     모양(v82 오토타일): 주변 8칸과 변형 번호로 정한 칸 모양 — 곧은 변 2px, 바깥 모서리 5px까지 비스듬히, 1px 요철 (아래 「벽 모양」).
+//     들어가는 건 칸 안쪽으로만 (부딪히는 판정은 칸 단위 그대로). 벽 칸 아래에도 얼음 바닥을 깔아 깎인 곳에 바닥이 보여요.
 //   바닥(얼음 동굴의 눈 바닥 19): 길쭉한 얼음 조각 면이 두 방향으로 엇갈림, 파랑 5단계(#1a49c4~#3f86f2), 꾸밈 X 서리 무늬·작은 연보라 점.
 //   벽과 바닥 사이: 바닥 쪽으로 청록빛이 덩어리지게 들쭉날쭉 번짐(벽에서 0~11px, #86f2d2 → #2a7ee6) — 새 빛에서는 스스로 빛나요.
 
@@ -5316,42 +5315,57 @@ const ROCK = { shadeRim: 2, shadeFade: 5, shadeBlack: .96, shadow: [.34, .2, .09
 const ICE_EM = (r, g, b) => (.3 * r + .59 * g + .11 * b) > 150 ? .85 : .22;
 const isIceShard = i => G.biome[i] === ICE_BIOME && G.floor[i] === ICE_SNOW && !G.wall[i];
 const ic_open = (x, y) => inB(x, y) && !G.wall[idx(x, y)];
-// ---- 벽 모양 ----
-const ic_vIns = (vx, vy) => ICE.ins[(hash2(vx, vy, 201) * ICE.ins.length) | 0]; // 꼭짓점이 안쪽으로 들어가는 정도
-const ic_bump = (a, b, s) => hash2(a, b, s) < .3 ? 1 : 0; // 1px 요철 (3px씩 이어짐)
-function ic_edge(x, y) { // 칸 하나의 네 변: 각 변을 따라 들어가는 정도 (16칸 배열), 열린 쪽만
-  const oN = ic_open(x, y - 1), oS = ic_open(x, y + 1), oW = ic_open(x - 1, y), oE = ic_open(x + 1, y);
-  const a = ic_vIns(x, y), b = ic_vIns(x + 1, y), c = ic_vIns(x, y + 1), d = ic_vIns(x + 1, y + 1), L = (p, q, t) => Math.round(p + (q - p) * (t + .5) / 16);
-  const run = (n, s) => { const r = new Int8Array(16); for (let t = 0; t < 16; t++) r[t] = n(t) + ic_bump(s[0], Math.floor((s[1] + t) / 3), s[2]); return r; };
-  return { oN, oS, oW, oE,
-    N: oN ? run(t => L(a, b, t), [y * 3, x * 16, 211]) : null, S: oS ? run(t => L(c, d, t), [(y + 1) * 3, x * 16, 212]) : null,
-    W: oW ? run(t => L(a, c, t), [x * 3, y * 16, 213]) : null, E: oE ? run(t => L(b, d, t), [(x + 1) * 3, y * 16, 214]) : null,
-    cNW: !oN && !oW && ic_open(x - 1, y - 1) ? a : 0, cNE: !oN && !oE && ic_open(x + 1, y - 1) ? b : 0, cSW: !oS && !oW && ic_open(x - 1, y + 1) ? c : 0, cSE: !oS && !oE && ic_open(x + 1, y + 1) ? d : 0 };
-}
-const ic_EDGE = new Map();
-function ic_edgeOf(x, y) { const i = idx(x, y), sig = ic_sig(x, y); let e = ic_EDGE.get(i); if (!e || e.sig !== sig) { e = ic_edge(x, y); e.sig = sig; ic_EDGE.set(i, e); if (ic_EDGE.size > 6000) ic_EDGE.clear(); } return e; }
-// 둘레 5×5 (앞면이 드러나는지는 이웃 칸의 깎인 모양에 달려서)
-function ic_sig5(x, y) { let s = 0, k = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { if (dx || dy) { if (ic_open(x + dx, y + dy)) s |= 1 << k; k++; } } return s; }
+// ---- 벽 모양: v82 오토타일 ----
+// 칸 모양은 주변 8칸(열림/막힘)과 변형 번호(0~2)만으로 정해요 — 같은 조합이면 어디서나 같은 그림이라 미리 만들어 둔 칸을 다시 써요.
+//   곧은 변: 열린 쪽으로 2px 들어감 · 바깥 모서리(두 변이 열림): 꼭짓점 5px까지 비스듬히 + 대각선으로 깎음
+//   변 끝에서 옆 칸이 막혔으면: 대각선 칸이 열렸으면 2px 그대로 이어지고, 막혔으면 0px로 줄어 옆 벽과 맞물려요
+//   안쪽 모서리(대각선만 열림): 3px 비스듬히 · 변 가운데(4~11px)에 1px 요철(변형마다 다름)
+//   주변 8칸 번호(ic_sig): 0 북서 · 1 북 · 2 북동 · 3 서 · 4 동 · 5 남서 · 6 남 · 7 남동 (1 = 열림)
+const AUTOTILE = { dep: 2, corner: 5, cut: 7, notch: 3, variants: 3 };
+const ic_SH = new Map(), ic_OCC = new Map();
+// 모양에 영향 없는 대각선은 지워요 (두 옆이 모두 열린 모서리)
+function canonSig(s) { const o = b => (s >> b) & 1; if (o(1) && o(3)) s &= ~1; if (o(1) && o(4)) s &= ~4; if (o(6) && o(3)) s &= ~32; if (o(6) && o(4)) s &= ~128; return s; }
+const ic_var = (x, y) => (hash2(x, y, 207) * AUTOTILE.variants) | 0;
+// 한 변을 따라 들어가는 정도 (16칸): aO·aD = t=0 쪽 옆 칸 열림·대각선 열림, bO·bD = t=15 쪽
+function ic_side(aO, aD, bO, bD, vr, seed, bump) {
+  const r = new Int8Array(16), A = AUTOTILE;
+  for (let t = 0; t < 16; t++) { let d = A.dep;
+    if (aO) d = Math.max(d, A.corner - t); else if (!aD) d = Math.min(d, t);
+    if (bO) d = Math.max(d, A.corner - (15 - t)); else if (!bD) d = Math.min(d, 15 - t);
+    if (bump && t >= 4 && t <= 11 && hash2(vr, Math.floor(t / 3), seed) < .3) d++;
+    r[t] = d; }
+  return r; }
+// 칸 모양 (16×16, 1 = 벽) — sig: 주변 8칸, vr: 변형, bump: 요철 넣기
+function autoShape(sig, vr = 0, bump = true) {
+  sig = canonSig(sig); const key = sig * 8 + vr * 2 + (bump ? 1 : 0); let m = ic_SH.get(key); if (m) return m;
+  const o = b => (sig >> b) & 1, oN = o(1), oE = o(4), oS = o(6), oW = o(3), A = AUTOTILE;
+  const N = oN ? ic_side(oW, o(0), oE, o(2), vr, 211, bump) : null, S = oS ? ic_side(oW, o(5), oE, o(7), vr, 212, bump) : null;
+  const Wd = oW ? ic_side(oN, o(0), oS, o(5), vr, 213, bump) : null, E = oE ? ic_side(oN, o(2), oS, o(7), vr, 214, bump) : null;
+  m = new Uint8Array(256);
+  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { const iu = 15 - u, iv = 15 - v;
+    if ((N && v < N[u]) || (S && iv < S[u]) || (Wd && u < Wd[v]) || (E && iu < E[v])) continue;
+    if ((oN && oW && u + v < A.cut) || (oN && oE && iu + v < A.cut) || (oS && oW && u + iv < A.cut) || (oS && oE && iu + iv < A.cut)) continue;
+    if ((!oN && !oW && o(0) && u + v < A.notch) || (!oN && !oE && o(2) && iu + v < A.notch) || (!oS && !oW && o(5) && u + iv < A.notch) || (!oS && !oE && o(7) && iu + iv < A.notch)) continue;
+    m[v * 16 + u] = 1; }
+  ic_SH.set(key, m); return m; }
+// 그림자용 4px 칸 (4×4 = 16비트, 9픽셀 이상 벽이면 막힘)
+function autoOcc(m) { let b = ic_OCC.get(m); if (b !== undefined) return b; b = 0;
+  for (let cy = 0; cy < 4; cy++) for (let cx = 0; cx < 4; cx++) { let n = 0; for (let v = 0; v < 4; v++) for (let u = 0; u < 4; u++) n += m[(cy * 4 + v) * 16 + cx * 4 + u]; if (n >= 9) b |= 1 << (cy * 4 + cx); }
+  ic_OCC.set(m, b); return b; }
 function ic_sig(x, y) { let s = 0, k = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (dx || dy) { if (ic_open(x + dx, y + dy)) s |= 1 << k; k++; } } return s; }
-// 얼음벽 칸 (x,y)의 발자국 픽셀 (u,v)가 벽 안인지 (위에서 본 모양 — 윗면은 이걸 12px 위로 올려 그려요)
-function ic_in(e, u, v) {
-  if (e.W && u < e.W[v]) return false; if (e.E && 15 - u < e.E[v]) return false; if (e.N && v < e.N[u]) return false; if (e.S && 15 - v < e.S[u]) return false;
-  const R = ICE.round, rc = (p, q) => p < R && q < R && (R - p) * (R - p) + (R - q) * (R - q) > R * R;
-  if (e.N && e.W && rc(u - e.W[v], v - e.N[u])) return false; if (e.N && e.E && rc(15 - u - e.E[v], v - e.N[u])) return false;
-  if (e.S && e.W && rc(u - e.W[v], 15 - v - e.S[u])) return false; if (e.S && e.E && rc(15 - u - e.E[v], 15 - v - e.S[u])) return false;
-  if (u < e.cNW && v < e.cNW) return false; if (15 - u < e.cNE && v < e.cNE) return false; if (u < e.cSW && 15 - v < e.cSW) return false; if (15 - u < e.cSE && 15 - v < e.cSE) return false;
-  return true;
-}
+const ic_slanted = w => SLANT.has(w) && (w === ICE_W || TR.ready); // 기울어진 모양으로 그리는 벽 (바위는 새 그림이 있을 때만)
+const tileShape = (x, y) => autoShape(ic_sig(x, y), ic_var(x, y), true);
+// 그림자 지도(render/glight.js)용: 칸 (x,y)의 4px 칸 막힘 (16비트) — 기울어진 벽은 모양대로, 다른 벽은 모두 막힘, 바닥은 0
+function wallOcc4(x, y) { const w = G.wall[idx(x, y)]; if (!w) return 0; if (!ic_slanted(w)) return 0xffff; return autoOcc(tileShape(x, y)); }
 // 세계 픽셀 (wx,wy)가 벽 안인지: 기울어지는 벽은 깎인 모양, 다른 벽(지어 쌓는 벽·암반)은 칸 전체, 지도 밖도 벽
-function wallSolidPx(wx, wy) { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); if (!inB(x, y)) return true; const w = G.wall[idx(x, y)]; if (!w) return false; if (!SLANT.has(w)) return true; return ic_in(ic_edgeOf(x, y), wx - x * 16, wy - y * 16); }
+function wallSolidPx(wx, wy) { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); if (!inB(x, y)) return true; const w = G.wall[idx(x, y)]; if (!w) return false; if (!SLANT.has(w)) return true; return !!tileShape(x, y)[(wy - y * 16) * 16 + wx - x * 16]; }
 // 픽셀 사각형 [X0, X0+w)×[Y0, Y0+h)의 벽 지도 (칸마다 모양을 한 번만 구해요): 0 바닥 · 1 칸 전체 벽 · 2 얼음벽 · 3 기울어지는 바위
 function wallMask(X0, Y0, w, h) {
   const m = new Uint8Array(w * h), tx0 = Math.floor(X0 / 16), ty0 = Math.floor(Y0 / 16), tx1 = Math.floor((X0 + w - 1) / 16), ty1 = Math.floor((Y0 + h - 1) / 16);
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { const out = !inB(tx, ty), wl = out ? 8 : G.wall[idx(tx, ty)]; if (!wl) continue;
-    const sl = !out && SLANT.has(wl), e = sl ? ic_edgeOf(tx, ty) : null, val = !sl ? 1 : wl === ICE_W ? 2 : 3;
+    const sl = !out && SLANT.has(wl), e = sl ? tileShape(tx, ty) : null, val = !sl ? 1 : wl === ICE_W ? 2 : 3;
     const u0 = Math.max(0, X0 - tx * 16), u1 = Math.min(15, X0 + w - 1 - tx * 16), v0 = Math.max(0, Y0 - ty * 16), v1 = Math.min(15, Y0 + h - 1 - ty * 16);
-    const full = !e || (!e.N && !e.S && !e.W && !e.E && !e.cNW && !e.cNE && !e.cSW && !e.cSE); // 깎인 곳 없는 칸은 바로 채워요
-    for (let v = v0; v <= v1; v++) { const row = (ty * 16 + v - Y0) * w + tx * 16 - X0; if (full) { m.fill(val, row + u0, row + u1 + 1); continue; } for (let u = u0; u <= u1; u++) if (ic_in(e, u, v)) m[row + u] = val; } }
+    for (let v = v0; v <= v1; v++) { const row = (ty * 16 + v - Y0) * w + tx * 16 - X0; if (!e) { m.fill(val, row + u0, row + u1 + 1); continue; } for (let u = u0; u <= u1; u++) if (e[v * 16 + u]) m[row + u] = val; } }
   return m; }
 // 거리 (1·1.41 근사): src(k)가 참인 픽셀에서 떨어진 거리
 function ic_dist(m, w, h, src) { const d = new Float32Array(w * h), BIG = 1e9; for (let k = 0; k < w * h; k++) d[k] = src(m[k]) ? 0 : BIG;
@@ -5374,13 +5388,18 @@ function ic_cell(wx, wy, cs, st, s, per = 0) { const gx = Math.floor(wx / cs), g
     const px = (cx + .15 + hash2(hx, hy, s) * .7) * cs, py = (cy + .15 + hash2(hx, hy, s + 1) * .7) * cs, o = hash2(hx, hy, s + 2) < .5 ? 1 : -1, ax = .86, ay = .5 * o, dx = wx + .5 - px, dy = wy + .5 - py, p = (dx * ax + dy * ay) / st, q = -dx * ay + dy * ax, d = Math.sqrt(p * p + q * q);
     if (d < d1) { d2 = d1; d1 = d; id = hx * 7919 + hy; } else if (d < d2) d2 = d; }
   return { id, gap: d2 - d1 }; }
+// v82: 얼음벽 윗면은 32px마다 반복하는 무늬 (오토타일: 칸 그림을 다시 쓰니 무늬도 칸 2개마다 같게) — wx·wy는 0~31
+const IC_TP = 32;
+const ic_vnP = (x, y, s, P) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = n => ((n % P) + P) % P;
+  const a = hash2(w(ix), w(iy), s), b = hash2(w(ix + 1), w(iy), s), c = hash2(w(ix), w(iy + 1), s), d = hash2(w(ix + 1), w(iy + 1), s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
 function ic_topPx(wx, wy) {
+  wx &= IC_TP - 1; wy &= IC_TP - 1;
   if (hash2(wx, wy, 230) < .0025) return IC.spark;
-  const c = ic_cell(wx, wy, 11, 1.6, 231), k = Math.min(4, Math.floor(hash2(c.id, 3, 232) * 5));
-  const cr1 = Math.abs(((wx + wy + Math.round(ic_vn(wx / 9, wy / 9, 233) * 6)) % 15 + 15) % 15) < 1 && ic_vn(wx / 6, wy / 6, 234) > .45;
-  const cr2 = Math.abs(((wx - wy + Math.round(ic_vn(wx / 9, wy / 9, 235) * 6)) % 13 + 13) % 13) < 1 && ic_vn(wx / 6, wy / 6, 236) > .5;
+  const c = ic_cell(wx, wy, 8, 1.6, 231, IC_TP / 8), k = Math.min(4, Math.floor(hash2(c.id, 3, 232) * 5));
+  const cr1 = ((wx + wy + Math.round(ic_vnP(wx / 8, wy / 8, 233, 4) * 6)) & 15) === 0 && ic_vnP(wx / 8, wy / 8, 234, 4) > .45;
+  const cr2 = ((wx - wy + Math.round(ic_vnP(wx / 8, wy / 8, 235, 4) * 6)) & 15) === 0 && ic_vnP(wx / 8, wy / 8, 236, 4) > .5;
   if (cr1 || cr2 || c.gap < .7) return IC.crack;
-  if ((((wx + 2 * wy) % 23) + 23) % 23 === 0 && ic_vn(wx / 5, wy / 5, 237) > .62) return IC.line;
+  if (((wx + 2 * wy) & 15) === 0 && ic_vnP(wx / 4, wy / 4, 237, 8) > .62) return IC.line;
   return IC.top[k];
 }
 // 얼음 조각 바닥 무늬는 256px마다 반복 — 처음 한 번 만들어 두고 베껴 써요 (v81: 픽셀마다 계산하던 것이 폰에서 느렸어요)
@@ -5436,19 +5455,29 @@ function ic_slot() { // 새 칸 → 빈 칸 → 가장 오래 안 쓴 칸
 }
 // 기울어지는 벽 한 칸의 그림 { slot, u, v(아틀라스 자리), front(앞면 있음), frontUp, ore } — 윗면은 (u, v) 16×16, 그늘 (u, v+16), 앞면 (u, v+32) 16×28
 // rock: 바위면 v73 그림 { top16, front, ore } (render/terrain.js wallArt), 얼음벽이면 null · glow: 광석 발광 규칙 (render/terrain.js GLOW_RULE)
+// v82 오토타일: 칸 그림은 (바위 그림, 주변 8칸, 변형[, 얼음 무늬 자리]) 조합마다 하나 — 같은 조합의 칸은 모두 같은 그림을 써요
+const ic_IMG = new WeakMap(); let ic_imgN = 0;
+const ic_rid = img => { if (!img) return 'i'; let n = ic_IMG.get(img); if (!n) { n = ++ic_imgN; ic_IMG.set(img, n); } return n; };
 function slantWallArt(x, y, w, rock, glow) {
   if (ic_ART.size > 30000) ic_ART.clear(); // 기억이 너무 커지면 비워요 (아틀라스 자리는 오래된 순으로 다시 써요)
-  const i = idx(x, y), s5 = ic_sig5(x, y), sig = s5 * 16 + (w & 15), clk = ++ATL.clock; let a = ic_ART.get(i);
-  if (a && a.sig === sig && a.src === (rock ? rock.top16 : null)) { ATL.used[a.slot] = clk; return a; }
-  // 둘레 2칸이 모두 벽인 깊은 칸은 모양이 같아서(깎임·앞면 없음, 그늘은 거의 까맘) 한 자리를 같이 써요 (지우지 않음)
-  if (!s5) { const dk = rock ? rock.top16 : 'ice'; let d = ic_DEEP.get(dk); if (!d) { if (ATL.budget-- <= 0) return null; d = ic_build(x, y, w, rock, glow, ic_edgeOf(x, y), ic_slot()); ATL.pin[d.slot] = 1; ic_DEEP.set(dk, d); } a = { ...d, sig }; ic_ART.set(i, a); return a; }
+  const ice = w === ICE_W, sig = canonSig(ic_sig(x, y)), vr = ic_var(x, y), par = ice ? (x & 1) + (y & 1) * 2 : 0;
+  const key = (ice ? 'i' : ic_rid(rock.top16) + '.' + ic_rid(rock.front)) + ':' + sig + ':' + vr + ':' + par, clk = ++ATL.clock; let a = ic_ART.get(key);
+  if (a) { ATL.used[a.slot] = clk; return a; }
   if (ATL.budget-- <= 0) return null;
-  const slot = a && !ATL.pin[a.slot] ? a.slot : ic_slot(); ATL.owner[slot] = i; ATL.used[slot] = clk;
-  a = ic_build(x, y, w, rock, glow, ic_edgeOf(x, y), slot); a.sig = sig; ic_ART.set(i, a); return a;
+  const slot = ic_slot(); ATL.owner[slot] = key; ATL.used[slot] = clk;
+  a = ic_build(sig, vr, par, w, rock, glow, slot); ic_ART.set(key, a); return a;
 }
-const ic_DEEP = new Map();
-function ic_build(x, y, w, rock, glow, e, slot) {
-  const ice = w === ICE_W, X = x * 16, Y = y * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK, FH = 16 + FU;
+// 칸 둘레 3×3을 48×48 벽 지도로 (가운데 칸은 진짜 모양, 옆 벽은 주변 8칸 밖을 벽으로 보고 요철 없이 — 그늘·앞면 계산에만 써요)
+const ic_BIT = { '-1,-1': 0, '0,-1': 1, '1,-1': 2, '-1,0': 3, '1,0': 4, '-1,1': 5, '0,1': 6, '1,1': 7 };
+function ic_local(sig, vr) {
+  const m = new Uint8Array(48 * 48), open = (dx, dy) => (dx || dy) && Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (sig >> ic_BIT[dx + ',' + dy]) & 1;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (open(dx, dy)) continue; let sh;
+    if (!dx && !dy) sh = autoShape(sig, vr, true);
+    else { let ns = 0, k = 0; for (let ey = -1; ey <= 1; ey++) for (let ex = -1; ex <= 1; ex++) { if (!ex && !ey) continue; if (open(dx + ex, dy + ey)) ns |= 1 << k; k++; } sh = autoShape(ns, 0, false); }
+    for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) m[((dy + 1) * 16 + v) * 48 + (dx + 1) * 16 + u] = sh[v * 16 + u]; }
+  return m; }
+function ic_build(sig, vr, par, w, rock, glow, slot) {
+  const ice = w === ICE_W, X = (par & 1) * 16, Y = (par >> 1) * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK, FH = 16 + FU, e = autoShape(sig, vr, true);
   const tp = rock ? ic_pix(rock.top16) : null, fp = rock ? ic_pix(rock.front) : null;
   const pg = ic_page(Math.floor(slot / PG_N)), lk = slot % PG_N, su = (lk % PG_COLS) * SLOT_W, sv = Math.floor(lk / PG_COLS) * SLOT_H, A = pg.A.data, Mt = pg.M.data, E = pg.E.data;
   for (let v = 0; v < SLOT_H; v++) { const o = ((sv + v) * PG_W + su) * 4; A.fill(0, o, o + SLOT_W * 4); Mt.fill(0, o, o + SLOT_W * 4); E.fill(0, o, o + SLOT_W * 4); } // 칸 비우기
@@ -5456,29 +5485,29 @@ function ic_build(x, y, w, rock, glow, e, slot) {
   const emF = ice ? (r, g, b) => ICE_EM(r, g, b) : (r, g, b) => glow && glow(r, g, b) ? 1 : 0;
   // 면 정보·발광 (render/glight.js gxlayerOf와 같은 값): 윗면 = 종류 3·높이 16·12px 아래, 앞면 = 종류 2·높이 FH−줄·FH+1−줄 아래
   const surf = (k, c, ty, z, off) => { Mt[k] = ty * 40; Mt[k + 1] = z; Mt[k + 2] = 128 + off; Mt[k + 3] = 255; const f = emF(c[0], c[1], c[2]); E[k] = c[0] * f; E[k + 1] = c[1] * f; E[k + 2] = c[2] * f; E[k + 3] = 255; };
-  // 둘레 10px까지 벽 지도 → 그늘(바닥에서 떨어진 거리)·테두리
-  const M = ice ? 10 : 8, WW = 16 + M * 2, wmk = wallMask(X - M, Y - M, WW, WW), dist = ic_dist(wmk, WW, WW, v => v === 0), sol = (u, v) => wmk[(v + M) * WW + u + M] !== 0;
-  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!ic_in(e, u, v)) continue; const k = at(u, v), ks = at(u, v + 16), wx = X + u, wy = Y + v;
+  // 둘레 3×3 벽 지도 → 그늘(바닥에서 떨어진 거리)·테두리
+  const wmk = ic_local(sig, vr), dist = ic_dist(wmk, 48, 48, v => v === 0), sol = (u, v) => wmk[(v + 16) * 48 + u + 16] !== 0;
+  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!e[v * 16 + u]) continue; const k = at(u, v), ks = at(u, v + 16), wx = X + u, wy = Y + v;
     const rim = !sol(u, v - 1) || !sol(u - 1, v) || !sol(u + 1, v);
     let c; if (ice) c = rim ? (hash2(wx, wy, 250) < .22 ? IC.rimT : IC.rim) : ic_topPx(wx, wy);
     else { c = ic_at(tp, u, v); if (rim) c = c.map(q => Math.min(255, q * 1.35 + 14)); } // 바위 윗면 가장자리는 조금 밝게
     c = c.map(Math.round); ic_put(A, k, c); surf(k, c, 3, 16, 12);
-    const d = dist[(v + M) * WW + u + M], al = Math.round(Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack * 255);
+    const d = dist[(v + 16) * 48 + u + 16], al = Math.round(Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack * 255);
     ic_put(A, ks, [8, 6, 12], al); E[ks + 3] = Math.min(255, Math.round(al / .96)); } // 그늘은 발광도 가려요(검정)
-  // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면 — 둥근 모서리를 따라 돌아요
-  const vbot = new Int8Array(16).fill(-1); let anyF = false;
-  for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (ic_in(e, u, v)) { if (!sol(u, v + 1)) { vbot[u] = v; anyF = true; } break; }
-  for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || e.oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || e.oE);
+  // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면 — 모서리를 따라 돌아요
+  const vbot = new Int8Array(16).fill(-1), oW = (sig >> 3) & 1, oE = (sig >> 4) & 1; let anyF = false;
+  for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (e[v * 16 + u]) { if (!sol(u, v + 1)) { vbot[u] = v; anyF = true; } break; }
+  for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || oE);
     for (let r = 0; r < 16; r++) { const row = vbot[u] - 15 + r + FU; if (row < 0 || row >= FH) continue; const k = at(u, 32 + row), wx = X + u;
       let c;
       if (ice) { c = r === 0 ? IC.fHi : r === 15 ? IC.fLow : ic_mix(IC.fTop, IC.fBot, Math.round(r / 15 * 4) / 4);
-        if (r > 0 && r < 15) { const f = ic_cell(wx * 2, Y + r * 3, 9, 1, 260); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
+        if (r > 0 && r < 15) { const f = ic_cell(wx * 2, r * 3, 8, 1, 260, 8); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
         if (side && r > 0 && r < 15) c = ic_mix(c, IC.fSide, .7); }
       else { c = ic_at(fp, u, r); if (side) c = c.map(q => q * .72); }
       c = c.map(Math.round); ic_put(A, k, c); surf(k, c, 2, Math.max(0, FH - row), FH + 1 - row); }
     // v81: 바위는 앞면 바로 아래 바닥에 옅은 그림자 3줄 (예전 칸 단위 접촉 그림자 대신, 벽 그림과 같이 그려요)
     if (!ice) for (let r = 1; r <= 3; r++) { const vv = vbot[u] + r; if (sol(u, vv)) break; const row = vbot[u] + FU + r; if (row >= FH + 3) break; ic_put(A, at(u, 60 + row), [14, 8, 22], Math.round(ROCK.shadow[r - 1] * 255)); } }
-  return { slot, img: pg.alb, u: su, v: sv, src: rock ? rock.top16 : null, front: anyF, shadow: anyF && !ice, frontUp: FU, ore: ice ? 'ice' : rock.ore };
+  return { slot, img: pg.alb, u: su, v: sv, front: anyF, shadow: anyF && !ice, frontUp: FU, ore: ice ? 'ice' : rock.ore };
 }
 // ---- 바닥: 얼음 조각 한 칸 (꾸밈은 진짜 바닥 칸에만) ----
 function drawIceShard(g, x, y, X, Y, deco) {
@@ -5508,7 +5537,7 @@ function wallEdgeChunk(cx, cy, N) {
   return lit || sh ? { glow: lit ? gc : null, shadow: sh ? sc : null } : null;
 }
 // 테스트용: 칸 (x,y) 발자국 안 픽셀 수 (깎인 모양 확인)
-function slantWallPx(x, y) { const e = ic_edgeOf(x, y); let n = 0; for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) if (ic_in(e, u, v)) n++; return n; }
+function slantWallPx(x, y) { const e = tileShape(x, y); let n = 0; for (let k = 0; k < 256; k++) n += e[k]; return n; }
 // ================= v73 바닥·벽·광석 새 그림 (빛 데모의 「에셋으로」 세트, dev/art/terrain/) =================
 // 그림 원본: 사용자가 직접 그려 예전에 판매했던 텍스처 묶음 → dev/art_src/terrain/make_terrain.py 가 16px 조각으로 만들어요.
 // 바닥: 잔디(1)·흙(2)·물(10)은 칸 조각이 아니라 픽셀 단위 경계(구불구불, 벽 쪽은 중립)로 굽고, 나무(5)·돌(6) 바닥은 네모 블록.
@@ -5676,8 +5705,16 @@ function bakeFloor(tx0, ty0, tx1, ty1) {
     if (!shore(x, yb) || !near(x - 1, yb) || !near(x + 1, yb)) continue;
     for (let r = 0; r < H2; r++) { const yy = yb - tr_CLIFF.h + r; if (yy < 0 || yy >= Hp) continue; const kk = yy * Wp + x, o = oi(kk); if (o < 0) continue;
       if (wallPx[kk] || (r < tr_CLIFF.h ? !Gm[kk] : Gm[kk])) continue; if (tBi[((yy >> 4) * TW) + (x >> 4)] === ICE_BIOME) putC(o, iceCliffPx(r, tr_CLIFF.h)); else putT(o, CL, X0 + x, r); } }
+  // v82: 땅·물 지도와 물가 거리도 같이 (render/chunks.js에서 다른 자연 바닥의 경계를 그릴 때 써요) — 0 물 · 1 땅 · 2 벽
+  const land = new Uint8Array(ow * oh), shoreD = new Uint8Array(ow * oh);
+  for (let ly = 0; ly < oh; ly++) for (let lx = 0; lx < ow; lx++) { const k = (oy0 + ly) * Wp + ox0 + lx, o = ly * ow + lx; land[o] = wallPx[k] ? 2 : Gm[k] ? 1 : 0; shoreD[o] = Gm[k] ? dG[k] : 0; }
+  out.land = land; out.shore = shoreD;
   return out;
 }
+// v82: 다른 자연 바닥과의 경계에 쓰는 것 (render/chunks.js softEdges)
+const floorNoise = (x, y, s) => tr_vnoise(x, y, s);
+// 기본 바닥(잔디·흙길·얼음 조각)의 한 픽셀 — 벽 칸 아래 깎인 곳에 써요
+function basePx(f, wx, wy, ice) { if (ice) return iceShorePx(wx, wy, 9); const t = TR.tex[f === 2 ? 'dirt' : 'grass'], k = tr_at(t, wx, wy); return [t.d[k], t.d[k + 1], t.d[k + 2]]; }
 // 얇은 벽·문 칸: 4등분 조각마다 그쪽 바닥을 무늬 그대로 (render/chunks.js) — 바닥 무늬의 그 자리 8×8
 const TQ = { 1: 'grass', 2: 'dirt', 5: 'fwood', 6: 'fstone' };
 function newQuarter(g, f, X, Y, wx, wy) { const img = ARTC['terrain/' + TQ[f]]; if (!img) return false;
@@ -5752,32 +5789,35 @@ const gxMAXL = 40;
 let gl = null, glCv = null, PV, PL, PB, PBl, PF, gxvao, texA, texM, texE, texOcc, visTex, visFb, fbLit = null, fbB1 = null, fbB2 = null, gxcurW = 0, gxcurH = 0;
 const gxVS = `#version 300 es
 layout(location = 0) in vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`;
-const gxSOFT_N = 16, gxSOFT_R = 6; // 벽 그림자 경계: 광선 16개, 빛의 반너비 6px
+const gxSOFT_N = 12, gxSOFT_R = 6; // 벽 그림자 경계: 광선 12개, 빛의 반너비 6px
+// v82: 벽 칸 지도는 4px 칸 (기울어진 벽 모양대로, render/icecave.js wallOcc4) — 빛이 네모 칸으로 끊기지 않게
+//   결과 두 가지: x = 자기 16px 칸 전체를 건너뜀(벽 윗면·앞면), y = 자기 4px 칸만 건너뜀(바닥·서 있는 것)
 const gxRAY = `
-bool occ(ivec2 c){ if (c.x < 0 || c.y < 0 || float(c.x) >= uMap.x || float(c.y) >= uMap.y) return true; ivec2 q = c - uOccO;
+bool occ(ivec2 c){ if (c.x < 0 || c.y < 0 || float(c.x) >= uMap.x * 4. || float(c.y) >= uMap.y * 4.) return true; ivec2 q = c - uOccO;
   if (q.x < 0 || q.y < 0 || q.x >= uOccS.x || q.y >= uOccS.y) return false; return texelFetch(uOcc, q, 0).r > 0u; }
-float ray(vec2 a, vec2 b, ivec2 skip){
-  vec2 p = a / 16., q = b / 16., d = q - p; ivec2 c = ivec2(floor(p)), e = ivec2(floor(q));
+vec2 ray(vec2 a, vec2 b){
+  vec2 p = a / 4., q = b / 4., d = q - p; ivec2 c = ivec2(floor(p)), e = ivec2(floor(q)), own = c, ownT = c >> 2;
   ivec2 st = ivec2(sign(d)); vec2 inv = 1. / max(abs(d), vec2(1e-5));
   vec2 tm = vec2(d.x > 0. ? float(c.x) + 1. - p.x : p.x - float(c.x), d.y > 0. ? float(c.y) + 1. - p.y : p.y - float(c.y)) * inv;
-  for (int i = 0; i < 72; i++) {
-    if (c != skip && occ(c)) return 0.;
-    if (c == e) return 1.;
-    if (tm.x < tm.y) { if (tm.x > 1.) return 1.; tm.x += inv.x; c.x += st.x; } else { if (tm.y > 1.) return 1.; tm.y += inv.y; c.y += st.y; }
+  float g = 1.;
+  for (int i = 0; i < 300; i++) {
+    if (occ(c)) { if ((c >> 2) != ownT) return vec2(0.); if (c != own) g = 0.; }
+    if (c == e) return vec2(1., g);
+    if (tm.x < tm.y) { if (tm.x > 1.) return vec2(1., g); tm.x += inv.x; c.x += st.x; } else { if (tm.y > 1.) return vec2(1., g); tm.y += inv.y; c.y += st.y; }
   }
-  return 1.;
+  return vec2(1., g);
 }
-float softVis(vec2 a, vec2 b, ivec2 skip){
+vec2 softVis(vec2 a, vec2 b){
   vec2 dir = normalize(b - a + vec2(1e-4)), n = vec2(-dir.y, dir.x) * ${gxSOFT_R.toFixed(1)};
-  float s = 0., wsum = 0.;
-  for (int k = 0; k < ${gxSOFT_N}; k++) { float t = (float(k) + .5) / ${gxSOFT_N}. * 2. - 1., w = sqrt(1. - t * t); s += ray(a, b + n * t, skip) * w; wsum += w; }
+  vec2 s = vec2(0.); float wsum = 0.;
+  for (int k = 0; k < ${gxSOFT_N}; k++) { float t = (float(k) + .5) / ${gxSOFT_N}. * 2. - 1., w = sqrt(1. - t * t); s += ray(a, b + n * t) * w; wsum += w; }
   return s / wsum;
 }`;
 const gxVIS = `#version 300 es
 precision highp float; precision highp int;
 uniform highp usampler2D uOcc; uniform vec2 uMap, uLight, uOrigin, uSlot; uniform ivec2 uOccO, uOccS; out vec4 o;
 ${gxRAY}
-void main(){ vec2 P = uOrigin + gl_FragCoord.xy - uSlot; o = vec4(softVis(P, uLight, ivec2(floor(P / 16.))), 0., 0., 1.); }`;
+void main(){ vec2 P = uOrigin + gl_FragCoord.xy - uSlot; o = vec4(softVis(P, uLight), 0., 1.); }`;
 const gxLIT = `#version 300 es
 precision highp float; precision highp int;
 uniform sampler2D uAlb, uMat, uEm, uVis;
@@ -5803,7 +5843,7 @@ void main(){
     else ndl = .82 + .18 * Ln.z;
     if (ndl <= 0.) continue;
     float gxsh = 1.; vec4 vr = uVisR[i];
-    if (vr.x >= 0.) { ivec2 q = ivec2(floor(P.xy - vr.zw)); float sz = uGlow[i].w; if (q.x >= 0 && q.y >= 0 && float(q.x) < sz && float(q.y) < sz) gxsh = texelFetch(uVis, ivec2(vr.xy) + q, 0).r; }
+    if (vr.x >= 0.) { ivec2 q = ivec2(floor(P.xy - vr.zw)); float sz = uGlow[i].w; if (q.x >= 0 && q.y >= 0 && float(q.x) < sz && float(q.y) < sz) { vec2 vv = texelFetch(uVis, ivec2(vr.xy) + q, 0).rg; gxsh = (ty == 2 || ty == 3) ? vv.r : vv.g; } }
     acc += uL1[i].rgb * uL1[i].w * at * ndl * gxsh;
   }
   vec3 c = alb * acc * 1.45;
@@ -5854,7 +5894,7 @@ function gxinitGL() {
   texA = gxtex(gl.NEAREST); texM = gxtex(gl.NEAREST); texE = gxtex(gl.NEAREST); texOcc = gxtex(gl.NEAREST);
   const maxT = gl.getParameter(gl.MAX_TEXTURE_SIZE); let y = 0; gxBANDS = [];
   for (const [s, rows] of [[128, 2], [256, 3], [512, 1], [1024, 1]]) { if (y + s * rows > maxT) break; gxBANDS.push({ s, y, rows, n: (gxVIS_W / s) * rows, free: [] }); for (let k = 0; k < (gxVIS_W / s) * rows; k++) gxBANDS[gxBANDS.length - 1].free.push(k); y += s * rows; }
-  visTex = gxtexN(gxVIS_W, y, gl.NEAREST, gl.R8, gl.RED); visFb = gxfbo(gxVIS_W, y, visTex);
+  visTex = gxtexN(gxVIS_W, y, gl.NEAREST, gl.RG8, gl.RG); visFb = gxfbo(gxVIS_W, y, visTex);
   if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error('그림자 지도를 만들 수 없어요');
 }
 function glReady() {
@@ -5870,16 +5910,19 @@ function gxsizeTargets(w, h) {
   glCv.width = w; glCv.height = h;
 }
 // ---- 벽 칸 지도 (보이는 곳 + 빛이 닿는 곳만, 매 장) — 바뀐 칸이 있으면 그림자를 모두 다시 구워요 ----
+// v82: 칸마다 4×4개의 4px 칸 (기울어진 벽은 모양대로)
 let gxoccMap = null, gxoccVer = 0, gxoccBuf = new Uint8Array(0);
 const gxOCC = { x: 0, y: 0, w: 0, h: 0 };
 function gxuploadOcc(x0, y0, x1, y1) {
-  if (!gxoccMap) { gxoccMap = new Uint8Array(W * H); gxoccMap.fill(255); }
+  if (!gxoccMap) { gxoccMap = new Int32Array(W * H); gxoccMap.fill(-1); }
   x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W - 1, x1); y1 = Math.min(H - 1, y1);
-  const w = Math.max(1, x1 - x0 + 1), h = Math.max(1, y1 - y0 + 1); if (gxoccBuf.length < w * h) gxoccBuf = new Uint8Array(w * h * 2);
+  const w = Math.max(1, x1 - x0 + 1), h = Math.max(1, y1 - y0 + 1), bw = w * 4; if (gxoccBuf.length < w * h * 16) gxoccBuf = new Uint8Array(w * h * 32);
   let changed = false;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = idx(x0 + x, y0 + y), v = G.wall[i] ? 1 : 0; gxoccBuf[y * w + x] = v; const o = gxoccMap[i]; if (o !== v) { if (o !== 255) changed = true; gxoccMap[i] = v; } }
-  gxOCC.x = x0; gxOCC.y = y0; gxOCC.w = w; gxOCC.h = h;
-  gl.bindTexture(gl.TEXTURE_2D, texOcc); gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, w, h, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, gxoccBuf.subarray(0, w * h));
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = idx(x0 + x, y0 + y), v = wallOcc4(x0 + x, y0 + y), o = gxoccMap[i];
+    if (o !== v) { if (o !== -1) changed = true; gxoccMap[i] = v; }
+    for (let cy = 0; cy < 4; cy++) { const row = (y * 4 + cy) * bw + x * 4; for (let cx = 0; cx < 4; cx++) gxoccBuf[row + cx] = (v >> (cy * 4 + cx)) & 1; } }
+  gxOCC.x = x0 * 4; gxOCC.y = y0 * 4; gxOCC.w = bw; gxOCC.h = h * 4;
+  gl.bindTexture(gl.TEXTURE_2D, texOcc); gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, bw, h * 4, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, gxoccBuf.subarray(0, w * h * 16));
   if (changed) gxoccVer++;
 }
 // ---- 그림자 지도 칸 (빛 자리마다 하나, 오래 안 쓰면 비워요) ----
@@ -6042,7 +6085,8 @@ const natural = f => !!PRI[f];
 function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
   const NEW = terrainReady(); // v73: grass·dirt·water·wood·stone floors baked per pixel (render/terrain.js), other floors drawn per tile on top
-  if (NEW) g.putImageData(bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1), 0, 0);
+  const bk = NEW ? bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1) : null, late = [];
+  if (NEW) g.putImageData(bk, 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y);
     if (G.wall[i] === ICE_W) { drawIceShard(g, x, y, tx * 16, ty * 16, false); continue; } // v79: ice under the ice wall, seen where its edge slants in
@@ -6061,28 +6105,77 @@ function drawChunk(c, cx, cy) {
       const side = (hx, vy) => { for (const [dx, dy] of [[hx, 0], [0, vy], [hx, vy]]) { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) continue; const j = idx(xx, yy); if (G.wall[j] || wallPiece(j)) continue; const nf = G.floor[j]; if (nf === WATER || nf === LAVA || !SPR.floor[nf]) continue; return nf; } return f; };
       for (const [qx, qy] of [[0, 0], [8, 0], [0, 8], [8, 8]]) { const qf = side(qx ? 1 : -1, qy ? 1 : -1); if (NEW && isNewFloor(qf) && newQuarter(g, qf, X + qx, Y + qy, x * 16 + qx, y * 16 + qy)) continue; const FQ = SPR.floor[qf]; g.drawImage(FQ[(hv * FQ.length) | 0], qx, qy, 8, 8, X + qx, Y + qy, 8, 8); } }
     else g.drawImage(SPR.floor[f][vr], X, Y);
-    if (!tset && natural(f) && !wallPiece(i)) {
-      const nb = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return 0; const j = idx(xx, yy); return G.wall[j] ? 0 : G.floor[j]; };
+    // v82: with the new floors, edges between natural floors are drawn per pixel after this loop (softEdges), so the extras wait until then
+    if (NEW) late.push([x, y, X, Y, f, i, tset]); else tileExtras(g, x, y, X, Y, f, i, tset, false);
+  }
+  if (NEW) { softEdges(g, cx, cy, bk); for (const a of late) tileExtras(g, ...a, true); }
+  if (TM.ready && !NEW) drawPatches(g, cx, cy);
+  c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+}
+// fringes (old floors only), little decorations, built-water rims and contact shadows on one floor tile
+function tileExtras(g, x, y, X, Y, f, i, tset, NEW) {
+  if (!tset && natural(f) && !wallPiece(i)) {
+    const nb = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return 0; const j = idx(xx, yy); return G.wall[j] ? 0 : G.floor[j]; };
+    if (!NEW) { // v82: the new floors have per-pixel edges instead of fringe pictures
       const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
       const fr = dirs.map(([dx, dy]) => { const b = nb(dx, dy); return natural(b) && PRI[b] > PRI[f] ? b : 0; });
       fr.forEach((b, q) => { if (b) g.drawImage(SPR.fringeX[b][q], X, Y); }); fr.forEach((b, q) => { if (b) g.drawImage(SPR.fringeL[b][q], X, Y); });
-      [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = nb(dx, dy); if (natural(b) && PRI[b] > PRI[f] && nb(dx, 0) !== b && nb(0, dy) !== b) g.drawImage(SPR.corner[b][q], X, Y); });
-      const hd = hash2(x, y, 77), dens = f === 1 ? .17 : .1;
-      if (hd < dens && SPR.deco[f]) { const list = SPR.deco[f], d = list[(hash2(x, y, 78) * list.length) | 0]; g.drawImage(d, X + 2 + ((hash2(x, y, 79) * 8) | 0), Y + 3 + ((hash2(x, y, 80) * 7) | 0)); }
-    }
-    if (WFLOOR.has(f) && !wallPiece(i)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
-      if (!nw(0, -1)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 16, 1); g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 1, 16, 1); }
-      if (!nw(0, 1)) { g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = '#5d5872'; g.fillRect(X, Y + 15, 16, 1); }
-      if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
-      if (!nw(1, 0)) { g.fillStyle = '#a7a2bb'; g.fillRect(X + 14, Y, 1, 16); g.fillStyle = '#5d5872'; g.fillRect(X + 15, Y, 1, 16); } }
-    // contact shadows next to walls
-    const hard = j => G.wall[j] && !(NEW && SLANT.has(G.wall[j])); // v80
-    if (y > 0 && hard(i - W)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
-    if (x > 0 && hard(i - 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
-    if (x < W - 1 && hard(i + 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
+      [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = nb(dx, dy); if (natural(b) && PRI[b] > PRI[f] && nb(dx, 0) !== b && nb(0, dy) !== b) g.drawImage(SPR.corner[b][q], X, Y); }); }
+    const hd = hash2(x, y, 77), dens = f === 1 ? .17 : .1;
+    if (hd < dens && SPR.deco[f]) { const list = SPR.deco[f], d = list[(hash2(x, y, 78) * list.length) | 0]; g.drawImage(d, X + 2 + ((hash2(x, y, 79) * 8) | 0), Y + 3 + ((hash2(x, y, 80) * 7) | 0)); }
   }
-  if (TM.ready && !NEW) drawPatches(g, cx, cy);
-  c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+  if (WFLOOR.has(f) && !wallPiece(i)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
+    if (!nw(0, -1)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 16, 1); g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 1, 16, 1); }
+    if (!nw(0, 1)) { g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = '#5d5872'; g.fillRect(X, Y + 15, 16, 1); }
+    if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
+    if (!nw(1, 0)) { g.fillStyle = '#a7a2bb'; g.fillRect(X + 14, Y, 1, 16); g.fillStyle = '#5d5872'; g.fillRect(X + 15, Y, 1, 16); } }
+  // contact shadows next to walls
+  const hard = j => G.wall[j] && !(NEW && SLANT.has(G.wall[j])); // v80
+  if (y > 0 && hard(i - W)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
+  if (x > 0 && hard(i - 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
+  if (x < W - 1 && hard(i + 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
+}
+// ---- v82: wavy edges between all natural floors (grass·dirt path·ice shards = "base" from the bake, mushroom soil 3, crystal sand 4, ash 18, lava) ----
+// each pixel near a tile edge goes to the floor whose share (blended between tile centres) plus a little noise is biggest — like the grass/water edge.
+// water stays where the bake put it (wavy shore for every floor), and the floor shows a darker rim at the shore.
+const SOFT_FLOORS = new Set([3, 4, 18, LAVA]);
+// tile class: -1 none (water·wall·outside — no share), -2 fixed (built floors: a share of 0, never changed), 0 base, f soft floor
+function fclass(x, y) { if (!inB(x, y)) return -1; const j = idx(x, y); if (G.wall[j]) return -1; if (wallPiece(j)) return -2; const f = G.floor[j];
+  if (f === WATER || (f === ICE_FROZEN && G.biome[j] === ICE_BIOME)) return -1; if (f === 1 || f === 2 || (f === 19 && G.biome[j] === ICE_BIOME)) return 0; return SOFT_FLOORS.has(f) ? f : -2; }
+const SE_PIX = new WeakMap();
+function sePix(cv) { let d = SE_PIX.get(cv); if (!d) { d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; SE_PIX.set(cv, d); } return d; }
+const SE_J = { wobble: .3, jag: .09 }; // 경계가 구불거리는 정도 (잔디·물 경계보다 조금 크게 — 칸 모양이 안 보이게)
+const SE_PRI = c => c === 0 ? 4 : PRI[c] || 0;
+function softEdges(g, cx, cy, bk) {
+  const T = 16, x0 = cx * CHN - 1, y0 = cy * CHN - 1, CW = CHN + 2, cl = new Int16Array(CW * CW);
+  for (let j = 0; j < CW; j++) for (let i = 0; i < CW; i++) cl[j * CW + i] = fclass(x0 + i, y0 + j);
+  const clAt = (x, y) => (x < x0 || y < y0 || x >= x0 + CW || y >= y0 + CW) ? fclass(x, y) : cl[(y - y0) * CW + x - x0];
+  let img = null; const D = () => img || (img = g.getImageData(0, 0, 256, 256)), B = bk.data;
+  const own = new Int16Array(18 * 18);
+  for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
+    const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y), me = clAt(x, y);
+    if (me === -2) continue; const wl = G.wall[i]; if (wl && (!SLANT.has(wl) || wl === ICE_W)) continue;
+    const CS = []; let soft = me > 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const c = clAt(x + dx, y + dy); if (c >= 0 && !CS.includes(c)) CS.push(c); if (c > 0) soft = true; }
+    if (!soft || !CS.length) continue; // only tiles where a soft floor is around
+    // share of class c at world pixel (px,py): blend of the four nearest tile centres (1 = that class, 0 = another floor, .5 = water·wall)
+    const share = (c, px, py) => { const gx = px / T - .5, gy = py / T - .5, a = Math.floor(gx), b = Math.floor(gy), u = gx - a, v = gy - b;
+      const m = (xx, yy) => { const k = clAt(xx, yy); return k === c ? 1 : k === -1 ? .5 : 0; };
+      return m(a, b) * (1 - u) * (1 - v) + m(a + 1, b) * u * (1 - v) + m(a, b + 1) * (1 - u) * v + m(a + 1, b + 1) * u * v; };
+    const owner = (px, py) => { if (CS.length === 1) return CS[0]; let best = CS[0], bv = -9;
+      for (const c of CS) { const v = share(c, px + .5, py + .5) + SE_J.wobble * floorNoise(px / 11, py / 11, 41 + c) + SE_J.jag * floorNoise(px / 2.6, py / 2.6, 61 + c); if (v > bv) { bv = v; best = c; } } return best; };
+    for (let v = -1; v <= 16; v++) for (let u = -1; u <= 16; u++) own[(v + 1) * 18 + u + 1] = owner(x * T + u, y * T + v);
+    const O = D().data, ice = G.biome[i] === ICE_BIOME, vr = (hash2(x, y, 5) * 4) | 0;
+    let baseF = 1; for (const [dx, dy] of [[0, 0], [0, 1], [-1, 0], [1, 0], [0, -1]]) { if (clAt(x + dx, y + dy) === 0) { baseF = G.floor[idx(x + dx, y + dy)]; break; } }
+    for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { const k = (ty * T + v) * 256 + tx * T + u, o = k * 4, L = bk.land[k];
+      if (L === 0) { if (me > 0) { O[o] = B[o]; O[o + 1] = B[o + 1]; O[o + 2] = B[o + 2]; O[o + 3] = 255; } continue; } // water stays where the bake put it
+      const c = own[(v + 1) * 18 + u + 1], wx = x * T + u, wy = y * T + v; let col;
+      if (c === 0) { if (L === 2) col = basePx(baseF, wx, wy, ice); else { if (me === 0) continue; col = [B[o], B[o + 1], B[o + 2]]; } }
+      else { const F = SPR.floor[c]; if (!F) continue; const d = sePix(F[vr % F.length]), s = ((wy & 15) * 16 + (wx & 15)) * 4; col = [d[s], d[s + 1], d[s + 2]];
+        const sh = bk.shore[k]; if (sh === 1) col = col.map(q => q * .55); else if (sh === 2) col = col.map(q => q * .78); }
+      const pr = SE_PRI(c); if (SE_PRI(own[v * 18 + u + 1]) > pr || SE_PRI(own[(v + 2) * 18 + u + 1]) > pr || SE_PRI(own[(v + 1) * 18 + u]) > pr || SE_PRI(own[(v + 1) * 18 + u + 2]) > pr) col = col.map(q => q * .8); // a thin darker line on the lower floor
+      O[o] = col[0]; O[o + 1] = col[1]; O[o + 2] = col[2]; O[o + 3] = 255; }
+  }
+  if (img) g.putImageData(img, 0, 0);
 }
 // v80: under a slanted rock wall, the floor of an open neighbour (south first) — seen where the wall's edge slants in
 function underWall(g, x, y, X, Y) {
