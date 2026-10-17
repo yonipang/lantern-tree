@@ -41,7 +41,7 @@ for (const r of RECIPES) r.req = r.req.map(([id, c]) => [id, TERRAIN_MATS.has(id
 // one workbench upgraded in place (o.lv 0–5). A higher tier also makes everything the lower tiers make; its own things come first.
 export const BENCH_N = ['작업대', '구리 작업대', '철 작업대', '석영 작업대', '금 작업대', '서리 작업대'];
 export const BENCH_IT = ['bench', 'forge', 'benchFe', 'benchQ', 'benchAu', 'benchFr']; // the item you get back when picking one up ('forge' = the old copper workbench item)
-export const BENCH_UP = [null, [['copperBar', 8], ['stone', 20]], [['ironBar', 8], ['stone', 30]], [['quartzR', 6], ['granite', 20]], [['goldBar', 6], ['basalt', 20]], [['frostShard', 10], ['iceBlock', 20]]];
+export const BENCH_UP = [null, [['copperBar', 8], ['dirt', 20]], [['ironBar', 8], ['stone', 30]], [['quartzR', 6], ['granite', 20]], [['goldBar', 6], ['basalt', 20]], [['frostShard', 10], ['iceBlock', 20]]];
 export const BENCH_COL = [null, '#e5884a', '#c8d0dc', '#d8d2ee', '#ffd25c', '#9fd8f0'];
 export const BENCH_MAX = BENCH_N.length - 1;
 export const TIER_MAT = [[5, ['frostShard', 'frostCore', 'iceBlock']], [4, ['goldBar', 'goldOre', 'obsidian', 'lavaCore', 'basalt']], [3, ['quartzR', 'crystal', 'cryGem', 'granite', 'golemCore', 'gCrystal']], [2, ['ironBar', 'ironOre']], [1, ['copperBar', 'copperOre']]];

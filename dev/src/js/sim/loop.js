@@ -5,6 +5,7 @@ import { josa } from '../engine/util.js';
 import { computeLight } from '../render/light.js';
 import { G, nearestPlayer, playerList, started, withPlayer } from '../save/state.js';
 import { petIs } from './animals.js';
+import { markRuleLit } from './enemies.js';
 import { emit } from './events.js';
 import { rarCol, rarOf } from './gear.js';
 import { addItem, moveInto } from './inventory.js';
@@ -13,7 +14,7 @@ import { onFrame, runFrame } from './systems.js';
 import { roomTick } from '../world/gen.js';
 import { moveEnt } from '../world/tiles.js';
 export let lightDirty = true, lightT = 0, guideT = 0;
-export const markLight = () => { lightDirty = true; }; // 빛을 다시 계산해요 (다른 파일은 이걸 불러요)
+export const markLight = () => { lightDirty = true; markRuleLit(); }; // 빛을 다시 계산해요 (다른 파일은 이걸 불러요)
 export function pausedTick(dt) { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } // 화면이 멈춘 동안 (제목 화면 — v76부터 창을 열어도 멈추지 않아요)
 export function update(dt) {
   G.time += dt;
