@@ -1333,7 +1333,13 @@ function buildSprites() {
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];
-  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = dimmed(SPR.obj[k]);
+  // v80: a turned-off torch has no flame (the dimmed flame looked like a broken one): flame pixels go, the base keeps a dark ember, a faint wisp of smoke
+  const snuffed = c => { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; k.hd = c.hd; const g = k.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, k.width, k.height), a = d.data, w = k.width, h = k.height;
+    let cx = 0, n = 0; for (let i = 0; i < a.length; i += 4) { if (!a[i + 3]) continue; const r = a[i], gg = a[i + 1], b = a[i + 2], fl = (r > 150 && r - b > 100) || (r * .3 + gg * .59 + b * .11) > 215; if (!fl) continue;
+      const y = (i / 4 / w) | 0; if (y >= h - 3) { a[i] = 74; a[i + 1] = 44; a[i + 2] = 40; } else { a[i + 3] = 0; cx += (i / 4) % w; n++; } }
+    const sx = n ? Math.round(cx / n) : w >> 1; for (const [dx, dy, al] of [[0, 5, 150], [1, 7, 120], [0, 9, 90], [-1, 11, 60]]) { const x = sx + dx, y = h - 3 - dy; if (x < 0 || y < 0 || x >= w) continue; const i = (y * w + x) * 4; a[i] = 150; a[i + 1] = 144; a[i + 2] = 160; a[i + 3] = al; }
+    g.putImageData(d, 0, 0); return k; };
+  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = k === 'torch' ? snuffed(SPR.obj[k]) : dimmed(SPR.obj[k]);
   SPR.giant = {}; for (const k in SPR.crop) SPR.giant[k] = giantSpr(k);
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
@@ -5281,7 +5287,9 @@ function computeLight() {
   }
   lightCtx.putImageData(lightImg, 0, 0);
 }
-// ================= v79 얼음 동굴 새 방식 시험 (인계 묶음 HANDOFF.md 3-2, 2026-10-16 사용자 확정 그림) =================
+// ================= v79 얼음 동굴 새 방식 시험 (인계 묶음 HANDOFF.md 3-2, 2026-10-16 사용자 확정 그림) · v80 다른 바위에도 기울어진 가장자리 =================
+// v80: 기울어진 가장자리는 얼음벽 + 흙·돌·화강암·현무암·광맥(SLANT)에 모두 써요. 바위는 v73 그림(render/terrain.js)을 그대로 깎아 그리고, 벽 옆 바닥엔 청록빛 대신 옅은 그림자.
+//   얼어붙은 물(20, 얼음 동굴)도 새 얼음판 그림 — 물과의 경계가 구불구불해요(render/terrain.js bakeFloor).
 // 그리는 방식(2D 캔버스 + 칸 그림)은 그대로, 얼음 동굴의 그림만 새로 만들어요. 그림 파일 없이 처음 쓸 때 코드로 만들고 칸마다 기억해요.
 //   벽(얼음벽 11): 밝은 얼음 파랑 큰 면 + 대각선 어두운 금 그물 + 연한 줄·드문 반짝임, 윗면 가장자리 1px 밝은 테두리(군데군데 청록),
 //     앞면은 위 #2552c2 → 아래 #122c82, 맨 위 줄 밝게·맨 아래 줄 청록.
@@ -5291,16 +5299,19 @@ function computeLight() {
 //   바닥(얼음 동굴의 눈 바닥 19): 길쭉한 얼음 조각 면이 두 방향으로 엇갈림, 파랑 5단계(#1a49c4~#3f86f2), 꾸밈 X 서리 무늬·작은 연보라 점.
 //   벽과 바닥 사이: 바닥 쪽으로 청록빛이 덩어리지게 들쭉날쭉 번짐(벽에서 0~11px, #86f2d2 → #2a7ee6) — 새 빛에서는 스스로 빛나요.
 
-const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19;
+const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19, ICE_FROZEN = 20;
+const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13]); // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
 const ic_hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const ic_mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const IC = {
   top: ['#1d42ad', '#2350bd', '#295bc8', '#2f63d1', '#356bd9'].map(ic_hex), crack: ic_hex('#162f8c'), line: ic_hex('#5a8ce6'), spark: ic_hex('#ffffff'),
   rim: ic_hex('#7fb8f8'), rimT: ic_hex('#7ff0d6'), fTop: ic_hex('#2552c2'), fBot: ic_hex('#122c82'), fHi: ic_hex('#5a8ce6'), fLow: ic_hex('#54d8c6'), fSide: ic_hex('#0e2266'),
   floor: ['#1a49c4', '#2357cf', '#2b66da', '#3576e6', '#3f86f2'].map(ic_hex), seam: ic_hex('#173fae'), frost: ic_hex('#a8e4ff'), dot: ic_hex('#c6b6ff'),
+  frz: ['#3577dc', '#3d80e1', '#4789e6'].map(ic_hex), frzLine: ic_hex('#cdeeff'), frzBub: ic_hex('#9fd0ff'), frzRim: ic_hex('#e2f6ff'),
   glowA: ic_hex('#86f2d2'), glowB: ic_hex('#2a7ee6'), edge: ic_hex('#123590'), edgeS: ic_hex('#1b44b4'), cliffT: ic_hex('#2a5ccc'), cliffB: ic_hex('#15358f'), foam: ic_hex('#d6f4ff'),
 };
 const ICE = { ins: [1, 1, 2, 3, 5], round: 5, shadeRim: 4, shadeFade: 9, shadeBlack: .9, glowMax: 11, frontUp: 12 };
+const ROCK = { shadeRim: 2, shadeFade: 5, shadeBlack: .96, shadow: [.34, .2, .09] }; // 바위: 예전 벽 그늘 그대로, 벽 옆 바닥 그림자 3px
 // 새 빛에서 얼음이 스스로 내는 빛 (픽셀 밝기별 비율): 밝은 테두리·맨 아래 청록 줄은 많이, 나머지 얼음은 조금
 const ICE_EM = (r, g, b) => (.3 * r + .59 * g + .11 * b) > 150 ? .85 : .22;
 const isIceShard = i => G.biome[i] === ICE_BIOME && G.floor[i] === ICE_SNOW && !G.wall[i];
@@ -5331,9 +5342,22 @@ function ic_in(e, u, v) {
   if (u < e.cNW && v < e.cNW) return false; if (15 - u < e.cNE && v < e.cNE) return false; if (u < e.cSW && 15 - v < e.cSW) return false; if (15 - u < e.cSE && 15 - v < e.cSE) return false;
   return true;
 }
-// 세계 픽셀 (wx,wy)가 벽 안인지: 얼음벽은 깎인 모양, 다른 벽은 칸 전체, 지도 밖도 벽
-function iceSolidPx(wx, wy) { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); if (!inB(x, y)) return true; const w = G.wall[idx(x, y)]; if (!w) return false; if (w !== ICE_W) return true; return ic_in(ic_edgeOf(x, y), wx - x * 16, wy - y * 16); }
-const ic_iceSolid = (wx, wy) => { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); return inB(x, y) && G.wall[idx(x, y)] === ICE_W && ic_in(ic_edgeOf(x, y), wx - x * 16, wy - y * 16); };
+// 세계 픽셀 (wx,wy)가 벽 안인지: 기울어지는 벽은 깎인 모양, 다른 벽(지어 쌓는 벽·암반)은 칸 전체, 지도 밖도 벽
+function wallSolidPx(wx, wy) { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); if (!inB(x, y)) return true; const w = G.wall[idx(x, y)]; if (!w) return false; if (!SLANT.has(w)) return true; return ic_in(ic_edgeOf(x, y), wx - x * 16, wy - y * 16); }
+// 픽셀 사각형 [X0, X0+w)×[Y0, Y0+h)의 벽 지도 (칸마다 모양을 한 번만 구해요): 0 바닥 · 1 칸 전체 벽 · 2 얼음벽 · 3 기울어지는 바위
+function wallMask(X0, Y0, w, h) {
+  const m = new Uint8Array(w * h), tx0 = Math.floor(X0 / 16), ty0 = Math.floor(Y0 / 16), tx1 = Math.floor((X0 + w - 1) / 16), ty1 = Math.floor((Y0 + h - 1) / 16);
+  for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { const out = !inB(tx, ty), wl = out ? 8 : G.wall[idx(tx, ty)]; if (!wl) continue;
+    const sl = !out && SLANT.has(wl), e = sl ? ic_edgeOf(tx, ty) : null, val = !sl ? 1 : wl === ICE_W ? 2 : 3;
+    const u0 = Math.max(0, X0 - tx * 16), u1 = Math.min(15, X0 + w - 1 - tx * 16), v0 = Math.max(0, Y0 - ty * 16), v1 = Math.min(15, Y0 + h - 1 - ty * 16);
+    for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) if (!e || ic_in(e, u, v)) m[(ty * 16 + v - Y0) * w + tx * 16 + u - X0] = val; }
+  return m; }
+// 거리 (1·1.41 근사): src(k)가 참인 픽셀에서 떨어진 거리
+function ic_dist(m, w, h, src) { const d = new Float32Array(w * h).fill(1e9); for (let k = 0; k < w * h; k++) if (src(m[k])) d[k] = 0;
+  for (let pass = 0; pass < 2; pass++) for (let s = 0; s < w * h; s++) { const k = pass ? w * h - 1 - s : s, q = k % w, j = (k / w) | 0, sg = pass ? -1 : 1;
+    const nb = (dq, dj, c) => { const qq = q + dq * sg, jj = j + dj * sg; if (qq < 0 || jj < 0 || qq >= w || jj >= h) return; const v = d[jj * w + qq] + c; if (v < d[k]) d[k] = v; };
+    nb(-1, 0, 1); nb(0, -1, 1); nb(-1, -1, 1.41); nb(1, -1, 1.41); }
+  return d; }
 // ---- 무늬 ----
 const ic_vn = (x, y, s) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
   const a = hash2(ix, iy, s), b = hash2(ix + 1, iy, s), c = hash2(ix, iy + 1, s), d = hash2(ix + 1, iy + 1, s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
@@ -5357,43 +5381,57 @@ function ic_floorPx(wx, wy) {
   let k = Math.floor(hash2(c.id, 5, 242) * 5); if (hash2(c.id, 6, 243) < .2) k = Math.max(0, k - 1); // 일부 조각 조금 어둡게
   return IC.floor[Math.min(4, k)];
 }
+// 얼어붙은 물(20): 매끈한 얼음판 — 큰 조각 3단계 + 대각선으로 길게 비치는 줄 + 작은 공기 방울, 물 쪽 가장자리는 밝게
+function iceFrozenPx(wx, wy, rim) {
+  if (rim) return IC.frzRim;
+  if ((((wx - 2 * wy) % 29) + 29) % 29 < 2 && ic_vn(wx / 7, wy / 7, 300) > .55) return IC.frzLine;
+  if (hash2(wx, wy, 301) < .006) return IC.frzBub;
+  const c = ic_cell(wx, wy, 16, 2.6, 302); return IC.frz[Math.min(2, Math.floor(hash2(c.id, 7, 303) * 3))];
+}
 // ---- 칸 그림 (칸마다 기억, 이웃이 바뀌면 다시) ----
 const ic_cnv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 const ic_put = (D, k, c, a = 255) => { D[k] = Math.round(c[0]); D[k + 1] = Math.round(c[1]); D[k + 2] = Math.round(c[2]); D[k + 3] = a; };
 const ic_ART = new Map();
-function iceWallArt(x, y) {
-  const i = idx(x, y), sig = ic_sig5(x, y); let a = ic_ART.get(i); if (a && a.sig === sig) return a;
+const ic_PIX = new WeakMap(); // 바위 그림의 픽셀 (한 번만 읽어요)
+function ic_pix(c) { let d = ic_PIX.get(c); if (!d) { const k = ic_cnv(16, 16), g = k.getContext('2d'); g.drawImage(c, 0, 0); d = g.getImageData(0, 0, 16, 16).data; ic_PIX.set(c, d); } return d; }
+const ic_at = (d, u, v) => { const k = ((v & 15) * 16 + (u & 15)) * 4; return [d[k], d[k + 1], d[k + 2]]; };
+// 기울어지는 벽 한 칸의 그림 { top 16×16(발자국, 12px 위로 그림), shade, front(16+FU 줄, FU px 위부터) 또는 null, ore }
+// rock: 바위면 v73 그림 { top16, front, ore } (render/terrain.js wallArt), 얼음벽이면 null
+function slantWallArt(x, y, w, rock) {
+  const i = idx(x, y), s5 = ic_sig5(x, y), sig = s5 * 16 + (w & 15); let a = ic_ART.get(i); if (a && a.sig === sig && a.src === (rock ? rock.top16 : null)) return a;
   if (ic_ART.size > 4000) ic_ART.clear();
-  const e = ic_edgeOf(x, y), X = x * 16, Y = y * 16, FU = ICE.frontUp;
-  // 윗면 16×16 (발자국 그대로, 그릴 때 12px 위로) + 그늘
+  // 둘레 2칸이 모두 벽인 깊은 칸은 모양이 같아서(깎임·앞면 없음, 그늘은 거의 까맘) 그림 하나를 같이 써요 — 처음 들어갈 때 계산을 줄여요
+  if (!s5) { const dk = rock ? rock.top16 : 'ice'; let d = ic_DEEP.get(dk); if (!d) { d = ic_build(x, y, w, rock, ic_edgeOf(x, y)); ic_DEEP.set(dk, d); } ic_ART.set(i, { ...d, sig }); return ic_ART.get(i); }
+  a = ic_build(x, y, w, rock, ic_edgeOf(x, y)); a.sig = sig; ic_ART.set(i, a); return a;
+}
+const ic_DEEP = new Map();
+function ic_build(x, y, w, rock, e) {
+  const ice = w === ICE_W, X = x * 16, Y = y * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK;
+  const tp = rock ? ic_pix(rock.top16) : null, fp = rock ? ic_pix(rock.front) : null;
   const top = ic_cnv(16, 16), shade = ic_cnv(16, 16), tg = top.getContext('2d'), sg = shade.getContext('2d'), icTI = tg.createImageData(16, 16), icSI = sg.createImageData(16, 16);
-  // 그늘: 벽 밖(바닥)에서 떨어진 거리 — 둘레 10px까지 봐요
-  const M = 10, WW = 16 + M * 2, dist = new Float32Array(WW * WW).fill(1e9);
-  for (let j = 0; j < WW; j++) for (let q = 0; q < WW; q++) if (!iceSolidPx(X - M + q, Y - M + j)) dist[j * WW + q] = 0;
-  for (let pass = 0; pass < 2; pass++) for (let s = 0; s < WW * WW; s++) { const k = pass ? WW * WW - 1 - s : s, q = k % WW, j = (k / WW) | 0, sg2 = pass ? -1 : 1;
-    const nb = (dq, dj, w) => { const qq = q + dq * sg2, jj = j + dj * sg2; if (qq < 0 || jj < 0 || qq >= WW || jj >= WW) return; const v = dist[jj * WW + qq] + w; if (v < dist[k]) dist[k] = v; };
-    nb(-1, 0, 1); nb(0, -1, 1); nb(-1, -1, 1.41); nb(1, -1, 1.41); }
+  // 둘레 10px까지 벽 지도 → 그늘(바닥에서 떨어진 거리)·테두리
+  const M = 10, WW = 16 + M * 2, wmk = wallMask(X - M, Y - M, WW, WW), dist = ic_dist(wmk, WW, WW, v => v === 0), sol = (u, v) => wmk[(v + M) * WW + u + M] !== 0;
   for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!ic_in(e, u, v)) continue; const k = (v * 16 + u) * 4, wx = X + u, wy = Y + v;
-    const rim = !iceSolidPx(wx, wy - 1) || !iceSolidPx(wx - 1, wy) || !iceSolidPx(wx + 1, wy);
-    ic_put(icTI.data, k, rim ? (hash2(wx, wy, 250) < .22 ? IC.rimT : IC.rim) : ic_topPx(wx, wy));
-    const d = dist[(v + M) * WW + u + M], al = Math.max(0, Math.min(1, (d - ICE.shadeRim) / ICE.shadeFade)) * ICE.shadeBlack;
+    const rim = !sol(u, v - 1) || !sol(u - 1, v) || !sol(u + 1, v);
+    if (ice) ic_put(icTI.data, k, rim ? (hash2(wx, wy, 250) < .22 ? IC.rimT : IC.rim) : ic_topPx(wx, wy));
+    else { const c = ic_at(tp, u, v); ic_put(icTI.data, k, rim ? c.map(q => Math.min(255, q * 1.35 + 14)) : c); } // 바위 윗면 가장자리는 조금 밝게
+    const d = dist[(v + M) * WW + u + M], al = Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack;
     ic_put(icSI.data, k, [8, 6, 12], Math.round(al * 255)); }
   tg.putImageData(icTI, 0, 0); sg.putImageData(icSI, 0, 0);
-  // 앞면 (남쪽이 열렸을 때): 16px 높이, 아래쪽이 깎인 만큼 올라가요 — 그림은 FU px 위부터
-  let front = null;
-  // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면
-  const vbot = new Int8Array(16).fill(-1); let anyF = false;
-  for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (ic_in(e, u, v)) { if (!iceSolidPx(X + u, Y + v + 1)) { vbot[u] = v; anyF = true; } break; }
+  // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면 — 둥근 모서리를 따라 돌아요
+  let front = null; const vbot = new Int8Array(16).fill(-1); let anyF = false;
+  for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (ic_in(e, u, v)) { if (!sol(u, v + 1)) { vbot[u] = v; anyF = true; } break; }
   if (anyF) { front = ic_cnv(16, 16 + FU); const fg = front.getContext('2d'), icFI = fg.createImageData(16, 16 + FU);
-    let lo = 16, hi = -1; for (let u = 0; u < 16; u++) if (vbot[u] >= 0) { lo = Math.min(lo, u); hi = Math.max(hi, u); }
-    for (let u = lo; u <= hi; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || e.oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || e.oE);
+    for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || e.oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || e.oE);
       for (let r = 0; r < 16; r++) { const row = vbot[u] - 15 + r + FU; if (row < 0 || row >= 16 + FU) continue; const k = (row * 16 + u) * 4, wx = X + u;
-        let c = r === 0 ? IC.fHi : r === 15 ? IC.fLow : ic_mix(IC.fTop, IC.fBot, Math.round(r / 15 * 4) / 4);
-        if (r > 0 && r < 15) { const f = ic_cell(wx * 2, Y + r * 3, 9, 1, 260); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
-        if (side && r > 0 && r < 15) c = ic_mix(c, IC.fSide, .7);
+        let c;
+        if (ice) { c = r === 0 ? IC.fHi : r === 15 ? IC.fLow : ic_mix(IC.fTop, IC.fBot, Math.round(r / 15 * 4) / 4);
+          if (r > 0 && r < 15) { const f = ic_cell(wx * 2, Y + r * 3, 9, 1, 260); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
+          if (side && r > 0 && r < 15) c = ic_mix(c, IC.fSide, .7); }
+        else { c = ic_at(fp, u, r); if (side) c = c.map(q => q * .72); }
         ic_put(icFI.data, k, c); } }
     fg.putImageData(icFI, 0, 0); }
-  a = { sig, top, shade, front, frontUp: FU }; ic_ART.set(i, a); return a;
+  return { src: rock ? rock.top16 : null, top, shade, front, frontUp: FU, ore: ice ? 'ice' : rock.ore };
 }
 // ---- 바닥: 얼음 조각 한 칸 (꾸밈은 진짜 바닥 칸에만) ----
 function drawIceShard(g, x, y, X, Y, deco) {
@@ -5408,26 +5446,24 @@ function drawIceShard(g, x, y, X, Y, deco) {
 // 물가: 얼음 동굴에서 물 칸으로 들어오는 땅 픽셀 색 (render/terrain.js bakeFloor) — d = 땅 가장자리에서의 거리
 function iceShorePx(wx, wy, d) { return d === 1 ? IC.edge : d === 2 ? IC.edgeS : ic_floorPx(wx, wy); }
 function iceCliffPx(r, h) { return r < h ? ic_mix(IC.cliffT, IC.cliffB, Math.round(r / (h - 1) * 3) / 3) : IC.foam; }
-// ---- 벽 옆 청록빛 (바닥 조각 하나 = 16×16칸, 없으면 null) ----
-function iceGlowChunk(cx, cy, N) {
+// ---- 벽 옆: 얼음벽은 청록빛(발광), 바위는 옅은 그림자 (바닥 조각 하나 = N×N칸, 없으면 null) ----
+function wallEdgeChunk(cx, cy, N) {
   const x0 = cx * N, y0 = cy * N; let any = false;
-  for (let y = y0 - 1; y <= y0 + N && !any; y++) for (let x = x0 - 1; x <= x0 + N; x++) if (inB(x, y) && G.wall[idx(x, y)] === ICE_W) { any = true; break; }
+  for (let y = y0 - 1; y <= y0 + N && !any; y++) for (let x = x0 - 1; x <= x0 + N; x++) if (inB(x, y) && SLANT.has(G.wall[idx(x, y)])) { any = true; break; }
   if (!any) return null;
-  const P = N * 16, Mg = ICE.glowMax + 2, WW = P + Mg * 2, X0 = x0 * 16 - Mg, Y0 = y0 * 16 - Mg, dist = new Float32Array(WW * WW).fill(1e9);
-  for (let j = 0; j < WW; j++) for (let q = 0; q < WW; q++) if (ic_iceSolid(X0 + q, Y0 + j)) dist[j * WW + q] = 0;
-  for (let pass = 0; pass < 2; pass++) for (let s = 0; s < WW * WW; s++) { const k = pass ? WW * WW - 1 - s : s, q = k % WW, j = (k / WW) | 0, sg = pass ? -1 : 1;
-    const nb = (dq, dj, w) => { const qq = q + dq * sg, jj = j + dj * sg; if (qq < 0 || jj < 0 || qq >= WW || jj >= WW) return; const v = dist[jj * WW + qq] + w; if (v < dist[k]) dist[k] = v; };
-    nb(-1, 0, 1); nb(0, -1, 1); nb(-1, -1, 1.41); nb(1, -1, 1.41); }
-  const c = ic_cnv(P, P), g = c.getContext('2d'), im = g.createImageData(P, P), D = im.data; let lit = false;
-  for (let j = 0; j < P; j++) for (let q = 0; q < P; q++) { const d = dist[(j + Mg) * WW + q + Mg]; if (!(d > 0) || d > ICE.glowMax) continue; const wx = X0 + Mg + q, wy = Y0 + Mg + j;
-    if (iceSolidPx(wx, wy)) continue;
-    const reach = ICE.glowMax * (.25 + .75 * ic_vn(wx / 6, wy / 6, 290)) + 1; if (d > reach) continue; // 덩어리지게 들쭉날쭉
-    const t = Math.min(1, Math.round(d / reach * 3) / 3), a = t < .34 ? .85 : t < .67 ? .6 : .35;
-    ic_put(D, (j * P + q) * 4, ic_mix(IC.glowA, IC.glowB, t), Math.round(a * 255)); lit = true; }
-  if (!lit) return null; g.putImageData(im, 0, 0); return c;
+  const P = N * 16, Mg = ICE.glowMax + 2, WW = P + Mg * 2, X0 = x0 * 16 - Mg, Y0 = y0 * 16 - Mg, wmk = wallMask(X0, Y0, WW, WW);
+  const dI = ic_dist(wmk, WW, WW, v => v === 2), dR = ic_dist(wmk, WW, WW, v => v === 3);
+  const gc = ic_cnv(P, P), gi = gc.getContext('2d').createImageData(P, P), sc = ic_cnv(P, P), si = sc.getContext('2d').createImageData(P, P); let lit = false, sh = false;
+  for (let j = 0; j < P; j++) for (let q = 0; q < P; q++) { const kk = (j + Mg) * WW + q + Mg; if (wmk[kk]) continue; const wx = X0 + Mg + q, wy = Y0 + Mg + j, o = (j * P + q) * 4;
+    const d = dI[kk];
+    if (d <= ICE.glowMax) { const reach = ICE.glowMax * (.25 + .75 * ic_vn(wx / 6, wy / 6, 290)) + 1; // 덩어리지게 들쭉날쭉
+      if (d <= reach) { const t = Math.min(1, Math.round(d / reach * 3) / 3), a = t < .34 ? .85 : t < .67 ? .6 : .35; ic_put(gi.data, o, ic_mix(IC.glowA, IC.glowB, t), Math.round(a * 255)); lit = true; continue; } }
+    const r = Math.round(dR[kk]); if (r >= 1 && r <= 3) { ic_put(si.data, o, [14, 8, 22], Math.round(ROCK.shadow[r - 1] * 255)); sh = true; } }
+  if (lit) gc.getContext('2d').putImageData(gi, 0, 0); if (sh) sc.getContext('2d').putImageData(si, 0, 0);
+  return lit || sh ? { glow: lit ? gc : null, shadow: sh ? sc : null } : null;
 }
 // 테스트용: 칸 (x,y) 발자국 안 픽셀 수 (깎인 모양 확인)
-function iceWallPx(x, y) { const e = ic_edgeOf(x, y); let n = 0; for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) if (ic_in(e, u, v)) n++; return n; }
+function slantWallPx(x, y) { const e = ic_edgeOf(x, y); let n = 0; for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) if (ic_in(e, u, v)) n++; return n; }
 // ================= v73 바닥·벽·광석 새 그림 (빛 데모의 「에셋으로」 세트, dev/art/terrain/) =================
 // 그림 원본: 사용자가 직접 그려 예전에 판매했던 텍스처 묶음 → dev/art_src/terrain/make_terrain.py 가 16px 조각으로 만들어요.
 // 바닥: 잔디(1)·흙(2)·물(10)은 칸 조각이 아니라 픽셀 단위 경계(구불구불, 벽 쪽은 중립)로 굽고, 나무(5)·돌(6) 바닥은 네모 블록.
@@ -5463,10 +5499,10 @@ function terrainReady() {
   if (TR.ready || TR.tried) return TR.ready;
   TR.tried = true; const AK = k => ARTC['terrain/' + k];
   if (!AK('grass') || !AK('wtop/1') || !AK('ore/4_1_top_0')) return false;
-  TR.wtop = {}; TR.wfront = {};
-  for (const t of ROCKS) { const t12 = tr_top12(AK('wtop/' + t)); TR.wtop[t] = [t12, t12, t12, t12]; TR.wfront[t] = [AK('wfront/' + t)]; }
+  TR.wtop = {}; TR.wfront = {}; TR.wtop16 = {};
+  for (const t of ROCKS) { const t12 = tr_top12(AK('wtop/' + t)); TR.wtop[t] = [t12, t12, t12, t12]; TR.wfront[t] = [AK('wfront/' + t)]; TR.wtop16[t] = AK('wtop/' + t); }
   TR.ore = {};
-  for (const t of ORE_T) for (const h of ROCKS) TR.ore[t + '_' + h] = { top: [0, 1, 2, 3].map(v => tr_top12(AK(`ore/${t}_${h}_top_${v}`))), front: [0, 1, 2].map(v => AK(`ore/${t}_${h}_front_${v}`)) };
+  for (const t of ORE_T) for (const h of ROCKS) TR.ore[t + '_' + h] = { top: [0, 1, 2, 3].map(v => tr_top12(AK(`ore/${t}_${h}_top_${v}`))), top16: [0, 1, 2, 3].map(v => AK(`ore/${t}_${h}_top_${v}`)), front: [0, 1, 2].map(v => AK(`ore/${t}_${h}_front_${v}`)) };
   TR.ripple = [AK('ripple_0'), AK('ripple_1')];
   TR.built = {};
   for (const [f, k] of [[5, 'fwood'], [6, 'fstone']]) { const px = tr_pixOf(AK(k)); let dk = [255, 255, 255], best = 1e9;
@@ -5487,8 +5523,8 @@ function oreHost(x, y) {
 function wallArt(x, y, w) {
   if (!TR.ready || !tr_NEW_WALLS.has(w)) return null;
   const tv = (hash2(x, y, 9) * 4) | 0, fv = (hash2(x, y, 13) * 3) | 0;
-  if (ORE_T.has(w)) { const o = TR.ore[w + '_' + oreHost(x, y)]; return { top: o.top[tv], front: o.front[fv], ore: w }; }
-  return { top: TR.wtop[w][tv], front: TR.wfront[w][0], ore: 0 };
+  if (ORE_T.has(w)) { const o = TR.ore[w + '_' + oreHost(x, y)]; return { top: o.top[tv], top16: o.top16[tv], front: o.front[fv], ore: w }; }
+  return { top: TR.wtop[w][tv], top16: TR.wtop16[w], front: TR.wfront[w][0], ore: 0 };
 }
 const isNewFloor = f => NEW_FLOORS.has(f);
 // 물칸 위 잔물결: 이끼 동굴은 새 그림, 다른 지역은 그 지역 물 그림에서 바탕색을 뺀 것
@@ -5510,10 +5546,11 @@ function bakeFloor(tx0, ty0, tx1, ty1) {
   const TX = TR.tex, T = 16, M = 2, cx0 = tx0 - M, cy0 = ty0 - M, cx1 = tx1 + M, cy1 = ty1 + M, TW = cx1 - cx0 + 1, TH = cy1 - cy0 + 1;
   const X0 = cx0 * T, Y0 = cy0 * T, Wp = TW * T, Hp = TH * T, N = Wp * Hp, J = tr_JOIN;
   // 칸 정보: 소속값(1 이 땅, 0 아님, .5 바위 = 어느 쪽도 아님), 벽, 바닥 번호, 블록 바닥
-  const mG = new Float32Array(TW * TH), mP = new Float32Array(TW * TH), tW = new Uint8Array(TW * TH), tF = new Int16Array(TW * TH), tB = new Uint8Array(TW * TH), tBi = new Uint8Array(TW * TH);
+  const mI = new Float32Array(TW * TH), mG = new Float32Array(TW * TH), mP = new Float32Array(TW * TH), tW = new Uint8Array(TW * TH), tF = new Int16Array(TW * TH), tB = new Uint8Array(TW * TH), tBi = new Uint8Array(TW * TH);
   for (let j = 0; j < TH; j++) for (let i = 0; i < TW; i++) { const k = j * TW + i, x = cx0 + i, y = cy0 + j;
     if (!inB(x, y)) { mG[k] = mP[k] = .5; tW[k] = 1; tF[k] = -1; continue; } const q = idx(x, y); tBi[k] = G.biome[q];
-    if (G.wall[q]) { mG[k] = mP[k] = .5; tW[k] = 1; tF[k] = -1; continue; } const f = G.floor[q]; tF[k] = f; mG[k] = f === WATER ? 0 : 1; mP[k] = f === 2 ? 1 : 0; tB[k] = tr_BUILT.has(f) ? 1 : 0; }
+    if (G.wall[q]) { mG[k] = mP[k] = mI[k] = .5; tW[k] = 1; tF[k] = -1; continue; } const f = G.floor[q]; tF[k] = f; const frz = f === ICE_FROZEN && tBi[k] === ICE_BIOME; // v80: frozen water belongs to the water body
+    mI[k] = frz ? 1 : f === WATER ? 0 : .5; mG[k] = f === WATER || frz ? 0 : 1; mP[k] = f === 2 ? 1 : 0; tB[k] = tr_BUILT.has(f) ? 1 : 0; }
   const mAt = (m, i, j) => (i < 0 || j < 0 || i >= TW || j >= TH) ? .5 : m[j * TW + i];
   const field = (m, px, py, link) => { const gx = (px - X0) / T - .5, gy = (py - Y0) / T - .5, i = Math.floor(gx), j = Math.floor(gy), u = gx - i, v = gy - j;
     const a = mAt(m, i, j), b = mAt(m, i + 1, j), c = mAt(m, i, j + 1), d = mAt(m, i + 1, j + 1);
@@ -5535,7 +5572,8 @@ function bakeFloor(tx0, ty0, tx1, ty1) {
   const tidy = m => { const o = m.slice(); for (let y = 0; y < Hp; y++) for (let x = 0; x < Wp; x++) { const k = y * Wp + x, s = o[k];
     const n = (x > 0 ? o[k - 1] : s) + (x < Wp - 1 ? o[k + 1] : s) + (y > 0 ? o[k - Wp] : s) + (y < Hp - 1 ? o[k + Wp] : s);
     if (s && n <= 1) m[k] = 0; else if (!s && n >= 3) m[k] = 1; } };
-  tidy(Gm); for (let k = 0; k < N; k++) Pm[k] &= Gm[k]; tidy(Pm); for (let k = 0; k < N; k++) { Pm[k] &= Gm[k]; if (isBuilt[k]) { Gm[k] = 1; Pm[k] = 0; } }
+  tidy(Gm); for (let k = 0; k < N; k++) if (wallPx[k]) Gm[k] = 1; // v80: walls count as ground for the edge lines — slanted walls show the floor under their edge, so no line along the tile edge
+  for (let k = 0; k < N; k++) Pm[k] &= Gm[k]; tidy(Pm); for (let k = 0; k < N; k++) { Pm[k] &= Gm[k]; if (isBuilt[k]) { Gm[k] = 1; Pm[k] = 0; } }
   const Q = new Int32Array(N);
   const dist4 = (m, cap) => { const d = new Uint8Array(N); let qh = 0, qt = 0;
     for (let y = 0; y < Hp; y++) for (let x = 0; x < Wp; x++) { const k = y * Wp + x; if (!m[k]) continue;
@@ -5544,8 +5582,9 @@ function bakeFloor(tx0, ty0, tx1, ty1) {
       if (x > 0 && m[k - 1] && !d[k - 1]) { d[k - 1] = nd; Q[qt++] = k - 1; } if (x < Wp - 1 && m[k + 1] && !d[k + 1]) { d[k + 1] = nd; Q[qt++] = k + 1; }
       if (k >= Wp && m[k - Wp] && !d[k - Wp]) { d[k - Wp] = nd; Q[qt++] = k - Wp; } if (k + Wp < N && m[k + Wp] && !d[k + Wp]) { d[k + Wp] = nd; Q[qt++] = k + Wp; } }
     for (let k = 0; k < N; k++) if (m[k] && !d[k]) d[k] = 255; return d; };
+  const pathAtWall = Pm.slice(); for (let k = 0; k < N; k++) if (wallPx[k]) pathAtWall[k] = 1; // v80: no path edge line along a wall either
   const notP = new Uint8Array(N); for (let k = 0; k < N; k++) notP[k] = Pm[k] || isBuilt[k] ? 0 : 1;
-  const dG = dist4(Gm, 4), dP = dist4(Pm, 2), dNP = dist4(notP, 3);
+  const dG = dist4(Gm, 4), dP = dist4(pathAtWall, 2), dNP = dist4(notP, 3);
   // 결과는 가운데(요청한 칸)만: ox0·oy0 = 결과의 왼쪽 위 (이 계산 영역 안 px)
   const ox0 = M * T, oy0 = M * T, ow = (tx1 - tx0 + 1) * T, oh = (ty1 - ty0 + 1) * T, out = new ImageData(ow, oh), O = out.data, EC = tr_A_EDGE;
   const oi = k => { const lx = k % Wp - ox0, ly = ((k / Wp) | 0) - oy0; return lx < 0 || ly < 0 || lx >= ow || ly >= oh ? -1 : (ly * ow + lx) * 4; };
@@ -5556,7 +5595,10 @@ function bakeFloor(tx0, ty0, tx1, ty1) {
     if (wallPx[k]) { O[o] = 18; O[o + 1] = 15; O[o + 2] = 28; O[o + 3] = 255; continue; }
     if (Gm[k] && tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)] === ICE_BIOME) { putC(o, iceShorePx(x, y, dG[k])); continue; } // v79: ice cave shore = ice shards, not grass
     if (Gm[k]) { const d = dG[k]; if (d === 1) putC(o, EC.gE); else if ((d === 2 && leaf(x, y) > -.45) || (d === 3 && leaf(x, y) > .1) || (d === 4 && leaf(x, y) > .65)) putC(o, EC.gS); else putT(o, TX.grass, x, y); }
-    else { const b = tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)]; if (b) putC(o, tr_waterRGB(b)); else putT(o, TX.water, x, y); } }
+    else { const b = tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)];
+      if (b === ICE_BIOME) { const fi = field(mI, x + .5, y + .5, false), th = .5 + .14 * tr_vnoise(x / 9, y / 9, 31) + .05 * tr_vnoise(x / 2.5, y / 2.5, 32); // v80: frozen water, a wavy edge toward open water
+        if (fi > th) { putC(o, iceFrozenPx(x, y, fi < th + .06)); continue; } }
+      if (b) putC(o, tr_waterRGB(b)); else putT(o, TX.water, x, y); } }
   // 작은 장식 (풀포기·꽃·조약돌): 잔디 칸에서만, 경계에서 3px 이상 안쪽 — 한 픽셀이라도 안 되면 통째로 빼요
   const off = (x, y, s, r) => Math.round((hash2(x, y, s) - .5) * 2 * r), DE = TX.deco, px = [];
   const okDeco = k => Gm[k] && dG[k] >= 3 && dNP[k] >= 3 && !wallPx[k] && !isBuilt[k];
@@ -5952,9 +5994,11 @@ function drawChunk(c, cx, cy) {
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y);
     if (G.wall[i] === ICE_W) { drawIceShard(g, x, y, tx * 16, ty * 16, false); continue; } // v79: ice under the ice wall, seen where its edge slants in
+    if (NEW && SLANT.has(G.wall[i])) { underWall(g, x, y, tx * 16, ty * 16); continue; } // v80: the floor next door continues under a slanted rock wall
     if (G.wall[i]) continue; const f = G.floor[i];
+    if (NEW && f === ICE_FROZEN && G.biome[i] === ICE_BIOME) continue; // v80: frozen water in the ice cave is baked with the water (render/terrain.js)
     if (isIceShard(i) && !wallPiece(i)) { // v79: ice cave floor = ice shards (render/icecave.js); next to water the baked floor already has them with a wavy shore
-      let wet = false; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (inB(x + dx, y + dy) && !G.wall[idx(x + dx, y + dy)] && G.floor[idx(x + dx, y + dy)] === WATER) wet = true;
+      let wet = false; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (inB(x + dx, y + dy) && !G.wall[idx(x + dx, y + dy)] && (G.floor[idx(x + dx, y + dy)] === WATER || G.floor[idx(x + dx, y + dy)] === ICE_FROZEN)) wet = true;
       if (!(NEW && wet)) drawIceShard(g, x, y, tx * 16, ty * 16, true); continue; }
     if (NEW && isNewFloor(f) && !wallPiece(i)) { newShadows(g, x, y, tx * 16, ty * 16, f); continue; }
     if (f === WATER) continue;
@@ -5980,16 +6024,24 @@ function drawChunk(c, cx, cy) {
       if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
       if (!nw(1, 0)) { g.fillStyle = '#a7a2bb'; g.fillRect(X + 14, Y, 1, 16); g.fillStyle = '#5d5872'; g.fillRect(X + 15, Y, 1, 16); } }
     // contact shadows next to walls
-    if (y > 0 && G.wall[i - W]) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
-    if (x > 0 && G.wall[i - 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
-    if (x < W - 1 && G.wall[i + 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
+    const hard = j => G.wall[j] && !(NEW && SLANT.has(G.wall[j])); // v80
+    if (y > 0 && hard(i - W)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
+    if (x > 0 && hard(i - 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
+    if (x < W - 1 && hard(i + 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
   }
   if (TM.ready && !NEW) drawPatches(g, cx, cy);
-  c.glow = iceGlowChunk(cx, cy, CHN); // v79: teal glow on the floor beside ice walls
+  c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+}
+// v80: under a slanted rock wall, the floor of an open neighbour (south first) — seen where the wall's edge slants in
+function underWall(g, x, y, X, Y) {
+  let f = -1; for (const [dx, dy] of [[0, 1], [-1, 0], [1, 0], [0, -1], [-1, 1], [1, 1], [-1, -1], [1, -1]]) { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) continue; const j = idx(xx, yy); if (G.wall[j] || wallPiece(j)) continue; const nf = G.floor[j]; if (nf === WATER || nf === LAVA) continue; f = nf; if (G.biome[j] === 4 && nf === 19) { drawIceShard(g, x, y, X, Y, false); return; } break; }
+  if (f < 0) return;
+  if (isNewFloor(f)) { for (const [qx, qy] of [[0, 0], [8, 0], [0, 8], [8, 8]]) newQuarter(g, f, X + qx, Y + qy, x * 16 + qx, y * 16 + qy); return; }
+  const F = SPR.floor[f]; if (F) g.drawImage(F[(hash2(x, y, 5) * F.length) | 0], X, Y);
 }
 // v73: contact shadows on the new floors (as in the light demo) — under a wall to the north, and beside walls left / right
 function newShadows(g, x, y, X, Y, f) {
-  const wl = (dx, dy) => !inB(x + dx, y + dy) || !!G.wall[idx(x + dx, y + dy)];
+  const wl = (dx, dy) => { if (!inB(x + dx, y + dy)) return true; const w = G.wall[idx(x + dx, y + dy)]; return !!w && !SLANT.has(w); }; // v80: slanted walls get their own soft shadow (wallEdgeChunk)
   if (f === WATER) { if (wl(0, -1)) { g.fillStyle = 'rgba(10,20,45,0.6)'; g.fillRect(X, Y, 16, 3); } return; }
   if (wl(0, -1)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
   if (wl(-1, 0)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
@@ -6053,7 +6105,7 @@ function getChunk(cx, cy) {
   return c.cv;
 }
 // v73: bake at most one chunk a frame just outside the screen, so walking into a new area rarely has to bake on screen
-const chunkGlow = (cx, cy) => { const c = chunks.get(cx * 1000 + cy); return c ? c.glow : null; };
+const chunkEdge = (cx, cy) => { const c = chunks.get(cx * 1000 + cy); return c ? c.edge : null; };
 function prefetchChunk(cx0, cy0, cx1, cy1) {
   for (let cy = cy0 - 1; cy <= cy1 + 1; cy++) for (let cx = cx0 - 1; cx <= cx1 + 1; cx++) {
     if (cx >= cx0 && cx <= cx1 && cy >= cy0 && cy <= cy1) continue; if (cx < 0 || cy < 0 || cx * CHN >= W || cy * CHN >= H) continue;
@@ -6083,7 +6135,8 @@ function renderWorld(cw, ch, glOn = false) {
   const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(H - 1, Math.ceil((camY + ch) / T) + 3);
   // floors (cached chunks)
   for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) ctx.drawImage(getChunk(cx, cy), cx * 256 - camX, cy * 256 - camY);
-  drawKind('fglow'); for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) { const gw = chunkGlow(cx, cy); if (gw) ctx.drawImage(gw, cx * 256 - camX, cy * 256 - camY); } drawKind('floor'); // v79: glow beside ice walls
+  for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) { const ed = chunkEdge(cx, cy); if (!ed) continue; // v79 glow beside ice walls · v80 shadow beside rock walls
+    if (ed.shadow) ctx.drawImage(ed.shadow, cx * 256 - camX, cy * 256 - camY); if (ed.glow) { drawKind('fglow'); ctx.drawImage(ed.glow, cx * 256 - camX, cy * 256 - camY); drawKind('floor'); } }
   prefetchChunk(Math.floor(x0 / CHN), Math.floor(y0 / CHN), Math.floor(x1 / CHN), Math.floor(y1 / CHN));
   drawHazards(T, camX, camY);
   // water, rugs and ground plants (change often, drawn live)
@@ -6133,13 +6186,13 @@ function renderWorld(cw, ch, glOn = false) {
     const y = y0 + r, sy = y * T - camY;
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
-      if (w === ICE_W) { const ia = iceWallArt(x, y); // v79: ice wall with slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, front only when the south is open
-        drawKind('itop', 'ice'); ctx.drawImage(ia.top, sx, sy - L); drawKind('shade'); ctx.drawImage(ia.shade, sx, sy - L);
-        if (ia.front) { drawKind('front', 'ice'); ctx.drawImage(ia.front, sx, sy - ia.frontUp); } drawKind('up');
+      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
+      if (w === ICE_W || (wa && SLANT.has(w))) { const ia = slantWallArt(x, y, w, w === ICE_W ? null : wa); // v79 ice / v80 rock: slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, a front wherever the bottom edge is open
+        drawKind('itop', ia.ore); ctx.drawImage(ia.top, sx, sy - L); drawKind('shade'); ctx.drawImage(ia.shade, sx, sy - L);
+        if (ia.front) { drawKind('front', ia.ore); ctx.drawImage(ia.front, sx, sy - ia.frontUp); } drawKind('up');
         const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
         if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (ia.front) { const a = .35 + .35 * Math.sin(t * 2.2 + x), fy = sy + T - WALL_H; ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
         continue; }
-      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
       const topImg = wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], shd = wallShade(wallOpen(x, y));
       // v77 버그 수정: 아래도 벽이면 앞면을 안 그려서, 내 칸의 위쪽 4px(윗면 12px 아래 ~ 아래 벽 윗면 시작)이 비어 틈이 보였어요 → 윗면을 4px 내려 한 번 더 깔아 메워요
