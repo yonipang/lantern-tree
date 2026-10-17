@@ -11,7 +11,7 @@ import { hexRgb } from '../engine/util.js';
 import { G } from '../save/state.js';
 import { WATER } from '../sim/nature.js';
 import { idx, inB } from '../world/map.js';
-import { ICE_BIOME, ICE_FROZEN, iceCliffPx, iceFrozenPx, iceShorePx } from './icecave.js';
+import { ICE_BIOME, ICE_FROZEN, iceCliffPx, iceFrozenPx, iceShorePx, iceWarm } from './icecave.js';
 
 export const NEW_FLOORS = new Set([1, 2, WATER, 5, 6]); // 새 방식으로 굽는 바닥
 const tr_BUILT = new Set([5, 6]); // 블록처럼 칸 단위로 깔리는 바닥
@@ -51,6 +51,7 @@ export function terrainReady() {
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const c = px(x, y), l = tr_lum(c[0], c[1], c[2]); if (l < best) { best = l; dk = c; } }
     TR.built[f] = { edge: dk.slice(0, 3).map(v => Math.round(v * .55)) }; }
   TR.waterC = {}; // 지역별 물 바탕색 (이끼 동굴은 텍스처)
+  iceWarm(); // v81: 얼음 무늬 표를 미리 (얼음 동굴에 처음 들어갈 때 끊기지 않게)
   return TR.ready = true;
 }
 // 광석이 박힐 바위: 가까운 둘레부터 세어 가장 많은 바위 (흙·돌·화강암·현무암). 없으면 돌
@@ -114,19 +115,20 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
   const tidy = m => { const o = m.slice(); for (let y = 0; y < Hp; y++) for (let x = 0; x < Wp; x++) { const k = y * Wp + x, s = o[k];
     const n = (x > 0 ? o[k - 1] : s) + (x < Wp - 1 ? o[k + 1] : s) + (y > 0 ? o[k - Wp] : s) + (y < Hp - 1 ? o[k + Wp] : s);
     if (s && n <= 1) m[k] = 0; else if (!s && n >= 3) m[k] = 1; } };
-  tidy(Gm); for (let k = 0; k < N; k++) if (wallPx[k]) Gm[k] = 1; // v80: walls count as ground for the edge lines — slanted walls show the floor under their edge, so no line along the tile edge
+  tidy(Gm);
   for (let k = 0; k < N; k++) Pm[k] &= Gm[k]; tidy(Pm); for (let k = 0; k < N; k++) { Pm[k] &= Gm[k]; if (isBuilt[k]) { Gm[k] = 1; Pm[k] = 0; } }
   const Q = new Int32Array(N);
+  // v80·v81: a wall next door is not an edge (slanted walls show the floor under their edge, so no line along the tile edge)
+  const edgeNb = (m, j) => !m[j] && !wallPx[j];
   const dist4 = (m, cap) => { const d = new Uint8Array(N); let qh = 0, qt = 0;
     for (let y = 0; y < Hp; y++) for (let x = 0; x < Wp; x++) { const k = y * Wp + x; if (!m[k]) continue;
-      if ((x > 0 && !m[k - 1]) || (x < Wp - 1 && !m[k + 1]) || (y > 0 && !m[k - Wp]) || (y < Hp - 1 && !m[k + Wp])) { d[k] = 1; Q[qt++] = k; } }
+      if ((x > 0 && edgeNb(m, k - 1)) || (x < Wp - 1 && edgeNb(m, k + 1)) || (y > 0 && edgeNb(m, k - Wp)) || (y < Hp - 1 && edgeNb(m, k + Wp))) { d[k] = 1; Q[qt++] = k; } }
     while (qh < qt) { const k = Q[qh++], x = k % Wp, nd = d[k] + 1; if (nd > cap) continue;
       if (x > 0 && m[k - 1] && !d[k - 1]) { d[k - 1] = nd; Q[qt++] = k - 1; } if (x < Wp - 1 && m[k + 1] && !d[k + 1]) { d[k + 1] = nd; Q[qt++] = k + 1; }
       if (k >= Wp && m[k - Wp] && !d[k - Wp]) { d[k - Wp] = nd; Q[qt++] = k - Wp; } if (k + Wp < N && m[k + Wp] && !d[k + Wp]) { d[k + Wp] = nd; Q[qt++] = k + Wp; } }
     for (let k = 0; k < N; k++) if (m[k] && !d[k]) d[k] = 255; return d; };
-  const pathAtWall = Pm.slice(); for (let k = 0; k < N; k++) if (wallPx[k]) pathAtWall[k] = 1; // v80: no path edge line along a wall either
   const notP = new Uint8Array(N); for (let k = 0; k < N; k++) notP[k] = Pm[k] || isBuilt[k] ? 0 : 1;
-  const dG = dist4(Gm, 4), dP = dist4(pathAtWall, 2), dNP = dist4(notP, 3);
+  const dG = dist4(Gm, 4), dP = dist4(Pm, 2), dNP = dist4(notP, 3);
   // 결과는 가운데(요청한 칸)만: ox0·oy0 = 결과의 왼쪽 위 (이 계산 영역 안 px)
   const ox0 = M * T, oy0 = M * T, ow = (tx1 - tx0 + 1) * T, oh = (ty1 - ty0 + 1) * T, out = new ImageData(ow, oh), O = out.data, EC = tr_A_EDGE;
   const oi = k => { const lx = k % Wp - ox0, ly = ((k / Wp) | 0) - oy0; return lx < 0 || ly < 0 || lx >= ow || ly >= oh ? -1 : (ly * ow + lx) * 4; };
@@ -138,8 +140,11 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
     if (Gm[k] && tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)] === ICE_BIOME) { putC(o, iceShorePx(x, y, dG[k])); continue; } // v79: ice cave shore = ice shards, not grass
     if (Gm[k]) { const d = dG[k]; if (d === 1) putC(o, EC.gE); else if ((d === 2 && leaf(x, y) > -.45) || (d === 3 && leaf(x, y) > .1) || (d === 4 && leaf(x, y) > .65)) putC(o, EC.gS); else putT(o, TX.grass, x, y); }
     else { const b = tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)];
-      if (b === ICE_BIOME) { const fi = field(mI, x + .5, y + .5, false), th = .5 + .14 * tr_vnoise(x / 9, y / 9, 31) + .05 * tr_vnoise(x / 2.5, y / 2.5, 32); // v80: frozen water, a wavy edge toward open water
-        if (fi > th) { putC(o, iceFrozenPx(x, y, fi < th + .06)); continue; } }
+      if (b === ICE_BIOME) { const tk = (((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4); let mix = false; const m0 = mI[tk]; // v81: the wavy edge only where frozen and open water meet
+        for (let dj = -1; dj <= 1 && !mix; dj++) for (let di = -1; di <= 1; di++) { const v2 = mAt(mI, ((ox0 + lx) >> 4) + di, ((oy0 + ly) >> 4) + dj); if (v2 !== m0 && v2 !== .5) { mix = true; break; } }
+        if (!mix) { if (m0 === 1) { putC(o, iceFrozenPx(x, y, false)); continue; } }
+        else { const fi = field(mI, x + .5, y + .5, false), th = .5 + .14 * tr_vnoise(x / 9, y / 9, 31) + .05 * tr_vnoise(x / 2.5, y / 2.5, 32); // v80: frozen water, a wavy edge toward open water
+        if (fi > th) { putC(o, iceFrozenPx(x, y, fi < th + .06)); continue; } } }
       if (b) putC(o, tr_waterRGB(b)); else putT(o, TX.water, x, y); } }
   // 작은 장식 (풀포기·꽃·조약돌): 잔디 칸에서만, 경계에서 3px 이상 안쪽 — 한 픽셀이라도 안 되면 통째로 빼요
   const off = (x, y, s, r) => Math.round((hash2(x, y, s) - .5) * 2 * r), DE = TX.deco, px = [];

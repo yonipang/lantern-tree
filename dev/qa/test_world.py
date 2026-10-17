@@ -102,7 +102,7 @@ def test_ice_cave_art():
     import asyncio, sys
     # v79: 얼음 동굴 새 방식 시험 — 얼음벽 가장자리 기울기·앞면, 얼음 조각 바닥, 벽 옆 청록빛 / 켜진 횃불 불꽃은 새 빛에서 스스로 빛남
     # v80: 흙·돌·화강암·현무암·광맥도 기울어진 가장자리 + 벽 옆 그림자, 얼어붙은 물(20)은 새 얼음판, 꺼진 횃불은 불꽃 없음
-    H2=HOOK.replace("computeLight}","computeLight,getChunk,chunkEdge,slantWallArt,slantWallPx,wallSolidPx,isIceShard,GLOW_RULE,glDebug,CHN,wallArt,SPR}")
+    H2=HOOK.replace("computeLight}","computeLight,getChunk,chunkEdge,slantWallArt,slantWallPx,wallSolidPx,isIceShard,GLOW_RULE,glDebug,CHN,wallArt,SPR,wallBudget}")
     async def main():
         mkpage(SRC,'qa.html',H2,layout=2)
         async with async_playwright() as p:
@@ -122,20 +122,20 @@ def test_ice_cave_art():
               for(let y=c0y-2;y<c0y+T.CHN+2;y++)for(let x=c0x-2;x<c0x+T.CHN+2;x++){const i=T.idx(x,y);G.objs.delete(i);G.floor[i]=19;G.wall[i]=0;G.biome[i]=4}
               for(let y=-2;y<11;y++)for(let x=-2;x<11;x++){const i=T.idx(ox+x,oy+y);G.objs.delete(i);G.floor[i]=19;G.wall[i]=(x>=0&&x<9&&y>=0&&y<9&&!(x>=3&&x<6&&y>=3&&y<6))?wt:0}
               G.p.x=ox+4.5;G.p.y=oy+4.5;G.enemies.length=0;
-              const art=(x,y)=>{const w=G.wall[T.idx(x,y)];return T.slantWallArt(x,y,w,w===11?null:T.wallArt(x,y,w))};
+              const art=(x,y)=>{const w=G.wall[T.idx(x,y)],wa=w===11?null:T.wallArt(x,y,w);T.wallBudget(1e9);return T.slantWallArt(x,y,w,wa,wa?T.GLOW_RULE[wa.ore]:null)};
               const full=T.slantWallPx(ox+1,oy+1), north=T.slantWallPx(ox+4,oy+2), corner=T.slantWallPx(ox,oy);
               const aN=art(ox+4,oy+2), aIn=art(ox+1,oy+1), aS=art(ox+4,oy+8);
               const cx=Math.floor((ox+4)/T.CHN),cy=Math.floor((oy+4)/T.CHN),cv=T.getChunk(cx,cy),g=cv.getContext('2d');
               const px=g.getImageData((ox+4)%16*16+8,(oy+4)%16*16+8,1,1).data, ed=T.chunkEdge(cx,cy);
-              return {full,north,corner,frontN:!!aN.front,frontIn:!!aIn.front,frontS:!!aS.front,shard:T.isIceShard(T.idx(ox+4,oy+4)),blue:px[2]>px[0]+60&&px[2]>px[1],glow:!!(ed&&ed.glow),shadow:!!(ed&&ed.shadow),
+              return {full,north,corner,frontN:!!aN.front,frontIn:!!aIn.front,frontS:!!aS.front,shard:T.isIceShard(T.idx(ox+4,oy+4)),blue:px[2]>px[0]+60&&px[2]>px[1],glow:!!(ed&&ed.glow),shadow:!!(ed&&ed.shadow),wallShadow:!!aN.shadow,
                 wall:G.wall[T.idx(ox+4,oy+2)],ox,oy}}"""
             r=await ev(pg,SETUP,11)
             ok=r and r['full']==256 and r['north']<256 and r['corner']<256 and r['wall']==11
             rec('얼음 동굴','얼음벽은 열린 쪽 가장자리만 안쪽으로 비스듬히 깎이고(둘러싸인 칸은 그대로), 벽 칸은 그대로', ok, str(r))
             rec('얼음 동굴','바닥 위로 드러난 얼음벽만 앞면이 있음 (방 북쪽 벽 ○, 안쪽 벽 ×, 바깥 남쪽 벽 ○)', r and r['frontN'] and not r['frontIn'] and r['frontS'], str(r))
-            rec('얼음 동굴','얼음 동굴 바닥은 파란 얼음 조각, 얼음벽 옆에 청록빛 (그림자 아님)', r and r['shard'] and r['blue'] and r['glow'] and not r['shadow'], str(r))
+            rec('얼음 동굴','얼음 동굴 바닥은 파란 얼음 조각, 얼음벽 옆에 청록빛 (그림자 아님)', r and r['shard'] and r['blue'] and r['glow'] and not r['shadow'] and not r['wallShadow'], str(r))
             r=await ev(pg,SETUP,2)
-            rec('바위','돌벽도 열린 쪽만 기울어지고 드러난 쪽에 앞면, 벽 옆엔 청록빛 대신 그림자', r and r['full']==256 and r['north']<256 and r['frontN'] and not r['frontIn'] and r['shadow'] and not r['glow'], str(r))
+            rec('바위','돌벽도 열린 쪽만 기울어지고 드러난 쪽에 앞면, 앞면 아래 바닥엔 청록빛 대신 그림자', r and r['full']==256 and r['north']<256 and r['frontN'] and not r['frontIn'] and r['wallShadow'] and not r['glow'], str(r))
             # 얼어붙은 물(20): 물과 같은 덩어리로 구워지고, 가운데는 얼음판 파랑
             r2=await ev(pg,"""()=>{const T=__T,G=T.G;let ox=-1,oy=-1;
               for(let y=40;y<560&&ox<0;y+=7)for(let x=40;x<560;x+=7){let ok=true;for(let dy=-3;dy<12&&ok;dy++)for(let dx=-3;dx<12;dx++)if(G.biome[T.idx(x+dx,y+dy)]!==4){ok=false;break}if(ok){ox=x;oy=y;break}}

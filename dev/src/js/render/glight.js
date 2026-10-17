@@ -9,7 +9,6 @@ import { G } from '../save/state.js';
 import { H, idx, W } from '../world/map.js';
 import { LIGHTS } from './light.js';
 import { GLOW_RULE } from './terrain.js';
-import { ICE_EM } from './icecave.js';
 
 export let lightPref = 'new'; try { lightPref = localStorage.getItem('lantern-tree-light') || 'new'; } catch (e) { }
 export const setLightPref = v => { lightPref = v; try { localStorage.setItem('lantern-tree-light', v); } catch (e) { } };
@@ -21,6 +20,8 @@ const mctx = matCv.getContext('2d'), ectx = emCv.getContext('2d');
 const GLAY = new WeakMap();
 // kind: 'floor' 바닥(면 그림 없음) · 'fglow' 바닥 위 발광(v79) · 'itop' 얼음벽 윗면(v79) · 'top' 벽 윗면 · 'front' 벽 앞면 · 'up' 서 있는 것 · 'shade' 벽 윗면 그늘(발광도 어둡게) · 'off' 안 그림
 export function drawKind(k, ore = 0) { GB.kind = k; GB.ore = ore; }
+// v81: 미리 만들어 둔 면 정보·발광 (얼음·바위 벽 아틀라스, render/icecave.js) — 종류+광석 번호별 { mat, em }
+export function presetLayers(img, table) { GLAY.set(img, table); }
 function gxlayerOf(img, kind, ore) {
   let m = GLAY.get(img); if (!m) { m = {}; GLAY.set(img, m); }
   const key = kind + ore; if (m[key]) return m[key];
@@ -37,7 +38,7 @@ function gxlayerOf(img, kind, ore) {
     else { ty = 4; z = Math.min(255, h - y); off = Math.min(127, h - y); }
     M.data[k] = ty * 40; M.data[k + 1] = z; M.data[k + 2] = 128 + off; M.data[k + 3] = 255;
     const on = rule && rule(src[k], src[k + 1], src[k + 2]);
-    const f = ore === 'ice' ? ICE_EM(src[k], src[k + 1], src[k + 2]) : on ? 1 : 0; // v79: ice glows a little, its bright rim more
+    const f = on ? 1 : 0;
     E.data[k] = src[k] * f; E.data[k + 1] = src[k + 1] * f; E.data[k + 2] = src[k + 2] * f; E.data[k + 3] = 255;
   }
   const mat = document.createElement('canvas'), em = document.createElement('canvas'); mat.width = em.width = w; mat.height = em.height = h;
