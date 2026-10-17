@@ -35,8 +35,8 @@ import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { anchorAt, fpOf, placeAnchor } from '../world/tiles.js';
 import { WALL_H, WALL_TOP, wallShade } from '../art/tilemap.js';
-import { rippleOf, TR, wallArt } from './terrain.js';
-import { ICE_W, SLANT, slantWallArt } from './icecave.js';
+import { GLOW_RULE, rippleOf, TR, wallArt } from './terrain.js';
+import { flushWallAtlas, ICE_W, SLANT, slantWallArt, wallBudget } from './icecave.js';
 export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
 export function updateAmbient(dt) {
@@ -104,17 +104,22 @@ export function renderWorld(cw, ch, glOn = false) {
   for (const k of BKEYS) if (!G.bossDead[k]) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
   for (const d of G.drops) push(d.y, { k: 'd', d, s: d.y });
   const L = LIFT;
+  // v81: make the slanted-wall pictures first, then send the changed atlas pages once (render/icecave.js)
+  wallBudget(28); const SW = new Map(); for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y), w = G.wall[i]; if (w && SLANT.has(w)) { const wa = wallArt(x, y, w); if (w === ICE_W || wa) { const a = slantWallArt(x, y, w, w === ICE_W ? null : wa, wa ? GLOW_RULE[wa.ore] : null); if (a) SW.set(i, a); } } }
+  flushWallAtlas();
   for (let r = 0; r < rows.length; r++) {
     const y = y0 + r, sy = y * T - camY;
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
-      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
-      if (w === ICE_W || (wa && SLANT.has(w))) { const ia = slantWallArt(x, y, w, w === ICE_W ? null : wa); // v79 ice / v80 rock: slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, a front wherever the bottom edge is open
-        drawKind('itop', ia.ore); ctx.drawImage(ia.top, sx, sy - L); drawKind('shade'); ctx.drawImage(ia.shade, sx, sy - L);
-        if (ia.front) { drawKind('front', ia.ore); ctx.drawImage(ia.front, sx, sy - ia.frontUp); } drawKind('up');
+      const ia = SW.get(i); // v81: made just above
+      if (ia) { const AT = ia.img; // v79 ice / v80 rock: slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, a front wherever the bottom edge is open
+        drawKind('itop', ia.ore); ctx.drawImage(AT, ia.u, ia.v, 16, 16, sx, sy - L, 16, 16); drawKind('shade'); ctx.drawImage(AT, ia.u, ia.v + 16, 16, 16, sx, sy - L, 16, 16); // v81: one shared atlas (fast)
+        if (ia.front) { drawKind('front', ia.ore); ctx.drawImage(AT, ia.u, ia.v + 32, 16, 28, sx, sy - ia.frontUp, 16, 28); }
+        if (ia.shadow) { drawKind('floor'); ctx.drawImage(AT, ia.u, ia.v + 60, 16, 31, sx, sy - ia.frontUp, 16, 31); } drawKind('up'); // v81: soft shadow on the floor under a rock wall
         const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
         if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (ia.front) { const a = .35 + .35 * Math.sin(t * 2.2 + x), fy = sy + T - WALL_H; ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
         continue; }
+      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
       const topImg = wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], shd = wallShade(wallOpen(x, y));
       // v77 버그 수정: 아래도 벽이면 앞면을 안 그려서, 내 칸의 위쪽 4px(윗면 12px 아래 ~ 아래 벽 윗면 시작)이 비어 틈이 보였어요 → 윗면을 4px 내려 한 번 더 깔아 메워요

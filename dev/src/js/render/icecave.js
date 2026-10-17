@@ -12,6 +12,7 @@
 import { hash2 } from '../engine/random.js';
 import { G } from '../save/state.js';
 import { idx, inB } from '../world/map.js';
+import { presetLayers } from './glight.js';
 
 export const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19, ICE_FROZEN = 20;
 export const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13]); // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
@@ -64,22 +65,29 @@ export function wallMask(X0, Y0, w, h) {
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { const out = !inB(tx, ty), wl = out ? 8 : G.wall[idx(tx, ty)]; if (!wl) continue;
     const sl = !out && SLANT.has(wl), e = sl ? ic_edgeOf(tx, ty) : null, val = !sl ? 1 : wl === ICE_W ? 2 : 3;
     const u0 = Math.max(0, X0 - tx * 16), u1 = Math.min(15, X0 + w - 1 - tx * 16), v0 = Math.max(0, Y0 - ty * 16), v1 = Math.min(15, Y0 + h - 1 - ty * 16);
-    for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) if (!e || ic_in(e, u, v)) m[(ty * 16 + v - Y0) * w + tx * 16 + u - X0] = val; }
+    const full = !e || (!e.N && !e.S && !e.W && !e.E && !e.cNW && !e.cNE && !e.cSW && !e.cSE); // 깎인 곳 없는 칸은 바로 채워요
+    for (let v = v0; v <= v1; v++) { const row = (ty * 16 + v - Y0) * w + tx * 16 - X0; if (full) { m.fill(val, row + u0, row + u1 + 1); continue; } for (let u = u0; u <= u1; u++) if (ic_in(e, u, v)) m[row + u] = val; } }
   return m; }
 // 거리 (1·1.41 근사): src(k)가 참인 픽셀에서 떨어진 거리
-function ic_dist(m, w, h, src) { const d = new Float32Array(w * h).fill(1e9); for (let k = 0; k < w * h; k++) if (src(m[k])) d[k] = 0;
-  for (let pass = 0; pass < 2; pass++) for (let s = 0; s < w * h; s++) { const k = pass ? w * h - 1 - s : s, q = k % w, j = (k / w) | 0, sg = pass ? -1 : 1;
-    const nb = (dq, dj, c) => { const qq = q + dq * sg, jj = j + dj * sg; if (qq < 0 || jj < 0 || qq >= w || jj >= h) return; const v = d[jj * w + qq] + c; if (v < d[k]) d[k] = v; };
-    nb(-1, 0, 1); nb(0, -1, 1); nb(-1, -1, 1.41); nb(1, -1, 1.41); }
+function ic_dist(m, w, h, src) { const d = new Float32Array(w * h), BIG = 1e9; for (let k = 0; k < w * h; k++) d[k] = src(m[k]) ? 0 : BIG;
+  // 두 번 훑기 (앞으로: 왼쪽·위·왼쪽 위·오른쪽 위 / 뒤로: 반대) — v81: 함수 호출 없이 (폰에서 빠르게)
+  for (let j = 0; j < h; j++) for (let q = 0; q < w; q++) { const k = j * w + q; let v = d[k]; if (!v) continue;
+    if (q > 0 && d[k - 1] + 1 < v) v = d[k - 1] + 1;
+    if (j > 0) { const u = k - w; if (d[u] + 1 < v) v = d[u] + 1; if (q > 0 && d[u - 1] + 1.41 < v) v = d[u - 1] + 1.41; if (q < w - 1 && d[u + 1] + 1.41 < v) v = d[u + 1] + 1.41; }
+    d[k] = v; }
+  for (let j = h - 1; j >= 0; j--) for (let q = w - 1; q >= 0; q--) { const k = j * w + q; let v = d[k]; if (!v) continue;
+    if (q < w - 1 && d[k + 1] + 1 < v) v = d[k + 1] + 1;
+    if (j < h - 1) { const u = k + w; if (d[u] + 1 < v) v = d[u] + 1; if (q < w - 1 && d[u + 1] + 1.41 < v) v = d[u + 1] + 1.41; if (q > 0 && d[u - 1] + 1.41 < v) v = d[u - 1] + 1.41; }
+    d[k] = v; }
   return d; }
 // ---- 무늬 ----
 const ic_vn = (x, y, s) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
   const a = hash2(ix, iy, s), b = hash2(ix + 1, iy, s), c = hash2(ix, iy + 1, s), d = hash2(ix + 1, iy + 1, s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
 // 늘인 조각 (보로노이): 조각마다 두 방향 중 하나로 길쭉해요. 가장 가까운 조각·두 번째와의 차이
-function ic_cell(wx, wy, cs, st, s) { const gx = Math.floor(wx / cs), gy = Math.floor(wy / cs); let d1 = 1e9, d2 = 1e9, id = 0;
-  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const cx = gx + i, cy = gy + j, px = (cx + .15 + hash2(cx, cy, s) * .7) * cs, py = (cy + .15 + hash2(cx, cy, s + 1) * .7) * cs;
-    const o = hash2(cx, cy, s + 2) < .5 ? 1 : -1, ax = .86, ay = .5 * o, dx = wx + .5 - px, dy = wy + .5 - py, p = (dx * ax + dy * ay) / st, q = -dx * ay + dy * ax, d = Math.sqrt(p * p + q * q);
-    if (d < d1) { d2 = d1; d1 = d; id = cx * 7919 + cy; } else if (d < d2) d2 = d; }
+function ic_cell(wx, wy, cs, st, s, per = 0) { const gx = Math.floor(wx / cs), gy = Math.floor(wy / cs); let d1 = 1e9, d2 = 1e9, id = 0;
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const cx = gx + i, cy = gy + j, hx = per ? ((cx % per) + per) % per : cx, hy = per ? ((cy % per) + per) % per : cy; // per: 반복 무늬(칸 per개마다 같은 모양)
+    const px = (cx + .15 + hash2(hx, hy, s) * .7) * cs, py = (cy + .15 + hash2(hx, hy, s + 1) * .7) * cs, o = hash2(hx, hy, s + 2) < .5 ? 1 : -1, ax = .86, ay = .5 * o, dx = wx + .5 - px, dy = wy + .5 - py, p = (dx * ax + dy * ay) / st, q = -dx * ay + dy * ax, d = Math.sqrt(p * p + q * q);
+    if (d < d1) { d2 = d1; d1 = d; id = hx * 7919 + hy; } else if (d < d2) d2 = d; }
   return { id, gap: d2 - d1 }; }
 function ic_topPx(wx, wy) {
   if (hash2(wx, wy, 230) < .0025) return IC.spark;
@@ -90,89 +98,127 @@ function ic_topPx(wx, wy) {
   if ((((wx + 2 * wy) % 23) + 23) % 23 === 0 && ic_vn(wx / 5, wy / 5, 237) > .62) return IC.line;
   return IC.top[k];
 }
-function ic_floorPx(wx, wy) {
-  const c = ic_cell(wx, wy, 9, 2.2, 241); if (c.gap < .55) return IC.seam;
+// 얼음 조각 바닥 무늬는 256px마다 반복 — 처음 한 번 만들어 두고 베껴 써요 (v81: 픽셀마다 계산하던 것이 폰에서 느렸어요)
+const IC_P = 256; let ic_FT = null, ic_FC = null;
+function ic_floorTex() { if (ic_FT) return ic_FT; ic_FT = new Uint8ClampedArray(IC_P * IC_P * 4);
+  for (let y = 0; y < IC_P; y++) for (let x = 0; x < IC_P; x++) { const c = ic_floorCalc(x, y), k = (y * IC_P + x) * 4; ic_FT[k] = c[0]; ic_FT[k + 1] = c[1]; ic_FT[k + 2] = c[2]; ic_FT[k + 3] = 255; }
+  ic_FC = ic_cnv(IC_P, IC_P); ic_FC.getContext('2d').putImageData(new ImageData(ic_FT, IC_P, IC_P), 0, 0); return ic_FT; }
+function ic_floorPx(wx, wy) { const t = ic_floorTex(), k = (((wy & 255) * IC_P) + (wx & 255)) * 4; return [t[k], t[k + 1], t[k + 2]]; }
+function ic_floorCalc(wx, wy) {
+  const c = ic_cell(wx, wy, 8, 2.2, 241, IC_P / 8); if (c.gap < .55) return IC.seam;
   let k = Math.floor(hash2(c.id, 5, 242) * 5); if (hash2(c.id, 6, 243) < .2) k = Math.max(0, k - 1); // 일부 조각 조금 어둡게
   return IC.floor[Math.min(4, k)];
 }
 // 얼어붙은 물(20): 매끈한 얼음판 — 큰 조각 3단계 + 대각선으로 길게 비치는 줄 + 작은 공기 방울, 물 쪽 가장자리는 밝게
+export function iceWarm() { ic_floorTex(); iceFrozenPx(0, 0, false); }
+let ic_ZT = null; // 얼음판 무늬도 256px마다 반복 (처음 한 번 만들어요)
 export function iceFrozenPx(wx, wy, rim) {
   if (rim) return IC.frzRim;
+  if (!ic_ZT) { ic_ZT = []; for (let y = 0; y < IC_P; y++) for (let x = 0; x < IC_P; x++) ic_ZT.push(ic_frozenCalc(x, y)); }
+  return ic_ZT[(wy & 255) * IC_P + (wx & 255)];
+}
+function ic_frozenCalc(wx, wy) {
   if ((((wx - 2 * wy) % 29) + 29) % 29 < 2 && ic_vn(wx / 7, wy / 7, 300) > .55) return IC.frzLine;
   if (hash2(wx, wy, 301) < .006) return IC.frzBub;
-  const c = ic_cell(wx, wy, 16, 2.6, 302); return IC.frz[Math.min(2, Math.floor(hash2(c.id, 7, 303) * 3))];
+  const c = ic_cell(wx, wy, 16, 2.6, 302, IC_P / 16); return IC.frz[Math.min(2, Math.floor(hash2(c.id, 7, 303) * 3))];
 }
 // ---- 칸 그림 (칸마다 기억, 이웃이 바뀌면 다시) ----
+// v81: 칸 그림은 칸마다 따로 캔버스를 만들지 않고 아틀라스에 칸(16×92: 윗면 16 · 그늘 16 · 앞면 28 · 바위 아래 그림자 31)으로 모아요.
+//   v80에서 칸마다 작은 캔버스를 만들었더니 한 장에 수천 개를 따로 그려 폰에서 많이 밀렸어요(같은 그림판에서 그리면 빨라요).
+//   새 빛(render/glight.js)이 쓰는 면 정보·발광도 같은 자리에 미리 써 둬요(그림에서 다시 읽지 않게).
 const ic_cnv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 const ic_put = (D, k, c, a = 255) => { D[k] = Math.round(c[0]); D[k + 1] = Math.round(c[1]); D[k + 2] = Math.round(c[2]); D[k + 3] = a; };
 const ic_ART = new Map();
 const ic_PIX = new WeakMap(); // 바위 그림의 픽셀 (한 번만 읽어요)
 function ic_pix(c) { let d = ic_PIX.get(c); if (!d) { const k = ic_cnv(16, 16), g = k.getContext('2d'); g.drawImage(c, 0, 0); d = g.getImageData(0, 0, 16, 16).data; ic_PIX.set(c, d); } return d; }
 const ic_at = (d, u, v) => { const k = ((v & 15) * 16 + (u & 15)) * 4; return [d[k], d[k + 1], d[k + 2]]; };
-// 기울어지는 벽 한 칸의 그림 { top 16×16(발자국, 12px 위로 그림), shade, front(16+FU 줄, FU px 위부터) 또는 null, ore }
-// rock: 바위면 v73 그림 { top16, front, ore } (render/terrain.js wallArt), 얼음벽이면 null
-export function slantWallArt(x, y, w, rock) {
-  const i = idx(x, y), s5 = ic_sig5(x, y), sig = s5 * 16 + (w & 15); let a = ic_ART.get(i); if (a && a.sig === sig && a.src === (rock ? rock.top16 : null)) return a;
-  if (ic_ART.size > 4000) ic_ART.clear();
-  // 둘레 2칸이 모두 벽인 깊은 칸은 모양이 같아서(깎임·앞면 없음, 그늘은 거의 까맘) 그림 하나를 같이 써요 — 처음 들어갈 때 계산을 줄여요
-  if (!s5) { const dk = rock ? rock.top16 : 'ice'; let d = ic_DEEP.get(dk); if (!d) { d = ic_build(x, y, w, rock, ic_edgeOf(x, y)); ic_DEEP.set(dk, d); } ic_ART.set(i, { ...d, sig }); return ic_ART.get(i); }
-  a = ic_build(x, y, w, rock, ic_edgeOf(x, y)); a.sig = sig; ic_ART.set(i, a); return a;
+const SLOT_W = 16, SLOT_H = 92, PG_COLS = 16, PG_ROWS = 4, PG_W = SLOT_W * PG_COLS, PG_H = SLOT_H * PG_ROWS, PG_N = PG_COLS * PG_ROWS, MAX_PAGES = 24, ATL_N = PG_N * MAX_PAGES;
+// 아틀라스는 작은 쪽(64칸, 256×240) 여러 장: 칸을 만들 때는 메모리에만 쓰고, 그리기 전에 바뀐 쪽만 한 번에 올려요(flushWallAtlas)
+export const ATL = { budget: 1e9, pages: [], owner: [], used: new Float64Array(ATL_N), pin: new Uint8Array(ATL_N), clock: 0, free: [], next: 0 };
+function ic_page(pi) { let pg = ATL.pages[pi]; if (pg) return pg;
+  const alb = ic_cnv(PG_W, PG_H), mat = ic_cnv(PG_W, PG_H), em = ic_cnv(PG_W, PG_H), g = alb.getContext('2d');
+  pg = { alb, mat, em, A: g.createImageData(PG_W, PG_H), M: g.createImageData(PG_W, PG_H), E: g.createImageData(PG_W, PG_H), dirty: false }; ATL.pages[pi] = pg;
+  const L = { mat, em }, tab = {}; // 어느 종류(윗면·앞면, 광석 번호)로 그려도 미리 써 둔 면 정보·발광을 써요
+  for (const o of ['ice', 0, 4, 5, 10, 12, 13]) { tab['itop' + o] = L; tab['front' + o] = L; }
+  tab.shade0 = { mat: null, em }; presetLayers(alb, tab); return pg; }
+// 한 장에 새로 만드는 칸 그림 수 (넘으면 그 칸은 이번 장만 예전 네모 그림 — 끊김 줄이기)
+export function wallBudget(n) { ATL.budget = n; }
+export function flushWallAtlas() { for (const pg of ATL.pages) if (pg && pg.dirty) { pg.dirty = false; pg.alb.getContext('2d').putImageData(pg.A, 0, 0); pg.mat.getContext('2d').putImageData(pg.M, 0, 0); pg.em.getContext('2d').putImageData(pg.E, 0, 0); } }
+function ic_slot() { // 새 칸 → 빈 칸 → 가장 오래 안 쓴 칸
+  if (ATL.free.length) return ATL.free.pop(); if (ATL.next < ATL_N) return ATL.next++;
+  let best = -1, bu = Infinity; for (let k = 0; k < ATL_N; k++) if (!ATL.pin[k] && ATL.used[k] < bu) { bu = ATL.used[k]; best = k; }
+  const ow = ATL.owner[best]; if (ow !== undefined) { const a = ic_ART.get(ow); if (a && a.slot === best) ic_ART.delete(ow); } return best;
+}
+// 기울어지는 벽 한 칸의 그림 { slot, u, v(아틀라스 자리), front(앞면 있음), frontUp, ore } — 윗면은 (u, v) 16×16, 그늘 (u, v+16), 앞면 (u, v+32) 16×28
+// rock: 바위면 v73 그림 { top16, front, ore } (render/terrain.js wallArt), 얼음벽이면 null · glow: 광석 발광 규칙 (render/terrain.js GLOW_RULE)
+export function slantWallArt(x, y, w, rock, glow) {
+  if (ic_ART.size > 30000) ic_ART.clear(); // 기억이 너무 커지면 비워요 (아틀라스 자리는 오래된 순으로 다시 써요)
+  const i = idx(x, y), s5 = ic_sig5(x, y), sig = s5 * 16 + (w & 15), clk = ++ATL.clock; let a = ic_ART.get(i);
+  if (a && a.sig === sig && a.src === (rock ? rock.top16 : null)) { ATL.used[a.slot] = clk; return a; }
+  // 둘레 2칸이 모두 벽인 깊은 칸은 모양이 같아서(깎임·앞면 없음, 그늘은 거의 까맘) 한 자리를 같이 써요 (지우지 않음)
+  if (!s5) { const dk = rock ? rock.top16 : 'ice'; let d = ic_DEEP.get(dk); if (!d) { if (ATL.budget-- <= 0) return null; d = ic_build(x, y, w, rock, glow, ic_edgeOf(x, y), ic_slot()); ATL.pin[d.slot] = 1; ic_DEEP.set(dk, d); } a = { ...d, sig }; ic_ART.set(i, a); return a; }
+  if (ATL.budget-- <= 0) return null;
+  const slot = a && !ATL.pin[a.slot] ? a.slot : ic_slot(); ATL.owner[slot] = i; ATL.used[slot] = clk;
+  a = ic_build(x, y, w, rock, glow, ic_edgeOf(x, y), slot); a.sig = sig; ic_ART.set(i, a); return a;
 }
 const ic_DEEP = new Map();
-function ic_build(x, y, w, rock, e) {
-  const ice = w === ICE_W, X = x * 16, Y = y * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK;
+function ic_build(x, y, w, rock, glow, e, slot) {
+  const ice = w === ICE_W, X = x * 16, Y = y * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK, FH = 16 + FU;
   const tp = rock ? ic_pix(rock.top16) : null, fp = rock ? ic_pix(rock.front) : null;
-  const top = ic_cnv(16, 16), shade = ic_cnv(16, 16), tg = top.getContext('2d'), sg = shade.getContext('2d'), icTI = tg.createImageData(16, 16), icSI = sg.createImageData(16, 16);
+  const pg = ic_page(Math.floor(slot / PG_N)), lk = slot % PG_N, su = (lk % PG_COLS) * SLOT_W, sv = Math.floor(lk / PG_COLS) * SLOT_H, A = pg.A.data, Mt = pg.M.data, E = pg.E.data;
+  for (let v = 0; v < SLOT_H; v++) { const o = ((sv + v) * PG_W + su) * 4; A.fill(0, o, o + SLOT_W * 4); Mt.fill(0, o, o + SLOT_W * 4); E.fill(0, o, o + SLOT_W * 4); } // 칸 비우기
+  const at = (u, v) => ((sv + v) * PG_W + su + u) * 4; pg.dirty = true;
+  const emF = ice ? (r, g, b) => ICE_EM(r, g, b) : (r, g, b) => glow && glow(r, g, b) ? 1 : 0;
+  // 면 정보·발광 (render/glight.js gxlayerOf와 같은 값): 윗면 = 종류 3·높이 16·12px 아래, 앞면 = 종류 2·높이 FH−줄·FH+1−줄 아래
+  const surf = (k, c, ty, z, off) => { Mt[k] = ty * 40; Mt[k + 1] = z; Mt[k + 2] = 128 + off; Mt[k + 3] = 255; const f = emF(c[0], c[1], c[2]); E[k] = c[0] * f; E[k + 1] = c[1] * f; E[k + 2] = c[2] * f; E[k + 3] = 255; };
   // 둘레 10px까지 벽 지도 → 그늘(바닥에서 떨어진 거리)·테두리
-  const M = 10, WW = 16 + M * 2, wmk = wallMask(X - M, Y - M, WW, WW), dist = ic_dist(wmk, WW, WW, v => v === 0), sol = (u, v) => wmk[(v + M) * WW + u + M] !== 0;
-  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!ic_in(e, u, v)) continue; const k = (v * 16 + u) * 4, wx = X + u, wy = Y + v;
+  const M = ice ? 10 : 8, WW = 16 + M * 2, wmk = wallMask(X - M, Y - M, WW, WW), dist = ic_dist(wmk, WW, WW, v => v === 0), sol = (u, v) => wmk[(v + M) * WW + u + M] !== 0;
+  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!ic_in(e, u, v)) continue; const k = at(u, v), ks = at(u, v + 16), wx = X + u, wy = Y + v;
     const rim = !sol(u, v - 1) || !sol(u - 1, v) || !sol(u + 1, v);
-    if (ice) ic_put(icTI.data, k, rim ? (hash2(wx, wy, 250) < .22 ? IC.rimT : IC.rim) : ic_topPx(wx, wy));
-    else { const c = ic_at(tp, u, v); ic_put(icTI.data, k, rim ? c.map(q => Math.min(255, q * 1.35 + 14)) : c); } // 바위 윗면 가장자리는 조금 밝게
-    const d = dist[(v + M) * WW + u + M], al = Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack;
-    ic_put(icSI.data, k, [8, 6, 12], Math.round(al * 255)); }
-  tg.putImageData(icTI, 0, 0); sg.putImageData(icSI, 0, 0);
+    let c; if (ice) c = rim ? (hash2(wx, wy, 250) < .22 ? IC.rimT : IC.rim) : ic_topPx(wx, wy);
+    else { c = ic_at(tp, u, v); if (rim) c = c.map(q => Math.min(255, q * 1.35 + 14)); } // 바위 윗면 가장자리는 조금 밝게
+    c = c.map(Math.round); ic_put(A, k, c); surf(k, c, 3, 16, 12);
+    const d = dist[(v + M) * WW + u + M], al = Math.round(Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack * 255);
+    ic_put(A, ks, [8, 6, 12], al); E[ks + 3] = Math.min(255, Math.round(al / .96)); } // 그늘은 발광도 가려요(검정)
   // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면 — 둥근 모서리를 따라 돌아요
-  let front = null; const vbot = new Int8Array(16).fill(-1); let anyF = false;
+  const vbot = new Int8Array(16).fill(-1); let anyF = false;
   for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (ic_in(e, u, v)) { if (!sol(u, v + 1)) { vbot[u] = v; anyF = true; } break; }
-  if (anyF) { front = ic_cnv(16, 16 + FU); const fg = front.getContext('2d'), icFI = fg.createImageData(16, 16 + FU);
-    for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || e.oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || e.oE);
-      for (let r = 0; r < 16; r++) { const row = vbot[u] - 15 + r + FU; if (row < 0 || row >= 16 + FU) continue; const k = (row * 16 + u) * 4, wx = X + u;
-        let c;
-        if (ice) { c = r === 0 ? IC.fHi : r === 15 ? IC.fLow : ic_mix(IC.fTop, IC.fBot, Math.round(r / 15 * 4) / 4);
-          if (r > 0 && r < 15) { const f = ic_cell(wx * 2, Y + r * 3, 9, 1, 260); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
-          if (side && r > 0 && r < 15) c = ic_mix(c, IC.fSide, .7); }
-        else { c = ic_at(fp, u, r); if (side) c = c.map(q => q * .72); }
-        ic_put(icFI.data, k, c); } }
-    fg.putImageData(icFI, 0, 0); }
-  return { src: rock ? rock.top16 : null, top, shade, front, frontUp: FU, ore: ice ? 'ice' : rock.ore };
+  for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || e.oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || e.oE);
+    for (let r = 0; r < 16; r++) { const row = vbot[u] - 15 + r + FU; if (row < 0 || row >= FH) continue; const k = at(u, 32 + row), wx = X + u;
+      let c;
+      if (ice) { c = r === 0 ? IC.fHi : r === 15 ? IC.fLow : ic_mix(IC.fTop, IC.fBot, Math.round(r / 15 * 4) / 4);
+        if (r > 0 && r < 15) { const f = ic_cell(wx * 2, Y + r * 3, 9, 1, 260); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
+        if (side && r > 0 && r < 15) c = ic_mix(c, IC.fSide, .7); }
+      else { c = ic_at(fp, u, r); if (side) c = c.map(q => q * .72); }
+      c = c.map(Math.round); ic_put(A, k, c); surf(k, c, 2, Math.max(0, FH - row), FH + 1 - row); }
+    // v81: 바위는 앞면 바로 아래 바닥에 옅은 그림자 3줄 (예전 칸 단위 접촉 그림자 대신, 벽 그림과 같이 그려요)
+    if (!ice) for (let r = 1; r <= 3; r++) { const vv = vbot[u] + r; if (sol(u, vv)) break; const row = vbot[u] + FU + r; if (row >= FH + 3) break; ic_put(A, at(u, 60 + row), [14, 8, 22], Math.round(ROCK.shadow[r - 1] * 255)); } }
+  return { slot, img: pg.alb, u: su, v: sv, src: rock ? rock.top16 : null, front: anyF, shadow: anyF && !ice, frontUp: FU, ore: ice ? 'ice' : rock.ore };
 }
 // ---- 바닥: 얼음 조각 한 칸 (꾸밈은 진짜 바닥 칸에만) ----
 export function drawIceShard(g, x, y, X, Y, deco) {
-  const im = g.getImageData(X, Y, 16, 16), D = im.data, wx0 = x * 16, wy0 = y * 16;
-  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) ic_put(D, (v * 16 + u) * 4, ic_floorPx(wx0 + u, wy0 + v));
-  if (deco) { const h = hash2(x, y, 270);
+  ic_floorTex(); g.drawImage(ic_FC, (x * 16) & 255, (y * 16) & 255, 16, 16, X, Y, 16, 16); // v81: copy from the repeating pattern (fast)
+  if (deco) { const h = hash2(x, y, 270), dot = (px, py, c) => { g.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; g.fillRect(X + px, Y + py, 1, 1); };
     if (h < .09) { const cx = 4 + ((hash2(x, y, 271) * 8) | 0), cy = 4 + ((hash2(x, y, 272) * 8) | 0); // X 서리 무늬
-      for (let t = -2; t <= 2; t++) for (const [px, py] of [[cx + t, cy + t], [cx + t, cy - t]]) ic_put(D, (py * 16 + px) * 4, t === 0 ? IC.spark : IC.frost); }
-    else if (h < .2) { const n = 2 + ((hash2(x, y, 273) * 2) | 0); for (let q = 0; q < n; q++) { const px = 2 + ((hash2(x, y, 274 + q) * 12) | 0), py = 2 + ((hash2(x, y, 280 + q) * 12) | 0); ic_put(D, (py * 16 + px) * 4, IC.dot); } } }
-  g.putImageData(im, X, Y);
+      for (let t = -2; t <= 2; t++) for (const [px, py] of [[cx + t, cy + t], [cx + t, cy - t]]) dot(px, py, t === 0 ? IC.spark : IC.frost); }
+    else if (h < .2) { const n = 2 + ((hash2(x, y, 273) * 2) | 0); for (let q = 0; q < n; q++) dot(2 + ((hash2(x, y, 274 + q) * 12) | 0), 2 + ((hash2(x, y, 280 + q) * 12) | 0), IC.dot); } }
 }
 // 물가: 얼음 동굴에서 물 칸으로 들어오는 땅 픽셀 색 (render/terrain.js bakeFloor) — d = 땅 가장자리에서의 거리
 export function iceShorePx(wx, wy, d) { return d === 1 ? IC.edge : d === 2 ? IC.edgeS : ic_floorPx(wx, wy); }
 export function iceCliffPx(r, h) { return r < h ? ic_mix(IC.cliffT, IC.cliffB, Math.round(r / (h - 1) * 3) / 3) : IC.foam; }
 // ---- 벽 옆: 얼음벽은 청록빛(발광), 바위는 옅은 그림자 (바닥 조각 하나 = N×N칸, 없으면 null) ----
 export function wallEdgeChunk(cx, cy, N) {
-  const x0 = cx * N, y0 = cy * N; let any = false;
-  for (let y = y0 - 1; y <= y0 + N && !any; y++) for (let x = x0 - 1; x <= x0 + N; x++) if (inB(x, y) && SLANT.has(G.wall[idx(x, y)])) { any = true; break; }
-  if (!any) return null;
+  const x0 = cx * N, y0 = cy * N; let hasI = false, hasR = false;
+  for (let y = y0 - 1; y <= y0 + N; y++) for (let x = x0 - 1; x <= x0 + N; x++) { if (!inB(x, y)) continue; const w = G.wall[idx(x, y)]; if (w === ICE_W) hasI = true; else if (SLANT.has(w)) hasR = true; }
+  if (!hasI) return null; hasR = false; // v81: 바위 옆 그림자는 벽 그림(아래 3줄)으로 옮겨서 여기서는 얼음벽 청록빛만
   const P = N * 16, Mg = ICE.glowMax + 2, WW = P + Mg * 2, X0 = x0 * 16 - Mg, Y0 = y0 * 16 - Mg, wmk = wallMask(X0, Y0, WW, WW);
-  const dI = ic_dist(wmk, WW, WW, v => v === 2), dR = ic_dist(wmk, WW, WW, v => v === 3);
+  const dI = hasI ? ic_dist(wmk, WW, WW, v => v === 2) : null, dR = hasR ? ic_dist(wmk, WW, WW, v => v === 3) : null; // 있는 벽 종류만
   const gc = ic_cnv(P, P), gi = gc.getContext('2d').createImageData(P, P), sc = ic_cnv(P, P), si = sc.getContext('2d').createImageData(P, P); let lit = false, sh = false;
   for (let j = 0; j < P; j++) for (let q = 0; q < P; q++) { const kk = (j + Mg) * WW + q + Mg; if (wmk[kk]) continue; const wx = X0 + Mg + q, wy = Y0 + Mg + j, o = (j * P + q) * 4;
-    const d = dI[kk];
+    const d = dI ? dI[kk] : 1e9;
     if (d <= ICE.glowMax) { const reach = ICE.glowMax * (.25 + .75 * ic_vn(wx / 6, wy / 6, 290)) + 1; // 덩어리지게 들쭉날쭉
       if (d <= reach) { const t = Math.min(1, Math.round(d / reach * 3) / 3), a = t < .34 ? .85 : t < .67 ? .6 : .35; ic_put(gi.data, o, ic_mix(IC.glowA, IC.glowB, t), Math.round(a * 255)); lit = true; continue; } }
-    const r = Math.round(dR[kk]); if (r >= 1 && r <= 3) { ic_put(si.data, o, [14, 8, 22], Math.round(ROCK.shadow[r - 1] * 255)); sh = true; } }
+    const r = dR ? Math.round(dR[kk]) : 0; if (r >= 1 && r <= 3) { ic_put(si.data, o, [14, 8, 22], Math.round(ROCK.shadow[r - 1] * 255)); sh = true; } }
   if (lit) gc.getContext('2d').putImageData(gi, 0, 0); if (sh) sc.getContext('2d').putImageData(si, 0, 0);
   return lit || sh ? { glow: lit ? gc : null, shadow: sh ? sc : null } : null;
 }
