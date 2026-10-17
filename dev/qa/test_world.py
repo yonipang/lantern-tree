@@ -235,9 +235,9 @@ window.__eat=(id)=>{const T=__T,G=T.G;G.inv[0]={id,c:1};G.sel=0;G.p.hunger=10;T.
             rec('게이지','용암 동굴은 더위: 40↑ 배고픔 1.3배, 70↑ 1.6배', r[0]=='hot' and r[1]==1.3 and r[2]==1.6, str(r))
             rec('게이지','100이면 5초마다 체력 -2', r[3]<=78 and r[3]>=74, str(r))
             rec('화면','100에서는 가장자리가 30~45% 사이로 숨 쉬듯', 0.25<=r[4]<=0.46, str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=__spot(4);G.p.x=s[0]+.5;G.p.y=s[1]+.5;G.env={k:'cold',v:0,lv:0,t:0};for(let n=0;n<300;n++){G.env.v=0;T.envTick(1/20)}const z=T.envFxV;G.env.v=55;for(let n=0;n<20;n++)T.envTick(1/20);const a=T.envFxV;for(let n=0;n<200;n++){G.env.v=55;T.envTick(1/20)}const b2=T.envFxV;return new Promise(res=>setTimeout(()=>res([+a.toFixed(3),+b2.toFixed(3),document.querySelector('#envFx').className,!document.querySelector('#envBar').hidden,document.querySelector('#envBar').className]),300))}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=__spot(4);G.p.x=s[0]+.5;G.p.y=s[1]+.5;G.env={k:'cold',v:0,lv:0,t:0};for(let n=0;n<300;n++){G.env.v=0;T.envTick(1/20)}const z=T.envFxV;G.env.v=55;for(let n=0;n<20;n++)T.envTick(1/20);const a=T.envFxV;for(let n=0;n<200;n++){G.env.v=55;T.envTick(1/20)}const b2=T.envFxV;return new Promise(res=>setTimeout(()=>res([+a.toFixed(3),+b2.toFixed(3),document.querySelector('#envFx').className,!document.querySelector('#envRing').hidden,document.querySelector('#envRing').className]),300))}""")
             rec('화면','가장자리가 서서히 차오름 (40↑ 옅게 15%), 추위는 파란 서리', 0.04<r[0]<0.12 and 0.13<=r[1]<=0.16 and r[2]=='cold', str(r))
-            rec('게이지','배고픔 아래 게이지 막대 (추위는 파랑)', r[3] is True and 'cold' in r[4], str(r))
+            rec('게이지','v77: 배고픔 옆 동그라미 게이지 (추위는 파랑)', r[3] is True and 'cold' in r[4], str(r))
             await pg.wait_for_timeout(200); await ev(pg,"()=>{const G=__T.G;G.env.v=80}"); await pg.wait_for_timeout(2500); await pg.screenshot(path=SP+'cold.png')
             # entrance suggestion
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.equip.body=null;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[12]={id:'obsCoat',c:1};G.biomeNow=0;const s=__spot(4);G.p.x=s[0]+.5;G.p.y=s[1]+.5;T.checkBiome0();const el=document.querySelector('#wearAsk');const t=[!el.hidden,el.textContent];el.click();return [t,G.equip.body&&G.equip.body.id]}""")

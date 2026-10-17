@@ -574,7 +574,7 @@ def test_materials_upgrades():
             rec('분해','용광로 분해: 제작 재료 70% + 강화 재료 절반 (구리 검 +2 → 구리괴 4+3)', r=='[["copperBar",7],["wood",1],["gel",1]]' and r2==[None,7,1], str([r,r2]))
             await ev(pg,"()=>__T.closePanel()")
             # ---- save keeps levels ----
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]={id:'swordIron',c:1,dur:300,lv:3};G.inv[5]={id:'pickIron',c:1,lv:1};const ci=T.idx(T.CX+10,T.CY+10);G.objs.set(ci,{t:'chest',items:Array(18).fill(null)});G.objs.get(ci).items[0]={id:'ringFe',c:1,lv:4};
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]={id:'swordIron',c:1,dur:300,lv:3};G.inv[5]={id:'swordCopper',c:1,lv:1};/* v77: 도구는 다음 단축칸 갱신 때 도구 주머니로 가서, 가방에 남는 무기로 */const ci=T.idx(T.CX+10,T.CY+10);G.objs.set(ci,{t:'chest',items:Array(18).fill(null)});G.objs.get(ci).items[0]={id:'ringFe',c:1,lv:4};
           T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const G2=T.G;return [G2.inv[0].lv,G2.inv[0].dur,G2.inv[5].lv,G2.objs.get(ci).items[0].lv]}""")
             rec('저장','강화 단계 저장/불러오기 (무기 칸·가방·상자)', r==[3,300,1,4], str(r))
             r=await ev(pg,"()=>{__T.openPanel('inv');const el=document.querySelector('#sheet .slot[data-i=\"5\"] .lvb');const t=el&&el.textContent;__T.closePanel();return t}")
