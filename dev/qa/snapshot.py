@@ -68,6 +68,8 @@ LEGACY = {
     'old_stations': "delete s.fpV;delete s.stats.nm61;s.objs=s.objs.filter(([i])=>i!==I(4,6)&&i!==I(5,6)&&i!==I(8,6));s.objs.push([I(4,6),{t:'bench'}],[I(8,6),{t:'forge'}]);s.inv[8]={id:'forge',c:1}",
     'bosses_beaten': "s.bossDead={slime:true,queen:true,golem:true,turtle:true,spirit:true};s.treeSeeds=3",
     'no_mapV': "delete s.mapV",
+    # v84 전 세이브: 활성 퀘스트가 없음 → 진행 중인 이야기가 활성
+    'old_no_quest_active': "delete s.qAct;s.guide=3",
     # v83 전 세이브: 장비 세트가 없음 → 입은 장비(강화 단계 포함)와 펫이 세트 I
     'old_equip_no_sets': "delete s.eqSets;delete s.eqSet;s.equip={body:{id:'frostRobe',c:1,lv:2},head:{id:'woolHat',c:1},neck:null,ring:null};s.pets={dog:1,cat:1};s.petOn='dog'",
     # v65 전 세이브: 도구가 가방·단축칸에 있고 곡괭이를 들고 있음 → 도구 주머니로 옮겨짐

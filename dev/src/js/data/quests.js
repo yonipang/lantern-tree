@@ -87,3 +87,21 @@ export const MULTI = {
 for (const id in MULTI) { const [n, d, req, at, cat, sz, ex, use] = MULTI[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = Object.assign({ n, item: id, sz }, ex); if (use) USE[id] = use; RECIPES.push(Rc(id, 1, req, at, cat)); }
 for (const id of ['chair', 'cryChair', 'mossSofa']) if (OBJ[id]) OBJ[id].dir4 = 1;
 QSIDE.push({ id: 's_farm', t: () => `나무 작업장으로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '작업대에서 나무 작업장을 만들어 놓고, 다 자라면 베어요. 건전지와 전선으로 전기를 이으면 저절로 베어 옆 상자에 담아요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
+// ---- v84 퀘스트 화면: 진행 숫자(진행 막대)와 「가장 가까운 할 곳」 종류 (글·조건·보상은 위 그대로, 칸만 더해요) ----
+// Q_PROG[id]() = [지금, 목표] · Q_GO[id] = 화살표가 가리킬 곳의 종류 (없으면 화살표 없음):
+//   ['obj', 물체…] 그 물체 · ['wall', 벽 번호] 그 광맥 · ['stn', 제작대] 그 물건을 만드는 제작대 · ['boss', 보스] 보스방 · ['tgt'] 이야기에 원래 있던 목표
+//   ['water'] 물가 · ['enemy'] 몬스터 · ['zone'] 꽃망울 구역 · ['biome', 지역…] 그 지역 · ['room'] 찾았지만 안 연 숨은 방 · ['wild'] 데려올 수 있는 동물
+const qn = v => v || 0;
+export const Q_PROG = {
+  wood: () => [qn(G.stats.wood), 6], ore: () => [qn(G.stats.copperOre), 6], seeds: () => [qn(G.stats.seedsFound), 3], tree: () => [qn(G.treeSeeds), 3],
+  seeds2: () => [Math.max(0, qn(G.stats.seedsFound) - 3), 2], tree2: () => [qn(G.treeSeeds), 5],
+  s_lv5: () => [G.rpg.lv, 5], s_fish: () => [qn(G.stats.fishCaught), 10], s_kill: () => [qn(G.stats.kills), 50], s_petal: () => [Object.keys(FLOWERS).filter(c => countItem('petal' + c) > 0 || (G.stats.petals || {})[c]).length, 5],
+  s_drill: () => [qn(G.stats.drilled), 20], s_gold: () => [qn((G.stats.made || {}).goldBar), 10], s_epic: () => [epicOwned(), 3], s_farm: () => [qn(G.stats.farmed), 30],
+  s_crop2: () => [qn(G.stats.wetH), 5], s_crop3: () => [qn(G.stats.fert), 10], s_crop4: () => [qn(G.stats.starH), 5], s_rooms: () => [qn(G.stats.chests), 3], s_ranch: () => [Object.keys(G.stats.ranchK || {}).length, 3], s_auto: () => [qn(G.stats.autoH), 20],
+};
+export const Q_GO = {
+  wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
+  queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
+  s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['obj', 'pitCu', 'pitFe', 'pitGold', 'quarry'], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
+  s_legend: ['stn', 'smelter'], s_farm: ['obj', 'treeFarm'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'],
+};

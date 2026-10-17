@@ -15,7 +15,8 @@ export function mapChestOn() { if (mapChestPref == null) { try { mapChestPref = 
 export function drawMap() {
   const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
   flushMap();
-  const span = UIS.mapAll ? W : 90, s = 600 / span; const ox = UIS.mapAll ? 0 : clamp(G.p.x - span / 2, 0, W - span), oy = UIS.mapAll ? 0 : clamp(G.p.y - span / 2, 0, H - span);
+  const F = UIS.mapFocus, cx0 = F ? F.x : G.p.x, cy0 = F ? F.y : G.p.y; // v84: 퀘스트 「지도에서 보기」는 목표를 가운데로
+  const span = UIS.mapAll ? W : 90, s = 600 / span; const ox = UIS.mapAll ? 0 : clamp(cx0 - span / 2, 0, W - span), oy = UIS.mapAll ? 0 : clamp(cy0 - span / 2, 0, H - span);
   g.drawImage(mapCv, ox, oy, span, span, 0, 0, 600, 600);
   const dot = (x, y, col, r) => { const X = (x - ox) * s, Y = (y - oy) * s; g.fillStyle = INK; g.beginPath(); g.arc(X, Y, r + 3, 0, 6.283); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(X, Y, r, 0, 6.283); g.fill(); };
   dot(CX + .5, CY, '#ffc861', 9);
@@ -27,4 +28,5 @@ export function drawMap() {
   for (const [i, o] of G.objs) if (myBag(o)) dot(i % W + .5, ((i / W) | 0) + .5, '#ff9b4a', 5); // v68: only my own bundles
   if (G.backPt) dot(G.backPt.x, G.backPt.y, '#b99bff', 5);
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
+  if (F) { const X = (F.x - ox) * s, Y = (F.y - oy) * s; g.strokeStyle = INK; g.lineWidth = 8; g.beginPath(); g.arc(X, Y, 16, 0, 6.283); g.stroke(); g.strokeStyle = '#ffc861'; g.lineWidth = 4; g.beginPath(); g.arc(X, Y, 16, 0, 6.283); g.stroke(); dot(F.x, F.y, '#ffc861', 6); }
 }

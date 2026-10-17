@@ -17,7 +17,7 @@ import { runCmd } from '../sim/commands.js';
 import { canSalv, maxCraft, nearStations, salvGet2 } from '../sim/crafting.js';
 import { upgOk } from '../sim/gear.js';
 import { itemAt } from '../sim/inventory.js';
-import { checkGuide } from '../sim/quests.js';
+import { checkGuide, questById, questGo } from '../sim/quests.js';
 import { resetGoalText } from './feedback.js';
 import { markInv, refreshHotbar } from './hud.js';
 import { applyCtrl, ctrlPref, setCtrlPref } from './input.js';
@@ -79,6 +79,10 @@ export function onSheetClick(e) {
   if (a === 'cout' || a === 'cin') { if (runCmd({ k: 'chest', o: panel.i, i, out: a === 'cout' }) === false) return; renderPanel(); return; }
   if (a === 'qTab') { UIS.qTab = i; renderPanel(); return; }
   if (a === 'qClaim') { runCmd({ k: 'claim', id: i }); renderPanel(); return; }
+  if (a === 'qAct') { runCmd({ k: 'qAct', id: i }); renderPanel(); return; } // v84: 활성화 · 활성화 해제
+  if (a === 'qMap') { const t = questGo(questById(i)); if (t) openPanel('map', { focus: t }); return; } // v84: 지도에서 보기
+  if (a === 'qDoneFold') { UIS.qDoneOpen = !UIS.qDoneOpen; renderPanel(); return; }
+  if (a === 'qGotFold') { UIS.qGotOpen = !UIS.qGotOpen; renderPanel(); return; }
   if (a === 'qClaimAll') { runCmd({ k: 'claimAll' }); renderPanel(); return; }
   if (a === 'statUp') { runCmd({ k: 'statUp', s: i }); UIS.statAsk = false; renderPanel(); return; }
   if (a === 'statReset') { if (!UIS.statAsk) { UIS.statAsk = true; renderPanel(); return; } runCmd({ k: 'statReset' }); UIS.statAsk = false; renderPanel(); return; }
