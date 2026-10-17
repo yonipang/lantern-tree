@@ -706,7 +706,7 @@ def test_arrow_keys_trees():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.set(i,{t:'sapling',at:G.time-1});G.p.x=102.5;T.growTick();const o=G.objs.get(i);G.inv[0]={id:'pickIron',c:1};for(let k=0;k<12&&G.objs.get(i)&&G.objs.get(i).t==='root';k++)T.hitObj({x:105,y:106},G.objs.get(i));G.p.x=104.5;return [o.t,G.objs.get(i)&&G.objs.get(i).t]}""")
             rec('나무','직접 심은 묘목이 자란 뿌리기둥도 베면 그루터기', r==['root','stump'], str(r))
             # chest stash
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'torch',c:5};G.inv[9]={id:'stone',c:30};G.inv[10]={id:'wood',c:20};G.inv[11]={id:'swordWood',c:1};const ci=T.idx(106,106);const o={t:'chest',items:Array(18).fill(null)};o.items[0]={id:'stone',c:10};G.objs.set(ci,o);G.p.x=104.5;G.p.y=106.5;T.openPanel('chest',{i:ci});return true}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;/* v76: 창을 열어도 세계가 가서 땅의 물건을 주워요 */for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'torch',c:5};G.inv[9]={id:'stone',c:30};G.inv[10]={id:'wood',c:20};G.inv[11]={id:'swordWood',c:1};const ci=T.idx(106,106);const o={t:'chest',items:Array(18).fill(null)};o.items[0]={id:'stone',c:10};G.objs.set(ci,o);G.p.x=104.5;G.p.y=106.5;T.openPanel('chest',{i:ci});return true}""")
             await pg.wait_for_timeout(600)
             await pg.tap('[data-a=stash][data-i=same]'); await pg.wait_for_timeout(200)
             r=await ev(pg,"()=>{const T=__T,G=T.G,o=G.objs.get(T.idx(106,106));return [o.items[0].c,T.countItem('wood'),T.countItem('torch')]}")

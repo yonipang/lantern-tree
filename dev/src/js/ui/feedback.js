@@ -48,11 +48,15 @@ onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 �
 onEvent('open', onlyMe((kind, data) => openPanel(kind, data)));
 onEvent('close', onlyMe(() => closePanel()));
 onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPanel(); })); // 그 창이 열려 있으면 다시 그리기
+// v76: 창을 연 채 체력이 줄면 (맞음·배고픔·더위·추위) 창은 그대로 두고 화면 가장자리를 빨갛게 번쩍 + 창의 체력 막대·닫기 버튼 강조
+let hitT = 0;
+onEvent('hurt', onlyMe(() => { if (!panel) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----
 onEvent('fade', onlyMe(mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기
   const f = $('#fade');
+  if ((mode === 'faint' || mode === 'show') && panel) closePanel(); // v76: 기절하면 열린 창을 닫아요 (맞을 때는 그대로)
   if (mode === 'faint') { f.textContent = '기절했어요…'; f.hidden = false; }
   else if (mode === 'show') f.hidden = false;
   else if (mode === 'hide') f.hidden = true;

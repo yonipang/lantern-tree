@@ -77,7 +77,7 @@ export let lastHud = '', lastAct = '', hbSel = -1;
 export function updateHud() {
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
   drawBuffs(); drawEnv();
-  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); }
+  if (k !== lastHud) { lastHud = k; $('#hpFill').style.width = (p.hp / maxHp() * 100) + '%'; $('#hpTxt').textContent = Math.round(p.hp); $('#huFill').style.width = p.hunger + '%'; $('#huTxt').textContent = Math.round(p.hunger); const sf = document.getElementById('shHpFill'); if (sf) { sf.style.width = Math.max(0, p.hp / maxHp() * 100) + '%'; $('#shHpTxt').textContent = Math.round(p.hp); } }
   const a = G.act || { lbl: '', icon: 'dots' }; const ak = a.lbl + a.icon;
   updateCtrlHud(); // v65: attack button · small button
   if (ak !== lastAct) { lastAct = ak; $('#actLbl').textContent = a.lbl; $('#actIcon').src = iconURL(a.icon); }

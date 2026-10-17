@@ -240,6 +240,47 @@ def test_bag_keeps_hotbar_pick():
     return main
 
 
+def test_world_runs_with_panel():
+    # v76 (B안): 창을 열어도 세계는 계속 가요. 창은 맞아도 그대로 + 경고(가장자리 번쩍·창 위 체력·닫기 강조), 캐릭터는 제자리, 기절하면 창이 닫혀요
+    async def main():
+        mkpage(SRC,'qa.html',HOOK.replace("computeLight}","computeLight,hurtPlayer,get paused(){return paused}}"))
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            await stand(pg,0,0,0,1)
+            await ev(pg,"()=>{const G=__T.G;G.p.x=__T.CX+.5;G.p.y=__T.CY+3.5;G.p.hp=100;G.p.inv=0;__T.openPanel('inv')}"); await pg.wait_for_timeout(300)
+            t0=await ev(pg,"()=>[__T.paused,__T.G.time]")
+            ok=True
+            try: await wait_game(pg,1,timeout=15000)
+            except Exception: ok=False
+            r=await ev(pg,"()=>[__T.paused,!document.querySelector('#sheetWrap').hidden,!!document.querySelector('#sheet .sh-hp'),document.querySelector('#shHpTxt')?.textContent]")
+            rec('창','창을 열어도 세계 시간이 흘러요', ok and t0[0] is False and r[:3]==[False,True,True] and r[3]=='100', f'{t0} {r}')
+            # 창이 열린 동안 걷기 키를 눌러도 캐릭터는 제자리
+            x0=await ev(pg,"()=>[__T.G.p.x,__T.G.p.y]")
+            await pg.keyboard.down('KeyD'); await wait_game(pg,.6); await pg.keyboard.up('KeyD')
+            x1=await ev(pg,"()=>[__T.G.p.x,__T.G.p.y]")
+            rec('창','창이 열린 동안 캐릭터는 움직이지 않아요', abs(x1[0]-x0[0])<.01 and abs(x1[1]-x0[1])<.01, f'{x0} {x1}')
+            # 맞아도 창은 그대로 + 경고, 창 위 체력이 따라 줄어요
+            await ev(pg,"()=>{const G=__T.G;G.p.inv=0;__T.hurtPlayer(10,G.p.x+1,G.p.y)}")
+            ok=await wait_until(pg,"()=>document.querySelector('#shHpTxt')?.textContent===String(Math.round(__T.G.p.hp))&&__T.G.p.hp<100")
+            r=await ev(pg,"()=>[!document.querySelector('#sheetWrap').hidden,document.querySelector('#sheet').classList.contains('hit'),document.querySelector('#hurtEdge').classList.contains('on')]")
+            await pg.screenshot(path=SP+'panel_hit.png')
+            rec('창','맞아도 창은 그대로 + 빨간 경고 + 창 위 체력', ok and r==[True,True,True], f'{ok} {r}')
+            # 창이 닫혀 있으면 경고 없음
+            await ev(pg,"()=>{__T.closePanel();document.querySelector('#hurtEdge').classList.remove('on');const G=__T.G;G.p.inv=0;__T.hurtPlayer(5,G.p.x+1,G.p.y)}")
+            r=await ev(pg,"()=>[document.querySelector('#hurtEdge').classList.contains('on'),document.querySelector('#sheet').classList.contains('hit')]")
+            rec('창','창이 닫혀 있으면 가장자리 경고 없음', r==[False,False], str(r))
+            # 창을 연 채 기절 → 창이 닫혀요
+            await ev(pg,"()=>{__T.openPanel('inv')}"); await pg.wait_for_timeout(200)
+            await ev(pg,"()=>{const G=__T.G;G.p.inv=0;__T.hurtPlayer(9999,G.p.x+1,G.p.y)}")
+            r=await ev(pg,"()=>[__T.G.p.dead>0,document.querySelector('#sheetWrap').hidden]")
+            rec('창','창을 연 채 기절하면 창이 닫혀요', r==[True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_chests():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,canCraft,nearStations,maxCraft,linkedChests,availCount}")

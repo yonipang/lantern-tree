@@ -14,7 +14,7 @@ import { roomTick } from '../world/gen.js';
 import { moveEnt } from '../world/tiles.js';
 export let lightDirty = true, lightT = 0, guideT = 0;
 export const markLight = () => { lightDirty = true; }; // 빛을 다시 계산해요 (다른 파일은 이걸 불러요)
-export function pausedTick(dt) { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } // 화면이 멈춘 동안 (제목 화면·창)
+export function pausedTick(dt) { if (lightDirty) { lightDirty = false; computeLight(); } if (!started) { G.time += dt; lightT += dt; if (lightT > .1) { lightT = 0; computeLight(); } } } // 화면이 멈춘 동안 (제목 화면 — v76부터 창을 열어도 멈추지 않아요)
 export function update(dt) {
   G.time += dt;
   runFrame(dt); // 매 프레임 순서표 (sim/systems.js): 기능마다 onFrame으로 등록해요

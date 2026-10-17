@@ -36,6 +36,7 @@ export function mouseTile() {
 }
 // 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)
 export function readCtl() {
+  if (panel) return { k: 'ctl', mx: 0, my: 0, stick: null, act: false, atk: false, aim: null }; // v76: 창이 열린 동안 내 캐릭터는 제자리 (세계는 계속)
   let mx = 0, my = 0;
   if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
   if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
