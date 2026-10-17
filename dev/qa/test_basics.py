@@ -124,7 +124,7 @@ def test_core_play():
             rec('상호작용','작업대 → 열기 + 회수 버튼', r==['open',True], str(r))
             # crafting list order and format
             await ev(pg,"()=>{__T.addItem('wood',14);__T.addItem('fiber',6);__T.addItem('rope',2);__T.addItem('gel',2)}")
-            await pg.tap('#bCraft'); await pg.wait_for_timeout(600); await pg.tap('[data-a=tab][data-i=all]'); await pg.wait_for_timeout(200)  # v61: tools moved to the 장비제작대
+            await pg.tap('#bInv'); await pg.wait_for_timeout(600); await pg.tap('[data-a=bagNav][data-i=craft]'); await pg.wait_for_timeout(300); await pg.tap('[data-a=tab][data-i=all]'); await pg.wait_for_timeout(200)  # v61: tools moved to the 장비제작대 · v77: 손제작은 가방 안 제작 탭
             await pg.screenshot(path=SP+'craft.png')
             r=await ev(pg,"()=>[[...document.querySelectorAll('.rc .rn')].map(e=>e.childNodes[0].textContent).slice(0,3).join(','), document.querySelector('.ing').textContent]")
             import re

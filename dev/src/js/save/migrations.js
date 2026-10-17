@@ -22,7 +22,7 @@ import { WATER } from '../sim/nature.js';
 import { GREW } from '../sim/building.js';
 import { bossNoteIds, learnRecipe, roomNotes } from '../sim/cooking.js';
 import { eqCopy, freshEquip } from '../sim/gear.js';
-import { addItem, isTool, moveInto, returnObj } from '../sim/inventory.js';
+import { addItem, isTool, moveInto, returnObj, seenAll } from '../sim/inventory.js';
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar
@@ -158,3 +158,5 @@ function freeTileNear(x0, y0) {
     const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || G.floor[i] === WATER || G.floor[i] === LAVA) continue; return i; }
   return -1;
 }
+// v77: 세이브에 「본 적 있는 물건」이 없으면 지금 가진 것(가방·도구·장비·상자)을 모두 본 것으로 — 빨간 점이 한꺼번에 뜨지 않게
+export function migrateSeen77() { seenAll(true); }

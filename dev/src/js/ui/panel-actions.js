@@ -29,8 +29,9 @@ export function onSheetClick(e) {
   const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, i = b.dataset.i != null ? (isNaN(+b.dataset.i) ? b.dataset.i : +b.dataset.i) : null;
   ensureAudio();
   if (a === 'close') { closePanel(); return; }
+  if (a === 'bagNav') { if (panel && panel.kind !== i) openPanel(i, { nav: 1 }); return; } // v77: 가방 | 제작 탭
   if (a === 'inv') {
-    UIS.trash = false;
+    UIS.trash = false; if (G.inv[i]) runCmd({ k: 'seenItem', id: G.inv[i].id }); // v77: 새 물건 표시는 한 번 누르면 꺼져요
     if (Number.isInteger(i) && i < HOT) runCmd({ k: 'selHot', i }); // v66 (BF-06): the hotbar slot picked here stays in hand after the bag closes
     if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
     else if (UIS.invSel === i) UIS.invSel = null;
@@ -45,7 +46,7 @@ export function onSheetClick(e) {
   if (a === 'catchThrow') { catchThrow(); return; }
   if (a === 'petOn') { if (runCmd({ k: 'pet', id: i }) === false) return; renderPanel(); return; }
   if (a === 'eqPick') { runCmd({ k: 'wear', i }); renderPanel(); return; }
-  if (a === 'pouch') { UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
+  if (a === 'pouch') { if (G.tools[i]) runCmd({ k: 'seenItem', id: G.tools[i].id }); UIS.toolSel = UIS.toolSel === i ? null : i; UIS.invSel = null; UIS.trash = false; renderPanel(); return; } // v65 tool pouch
   if (a === 'holdTool') { const s = G.tools[UIS.toolSel]; if (s) { runCmd({ k: 'hold', i: UIS.toolSel }); SFX.click(); } UIS.toolSel = null; renderPanel(); return; }
   if (a === 'trashTool') { if (!UIS.trash) { UIS.trash = true; renderPanel(); return; } runCmd({ k: 'trashTool', i: UIS.toolSel }); UIS.toolSel = null; UIS.trash = false; renderPanel(); return; }
   if (a === 'eat') { runCmd({ k: 'eat', i: UIS.invSel }); if (!G.inv[UIS.invSel]) UIS.invSel = null; renderPanel(); return; }

@@ -31,12 +31,12 @@ def rec(area,name,ok,detail=''):
 
 LAYOUT_JS="""()=>{
  const q=s=>{const e=document.querySelector(s); if(!e) return null; const cs=getComputedStyle(e); if(e.hidden||cs.display==='none'||cs.visibility==='hidden') return null; const r=e.getBoundingClientRect(); return r.width?{x:r.left,y:r.top,w:r.width,h:r.height,r:r.right,b:r.bottom}:null};
- const els={bars:q('#hud .bars'),side:q('#hud .side'),hotbar:q('#hotbar'),belt:q('#subBtn'),act:q('#actBtn'),atk:q('#atkBtn'),sk:q('#skBar'),joy:q('#joy'),hint:q('#pcHint'),toast:q('#toasts')};
+ const els={bars:q('#hud .stat'),boss:q('#bossbar'),side:q('#hud .side'),hotbar:q('#hotbar'),belt:q('#subBtn'),act:q('#actBtn'),atk:q('#atkBtn'),sk:q('#skBar'),joy:q('#joy'),hint:q('#pcHint'),toast:q('#toasts')};
  const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
- const pairs=[['bars','side'],['hotbar','belt'],['hotbar','act'],['belt','act'],['side','belt'],['side','act'],['bars','belt'],['joy','belt'],['joy','bars'],['joy','act'],['joy','hotbar'],['hint','hotbar'],['hint','belt'],['toast','belt'],['toast','act'],['atk','act'],['atk','hotbar'],['atk','belt'],['atk','sk'],['sk','act'],['sk','hotbar'],['joy','atk'],['joy','sk'],['side','atk']];
+ const pairs=[['bars','side'],['hotbar','belt'],['hotbar','act'],['belt','act'],['side','belt'],['side','act'],['bars','belt'],['joy','belt'],['joy','bars'],['joy','act'],['joy','hotbar'],['hint','hotbar'],['hint','belt'],['toast','belt'],['toast','act'],['atk','act'],['atk','hotbar'],['atk','belt'],['atk','sk'],['sk','act'],['sk','hotbar'],['joy','atk'],['joy','sk'],['side','atk'],['bars','boss'],['boss','side'],['hotbar','sk'],['joy','sk']];
  const over=pairs.filter(([a,b])=>ov(els[a],els[b])).map(p=>p.join('/'));
  const out=Object.entries(els).filter(([k,v])=>v&&(v.x<-1||v.y<-1||v.r>innerWidth+1||v.b>innerHeight+1)&&k!=='joy').map(([k])=>k);
- const slots=[...document.querySelectorAll('#hotbar .slot')].map(e=>Math.round(e.getBoundingClientRect().width));
+ const slots=[...document.querySelectorAll('#hotbar .slot')].map(e=>Math.round(e.getBoundingClientRect().width)).filter(w=>w>0); // v77: 폰은 안 보이는 쪽 단축칸(1–5 / 6–9)을 빼고
  const actW=els.act?els.act.w:0;
  return {over,out,minSlot:Math.min(...slots),actW,hscroll:document.documentElement.scrollWidth>innerWidth}
 }"""

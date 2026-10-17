@@ -23,7 +23,7 @@ export function enemyStep(e, dt) {
   if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
   dotTick(e, dt); if (!G.enemies.includes(e)) return; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
   if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0);
+  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0); if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
   if (def.hop) {
     if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
     else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }

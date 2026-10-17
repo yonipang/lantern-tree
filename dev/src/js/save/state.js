@@ -5,7 +5,7 @@ import { BKEYS, BOSSES } from '../data/rpg-nature.js';
 import { BUFF_MAX, DISH, EFF } from '../data/farming-cooking.js';
 import { CHARS, LOOK_DEF, cleanLook } from '../art/characters.js';
 import { clamp } from '../engine/util.js';
-import { refundPieces, convertDrills, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, syncNotes } from './migrations.js';
+import { refundPieces, convertDrills, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, migrateSeen77, syncNotes } from './migrations.js';
 import { rand } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
 import { ANCH, CX, CY, H, MAPV, SA, SB, SI, SL, W, devLayout, idx, setLayout } from '../world/map.js';
@@ -15,7 +15,7 @@ import { FPV, setFootprints } from '../sim/building.js';
 import { activeBuffs } from '../sim/cooking.js';
 import { advanceOffline } from '../sim/crafting.js';
 import { freshEquip } from '../sim/gear.js';
-import { addItem, invSize, isTool, moveInto } from '../sim/inventory.js';
+import { addItem, invSize, isTool, moveInto, seenAll } from '../sim/inventory.js';
 import { cleanZones, genFlowerZones } from '../sim/nature.js';
 import { cleanRpg, freshRpg, maxHp, maxMp } from '../sim/player.js';
 import { unstick } from '../sim/survival.js';
@@ -43,7 +43,7 @@ export function newGame(seed) {
     p: { x: CX + .5, y: CY + 1.7, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
-  G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.newIds = {};
+  G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
   G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
@@ -55,9 +55,9 @@ export const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 export const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
-export const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env']);
+export const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 export const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
 export const ME = 'me'; // 내 플레이어 (13단계에서 캐릭터마다 이름표)
@@ -67,9 +67,9 @@ const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 // 옛 코드의 G.inv·G.p·G.actCd … (PER_PLAYER)는 「지금 플레이어」(curPl)의 것을 가리켜요:
 //   명령은 보낸 플레이어(sim/commands.js), 매 프레임 플레이어별 일은 한 명씩(sim/systems.js), 그 밖(화면·저장)은 내 플레이어(ME).
 // 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
-export const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env',
+export const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen',
   'explored', 'spawnPt', 'backPt', // 세계 안 플레이어별 (PLAYER_KEYS)
-  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'newIds', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
+  'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
   'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
 const freshTimers = () => ({ actCd: 0, holdGroup: null, actQ: 0, holdT: 0, holdK: null, atkQ: 0, atkT: 0, hungerT: 0, regenT: 0, spawnT: 0 });
 export let curPl = null;
@@ -93,8 +93,8 @@ function bindPlayers(g, id = ME) {
 export function addPlayer(id, x, y) {
   const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(),
-    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
-    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0, newIds: {} };
+    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, seen: {}, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
+    fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0 };
   G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
 }
 export function splitSave(s, id = ME) {
@@ -125,7 +125,7 @@ export function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
 }
 export function deserialize(s) {
   setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
@@ -153,7 +153,7 @@ export function deserialize(s) {
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   G.tools = G.tools.filter(x => known(x) && isTool(x.id)).map(x => ({ ...x, c: 1 })); if (!(G.tsel >= 0 && G.tsel < G.tools.length)) G.tsel = 0;
-  if (!(G.sel >= (G.tools.length ? -1 : 0) && G.sel < HOT)) G.sel = 0; G.newIds = {};
+  if (!(G.sel >= (G.tools.length ? -1 : 0) && G.sel < HOT)) G.sel = 0;
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
   convertDrills(); // v46: old stone drills become stone pits
   if (oldWp) moveOldWeapon(oldWp);
@@ -177,6 +177,7 @@ export function deserialize(s) {
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
+  G.seen = {}; if (s.seen && typeof s.seen === 'object') { for (const k in s.seen) if (ITEMS[k] && [1, 2, 3].includes(s.seen[k])) G.seen[k] = s.seen[k]; } else migrateSeen77(); // v77: 본 적 있는 물건 (빨간 점)
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 // the deep bosses drop their light seed themselves (the altar empties), so it can never go missing

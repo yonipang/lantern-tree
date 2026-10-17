@@ -30,6 +30,7 @@ export function updateHazards(dt) {
 }
 export function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; emit('ftext', b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
 export function hitBoss(b, dmg, crit, fx) {
+  if (dmg > 0) G.p.fightAt = G.time; // v77: 싸우는 중 → 머리 위 체력 막대
   if ((b.inv || 0) > 0) { if (dmg > 0) emit('ftext', b.x, b.y - 2.3, '막힘', '#bfe6ff'); return; }
   if (b.k === 'turtle' && b.ph === 'open' && dmg > 0) { dmg = Math.round(dmg * 1.5); crit = true; }
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }

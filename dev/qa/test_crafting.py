@@ -471,7 +471,7 @@ def test_weapons_skills():
                 await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1),{t:'chair'});G.p.face={x:0,y:1}}")
                 await pg.wait_for_timeout(500)
                 r=await ev(pg,"""()=>{const q=s=>{const e=document.querySelector(s);if(!e)return null;const cs=getComputedStyle(e);if(e.hidden||cs.display==='none')return null;const r=e.getBoundingClientRect();return r.width?{x:r.left,y:r.top,r:r.right,b:r.bottom}:null};
-              const E={sk:q('#skBar'),act:q('#actBtn'),sub:q('#subBtn'),hot:q('#hotbar'),bars:q('#hud .bars'),side:q('#hud .side'),joy:q('#joy'),hint:q('#pcHint')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
+              const E={sk:q('#skBar'),act:q('#actBtn'),sub:q('#subBtn'),hot:q('#hotbar'),bars:q('#hud .stat'),side:q('#hud .side'),joy:q('#joy'),hint:q('#pcHint')};const ov=(a,b)=>a&&b&&a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1;
               const bad=Object.keys(E).filter(k=>k!=='sk'&&ov(E.sk,E[k]));const out=E.sk&&(E.sk.x<0||E.sk.y<0||E.sk.r>innerWidth||E.sk.b>innerHeight);const sideOut=E.side&&(E.side.b>innerHeight||E.side.r>innerWidth);return [!!E.sk,bad,!!out,!!sideOut,!!(E.bars&&E.side&&ov(E.bars,E.side))]}""")
                 rec('레이아웃',f'{name} 스킬 버튼 겹침 없음', r[0] and not r[1] and not r[2], str(r))
                 rec('레이아웃',f'{name} 능력 버튼 포함 사이드 메뉴가 화면 안', not r[3] and not r[4], str(r))
@@ -574,7 +574,7 @@ def test_materials_upgrades():
             rec('분해','용광로 분해: 제작 재료 70% + 강화 재료 절반 (구리 검 +2 → 구리괴 4+3)', r=='[["copperBar",7],["wood",1],["gel",1]]' and r2==[None,7,1], str([r,r2]))
             await ev(pg,"()=>__T.closePanel()")
             # ---- save keeps levels ----
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]={id:'swordIron',c:1,dur:300,lv:3};G.inv[5]={id:'pickIron',c:1,lv:1};const ci=T.idx(T.CX+10,T.CY+10);G.objs.set(ci,{t:'chest',items:Array(18).fill(null)});G.objs.get(ci).items[0]={id:'ringFe',c:1,lv:4};
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]={id:'swordIron',c:1,dur:300,lv:3};G.inv[5]={id:'swordCopper',c:1,lv:1};/* v77: 도구는 다음 단축칸 갱신 때 도구 주머니로 가서, 가방에 남는 무기로 */const ci=T.idx(T.CX+10,T.CY+10);G.objs.set(ci,{t:'chest',items:Array(18).fill(null)});G.objs.get(ci).items[0]={id:'ringFe',c:1,lv:4};
           T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const G2=T.G;return [G2.inv[0].lv,G2.inv[0].dur,G2.inv[5].lv,G2.objs.get(ci).items[0].lv]}""")
             rec('저장','강화 단계 저장/불러오기 (무기 칸·가방·상자)', r==[3,300,1,4], str(r))
             r=await ev(pg,"()=>{__T.openPanel('inv');const el=document.querySelector('#sheet .slot[data-i=\"5\"] .lvb');const t=el&&el.textContent;__T.closePanel();return t}")

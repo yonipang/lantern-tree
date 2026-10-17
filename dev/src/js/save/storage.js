@@ -7,7 +7,7 @@ import { beginPlay } from '../ui/picker.js';
 export let saveFailWarned = false;
 export function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
-  catch (e) { if (!silent || !saveFailWarned) { saveFailWarned = true; toast('이 화면에서는 저장이 되지 않아요! 메뉴 → 세이브 파일로 내보내기로 꼭 백업해 주세요', 'warn', 'savefail'); } return false; }
+  catch (e) { if (!silent || !saveFailWarned) { saveFailWarned = true; toast('이 화면에서는 저장이 되지 않아요! 설정 → 세이브 파일로 내보내기로 꼭 백업해 주세요', 'warn', 'savefail'); } return false; }
 }
 // keeps the last 3 saves that were about to be replaced (new game, import, and a snapshot every 20 minutes of play)
 export const BACKUP_KEY = 'lantern-tree-backups';
@@ -61,12 +61,12 @@ export async function cloudCheck() {
   if (!local || !localRun || !CLOUD.docRun || localRun !== CLOUD.docRun) {
     if (local && local.run && CLOUD.docRun === local.run) { /* same */ } else {
       CLOUD.pending = doc; CLOUD.diffRun = !!local; showCloudAsk();
-      if (started) toast(local ? '클라우드에 다른 모험이 있어요. 메뉴에서 어느 쪽을 쓸지 골라 주세요' : '클라우드에 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew');
+      if (started) toast(local ? '클라우드에 다른 모험이 있어요. 설정에서 어느 쪽을 쓸지 골라 주세요' : '클라우드에 세이브가 있어요. 설정에서 확인해 주세요', 'good', 'cloudnew');
       cloudRefresh(); return;
     }
   }
   CLOUD.diffRun = false;
-  if ((doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 메뉴에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
+  if ((doc.at || 0) > localAt + 3000) { CLOUD.pending = doc; showCloudAsk(); if (started) toast('클라우드에 더 최근 세이브가 있어요. 설정에서 확인해 주세요', 'good', 'cloudnew'); cloudRefresh(); return; }
   CLOUD.lastUp = doc.at || 0; cloudUpload(true);
 }
 export async function cloudUpload(force, quiet = true) {

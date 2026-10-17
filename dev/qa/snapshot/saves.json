@@ -381,6 +381,32 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"golemCore": 1,
+"daggerQueen": 1,
+"hammerSlime": 1,
+"bowGolem": 1,
+"swordLava": 1,
+"bowFrost": 1,
+"turtleCharm": 1,
+"snowBrooch": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "no_mapV": {
@@ -717,6 +743,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "old_bag": {
@@ -1049,6 +1093,23 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"torch": 1,
+"wood": 1,
+"stone": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "old_build_pieces": {
@@ -1472,6 +1533,15 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"stone": 1,
+"wood": 1,
+"gel": 1,
+"pickWood": 1
 }
 },
 "old_fields": {
@@ -1808,6 +1878,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "old_roof_drill_weapon": {
@@ -2164,6 +2252,30 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"wood": 1,
+"stone": 1,
+"quarry": 1,
+"pitCu": 1,
+"swordCopper": 1,
+"bowIron": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "old_stations": {
@@ -2506,6 +2618,26 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"smelterCu": 1,
+"forge": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "old_tools_in_bag": {
@@ -2867,6 +2999,29 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"swordIron": 1,
+"pickCopper": 1,
+"axeStone": 1,
+"shovel": 1,
+"rod": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "v1": {
@@ -3285,6 +3440,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "v2": {
@@ -3703,6 +3876,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "v3": {
@@ -4121,6 +4312,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "v62_layout1": {
@@ -4457,6 +4666,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 },
 "v62_layout2": {
@@ -4803,6 +5030,24 @@ null
 "env": {
 "k": null,
 "v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1,
+"bed": 1,
+"chair": 1,
+"table": 1,
+"plant": 1,
+"rug": 1,
+"cushion": 1,
+"vase": 1,
+"shelf": 1,
+"lampShroom": 1,
+"torch": 1,
+"wallWood": 1,
+"floorWood": 1
 }
 }
 }
