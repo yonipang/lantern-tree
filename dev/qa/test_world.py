@@ -98,6 +98,52 @@ def test_new_light_terrain():
     return main
 
 
+def test_ice_cave_art():
+    import asyncio, sys
+    # v79: 얼음 동굴 새 방식 시험 — 얼음벽 가장자리 기울기·앞면, 얼음 조각 바닥, 벽 옆 청록빛 / 켜진 횃불 불꽃은 새 빛에서 스스로 빛남
+    H2=HOOK.replace("computeLight}","computeLight,getChunk,chunkGlow,iceWallArt,iceWallPx,iceSolidPx,isIceShard,GLOW_RULE,glDebug,CHN}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
+            await ctx.add_init_script("try{localStorage.setItem('lantern-tree-light','force')}catch(e){}")
+            pg=await ctx.new_page(); errs=[]
+            pg.on('console',lambda m: errs.append(m.text) if m.type=='error' and 'TUNNEL' not in m.text and 'fonts' not in m.text else None)
+            pg.on('pageerror',lambda e: errs.append(str(e)))
+            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(400)
+            await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
+            # 얼음 동굴 안에 9×9 얼음벽 덩어리를 만들고 가운데 3×3을 비워요 (지도 모양에 기대지 않게 직접 깔아요)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ox=-1,oy=-1;
+              for(let y=40;y<560&&ox<0;y+=7)for(let x=40;x<560;x+=7){let ok=true;for(let dy=-3;dy<12&&ok;dy++)for(let dx=-3;dx<12;dx++)if(G.biome[T.idx(x+dx,y+dy)]!==4){ok=false;break}if(ok){ox=x;oy=y;break}}
+              if(ox<0)return null;
+              for(let y=-2;y<11;y++)for(let x=-2;x<11;x++){const i=T.idx(ox+x,oy+y);G.objs.delete(i);G.floor[i]=19;G.wall[i]=(x>=0&&x<9&&y>=0&&y<9&&!(x>=3&&x<6&&y>=3&&y<6))?11:0}
+              G.p.x=ox+4.5;G.p.y=oy+4.5;G.enemies.length=0;
+              const full=T.iceWallPx(ox+1,oy+1), north=T.iceWallPx(ox+4,oy+2), corner=T.iceWallPx(ox,oy);
+              const aN=T.iceWallArt(ox+4,oy+2), aIn=T.iceWallArt(ox+1,oy+1), aS=T.iceWallArt(ox+4,oy+8);
+              // 바닥: 방 안 칸은 얼음 조각, 칸 그림의 픽셀은 파란색
+              const cx=Math.floor((ox+4)/T.CHN),cy=Math.floor((oy+4)/T.CHN),cv=T.getChunk(cx,cy),g=cv.getContext('2d');
+              const px=g.getImageData((ox+4)%16*16+8,(oy+4)%16*16+8,1,1).data;
+              const glow=T.chunkGlow(cx,cy);
+              // 깎인 곳은 벽 안이 아니지만, 부딪히는 판정은 칸 단위 그대로
+              return {full,north,corner,frontN:!!aN.front,frontIn:!!aIn.front,frontS:!!aS.front,shard:T.isIceShard(T.idx(ox+4,oy+4)),blue:px[2]>px[0]+60&&px[2]>px[1],glow:!!glow,
+                cut:!T.iceSolidPx((ox+4)*16+8,(oy+3)*16-1)||!T.iceSolidPx((ox+3)*16-1,(oy+3)*16+1), wall:G.wall[T.idx(ox+4,oy+2)]}}""")
+            ok=r and r['full']==256 and r['north']<256 and r['corner']<256 and r['wall']==11
+            rec('얼음 동굴','얼음벽은 열린 쪽 가장자리만 안쪽으로 비스듬히 깎이고(둘러싸인 칸은 그대로), 벽 칸은 그대로', ok, str(r))
+            rec('얼음 동굴','남쪽이 드러난 얼음벽만 앞면이 있음 (방 북쪽 벽 ○, 안쪽 벽 ×, 바깥 남쪽 벽 ○)', r and r['frontN'] and not r['frontIn'] and r['frontS'], str(r))
+            rec('얼음 동굴','얼음 동굴 바닥은 파란 얼음 조각, 벽 옆에 청록빛 조각이 있음', r and r['shard'] and r['blue'] and r['glow'], str(r))
+            # 횃불 불꽃은 빛나고 나무 손잡이는 안 빛남
+            r2=await ev(pg,"()=>{const L=__T.GLOW_RULE.lamp;return [L(169,37,10),L(245,187,32),L(255,253,230),L(156,93,58),L(35,28,24)]}")
+            rec('빛','켜진 횃불의 불꽃 픽셀만 스스로 빛남 (손잡이·몸통은 아님)', r2==[True,True,True,False,False], str(r2))
+            ok=await wait_until(pg,"()=>{const d=__T.glDebug();return d.failed||d.frames>10}")
+            r3=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.failed,d.err2]}")
+            rec('빛','얼음 동굴에서 새 빛이 돌아감 (GL 오류 없음, 칩이 없으면 예전 빛)', ok and ((r3[0] and not r3[1] and r3[2]==0) or (r3[1] and not r3[0])), str(r3))
+            await pg.screenshot(path=SP+'ice_cave.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_ring_map_boss_room():
     import asyncio, sys
     # v49.1 버그 수정: 고리 지도에서 말랑대왕 방(과 그 방에서 시작하는 수정골렘 길)이 바위 고리에 막히던 문제 / 귀환석으로 표지에 돌아갈 때 막힌 굴이면 엉뚱한 곳으로 옮겨지던 문제

@@ -11,6 +11,7 @@ import { hexRgb } from '../engine/util.js';
 import { G } from '../save/state.js';
 import { WATER } from '../sim/nature.js';
 import { idx, inB } from '../world/map.js';
+import { ICE_BIOME, iceCliffPx, iceShorePx } from './icecave.js';
 
 export const NEW_FLOORS = new Set([1, 2, WATER, 5, 6]); // 새 방식으로 굽는 바닥
 const tr_BUILT = new Set([5, 6]); // 블록처럼 칸 단위로 깔리는 바닥
@@ -27,6 +28,8 @@ export const GLOW_RULE = {
   10: (r, g, b) => r > 150 && g > 110 && b < 130,
   13: (r, g, b) => tr_lum(r, g, b) > 150,
   12: (r, g, b) => b > 200 && tr_lum(r, g, b) > 150,
+  // v79: 켜진 빛 물건(횃불·등불·난로 …)의 불꽃 — 진한 빨강~노랑 불꽃과 아주 밝은 픽셀만 스스로 빛나요 (나무 손잡이·몸통은 빛을 받기만)
+  lamp: (r, g, b) => (r > 150 && r - b > 100) || tr_lum(r, g, b) > 215,
 };
 export const TR = { ready: false, tried: false };
 const tcnv = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; if (fn) fn(g); return c; };
@@ -129,6 +132,7 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
   const leaf = (x, y) => tr_vnoise(x / 2.3, y / 2.3, 15);
   for (let ly = 0; ly < oh; ly++) for (let lx = 0; lx < ow; lx++) { const k = (oy0 + ly) * Wp + ox0 + lx, o = (ly * ow + lx) * 4, x = X0 + ox0 + lx, y = Y0 + oy0 + ly;
     if (wallPx[k]) { O[o] = 18; O[o + 1] = 15; O[o + 2] = 28; O[o + 3] = 255; continue; }
+    if (Gm[k] && tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)] === ICE_BIOME) { putC(o, iceShorePx(x, y, dG[k])); continue; } // v79: ice cave shore = ice shards, not grass
     if (Gm[k]) { const d = dG[k]; if (d === 1) putC(o, EC.gE); else if ((d === 2 && leaf(x, y) > -.45) || (d === 3 && leaf(x, y) > .1) || (d === 4 && leaf(x, y) > .65)) putC(o, EC.gS); else putT(o, TX.grass, x, y); }
     else { const b = tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)]; if (b) putC(o, tr_waterRGB(b)); else putT(o, TX.water, x, y); } }
   // 작은 장식 (풀포기·꽃·조약돌): 잔디 칸에서만, 경계에서 3px 이상 안쪽 — 한 픽셀이라도 안 되면 통째로 빼요
@@ -157,7 +161,7 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
   for (let x = Math.max(0, ox0 - 1); x < Math.min(Wp, ox0 + ow + 1); x++) for (let yb = Math.max(1, oy0 - H2); yb < Math.min(Hp, oy0 + oh + tr_CLIFF.h + 1); yb++) {
     if (!shore(x, yb) || !near(x - 1, yb) || !near(x + 1, yb)) continue;
     for (let r = 0; r < H2; r++) { const yy = yb - tr_CLIFF.h + r; if (yy < 0 || yy >= Hp) continue; const kk = yy * Wp + x, o = oi(kk); if (o < 0) continue;
-      if (wallPx[kk] || (r < tr_CLIFF.h ? !Gm[kk] : Gm[kk])) continue; putT(o, CL, X0 + x, r); } }
+      if (wallPx[kk] || (r < tr_CLIFF.h ? !Gm[kk] : Gm[kk])) continue; if (tBi[((yy >> 4) * TW) + (x >> 4)] === ICE_BIOME) putC(o, iceCliffPx(r, tr_CLIFF.h)); else putT(o, CL, X0 + x, r); } }
   return out;
 }
 // 얇은 벽·문 칸: 4등분 조각마다 그쪽 바닥을 무늬 그대로 (render/chunks.js) — 바닥 무늬의 그 자리 8×8

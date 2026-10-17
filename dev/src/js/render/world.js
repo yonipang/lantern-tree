@@ -9,7 +9,7 @@ import { BKEYS, BOSSES, ENEMY } from '../data/rpg-nature.js';
 import { effH, effW, hdCtx, INK, whiten } from '../engine/canvas.js';
 import { fxRand, hash2 } from '../engine/random.js';
 import { clamp } from '../engine/util.js';
-import { CHN, getChunk, prefetchChunk } from './chunks.js';
+import { CHN, chunkGlow, getChunk, prefetchChunk } from './chunks.js';
 import { iconCanvas } from './icons.js';
 import { LH, lightCv, LIGHTS, LW, LX0, LY0 } from './light.js';
 import { animalImg, drawHazards, drawHitBars, drawSpread, drawTree, drawTreeGlow, drawTreeLeaves, rotImg, twSprite, visibleShakers } from './parts.js';
@@ -36,6 +36,7 @@ import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { anchorAt, fpOf, placeAnchor } from '../world/tiles.js';
 import { WALL_H, WALL_TOP, wallShade } from '../art/tilemap.js';
 import { rippleOf, TR, wallArt } from './terrain.js';
+import { ICE_W, iceWallArt } from './icecave.js';
 export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
 export function updateAmbient(dt) {
@@ -56,6 +57,7 @@ export function renderWorld(cw, ch, glOn = false) {
   const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(H - 1, Math.ceil((camY + ch) / T) + 3);
   // floors (cached chunks)
   for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) ctx.drawImage(getChunk(cx, cy), cx * 256 - camX, cy * 256 - camY);
+  drawKind('fglow'); for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) { const gw = chunkGlow(cx, cy); if (gw) ctx.drawImage(gw, cx * 256 - camX, cy * 256 - camY); } drawKind('floor'); // v79: glow beside ice walls
   prefetchChunk(Math.floor(x0 / CHN), Math.floor(y0 / CHN), Math.floor(x1 / CHN), Math.floor(y1 / CHN));
   drawHazards(T, camX, camY);
   // water, rugs and ground plants (change often, drawn live)
@@ -105,6 +107,12 @@ export function renderWorld(cw, ch, glOn = false) {
     const y = y0 + r, sy = y * T - camY;
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
+      if (w === ICE_W) { const ia = iceWallArt(x, y); // v79: ice wall with slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, front only when the south is open
+        drawKind('itop', 'ice'); ctx.drawImage(ia.top, sx, sy - L); drawKind('shade'); ctx.drawImage(ia.shade, sx, sy - L);
+        if (ia.front) { drawKind('front', 'ice'); ctx.drawImage(ia.front, sx, sy - ia.frontUp); } drawKind('up');
+        const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+        if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (ia.front) { const a = .35 + .35 * Math.sin(t * 2.2 + x), fy = sy + T - WALL_H; ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
+        continue; }
       const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
       const topImg = wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], shd = wallShade(wallOpen(x, y));
@@ -288,7 +296,9 @@ export function drawEntity(it, t) {
       if (jobDone(j) > 0) drawImg(iconCanvas(j.out), wx, top - .1 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 }); }
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
     let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
+    const glowL = d.light && !o.off; if (glowL) drawKind('up', 'lamp'); // v79: lit light objects' flames glow in the new light
     drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
+    if (glowL) drawKind('up');
     if (d.dev === 'farm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / growOf(o), 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
     if (d.dev === 'farm' && ((o.store || []).length || farmStage(o) >= 3)) { ctx.fillStyle = (o.store || []).length ? '#ffd25c' : `rgba(255,241,214,${.5 + Math.sin(t * 5) * .3})`; ctx.fillRect(Math.round((it.x + 1.8) * T - camX), Math.round((it.y - .3) * T - camY), 3, 3); }
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }

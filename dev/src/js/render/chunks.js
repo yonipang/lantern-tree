@@ -10,6 +10,7 @@ import { H, idx, inB, LAVA, W } from '../world/map.js';
 import { BIOME_WATER, BUILT_WALLS, OLD_WATER, ROCK_FILL, TM, tileSetOf } from '../art/tilemap.js';
 import { cv } from './view.js';
 import { bakeFloor, isNewFloor, newQuarter, terrainReady } from './terrain.js';
+import { drawIceShard, ICE_W, iceGlowChunk, isIceShard } from './icecave.js';
 export const CHN = 16, chunks = new Map();
 const CH_KEEP = 96; let chunkClock = 0;
 export function chunkSig(cx, cy) { let h = 7; const m = terrainReady() ? 2 : 1; for (let y = cy * CHN - m; y < cy * CHN + CHN + m; y++) for (let x = cx * CHN - m; x < cx * CHN + CHN + m; x++) { if (!inB(x, y)) continue; const i = idx(x, y); h = (Math.imul(h, 31) + G.wall[i] * 16 + G.floor[i] + (wallPiece(i) ? 7919 : 0)) | 0; } return h; }
@@ -19,7 +20,12 @@ export function drawChunk(c, cx, cy) {
   const NEW = terrainReady(); // v73: grass·dirt·water·wood·stone floors baked per pixel (render/terrain.js), other floors drawn per tile on top
   if (NEW) g.putImageData(bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1), 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
-    const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y); if (G.wall[i]) continue; const f = G.floor[i];
+    const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y);
+    if (G.wall[i] === ICE_W) { drawIceShard(g, x, y, tx * 16, ty * 16, false); continue; } // v79: ice under the ice wall, seen where its edge slants in
+    if (G.wall[i]) continue; const f = G.floor[i];
+    if (isIceShard(i) && !wallPiece(i)) { // v79: ice cave floor = ice shards (render/icecave.js); next to water the baked floor already has them with a wavy shore
+      let wet = false; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (inB(x + dx, y + dy) && !G.wall[idx(x + dx, y + dy)] && G.floor[idx(x + dx, y + dy)] === WATER) wet = true;
+      if (!(NEW && wet)) drawIceShard(g, x, y, tx * 16, ty * 16, true); continue; }
     if (NEW && isNewFloor(f) && !wallPiece(i)) { newShadows(g, x, y, tx * 16, ty * 16, f); continue; }
     if (f === WATER) continue;
     const X = tx * 16, Y = ty * 16, hv = hash2(x, y, 5), vr = (hv * (SPR.floor[f] ? SPR.floor[f].length : 4)) | 0; // drawn floors can have more than 4 variants (v54)
@@ -49,6 +55,7 @@ export function drawChunk(c, cx, cy) {
     if (x < W - 1 && G.wall[i + 1]) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
   }
   if (TM.ready && !NEW) drawPatches(g, cx, cy);
+  c.glow = iceGlowChunk(cx, cy, CHN); // v79: teal glow on the floor beside ice walls
 }
 // v73: contact shadows on the new floors (as in the light demo) — under a wall to the north, and beside walls left / right
 function newShadows(g, x, y, X, Y, f) {
@@ -116,6 +123,7 @@ export function getChunk(cx, cy) {
   return c.cv;
 }
 // v73: bake at most one chunk a frame just outside the screen, so walking into a new area rarely has to bake on screen
+export const chunkGlow = (cx, cy) => { const c = chunks.get(cx * 1000 + cy); return c ? c.glow : null; };
 export function prefetchChunk(cx0, cy0, cx1, cy1) {
   for (let cy = cy0 - 1; cy <= cy1 + 1; cy++) for (let cx = cx0 - 1; cx <= cx1 + 1; cx++) {
     if (cx >= cx0 && cx <= cx1 && cy >= cy0 && cy <= cy1) continue; if (cx < 0 || cy < 0 || cx * CHN >= W || cy * CHN >= H) continue;
