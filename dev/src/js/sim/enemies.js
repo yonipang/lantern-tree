@@ -9,7 +9,7 @@ import { dotTick } from './combat.js';
 import { hurtPlayer } from './player.js';
 import { onFrame } from './systems.js';
 import { BX, BY, CX, CY, idx, inB, SA, SB, SI, SL } from '../world/map.js';
-import { isSolid, moveEnt } from '../world/tiles.js';
+import { canSee, isSolid, moveEnt } from '../world/tiles.js';
 onFrame('enemies', updateEnemies);
 onFrame('spawn', dt => { const p = G.p;
   G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
@@ -23,7 +23,15 @@ export function enemyStep(e, dt) {
   if (d > 30) { G.enemies.splice(G.enemies.indexOf(e), 1); return; }
   dotTick(e, dt); if (!G.enemies.includes(e)) return; const sm = e.slow > 0 ? (e.chill ? .3 : .45) : 1;
   if (def.calm) e.angry = Math.max(0, (e.angry || 0) - dt);
-  const chase = d < (def.aggro || 8) && p.dead <= 0 && (!def.calm || e.angry > 0); if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
+  // v85: 알아채는 거리 aggro(기본 5칸) 안에서 벽·닫힌 문에 가리지 않아야 알아채요. 한번 쫓으면(또는 맞으면 4초 동안) 3칸 더 멀리까지 쫓고, 안 보여도 1초는 계속 쫓아요
+  const alerted = e.alertAt != null && G.time - e.alertAt < 4;
+  let chase = false;
+  if (d < (def.aggro || 5) + (e.chasing || alerted ? 3 : 0) && p.dead <= 0 && (!def.calm || e.angry > 0)) {
+    e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = canSee(e.x, e.y, p.x, p.y); }
+    if (e.sees) e.seenAt = G.time;
+    chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
+  } else e.losT = 0;
+  e.chasing = chase; if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
   if (def.hop) {
     if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
     else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase ? 0.45 : 1.2) + rand() * 0.6; } }

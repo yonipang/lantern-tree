@@ -64,8 +64,8 @@ Object.assign(ENEMY, {
   snowling: { n: '눈뭉치', hp: 85, dmg: 18, spd: 2.3, r: 0.32, hop: 0, drops: [['frostShard', 1, 1, 0.35], ['fiber', 1, 2, 0.4]], col: '#e8f4ff' },
 });
 // tougher monsters everywhere (bloom critters stay gentle); deeper places notice you from farther away
-Object.assign(ENEMY.slimeG, { hp: 18, dmg: 7 }); Object.assign(ENEMY.slimeO, { hp: 40, dmg: 12, aggro: 8.5 }); Object.assign(ENEMY.slimeP, { hp: 75, dmg: 18, aggro: 9 }); Object.assign(ENEMY.shroomy, { hp: 34, dmg: 11, spd: 2.3, aggro: 8.5 });
-Object.assign(ENEMY.magmaSlime, { hp: 120, dmg: 24, aggro: 10 }); Object.assign(ENEMY.cinder, { hp: 105, dmg: 22, spd: 2.7, aggro: 10 }); Object.assign(ENEMY.frostSlime, { hp: 115, dmg: 22, aggro: 10 }); Object.assign(ENEMY.snowling, { hp: 110, dmg: 22, spd: 2.5, aggro: 10 });
+Object.assign(ENEMY.slimeG, { hp: 18, dmg: 7 }); Object.assign(ENEMY.slimeO, { hp: 40, dmg: 12, aggro: 5.5 }); Object.assign(ENEMY.slimeP, { hp: 75, dmg: 18, aggro: 6 }); Object.assign(ENEMY.shroomy, { hp: 34, dmg: 11, spd: 2.3, aggro: 5.5 });
+Object.assign(ENEMY.magmaSlime, { hp: 120, dmg: 24, aggro: 6.5 }); Object.assign(ENEMY.cinder, { hp: 105, dmg: 22, spd: 2.7, aggro: 6.5 }); Object.assign(ENEMY.frostSlime, { hp: 115, dmg: 22, aggro: 6.5 }); Object.assign(ENEMY.snowling, { hp: 110, dmg: 22, spd: 2.5, aggro: 6.5 });
 export const SPAWN_CAP = [6, 8, 9, 10, 10], SPAWN_EVERY = [2.6, 2.3, 2.0, 1.6, 1.6], SPAWN_PACK = [0, .2, .3, .4, .4];
 CATCH[3] = CATCH[2]; CATCH[4] = [['smelt', 50], ['shrimp', 26], ['crucian', 10], ['boot', 6], ['koi', 8]];
 // deep gear (영웅) and legendary (전설)

@@ -12,6 +12,14 @@ import { WATER } from '../sim/nature.js';
 import { hasItem } from '../sim/quests.js';
 
 export function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
+// v85: 시야를 가리는 칸 = 벽·닫힌 문 (물·용암·가구는 너머가 보여요)
+export function blocksSight(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i]) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].door && !o.open); }
+// v85: (ax, ay)에서 (bx, by)가 보이나 — 두 점 사이를 0.25칸마다 짚어 벽·닫힌 문이 있으면 안 보여요 (양쪽 끝 칸은 빼요)
+export function canSee(ax, ay, bx, by) {
+  const sx = Math.floor(ax), sy = Math.floor(ay), ex = Math.floor(bx), ey = Math.floor(by), n = Math.ceil(Math.hypot(bx - ax, by - ay) / 0.25);
+  for (let k = 1; k < n; k++) { const tx = Math.floor(ax + (bx - ax) * k / n), ty = Math.floor(ay + (by - ay) * k / n); if ((tx === sx && ty === sy) || (tx === ex && ty === ey)) continue; if (blocksSight(tx, ty)) return false; }
+  return true;
+}
 export function boxHits(x, y, r) { for (let ty = Math.floor(y - r); ty <= Math.floor(y + r * 0.7); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) if (isSolid(tx, ty)) return true; return false; }
 export function moveEnt(e, dx, dy, r) {
   const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.15)); let bx = false, by = false;

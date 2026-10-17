@@ -131,7 +131,7 @@ def test_boss_effects_rarity():
             r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;const e=__T.mkEnemy('slimeG',104.5,110.5);e.hp=3;G.enemies.push(e);__T.hitEnemy(e,1,false,0,'poison');const k0=G.stats.kills||0;for(let k=0;k<200;k++)__T.updateEnemies(1/30);return [G.enemies.includes(e),(G.stats.kills||0)-k0]}")
             rec('효과','독으로 쓰러지면 처치 수·드롭 처리', r==[False,1], str(r))
             # slow
-            r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;const a=__T.mkEnemy('shroomy',110.5,110.5),b2=__T.mkEnemy('shroomy',110.5,114.5);a.hp=b2.hp=999;G.enemies.push(a,b2);G.p.x=104.5;G.p.y=112.5;__T.hitEnemy(a,1,false,0,'slow');a.kx=a.ky=0;const ax=a.x,bx=b2.x;for(let k=0;k<30;k++)__T.updateEnemies(1/30);return [+(ax-a.x).toFixed(2),+(bx-b2.x).toFixed(2)]}")
+            r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;const a=__T.mkEnemy('shroomy',110.5,110.5),b2=__T.mkEnemy('shroomy',110.5,114.5);a.hp=b2.hp=999;G.enemies.push(a,b2);G.p.x=106.5;G.p.y=112.5;__T.hitEnemy(a,1,false,0,'slow');a.kx=a.ky=0;const ax=a.x,bx=b2.x;for(let k=0;k<30;k++)__T.updateEnemies(1/30);return [+(ax-a.x).toFixed(2),+(bx-b2.x).toFixed(2)]}")
             rec('효과','끈적: 맞은 적이 절반 이하 속도', r[0] < r[1]*0.6 and r[1] > 0.5, str(r))
             # split
             r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;G.pshots.length=0;const a=__T.mkEnemy('slimeP',110.5,110.5),b2=__T.mkEnemy('slimeP',111.6,110.5);a.hp=b2.hp=999;G.enemies.push(a,b2);__T.hitEnemy(a,30,false,0,'split');const n=G.pshots.length;for(let k=0;k<20;k++)__T.updatePShots(1/60);return [n,999-b2.hp>=0,G.pshots.length]}")
@@ -343,12 +343,12 @@ def test_boss_rematch():
             await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'farm.png')
             # ---- region difficulty ----
             r=await ev(pg,"()=>{const E=__T.ENEMY;return [E.slimeG.hp,E.slimeP.hp,E.magmaSlime.hp,E.snowling.dmg,E.magmaSlime.aggro,E.bloomR.hp]}")
-            rec('난이도','몬스터 체력·공격력 상향 (꽃망울은 그대로)', r==[18,75,120,22,10,18], str(r))
+            rec('난이도','몬스터 체력·공격력 상향 (꽃망울은 그대로), 깊은 동굴 알아채는 거리 6.5칸(v85)', r==[18,75,120,22,6.5,18], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;let i=-1;for(let k=0;k<40000;k++){if(G.biome[k]===3&&!G.wall[k]&&G.floor[k]===18&&Math.hypot(k%200-T.SL.x,((k/200)|0)-T.SL.y)>14){i=k;break}}const x=i%200,y=(i/200)|0;for(let dy=-16;dy<=16;dy++)for(let dx=-16;dx<=16;dx++){const j=T.idx(x+dx,y+dy);if(x+dx>2&&y+dy>2&&x+dx<197&&y+dy<197&&G.wall[j]!==8){G.wall[j]=0;G.floor[j]=18;G.objs.delete(j);G.biome[j]=3}}G.p.x=x+.5;G.p.y=y+.5;G.enemies.length=0;for(let k=0;k<60;k++)T.trySpawn();return G.enemies.length}""")
             rec('난이도','용암 동굴은 한 번에 더 많이 몰려옴 (최대 10, 무리 지어 등장)', 9<=r<=11, r)
             # 앞 단계에서 생긴 몬스터들이 잠깐 사이에 플레이어를 때리거나 쓰러뜨릴 수 있어요(쓰러지면 집으로) → 여기서 상태와 길을 직접 맞춰요
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;G.p.dead=0;G.p.hp=999;G.p.hurt=0;G.p.inv=0;const px=Math.floor(G.p.x),py=Math.floor(G.p.y);for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=12;dx++){const j=T.idx(px+dx,py+dy);if(G.wall[j]!==8){G.wall[j]=0;G.objs.delete(j);if(G.floor[j]===T.WATER||G.floor[j]===17)G.floor[j]=18}}const e=T.mkEnemy('magmaSlime',G.p.x+9.4,G.p.y);G.enemies.push(e);const x0=e.x;for(let k=0;k<60;k++)T.updateEnemies(1/30);return +(x0-e.x).toFixed(2)}""")
-            rec('난이도','깊은 동굴 몬스터는 더 멀리서(10칸) 알아채고 쫓아옴', r>0.5, r)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;G.p.dead=0;G.p.hp=999;G.p.hurt=0;G.p.inv=0;const px=Math.floor(G.p.x),py=Math.floor(G.p.y);for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=12;dx++){const j=T.idx(px+dx,py+dy);if(G.wall[j]!==8){G.wall[j]=0;G.objs.delete(j);if(G.floor[j]===T.WATER||G.floor[j]===17)G.floor[j]=18}}const e=T.mkEnemy('magmaSlime',G.p.x+6.2,G.p.y);G.enemies.push(e);const x0=e.x;for(let k=0;k<60;k++)T.updateEnemies(1/30);return +(x0-e.x).toFixed(2)}""")
+            rec('난이도','깊은 동굴 몬스터는 더 멀리서(6.5칸, 기본 5칸) 알아채고 쫓아옴', r>0.5, r)
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
@@ -426,5 +426,30 @@ def test_natural_regen():
             rec('저장','맞은 시각은 저장하지 않음 (불러오면 바로 회복)', r is False, str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_enemy_sight():
+    # v85: 알아채는 거리(기본 5칸·버섯도깨비 5.5칸) + 벽 너머는 못 봄 + 쫓기 시작하면 3칸 더 + 맞으면 쫓음
+    H2=HOOK.replace("computeLight}","computeLight,mkEnemy,enemyStep,hitEnemy,ENEMY}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=G.p;G.enemies.length=0;P.dead=0;P.hp=999;P.inv=99;const px=Math.floor(P.x),py=Math.floor(P.y),fl=G.floor[T.idx(px,py)];
+              for(let dy=-4;dy<=4;dy++)for(let dx=-12;dx<=12;dx++){const j=T.idx(px+dx,py+dy);if(G.wall[j]!==8){G.wall[j]=0;G.objs.delete(j);G.floor[j]=fl}}
+              const look=(dx,setup)=>{G.enemies.length=0;const e=T.mkEnemy('shroomy',P.x+dx,P.y);e.hp=999;G.enemies.push(e);if(setup)setup(e);e.x=P.x+dx;e.y=P.y;T.enemyStep(e,1/60);const c=!!e.chasing;G.enemies.length=0;return c};
+              const near=look(4.5),far=look(7),dflt=T.ENEMY.slimeG.aggro||5;
+              for(let dy=-4;dy<=4;dy++)G.wall[T.idx(px+2,py+dy)]=1;
+              const wall=look(4.5);for(let dy=-4;dy<=4;dy++)G.wall[T.idx(px+2,py+dy)]=0;
+              const keep=look(7.5,e=>{e.x=P.x+4.5;T.enemyStep(e,1/60)}),lose=look(9,e=>{e.x=P.x+4.5;T.enemyStep(e,1/60)}),hit=look(7.5,e=>T.hitEnemy(e,1,false,0));
+              return {near,far,wall,keep,lose,hit,dflt,aggro:T.ENEMY.shroomy.aggro}}""")
+            rec('알아채기','버섯도깨비 5.5칸: 4.5칸은 쫓고 7칸은 못 알아챔 · 기본 5칸', r['near'] and not r['far'] and r['aggro']==5.5 and r['dflt']==5, str(r))
+            rec('알아채기','벽이 가리면 4.5칸이어도 못 알아챔', not r['wall'], str(r))
+            rec('알아채기','쫓기 시작하면 7.5칸까지 계속 쫓고 9칸이면 놓침', r['keep'] and not r['lose'], str(r))
+            rec('알아채기','7.5칸에서 맞으면 쫓아옴', r['hit'], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
