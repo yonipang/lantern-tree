@@ -9,6 +9,7 @@ import { G } from '../save/state.js';
 import { H, idx, W } from '../world/map.js';
 import { LIGHTS } from './light.js';
 import { GLOW_RULE } from './terrain.js';
+import { ICE_EM } from './icecave.js';
 
 export let lightPref = 'new'; try { lightPref = localStorage.getItem('lantern-tree-light') || 'new'; } catch (e) { }
 export const setLightPref = v => { lightPref = v; try { localStorage.setItem('lantern-tree-light', v); } catch (e) { } };
@@ -18,23 +19,26 @@ export const GB = { on: false, kind: 'floor', ore: 0 };
 const matCv = document.createElement('canvas'), emCv = document.createElement('canvas');
 const mctx = matCv.getContext('2d'), ectx = emCv.getContext('2d');
 const GLAY = new WeakMap();
-// kind: 'floor' 바닥(면 그림 없음) · 'top' 벽 윗면 · 'front' 벽 앞면 · 'up' 서 있는 것 · 'shade' 벽 윗면 그늘(발광도 어둡게) · 'off' 안 그림
+// kind: 'floor' 바닥(면 그림 없음) · 'fglow' 바닥 위 발광(v79) · 'itop' 얼음벽 윗면(v79) · 'top' 벽 윗면 · 'front' 벽 앞면 · 'up' 서 있는 것 · 'shade' 벽 윗면 그늘(발광도 어둡게) · 'off' 안 그림
 export function drawKind(k, ore = 0) { GB.kind = k; GB.ore = ore; }
 function gxlayerOf(img, kind, ore) {
   let m = GLAY.get(img); if (!m) { m = {}; GLAY.set(img, m); }
   const key = kind + ore; if (m[key]) return m[key];
   const w = img.width, h = img.height; if (!w || !h) return m[key] = { mat: null, em: null };
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+  if (kind === 'fglow') return m[key] = { mat: null, em: img }; // v79: a glow drawn on the floor — the floor stays floor, the pixels shine
   if (kind === 'shade') { const d = g.getImageData(0, 0, w, h); for (let k = 0; k < d.data.length; k += 4) { d.data[k] = d.data[k + 1] = d.data[k + 2] = 0; d.data[k + 3] = Math.min(255, Math.round(d.data[k + 3] / .96)); } g.putImageData(d, 0, 0); return m[key] = { mat: null, em: c }; } // the shade hides glow fully (black, not the shade's own colour)
   const src = g.getImageData(0, 0, w, h).data, M = new ImageData(w, h), E = new ImageData(w, h), rule = GLOW_RULE[ore];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const k = (y * w + x) * 4; if (src[k + 3] < 128) continue; let ty, z, off;
     if (kind === 'top') { ty = 3; z = 16; off = 12 + Math.round(y / 3); }
+    else if (kind === 'itop') { ty = 3; z = 16; off = 12; } // v79: ice wall top (16 rows drawn 12px up) — each pixel back on its own footprint
     else if (kind === 'front') { ty = 2; z = Math.max(0, h - y); off = h + 1 - y; }
     else { ty = 4; z = Math.min(255, h - y); off = Math.min(127, h - y); }
     M.data[k] = ty * 40; M.data[k + 1] = z; M.data[k + 2] = 128 + off; M.data[k + 3] = 255;
     const on = rule && rule(src[k], src[k + 1], src[k + 2]);
-    E.data[k] = on ? src[k] : 0; E.data[k + 1] = on ? src[k + 1] : 0; E.data[k + 2] = on ? src[k + 2] : 0; E.data[k + 3] = 255;
+    const f = ore === 'ice' ? ICE_EM(src[k], src[k + 1], src[k + 2]) : on ? 1 : 0; // v79: ice glows a little, its bright rim more
+    E.data[k] = src[k] * f; E.data[k + 1] = src[k + 1] * f; E.data[k + 2] = src[k + 2] * f; E.data[k + 3] = 255;
   }
   const mat = document.createElement('canvas'), em = document.createElement('canvas'); mat.width = em.width = w; mat.height = em.height = h;
   mat.getContext('2d').putImageData(M, 0, 0); em.getContext('2d').putImageData(E, 0, 0);
