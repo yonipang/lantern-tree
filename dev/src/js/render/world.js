@@ -9,7 +9,7 @@ import { BKEYS, BOSSES, ENEMY } from '../data/rpg-nature.js';
 import { effH, effW, hdCtx, INK, whiten } from '../engine/canvas.js';
 import { fxRand, hash2 } from '../engine/random.js';
 import { clamp } from '../engine/util.js';
-import { CHN, chunkGlow, getChunk, prefetchChunk } from './chunks.js';
+import { CHN, chunkEdge, getChunk, prefetchChunk } from './chunks.js';
 import { iconCanvas } from './icons.js';
 import { LH, lightCv, LIGHTS, LW, LX0, LY0 } from './light.js';
 import { animalImg, drawHazards, drawHitBars, drawSpread, drawTree, drawTreeGlow, drawTreeLeaves, rotImg, twSprite, visibleShakers } from './parts.js';
@@ -36,7 +36,7 @@ import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { anchorAt, fpOf, placeAnchor } from '../world/tiles.js';
 import { WALL_H, WALL_TOP, wallShade } from '../art/tilemap.js';
 import { rippleOf, TR, wallArt } from './terrain.js';
-import { ICE_W, iceWallArt } from './icecave.js';
+import { ICE_W, SLANT, slantWallArt } from './icecave.js';
 export const AMB = [];
 onFrame('ambient', dt => updateAmbient(dt));
 export function updateAmbient(dt) {
@@ -57,7 +57,8 @@ export function renderWorld(cw, ch, glOn = false) {
   const y0 = Math.max(0, Math.floor(camY / T) - 1), y1 = Math.min(H - 1, Math.ceil((camY + ch) / T) + 3);
   // floors (cached chunks)
   for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) ctx.drawImage(getChunk(cx, cy), cx * 256 - camX, cy * 256 - camY);
-  drawKind('fglow'); for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) { const gw = chunkGlow(cx, cy); if (gw) ctx.drawImage(gw, cx * 256 - camX, cy * 256 - camY); } drawKind('floor'); // v79: glow beside ice walls
+  for (let cy = Math.floor(y0 / CHN); cy <= Math.floor(y1 / CHN); cy++) for (let cx = Math.floor(x0 / CHN); cx <= Math.floor(x1 / CHN); cx++) { const ed = chunkEdge(cx, cy); if (!ed) continue; // v79 glow beside ice walls · v80 shadow beside rock walls
+    if (ed.shadow) ctx.drawImage(ed.shadow, cx * 256 - camX, cy * 256 - camY); if (ed.glow) { drawKind('fglow'); ctx.drawImage(ed.glow, cx * 256 - camX, cy * 256 - camY); drawKind('floor'); } }
   prefetchChunk(Math.floor(x0 / CHN), Math.floor(y0 / CHN), Math.floor(x1 / CHN), Math.floor(y1 / CHN));
   drawHazards(T, camX, camY);
   // water, rugs and ground plants (change often, drawn live)
@@ -107,13 +108,13 @@ export function renderWorld(cw, ch, glOn = false) {
     const y = y0 + r, sy = y * T - camY;
     for (let x = x0; x <= x1; x++) {
       const i = idx(x, y), w = G.wall[i]; if (!w) continue; const sx = x * T - camX;
-      if (w === ICE_W) { const ia = iceWallArt(x, y); // v79: ice wall with slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, front only when the south is open
-        drawKind('itop', 'ice'); ctx.drawImage(ia.top, sx, sy - L); drawKind('shade'); ctx.drawImage(ia.shade, sx, sy - L);
-        if (ia.front) { drawKind('front', 'ice'); ctx.drawImage(ia.front, sx, sy - ia.frontUp); } drawKind('up');
+      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
+      if (w === ICE_W || (wa && SLANT.has(w))) { const ia = slantWallArt(x, y, w, w === ICE_W ? null : wa); // v79 ice / v80 rock: slanted edges (render/icecave.js) — top 16px covers this tile's row above + the 4px gap, a front wherever the bottom edge is open
+        drawKind('itop', ia.ore); ctx.drawImage(ia.top, sx, sy - L); drawKind('shade'); ctx.drawImage(ia.shade, sx, sy - L);
+        if (ia.front) { drawKind('front', ia.ore); ctx.drawImage(ia.front, sx, sy - ia.frontUp); } drawKind('up');
         const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
         if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (ia.front) { const a = .35 + .35 * Math.sin(t * 2.2 + x), fy = sy + T - WALL_H; ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
         continue; }
-      const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
       const below = y + 1 < H ? G.wall[i + W] : 1, fy = sy + T - WALL_H; // v72: front 16px on its own tile, top 12px right above it
       const topImg = wa ? wa.top : SPR.wtop[w][(hash2(x, y, 9) * 4) | 0], shd = wallShade(wallOpen(x, y));
       // v77 버그 수정: 아래도 벽이면 앞면을 안 그려서, 내 칸의 위쪽 4px(윗면 12px 아래 ~ 아래 벽 윗면 시작)이 비어 틈이 보였어요 → 윗면을 4px 내려 한 번 더 깔아 메워요

@@ -11,7 +11,7 @@ import { hexRgb } from '../engine/util.js';
 import { G } from '../save/state.js';
 import { WATER } from '../sim/nature.js';
 import { idx, inB } from '../world/map.js';
-import { ICE_BIOME, iceCliffPx, iceShorePx } from './icecave.js';
+import { ICE_BIOME, ICE_FROZEN, iceCliffPx, iceFrozenPx, iceShorePx } from './icecave.js';
 
 export const NEW_FLOORS = new Set([1, 2, WATER, 5, 6]); // 새 방식으로 굽는 바닥
 const tr_BUILT = new Set([5, 6]); // 블록처럼 칸 단위로 깔리는 바닥
@@ -41,10 +41,10 @@ export function terrainReady() {
   if (TR.ready || TR.tried) return TR.ready;
   TR.tried = true; const AK = k => ARTC['terrain/' + k];
   if (!AK('grass') || !AK('wtop/1') || !AK('ore/4_1_top_0')) return false;
-  TR.wtop = {}; TR.wfront = {};
-  for (const t of ROCKS) { const t12 = tr_top12(AK('wtop/' + t)); TR.wtop[t] = [t12, t12, t12, t12]; TR.wfront[t] = [AK('wfront/' + t)]; }
+  TR.wtop = {}; TR.wfront = {}; TR.wtop16 = {};
+  for (const t of ROCKS) { const t12 = tr_top12(AK('wtop/' + t)); TR.wtop[t] = [t12, t12, t12, t12]; TR.wfront[t] = [AK('wfront/' + t)]; TR.wtop16[t] = AK('wtop/' + t); }
   TR.ore = {};
-  for (const t of ORE_T) for (const h of ROCKS) TR.ore[t + '_' + h] = { top: [0, 1, 2, 3].map(v => tr_top12(AK(`ore/${t}_${h}_top_${v}`))), front: [0, 1, 2].map(v => AK(`ore/${t}_${h}_front_${v}`)) };
+  for (const t of ORE_T) for (const h of ROCKS) TR.ore[t + '_' + h] = { top: [0, 1, 2, 3].map(v => tr_top12(AK(`ore/${t}_${h}_top_${v}`))), top16: [0, 1, 2, 3].map(v => AK(`ore/${t}_${h}_top_${v}`)), front: [0, 1, 2].map(v => AK(`ore/${t}_${h}_front_${v}`)) };
   TR.ripple = [AK('ripple_0'), AK('ripple_1')];
   TR.built = {};
   for (const [f, k] of [[5, 'fwood'], [6, 'fstone']]) { const px = tr_pixOf(AK(k)); let dk = [255, 255, 255], best = 1e9;
@@ -65,8 +65,8 @@ export function oreHost(x, y) {
 export function wallArt(x, y, w) {
   if (!TR.ready || !tr_NEW_WALLS.has(w)) return null;
   const tv = (hash2(x, y, 9) * 4) | 0, fv = (hash2(x, y, 13) * 3) | 0;
-  if (ORE_T.has(w)) { const o = TR.ore[w + '_' + oreHost(x, y)]; return { top: o.top[tv], front: o.front[fv], ore: w }; }
-  return { top: TR.wtop[w][tv], front: TR.wfront[w][0], ore: 0 };
+  if (ORE_T.has(w)) { const o = TR.ore[w + '_' + oreHost(x, y)]; return { top: o.top[tv], top16: o.top16[tv], front: o.front[fv], ore: w }; }
+  return { top: TR.wtop[w][tv], top16: TR.wtop16[w], front: TR.wfront[w][0], ore: 0 };
 }
 export const isNewFloor = f => NEW_FLOORS.has(f);
 // 물칸 위 잔물결: 이끼 동굴은 새 그림, 다른 지역은 그 지역 물 그림에서 바탕색을 뺀 것
@@ -88,10 +88,11 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
   const TX = TR.tex, T = 16, M = 2, cx0 = tx0 - M, cy0 = ty0 - M, cx1 = tx1 + M, cy1 = ty1 + M, TW = cx1 - cx0 + 1, TH = cy1 - cy0 + 1;
   const X0 = cx0 * T, Y0 = cy0 * T, Wp = TW * T, Hp = TH * T, N = Wp * Hp, J = tr_JOIN;
   // 칸 정보: 소속값(1 이 땅, 0 아님, .5 바위 = 어느 쪽도 아님), 벽, 바닥 번호, 블록 바닥
-  const mG = new Float32Array(TW * TH), mP = new Float32Array(TW * TH), tW = new Uint8Array(TW * TH), tF = new Int16Array(TW * TH), tB = new Uint8Array(TW * TH), tBi = new Uint8Array(TW * TH);
+  const mI = new Float32Array(TW * TH), mG = new Float32Array(TW * TH), mP = new Float32Array(TW * TH), tW = new Uint8Array(TW * TH), tF = new Int16Array(TW * TH), tB = new Uint8Array(TW * TH), tBi = new Uint8Array(TW * TH);
   for (let j = 0; j < TH; j++) for (let i = 0; i < TW; i++) { const k = j * TW + i, x = cx0 + i, y = cy0 + j;
     if (!inB(x, y)) { mG[k] = mP[k] = .5; tW[k] = 1; tF[k] = -1; continue; } const q = idx(x, y); tBi[k] = G.biome[q];
-    if (G.wall[q]) { mG[k] = mP[k] = .5; tW[k] = 1; tF[k] = -1; continue; } const f = G.floor[q]; tF[k] = f; mG[k] = f === WATER ? 0 : 1; mP[k] = f === 2 ? 1 : 0; tB[k] = tr_BUILT.has(f) ? 1 : 0; }
+    if (G.wall[q]) { mG[k] = mP[k] = mI[k] = .5; tW[k] = 1; tF[k] = -1; continue; } const f = G.floor[q]; tF[k] = f; const frz = f === ICE_FROZEN && tBi[k] === ICE_BIOME; // v80: frozen water belongs to the water body
+    mI[k] = frz ? 1 : f === WATER ? 0 : .5; mG[k] = f === WATER || frz ? 0 : 1; mP[k] = f === 2 ? 1 : 0; tB[k] = tr_BUILT.has(f) ? 1 : 0; }
   const mAt = (m, i, j) => (i < 0 || j < 0 || i >= TW || j >= TH) ? .5 : m[j * TW + i];
   const field = (m, px, py, link) => { const gx = (px - X0) / T - .5, gy = (py - Y0) / T - .5, i = Math.floor(gx), j = Math.floor(gy), u = gx - i, v = gy - j;
     const a = mAt(m, i, j), b = mAt(m, i + 1, j), c = mAt(m, i, j + 1), d = mAt(m, i + 1, j + 1);
@@ -113,7 +114,8 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
   const tidy = m => { const o = m.slice(); for (let y = 0; y < Hp; y++) for (let x = 0; x < Wp; x++) { const k = y * Wp + x, s = o[k];
     const n = (x > 0 ? o[k - 1] : s) + (x < Wp - 1 ? o[k + 1] : s) + (y > 0 ? o[k - Wp] : s) + (y < Hp - 1 ? o[k + Wp] : s);
     if (s && n <= 1) m[k] = 0; else if (!s && n >= 3) m[k] = 1; } };
-  tidy(Gm); for (let k = 0; k < N; k++) Pm[k] &= Gm[k]; tidy(Pm); for (let k = 0; k < N; k++) { Pm[k] &= Gm[k]; if (isBuilt[k]) { Gm[k] = 1; Pm[k] = 0; } }
+  tidy(Gm); for (let k = 0; k < N; k++) if (wallPx[k]) Gm[k] = 1; // v80: walls count as ground for the edge lines — slanted walls show the floor under their edge, so no line along the tile edge
+  for (let k = 0; k < N; k++) Pm[k] &= Gm[k]; tidy(Pm); for (let k = 0; k < N; k++) { Pm[k] &= Gm[k]; if (isBuilt[k]) { Gm[k] = 1; Pm[k] = 0; } }
   const Q = new Int32Array(N);
   const dist4 = (m, cap) => { const d = new Uint8Array(N); let qh = 0, qt = 0;
     for (let y = 0; y < Hp; y++) for (let x = 0; x < Wp; x++) { const k = y * Wp + x; if (!m[k]) continue;
@@ -122,8 +124,9 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
       if (x > 0 && m[k - 1] && !d[k - 1]) { d[k - 1] = nd; Q[qt++] = k - 1; } if (x < Wp - 1 && m[k + 1] && !d[k + 1]) { d[k + 1] = nd; Q[qt++] = k + 1; }
       if (k >= Wp && m[k - Wp] && !d[k - Wp]) { d[k - Wp] = nd; Q[qt++] = k - Wp; } if (k + Wp < N && m[k + Wp] && !d[k + Wp]) { d[k + Wp] = nd; Q[qt++] = k + Wp; } }
     for (let k = 0; k < N; k++) if (m[k] && !d[k]) d[k] = 255; return d; };
+  const pathAtWall = Pm.slice(); for (let k = 0; k < N; k++) if (wallPx[k]) pathAtWall[k] = 1; // v80: no path edge line along a wall either
   const notP = new Uint8Array(N); for (let k = 0; k < N; k++) notP[k] = Pm[k] || isBuilt[k] ? 0 : 1;
-  const dG = dist4(Gm, 4), dP = dist4(Pm, 2), dNP = dist4(notP, 3);
+  const dG = dist4(Gm, 4), dP = dist4(pathAtWall, 2), dNP = dist4(notP, 3);
   // 결과는 가운데(요청한 칸)만: ox0·oy0 = 결과의 왼쪽 위 (이 계산 영역 안 px)
   const ox0 = M * T, oy0 = M * T, ow = (tx1 - tx0 + 1) * T, oh = (ty1 - ty0 + 1) * T, out = new ImageData(ow, oh), O = out.data, EC = tr_A_EDGE;
   const oi = k => { const lx = k % Wp - ox0, ly = ((k / Wp) | 0) - oy0; return lx < 0 || ly < 0 || lx >= ow || ly >= oh ? -1 : (ly * ow + lx) * 4; };
@@ -134,7 +137,10 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
     if (wallPx[k]) { O[o] = 18; O[o + 1] = 15; O[o + 2] = 28; O[o + 3] = 255; continue; }
     if (Gm[k] && tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)] === ICE_BIOME) { putC(o, iceShorePx(x, y, dG[k])); continue; } // v79: ice cave shore = ice shards, not grass
     if (Gm[k]) { const d = dG[k]; if (d === 1) putC(o, EC.gE); else if ((d === 2 && leaf(x, y) > -.45) || (d === 3 && leaf(x, y) > .1) || (d === 4 && leaf(x, y) > .65)) putC(o, EC.gS); else putT(o, TX.grass, x, y); }
-    else { const b = tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)]; if (b) putC(o, tr_waterRGB(b)); else putT(o, TX.water, x, y); } }
+    else { const b = tBi[(((oy0 + ly) >> 4) * TW) + ((ox0 + lx) >> 4)];
+      if (b === ICE_BIOME) { const fi = field(mI, x + .5, y + .5, false), th = .5 + .14 * tr_vnoise(x / 9, y / 9, 31) + .05 * tr_vnoise(x / 2.5, y / 2.5, 32); // v80: frozen water, a wavy edge toward open water
+        if (fi > th) { putC(o, iceFrozenPx(x, y, fi < th + .06)); continue; } }
+      if (b) putC(o, tr_waterRGB(b)); else putT(o, TX.water, x, y); } }
   // 작은 장식 (풀포기·꽃·조약돌): 잔디 칸에서만, 경계에서 3px 이상 안쪽 — 한 픽셀이라도 안 되면 통째로 빼요
   const off = (x, y, s, r) => Math.round((hash2(x, y, s) - .5) * 2 * r), DE = TX.deco, px = [];
   const okDeco = k => Gm[k] && dG[k] >= 3 && dNP[k] >= 3 && !wallPx[k] && !isBuilt[k];
