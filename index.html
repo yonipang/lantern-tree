@@ -7690,12 +7690,22 @@ function setupInput() {
   // buttons never keep keyboard focus after a mouse click; any click outside a text field brings focus back to the game
   document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button') && !e.target.closest('input,textarea')) e.preventDefault(); }, true);
   document.addEventListener('pointerdown', e => { if (!(e.target.closest && e.target.closest('input,textarea,select'))) refocusGame(); }, true);
-  window.addEventListener('blur', () => { keys.clear(); btnHeld = false; atkBtnHeld = false; mouse.down = false; joyEnd(); padEnd(); });
+  // 손을 떼도 아무것도 눌린 채 남지 않게 (v85: 아이폰 홈 화면 앱에서 방향키 「손 뗌」 신호가 빠져 계속 걷던 문제)
+  const releaseAll = () => { keys.clear(); btnHeld = false; atkBtnHeld = false; mouse.down = false; joyEnd(); padEnd(); ab.classList.remove('on'); kb.classList.remove('on'); };
+  window.addEventListener('blur', releaseAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+  window.addEventListener('pagehide', releaseAll);
+  // 방향키·조이스틱을 누른 손가락의 「뗌」이 화면 어디로 가든 받아요 (아이폰은 누른 칸 밖에서 떼면 그 칸에 안 알려 줄 때가 있어요)
+  const anyUp = e => { if (e.pointerId === dpad.id) padEnd(); if (joy.active && e.pointerId === joy.id) joyEnd(); };
+  window.addEventListener('pointerup', anyUp, true); window.addEventListener('pointercancel', anyUp, true);
+  // 화면에 닿은 손가락이 하나도 없으면 눌린 것은 모두 풀어요 (떼는 신호를 아예 놓쳤을 때)
+  const noTouch = e => { if (e.touches && e.touches.length === 0 && (dpad.id != null || joy.active || btnHeld || atkBtnHeld)) { btnHeld = false; atkBtnHeld = false; ab.classList.remove('on'); kb.classList.remove('on'); joyEnd(); padEnd(); } };
+  window.addEventListener('touchend', noTouch, true); window.addEventListener('touchcancel', noTouch, true);
   const dp = $('#dpad');
   const padMove = e => { if (dpad.id !== e.pointerId) return; const r = dp.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
     if (Math.hypot(dx, dy) < 12) { dpad.vx = dpad.vy = 0; } else { const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4); dpad.vx = Math.abs(Math.cos(a)) < 1e-6 ? 0 : Math.cos(a); dpad.vy = Math.abs(Math.sin(a)) < 1e-6 ? 0 : Math.sin(a); }
     dp.querySelector('.u').classList.toggle('on', dpad.vy < -.1); dp.querySelector('.d').classList.toggle('on', dpad.vy > .1); dp.querySelector('.l').classList.toggle('on', dpad.vx < -.1); dp.querySelector('.r').classList.toggle('on', dpad.vx > .1); };
-  dp.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); document.body.classList.add('touch'); if (paused || dpad.id != null) return; dpad.id = e.pointerId; try { dp.setPointerCapture(e.pointerId); } catch (_) { } padMove(e); });
+  dp.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); document.body.classList.add('touch'); if (paused) return; dpad.id = e.pointerId; /* v85: 새로 누른 손가락이 늘 방향키를 잡아요 — 예전 손가락이 눌린 채 남아 있어도 다시 누르면 풀려요 */ try { dp.setPointerCapture(e.pointerId); } catch (_) { } padMove(e); });
   dp.addEventListener('pointermove', padMove);
   const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
   applyCtrl();
