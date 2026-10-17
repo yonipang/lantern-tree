@@ -417,6 +417,45 @@ body.touch #hbFlip{width:var(--slotS)}
 .sbtn{width:52px}
 .eqlist.eq2{grid-template-columns:repeat(auto-fit,minmax(min(100%,168px),1fr))}
 #pcHint{max-width:340px;line-height:20px}
+
+/* v83: 창 위 바깥 탭 · 창 안 첫 줄 · 장비 세트 탭 · 장비 칸 · 가방 말풍선과 버튼 줄 (ui/panels-char.js) */
+.otabs{position:absolute;bottom:100%;left:10px;display:flex;gap:4px;z-index:1}
+.otab{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;background:var(--panel2);border:2px solid var(--line);border-bottom:0;color:var(--muted);font-size:16px;margin-bottom:0}
+.otab img{width:16px;height:16px}
+.otab.on{background:var(--panel);color:var(--text);height:42px;margin-bottom:-2px;position:relative}
+.sheet.hasotab{max-height:calc(86% - 42px)}
+.sh-top{flex:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.sh-top .sh-hp{flex:1;margin:0;min-width:0}
+.btn.sm{min-height:36px;padding:0 10px;font-size:16px;flex:none}
+.stabs{position:absolute;right:100%;top:56px;display:flex;flex-direction:column;gap:4px}
+.stab{width:44px;height:48px;padding:0;background:var(--panel2);border:2px solid var(--line);border-right:0;color:var(--muted);font-size:16px}
+.stab.on{background:var(--panel);color:var(--amber);width:46px;margin-right:-2px;position:relative}
+.sheet.side{width:min(calc(100% - 46px),496px);left:calc(50% + 23px)}
+.eqgrid{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(4,auto);gap:6px 14px;justify-content:center;margin:4px 0 8px}
+.eqcell{display:flex;flex-direction:column;align-items:center;gap:2px}
+.eqcell small{font-size:16px;color:var(--muted);white-space:nowrap}
+.eqcell .slot{width:56px;height:56px}
+.slot.eqc.empty span{font-size:16px;color:var(--muted);line-height:16px;text-align:center}
+.slot.eqc.new0{opacity:.55;border-style:dashed}
+.eqme{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.eqme img{width:96px;height:96px;image-rendering:pixelated}
+.eqme small{font-size:16px;color:var(--amber)}
+.detail.eqd{margin-top:4px}
+.lbl.fold{display:block;width:100%;text-align:left;background:none;border:0;padding:4px 2px;cursor:pointer}
+.lbl.hotl{flex:none;margin-top:6px}
+.grid.hot9{flex:none;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
+.bagbar{flex:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;margin-top:6px;padding-top:6px;border-top:2px solid var(--line)}
+.bagbar .bb-hint{color:var(--muted);font-size:16px}
+.btip{position:absolute;z-index:5;max-width:min(280px,calc(100% - 8px));box-sizing:border-box;background:var(--ink);border:2px solid var(--line);padding:8px 10px;font-size:16px;line-height:24px;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.btip b{font-weight:400;display:block}
+.btip p{margin:0;color:var(--muted)}
+.btip .st{color:var(--amber)}
+@media (max-width:759px),(max-height:639px){
+  .sheet[data-key^="inv"],.sheet[data-key^="quest"],.sheet[data-key^="craft"][data-key$="|"]{height:calc(66.6% - 42px);max-height:calc(66.6% - 42px)}
+}
+.sheet.hasotab,.sheet.side{clip-path:none} /* v83: 바깥 탭이 계단 모서리(clip-path)에 잘리지 않게 */
+.detail.eqd.noimg{grid-template-columns:1fr}
+.sh-head.vh{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -1720,6 +1759,7 @@ const DECOR = {
   grandClock: { n: '괘종시계', d: '똑딱똑딱 시간을 알려 주는 커다란 시계.', req: [['copperBar', 1], ['wood', 6]] },
   ironStove: { n: '무쇠 난로', d: '집 안을 따뜻하게 밝혀요. 눌러서 켜고 꺼요.', req: [['ironBar', 3], ['stone', 4]], use: 'lamp', light: [5.5, '#ff9a4a'], flick: 1 },
   ironChair: { n: '철제 의자', d: '돌돌 말린 등받이가 예쁜 의자. 앉을 수 있어요.', req: [['ironBar', 2], ['fiber', 1]], use: 'sit' },
+  woodWardrobe: { n: '나무 옷장', d: '옷장 앞에서 [꾸미기]를 누르면 캐릭터를 바꾸고 머리·옷을 꾸밀 수 있어요.', req: [['wood', 8], ['fiber', 4]], use: 'dress' },
 };
 for (const id in DECOR) { const D = DECOR[id]; ITEMS[id] = { n: D.n, kind: 'place', obj: id, d: D.d }; OBJ[id] = { n: D.n, solid: 1, item: id }; if (D.light) OBJ[id].light = D.light; if (D.flick) OBJ[id].flick = 1; if (D.use) USE[id] = D.use; RECIPES.push(Rc(id, 1, D.req, 'bench', 'furn')); }
 RECIPES.push(
@@ -2398,7 +2438,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2409,9 +2449,9 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
-const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen']);
+const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt']);
 const ME = 'me'; // 내 플레이어 (13단계에서 캐릭터마다 이름표)
@@ -2421,7 +2461,7 @@ const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 // 옛 코드의 G.inv·G.p·G.actCd … (PER_PLAYER)는 「지금 플레이어」(curPl)의 것을 가리켜요:
 //   명령은 보낸 플레이어(sim/commands.js), 매 프레임 플레이어별 일은 한 명씩(sim/systems.js), 그 밖(화면·저장)은 내 플레이어(ME).
 // 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
-const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen',
+const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet',
   'explored', 'spawnPt', 'backPt', // 세계 안 플레이어별 (PLAYER_KEYS)
   'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'petE', 'pshots', 'biomeNow', 'escCd', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
   'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
@@ -2446,7 +2486,7 @@ function bindPlayers(g, id = ME) {
 // 같은 세계에 플레이어 더하기 (지금은 테스트용 — 12단계 「혼자서 둘이 하기」·13단계 친구 들어오기에서 씀). 캐릭터는 새로 시작
 function addPlayer(id, x, y) {
   const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
-    inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(),
+    inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(), eqSets: freshSets(), eqSet: 0,
     pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, seen: {}, explored: new Uint8Array(W * H), spawnPt: null, backPt: null,
     fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, petE: null, pshots: [], biomeNow: 0, escCd: 0 };
   G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
@@ -2479,7 +2519,7 @@ function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
 }
 function deserialize(s) {
   setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
@@ -2499,6 +2539,7 @@ function deserialize(s) {
   if (!G.stats.qv) { addQuartzVeins(); G.stats.qv = 1; } // v43: older crystal caves get the new quartz veins inside their granite
   const oldWp = loadEquip(s.equip); // v42 equipment slots; v48: the weapon of the old weapon slot (moved to the hotbar below)
   G.pets = {}; if (s.pets && typeof s.pets === 'object') for (const k in s.pets) if (ANIMALS[k] && ANIMALS[k].pet && s.pets[k]) G.pets[k] = 1; G.petOn = G.pets[s.petOn] ? s.petOn : null; G.wild = []; G.petE = null; // v45 pets
+  loadSets(s.eqSets, s.eqSet); // v83: equipment sets I·II·III (old saves: what is worn now is set I)
   G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null;
   G.look = cleanLook(s.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; emit('look');
@@ -2542,15 +2583,22 @@ function deepSeedDrop(k, S, b) { G.stats.deepSeed = G.stats.deepSeed || {}; if (
 // so old saves load and new saves still open in older versions. Add a save to dev/qa/snapshot/saves/ for each new fix.
 //
 // order in deserialize(): migrateBagV2 · migrateV2 · migrateV3 · loadEquip · refundRoofItems · convertDrills · moveOldWeapon ·
-// noticeRename58 · refundRoofTiles · migrateGear61 · migrateForges60 (convertForges, growFootprints) · growFootprints · fixParts ·
+// (v83: loadSets right after the pets) · noticeRename58 · refundRoofTiles · migrateGear61 · migrateForges60 (convertForges, growFootprints) · growFootprints · fixParts ·
 // grantUniques · ensureDeepAltars · migrateRecipes · syncNotes · grantAccs
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar
 function migrateBagV2() { while (G.inv.length < 30) G.inv.push(null); G.inv.splice(6, 0, null, null, null); if (!(G.sel < 6)) G.sel = 0; }
+// v83: 장비 세트 I·II·III — 지금 세트는 G.equip·G.petOn, 다른 세트는 G.eqSets에 (옛 세이브는 모두 세트 I)
+function loadSets(raw, cur) {
+  const k0 = Number.isInteger(cur) && cur >= 0 && cur <= 2 ? cur : 0; G.eqSet = k0; G.eqSets = freshSets();
+  if (!Array.isArray(raw)) return;
+  raw.slice(0, 3).forEach((x, k) => { if (k === k0 || !x || typeof x !== 'object') return; const e = freshEquip();
+    for (const [sl] of EQ_SLOTS) { const it = x.e && x.e[sl]; if (it && ITEMS[it.id] && ITEMS[it.id].kind === 'wear' && ITEMS[it.id].slot === sl) e[sl] = eqCopy(it); }
+    G.eqSets[k] = { e: EQ_SLOTS.some(([sl]) => e[sl]) ? e : null, pet: x.pet && (G.pets || {})[x.pet] ? x.pet : null }; }); }
 function loadEquip(raw) {
   G.equip = freshEquip(); const se = raw && typeof raw === 'object' ? raw : {}; // v42: the old 'acc' slot moves to the slot that fits (turtle charm → neck, snow brooch → head)
-  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = { id: e.id, c: 1 }; }
+  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = eqCopy(e); } // v83 버그 수정: 강화 단계(lv)도 그대로 (예전엔 불러오면 입은 장비의 강화가 사라졌어요)
   return se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword' ? eqCopy(se.weapon) : null; // v48: no weapon slot any more
 }
 // ---- the world (map regions added in v2 / v3) ----
@@ -3109,7 +3157,7 @@ Object.assign(ITEMS, {
 });
 RECIPES.push(Rc('obsCoat', 1, [['obsidian', 4], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'), Rc('frostRobe', 1, [['frostShard', 6], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'));
 // v42: slots in their own 「장비」 menu — clothes · head · neck · ring (rings arrive with the smelter in v43); v48: the weapon slot is gone (the held weapon is used)
-const EQ_SLOTS = [['body', '옷'], ['head', '머리장식'], ['neck', '목걸이'], ['ring', '반지']], EQ_N = Object.fromEntries(EQ_SLOTS);
+const EQ_SLOTS = [['body', '상의'], ['head', '머리장식'], ['neck', '목걸이'], ['ring', '반지']] /* v83: 옷 → 상의 */, EQ_N = Object.fromEntries(EQ_SLOTS);
 // ---- v43 smelter 「용광로」 (v58: renamed 「장비제작대」): upgrade gear (+1 … +5) and break it down; rings are made here too ----
 ITEMS.smelter = { n: '장비제작대', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요. (v58 전 이름: 용광로)' };
 OBJ.smelter = { n: '장비제작대', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
@@ -3414,6 +3462,21 @@ const isRefund = o => !!o && o.t === 'refundBox';
 function clearRefundBox(i) { const o = G.objs.get(i); if (!isRefund(o) || !refundMine(o) || (o.items || []).some(x => x)) return false; delObj(i); emit('sfx', 'pick'); emit('puff', i % W + .5, ((i / W) | 0) + .6, '#e8d8c0', 5, 2); markLight(); emit('close'); return true; }
 defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items || isRefund(o)) return false; const r = stashBag(o, c.same);
   emit('toast', r.n ? `${r.n}개를 상자에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : c.same ? '상자에 있는 것과 같은 물건이 가방에 없어요' : r.left ? '상자가 가득 찼어요' : '가방에 넣을 물건이 없어요', r.n ? 'good' : null, 'stash'); if (r.n) emit('sfx', 'place'); emit('inv'); });
+// v83 「가까운 상자에 넣기」: 내 둘레 16칸 안의 보관상자 중 그 물건이 이미 있는 상자에만, 가까운 상자부터 (겹치기 → 빈칸). 단축칸·도구 주머니는 그대로, 남으면 가방에
+const STASH_R = 16;
+function stashNear() {
+  const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), list = [];
+  for (const [j, o] of G.objs) { if (!o || o.t !== 'chest' || !o.items) continue; const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > STASH_R || Math.abs(y - py) > STASH_R) continue; list.push({ j, o, x, y, d: Math.hypot(x + .5 - p.x, y + .5 - p.y), n: 0 }); }
+  list.sort((a, b) => a.d - b.d); let n = 0, left = 0;
+  for (let i = HOT; i < G.inv.length; i++) { const s = G.inv[i]; if (!s) continue; const to = list.filter(c => c.o.items.some(x => x && x.id === s.id)); if (!to.length) continue;
+    for (const c of to) { const l = moveInto(c.o.items, s), k = s.c - l; c.n += k; n += k; s.c = l; if (!l) break; }
+    if (!s.c) G.inv[i] = null; else left++; }
+  const used = list.filter(c => c.n);
+  for (const c of used) { emit('puff', c.x + .5, c.y + .4, '#ffe9a8', 10, 2.2, .6); emit('ftext', c.x + .5, c.y - .3, `+${c.n}`, '#ffe9a8'); }
+  return { n, left, boxes: used.length, near: list.length }; }
+defineCmd('stashNear', () => { const r = stashNear();
+  emit('toast', r.n ? `${r.n}개를 상자 ${r.boxes}개에 넣었어요${r.left ? ' · 상자가 가득 차서 일부는 남았어요' : ''}` : !r.near ? '근처(16칸 안)에 보관상자가 없어요' : r.left ? '상자가 가득 차서 넣지 못했어요' : '근처 상자에 같은 물건이 없어요', r.n ? 'good' : null, 'stash');
+  if (r.n) emit('sfx', 'place'); emit('inv'); return r; });
 defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o || (isRefund(o) && (!c.out || !refundMine(o)))) return false; const src = c.out ? o.items : G.inv, dst = c.out ? G.inv : o.items; const s = src[c.i]; if (!s) return false; const left = moveInto(dst, s); if (left === s.c) { emit('toast', c.out ? '가방이 가득 찼어요' : '상자가 가득 찼어요', null, 'full'); return false; } if (left) s.c = left; else src[c.i] = null; emit('sfx', 'pick'); emit('inv'); }); // 상자 ↔ 가방 한 칸 (out: 상자에서 꺼내기)
 defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (isRefund(o)) { clearRefundBox(c.o); return; } if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
 defineCmd('markAdd', () => { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); });
@@ -3433,7 +3496,9 @@ function fixTsel(h) { if (!G.tools.length) { G.tsel = 0; if (G.sel < 0) G.sel = 
 function sweepTools() { if (!G || !G.tools) return; const h = heldTool(); for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (s && isTool(s.id)) { if (i === G.sel) { G.inv[i] = null; G.tools.push(s); G.tsel = G.tools.length - 1; G.sel = -1; } else { G.inv[i] = null; G.tools.push(s); } emit('inv'); } } if (h && G.sel < 0) fixTsel(h); }
 // the bag and the pouch together for repair · salvage · upgrade lists ('t:3' = pouch slot 3)
 const slotList = () => G.inv.map((s, i) => ({ s, i })).concat((G.tools || []).map((s, k) => ({ s, i: 't:' + k })));
-const itemAt = i => typeof i === 'string' ? (i.startsWith('e:') ? G.equip[i.slice(2)] : i.startsWith('t:') ? (G.tools || [])[+i.slice(2)] : null) : G.inv[i];
+// 칸 번호: 숫자 = 가방, 'e:옷칸' = 입은 장비, 't:k' = 도구 주머니, 's:세트:옷칸' = 다른 장비 세트에 넣어 둔 장비 (v83)
+const itemAt = i => { if (typeof i !== 'string') return G.inv[i]; if (i.startsWith('e:')) return G.equip[i.slice(2)]; if (i.startsWith('t:')) return (G.tools || [])[+i.slice(2)];
+  if (i.startsWith('s:')) { const [, k, sl] = i.split(':'), S = G.eqSets && G.eqSets[+k]; return +k !== (G.eqSet || 0) && S && S.e ? S.e[sl] || null : null; } return null; };
 function clearSlot(i) { if (typeof i === 'string' && i.startsWith('t:')) { const h = heldTool(), k = +i.slice(2), gone = G.tools[k]; G.tools.splice(k, 1); if (h && h === gone) { G.tsel = 0; if (!G.tools.length && G.sel < 0) G.sel = 0; } else fixTsel(h); } else G.inv[i] = null; emit('inv'); }
 // one of each kind for the tool row: the best working one, broken ones hidden
 function toolRowList() { const by = {}; for (const s of G.tools || []) { if (isBroken(s)) continue; const k = ITEMS[s.id].kind; if (!by[k] || toolPow(s) > toolPow(by[k])) by[k] = s; } return TOOL_KINDS.map(k => by[k]).filter(Boolean); }
@@ -3446,6 +3511,23 @@ const rarCol = id => rarOf(id) >= 1 ? RARITY[rarOf(id)][1] : null;
 // ---- clothes (body) and charms (accessory): two slots; clothes halve the cold or heat gauge, charms come from the deep bosses ----
 const WEAR_PAL = { obsCoat: ['#5a4a78', '#3a2f52', '#8a7ab0'], frostRobe: ['#8fd0f0', '#5a9ac8', '#d8f2ff'] };
 const freshEquip = () => ({ body: null, head: null, neck: null, ring: null });
+// ---- v83 장비 세트 I·II·III: 세트마다 장비 칸·함께 다니는 펫을 따로 (가방 밖) ----
+// 지금 세트는 G.equip·G.petOn이 그대로 맡고, G.eqSets[k]에는 다른 세트의 것만 들어 있어요 (지금 세트 자리는 비어 있음).
+const SET_N = ['I', 'II', 'III'];
+const freshSets = () => [0, 1, 2].map(() => ({ e: null, pet: null }));
+// 세트 k의 장비 (지금 세트면 G.equip)
+const setEquip = k => k === (G.eqSet || 0) ? G.equip : (G.eqSets && G.eqSets[k] && G.eqSets[k].e) || null;
+const setPet = k => k === (G.eqSet || 0) ? G.petOn : (G.eqSets && G.eqSets[k] && G.eqSets[k].pet) || null;
+function switchSet(n) { if (!Number.isInteger(n) || n < 0 || n > 2) return false; if (!G.eqSets) G.eqSets = freshSets(); const cur = G.eqSet || 0; if (n === cur) return false;
+  const was = G.equip.body && G.equip.body.id;
+  G.eqSets[cur] = { e: G.equip, pet: G.petOn }; const nx = G.eqSets[n] || { e: null, pet: null };
+  G.equip = nx.e || freshEquip(); G.petOn = nx.pet && (G.pets || {})[nx.pet] ? nx.pet : null; G.petE = G.petOn ? { x: G.p.x - .6, y: G.p.y + .2, flip: false, anim: 0, moving: false } : null;
+  G.eqSets[n] = { e: null, pet: null }; G.eqSet = n;
+  if ((G.equip.body && G.equip.body.id) !== was) emit('look'); emit('sfx', 'craft'); emit('inv');
+  emit('toast', `장비 세트 ${SET_N[n]}로 바꿨어요${G.petOn ? ` · ${ANIMALS[G.petOn].pn}와 함께` : ''}`, 'good', 'eqset'); return true; }
+defineCmd('eqSet', c => switchSet(c.n));
+// 다른 세트에 넣어 둔 장비도 「가진 것」 (퀘스트 확인용)
+const inOtherSet = id => !!(G && G.eqSets && G.eqSets.some((x, k) => k !== (G.eqSet || 0) && x && x.e && EQ_SLOTS.some(([sl]) => x.e[sl] && x.e[sl].id === id)));
 const eqSlotOf = id => { const it = ITEMS[id]; return !it ? null : it.kind === 'wear' ? it.slot : null; };
 const wearing = id => !!(G && G.equip && EQ_SLOTS.some(([sl]) => G.equip[sl] && G.equip[sl].id === id));
 const eqCopy = s => { const c = { id: s.id, c: 1 }; if (s.dur != null) c.dur = s.dur; if (s.lv) c.lv = s.lv; return c; };
@@ -4132,7 +4214,7 @@ function useObj(a) {
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;
-    case 'dress': emit('open', 'look'); break;
+    case 'dress': emit('open', 'look', { tab: 'char' }); break; // v83: 옷장 — 캐릭터 고르기 탭부터
     case 'wish': if ((o.cd || 0) > G.time) { emit('toast', '분수가 쉬고 있어요. 조금 뒤에 다시 빌어요', null, 'wish'); break; } o.cd = G.time + 120; G.luck = G.time + 120; emit('puff', x, t.y, '#bfefff', 16, 2.5, 1); emit('sfx', 'seed'); emit('toast', '행운이 깃들었어요! 2분 동안 낚시 운 2단계 (요리의 낚시 운과 겹치면 더 높은 쪽만)', 'good'); break;
     case 'water': o.shake = .3; emit('drips', x, t.y + .6); emit('sfx', 'plop'); emit('toast', '촉촉해졌어요', null, 'water'); break;
     case 'tea': if ((o.cd || 0) > G.time) { emit('toast', '찻잔이 비었어요. 조금 뒤에 다시 마셔요', null, 'tea'); break; } o.cd = G.time + 45; p.hp = Math.min(maxHp(), p.hp + 6); p.hunger = Math.min(100, p.hunger + 4); emit('ftext', p.x, p.y - 1.3, '♥ +6', '#ff8fa3'); emit('sfx', 'eat'); emit('toast', '따뜻한 차 한 잔, 기운이 나요', null, 'tea'); break;
@@ -4759,7 +4841,7 @@ defineCmd('claim', c => claimQuest(c.id));
 defineCmd('claimAll', () => { for (const q of [...GUIDE, ...QSIDE]) claimQuest(q.id); emit('toast', '보상을 모두 받았어요', 'good'); });
 // ================= guide =================
 function nearestObjOf(t, rad = 24) { const p = G.p; let best = null, bd = 1e9; for (let y = Math.floor(p.y - rad); y <= p.y + rad; y++) for (let x = Math.floor(p.x - rad); x <= p.x + rad; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === t) { const d = Math.hypot(x - p.x, y - p.y); if (d < bd) { bd = d; best = { x: x + .5, y: y + .5 }; } } } return best; }
-const hasItem = id => countItem(id) > 0 || wearing(id);
+const hasItem = id => countItem(id) > 0 || wearing(id) || inOtherSet(id); // v83: 다른 장비 세트에 넣어 둔 것도
 // v47: quest texts name directions from the old map; on the ring map they are rewritten from where things really are
 function dirFix() { if (LAY !== 2) return null; const d = (x, y) => dirKo(x, y);
   return { '서쪽 버섯숲': `${d(SA.x, SA.y)} 버섯숲`, '동쪽 동굴의 말랑대왕': `${d(BX, BY)} 이끼 동굴의 말랑대왕`, '화살표를 따라 서쪽으로!': `화살표를 따라 ${d(SA.x, SA.y)}으로!`, '화살표를 따라 동쪽으로!': `화살표를 따라 ${d(BX, BY)}으로!`,
@@ -4860,6 +4942,7 @@ const DECOR_SPR = {
   ironChair: [16, 16, A => { A.line(4, 2, 4, 9, C.ironD); A.line(11, 2, 11, 9, C.ironD); A.r(4, 2, 8, 1, C.ironD); A.e(7, 5, 1.5, 1.5, C.ironD); A.e(7, 5, .6, .6, '#00000000'); A.e(9.5, 5, 1.5, 1.5, C.ironD); A.r(3, 9, 10, 2, C.iron); A.r(4, 9, 8, 1, '#7fb3e0'); A.r(4, 11, 1, 4, C.ironD); A.r(11, 11, 1, 4, C.ironD); }],
 };
 for (const id in DECOR_SPR) OSPR[id] = DECOR_SPR[id];
+OSPR.woodWardrobe = OSPR.shroomWardrobe; // v83 나무 옷장: 새 그림이 오기 전까지 버섯집 옷장 그림을 임시로 (dev/art에 그림을 넣으면 바뀌어요)
 
 OSPR.forge = [16, 20, A => { A.r(2, 13, 2, 6, C.woodD); A.r(12, 13, 2, 6, C.woodD); A.r(1, 10, 14, 4, C.wood); A.r(1, 10, 14, 1, C.copperL); A.r(1, 11, 14, 1, C.copper); A.r(1, 13, 14, 1, C.woodD); A.r(4, 6, 8, 3, C.iron); A.r(3, 5, 10, 1, C.ironL); A.r(12, 6, 3, 1, C.iron); A.r(6, 9, 4, 1, C.ironD); A.line(10, 1, 13, 4, C.woodD); A.r(8, 1, 4, 2, C.ironD); A.r(2, 8, 2, 2, C.copper); A.p(2, 8, C.copperL); }];
 Object.assign(ICON, {
@@ -6818,7 +6901,7 @@ onEvent('goal', txt => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = 
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
-function openPanel(kind, data = {}) { if (kind === 'equip') kind = 'inv'; if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) runCmd({ k: 'seenBag' }); /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); if (!data.nav) noteBagOpen(); } if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 function sheetHpHTML() { if (!G || !started) return ''; const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
@@ -6837,7 +6920,7 @@ const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], 
   furn: [['all', '전체'], ['seat', '의자'], ['table', '탁자'], ['bed', '침대'], ['store', '수납'], ['light', '조명'], ['deco', '장식']],
   build: [['all', '전체'], ['wall', '벽'], ['floor', '바닥'], ['fence', '울타리'], ['door', '문'], ['nature', '자연']], // v69: thin walls, pillars and windows were removed
   conv: [['all', '전체'], ['circuit', '회로'], ['farm', '농사'], ['mine', '채굴장']] };
-const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
+const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe woodWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
 const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
 function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
   if (o.station) t = ['stn', o.station === 'furnace' ? 'smelt' : o.station === 'pot' ? 'cook' : 'make'];
@@ -6850,30 +6933,17 @@ function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || 
   else if (c === 'build' && !FURN2_OF[id]) t = ['build', /Fence/.test(id) ? 'fence' : /Pillar/.test(id) ? 'pillar' : /Door/.test(id) ? 'door' : /Frame|Win/.test(id) ? 'win' : 'wall'];
   else t = ['furn', FURN2_OF[id] || 'deco'];
   return (r._bc = t); }
+const EQ_SLOTS_FIX = () => Object.keys(G.equip || {}).map(sl => ({ s: G.equip[sl], i: 'e:' + sl }));
 function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (UIS.tab2 || 'all') + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
   const ob = sh.querySelector('.sh-body'), oTop = ob ? ob.scrollTop : 0, ot = sh.querySelector('.tabs'), oLeft = ot ? ot.scrollLeft : 0;
-  if (k === 'inv') {
-    h += head('가방', 'bag', `<button type="button" class="btn ghost" data-a="sortBag" style="min-height:36px;padding:0 12px;font-size:16px">정렬</button>`) + bagNavHTML('inv');
-    h += `<div class="sh-body"><p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칼 버튼은 언제나 공격해요(든 무기, 안 들었으면 마지막에 쓴 무기). 손 버튼은 앞에 있는 것에 맞춰 열기·캐기·놓기를 하고, 필요한 도구를 도구 주머니에서 꺼내 들어요.</p><div class="lbl">단축칸</div><div class="grid">`;
-    const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && (G.seen || {})[s0.id] > 1) c += ' new'; return c; }; // v77: 처음 얻은 물건 — 한 번 누르면 꺼져요
-    h = h.replace(`<div class="lbl">단축칸</div>`, eqRowHTML() + `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div></div><div class="lbl">단축칸</div>`);
-    for (let i = 0; i < G.inv.length; i++) { if (i === HOT) h += `</div><div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 가방을 늘릴 수 있어요)</span>' : ''}</div><div class="grid">`; h += slotHTML(G.inv[i], 'inv', i, cls(i)); }
-    h += `</div>` + pouchHTML(); // v65: the tool pouch
-    const s = UIS.invSel != null ? G.inv[UIS.invSel] : null;
-    if (s) { const it = ITEMS[s.id]; const st = itemStat(it, s);
-      h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''} <span style="color:var(--muted);font-size:16px">× ${s.c}</span></h3><p>${it.d || FURN_D}</p>${rarOf(s.id) >= 0 && (it.kind === 'sword' || it.kind === 'pick' || rarOf(s.id) >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, rarOf(s.id))][1]}">★ ${RARITY[Math.max(0, rarOf(s.id))][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}</div><div class="btns">`;
-      if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
-      if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;
-      if (UIS.invSel >= HOT) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
-      h += `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
-    h += petHTML() + `</div>`;
+  if (k === 'inv') { h += otabsHTML(BAG_NAV, 'inv', 'bagNav') + bagHTML(); // v83: 창 위 바깥 탭 · 장비와 펫은 캐릭터 창으로 (ui/panels-char.js)
   } else if (k === 'catch') { h += catchHTML();
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; resetPool(); const nCh = linkedChests().length;
     const ctier = craftTier(), bo = TIERED[st] && panel.i != null ? G.objs.get(panel.i) : null, inTier = r => !TIERED[r.at] || (r.tier || 0) <= ctier;
-    h += head(TIERED[st] ? TIERED[st][ctier] : st ? STN[st] : '제작', st ? null : 'hammer', st ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>` : '') + (st ? '' : bagNavHTML('craft')); // v77: 손제작은 가방 안 제작 탭
+    h += st ? head(TIERED[st] ? TIERED[st][ctier] : STN[st], null, `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>`) : otabsHTML(BAG_NAV, 'craft', 'bagNav') + sheetTop('', '제작'); // v77: 손제작은 가방 안 제작 탭 · v83: 탭은 창 위 바깥
     if (bo) h += benchUpHTML(bo); // v60: upgrade the workbench at the top of its window
     const hereR = RECIPES.filter(r => atHere(r, st) && recipeOn(r) && inTier(r)), benchy = st === 'bench' || st === 'forge', smel = st === 'smelter';
     const tabs = [['all', '전체'], ['tool', '도구'], ['weapon', '무기'], ['furn', '기본 가구'], ['nature', '자연'], ['farm', '농사'], ['moss', '이끼 세트'], ['shroom', '버섯 세트'], ['crystal', '수정 세트'], ['build', '건축'], ['food', '음식'], ['mat', '재료'], ['circuit', '회로'], ['mine', '채굴장'], ['upg', '강화'], ['ring', '반지'], ['fix', '수리'], ['salv', '분해'], ['book', '요리 도감']].filter(([id]) => id === 'all' || (id === 'book' ? st === 'pot' : id === 'upg' ? smel : id === 'fix' ? smel : id === 'salv' ? smel : hereR.some(r => r.cat === id)));
@@ -6906,7 +6976,7 @@ function renderPanel() {
       h += `<div class="sh-body"><p class="hint">만들어 본 요리에 도장이 찍혀요 · 만든 요리 ${nMade}/${all.length} · 아는 레시피 ${nKnown}/${all.length}</p><div class="dbook">${all.map(id => { const k = knows(id), m = made(id), it = ITEMS[id];
         return `<div class="dk ${m ? 'done' : ''} ${k ? '' : 'unk'}"><img class="px" src="${iconURL(k ? id : 'rn_' + (DISH[id] ? id : 'skewer'))}" alt=""><b>${k ? it.n : '???'}</b><small>${k ? (it.buff ? buffText(it) : '회복 요리') : escHTML(noteHint(DISH[id]))}</small>${m ? '<i>✓</i>' : ''}</div>`; }).join('')}</div></div>`;
     } else if (UIS.tab === 'fix') {
-      const nb = smel && near.has('smelter'), list = slotList().filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]);
+      const nb = smel && near.has('smelter'), list = [...EQ_SLOTS_FIX(), ...otherSetSlots(), ...slotList()].filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]); // v83: 입은 장비·다른 세트 장비도
       h += `<div class="sh-body"><p class="hint">${nb ? '닳은 도구를 새것처럼 고쳐요. 많이 닳을수록 재료가 더 들어요.' : '장비제작대 근처에서 고칠 수 있어요.'}</p><div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">고칠 도구가 없어요</p>`;
       for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => availCount(id) >= c), mx = DUR[s.id][0];
@@ -6944,7 +7014,7 @@ function renderPanel() {
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:6px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">설정</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button></div>
       ${playRecordHTML()}
-      <div class="lbl" style="margin-top:12px">캐릭터</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:6px">${CHARS[curChar()].n} · ${CHARS[curChar()].d}</p><div class="menu-list"><button class="btn ghost" data-a="openLook" type="button">머리·옷 직접 꾸미기</button></div>
+      <p class="hint" style="margin-top:12px">캐릭터 바꾸기·꾸미기는 옷장에서 해요 (나무 옷장: 작업대 · 버섯집 옷장).</p>
       <div class="lbl" style="margin-top:12px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div><p class="hint" style="margin-top:6px">다른 기기로 옮기거나 백업할 때 써요.</p>${cloudMenuHTML()}
       <div class="lbl" style="margin-top:12px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:12px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:12px">빛 효과${GLST.failed ? ' <span style="opacity:.7">(이 기기에서는 새 빛을 쓸 수 없어 예전 빛으로 보여요)</span>' : ''}</div><div class="tabs">${[['new', '새 빛 (부드러운 그림자)'], ['old', '예전 빛 (가볍게)']].map(([k, n]) => `<button type="button" class="tab ${(lightPref === 'force' ? 'new' : lightPref) === k ? 'on' : ''}" data-a="light" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:12px">조작 방법</div><div class="keys"><b>이동</b><span>화면 왼쪽을 끌기 · WASD</span><b>공격</b><span>칼 버튼 · 클릭. 든 무기로, 안 들었으면 마지막에 쓴 무기로 가까운 몬스터를 노려요. 몬스터가 없을 때 놓아 둔 가구·벽을 세 번 치면 바닥에 떨어져요</span><b>상호작용</b><span>손 버튼 · E · 스페이스. 일부러 든 물건(씨앗·가구·물뿌리개·음식 …)을 먼저 쓰고, 아니면 앞에 있는 것에 맞춰 열기·캐기·베기·거두기·회수를 해요. 곡괭이·도끼·낫·삽은 도구 주머니에서 알아서 꺼내 들어요</span><b>작은 버튼</b><span>같은 곳에서 할 수 있는 다른 일(회수·물 주기·낚시 …). ▸로 다음 것 (PC는 R · Q)</span><b>도구 칸</b><span>단축칸 맨 앞. 누르면 가진 도구가 펼쳐져요 (PC는 Tab)</span><b>계속 누르기</b><span>꾹 누르고 있으면 계속 캐거나 공격해요</span><b>놓기</b><span>단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요. 작은 [방향] 버튼으로 놓기 전에 돌려요</span><b>먹기</b><span>음식을 고르고 손 버튼, 또는 골라 둔 음식을 한 번 더 눌러요</span><b>단축칸</b><span>폰은 다섯 칸씩 보여요. 옆의 [6–9] 버튼으로 넘겨요 (안 보이는 쪽에 새 물건이 들어오면 빨간 점)</span><b>단축키</b><span>1–9 단축칸 · Tab 도구 · F·G 스킬 · C 캐릭터 · I 가방(제작은 가방 안 제작 탭) · M 지도 · L 퀘스트 · Esc 설정</span></div>
@@ -6952,10 +7022,11 @@ function renderPanel() {
       <div class="menu-list" style="margin-top:12px"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
-    const tabs = [['hair', '머리 모양'], ['hc', '머리 색'], ['eye', '눈 색'], ['outfit', '옷'], ['oc', '옷 색'], ['hat', '모자·소품']];
+    const tabs = [['char', '캐릭터'], ['hair', '머리 모양'], ['hc', '머리 색'], ['eye', '눈 색'], ['outfit', '옷'], ['oc', '옷 색'], ['hat', '모자·소품']];
     h += head('꾸미기', 'hand') + `<div class="look-prev">${pv('down')}${pv('side')}${pv('up')}</div><div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.lookTab === id ? 'on' : ''}" data-a="lookTab" data-i="${id}">${n}</button>`).join('')}</div><div class="sh-body"><div class="look-grid">`;
     const t = UIS.lookTab, opt = (key, val, label, inner) => `<button type="button" class="look-opt ${String(L[key]) === String(val) ? 'on' : ''}" data-a="lookSet" data-i="${key}:${val}">${inner}<span>${label}</span></button>`;
     const mini = (key, val) => { const T = Object.assign({}, L, { [key]: val }); CHARS.__mini = lookDef(T); return `<img class="px" src="${charPreview('__mini', 0, 'down')}" alt="">`; };
+    if (t === 'char') h += `</div><div class="cp-grid">${cpCards(curChar())}</div><p class="hint" style="margin-top:6px">${CHARS[curChar()].n} · ${CHARS[curChar()].d} · 고르면 바로 바뀌어요</p><div>`; // v83: 캐릭터 고르기도 옷장에서
     if (t === 'hair') for (const k in HAIRS) h += opt('hair', k, HAIRS[k].n, mini('hair', k));
     if (t === 'hat') for (const k in HATS) h += opt('hat', k, HATS[k].n, mini('hat', k));
     if (t === 'outfit') for (const k in OUTFITS2) h += opt('outfit', k, OUTFITS2[k].n, mini('outfit', k));
@@ -6975,9 +7046,13 @@ function renderPanel() {
     if (tab === 'main') GUIDE.forEach((q, k) => { if (k > G.guide + 1) return; h += row(q, questState(q, k), true); });
     else { const L = QSIDE.map(q => [q, questState(q)]).sort((a, b) => (b[1].done && !b[1].claimed) - (a[1].done && !a[1].claimed) || a[1].claimed - b[1].claimed); for (const [q, st] of L) h += row(q, st, false); }
     h += `</div>`;
-  } else if (k === 'stat') {
+  } else if (k === 'stat') { // v83: 캐릭터 창 — 바깥 탭 장비 / 스킬 / 등불 (ui/panels-char.js)
+    const ct = UIS.chTab || 'eq'; h += otabsHTML(CH_TABS, ct, 'chTab') + (ct === 'eq' ? setTabsHTML() : '') + sheetTop('', '캐릭터');
+    if (ct === 'eq') h += `<div class="sh-body">${charEqHTML()}</div>`;
+    else if (ct === 'lamp') h += `<div class="sh-body">${lampHTML()}</div>`;
+    else {
     const R = G.rpg, need = XP_NEED(R.lv), touch = document.body.classList.contains('touch');
-    h += head('캐릭터', 'star') + `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
+    h += `<div class="sh-body"><div class="lvbox"><b>Lv.${R.lv}</b><div class="xpbar"><i style="width:${R.lv >= MAX_LV ? 100 : Math.round(R.xp / need * 100)}%"></i></div><span>${R.lv >= MAX_LV ? '최고 레벨' : `경험치 ${R.xp} / ${need}`}</span></div>
       <p class="hint">몬스터를 물리치고, 광석을 캐고, 물건을 만들고, 낚시하면 경험치가 쌓여요. 레벨이 오르면 능력치 포인트 2개와 스킬 포인트 1개를 받아요.</p>
       <div class="lbl">능력치<span class="pt">남은 포인트 ${R.pts}</span></div>`;
     for (const st in STATN) h += `<div class="strow"><b>${STATN[st][0]}</b><span class="v">${R[st]}</span><small>${STATN[st][1]}</small><button type="button" class="btn" data-a="statUp" data-i="${st}" ${R.pts > 0 ? '' : 'disabled'} aria-label="${STATN[st][0]} 올리기">+</button></div>`;
@@ -6990,6 +7065,7 @@ function renderPanel() {
       h += `<div class="skrow ${lock ? 'lock' : ''}"><img class="px" src="${iconURL('sk_' + id)}" alt=""><div><h4>${S.n}<small>${S.act ? '사용' : '항상 적용'} · ${l}/${S.max}</small></h4><p>${S.d(L1)}${S.act ? ` · 기력 ${S.mp(L1)} · ${S.cd(L1).toFixed(1)}초` : ''}</p>${l && l < S.max ? `<p class="nx">다음 단계: ${S.d(l + 1)}</p>` : ''}${lock ? `<p>Lv.${S.lv}부터 배울 수 있어요</p>` : ''}${slots}</div><button type="button" class="btn mk" data-a="skUp" data-i="${id}" ${can ? '' : 'disabled'}>${l ? (l >= S.max ? '최고' : '올리기') : '배우기'}</button></div>`; }
     if (Object.keys(R.sk).length) h += `<div class="menu-list"><button type="button" class="btn ${UIS.skAsk ? 'warn' : 'ghost'}" data-a="skReset">${UIS.skAsk ? '정말 스킬 포인트를 모두 돌려받을까요?' : '스킬 다시 배우기 (무료)'}</button></div>`;
     h += `</div>`;
+    }
   } else if (k === 'win2') {
     h += `<div class="sh-body" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">다섯 등불이 모두 밝아졌어요!</h2><p class="prose">용암과 얼음 깊은 곳까지 빛이 닿았어요. 땅속 세상 전체가 등불나무의 품 안에서 반짝여요. 끝까지 함께해 줘서 고마워요!</p><p class="prose" style="color:var(--muted)">전설 장비를 모으고, 남은 도전 퀘스트를 깨고, 나만의 정원을 마음껏 꾸며 보세요.</p><p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">계속 모험하기</button></div>`;
   } else if (k === 'win') {
@@ -6997,7 +7073,8 @@ function renderPanel() {
   }
   resetPool();
   if (LAY === 2 && (k === 'tree' || k === 'win' || k === 'win2')) h = dirText(h);
-  sh.innerHTML = sheetHpHTML() + h; sh.dataset.key = key;
+  sh.innerHTML = (h.includes('class="sh-top"') ? '' : sheetHpHTML()) + h; sh.dataset.key = key; sh.classList.toggle('side', !!sh.querySelector('.stabs')); sh.classList.toggle('hasotab', !!sh.querySelector('.otabs'));
+  if (k === 'inv') { setupBagHover(); placeTip(sh); }
   if (same) { const nb = sh.querySelector('.sh-body'); if (nb) nb.scrollTop = oTop; }
   if (sameKind) { const nt = sh.querySelector('.tabs'); if (nt) nt.scrollLeft = oLeft; }
   if (k === 'map') drawMap();
@@ -7120,8 +7197,10 @@ function updateSkBar() {
 // ================= 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const rarName = id => { const c = rarCol(id), n = ITEMS[id].n; return c ? `<span style="color:${c}">${n}</span>` : n; };
+// v83: 다른 장비 세트에 넣어 둔 장비 (강화·수리에서 보여요, 분해에서는 안 보여요)
+const otherSetSlots = () => (G.eqSets || []).flatMap((x, k) => k === (G.eqSet || 0) || !x || !x.e ? [] : EQ_SLOTS.map(([sl, n]) => ({ s: x.e[sl], i: `s:${k}:${sl}`, tag: `세트 ${SET_N[k]} · ${n}` })).filter(o => o.s));
 function upgListHTML(ok) {
-  const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
+  const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...otherSetSlots(), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
   let h = `<div class="sh-body"><p class="hint">${ok ? `재료를 넣어 장비를 강화해요 (최대 +${UPG_MAX}). 무기는 공격력, 곡괭이는 캐는 힘, 옷·장신구·반지는 효과가 좋아져요.` : '장비제작대 근처에서 강화할 수 있어요.'}</p><div class="list">`;
   if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">강화할 장비가 없어요</p>`;
   for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && cost.every(([id, c]) => availCount(id) >= c);
@@ -7162,6 +7241,108 @@ function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구
   h += `</div>`; const s = UIS.toolSel != null ? T[UIS.toolSel] : null;
   if (s) { const it = ITEMS[s.id], st = itemStat(it, s); h += `<div class="detail"><img class="px" src="${iconURL(s.id)}" alt=""><div><h3>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}</h3><p>${it.d || ''}</p>${st ? `<div class="st">${st}</div>` : ''}</div><div class="btns">${isBroken(s) ? '' : `<button class="btn" data-a="holdTool" type="button">${s === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div></div>`; }
   return h; }
+// ================= v83 가방 창 · 캐릭터 창 (UIUX-재설계.md 「가방 화면 안쪽」·「캐릭터 화면 안쪽」) =================
+// 창 위 바깥 탭(가방 | 제작 · 장비 / 스킬 / 등불), 창 안 첫 줄(체력 막대 + 닫기), 장비 세트 I·II·III(창 왼쪽 바깥),
+// 장비 탭(3×4 칸 + 가운데 캐릭터), 등불 탭, 가방 칸 위 말풍선과 창 맨 아래 버튼 줄.
+// ---- 창 위 바깥 탭 · 창 안 첫 줄 ----
+const otabsHTML = (list, on, act) => `<div class="otabs">${list.map(([k, n, ic]) => `<button type="button" class="otab ${on === k ? 'on' : ''}" data-a="${act}" data-i="${k}"><img class="px" src="${iconURL(ic)}" alt="">${n}</button>`).join('')}</div>`;
+const BAG_NAV = [['inv', '가방', 'bag'], ['craft', '제작', 'hammer']];
+const CH_TABS = [['eq', '장비', 'woolHat'], ['sk', '스킬', 'star'], ['lamp', '등불', 'lightSeed']];
+// 창 이름은 탭 이름이 대신해서 보이지 않게만 둬요 (화면 읽기·창 구분용)
+const sheetTop = (extra = '', title = '') => `${title ? `<div class="sh-head vh"><h2>${title}</h2></div>` : ''}<div class="sh-top">${sheetHpHTML()}${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div>`;
+// ---- 장비 탭: 3열 × 4줄, 가운데 2·3줄은 캐릭터 (왼쪽 위부터 시계방향 머리 → 목걸이 → 반지 1 → 반지 2 → 가방 → 펫 → 버프 아이템 → 등불 → 하의 → 상의) ----
+// eq: 지금 있는 장비 칸(G.equip), 'pet': 펫, 그 밖은 새 칸(아직 넣을 물건 없음)
+const EQ_CELLS = { head: ['머리', 'head'], neck: ['목걸이', 'neck'], ring: ['반지 1', 'ring'], ring2: ['반지 2'], bag: ['가방'], pet: ['펫', 'pet'], buff: ['버프 아이템'], lamp: ['등불'], legs: ['하의'], body: ['상의', 'body'] };
+const EQ_GRID = [['head', 'neck', 'ring'], ['body', null, 'ring2'], ['legs', null, 'bag'], ['lamp', 'buff', 'pet']];
+const isNewCell = c => !EQ_CELLS[c] || !EQ_CELLS[c][1];
+function cellHTML(c) {
+  const [n, sl] = EQ_CELLS[c], on = UIS.chSlot === c ? 'pick' : '';
+  if (sl === 'pet') { const k = G.petOn; return `<button type="button" class="slot eqc ${on} ${k ? '' : 'empty'}" data-a="chSlot" data-i="pet" aria-label="펫">${k && animalImg(k) ? `<img class="px" src="${animalImg(k).toDataURL()}" alt="">` : ''}</button>`; }
+  if (!sl) return `<button type="button" class="slot eqc empty new0 ${on}" data-a="chSlot" data-i="${c}" aria-label="${n} (아직 넣을 물건 없음)"></button>`;
+  const s = G.equip[sl]; return slotHTML(s, 'chSlot', c, 'eqc ' + on + (s ? '' : ' empty'));
+}
+function charEqHTML() {
+  let h = `<div class="eqgrid">`;
+  EQ_GRID.forEach((row, r) => row.forEach((c, k) => { if (c) h += `<div class="eqcell" style="grid-row:${r + 1};grid-column:${k + 1}">${cellHTML(c)}<small>${EQ_CELLS[c][0]}</small></div>`; }));
+  h += `<div class="eqme" style="grid-row:2/4;grid-column:2"><img class="px" src="${charPreview(curChar(), 0, 'down')}" alt="내 캐릭터"><small>세트 ${SET_N[G.eqSet || 0]}</small></div></div>`;
+  const c = UIS.chSlot; if (!c) return h + `<p class="hint">칸을 누르면 지금 장비의 능력과, 가방 속 그 칸에 맞는 물건이 나와요. 왼쪽 I·II·III로 장비 세트를 바꿔요(언제든).</p>`;
+  const [n, sl] = EQ_CELLS[c];
+  if (!sl) return h + `<div class="detail eqd noimg"><div><h3>${n}</h3><p>아직 넣을 수 있는 물건이 없어요.</p></div></div>`;
+  if (sl === 'pet') { const own = Object.keys(ANIMALS).filter(k => ANIMALS[k].pet && (G.pets || {})[k]);
+    if (!own.length) return h + `<div class="detail eqd noimg"><div><h3>펫</h3><p>아직 펫이 없어요 · 올가미 밧줄(작업대)을 들고 강아지(이끼 동굴)·토끼(버섯숲)·고양이(수정 동굴)에게 다가가 포획해요</p></div></div>`;
+    return h + `<div class="lbl">펫 <span style="color:var(--muted)">세트마다 한 마리 · 같은 펫을 여러 세트에 골라도 돼요</span></div><div class="eqlist">${own.map(k => `<div class="eqr"><button type="button" class="slot eq ${G.petOn === k ? 'pick' : ''}" data-a="petOn" data-i="${k}" aria-label="${ANIMALS[k].pn}"><img class="px" src="${animalImg(k).toDataURL()}" alt=""></button><div><b>${ANIMALS[k].n} ${ANIMALS[k].pn}${G.petOn === k ? ' · 함께 다니는 중' : ''}</b><small>${ANIMALS[k].fx}</small></div></div>`).join('')}</div>`; }
+  const s = G.equip[sl], it = s && ITEMS[s.id];
+  h += `<div class="detail eqd ${s ? '' : 'noimg'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">` : ''}<div><h3>${n}${s ? ' · ' + rarName(s.id) + (s.lv ? ` +${s.lv}` : '') : ' · 비어 있어요'}</h3>${s ? `<p>${it.d || ''}</p>${rarOf(s.id) >= 1 ? `<div class="st" style="color:${RARITY[rarOf(s.id)][1]}">★ ${RARITY[rarOf(s.id)][0]} 등급</div>` : ''}<div class="st">${eqEffect(sl, s)}</div>` : ''}</div>${s ? `<div class="btns"><button class="btn ghost" data-a="eqSlot" data-i="${sl}" type="button">벗기</button></div>` : ''}</div>`;
+  const cand = G.inv.map((x, i) => ({ x, i })).filter(({ x }) => x && ITEMS[x.id] && ITEMS[x.id].kind === 'wear' && ITEMS[x.id].slot === sl);
+  h += `<div class="lbl">가방 속 ${n} 칸 물건</div>`;
+  if (!cand.length) h += `<p class="prose" style="color:var(--muted)">가방에 ${n} 칸에 맞는 물건이 없어요${sl === 'ring' ? ' · 반지는 장비제작대에서 만들어요' : ''}</p>`;
+  else h += `<div class="list">${cand.map(({ x, i }) => `<div class="rc ok"><div class="ri"><img class="px" src="${iconURL(x.id)}" alt=""></div><div class="rn">${rarName(x.id)}${x.lv ? ` +${x.lv}` : ''}<div class="ings"><span class="ing gain">${upgText(x.id, lvOf(x)) || ITEMS[x.id].d || ''}</span>${s ? `<span class="ing">지금: ${upgText(s.id, lvOf(s)) || ITEMS[s.id].n}</span>` : ''}</div></div><button type="button" class="btn mk" data-a="eqPick" data-i="${i}">${sl === 'body' ? '입기' : '달기'}</button></div>`).join('')}</div>`;
+  return h;
+}
+const setTabsHTML = () => `<div class="stabs">${SET_N.map((n, k) => `<button type="button" class="stab ${(G.eqSet || 0) === k ? 'on' : ''}" data-a="eqSet" data-i="${k}" aria-label="장비 세트 ${n}${setPet(k) ? ' · 펫 ' + ANIMALS[setPet(k)].pn : ''}">${n}</button>`).join('')}</div>`;
+// ---- 등불 탭: 지금 있는 정보만 (등불나무 단계·빛씨앗·효과·다음 목표) ----
+function lampHTML() {
+  const st = treeStage(), n = G.treeSeeds | 0, bl = TREE_BLESS(st), max = G.won ? 5 : 3;
+  return `<div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < n ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div>
+    <p class="prose" style="text-align:center;color:var(--amber)">등불나무 · ${TREE_STAGE[st]} (${st + 1}/6단계) · 빛씨앗 ${n}/5</p>
+    <div class="lbl">지금 받는 효과</div><div class="keys"><b>몬스터</b><span>나무 둘레 ${13 + n * 4}칸 안에는 몬스터가 생기지 않아요</span><b>나무 빛</b><span>반지름 ${7 + n * 3.5}칸</span><b>축복</b><span>${bl ? `나무 둘레 ${bl}칸 안의 작물이 20% 빨리 자라요` : '아직 없어요 (빛씨앗 3개부터)'}</span></div>
+    <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요!' : n < max ? `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 돼요 (${n}/${max}${max === 3 ? ' · 셋을 모두 심으면 나무가 깨어나요' : ' · 다섯을 모두 심으면 끝까지 밝아져요'})` : '빛씨앗을 더 찾아 등불나무에 심어요'}</p>`;
+}
+// ---- 가방 탭 ----
+const BAGHINT_K = 'lantern-tree-baghint';
+let bagHintN = 0; try { bagHintN = +localStorage.getItem(BAGHINT_K) || 0; } catch (e) { }
+const pouchOpen = () => { try { return localStorage.getItem('lantern-tree-pouch') === '1'; } catch (e) { return false; } };
+const setPouchOpen = v => { try { localStorage.setItem('lantern-tree-pouch', v ? '1' : '0'); } catch (e) { } };
+function noteBagOpen() { if (bagHintN < 3) { bagHintN++; try { localStorage.setItem(BAGHINT_K, String(bagHintN)); } catch (e) { } } }
+function bagHTML() {
+  const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && (G.seen || {})[s0.id] > 1) c += ' new'; return c; };
+  let h = sheetTop(`<button type="button" class="btn ghost sm" data-a="sortBag">정렬</button>`, '가방');
+  h += `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div><button type="button" class="btn ghost sm" data-a="stashNear" title="내 둘레 16칸 안의 상자 중 같은 물건이 있는 상자에 넣어요">상자에 넣기</button></div>`;
+  h += `<div class="sh-body">${bagHintN <= 3 ? `<p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칸을 누르면 위에 설명이, 아래에 버튼이 나와요.</p>` : ''}<div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 늘려요)</span>' : ''}</div><div class="grid">`;
+  for (let i = HOT; i < G.inv.length; i++) h += slotHTML(G.inv[i], 'inv', i, cls(i));
+  const T = G.tools || [], po = pouchOpen();
+  h += `</div><button type="button" class="lbl fold" data-a="pouchFold" aria-expanded="${po}">${po ? '▾' : '▸'} 도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요)</span></button>`;
+  if (po) { h += `<div class="grid">`; T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '') + ((G.seen || {})[s.id] > 1 ? ' new' : '')); }); if (!T.length) h += `<p class="prose" style="grid-column:1/-1;color:var(--muted)">아직 도구가 없어요</p>`; h += `</div>`; }
+  h += `</div><div class="lbl hotl">단축칸</div><div class="grid hot9">`;
+  for (let i = 0; i < HOT; i++) h += slotHTML(G.inv[i], 'inv', i, cls(i));
+  h += `</div>` + bagBarHTML();
+  const tip = tipHTML(); if (tip) h += `<div id="bagTip" class="btip" role="tooltip">${tip}</div>`;
+  return h;
+}
+// 창 맨 아래 버튼 줄 (고른 칸에 맞는 버튼)
+function bagBarHTML() {
+  const s = UIS.invSel != null ? G.inv[UIS.invSel] : null, t = UIS.toolSel != null ? (G.tools || [])[UIS.toolSel] : null;
+  if (t) return `<div class="bagbar">${isBroken(t) ? '' : `<button class="btn" data-a="holdTool" type="button">${t === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div>`;
+  if (!s) return `<div class="bagbar"><span class="bb-hint">칸을 누르면 여기에 버튼이 나와요</span></div>`;
+  const it = ITEMS[s.id]; let h = `<div class="bagbar">`;
+  if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
+  if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;
+  if (UIS.invSel >= HOT) h += `<button class="btn ghost" data-a="tohot" type="button">단축칸으로</button>`;
+  return h + `<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trash" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div>`;
+}
+// 칸 위 말풍선 (고른 칸, PC는 마우스를 올린 칸)
+function tipFor(s) { if (!s) return ''; const it = ITEMS[s.id], st = itemStat(it, s), r = rarOf(s.id);
+  return `<b>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}${s.c > 1 ? ` <span style="color:var(--muted)">× ${s.c}</span>` : ''}</b><p>${it.d || FURN_D}</p>${r >= 0 && (it.kind === 'sword' || it.kind === 'pick' || r >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, r)][1]}">★ ${RARITY[Math.max(0, r)][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}`; }
+function tipHTML() { const t = UIS.toolSel != null ? (G.tools || [])[UIS.toolSel] : null; return tipFor(t || (UIS.invSel != null ? G.inv[UIS.invSel] : null)); }
+// 말풍선을 칸 바로 위에 (자리가 없으면 아래에)
+function placeTip(sh, el) {
+  const tip = sh.querySelector('#bagTip'); if (!tip) return;
+  el = el || sh.querySelector(UIS.toolSel != null ? `.slot[data-a="pouch"][data-i="${UIS.toolSel}"]` : `.slot[data-a="inv"][data-i="${UIS.invSel}"]`);
+  if (!el) { tip.hidden = true; return; } const r = el.getBoundingClientRect(), R = sh.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = r.left + r.width / 2 - tw / 2 - R.left; x = Math.max(4, Math.min(R.width - tw - 4, x));
+  let y = r.top - R.top - th - 6; tip.classList.toggle('below', y < 4); if (y < 4) y = r.bottom - R.top + 6;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.hidden = false;
+}
+// PC: 칸에 마우스를 올리면 말풍선
+let hoverOn = false;
+function setupBagHover() { if (hoverOn) return; hoverOn = true; const sh = $('#sheet');
+  sh.addEventListener('pointerover', e => { if (e.pointerType !== 'mouse' || !panel || panel.kind !== 'inv') return; const el = e.target.closest && e.target.closest('.slot[data-a="inv"],.slot[data-a="pouch"]'); if (!el) return;
+    const i = +el.dataset.i, s = el.dataset.a === 'pouch' ? (G.tools || [])[i] : G.inv[i]; if (!s) return; let tip = sh.querySelector('#bagTip');
+    if (!tip) { tip = document.createElement('div'); tip.id = 'bagTip'; tip.className = 'btip'; tip.setAttribute('role', 'tooltip'); sh.appendChild(tip); }
+    tip.innerHTML = tipFor(s); tip.dataset.hover = '1'; placeTip(sh, el); });
+  sh.addEventListener('pointerout', e => { if (e.pointerType !== 'mouse') return; const tip = sh.querySelector('#bagTip'); if (!tip || !tip.dataset.hover) return; const to = e.relatedTarget; if (to && to.closest && to.closest('.slot[data-a="inv"],.slot[data-a="pouch"]')) return;
+    if (UIS.invSel == null && UIS.toolSel == null) tip.remove(); else { tip.innerHTML = tipHTML(); delete tip.dataset.hover; placeTip(sh); } });
+}
 // ================= 지도 창: 상자 표시 설정, 지도 그리기(drawMap) =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // the map's unopened-treasure markers can be hidden; a per-viewer setting kept in this browser
@@ -7192,7 +7373,7 @@ function onSheetClick(e) {
   if (a === 'close') { closePanel(); return; }
   if (a === 'bagNav') { if (panel && panel.kind !== i) openPanel(i, { nav: 1 }); return; } // v77: 가방 | 제작 탭
   if (a === 'inv') {
-    UIS.trash = false; if (G.inv[i]) runCmd({ k: 'seenItem', id: G.inv[i].id }); // v77: 새 물건 표시는 한 번 누르면 꺼져요
+    UIS.trash = false; UIS.toolSel = null; if (G.inv[i]) runCmd({ k: 'seenItem', id: G.inv[i].id }); // v77: 새 물건 표시는 한 번 누르면 꺼져요
     if (Number.isInteger(i) && i < HOT) runCmd({ k: 'selHot', i }); // v66 (BF-06): the hotbar slot picked here stays in hand after the bag closes
     if (UIS.invSel === null) { if (G.inv[i]) UIS.invSel = i; }
     else if (UIS.invSel === i) UIS.invSel = null;
@@ -7203,7 +7384,12 @@ function onSheetClick(e) {
   if (a === 'stash') { if (!(panel && panel.kind === 'chest') || runCmd({ k: 'stash', o: panel.i, same: i === 'same' }) === false) return; renderPanel(); return; }
   if (a === 'sortBag') { runCmd({ k: 'sortBag' }); UIS.invSel = null; renderPanel(); return; }
   if (a === 'wearOn') { const k = UIS.invSel; if (k != null && G.inv[k]) runCmd({ k: 'wear', i: k }); UIS.invSel = null; renderPanel(); return; }
-  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) runCmd({ k: 'unwear', sl }); else toast(`${EQ_N[sl]} 칸에 낄 장비는 가방에서 고르고 [입기]·[달기]를 눌러요`, null, 'eq'); renderPanel(); return; }
+  if (a === 'chTab') { UIS.chTab = i; UIS.chSlot = null; renderPanel(); return; } // v83: 캐릭터 창 탭 장비 / 스킬 / 등불
+  if (a === 'chSlot') { UIS.chSlot = UIS.chSlot === i ? null : i; if (UIS.chSlot && isNewCell(UIS.chSlot)) toast('아직 넣을 수 있는 물건이 없어요', null, 'eqnew'); renderPanel(); return; }
+  if (a === 'eqSet') { runCmd({ k: 'eqSet', n: +i }); renderPanel(); return; } // v83: 장비 세트 I·II·III
+  if (a === 'stashNear') { runCmd({ k: 'stashNear' }); UIS.invSel = null; UIS.toolSel = null; markInv(); renderPanel(); return; } // v83: 가까운 상자에 넣기
+  if (a === 'pouchFold') { setPouchOpen(!pouchOpen()); UIS.toolSel = null; renderPanel(); return; } // v83: 도구 주머니 접기 (기억해요)
+  if (a === 'eqSlot') { const sl = i; if (G.equip[sl]) runCmd({ k: 'unwear', sl }); else toast(`${EQ_N[sl]} 칸에 낄 장비는 캐릭터 창 장비 탭에서 칸을 누르고 골라요`, null, 'eq'); renderPanel(); return; }
   if (a === 'catchThrow') { catchThrow(); return; }
   if (a === 'petOn') { if (runCmd({ k: 'pet', id: i }) === false) return; renderPanel(); return; }
   if (a === 'eqPick') { runCmd({ k: 'wear', i }); renderPanel(); return; }
@@ -7385,11 +7571,11 @@ function setupInput() {
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
     if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
-      if (['KeyI', 'KeyB', 'KeyU'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
+      if (['KeyI', 'KeyB'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK' || e.code === 'KeyU') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽
-    if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyU') { openPanel('inv'); return; } if (e.code === 'KeyL') { openPanel('quest'); return; } // v77: L = 퀘스트
+    if (e.code === 'KeyM') { openPanel('map'); return; } if (e.code === 'KeyU') { openPanel('stat', { tab: 'eq' }); return; } /* v83: U = 장비(캐릭터 창 장비 탭) */ if (e.code === 'KeyL') { openPanel('quest'); return; } // v77: L = 퀘스트
     if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
