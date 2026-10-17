@@ -709,6 +709,7 @@ const FRAME_ORDER = [
   'tree',     // 등불나무 연출 (game/update.js)
   'spawn', 'regrow', // 몬스터 생기기 · 자연 다시 자라기 (game/update.js)
   'zone', 'grow', // 꽃잎 구역 · 작물·나무 자라기 (content/rpg-nature.js)
+  'flow',     // v87: 물·용암이 이어진 구덩이로 흐르기 (sim/digging.js)
   'circuit',  // 전선·기계 (content/circuits-regions.js)
   'light', 'guide', // 빛 계산 · 퀘스트·지역·숨은 방 확인 (game/update.js)
   'autosave', 'backup', 'cloud', // 저장·백업·클라우드 (main.js)
@@ -753,6 +754,7 @@ const devLayout = () => { try { const v = +localStorage.getItem('lantern-tree-la
 const DIR8 = ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'];
 const dirKo = (x, y) => DIR8[((Math.round(Math.atan2(y - CY, x - CX) / (Math.PI / 4)) % 8) + 8) % 8];
 const LAVA = 17;
+const PIT = 22; // v87: 삽으로 판 구덩이 (사람·몬스터는 못 지나가고 발사체는 지나가요)
 const idx = (x, y) => y * W + x;
 // ================= world helpers =================
 const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
@@ -1628,11 +1630,14 @@ const OBJ = {
 Object.assign(ITEMS, {
   shroomCap: { n: '버섯 갓', d: '큰버섯과 버섯 여왕에게서 얻는 탱글한 갓. 버섯 세트 재료예요.' },
   shovel: { n: '삽', kind: 'shovel', stack: 1, get d() { return shovelDesc(); } },
-  gDirt: { n: '흙 한 삽', kind: 'ground', ground: 2, d: '땅을 흙으로 덮어요. 물을 메울 수도 있어요.' },
-  gMoss: { n: '이끼 한 삽', kind: 'ground', ground: 1, d: '땅을 이끼로 덮어요. 씨앗을 심을 수 있어요.' },
-  gShroom: { n: '버섯흙 한 삽', kind: 'ground', ground: 3, d: '땅을 버섯흙으로 덮어요. 포자를 심기 좋아요.' },
-  gCrystal: { n: '수정 모래 한 삽', kind: 'ground', ground: 4, d: '땅을 반짝이는 수정 바닥으로 덮어요.' },
-  gWater: { n: '물 한 동이', kind: 'ground', ground: 10, d: '빈 땅에 부으면 작은 물웅덩이가 생겨요. 낚시도 할 수 있어요.' },
+  gDirt: { n: '흙 한 삽', kind: 'ground', ground: 2, d: '구덩이를 메우거나 바닥을 흙으로 바꿔요(원래 바닥은 돌려받아요). 물·용암도 메울 수 있어요.' },
+  gMoss: { n: '이끼 한 삽', kind: 'ground', ground: 1, d: '구덩이를 메우거나 바닥을 이끼로 바꿔요. 씨앗을 심을 수 있어요.' },
+  gShroom: { n: '버섯흙 한 삽', kind: 'ground', ground: 3, d: '구덩이를 메우거나 바닥을 버섯흙으로 바꿔요. 포자를 심기 좋아요.' },
+  gCrystal: { n: '수정 모래 한 삽', kind: 'ground', ground: 4, d: '구덩이를 메우거나 바닥을 반짝이는 수정 바닥으로 바꿔요.' },
+  gWater: { n: '물 한 동이', kind: 'ground', ground: 10, d: '구덩이에 부으면 물이 차고, 이어진 구덩이로 흘러가요. 낚시도 할 수 있어요.' },
+  gAsh: { n: '재 한 삽', kind: 'ground', ground: 18, d: '용암 동굴의 재 바닥을 판 것. 구덩이를 메우거나 바닥을 재 바닥으로 바꿔요.' },
+  gSnow: { n: '눈 한 삽', kind: 'ground', ground: 19, d: '눈 바닥을 판 것. 구덩이를 메우거나 바닥을 눈 바닥으로 바꿔요.' },
+  gIce: { n: '얼음 한 삽', kind: 'ground', ground: 20, d: '얼어붙은 물을 판 얼음. 구덩이를 메우거나 바닥을 얼음판으로 바꿔요.' },
   rod: { n: '낚싯대', kind: 'rod', stack: 1, d: '물을 바라보며 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 한 번 더 눌러요!' },
   minnow: { n: '이끼 송사리', kind: 'food', fish: 1, food: 6, heal: 3, d: '이끼 동굴 물가의 작은 물고기.' },
   crucian: { n: '통통 붕어', kind: 'food', fish: 1, food: 10, heal: 4, d: '통통하게 살이 오른 붕어.' },
@@ -1942,7 +1947,8 @@ Object.assign(ITEMS, {
   capSapling: { n: '아기 큰버섯', kind: 'seed', crop: 'capSapling', d: '흙·이끼·버섯흙 바닥에 심으면 3분쯤 뒤 큰버섯으로 자라요.' },
   berryBush: { n: '베리덤불', kind: 'place', obj: 'bush', d: '삽으로 퍼 온 베리덤불. 원하는 곳에 옮겨 심으면 다시 열매가 열려요.' },
 });
-OBJ.root.drops.push(['sapling', 1, 1, 0.22]); OBJ.bigShroom.drops.push(['capSapling', 1, 1, 0.22]);
+// v87: 벤 나무는 묘목을 꼭 1개 줘요 (sim/nature.js afterCut) — 예전 확률 드롭(뿌리기둥 22%·큰버섯 22%·둥근 나무 20%·큰 고목 40%)은 없앴어요
+const SEED_OF = { root: 'sapling', bigShroom: 'capSapling' }; // 그 밖의 나무(ntree)는 뿌리기둥 묘목
 const GROW_TIME = 180, REGROW_TIME = 240, YOUNG_T = 60; // each tree step lasts YOUNG_T: sapling → young sapling → young tree → grown (stumps wait one step first)
 const YOUNG_TREES = ['root', 'bigShroom', 'cherryTree', 'roundTree', 'bigTree'];
 const NFLOOR = { 11: ['waterShallow', '얕은 물 타일', '자갈이 비치는 맑은 물. 위로 걸어 다닐 수 있어요.', [['gWater', 1], ['stone', 1]]], 12: ['waterPond', '연못 물 타일', '연잎이 동동 떠 있는 연못.', [['gWater', 1], ['gMoss', 1]]],
@@ -1962,7 +1968,7 @@ const NATURE = {
 for (const id in NATURE) { const [n, d, req, flat] = NATURE[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = flat ? { n, flat: 1, item: id } : { n, solid: 1, item: id }; RECIPES.push(Rc(id, 1, req, 'bench', 'nature')); }
 RECIPES.push(Rc('sapling', 1, [['wood', 3], ['dirt', 2], ['fiber', 2]], 'bench', 'nature'));
 Object.assign(OBJ.cherryTree, { ntree: 1, nat: 'cut', hp: 6, drops: [['wood', 3, 5, 1], ['petalW', 1, 2, 0.5], ['petalR', 1, 1, 0.3]] });
-Object.assign(OBJ.roundTree, { ntree: 1, nat: 'cut', hp: 5, drops: [['wood', 2, 4, 1], ['sapling', 1, 1, 0.2]] });
+Object.assign(OBJ.roundTree, { ntree: 1, nat: 'cut', hp: 5, drops: [['wood', 2, 4, 1]] });
 
 // ---- 보스 (구조 변경 2단계: save/state.js·game/combat.js에서 옮김) — 체력·자리·재도전 보상 ----
 const BOSSES = {
@@ -1981,14 +1987,11 @@ const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['iron
 const FLOOR_ITEM = { 5: 'floorWood', 6: 'floorStone', 7: 'floorMoss', 8: 'floorShroom', 9: 'floorCrystal' };
 for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
 FLOOR_ITEM[21] = 'meadow';
-// how: shown while locked · when: unlock condition (checked often, so it also works for old saves)
-const TERRAIN = {
-  2: { n: '흙', item: 'gDirt', base: true },
-  1: { n: '이끼', item: 'gMoss', how: '퀘스트 「구리 곡괭이 만들기」를 마치면 배워요', when: () => G.guide > 5 },
-  10: { n: '물', item: 'gWater', how: '물고기를 10마리 낚으면 배워요', when: () => (G.stats.fishCaught || 0) >= 10 },
-  3: { n: '버섯흙', item: 'gShroom', how: '버섯 여왕을 물리치면 배워요', when: () => beat('queen') },
-  4: { n: '수정바닥', item: 'gCrystal', how: '수정골렘을 물리치면 배워요', when: () => beat('golem') },
-};
+// v87: 삽으로 판 자연 바닥이 주는 것 (예전 「지형 배우기」는 없앴어요 — 처음부터 모두 팔 수 있어요). 판 칸은 구덩이(PIT)가 돼요
+// 1 이끼 · 2 흙 · 3 버섯흙 · 4 수정 모래 · 18 재 바닥 · 19 눈 바닥 · 20 얼어붙은 물. 물(10)·용암(17)은 못 파요 (물은 빈 양동이로 떠요)
+const DIG_YIELD = { 1: 'gMoss', 2: 'gDirt', 3: 'gShroom', 4: 'gCrystal', 18: 'gAsh', 19: 'gSnow', 20: 'gIce' };
+// 바닥 재료로 바꿀 때 돌려주는 것도 같아요. 물·용암을 메우면 돌려주는 것이 없어요
+const BUCKET_FISH = 10; // 물고기를 이만큼 낚으면 빈 양동이를 만들 수 있어요 (예전 「물 뜨기 배우기」 조건)
 // ================= 회로·기계·깊은 지역 데이터 (구조 변경 2단계: content/circuits-regions.js에서 데이터만 옮김) =================
 // 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
 // 이 파일은 shell.html에서 content/circuits-regions.js 바로 앞에 와요 (예전과 같은 실행 순서).
@@ -2333,9 +2336,9 @@ function makeWorld3(seed, chk = checkWorld) { const why = [];
   for (let k = 0; k < BF04.tries; k++) { setLayout(3, rollAnch(seed, k)); const w = genWorld(seed), r = chk(w); if (!r) return { w, tries: k + 1, why }; why.push(r); }
   setLayout(3, { ...ANCH2, t: -1 }); return { w: genWorld(seed), tries: 0, why }; }
 // ================= 칸·충돌·움직임·놓기 (구조 변경 5단계: world.js와 content/circuits-regions.js에서 옮김) =================
-// 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 땅 파기·지형 배우기, 놓을 수 있는지(canPlace)
+// 막힌 칸(isSolid)·몸이 걸리는지(boxHits)·움직이기(moveEnt), 여러 칸 가구의 발자리(fpOf·setParts·delObj …), 바닥 파기(v87 구덩이)·못 파는 곳, 놓을 수 있는지(canPlace)
 
-function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); }
+function isSolid(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i] || G.floor[i] === WATER || G.floor[i] === LAVA || G.floor[i] === PIT) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].solid && !(OBJ[o.t].door && o.open)); } // v87: 구덩이도 막혀요 (발사체는 벽만 봐서 지나가요)
 // v85: 시야를 가리는 칸 = 벽·닫힌 문 (물·용암·가구는 너머가 보여요)
 function blocksSight(tx, ty) { if (!inB(tx, ty)) return true; const i = idx(tx, ty); if (G.wall[i]) return true; let o = G.objs.get(i); if (o && o.t === '_part') o = G.objs.get(o.a); return !!(o && OBJ[o.t] && OBJ[o.t].door && !o.open); }
 // v85: (ax, ay)에서 (bx, by)가 보이나 — 두 점 사이를 0.25칸마다 짚어 벽·닫힌 문이 있으면 안 보여요 (양쪽 끝 칸은 빼요)
@@ -2376,31 +2379,45 @@ function occupied(tx, ty, skip) {
   for (const e of G.enemies) if (Math.floor(e.x) === tx && Math.floor(e.y) === ty) return true; return false;
 }
 const isPlacedFloor = f => !!FLOOR_ITEM[f];
-const terrainOk = f => !!(TERRAIN[f] && (TERRAIN[f].base || (G.terrain && G.terrain[f])));
+// v87: 못 파는 곳 — 등불나무 둘레(가운데에서 9.5칸 안, 새 세계의 시작 빈터와 같은 넓이)와 보스방(방 가운데에서 12칸 안).
+// 물·용암·벽·물체·누가 서 있는 칸은 digWhy가 따로 봐요
+const NODIG_TREE = 9.5, NODIG_BOSS = 12;
+function noDigZone(x, y) { const cx = x + .5, cy = y + .5; if (Math.hypot(cx - CX, cy - CY) < NODIG_TREE) return 'tree';
+  for (const s of [{ x: BX, y: BY }, SA, SB, SL, SI]) if (Math.hypot(cx - s.x - .5, cy - s.y - .5) < NODIG_BOSS) return 'boss'; return null; }
+// 삽으로 이 칸을 팔 수 있나: null = 팔 수 있음, 아니면 못 파는 까닭 (actions.js가 보여 줘요)
+function digWhy(x, y) {
+  if (!inB(x, y)) return '여기는 팔 수 없어요'; const i = idx(x, y), f = G.floor[i];
+  if (G.wall[i]) return '벽은 곡괭이로 캐요'; if (G.objs.get(i)) return '물건이 있는 칸은 팔 수 없어요';
+  if (f === WATER) return '물은 빈 양동이로 떠요'; if (f === LAVA) return '용암은 팔 수 없어요'; if (f === PIT) return '이미 판 구덩이예요 · 바닥 재료로 메울 수 있어요';
+  if (!isPlacedFloor(f) && !DIG_YIELD[f]) return '여기는 팔 수 없어요';
+  if (occupied(x, y)) return '누가 서 있는 칸은 팔 수 없어요';
+  const z = noDigZone(x, y); if (z && !isPlacedFloor(f)) return z === 'tree' ? '등불나무 둘레는 팔 수 없어요' : '보스방은 팔 수 없어요'; // 깔아 둔 바닥은 어디서나 걷을 수 있어요
+  return null; }
+// 바닥이 돌려주는 아이템 (자연 바닥 = 그 한 삽, 깐 바닥 = 그 바닥 아이템, 물·용암·구덩이 = 없음)
+const floorItem = f => FLOOR_ITEM[f] || DIG_YIELD[f] || null;
 function checkUnlocks() {
   if (!G.terrain) G.terrain = {};
-  for (const f in TERRAIN) { const T = TERRAIN[f]; if (T.base || G.terrain[f] || !T.when()) continue; G.terrain[f] = 1;
-    if (started) { emit('toast', `새 지형을 배웠어요: ${T.n}! 삽을 들고 떠서 다른 곳에 옮길 수 있어요${hasItem('shovel') ? '' : ' (삽은 장비제작대에서 만들어요)'}`, 'good', 'terrain' + f); emit('sfx', 'craft'); } }
+  if (started && !G.stats.bucketTip && (G.stats.fishCaught || 0) >= BUCKET_FISH) { G.stats.bucketTip = 1; emit('toast', '이제 작업대에서 빈 양동이를 만들 수 있어요! 물을 떠서 구덩이에 부어요', 'good', 'bucket'); emit('sfx', 'craft'); }
   if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => emit('toast', '이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
 }
-function shovelDesc() {
-  const ks = Object.keys(TERRAIN).map(Number), ok = ks.filter(terrainOk).map(f => TERRAIN[f].n), no = ks.filter(f => !terrainOk(f));
-  return `삽을 들고(도구 칸) 바닥을 바라보며 누르면 깔아 둔 바닥을 걷고, 땅을 누르면 배운 지형을 떠서 옮길 수 있어요. 배운 지형: ${ok.join(' · ')}${no.length ? ' / 아직: ' + no.map(f => `${TERRAIN[f].n}(${TERRAIN[f].how.replace(/ ?배워요$/, '')})`).join(', ') : ''}`;
-}
+function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 한 삽을 얻어요. 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
 function digGround(t) {
-  const i = idx(t.x, t.y), f = G.floor[i]; if (G.wall[i] || G.objs.get(i)) return;
+  if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
   if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
-  else { if (f === 2 || !terrainOk(f)) return; const id = TERRAIN[f].item; G.floor[i] = 2; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === WATER ? '#8fd0ff' : f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : '#b9a8ff', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+  else { const id = DIG_YIELD[f]; G.floor[i] = PIT; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
+    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+  flowNear(t.x, t.y); // 새 구덩이(또는 걷어서 드러난 구덩이) 옆에 물·용암이 있으면 흘러 들어와요
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
 function canPlace(tx, ty, it, skip) {
   if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid, null, skip); }
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
-  if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && (!o || !OBJ[o.t].tree);
-  if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree);
-  if (it.kind === 'ground') return !o && G.floor[i] !== it.ground && !isPlacedFloor(G.floor[i]) && !(it.ground === WATER && (occupied(tx, ty) || (tx === Math.floor(G.p.x) && ty === Math.floor(G.p.y))));
+  if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && (!o || !OBJ[o.t].tree);
+  if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree); // 구덩이 위에도 깔 수 있어요 (걷으면 구덩이가 다시 드러나요)
+  if (it.kind === 'ground') { const f = G.floor[i]; if (o) return false; // v87: 물 한 동이는 구덩이에만 · 다른 바닥 재료는 구덩이를 메우거나, 물·용암을 메우거나, 다른 자연 바닥을 바꿔요
+    if (it.ground === WATER) return f === PIT; return f === PIT || f === WATER || f === LAVA || (!!DIG_YIELD[f] && f !== it.ground); }
   if (o) return false;
+  if (G.floor[i] === PIT) return false; // v87: 구덩이에는 벽·가구·씨앗을 놓지 못해요 (먼저 메워요)
   if ((G.floor[i] === WATER || G.floor[i] === LAVA) && it.kind !== 'wall') return false;
   if (it.kind === 'seed') return it.crop === 'cropMoss' ? G.floor[i] === 21 : [1, 2, 3, 4, 21].includes(G.floor[i]);
   if (it.kind === 'wall') return !occupied(tx, ty, skip);
@@ -2469,7 +2486,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'qAct'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'qAct', 'natDay'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
 const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
@@ -2539,7 +2556,7 @@ function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, qAct: G.qAct || 'main', recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, qAct: G.qAct || 'main', natDay: Number.isFinite(G.natDay) ? G.natDay : null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
 }
 function deserialize(s) {
   setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
@@ -2561,7 +2578,7 @@ function deserialize(s) {
   G.pets = {}; if (s.pets && typeof s.pets === 'object') for (const k in s.pets) if (ANIMALS[k] && ANIMALS[k].pet && s.pets[k]) G.pets[k] = 1; G.petOn = G.pets[s.petOn] ? s.petOn : null; G.wild = []; G.petE = null; // v45 pets
   loadSets(s.eqSets, s.eqSet); // v83: equipment sets I·II·III (old saves: what is worn now is set I)
   G.env = s.env && ['hot', 'cold'].includes(s.env.k) && Number.isFinite(s.env.v) ? { k: s.env.k, v: clamp(s.env.v, 0, 100), lv: 9, t: 0 } : { k: null, v: 0, lv: 0, t: 0 };
-  G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null; G.qAct = typeof s.qAct === 'string' ? s.qAct : 'main'; // v84 (옛 세이브: 진행 중인 이야기)
+  G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null; G.qAct = typeof s.qAct === 'string' ? s.qAct : 'main'; G.natDay = Number.isFinite(s.natDay) ? s.natDay : null; // v87: 하루 하나 새 자연물 — 마지막으로 센 날 (없으면 오늘부터) // v84 (옛 세이브: 진행 중인 이야기)
   G.look = cleanLook(s.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; emit('look');
   const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
   refundPieces(); // v69 (BF-05): removed building pieces turn back into their materials — before unknown items are cleared out just below
@@ -3005,7 +3022,7 @@ const MULTI = {
   rugBig: ['큰 꽃 러그', '가운데 노란 꽃이 핀 러그 (2×2). 위로 걸어 다닐 수 있어요.', [['fiber', 12], ['petalR', 2]], 'bench', 'furn', [2, 2], { flat: 1 }],
   rugLong: ['긴 줄무늬 러그', '복도에 깔기 좋은 긴 러그 (3×2). 가로·세로로 돌릴 수 있어요.', [['fiber', 14], ['rope', 2]], 'bench', 'furn', [3, 2], { flat: 1, rotV: 1 }],
   rugRound: ['둥근 엮음 러그', '알록달록 엮은 큰 원형 러그 (3×3).', [['fiber', 18], ['petalY', 2], ['petalB', 2]], 'bench', 'furn', [3, 3], { flat: 1 }],
-  bigTree: ['큰 고목', '굵은 줄기의 커다란 나무 (2×2). 베면 그루터기가 남고 다시 자라요.', [['dirt', 8], ['gMoss', 8], ['wood', 16], ['sapling', 2]], 'bench', 'nature', [2, 2], { solid: 1, ntree: 1, nat: 'cut', hp: 10, drops: [['wood', 6, 9, 1], ['resin', 1, 2, 0.6], ['sapling', 1, 1, 0.4]] }],
+  bigTree: ['큰 고목', '굵은 줄기의 커다란 나무 (2×2). 베면 없어지고 뿌리기둥 묘목 1개를 줘요.', [['dirt', 8], ['gMoss', 8], ['wood', 16], ['sapling', 2]], 'bench', 'nature', [2, 2], { solid: 1, ntree: 1, nat: 'cut', hp: 10, drops: [['wood', 6, 9, 1], ['resin', 1, 2, 0.6]] }],
   bigRock: ['이끼 바위', '이끼가 살짝 덮인 큰 바위 (2×1).', [['stone', 16], ['gMoss', 2]], 'bench', 'nature', [2, 1], { solid: 1 }],
   flowerField: ['큰 꽃밭', '온갖 색 꽃이 가득한 꽃밭 (3×2). 위로 걸어 다닐 수 있어요.', [['dirt', 3], ['gMoss', 3], ['petalR', 2], ['petalY', 2], ['petalB', 2], ['petalW', 2]], 'bench', 'nature', [3, 2], { flat: 1, rotV: 1 }],
   pondBig: ['작은 연못', '연잎이 떠 있는 작은 연못 (2×2).', [['gWater', 4], ['stone', 8], ['gMoss', 2]], 'bench', 'nature', [2, 2], { flat: 1, solid: 1 }],
@@ -3361,13 +3378,35 @@ for (const r of RECIPES) { const c = gearCatOf(ITEMS[r.out]); if (!c || !(r.at =
 // 이 파일은 shell.html에서 features/controls.js 바로 앞에 와요 (예전과 같은 실행 순서).
 
 // ---- tools ----
-const TOOL_KINDS = ['pick', 'axe', 'sickle', 'shovel', 'wcan', 'rod', 'lasso'];
+const TOOL_KINDS = ['pick', 'axe', 'sickle', 'shovel', 'wcan', 'rod', 'lasso', 'bucket']; // v87: 빈 양동이
 // axes stop being weapons and become the tree-cutting tool (power = how fast they cut, like a pickaxe's power)
 const AXE_TOOL = { axeStone: [1.6, 0, '돌로 만든 도끼. 나무를 손이나 곡괭이보다 빨리 베어요.'], axeCopper: [3.2, 1, '단단한 구리 도끼. 큰 나무도 금방 베어요.'], axeIron: [4.8, 2, '날이 선 철 도끼. 어떤 나무든 몇 번이면 베어요.'] };
 for (const id in AXE_TOOL) { const it = ITEMS[id]; if (!it) continue; it.kind = 'axe'; [it.power, it.tier, it.d] = AXE_TOOL[id]; delete it.dmg; delete it.wt; }
 for (const r of RECIPES) if (AXE_TOOL[r.out]) r.cat = 'tool';
 // ---- hit a placed piece three times and it falls on the floor ----
 const RECOVER_HITS = 3, RECOVER_GAP = 2; // hits · seconds (game time) the hits may be apart
+// ================= v87 바닥 파기 데이터: 빈 양동이, 물·용암 흐름 빠르기, 하루 하나 자연물 =================
+// 기획: dev/design/바닥파기.md (2026-10-17 확정). 동작은 sim/digging.js(구덩이·흐름·양동이)와 sim/nature.js(자연물)에 있어요.
+// 이 파일은 data/controls.js 다음에 와요 (「지형 재료 2배」·작업대 단계 나누기 data/automation-tiers.js 뒤). 양동이는 구리괴를 써서, 다른 구리 레시피처럼 구리 작업대(1단계)예요.
+
+// 빈 양동이: 물 칸에 대고 쓰면 「물 한 동이」 하나 (물 칸은 줄지 않아요), 용암은 못 떠요, 닳지 않아요
+ITEMS.bucket = { n: '빈 양동이', kind: 'bucket', stack: 1, d: '물을 바라보고 누르면 「물 한 동이」를 떠요. 물은 줄지 않아요. 용암은 뜰 수 없어요. 닳지 않아요.' };
+RECIPES.push(Object.assign(Rc('bucket', 1, [['wood', 4], ['copperBar', 1]], 'bench', 'tool'), { tier: 1, need: () => (G.stats.fishCaught || 0) >= BUCKET_FISH }));
+
+// 흐름: 이어진 구덩이로 한 칸 퍼지는 데 걸리는 시간(초, 게임 시간)
+const FLOW_SEC = { 10: 0.5, 17: 2 }; // 물 · 용암
+// 하루 하나 새 자연물: 게임을 안 한 날 몫은 이만큼까지 쌓여요
+const NAT_DAY_MAX = 7;
+// 지역(biome)마다 생기는 자연물과 비율 — 새 세계 만들기(world/gen.js)의 비율을 따라요
+const NAT_DAY_KINDS = {
+  0: [['root', 1], ['bush', 0.85], ['grass', 3], ['glow', 0.6]],
+  1: [['bigShroom', 1.5], ['root', 0.6], ['glow', 1], ['grass', 2], ['bush', 1]],
+  2: [['cluster', 2], ['glow', 1]],
+  3: [['fireBloom', 1]],
+  4: [['iceCluster', 1]],
+};
+// 그 자연물이 생길 수 있는 바닥
+const NAT_DAY_FLOORS = new Set([1, 2, 3, 4, 18, 19]);
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -3397,7 +3436,7 @@ const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt || !!i
 const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting
 const BAG_TABS = [['all', '전체'], ['equip', '장비'], ['mat', '재료'], ['food', '음식'], ['deco', '꾸미기'], ['seed', '씨앗']];
-function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'axe', 'lasso', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
+function bagCat(id) { const it = ITEMS[id], k = it.kind; if (['pick', 'axe', 'lasso', 'sword', 'rod', 'shovel', 'sickle', 'wcan', 'bucket', 'wear', 'recall', 'arrow'].includes(k)) return 'equip'; if (k === 'food') return 'food'; if (k === 'seed' || k === 'fert') return 'seed'; if (isMat(it) || k === 'key') return 'mat'; return 'deco'; }
 function addItem(id, c, count = true) {
   if (ITEMS[id] && ITEMS[id].note) { learnRecipe(ITEMS[id].note); return 0; } // recipe notes teach a dish instead of taking a bag slot
   if (isTool(id) && G.tools) { for (let k = 0; k < c; k++) { const t = { id, c: 1 }; if (DUR[id]) t.dur = DUR[id][0]; G.tools.push(t); } emit('inv'); return 0; } // v65: tools go into the tool pouch
@@ -3723,7 +3762,8 @@ function placeItem(t) {
   if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }
   if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
-  else if (it.kind === 'ground') { G.floor[i] = it.ground; G.under.delete(i); }
+  else if (it.kind === 'ground') { const old = G.floor[i], back = old === PIT || old === WATER || old === LAVA ? null : floorItem(old); G.floor[i] = it.ground; G.under.delete(i); // v87: 바꾼 자연 바닥은 돌려받아요
+    if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
   else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
@@ -3776,7 +3816,7 @@ function harvest(t, o) {
   if (d.crop) { const i = idx(t.x, t.y); if (o.star == null) rollStar(i, o); G.objs.delete(i); // a star crop gives its main harvest as star items
     rollDrops(d.yield.map(([id, a, b, ch], k) => [!k && o.star && STAR_OF[id] ? STAR_OF[id] : id, a + (sk && !k ? 1 : 0), b + (sk && !k ? 1 : 0), id === 'glowcap' && o.f === 2 ? .6 : ch]), t.x + .5, t.y + .5);
     const S = G.stats; S.cropH = (S.cropH || 0) + 1; if (o.star) { S.starH = (S.starH || 0) + 1; emit('ftext', t.x + .5, t.y - .3, '★ 별 작물!', '#ffe9a8'); } if (o.t === 'cropBerry') S.berryH = (S.berryH || 0) + 1; if (o.w) S.wetH = (S.wetH || 0) + 1; }
-  else { o.r = G.time + 150; rollDrops([['berry', 2 + (sk ? 1 : 0), 3 + (sk ? 1 : 0), 1], ['berrySeed', 1, 1, 0.3]], t.x + .5, t.y + .6); }
+  else { delObj(idx(t.x, t.y)); rollDrops([['berry', 2 + (sk ? 1 : 0), 3 + (sk ? 1 : 0), 1]], t.x + .5, t.y + .6); spawnDrop('berrySeed', 1, t.x + .5, t.y + .6); markLight(); } // v87: 딴 베리덤불은 사라지고 베리 씨앗을 꼭 1개 줘요 (예전: 150초 뒤 다시 열림, 씨앗 30%)
   emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .5, '#9be37a', 6, 2); gainXp(2); maybeNote('gather', t.x + .5, t.y + .5);
 }
 const HITS = new Map();
@@ -4012,7 +4052,7 @@ onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/syste
 const REACH = 2.4;
 const inReach = (tx, ty) => Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) <= REACH;
 // ================= actions =================
-const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig' };
+const GROUP = { attack: 'work', swing: 'work', mine: 'work', chop: 'work', harvest: 'work', harvest3: 'work', water: 'water', fert: 'fert', place: 'place', dig: 'dig', unwire: 'dig', scoop: 'scoop' };
 function targetTile() {
   const p = G.p; const ptx = Math.floor(p.x), pty = Math.floor(p.y);
   const aim = ctlOf(p).aim;
@@ -4037,7 +4077,7 @@ function nearestEnemy(range) {
 // thing in front: an item held on purpose comes first (seed · watering can · furniture · food …), otherwise a recommendation
 // (open · harvest · chop · mine · pick up …) that takes the right tool out of the tool pouch by itself (pickaxe · axe · sickle ·
 // shovel; the fishing rod and the watering can only from the small button or when held). Other things that fit go to the small button.
-const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
+const HOLD_MODE = { sword: 'weapon', pick: 'pick', axe: 'axe', shovel: 'shovel', bucket: 'bucket', wcan: 'wcan', fert: 'fert', lasso: 'lasso', rod: 'rod', sickle: 'sickle', food: 'food', wear: 'wear', key: 'key', summon: 'summon', recall: 'recall' };
 const holdMode = it => !it ? 'hand' : BUILD_KINDS.includes(it.kind) ? 'build' : HOLD_MODE[it.kind] || 'hand';
 const NOTGT = ['eat', 'wear']; // held food · clothes: after a real action in front (opening a chest, …), or first when there is nothing to do
 const swingAct = sw => ({ k: 'swing', lbl: wtOf(sw).ranged ? '쏘기' : '휘두르기', icon: sw.id === 'hand' ? 'hand' : sw.id });
@@ -4083,15 +4123,17 @@ function heldDecide(md, s, it, t, i, o) {
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
+      if (it.kind === 'ground' && it.ground === WATER) return no('부을 수 없음', '물 한 동이는 구덩이에만 부을 수 있어요 · 삽으로 바닥을 파서 구덩이를 만들어요');
       return no(it.kind === 'seed' ? '심을 수 없음' : '놓을 수 없음', it.kind === 'seed' ? '여기엔 심을 수 없어요 · 빈 흙·이끼·버섯흙·수정 모래를 바라보고 눌러요' : '여기엔 놓을 수 없어요 · 빈 곳을 바라보고 눌러요'); }
     case 'shovel': {
       if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
-      if (d && (d.bush || d.growTo)) return { k: 'dig', lbl: d.stump ? '뽑기' : '퍼내기', icon: 'shovel', t, o };
-      if (i >= 0 && !G.wall[i] && !o) { const f = G.floor[i];
-        if (isPlacedFloor(f)) return { k: 'dig', lbl: '걷기', icon: 'shovel', t };
-        if (f === 2) return no('흙 땅', '흙은 더 팔 수 없어요. 흙 한 삽은 제작에서 흙으로 만들어요');
-        if (TERRAIN[f]) return terrainOk(f) ? { k: 'dig', lbl: f === WATER ? '물 뜨기' : '파기', icon: 'shovel', t } : { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(TERRAIN[f].n, '은', '는')} 아직 옮길 수 없어요 · ${TERRAIN[f].how}`, t }; }
-      return no('팔 수 없음', '삽으로는 깔아 둔 바닥·배운 지형·덤불·묘목만 떠요'); }
+      if (i < 0 || o) return no('팔 수 없음', '삽으로는 바닥만 파요 · 빈 바닥을 바라보고 눌러요'); // v87: 덤불·묘목 퍼내기는 없어요
+      { const why = digWhy(t.x, t.y); if (why) return no(G.floor[i] === PIT ? '구덩이' : '팔 수 없음', why); }
+      return { k: 'dig', lbl: isPlacedFloor(G.floor[i]) ? '걷기' : '파기', icon: 'shovel', t }; }
+    case 'bucket': // v87: 빈 양동이 — 물 칸에서 물 한 동이 (닳지 않아요)
+      if (water) return { k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t };
+      if (i >= 0 && !G.wall[i] && G.floor[i] === LAVA) return no('뜰 수 없음', '용암은 뜰 수 없어요');
+      return no('물 뜨기', '물을 바라보고 눌러요 · 뜬 물은 구덩이에만 부어요');
     case 'wcan':
       if (crop >= 0 && crop < 3) return o.w ? { k: 'info', lbl: `자라는 중 ${crop + 1}/4`, icon: 'dots', msg: cropMsg(o, crop, i), t } : (s.w || 0) > 0 ? { k: 'water', lbl: '물 주기', icon: 'wcan', t, o } : no('물 없음', '물뿌리개가 비었어요 · 물가를 바라보고 눌러 채워요');
       if (water) return (s.w || 0) >= WCAN_MAX ? no('가득 참', '물뿌리개에 물이 가득해요') : { k: 'fill', lbl: '물 채우기', icon: 'wcan', t };
@@ -4131,9 +4173,9 @@ function autoOptions(t, i, o) {
   if (o) {
     const d = OBJ[o.t];
     if (d.growTo) { const st = treeStep(o), into = d.stump && OBJ[o.g] ? OBJ[o.g].n : d.into, mins = s2 => Math.max(1, Math.ceil(s2 / 60)), r = (o.at || 0) - G.time;
-      A(st < 0 ? { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (삽으로 뽑을 수 있어요)`, t }
+      A(st < 0 ? { k: 'info', lbl: d.n, icon: 'dots', msg: `${d.n} · ${mins(r - 3 * YOUNG_T)}분쯤 뒤 새순이 돋아요 (다 자란 뒤 베면 없어져요)`, t }
         : { k: 'info', lbl: `자라는 중 ${st + 1}/4`, icon: 'dots', msg: `${into} ${['묘목', '어린나무'][st]} (${st + 1}/4단계) · ${mins(r)}분쯤 뒤 다 자라요${st ? ' · 한 단계 더 크면 벨 수 있어요' : ''}`, t });
-      A(dig(d.stump ? '뽑기' : '퍼내기', o)); return L; }
+      return L; }
     if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
     if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
     if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
@@ -4148,7 +4190,7 @@ function autoOptions(t, i, o) {
       if (cs >= 3) A({ k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o, tool: bestTool('sickle') });
       else { A({ k: 'info', lbl: `자라는 중 ${cs + 1}/4`, icon: 'dots', msg: cropMsg(o, cs, i), t }); if (!o.w && can && (can.w || 0) > 0) A({ k: 'water', lbl: '물 주기', icon: 'wcan', t, o, tool: can, onlyAlt: 1 }); }
       return L; }
-    if (d.bush) { A((o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o, tool: bestTool('sickle') } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 다시 열리려면 조금 기다려요', t }); A(dig('퍼내기', o)); return L; }
+    if (d.bush) { A((o.r || 0) <= G.time ? { k: 'harvest', lbl: '따기', icon: 'berry', t, o, tool: bestTool('sickle') } : { k: 'info', lbl: '열매 없음', icon: 'dots', msg: '열매가 열리려면 조금 기다려요 · 따면 덤불은 없어지고 베리 씨앗을 줘요', t }); return L; }
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
       else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
     if (d.nat) { A(natAct(d, o, t)); return L; }
@@ -4158,7 +4200,9 @@ function autoOptions(t, i, o) {
   if (i >= 0 && !G.wall[i] && G.floor[i] === WATER) {
     A(rod && !isBroken(rod) ? { k: 'fish', lbl: '낚시', icon: 'rod', t, tool: rod, onlyAlt: 1 } : { k: 'info', lbl: rod ? '낚싯대 고장' : '낚싯대 필요', icon: 'rod', msg: rod ? '낚싯대가 망가졌어요. 장비제작대에서 고칠 수 있어요' : '낚싯대가 있으면 낚시할 수 있어요 (장비제작대 → 도구)', t });
     if (can && (can.w || 0) < WCAN_MAX) A({ k: 'fill', lbl: '물 채우기', icon: 'wcan', t, tool: can, onlyAlt: 1 });
+    { const bk = bestTool('bucket'); if (bk) A({ k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t, tool: bk, onlyAlt: 1 }); } // v87
     if (rod) A({ k: 'info', lbl: '물가', icon: 'rod', msg: '작은 버튼의 [낚시]를 누르거나, 도구 칸에서 낚싯대를 들고 눌러요', t }); }
+  if (i >= 0 && !G.wall[i] && !o && G.floor[i] === PIT) A({ k: 'info', lbl: '구덩이', icon: 'dots', msg: '구덩이예요 · 흙 한 삽 같은 바닥 재료를 들고 눌러 메우거나, 물 한 동이를 부어요', t }); // v87
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) { const pk = bestTool('pick'); A({ k: 'mine', lbl: '캐기', icon: pk ? pk.id : 'hand', t, tool: pk }); }
   if (i >= 0 && !G.wall[i] && !o && isPlacedFloor(G.floor[i])) A(dig('걷기'));
   if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) A({ k: 'petpet', lbl: '쓰다듬기', icon: 'hand' });
@@ -4176,7 +4220,7 @@ defineCmd('ctl', c => { G.p.ctl = c; }); // 조작 의도 (sim/commands.js) — 
 function faceTo(dx, dy) { const l = Math.hypot(dx, dy) || 1; G.p.face = { x: dx / l, y: dy / l }; }
 function perform(a) {
   const p = G.p;
-  if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
+  if (a.tool && a.tool !== selItem() && G.tools && G.tools.includes(a.tool)) holdTool(a.tool, ['rod', 'wcan', 'lasso', 'bucket'].includes(ITEMS[a.tool.id].kind)); // the rod / watering can from the small button stay chosen // v65: the tool the job needs comes out of the pouch and stays in hand
   switch (a.k) {
     case 'attack': {
       if (!ctlOf(p).aim) faceTo(a.en.x - p.x, a.en.y - p.y);
@@ -4187,7 +4231,8 @@ function perform(a) {
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
     case 'place': placeItem(a.t); G.actCd = 0.14; break;
-    case 'dig': if (a.o) digPlant(a.t, a.o); else digGround(a.t); G.actCd = 0.22; break;
+    case 'dig': digGround(a.t); G.actCd = 0.22; break;
+    case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
     case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
     case 'open': if (a.o.t === 'chest' || OBJ[a.o.t].refund) emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
@@ -4585,7 +4630,7 @@ function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx, dy] o
 function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); emit('puff', e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
 function cloneTick(b, dt) { const cl = G.enemies.filter(e => e.k === 'spiritClone'); cl.forEach((e, i) => { const a = (b.anim || 0) * .9 + i * Math.PI + .8, tx = b.x + Math.cos(a) * 2.8, ty = b.y + Math.sin(a) * 1.8, k = Math.min(1, dt * 3); if (!boxHits(e.x + (tx - e.x) * k, e.y + (ty - e.y) * k, .3)) { e.x += (tx - e.x) * k; e.y += (ty - e.y) * k; } e.z = .45; e.anim = b.anim; }); return cl; }
 function pillarBlocks(s, tx, ty) { const i = idx(tx, ty), o = G.objs.get(i); if (!o || o.t !== 'icePillar') return false; o.hp = (o.hp || 4) - 1; emit('puff', s.x, s.y, '#d4f6ff', 4, 1.6, .2); if (o.hp <= 0) { G.objs.delete(i); emit('puff', tx + .5, ty + .5, '#e8f8ff', 14, 3, .4); emit('sfx', 'brk'); markLight(); } return true; }
-// ================= 자연: 꽃잎 구역, 작물·어린나무 자라기, 베고 남기기·파내기, 풀·뿌리 다시 자라기 =================
+// ================= 자연: 꽃잎 구역, 작물·어린나무 자라기, 벤 뒤 처리, 하루 하나 새 자연물 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const WATER = 10;
 function genFlowerZones() {
@@ -4628,10 +4673,10 @@ const isYoung = o => !!(o && o.yg && G.time < o.yg);
 // -1 bare stump, 0 sapling, 1 young sapling, 2 young tree (can be cut for a little wood), 3 grown. Worked out from times already saved, so old saves need nothing new
 function treeStep(o) { const d = OBJ[o.t]; if (d.growTo) { const r = (o.at || 0) - G.time; return d.stump && r > 3 * YOUNG_T ? -1 : r > 2 * YOUNG_T ? 0 : 1; } return isYoung(o) ? 2 : 3; }
 const youngDrops = drops => drops.filter(([id, , , ch]) => ch >= 1 && !['sapling', 'capSapling', 'resin'].includes(id)).map(([id, a, b]) => [id, Math.max(1, Math.ceil(a / 2)), Math.max(1, Math.ceil(b / 2)), 1]);
+// v87: 벤 나무(뿌리기둥·큰버섯·꾸밈 나무)는 그루터기 없이 사라지고 묘목을 꼭 1개 줘요 — 다시 자라지 않아요 (예전: 그루터기가 240초 뒤 다시 자람)
 function afterCut(t, o) {
-  const i = idx(t.x, t.y);
-  if (o.t === 'root' || o.t === 'bigShroom') G.objs.set(i, { t: o.t === 'root' ? 'stump' : 'capStump', g: o.t, at: G.time + REGROW_TIME });
-  else if (OBJ[o.t] && OBJ[o.t].ntree) G.objs.set(i, { t: 'stump', g: o.t, at: G.time + REGROW_TIME });
+  const i = idx(t.x, t.y), d = OBJ[o.t];
+  if (SEED_OF[o.t] || (d && d.ntree)) { const fp = d && d.sz ? fpOf(o) : [1, 1]; spawnDrop(SEED_OF[o.t] || 'sapling', 1, t.x + fp[0] / 2, t.y + fp[1] / 2); }
   else if (o.t === 'grass' || o.t === 'glow' || o.t === 'wildF') { G.regen = G.regen || []; if (G.regen.length < 600) G.regen.push([i, o.t, G.time + (o.t === 'grass' ? 120 : 200), o.c || null]); }
   if (o.t === 'wildF') rollDrops([['petal' + (FLOWERS[o.c] ? o.c : 'R'), 1, 1, 0.35]], t.x + .5, t.y + .5);
 }
@@ -4647,31 +4692,29 @@ function growTick(dt = 2) {
     if (OBJ[nt].sz) { G.objs.delete(i); if (!fpFree(x, y, fpOf(no), true)) { G.objs.set(i, o); o.at = G.time + 10 + YOUNG_T; continue; } G.objs.set(i, no); setParts(i, no); } else G.objs.set(i, no); if (Math.hypot(x - p.x, y - p.y) < 20) emit('puff', x + .5, y + .6, '#9be37a', 8, 2, .3); markLight(); }
   if (G.regen && G.regen.length) G.regen = G.regen.filter(([i, t, at, c]) => { if (at > G.time) return true; if (!OBJ[t] || G.wall[i] || G.objs.get(i) || ![1, 2, 3].includes(G.floor[i])) return false; const x = i % W, y = (i / W) | 0; if (inside(x, y)) return true; const o = { t }; if (c) o.c = c; G.objs.set(i, o); return false; });
 }
-function digPlant(t, o) {
-  const d = OBJ[o.t], i = idx(t.x, t.y); delObj(i);
-  const id = d.bush ? 'berryBush' : o.t === 'sapling' ? 'sapling' : o.t === 'capSapling' ? 'capSapling' : d.stump && o.g && OBJ[o.g] && OBJ[o.g].ntree && ITEMS[o.g] ? o.g : 'wood';
-  const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-  emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#9be37a', 7, 2.2); emit('inv'); markLight(); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
-  emit('toast', d.bush ? '베리덤불을 퍼냈어요. 원하는 곳에 다시 심어요' : d.stump ? `${d.n}을(를) 뽑았어요` : `${d.n}을(를) 퍼냈어요`, null, 'digplant');
-}
 // ---- nature decorations ----
 const WFLOOR = new Set([11, 12, 13, 14, 15]);
 // ================= update =================
+// v87: 세계 자연 재생은 실제 시간으로 하루에 하나 (예전: 플레이어 가까이 3초마다 이끼풀·뿌리기둥). 게임을 안 한 날 몫은 NAT_DAY_MAX개까지 쌓였다가
+// 다음에 세계를 열면 한꺼번에 생겨요. 세계 아무 곳의 그 지역에 맞는 빈 자연 바닥(깐 바닥·등불나무 둘레·보스방·누가 선 칸은 빼요)에.
+// 이끼풀·빛버섯·들꽃이 같은 자리에서 다시 자라는 것(G.regen, 위 growTick)은 그대로예요.
+const dayNo = () => { const d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }; // 이 기기의 날짜
 let regrowT = 0;
-function regrow() {
-  const p = nextTurn().p; // 플레이어를 돌아가며 그 주변에 (8단계)
-  for (let k = 0; k < 14; k++) {
-    const a = rand() * 6.283, d = 13 + rand() * 22, x = Math.floor(p.x + Math.cos(a) * d), y = Math.floor(p.y + Math.sin(a) * d);
-    if (x < 2 || y < 2 || x >= W - 2 || y >= H - 2) continue; const i = idx(x, y), f = G.floor[i], b = G.biome[i];
-    if (G.wall[i] || G.objs.get(i) || !(f === 1 || f === 2 || f === 3) || b === 2) continue;
-    if (Math.hypot(x - CX, y - CY) < 3.5) continue;
-    let nat = 0, built = false;
-    for (let dy = -3; dy <= 3 && !built; dy++) for (let dx = -3; dx <= 3; dx++) { const j = idx(x + dx, y + dy), o = G.objs.get(j); if (isPlacedFloor(G.floor[j])) { built = true; break; } if (!o) continue; const od = OBJ[o.t]; if (od.nat || od.bush) nat++; else if (od.item || od.tw) { built = true; break; } }
-    if (built || nat >= 6) continue;
-    const nt = rand() < (b === 1 ? 0.25 : 0.35) && f !== 3 ? 'root' : 'grass';
-    if (rand() >= (nt === 'root' ? 1 / 3 : 0.5)) return; // v74: root pillars regrow 1/3 as often, moss grass 1/2
-    G.objs.set(i, { t: nt }); return;
+function pickNat(b) { const L = NAT_DAY_KINDS[b]; if (!L) return null; let s = 0; for (const [, w] of L) s += w; let r = rand() * s; for (const [k, w] of L) { r -= w; if (r < 0) return k; } return L[L.length - 1][0]; }
+function spawnNatural() {
+  for (let k = 0; k < 400; k++) {
+    const x = 2 + Math.floor(rand() * (W - 4)), y = 2 + Math.floor(rand() * (H - 4)), i = idx(x, y), f = G.floor[i];
+    if (G.wall[i] || G.objs.get(i) || !NAT_DAY_FLOORS.has(f) || noDigZone(x, y) || occupied(x, y)) continue;
+    const nt = pickNat(G.biome[i]); if (!nt || !OBJ[nt]) continue;
+    G.objs.set(i, nt === 'bush' ? { t: nt, r: 0 } : { t: nt }); emit('tile', x, y); markLight(); return { x, y, t: nt };
   }
+  return null;
+}
+function regrow() {
+  const today = dayNo(); if (G.natDay == null || G.natDay > today) { G.natDay = today; return; } // 새 세계·옛 세이브는 오늘부터 세요 (밀린 몫 없음)
+  const n = Math.min(NAT_DAY_MAX, today - G.natDay); if (n <= 0) return;
+  for (let k = 0; k < n; k++) spawnNatural();
+  G.natDay = today;
 }
 onFrame('regrow', dt => {
   regrowT += dt; if (regrowT > 3) { regrowT = 0; regrow(); }
@@ -5002,6 +5045,46 @@ function dropStep(d, dt) {
     if (d.t > 400) G.drops.splice(G.drops.indexOf(d), 1);
   }
 }
+// ================= v87 바닥 파기: 물·용암 흐름, 빈 양동이 =================
+// 기획 dev/design/바닥파기.md (2026-10-17 확정). 파기·메우기 자체는 world/tiles.js(digGround·digWhy·canPlace)와 sim/building.js(placeItem)에 있어요.
+// - 물·용암은 이어진 구덩이로 한 칸씩 흘러요 (물 0.5초 · 용암 2초, data/digging.js FLOW_SEC). 원래 물·용암은 줄지 않아요.
+// - 물과 용암이 한 구덩이에서 만나면 그 칸은 돌 바닥(6)으로 굳어요.
+// - 흘러 들어온 칸의 떨어진 물건: 용암은 태워 없애고, 물은 옆 빈 칸으로 밀어내요. (몬스터·사람은 구덩이에 못 들어가요)
+// - 흐를 차례는 저장하지 않아요: 세계를 불러오면 구덩이 옆 물·용암을 한 번 훑어 다시 이어 가요.
+const STONE_FLOOR = 6; // 물과 용암이 만나 굳은 칸 (걸을 수 있는 돌 바닥 — 삽으로 걷으면 돌 바닥 아이템)
+const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const isLiquid = f => f === WATER || f === LAVA;
+// 흐를 차례: 칸 번호 → 그 칸이 바뀔 게임 시간
+let flowQ = new Map(), flowG = null;
+function resetFlow() { flowQ = new Map(); flowG = G; }
+function liquidNb(x, y) { let w = false, l = false; for (const [dx, dy] of N4) { const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (G.wall[j]) continue; const f = G.floor[j]; if (f === WATER) w = true; else if (f === LAVA) l = true; } return { w, l }; }
+// 구덩이 한 칸이 언제 바뀔지 정해요 (이미 정해져 있으면 더 빠른 쪽)
+function schedule(x, y) { const i = idx(x, y); if (G.floor[i] !== PIT || G.wall[i]) return; const n = liquidNb(x, y); if (!n.w && !n.l) return;
+  const at = G.time + Math.min(n.w ? FLOW_SEC[WATER] : 99, n.l ? FLOW_SEC[LAVA] : 99), old = flowQ.get(i); if (old == null || at < old) flowQ.set(i, at); }
+// (x, y)가 바뀌었을 때 부르는 곳: 그 칸과 옆 칸들 가운데 흘러 들어올 구덩이를 찾아요
+function flowNear(x, y) { if (flowG !== G) scanFlow(); schedule(x, y); for (const [dx, dy] of N4) if (inB(x + dx, y + dy)) schedule(x + dx, y + dy); }
+function scanFlow() { resetFlow(); for (let i = 0; i < W * H; i++) if (G.floor[i] === PIT) schedule(i % W, (i / W) | 0); }
+// 구덩이 칸이 물·용암·돌 바닥이 돼요
+function fillPit(i) { const x = i % W, y = (i / W) | 0, n = liquidNb(x, y); if (G.floor[i] !== PIT || (!n.w && !n.l)) return false;
+  const nf = n.w && n.l ? STONE_FLOOR : n.w ? WATER : LAVA; G.floor[i] = nf;
+  if (nf === LAVA) { let burnt = 0; G.drops = G.drops.filter(d => { const hit = Math.floor(d.x) === x && Math.floor(d.y) === y; if (hit) burnt++; return !hit; }); if (burnt) emit('puff', x + .5, y + .5, '#ffb070', 8, 2, .3); }
+  else if (nf === WATER) for (const d of G.drops) { if (Math.floor(d.x) !== x || Math.floor(d.y) !== y) continue; const to = N4.find(([dx, dy]) => inB(x + dx, y + dy) && !isSolid(x + dx, y + dy)); if (to) { d.x = x + to[0] + .5; d.y = y + to[1] + .5; } }
+  if (nf === STONE_FLOOR) { emit('puff', x + .5, y + .5, '#d8d4e0', 12, 2.4, .4); emit('sfx', 'brk'); }
+  else emit('puff', x + .5, y + .6, nf === WATER ? '#8fd0ff' : '#ff9b4a', 5, 1.6, .2);
+  emit('tile', x, y); markLight();
+  if (nf !== STONE_FLOOR) for (const [dx, dy] of N4) if (inB(x + dx, y + dy)) schedule(x + dx, y + dy); // 이어진 구덩이로 계속
+  return true; }
+function flowTick() {
+  if (flowG !== G) scanFlow(); if (!flowQ.size) return;
+  const due = []; for (const [i, at] of flowQ) if (at <= G.time) due.push(i);
+  for (const i of due) { flowQ.delete(i); fillPit(i); }
+}
+onFrame('flow', () => flowTick());
+// ---- 빈 양동이: 물 칸에서 「물 한 동이」 하나 (물 칸은 그대로, 양동이는 닳지 않아요) ----
+function scoopWater(t) {
+  if (!inB(t.x, t.y)) return false; const i = idx(t.x, t.y); if (G.wall[i] || G.floor[i] !== WATER) return false;
+  const l = addItem('gWater', 1, false); if (l) spawnDrop('gWater', 1, t.x + .5, t.y + .5);
+  emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .6, '#8fd0ff', 7, 2, .2); emit('inv'); return true; }
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -6164,7 +6247,7 @@ function gxglCvURL() { try { return glCv ? glCv.toDataURL() : ''; } catch (e) { 
 // ================= map =================
 let mapCv = null, mapCtx = null, mapImg = null;
 const MAPF = { 7: '#6fb36a', 8: '#7f6191', 9: '#958ccf', 10: '#3f7fb5', 1: '#4f8f57', 2: '#7a5442', 3: '#6a5272', 4: '#4a5378', 5: '#c08a58', 6: '#8f8aa3' };
-Object.assign(MAPF, { 21: '#7a6a3a', 17: '#ff6a2a', 18: '#4a3f48', 19: '#c8dcef', 20: '#a8e0f8', 11: '#6fb6e0', 12: '#3f7fb5', 13: '#5b9bd0', 14: '#8a7ad0', 15: '#7fb0d8', 16: '#e8a8c0' });
+Object.assign(MAPF, { 22: '#2a1e22', 21: '#7a6a3a', 17: '#ff6a2a', 18: '#4a3f48', 19: '#c8dcef', 20: '#a8e0f8', 11: '#6fb6e0', 12: '#3f7fb5', 13: '#5b9bd0', 14: '#8a7ad0', 15: '#7fb0d8', 16: '#e8a8c0' });
 const MAPW = { 13: '#8a72d0', 9: '#2e2832', 10: '#c9a03a', 11: '#9cc8e8', 12: '#5ad8f0', 1: '#3a2a25', 2: '#38364a', 3: '#4a3a78', 4: '#a85f32', 5: '#8d97a8', 6: '#8a5a32', 7: '#6f6a86', 8: '#0b0910' };
 function rebuildMap() { chunks.clear(); AMB.length = 0; if (!mapCv || mapCv.width !== W) { mapCv = document.createElement('canvas'); mapCv.width = W; mapCv.height = H; mapCtx = mapCv.getContext('2d'); } mapImg = mapCtx.createImageData(W, H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (G.explored[idx(x, y)]) mapPixel(x, y, true); mapCtx.putImageData(mapImg, 0, 0); }
 function mapPixel(x, y, bulk) {
@@ -6249,13 +6332,14 @@ const natural = f => !!PRI[f];
 function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
   const NEW = terrainReady(); // v73: grass·dirt·water·wood·stone floors baked per pixel (render/terrain.js), other floors drawn per tile on top
-  const bk = NEW ? bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1) : null, late = [];
+  const bk = NEW ? bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1) : null, late = [], pits = [];
   if (NEW) g.putImageData(bk, 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y);
     if (G.wall[i] === ICE_W) { drawIceShard(g, x, y, tx * 16, ty * 16, false); continue; } // v79: ice under the ice wall, seen where its edge slants in
     if (NEW && SLANT.has(G.wall[i])) { underWall(g, x, y, tx * 16, ty * 16); continue; } // v80: the floor next door continues under a slanted rock wall
     if (G.wall[i]) continue; const f = G.floor[i];
+    if (f === PIT) { pits.push([x, y, tx * 16, ty * 16]); continue; } // v87: 구덩이는 다른 바닥을 다 그린 뒤 위에 (drawPit)
     if (NEW && f === ICE_FROZEN && G.biome[i] === ICE_BIOME) continue; // v80: frozen water in the ice cave is baked with the water (render/terrain.js)
     if (isIceShard(i) && !wallPiece(i)) { // v79: ice cave floor = ice shards (render/icecave.js); next to water the baked floor already has them with a wavy shore
       let wet = false; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (inB(x + dx, y + dy) && !G.wall[idx(x + dx, y + dy)] && (G.floor[idx(x + dx, y + dy)] === WATER || G.floor[idx(x + dx, y + dy)] === ICE_FROZEN)) wet = true;
@@ -6274,7 +6358,28 @@ function drawChunk(c, cx, cy) {
   }
   if (NEW) { softEdges(g, cx, cy, bk); for (const a of late) tileExtras(g, ...a, true); }
   if (TM.ready && !NEW) drawPatches(g, cx, cy);
+  for (const a of pits) drawPit(g, ...a);
   c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+}
+// ---- v87: 구덩이 그림 (코드로 그려요 — 지형 그림 예외와 같이). 위에서 비스듬히 내려다본 구멍: 북쪽 가장자리 아래로 안쪽 벽(위가 밝고 아래로 어두워짐),
+// 바닥은 아주 어둡게, 다른 구덩이와 이어진 쪽은 테두리 없이 이어져요. 옆·아래 가장자리는 땅의 밝은 턱 1px + 안쪽 그늘. 지역마다 흙색(얼음 동굴은 푸른 얼음, 용암 동굴은 재색)
+const PIT_WALL = { d: ['#8a6848', '#6e5039', '#56402f', '#443226', '#33251e', '#281c19'], 4: ['#c6e2f8', '#8fb6e2', '#6a8fc6', '#4f6fa6', '#3a5486', '#2b3d66'], 3: ['#7a6870', '#625560', '#4e434e', '#3e343e', '#30282f', '#251e25'] };
+const PIT_FLOOR = { d: ['#1c1418', '#241a1d'], 4: ['#141c2c', '#1a2438'], 3: ['#18131a', '#201a22'] };
+function drawPit(g, x, y, X, Y) {
+  const pit = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && G.floor[j] === PIT; };
+  const b = G.biome[idx(x, y)], wc = PIT_WALL[b] || PIT_WALL.d, fc = PIT_FLOOR[b] || PIT_FLOOR.d;
+  const n = pit(0, -1), s = pit(0, 1), w = pit(-1, 0), e = pit(1, 0);
+  g.fillStyle = fc[0]; g.fillRect(X, Y, 16, 16);
+  for (let k = 0; k < 5; k++) { const hx = (hash2(x * 5 + k, y, 41) * 16) | 0, hy = (hash2(x, y * 5 + k, 42) * 16) | 0; g.fillStyle = fc[1]; g.fillRect(X + hx, Y + hy, 1, 1); } // 바닥 얼룩
+  if (!n) for (let u = 0; u < 16; u++) { // 북쪽 안쪽 벽: 4px마다 높이가 조금씩 달라요 (5~7px)
+    const h = 5 + ((hash2(x * 4 + (u >> 2), y, 43) * 3) | 0);
+    for (let v = 0; v < h; v++) { g.fillStyle = v === 0 ? wc[0] : wc[Math.min(wc.length - 1, 1 + Math.floor((v - 1) * (wc.length - 1) / Math.max(1, h - 1)))]; g.fillRect(X + u, Y + v, 1, 1); }
+    g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(X + u, Y + h, 1, 1); } // 안쪽 벽 아래 그늘
+  if (!w) { g.fillStyle = wc[1]; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(X + 1, Y + (n ? 0 : 5), 1, n ? 16 : 11); }
+  if (!e) { g.fillStyle = wc[2]; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(X + 14, Y + (n ? 0 : 5), 1, n ? 16 : 11); }
+  if (!s) { g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = wc[0]; g.fillRect(X, Y + 15, 16, 1); } // 앞쪽 턱
+  if (n && w && !pit(-1, -1)) { for (let v = 0; v < 6; v++) { g.fillStyle = wc[Math.min(wc.length - 1, v)]; g.fillRect(X, Y + v, 1, 1); } } // 안쪽 모서리: 북서쪽 칸만 땅이면 그쪽 벽이 조금
+  if (n && e && !pit(1, -1)) { for (let v = 0; v < 6; v++) { g.fillStyle = wc[Math.min(wc.length - 1, v)]; g.fillRect(X + 15, Y + v, 1, 1); } }
 }
 // fringes (old floors only), little decorations, built-water rims and contact shadows on one floor tile
 function tileExtras(g, x, y, X, Y, f, i, tset, NEW) {
@@ -6763,6 +6868,7 @@ function squareIcon(c) {
 function iconCanvas(id) {
   if (SPR.item[id]) return SPR.item[id];
   const it = ITEMS[id];
+  if (it.kind === 'bucket') return SPR.item[id] = iconCanvas('gWater'); // v87: 빈 양동이 그림이 오기 전까지 물 한 동이 그림을 임시로
   if (it.blv) { const b = iconCanvas(it.obj === 'smelter' ? 'smelter' : 'bench'), c = document.createElement('canvas'); c.width = b.width; c.height = b.height; c.hd = b.hd; const g = c.getContext('2d'); g.drawImage(b, 0, 0); const z = Math.max(4, Math.round(b.width / 4)); g.fillStyle = INK; g.fillRect(b.width - z - 1, 0, z + 1, z + 1); g.fillStyle = BENCH_COL[it.blv]; g.fillRect(b.width - z, 1, z - 1, z - 1); return SPR.item[id] = c; } // v60: tier workbench = workbench + tier colour plate
   if (it.kind === 'place') { const f = SPR.fp && SPR.fp[it.obj]; return squareIcon(f && !ARTC['obj/' + it.obj] ? f.small : SPR.obj[it.obj]); }
   if (it.kind === 'wall') { const c = mk(16, 16, A => { const [top, front] = SPR.wallIcon[it.wall]; A.g.drawImage(top, 0, 0, 16, 11, 1, 1, 14, 10); A.g.drawImage(front, 0, 0, 16, 5, 1, 11, 14, 4); }); return SPR.item[id] = c; }
