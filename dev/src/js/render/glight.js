@@ -9,6 +9,7 @@ import { G } from '../save/state.js';
 import { H, idx, W } from '../world/map.js';
 import { LIGHTS } from './light.js';
 import { GLOW_RULE } from './terrain.js';
+import { wallOcc4 } from './icecave.js';
 
 export let lightPref = 'new'; try { lightPref = localStorage.getItem('lantern-tree-light') || 'new'; } catch (e) { }
 export const setLightPref = v => { lightPref = v; try { localStorage.setItem('lantern-tree-light', v); } catch (e) { } };
@@ -70,32 +71,35 @@ const gxMAXL = 40;
 let gl = null, glCv = null, PV, PL, PB, PBl, PF, gxvao, texA, texM, texE, texOcc, visTex, visFb, fbLit = null, fbB1 = null, fbB2 = null, gxcurW = 0, gxcurH = 0;
 const gxVS = `#version 300 es
 layout(location = 0) in vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`;
-const gxSOFT_N = 16, gxSOFT_R = 6; // 벽 그림자 경계: 광선 16개, 빛의 반너비 6px
+const gxSOFT_N = 12, gxSOFT_R = 6; // 벽 그림자 경계: 광선 12개, 빛의 반너비 6px
+// v82: 벽 칸 지도는 4px 칸 (기울어진 벽 모양대로, render/icecave.js wallOcc4) — 빛이 네모 칸으로 끊기지 않게
+//   결과 두 가지: x = 자기 16px 칸 전체를 건너뜀(벽 윗면·앞면), y = 자기 4px 칸만 건너뜀(바닥·서 있는 것)
 const gxRAY = `
-bool occ(ivec2 c){ if (c.x < 0 || c.y < 0 || float(c.x) >= uMap.x || float(c.y) >= uMap.y) return true; ivec2 q = c - uOccO;
+bool occ(ivec2 c){ if (c.x < 0 || c.y < 0 || float(c.x) >= uMap.x * 4. || float(c.y) >= uMap.y * 4.) return true; ivec2 q = c - uOccO;
   if (q.x < 0 || q.y < 0 || q.x >= uOccS.x || q.y >= uOccS.y) return false; return texelFetch(uOcc, q, 0).r > 0u; }
-float ray(vec2 a, vec2 b, ivec2 skip){
-  vec2 p = a / 16., q = b / 16., d = q - p; ivec2 c = ivec2(floor(p)), e = ivec2(floor(q));
+vec2 ray(vec2 a, vec2 b){
+  vec2 p = a / 4., q = b / 4., d = q - p; ivec2 c = ivec2(floor(p)), e = ivec2(floor(q)), own = c, ownT = c >> 2;
   ivec2 st = ivec2(sign(d)); vec2 inv = 1. / max(abs(d), vec2(1e-5));
   vec2 tm = vec2(d.x > 0. ? float(c.x) + 1. - p.x : p.x - float(c.x), d.y > 0. ? float(c.y) + 1. - p.y : p.y - float(c.y)) * inv;
-  for (int i = 0; i < 72; i++) {
-    if (c != skip && occ(c)) return 0.;
-    if (c == e) return 1.;
-    if (tm.x < tm.y) { if (tm.x > 1.) return 1.; tm.x += inv.x; c.x += st.x; } else { if (tm.y > 1.) return 1.; tm.y += inv.y; c.y += st.y; }
+  float g = 1.;
+  for (int i = 0; i < 300; i++) {
+    if (occ(c)) { if ((c >> 2) != ownT) return vec2(0.); if (c != own) g = 0.; }
+    if (c == e) return vec2(1., g);
+    if (tm.x < tm.y) { if (tm.x > 1.) return vec2(1., g); tm.x += inv.x; c.x += st.x; } else { if (tm.y > 1.) return vec2(1., g); tm.y += inv.y; c.y += st.y; }
   }
-  return 1.;
+  return vec2(1., g);
 }
-float softVis(vec2 a, vec2 b, ivec2 skip){
+vec2 softVis(vec2 a, vec2 b){
   vec2 dir = normalize(b - a + vec2(1e-4)), n = vec2(-dir.y, dir.x) * ${gxSOFT_R.toFixed(1)};
-  float s = 0., wsum = 0.;
-  for (int k = 0; k < ${gxSOFT_N}; k++) { float t = (float(k) + .5) / ${gxSOFT_N}. * 2. - 1., w = sqrt(1. - t * t); s += ray(a, b + n * t, skip) * w; wsum += w; }
+  vec2 s = vec2(0.); float wsum = 0.;
+  for (int k = 0; k < ${gxSOFT_N}; k++) { float t = (float(k) + .5) / ${gxSOFT_N}. * 2. - 1., w = sqrt(1. - t * t); s += ray(a, b + n * t) * w; wsum += w; }
   return s / wsum;
 }`;
 const gxVIS = `#version 300 es
 precision highp float; precision highp int;
 uniform highp usampler2D uOcc; uniform vec2 uMap, uLight, uOrigin, uSlot; uniform ivec2 uOccO, uOccS; out vec4 o;
 ${gxRAY}
-void main(){ vec2 P = uOrigin + gl_FragCoord.xy - uSlot; o = vec4(softVis(P, uLight, ivec2(floor(P / 16.))), 0., 0., 1.); }`;
+void main(){ vec2 P = uOrigin + gl_FragCoord.xy - uSlot; o = vec4(softVis(P, uLight), 0., 1.); }`;
 const gxLIT = `#version 300 es
 precision highp float; precision highp int;
 uniform sampler2D uAlb, uMat, uEm, uVis;
@@ -121,7 +125,7 @@ void main(){
     else ndl = .82 + .18 * Ln.z;
     if (ndl <= 0.) continue;
     float gxsh = 1.; vec4 vr = uVisR[i];
-    if (vr.x >= 0.) { ivec2 q = ivec2(floor(P.xy - vr.zw)); float sz = uGlow[i].w; if (q.x >= 0 && q.y >= 0 && float(q.x) < sz && float(q.y) < sz) gxsh = texelFetch(uVis, ivec2(vr.xy) + q, 0).r; }
+    if (vr.x >= 0.) { ivec2 q = ivec2(floor(P.xy - vr.zw)); float sz = uGlow[i].w; if (q.x >= 0 && q.y >= 0 && float(q.x) < sz && float(q.y) < sz) { vec2 vv = texelFetch(uVis, ivec2(vr.xy) + q, 0).rg; gxsh = (ty == 2 || ty == 3) ? vv.r : vv.g; } }
     acc += uL1[i].rgb * uL1[i].w * at * ndl * gxsh;
   }
   vec3 c = alb * acc * 1.45;
@@ -172,7 +176,7 @@ function gxinitGL() {
   texA = gxtex(gl.NEAREST); texM = gxtex(gl.NEAREST); texE = gxtex(gl.NEAREST); texOcc = gxtex(gl.NEAREST);
   const maxT = gl.getParameter(gl.MAX_TEXTURE_SIZE); let y = 0; gxBANDS = [];
   for (const [s, rows] of [[128, 2], [256, 3], [512, 1], [1024, 1]]) { if (y + s * rows > maxT) break; gxBANDS.push({ s, y, rows, n: (gxVIS_W / s) * rows, free: [] }); for (let k = 0; k < (gxVIS_W / s) * rows; k++) gxBANDS[gxBANDS.length - 1].free.push(k); y += s * rows; }
-  visTex = gxtexN(gxVIS_W, y, gl.NEAREST, gl.R8, gl.RED); visFb = gxfbo(gxVIS_W, y, visTex);
+  visTex = gxtexN(gxVIS_W, y, gl.NEAREST, gl.RG8, gl.RG); visFb = gxfbo(gxVIS_W, y, visTex);
   if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error('그림자 지도를 만들 수 없어요');
 }
 export function glReady() {
@@ -188,16 +192,19 @@ function gxsizeTargets(w, h) {
   glCv.width = w; glCv.height = h;
 }
 // ---- 벽 칸 지도 (보이는 곳 + 빛이 닿는 곳만, 매 장) — 바뀐 칸이 있으면 그림자를 모두 다시 구워요 ----
+// v82: 칸마다 4×4개의 4px 칸 (기울어진 벽은 모양대로)
 let gxoccMap = null, gxoccVer = 0, gxoccBuf = new Uint8Array(0);
 const gxOCC = { x: 0, y: 0, w: 0, h: 0 };
 function gxuploadOcc(x0, y0, x1, y1) {
-  if (!gxoccMap) { gxoccMap = new Uint8Array(W * H); gxoccMap.fill(255); }
+  if (!gxoccMap) { gxoccMap = new Int32Array(W * H); gxoccMap.fill(-1); }
   x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W - 1, x1); y1 = Math.min(H - 1, y1);
-  const w = Math.max(1, x1 - x0 + 1), h = Math.max(1, y1 - y0 + 1); if (gxoccBuf.length < w * h) gxoccBuf = new Uint8Array(w * h * 2);
+  const w = Math.max(1, x1 - x0 + 1), h = Math.max(1, y1 - y0 + 1), bw = w * 4; if (gxoccBuf.length < w * h * 16) gxoccBuf = new Uint8Array(w * h * 32);
   let changed = false;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = idx(x0 + x, y0 + y), v = G.wall[i] ? 1 : 0; gxoccBuf[y * w + x] = v; const o = gxoccMap[i]; if (o !== v) { if (o !== 255) changed = true; gxoccMap[i] = v; } }
-  gxOCC.x = x0; gxOCC.y = y0; gxOCC.w = w; gxOCC.h = h;
-  gl.bindTexture(gl.TEXTURE_2D, texOcc); gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, w, h, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, gxoccBuf.subarray(0, w * h));
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = idx(x0 + x, y0 + y), v = wallOcc4(x0 + x, y0 + y), o = gxoccMap[i];
+    if (o !== v) { if (o !== -1) changed = true; gxoccMap[i] = v; }
+    for (let cy = 0; cy < 4; cy++) { const row = (y * 4 + cy) * bw + x * 4; for (let cx = 0; cx < 4; cx++) gxoccBuf[row + cx] = (v >> (cy * 4 + cx)) & 1; } }
+  gxOCC.x = x0 * 4; gxOCC.y = y0 * 4; gxOCC.w = bw; gxOCC.h = h * 4;
+  gl.bindTexture(gl.TEXTURE_2D, texOcc); gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, bw, h * 4, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, gxoccBuf.subarray(0, w * h * 16));
   if (changed) gxoccVer++;
 }
 // ---- 그림자 지도 칸 (빛 자리마다 하나, 오래 안 쓰면 비워요) ----

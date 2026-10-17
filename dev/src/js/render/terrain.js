@@ -173,8 +173,16 @@ export function bakeFloor(tx0, ty0, tx1, ty1) {
     if (!shore(x, yb) || !near(x - 1, yb) || !near(x + 1, yb)) continue;
     for (let r = 0; r < H2; r++) { const yy = yb - tr_CLIFF.h + r; if (yy < 0 || yy >= Hp) continue; const kk = yy * Wp + x, o = oi(kk); if (o < 0) continue;
       if (wallPx[kk] || (r < tr_CLIFF.h ? !Gm[kk] : Gm[kk])) continue; if (tBi[((yy >> 4) * TW) + (x >> 4)] === ICE_BIOME) putC(o, iceCliffPx(r, tr_CLIFF.h)); else putT(o, CL, X0 + x, r); } }
+  // v82: 땅·물 지도와 물가 거리도 같이 (render/chunks.js에서 다른 자연 바닥의 경계를 그릴 때 써요) — 0 물 · 1 땅 · 2 벽
+  const land = new Uint8Array(ow * oh), shoreD = new Uint8Array(ow * oh);
+  for (let ly = 0; ly < oh; ly++) for (let lx = 0; lx < ow; lx++) { const k = (oy0 + ly) * Wp + ox0 + lx, o = ly * ow + lx; land[o] = wallPx[k] ? 2 : Gm[k] ? 1 : 0; shoreD[o] = Gm[k] ? dG[k] : 0; }
+  out.land = land; out.shore = shoreD;
   return out;
 }
+// v82: 다른 자연 바닥과의 경계에 쓰는 것 (render/chunks.js softEdges)
+export const floorNoise = (x, y, s) => tr_vnoise(x, y, s);
+// 기본 바닥(잔디·흙길·얼음 조각)의 한 픽셀 — 벽 칸 아래 깎인 곳에 써요
+export function basePx(f, wx, wy, ice) { if (ice) return iceShorePx(wx, wy, 9); const t = TR.tex[f === 2 ? 'dirt' : 'grass'], k = tr_at(t, wx, wy); return [t.d[k], t.d[k + 1], t.d[k + 2]]; }
 // 얇은 벽·문 칸: 4등분 조각마다 그쪽 바닥을 무늬 그대로 (render/chunks.js) — 바닥 무늬의 그 자리 8×8
 const TQ = { 1: 'grass', 2: 'dirt', 5: 'fwood', 6: 'fstone' };
 export function newQuarter(g, f, X, Y, wx, wy) { const img = ARTC['terrain/' + TQ[f]]; if (!img) return false;

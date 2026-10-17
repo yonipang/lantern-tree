@@ -9,7 +9,7 @@ import { WATER, WFLOOR } from '../sim/nature.js';
 import { H, idx, inB, LAVA, W } from '../world/map.js';
 import { BIOME_WATER, BUILT_WALLS, OLD_WATER, ROCK_FILL, TM, tileSetOf } from '../art/tilemap.js';
 import { cv } from './view.js';
-import { bakeFloor, isNewFloor, newQuarter, terrainReady } from './terrain.js';
+import { bakeFloor, basePx, floorNoise, isNewFloor, newQuarter, terrainReady } from './terrain.js';
 import { drawIceShard, ICE_BIOME, ICE_FROZEN, ICE_W, isIceShard, SLANT, wallEdgeChunk } from './icecave.js';
 export const CHN = 16, chunks = new Map();
 const CH_KEEP = 96; let chunkClock = 0;
@@ -18,7 +18,8 @@ export const natural = f => !!PRI[f];
 export function drawChunk(c, cx, cy) {
   const g = c.cv.getContext('2d'); g.clearRect(0, 0, 256, 256); g.imageSmoothingEnabled = false;
   const NEW = terrainReady(); // v73: grass·dirt·water·wood·stone floors baked per pixel (render/terrain.js), other floors drawn per tile on top
-  if (NEW) g.putImageData(bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1), 0, 0);
+  const bk = NEW ? bakeFloor(cx * CHN, cy * CHN, cx * CHN + CHN - 1, cy * CHN + CHN - 1) : null, late = [];
+  if (NEW) g.putImageData(bk, 0, 0);
   for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
     const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y);
     if (G.wall[i] === ICE_W) { drawIceShard(g, x, y, tx * 16, ty * 16, false); continue; } // v79: ice under the ice wall, seen where its edge slants in
@@ -37,28 +38,77 @@ export function drawChunk(c, cx, cy) {
       const side = (hx, vy) => { for (const [dx, dy] of [[hx, 0], [0, vy], [hx, vy]]) { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) continue; const j = idx(xx, yy); if (G.wall[j] || wallPiece(j)) continue; const nf = G.floor[j]; if (nf === WATER || nf === LAVA || !SPR.floor[nf]) continue; return nf; } return f; };
       for (const [qx, qy] of [[0, 0], [8, 0], [0, 8], [8, 8]]) { const qf = side(qx ? 1 : -1, qy ? 1 : -1); if (NEW && isNewFloor(qf) && newQuarter(g, qf, X + qx, Y + qy, x * 16 + qx, y * 16 + qy)) continue; const FQ = SPR.floor[qf]; g.drawImage(FQ[(hv * FQ.length) | 0], qx, qy, 8, 8, X + qx, Y + qy, 8, 8); } }
     else g.drawImage(SPR.floor[f][vr], X, Y);
-    if (!tset && natural(f) && !wallPiece(i)) {
-      const nb = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return 0; const j = idx(xx, yy); return G.wall[j] ? 0 : G.floor[j]; };
+    // v82: with the new floors, edges between natural floors are drawn per pixel after this loop (softEdges), so the extras wait until then
+    if (NEW) late.push([x, y, X, Y, f, i, tset]); else tileExtras(g, x, y, X, Y, f, i, tset, false);
+  }
+  if (NEW) { softEdges(g, cx, cy, bk); for (const a of late) tileExtras(g, ...a, true); }
+  if (TM.ready && !NEW) drawPatches(g, cx, cy);
+  c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+}
+// fringes (old floors only), little decorations, built-water rims and contact shadows on one floor tile
+function tileExtras(g, x, y, X, Y, f, i, tset, NEW) {
+  if (!tset && natural(f) && !wallPiece(i)) {
+    const nb = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return 0; const j = idx(xx, yy); return G.wall[j] ? 0 : G.floor[j]; };
+    if (!NEW) { // v82: the new floors have per-pixel edges instead of fringe pictures
       const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
       const fr = dirs.map(([dx, dy]) => { const b = nb(dx, dy); return natural(b) && PRI[b] > PRI[f] ? b : 0; });
       fr.forEach((b, q) => { if (b) g.drawImage(SPR.fringeX[b][q], X, Y); }); fr.forEach((b, q) => { if (b) g.drawImage(SPR.fringeL[b][q], X, Y); });
-      [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = nb(dx, dy); if (natural(b) && PRI[b] > PRI[f] && nb(dx, 0) !== b && nb(0, dy) !== b) g.drawImage(SPR.corner[b][q], X, Y); });
-      const hd = hash2(x, y, 77), dens = f === 1 ? .17 : .1;
-      if (hd < dens && SPR.deco[f]) { const list = SPR.deco[f], d = list[(hash2(x, y, 78) * list.length) | 0]; g.drawImage(d, X + 2 + ((hash2(x, y, 79) * 8) | 0), Y + 3 + ((hash2(x, y, 80) * 7) | 0)); }
-    }
-    if (WFLOOR.has(f) && !wallPiece(i)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
-      if (!nw(0, -1)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 16, 1); g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 1, 16, 1); }
-      if (!nw(0, 1)) { g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = '#5d5872'; g.fillRect(X, Y + 15, 16, 1); }
-      if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
-      if (!nw(1, 0)) { g.fillStyle = '#a7a2bb'; g.fillRect(X + 14, Y, 1, 16); g.fillStyle = '#5d5872'; g.fillRect(X + 15, Y, 1, 16); } }
-    // contact shadows next to walls
-    const hard = j => G.wall[j] && !(NEW && SLANT.has(G.wall[j])); // v80
-    if (y > 0 && hard(i - W)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
-    if (x > 0 && hard(i - 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
-    if (x < W - 1 && hard(i + 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
+      [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = nb(dx, dy); if (natural(b) && PRI[b] > PRI[f] && nb(dx, 0) !== b && nb(0, dy) !== b) g.drawImage(SPR.corner[b][q], X, Y); }); }
+    const hd = hash2(x, y, 77), dens = f === 1 ? .17 : .1;
+    if (hd < dens && SPR.deco[f]) { const list = SPR.deco[f], d = list[(hash2(x, y, 78) * list.length) | 0]; g.drawImage(d, X + 2 + ((hash2(x, y, 79) * 8) | 0), Y + 3 + ((hash2(x, y, 80) * 7) | 0)); }
   }
-  if (TM.ready && !NEW) drawPatches(g, cx, cy);
-  c.edge = wallEdgeChunk(cx, cy, CHN); // v79 teal glow beside ice walls · v80 soft shadow beside rock walls (render/icecave.js)
+  if (WFLOOR.has(f) && !wallPiece(i)) { const nw = (dx, dy) => { const xx = x + dx, yy = y + dy; if (!inB(xx, yy)) return false; const j = idx(xx, yy); return !G.wall[j] && (WFLOOR.has(G.floor[j]) || G.floor[j] === WATER); };
+    if (!nw(0, -1)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 16, 1); g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 1, 16, 1); }
+    if (!nw(0, 1)) { g.fillStyle = '#a7a2bb'; g.fillRect(X, Y + 14, 16, 1); g.fillStyle = '#5d5872'; g.fillRect(X, Y + 15, 16, 1); }
+    if (!nw(-1, 0)) { g.fillStyle = '#5d5872'; g.fillRect(X, Y, 1, 16); g.fillStyle = '#a7a2bb'; g.fillRect(X + 1, Y, 1, 16); }
+    if (!nw(1, 0)) { g.fillStyle = '#a7a2bb'; g.fillRect(X + 14, Y, 1, 16); g.fillStyle = '#5d5872'; g.fillRect(X + 15, Y, 1, 16); } }
+  // contact shadows next to walls
+  const hard = j => G.wall[j] && !(NEW && SLANT.has(G.wall[j])); // v80
+  if (y > 0 && hard(i - W)) { g.fillStyle = 'rgba(14,8,22,0.38)'; g.fillRect(X, Y, 16, 1); g.fillStyle = 'rgba(14,8,22,0.22)'; g.fillRect(X, Y + 1, 16, 1); g.fillStyle = 'rgba(14,8,22,0.1)'; g.fillRect(X, Y + 2, 16, 1); }
+  if (x > 0 && hard(i - 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 1, Y, 1, 16); }
+  if (x < W - 1 && hard(i + 1)) { g.fillStyle = 'rgba(14,8,22,0.28)'; g.fillRect(X + 15, Y, 1, 16); g.fillStyle = 'rgba(14,8,22,0.12)'; g.fillRect(X + 14, Y, 1, 16); }
+}
+// ---- v82: wavy edges between all natural floors (grass·dirt path·ice shards = "base" from the bake, mushroom soil 3, crystal sand 4, ash 18, lava) ----
+// each pixel near a tile edge goes to the floor whose share (blended between tile centres) plus a little noise is biggest — like the grass/water edge.
+// water stays where the bake put it (wavy shore for every floor), and the floor shows a darker rim at the shore.
+export const SOFT_FLOORS = new Set([3, 4, 18, LAVA]);
+// tile class: -1 none (water·wall·outside — no share), -2 fixed (built floors: a share of 0, never changed), 0 base, f soft floor
+function fclass(x, y) { if (!inB(x, y)) return -1; const j = idx(x, y); if (G.wall[j]) return -1; if (wallPiece(j)) return -2; const f = G.floor[j];
+  if (f === WATER || (f === ICE_FROZEN && G.biome[j] === ICE_BIOME)) return -1; if (f === 1 || f === 2 || (f === 19 && G.biome[j] === ICE_BIOME)) return 0; return SOFT_FLOORS.has(f) ? f : -2; }
+const SE_PIX = new WeakMap();
+function sePix(cv) { let d = SE_PIX.get(cv); if (!d) { d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; SE_PIX.set(cv, d); } return d; }
+const SE_J = { wobble: .3, jag: .09 }; // 경계가 구불거리는 정도 (잔디·물 경계보다 조금 크게 — 칸 모양이 안 보이게)
+const SE_PRI = c => c === 0 ? 4 : PRI[c] || 0;
+function softEdges(g, cx, cy, bk) {
+  const T = 16, x0 = cx * CHN - 1, y0 = cy * CHN - 1, CW = CHN + 2, cl = new Int16Array(CW * CW);
+  for (let j = 0; j < CW; j++) for (let i = 0; i < CW; i++) cl[j * CW + i] = fclass(x0 + i, y0 + j);
+  const clAt = (x, y) => (x < x0 || y < y0 || x >= x0 + CW || y >= y0 + CW) ? fclass(x, y) : cl[(y - y0) * CW + x - x0];
+  let img = null; const D = () => img || (img = g.getImageData(0, 0, 256, 256)), B = bk.data;
+  const own = new Int16Array(18 * 18);
+  for (let ty = 0; ty < CHN; ty++) for (let tx = 0; tx < CHN; tx++) {
+    const x = cx * CHN + tx, y = cy * CHN + ty; if (!inB(x, y)) continue; const i = idx(x, y), me = clAt(x, y);
+    if (me === -2) continue; const wl = G.wall[i]; if (wl && (!SLANT.has(wl) || wl === ICE_W)) continue;
+    const CS = []; let soft = me > 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const c = clAt(x + dx, y + dy); if (c >= 0 && !CS.includes(c)) CS.push(c); if (c > 0) soft = true; }
+    if (!soft || !CS.length) continue; // only tiles where a soft floor is around
+    // share of class c at world pixel (px,py): blend of the four nearest tile centres (1 = that class, 0 = another floor, .5 = water·wall)
+    const share = (c, px, py) => { const gx = px / T - .5, gy = py / T - .5, a = Math.floor(gx), b = Math.floor(gy), u = gx - a, v = gy - b;
+      const m = (xx, yy) => { const k = clAt(xx, yy); return k === c ? 1 : k === -1 ? .5 : 0; };
+      return m(a, b) * (1 - u) * (1 - v) + m(a + 1, b) * u * (1 - v) + m(a, b + 1) * (1 - u) * v + m(a + 1, b + 1) * u * v; };
+    const owner = (px, py) => { if (CS.length === 1) return CS[0]; let best = CS[0], bv = -9;
+      for (const c of CS) { const v = share(c, px + .5, py + .5) + SE_J.wobble * floorNoise(px / 11, py / 11, 41 + c) + SE_J.jag * floorNoise(px / 2.6, py / 2.6, 61 + c); if (v > bv) { bv = v; best = c; } } return best; };
+    for (let v = -1; v <= 16; v++) for (let u = -1; u <= 16; u++) own[(v + 1) * 18 + u + 1] = owner(x * T + u, y * T + v);
+    const O = D().data, ice = G.biome[i] === ICE_BIOME, vr = (hash2(x, y, 5) * 4) | 0;
+    let baseF = 1; for (const [dx, dy] of [[0, 0], [0, 1], [-1, 0], [1, 0], [0, -1]]) { if (clAt(x + dx, y + dy) === 0) { baseF = G.floor[idx(x + dx, y + dy)]; break; } }
+    for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { const k = (ty * T + v) * 256 + tx * T + u, o = k * 4, L = bk.land[k];
+      if (L === 0) { if (me > 0) { O[o] = B[o]; O[o + 1] = B[o + 1]; O[o + 2] = B[o + 2]; O[o + 3] = 255; } continue; } // water stays where the bake put it
+      const c = own[(v + 1) * 18 + u + 1], wx = x * T + u, wy = y * T + v; let col;
+      if (c === 0) { if (L === 2) col = basePx(baseF, wx, wy, ice); else { if (me === 0) continue; col = [B[o], B[o + 1], B[o + 2]]; } }
+      else { const F = SPR.floor[c]; if (!F) continue; const d = sePix(F[vr % F.length]), s = ((wy & 15) * 16 + (wx & 15)) * 4; col = [d[s], d[s + 1], d[s + 2]];
+        const sh = bk.shore[k]; if (sh === 1) col = col.map(q => q * .55); else if (sh === 2) col = col.map(q => q * .78); }
+      const pr = SE_PRI(c); if (SE_PRI(own[v * 18 + u + 1]) > pr || SE_PRI(own[(v + 2) * 18 + u + 1]) > pr || SE_PRI(own[(v + 1) * 18 + u]) > pr || SE_PRI(own[(v + 1) * 18 + u + 2]) > pr) col = col.map(q => q * .8); // a thin darker line on the lower floor
+      O[o] = col[0]; O[o + 1] = col[1]; O[o + 2] = col[2]; O[o + 3] = 255; }
+  }
+  if (img) g.putImageData(img, 0, 0);
 }
 // v80: under a slanted rock wall, the floor of an open neighbour (south first) — seen where the wall's edge slants in
 function underWall(g, x, y, X, Y) {

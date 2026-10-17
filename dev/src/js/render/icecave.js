@@ -4,15 +4,15 @@
 // 그리는 방식(2D 캔버스 + 칸 그림)은 그대로, 얼음 동굴의 그림만 새로 만들어요. 그림 파일 없이 처음 쓸 때 코드로 만들고 칸마다 기억해요.
 //   벽(얼음벽 11): 밝은 얼음 파랑 큰 면 + 대각선 어두운 금 그물 + 연한 줄·드문 반짝임, 윗면 가장자리 1px 밝은 테두리(군데군데 청록),
 //     앞면은 위 #2552c2 → 아래 #122c82, 맨 위 줄 밝게·맨 아래 줄 청록.
-//     모양: 열린 쪽 가장자리가 칸 모양 그대로가 아니라 비스듬히 기울어짐 — 칸 꼭짓점마다 안쪽으로 들어가는 정도(1~5px)를 꼭짓점 자리로 정하고
-//     (옆 칸과 같은 꼭짓점을 쓰니 이음매가 맞음) 그 사이를 직선으로 + 1px 요철, 바깥 모서리는 반지름 5px로 둥글게. 들어가는 건 칸 안쪽으로만
-//     (부딪히는 판정은 칸 단위 그대로). 벽 칸 아래에도 얼음 바닥을 깔아 깎인 곳에 바닥이 보여요.
+//     모양(v82 오토타일): 주변 8칸과 변형 번호로 정한 칸 모양 — 곧은 변 2px, 바깥 모서리 5px까지 비스듬히, 1px 요철 (아래 「벽 모양」).
+//     들어가는 건 칸 안쪽으로만 (부딪히는 판정은 칸 단위 그대로). 벽 칸 아래에도 얼음 바닥을 깔아 깎인 곳에 바닥이 보여요.
 //   바닥(얼음 동굴의 눈 바닥 19): 길쭉한 얼음 조각 면이 두 방향으로 엇갈림, 파랑 5단계(#1a49c4~#3f86f2), 꾸밈 X 서리 무늬·작은 연보라 점.
 //   벽과 바닥 사이: 바닥 쪽으로 청록빛이 덩어리지게 들쭉날쭉 번짐(벽에서 0~11px, #86f2d2 → #2a7ee6) — 새 빛에서는 스스로 빛나요.
 import { hash2 } from '../engine/random.js';
 import { G } from '../save/state.js';
 import { idx, inB } from '../world/map.js';
 import { presetLayers } from './glight.js';
+import { TR } from './terrain.js';
 
 export const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19, ICE_FROZEN = 20;
 export const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13]); // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
@@ -31,42 +31,57 @@ const ROCK = { shadeRim: 2, shadeFade: 5, shadeBlack: .96, shadow: [.34, .2, .09
 export const ICE_EM = (r, g, b) => (.3 * r + .59 * g + .11 * b) > 150 ? .85 : .22;
 export const isIceShard = i => G.biome[i] === ICE_BIOME && G.floor[i] === ICE_SNOW && !G.wall[i];
 const ic_open = (x, y) => inB(x, y) && !G.wall[idx(x, y)];
-// ---- 벽 모양 ----
-const ic_vIns = (vx, vy) => ICE.ins[(hash2(vx, vy, 201) * ICE.ins.length) | 0]; // 꼭짓점이 안쪽으로 들어가는 정도
-const ic_bump = (a, b, s) => hash2(a, b, s) < .3 ? 1 : 0; // 1px 요철 (3px씩 이어짐)
-function ic_edge(x, y) { // 칸 하나의 네 변: 각 변을 따라 들어가는 정도 (16칸 배열), 열린 쪽만
-  const oN = ic_open(x, y - 1), oS = ic_open(x, y + 1), oW = ic_open(x - 1, y), oE = ic_open(x + 1, y);
-  const a = ic_vIns(x, y), b = ic_vIns(x + 1, y), c = ic_vIns(x, y + 1), d = ic_vIns(x + 1, y + 1), L = (p, q, t) => Math.round(p + (q - p) * (t + .5) / 16);
-  const run = (n, s) => { const r = new Int8Array(16); for (let t = 0; t < 16; t++) r[t] = n(t) + ic_bump(s[0], Math.floor((s[1] + t) / 3), s[2]); return r; };
-  return { oN, oS, oW, oE,
-    N: oN ? run(t => L(a, b, t), [y * 3, x * 16, 211]) : null, S: oS ? run(t => L(c, d, t), [(y + 1) * 3, x * 16, 212]) : null,
-    W: oW ? run(t => L(a, c, t), [x * 3, y * 16, 213]) : null, E: oE ? run(t => L(b, d, t), [(x + 1) * 3, y * 16, 214]) : null,
-    cNW: !oN && !oW && ic_open(x - 1, y - 1) ? a : 0, cNE: !oN && !oE && ic_open(x + 1, y - 1) ? b : 0, cSW: !oS && !oW && ic_open(x - 1, y + 1) ? c : 0, cSE: !oS && !oE && ic_open(x + 1, y + 1) ? d : 0 };
-}
-const ic_EDGE = new Map();
-function ic_edgeOf(x, y) { const i = idx(x, y), sig = ic_sig(x, y); let e = ic_EDGE.get(i); if (!e || e.sig !== sig) { e = ic_edge(x, y); e.sig = sig; ic_EDGE.set(i, e); if (ic_EDGE.size > 6000) ic_EDGE.clear(); } return e; }
-// 둘레 5×5 (앞면이 드러나는지는 이웃 칸의 깎인 모양에 달려서)
-function ic_sig5(x, y) { let s = 0, k = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { if (dx || dy) { if (ic_open(x + dx, y + dy)) s |= 1 << k; k++; } } return s; }
+// ---- 벽 모양: v82 오토타일 ----
+// 칸 모양은 주변 8칸(열림/막힘)과 변형 번호(0~2)만으로 정해요 — 같은 조합이면 어디서나 같은 그림이라 미리 만들어 둔 칸을 다시 써요.
+//   곧은 변: 열린 쪽으로 2px 들어감 · 바깥 모서리(두 변이 열림): 꼭짓점 5px까지 비스듬히 + 대각선으로 깎음
+//   변 끝에서 옆 칸이 막혔으면: 대각선 칸이 열렸으면 2px 그대로 이어지고, 막혔으면 0px로 줄어 옆 벽과 맞물려요
+//   안쪽 모서리(대각선만 열림): 3px 비스듬히 · 변 가운데(4~11px)에 1px 요철(변형마다 다름)
+//   주변 8칸 번호(ic_sig): 0 북서 · 1 북 · 2 북동 · 3 서 · 4 동 · 5 남서 · 6 남 · 7 남동 (1 = 열림)
+export const AUTOTILE = { dep: 2, corner: 5, cut: 7, notch: 3, variants: 3 };
+const ic_SH = new Map(), ic_OCC = new Map();
+// 모양에 영향 없는 대각선은 지워요 (두 옆이 모두 열린 모서리)
+export function canonSig(s) { const o = b => (s >> b) & 1; if (o(1) && o(3)) s &= ~1; if (o(1) && o(4)) s &= ~4; if (o(6) && o(3)) s &= ~32; if (o(6) && o(4)) s &= ~128; return s; }
+const ic_var = (x, y) => (hash2(x, y, 207) * AUTOTILE.variants) | 0;
+// 한 변을 따라 들어가는 정도 (16칸): aO·aD = t=0 쪽 옆 칸 열림·대각선 열림, bO·bD = t=15 쪽
+function ic_side(aO, aD, bO, bD, vr, seed, bump) {
+  const r = new Int8Array(16), A = AUTOTILE;
+  for (let t = 0; t < 16; t++) { let d = A.dep;
+    if (aO) d = Math.max(d, A.corner - t); else if (!aD) d = Math.min(d, t);
+    if (bO) d = Math.max(d, A.corner - (15 - t)); else if (!bD) d = Math.min(d, 15 - t);
+    if (bump && t >= 4 && t <= 11 && hash2(vr, Math.floor(t / 3), seed) < .3) d++;
+    r[t] = d; }
+  return r; }
+// 칸 모양 (16×16, 1 = 벽) — sig: 주변 8칸, vr: 변형, bump: 요철 넣기
+export function autoShape(sig, vr = 0, bump = true) {
+  sig = canonSig(sig); const key = sig * 8 + vr * 2 + (bump ? 1 : 0); let m = ic_SH.get(key); if (m) return m;
+  const o = b => (sig >> b) & 1, oN = o(1), oE = o(4), oS = o(6), oW = o(3), A = AUTOTILE;
+  const N = oN ? ic_side(oW, o(0), oE, o(2), vr, 211, bump) : null, S = oS ? ic_side(oW, o(5), oE, o(7), vr, 212, bump) : null;
+  const Wd = oW ? ic_side(oN, o(0), oS, o(5), vr, 213, bump) : null, E = oE ? ic_side(oN, o(2), oS, o(7), vr, 214, bump) : null;
+  m = new Uint8Array(256);
+  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { const iu = 15 - u, iv = 15 - v;
+    if ((N && v < N[u]) || (S && iv < S[u]) || (Wd && u < Wd[v]) || (E && iu < E[v])) continue;
+    if ((oN && oW && u + v < A.cut) || (oN && oE && iu + v < A.cut) || (oS && oW && u + iv < A.cut) || (oS && oE && iu + iv < A.cut)) continue;
+    if ((!oN && !oW && o(0) && u + v < A.notch) || (!oN && !oE && o(2) && iu + v < A.notch) || (!oS && !oW && o(5) && u + iv < A.notch) || (!oS && !oE && o(7) && iu + iv < A.notch)) continue;
+    m[v * 16 + u] = 1; }
+  ic_SH.set(key, m); return m; }
+// 그림자용 4px 칸 (4×4 = 16비트, 9픽셀 이상 벽이면 막힘)
+export function autoOcc(m) { let b = ic_OCC.get(m); if (b !== undefined) return b; b = 0;
+  for (let cy = 0; cy < 4; cy++) for (let cx = 0; cx < 4; cx++) { let n = 0; for (let v = 0; v < 4; v++) for (let u = 0; u < 4; u++) n += m[(cy * 4 + v) * 16 + cx * 4 + u]; if (n >= 9) b |= 1 << (cy * 4 + cx); }
+  ic_OCC.set(m, b); return b; }
 function ic_sig(x, y) { let s = 0, k = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (dx || dy) { if (ic_open(x + dx, y + dy)) s |= 1 << k; k++; } } return s; }
-// 얼음벽 칸 (x,y)의 발자국 픽셀 (u,v)가 벽 안인지 (위에서 본 모양 — 윗면은 이걸 12px 위로 올려 그려요)
-function ic_in(e, u, v) {
-  if (e.W && u < e.W[v]) return false; if (e.E && 15 - u < e.E[v]) return false; if (e.N && v < e.N[u]) return false; if (e.S && 15 - v < e.S[u]) return false;
-  const R = ICE.round, rc = (p, q) => p < R && q < R && (R - p) * (R - p) + (R - q) * (R - q) > R * R;
-  if (e.N && e.W && rc(u - e.W[v], v - e.N[u])) return false; if (e.N && e.E && rc(15 - u - e.E[v], v - e.N[u])) return false;
-  if (e.S && e.W && rc(u - e.W[v], 15 - v - e.S[u])) return false; if (e.S && e.E && rc(15 - u - e.E[v], 15 - v - e.S[u])) return false;
-  if (u < e.cNW && v < e.cNW) return false; if (15 - u < e.cNE && v < e.cNE) return false; if (u < e.cSW && 15 - v < e.cSW) return false; if (15 - u < e.cSE && 15 - v < e.cSE) return false;
-  return true;
-}
+const ic_slanted = w => SLANT.has(w) && (w === ICE_W || TR.ready); // 기울어진 모양으로 그리는 벽 (바위는 새 그림이 있을 때만)
+export const tileShape = (x, y) => autoShape(ic_sig(x, y), ic_var(x, y), true);
+// 그림자 지도(render/glight.js)용: 칸 (x,y)의 4px 칸 막힘 (16비트) — 기울어진 벽은 모양대로, 다른 벽은 모두 막힘, 바닥은 0
+export function wallOcc4(x, y) { const w = G.wall[idx(x, y)]; if (!w) return 0; if (!ic_slanted(w)) return 0xffff; return autoOcc(tileShape(x, y)); }
 // 세계 픽셀 (wx,wy)가 벽 안인지: 기울어지는 벽은 깎인 모양, 다른 벽(지어 쌓는 벽·암반)은 칸 전체, 지도 밖도 벽
-export function wallSolidPx(wx, wy) { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); if (!inB(x, y)) return true; const w = G.wall[idx(x, y)]; if (!w) return false; if (!SLANT.has(w)) return true; return ic_in(ic_edgeOf(x, y), wx - x * 16, wy - y * 16); }
+export function wallSolidPx(wx, wy) { const x = Math.floor(wx / 16), y = Math.floor(wy / 16); if (!inB(x, y)) return true; const w = G.wall[idx(x, y)]; if (!w) return false; if (!SLANT.has(w)) return true; return !!tileShape(x, y)[(wy - y * 16) * 16 + wx - x * 16]; }
 // 픽셀 사각형 [X0, X0+w)×[Y0, Y0+h)의 벽 지도 (칸마다 모양을 한 번만 구해요): 0 바닥 · 1 칸 전체 벽 · 2 얼음벽 · 3 기울어지는 바위
 export function wallMask(X0, Y0, w, h) {
   const m = new Uint8Array(w * h), tx0 = Math.floor(X0 / 16), ty0 = Math.floor(Y0 / 16), tx1 = Math.floor((X0 + w - 1) / 16), ty1 = Math.floor((Y0 + h - 1) / 16);
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { const out = !inB(tx, ty), wl = out ? 8 : G.wall[idx(tx, ty)]; if (!wl) continue;
-    const sl = !out && SLANT.has(wl), e = sl ? ic_edgeOf(tx, ty) : null, val = !sl ? 1 : wl === ICE_W ? 2 : 3;
+    const sl = !out && SLANT.has(wl), e = sl ? tileShape(tx, ty) : null, val = !sl ? 1 : wl === ICE_W ? 2 : 3;
     const u0 = Math.max(0, X0 - tx * 16), u1 = Math.min(15, X0 + w - 1 - tx * 16), v0 = Math.max(0, Y0 - ty * 16), v1 = Math.min(15, Y0 + h - 1 - ty * 16);
-    const full = !e || (!e.N && !e.S && !e.W && !e.E && !e.cNW && !e.cNE && !e.cSW && !e.cSE); // 깎인 곳 없는 칸은 바로 채워요
-    for (let v = v0; v <= v1; v++) { const row = (ty * 16 + v - Y0) * w + tx * 16 - X0; if (full) { m.fill(val, row + u0, row + u1 + 1); continue; } for (let u = u0; u <= u1; u++) if (ic_in(e, u, v)) m[row + u] = val; } }
+    for (let v = v0; v <= v1; v++) { const row = (ty * 16 + v - Y0) * w + tx * 16 - X0; if (!e) { m.fill(val, row + u0, row + u1 + 1); continue; } for (let u = u0; u <= u1; u++) if (e[v * 16 + u]) m[row + u] = val; } }
   return m; }
 // 거리 (1·1.41 근사): src(k)가 참인 픽셀에서 떨어진 거리
 function ic_dist(m, w, h, src) { const d = new Float32Array(w * h), BIG = 1e9; for (let k = 0; k < w * h; k++) d[k] = src(m[k]) ? 0 : BIG;
@@ -89,13 +104,18 @@ function ic_cell(wx, wy, cs, st, s, per = 0) { const gx = Math.floor(wx / cs), g
     const px = (cx + .15 + hash2(hx, hy, s) * .7) * cs, py = (cy + .15 + hash2(hx, hy, s + 1) * .7) * cs, o = hash2(hx, hy, s + 2) < .5 ? 1 : -1, ax = .86, ay = .5 * o, dx = wx + .5 - px, dy = wy + .5 - py, p = (dx * ax + dy * ay) / st, q = -dx * ay + dy * ax, d = Math.sqrt(p * p + q * q);
     if (d < d1) { d2 = d1; d1 = d; id = hx * 7919 + hy; } else if (d < d2) d2 = d; }
   return { id, gap: d2 - d1 }; }
+// v82: 얼음벽 윗면은 32px마다 반복하는 무늬 (오토타일: 칸 그림을 다시 쓰니 무늬도 칸 2개마다 같게) — wx·wy는 0~31
+const IC_TP = 32;
+const ic_vnP = (x, y, s, P) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = n => ((n % P) + P) % P;
+  const a = hash2(w(ix), w(iy), s), b = hash2(w(ix + 1), w(iy), s), c = hash2(w(ix), w(iy + 1), s), d = hash2(w(ix + 1), w(iy + 1), s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
 function ic_topPx(wx, wy) {
+  wx &= IC_TP - 1; wy &= IC_TP - 1;
   if (hash2(wx, wy, 230) < .0025) return IC.spark;
-  const c = ic_cell(wx, wy, 11, 1.6, 231), k = Math.min(4, Math.floor(hash2(c.id, 3, 232) * 5));
-  const cr1 = Math.abs(((wx + wy + Math.round(ic_vn(wx / 9, wy / 9, 233) * 6)) % 15 + 15) % 15) < 1 && ic_vn(wx / 6, wy / 6, 234) > .45;
-  const cr2 = Math.abs(((wx - wy + Math.round(ic_vn(wx / 9, wy / 9, 235) * 6)) % 13 + 13) % 13) < 1 && ic_vn(wx / 6, wy / 6, 236) > .5;
+  const c = ic_cell(wx, wy, 8, 1.6, 231, IC_TP / 8), k = Math.min(4, Math.floor(hash2(c.id, 3, 232) * 5));
+  const cr1 = ((wx + wy + Math.round(ic_vnP(wx / 8, wy / 8, 233, 4) * 6)) & 15) === 0 && ic_vnP(wx / 8, wy / 8, 234, 4) > .45;
+  const cr2 = ((wx - wy + Math.round(ic_vnP(wx / 8, wy / 8, 235, 4) * 6)) & 15) === 0 && ic_vnP(wx / 8, wy / 8, 236, 4) > .5;
   if (cr1 || cr2 || c.gap < .7) return IC.crack;
-  if ((((wx + 2 * wy) % 23) + 23) % 23 === 0 && ic_vn(wx / 5, wy / 5, 237) > .62) return IC.line;
+  if (((wx + 2 * wy) & 15) === 0 && ic_vnP(wx / 4, wy / 4, 237, 8) > .62) return IC.line;
   return IC.top[k];
 }
 // 얼음 조각 바닥 무늬는 256px마다 반복 — 처음 한 번 만들어 두고 베껴 써요 (v81: 픽셀마다 계산하던 것이 폰에서 느렸어요)
@@ -151,19 +171,29 @@ function ic_slot() { // 새 칸 → 빈 칸 → 가장 오래 안 쓴 칸
 }
 // 기울어지는 벽 한 칸의 그림 { slot, u, v(아틀라스 자리), front(앞면 있음), frontUp, ore } — 윗면은 (u, v) 16×16, 그늘 (u, v+16), 앞면 (u, v+32) 16×28
 // rock: 바위면 v73 그림 { top16, front, ore } (render/terrain.js wallArt), 얼음벽이면 null · glow: 광석 발광 규칙 (render/terrain.js GLOW_RULE)
+// v82 오토타일: 칸 그림은 (바위 그림, 주변 8칸, 변형[, 얼음 무늬 자리]) 조합마다 하나 — 같은 조합의 칸은 모두 같은 그림을 써요
+const ic_IMG = new WeakMap(); let ic_imgN = 0;
+const ic_rid = img => { if (!img) return 'i'; let n = ic_IMG.get(img); if (!n) { n = ++ic_imgN; ic_IMG.set(img, n); } return n; };
 export function slantWallArt(x, y, w, rock, glow) {
   if (ic_ART.size > 30000) ic_ART.clear(); // 기억이 너무 커지면 비워요 (아틀라스 자리는 오래된 순으로 다시 써요)
-  const i = idx(x, y), s5 = ic_sig5(x, y), sig = s5 * 16 + (w & 15), clk = ++ATL.clock; let a = ic_ART.get(i);
-  if (a && a.sig === sig && a.src === (rock ? rock.top16 : null)) { ATL.used[a.slot] = clk; return a; }
-  // 둘레 2칸이 모두 벽인 깊은 칸은 모양이 같아서(깎임·앞면 없음, 그늘은 거의 까맘) 한 자리를 같이 써요 (지우지 않음)
-  if (!s5) { const dk = rock ? rock.top16 : 'ice'; let d = ic_DEEP.get(dk); if (!d) { if (ATL.budget-- <= 0) return null; d = ic_build(x, y, w, rock, glow, ic_edgeOf(x, y), ic_slot()); ATL.pin[d.slot] = 1; ic_DEEP.set(dk, d); } a = { ...d, sig }; ic_ART.set(i, a); return a; }
+  const ice = w === ICE_W, sig = canonSig(ic_sig(x, y)), vr = ic_var(x, y), par = ice ? (x & 1) + (y & 1) * 2 : 0;
+  const key = (ice ? 'i' : ic_rid(rock.top16) + '.' + ic_rid(rock.front)) + ':' + sig + ':' + vr + ':' + par, clk = ++ATL.clock; let a = ic_ART.get(key);
+  if (a) { ATL.used[a.slot] = clk; return a; }
   if (ATL.budget-- <= 0) return null;
-  const slot = a && !ATL.pin[a.slot] ? a.slot : ic_slot(); ATL.owner[slot] = i; ATL.used[slot] = clk;
-  a = ic_build(x, y, w, rock, glow, ic_edgeOf(x, y), slot); a.sig = sig; ic_ART.set(i, a); return a;
+  const slot = ic_slot(); ATL.owner[slot] = key; ATL.used[slot] = clk;
+  a = ic_build(sig, vr, par, w, rock, glow, slot); ic_ART.set(key, a); return a;
 }
-const ic_DEEP = new Map();
-function ic_build(x, y, w, rock, glow, e, slot) {
-  const ice = w === ICE_W, X = x * 16, Y = y * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK, FH = 16 + FU;
+// 칸 둘레 3×3을 48×48 벽 지도로 (가운데 칸은 진짜 모양, 옆 벽은 주변 8칸 밖을 벽으로 보고 요철 없이 — 그늘·앞면 계산에만 써요)
+const ic_BIT = { '-1,-1': 0, '0,-1': 1, '1,-1': 2, '-1,0': 3, '1,0': 4, '-1,1': 5, '0,1': 6, '1,1': 7 };
+function ic_local(sig, vr) {
+  const m = new Uint8Array(48 * 48), open = (dx, dy) => (dx || dy) && Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (sig >> ic_BIT[dx + ',' + dy]) & 1;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (open(dx, dy)) continue; let sh;
+    if (!dx && !dy) sh = autoShape(sig, vr, true);
+    else { let ns = 0, k = 0; for (let ey = -1; ey <= 1; ey++) for (let ex = -1; ex <= 1; ex++) { if (!ex && !ey) continue; if (open(dx + ex, dy + ey)) ns |= 1 << k; k++; } sh = autoShape(ns, 0, false); }
+    for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) m[((dy + 1) * 16 + v) * 48 + (dx + 1) * 16 + u] = sh[v * 16 + u]; }
+  return m; }
+function ic_build(sig, vr, par, w, rock, glow, slot) {
+  const ice = w === ICE_W, X = (par & 1) * 16, Y = (par >> 1) * 16, FU = ICE.frontUp, L = ice ? ICE : ROCK, FH = 16 + FU, e = autoShape(sig, vr, true);
   const tp = rock ? ic_pix(rock.top16) : null, fp = rock ? ic_pix(rock.front) : null;
   const pg = ic_page(Math.floor(slot / PG_N)), lk = slot % PG_N, su = (lk % PG_COLS) * SLOT_W, sv = Math.floor(lk / PG_COLS) * SLOT_H, A = pg.A.data, Mt = pg.M.data, E = pg.E.data;
   for (let v = 0; v < SLOT_H; v++) { const o = ((sv + v) * PG_W + su) * 4; A.fill(0, o, o + SLOT_W * 4); Mt.fill(0, o, o + SLOT_W * 4); E.fill(0, o, o + SLOT_W * 4); } // 칸 비우기
@@ -171,29 +201,29 @@ function ic_build(x, y, w, rock, glow, e, slot) {
   const emF = ice ? (r, g, b) => ICE_EM(r, g, b) : (r, g, b) => glow && glow(r, g, b) ? 1 : 0;
   // 면 정보·발광 (render/glight.js gxlayerOf와 같은 값): 윗면 = 종류 3·높이 16·12px 아래, 앞면 = 종류 2·높이 FH−줄·FH+1−줄 아래
   const surf = (k, c, ty, z, off) => { Mt[k] = ty * 40; Mt[k + 1] = z; Mt[k + 2] = 128 + off; Mt[k + 3] = 255; const f = emF(c[0], c[1], c[2]); E[k] = c[0] * f; E[k + 1] = c[1] * f; E[k + 2] = c[2] * f; E[k + 3] = 255; };
-  // 둘레 10px까지 벽 지도 → 그늘(바닥에서 떨어진 거리)·테두리
-  const M = ice ? 10 : 8, WW = 16 + M * 2, wmk = wallMask(X - M, Y - M, WW, WW), dist = ic_dist(wmk, WW, WW, v => v === 0), sol = (u, v) => wmk[(v + M) * WW + u + M] !== 0;
-  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!ic_in(e, u, v)) continue; const k = at(u, v), ks = at(u, v + 16), wx = X + u, wy = Y + v;
+  // 둘레 3×3 벽 지도 → 그늘(바닥에서 떨어진 거리)·테두리
+  const wmk = ic_local(sig, vr), dist = ic_dist(wmk, 48, 48, v => v === 0), sol = (u, v) => wmk[(v + 16) * 48 + u + 16] !== 0;
+  for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) { if (!e[v * 16 + u]) continue; const k = at(u, v), ks = at(u, v + 16), wx = X + u, wy = Y + v;
     const rim = !sol(u, v - 1) || !sol(u - 1, v) || !sol(u + 1, v);
     let c; if (ice) c = rim ? (hash2(wx, wy, 250) < .22 ? IC.rimT : IC.rim) : ic_topPx(wx, wy);
     else { c = ic_at(tp, u, v); if (rim) c = c.map(q => Math.min(255, q * 1.35 + 14)); } // 바위 윗면 가장자리는 조금 밝게
     c = c.map(Math.round); ic_put(A, k, c); surf(k, c, 3, 16, 12);
-    const d = dist[(v + M) * WW + u + M], al = Math.round(Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack * 255);
+    const d = dist[(v + 16) * 48 + u + 16], al = Math.round(Math.max(0, Math.min(1, (d - L.shadeRim) / L.shadeFade)) * L.shadeBlack * 255);
     ic_put(A, ks, [8, 6, 12], al); E[ks + 3] = Math.min(255, Math.round(al / .96)); } // 그늘은 발광도 가려요(검정)
-  // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면 — 둥근 모서리를 따라 돌아요
-  const vbot = new Int8Array(16).fill(-1); let anyF = false;
-  for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (ic_in(e, u, v)) { if (!sol(u, v + 1)) { vbot[u] = v; anyF = true; } break; }
-  for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || e.oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || e.oE);
+  // 앞면: 칸마다 발자국 맨 아래 픽셀 바로 아래가 비었으면(남쪽 칸이 열렸거나, 아래 벽이 깎였거나, 안쪽 모서리) 그 칸에 16px 앞면 — 모서리를 따라 돌아요
+  const vbot = new Int8Array(16).fill(-1), oW = (sig >> 3) & 1, oE = (sig >> 4) & 1; let anyF = false;
+  for (let u = 0; u < 16; u++) for (let v = 15; v >= 0; v--) if (e[v * 16 + u]) { if (!sol(u, v + 1)) { vbot[u] = v; anyF = true; } break; }
+  for (let u = 0; u < 16; u++) { if (vbot[u] < 0) continue; const side = (u === 0 || vbot[u - 1] < 0) && (u > 0 || oW) || (u === 15 || vbot[u + 1] < 0) && (u < 15 || oE);
     for (let r = 0; r < 16; r++) { const row = vbot[u] - 15 + r + FU; if (row < 0 || row >= FH) continue; const k = at(u, 32 + row), wx = X + u;
       let c;
       if (ice) { c = r === 0 ? IC.fHi : r === 15 ? IC.fLow : ic_mix(IC.fTop, IC.fBot, Math.round(r / 15 * 4) / 4);
-        if (r > 0 && r < 15) { const f = ic_cell(wx * 2, Y + r * 3, 9, 1, 260); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
+        if (r > 0 && r < 15) { const f = ic_cell(wx * 2, r * 3, 8, 1, 260, 8); if (f.gap < .45) c = ic_mix(c, IC.crack, .6); else if (hash2(f.id, 1, 261) < .3) c = ic_mix(c, IC.fTop, .25); }
         if (side && r > 0 && r < 15) c = ic_mix(c, IC.fSide, .7); }
       else { c = ic_at(fp, u, r); if (side) c = c.map(q => q * .72); }
       c = c.map(Math.round); ic_put(A, k, c); surf(k, c, 2, Math.max(0, FH - row), FH + 1 - row); }
     // v81: 바위는 앞면 바로 아래 바닥에 옅은 그림자 3줄 (예전 칸 단위 접촉 그림자 대신, 벽 그림과 같이 그려요)
     if (!ice) for (let r = 1; r <= 3; r++) { const vv = vbot[u] + r; if (sol(u, vv)) break; const row = vbot[u] + FU + r; if (row >= FH + 3) break; ic_put(A, at(u, 60 + row), [14, 8, 22], Math.round(ROCK.shadow[r - 1] * 255)); } }
-  return { slot, img: pg.alb, u: su, v: sv, src: rock ? rock.top16 : null, front: anyF, shadow: anyF && !ice, frontUp: FU, ore: ice ? 'ice' : rock.ore };
+  return { slot, img: pg.alb, u: su, v: sv, front: anyF, shadow: anyF && !ice, frontUp: FU, ore: ice ? 'ice' : rock.ore };
 }
 // ---- 바닥: 얼음 조각 한 칸 (꾸밈은 진짜 바닥 칸에만) ----
 export function drawIceShard(g, x, y, X, Y, deco) {
@@ -223,4 +253,4 @@ export function wallEdgeChunk(cx, cy, N) {
   return lit || sh ? { glow: lit ? gc : null, shadow: sh ? sc : null } : null;
 }
 // 테스트용: 칸 (x,y) 발자국 안 픽셀 수 (깎인 모양 확인)
-export function slantWallPx(x, y) { const e = ic_edgeOf(x, y); let n = 0; for (let v = 0; v < 16; v++) for (let u = 0; u < 16; u++) if (ic_in(e, u, v)) n++; return n; }
+export function slantWallPx(x, y) { const e = tileShape(x, y); let n = 0; for (let k = 0; k < 256; k++) n += e[k]; return n; }
