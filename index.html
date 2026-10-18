@@ -445,7 +445,6 @@ body.touch #hbFlip{width:var(--slotS)}
 .lbl.hotl{flex:none;margin-top:6px}
 .grid.hot9{flex:none;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
 .bagbar{flex:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;margin-top:6px;padding-top:6px;border-top:2px solid var(--line)}
-.bagbar .bb-hint{color:var(--muted);font-size:16px}
 .btip{position:absolute;z-index:5;max-width:min(280px,calc(100% - 8px));box-sizing:border-box;background:var(--ink);border:2px solid var(--line);padding:8px 10px;font-size:16px;line-height:24px;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.35)}
 .btip b{font-weight:400;display:block}
 .btip p{margin:0;color:var(--muted)}
@@ -471,6 +470,35 @@ body.touch #hbFlip{width:var(--slotS)}
 /* v89 워프 고르기: 고른 목적지와 「여기로 이동」 */
 .warpgo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;padding:8px 10px;background:var(--panel2,#2a2236);box-shadow:inset 0 0 0 2px #ffc861}
 .warpgo span{font-size:16px;color:var(--amber,#ffc861)}
+/* ===== v91 건축 모드: 단축칸·공격·상호작용·스킬·이야기 한 줄·오른쪽 위 버튼은 숨기고, 아래 건축 목록·오른쪽 위 「완료」·오른쪽 아래 「놓기」 ===== */
+body.building #hotbar,body.building #actBtn,body.building #atkBtn,body.building #skBar,body.building #altWrap,body.building #hud .side,body.building #goal,body.building #toolRow,body.building #pcHint,body.building #wearAsk{display:none!important}
+#bmTop{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 12px);display:flex;gap:8px;align-items:center;z-index:6}
+#bmTop .bm-title{background:#e9d9a6;color:#2a2139;padding:0 10px;height:32px;line-height:32px;border:2px solid var(--ink)}
+#bmTop .btn{min-height:48px;padding:0 16px;background:var(--amber);color:var(--ink);border:2px solid var(--ink)}
+#bmTop .k,.btn .k{font-style:normal;color:inherit;opacity:.7}
+body.touch #bmTop .k,body.touch .btn .k{display:none}
+#bmBar{position:absolute;left:0;right:0;bottom:0;z-index:6;background:rgba(42,33,57,.97);border-top:2px solid var(--ink);padding:0 calc(env(safe-area-inset-right,0px) + 4px) calc(env(safe-area-inset-bottom,0px) + 4px) calc(env(safe-area-inset-left,0px) + 4px)}
+body:not(.touch) #bmBar{left:50%;right:auto;width:560px;max-width:calc(100% - 16px);transform:translateX(-50%);bottom:8px;border:2px solid var(--ink)}
+.bm-info{height:32px;display:flex;align-items:center;gap:8px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bm-info span{color:var(--muted)}.bm-info .mk{color:var(--mint)}.bm-info .no{color:var(--danger)}
+.bm-tabs{display:flex;gap:2px;padding:2px 0 4px}
+.bm-tabs button{flex:1;min-width:0;height:36px;padding:0;background:var(--panel2);border:2px solid var(--line);font-size:16px;white-space:nowrap}
+.bm-tabs button.on{background:#e9d9a6;color:var(--ink);border-color:var(--ink)}
+.bm-tabs button.empty{opacity:.45}
+.bm-slots{display:flex;flex-wrap:wrap;gap:4px;max-height:108px;overflow-y:auto;padding:2px 0}
+body:not(.touch) .bm-slots{max-height:52px}
+.bm-slots .slot{width:48px;height:48px;flex:none}
+.bm-slots .slot.pick{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber)}
+.bm-slots .slot.dim{opacity:.4}
+.bm-slots .slot.mk::after{content:'';position:absolute;left:3px;top:3px;width:8px;height:8px;background:var(--mint);border:2px solid var(--ink)} /* 만들어서 놓기 */
+.bm-none{margin:12px 8px;color:var(--muted)}
+#bmPut,#bmRot{position:absolute;z-index:6;right:calc(env(safe-area-inset-right,0px) + 16px);border-radius:50%;background:rgba(42,33,57,.92);border:2px solid var(--line);font-size:16px;padding:0}
+#bmPut{width:80px;height:80px;bottom:calc(var(--bmH,184px) + 16px);background:#3c5a46;border-color:var(--mint)}
+#bmRot{width:56px;height:56px;bottom:calc(var(--bmH,184px) + 112px)}
+#bmPut:active{transform:translateY(2px) scale(.96)}
+body:not(.touch) #bmPut{display:none}
+body:not(.touch) #bmRot{border-radius:0;width:auto;height:40px;padding:0 12px;bottom:calc(var(--bmH,120px) + 16px)}
+body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방향키로 고른 사람은 목록 바로 위 */
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -503,6 +531,10 @@ body.touch #hbFlip{width:var(--slotS)}
   <div id="altWrap"><button id="altNext" type="button" hidden aria-label="다음 선택지">▸</button><button id="subBtn" type="button" hidden aria-label="다른 행동"><img class="px" id="subIcon" alt=""><span id="subLbl"></span><i class="k">R</i></button></div>
   <div id="pcHint">WASD 이동 · 마우스로 조준<br>클릭: 공격 · E(스페이스): 상호작용<br>R 다른 행동 · Q 다음 선택지 · Tab 도구<br>1–9 단축칸 · F·G(오른쪽 클릭) 스킬<br>C 캐릭터 · I 가방 · M 지도 · L 퀘스트</div>
   <div id="sheetWrap" hidden><div class="backdrop" id="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
+  <div id="bmTop" hidden><span class="bm-title">건축 중</span><button class="btn" id="bmDone" type="button">완료<i class="k"> Z</i></button></div>
+  <div id="bmBar" hidden></div>
+  <button id="bmRot" type="button" hidden>돌리기<i class="k"> R</i></button>
+  <button id="bmPut" type="button" hidden>놓기</button>
   <div id="hurtEdge" aria-hidden="true"></div>
   <div id="fade" hidden>기절했어요…</div>
   <input type="file" id="fileIn" hidden>
@@ -3797,25 +3829,31 @@ function pickupObj(t, o) {
   returnObj(o, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .6, '#e8d8c0', 5, 2); markLight();
 }
 const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.crop); };
-function placeItem(t) {
-  const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
-  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) { emit('toast', why, 'warn', 'portal'); return; } } // v89 포탈
-  // v67 (BF-09): the placing player steps to a free tile next to them first, in the same moment (nothing placed or used up if there is none)
-  if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }
+// v91: 놓기의 세계 바꾸기 부분 (단축칸 놓기 placeItem과 건축 모드 bplace가 함께 써요) — s = 놓는 물건 칸(배터리 남은 양), op.rot 방향, op.anchor 여러 칸 가구 자리, op.give 걷어 낸 깐 바닥 받기
+const dropAt = (id, t) => spawnDrop(id, 1, t.x + .5, t.y + .5);
+function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give || dropAt;
   if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
-  else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) spawnDrop(FLOOR_ITEM[old], 1, t.x + .5, t.y + .5); else G.under.set(i, old); }
+  else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) give(FLOOR_ITEM[old], t); else G.under.set(i, old); }
   else if (it.kind === 'ground') { const old = G.floor[i], back = old === PIT || old === WATER || old === LAVA ? null : floorItem(old); G.floor[i] = it.ground; G.under.delete(i); // v87: 바꾼 자연 바닥은 돌려받아요
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
   else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
-    const pr = pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
-    if (dd.sz) { const a = placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
+    const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
+    if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
     if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
+  markLight(); emit('tile', t.x, t.y); return t;
+}
+function placeItem(t) {
+  const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
+  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) { emit('toast', why, 'warn', 'portal'); return; } } // v89 포탈
+  // v67 (BF-09): the placing player steps to a free tile next to them first, in the same moment (nothing placed or used up if there is none)
+  if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }
+  t = putItem(it, s, t);
   s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } emit('inv');
-  emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1); markLight(); emit('tile', t.x, t.y);
+  emit('sfx', 'place'); emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 5, 1.6, 0.1);
 }
 const GROW_SPR = { bench: [2, 2], logBench: [2, 1], stoneBench: [2, 1],
   roundTree: [1.75, 1.75], root: [1.35, 1.35], bigShroom: [1.75, 1.75], cherryTree: [1.4, 1.4], bigTree: [1.5, 1.5] };
@@ -5265,6 +5303,92 @@ function warpTick(dt) { const R = G.warpGo; if (!R) return; const p = G.p;
   if (curPl === myPlayer()) { cam.x = p.x; cam.y = p.y; }
   markLight(); emit('puff', p.x, p.y - .3, '#e3d4ff', 18, 3, .4); emit('sfx', 'win'); G.stats.warps = (G.stats.warps || 0) + 1;
   emit('toast', `도착했어요 · ${R.name}`, 'good', 'warp'); }
+// ================= v91 건축 모드 (규칙): 건축 목록·개수(가방 + 16칸 안 상자), 만들어서 놓기, 놓을 수 있는지, 연속 놓기·벽/바닥 교체 명령 =================
+// 화면(목록·미리보기·누르기)은 ui/build.js. 여기서는 명령 { k: 'bplace', id, cells: [[x, y] …], rot }만 받아요.
+// 기획: dev/design/건축모드.md (v91 = 켜고 끄기·목록·놓기·연속 놓기·교체, v92 = 옮기기·뜯기·되돌리기)
+const BM_REACH = 8, BM_MAX = 64, BM_CHEST_R = 16;
+// ---- 분류 탭 ----
+const BM_CATS = [['wall', '벽'], ['floor', '바닥'], ['furn', '가구'], ['light', '조명'], ['stn', '제작대'], ['circ', '회로'], ['nat', '자연']];
+function bmCat(id) { const it = ITEMS[id], k = it.kind;
+  if (k === 'wall') return 'wall'; if (k === 'floor' || k === 'ground') return 'floor'; if (k === 'wire') return 'circ'; if (k === 'seed') return 'nat';
+  const d = OBJ[it.obj] || {}; if (d.tw) return 'wall'; if (d.dev || d.sw || d.src || d.gate || it.obj === 'battery' || it.obj === 'eLamp') return 'circ';
+  if (d.station || d.chest || it.obj === 'chest' || d.warp) return 'stn'; if (d.light) return 'light'; if (d.nat || d.crop || d.tree || d.ranch || natDecor().has(id)) return 'nat'; return 'furn'; }
+let NAT_D = null; // 자연 꾸미기(덤불·꽃밭·연못·바위): 자연 꾸미기 표와 제작 창 「자연」 탭의 것
+const natDecor = () => NAT_D || (NAT_D = new Set([...Object.keys(NATURE), ...RECIPES.filter(r => r.cat === 'nature').map(r => r.out)]));
+const isBuildItem = id => { const it = ITEMS[id]; return !!it && BUILD_KINDS.includes(it.kind); };
+// 끌어서 여러 칸: 바닥은 네모, 벽·울타리·전선은 끈 길 한 줄, 그 밖은 한 칸
+function bmDrag(id) { const it = ITEMS[id]; if (!it) return 'one'; if (it.kind === 'floor' || it.kind === 'ground') return 'rect';
+  if (it.kind === 'wall' || it.kind === 'wire') return 'line'; const d = OBJ[it.obj]; return d && d.tw ? 'line' : 'one'; }
+// ---- 가방 + 둘레 16칸 안 보관상자 ----
+function bmChests() { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), out = [];
+  for (const [j, o] of G.objs) { if (!o || o.t !== 'chest' || !o.items || isRefund(o)) continue; const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > BM_CHEST_R || Math.abs(y - py) > BM_CHEST_R) continue; out.push({ o, d: Math.hypot(x - px, y - py) }); }
+  return out.sort((a, b) => a.d - b.d).map(c => c.o); }
+function bmCount(id, ch = bmChests()) { let n = countItem(id), b = 0; for (const o of ch) for (const s of o.items) if (slotIs(s, id)) b += s.c; return { bag: n, box: b, all: n + b }; }
+// 한 개를 가방(뒤 칸부터) → 가까운 상자 순으로 꺼내요. 돌려주는 칸은 배터리 남은 양을 그대로 가져요
+function bmTake(id, n, ch) { let left = n; const one = [];
+  for (let i = G.inv.length - 1; i >= 0 && left > 0; i--) { const s = G.inv[i]; if (s && slotIs(s, id) && s.dur != null) one.push(s.dur); }
+  const fromBag = Math.min(left, countItem(id)); if (fromBag) removeItem(id, fromBag); left -= fromBag;
+  for (const o of ch) for (let k = 0; k < o.items.length && left > 0; k++) { const s = o.items[k]; if (!slotIs(s, id)) continue; if (s.dur != null) one.push(s.dur); const t = Math.min(s.c, left); s.c -= t; left -= t; if (!s.c) o.items[k] = null; }
+  return { id, c: 1, dur: one.length ? one[0] : undefined }; }
+// ---- 만들어서 놓기: 해금된 레시피 + 그 제작대 단계까지 올렸어야 (곁에 있을 필요는 없음). 시간이 걸리는 용광로·요리솥 것은 안 돼요 ----
+function bmStations() { const set = new Set(); for (const o of G.objs.values()) { const d = o && OBJ[o.t]; if (d && d.station) set.add(d.station); } return set; }
+function stationReached(r, st) { if (!r.at) return true; if (TIMED[r.at]) return false;
+  if (r.at === 'bench') return !!G.stats.bench && (r.tier || 0) <= (G.stats.benchLv || 0);
+  if (TIERED[r.at]) return st.has(r.at) && (r.tier || 0) <= (G.stats.gearLv || 0);
+  return st.has(r.at); }
+function bmRecipe(id, st = bmStations()) { return RECIPES.find(r => r.out === id && recipeOn(r) && (!r.dish || knows(r.dish)) && stationReached(r, st)) || null; }
+const bmCanMake = (r, ch) => !!r && r.req.every(([m, c]) => bmCount(m, ch).all >= c);
+// ---- 건축 목록: 가진 것 + 만들 수 있는 레시피 ----
+function bmList() { const ch = bmChests(), st = bmStations(), seen = new Set(), out = [];
+  const add = id => { if (seen.has(id) || !isBuildItem(id)) return; seen.add(id); const c = bmCount(id, ch), r = c.all ? null : bmRecipe(id, st); if (!c.all && !r) return;
+    out.push({ id, cat: bmCat(id), bag: c.bag, box: c.box, have: c.all, r, can: c.all > 0 || bmCanMake(r, ch) }); };
+  for (const s of G.inv) if (s) add(s.id); for (const o of ch) for (const s of o.items) if (s) add(s.id);
+  for (const r of RECIPES) add(r.out);
+  return out; }
+// ---- 놓을 수 있는지 ----
+function pickTier() { let t = 0; for (const s of G.inv.concat(G.tools || [])) { if (!s || !ITEMS[s.id] || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; t = Math.max(t, ITEMS[s.id].tier || 0); } return t; }
+const bmFp = (id, rot) => { const it = ITEMS[id], d = it && OBJ[it.obj]; if (!d || !d.sz) return [1, 1]; return rot % 2 && rotSwaps(d) && rotN(it.obj) > 1 ? [d.sz[1], d.sz[0]] : d.sz; };
+// 여러 칸 가구: 누른 칸이 아래 줄 가운데가 되게
+const bmAnchor = (id, x, y, rot) => { const fp = bmFp(id, rot); return { x: x - Math.floor((fp[0] - 1) / 2), y: y - (fp[1] - 1) }; };
+const inBmReach = (x, y) => { const p = G.p; return Math.abs(x - Math.floor(p.x)) <= BM_REACH && Math.abs(y - Math.floor(p.y)) <= BM_REACH; };
+// 벽 위에 다른 벽을 놓으면 바꾸기: 지금 가진 곡괭이로 캘 수 있는 벽만(쌓은 벽도 같음), 암반·보스방은 안 돼요
+function wallSwapOk(x, y, it) { const i = idx(x, y), w = G.wall[i]; if (!w || it.kind !== 'wall' || w === it.wall) return false; const def = WALLS[w];
+  return !!def && def.tier <= pickTier() && noDigZone(x, y) !== 'boss' && !G.objs.get(i); }
+// null = 놓을 수 있음, 아니면 까닭 (skip: 내 몸은 비켜설 수 있으니 무시)
+function bmWhy(id, x, y, rot = 0, skip) { const it = ITEMS[id]; if (!it || !BUILD_KINDS.includes(it.kind)) return '놓을 수 없는 물건이에요';
+  if (!inB(x, y)) return '여기엔 놓을 수 없어요'; if (!inBmReach(x, y)) return '8칸 안에만 놓을 수 있어요';
+  const d = it.kind === 'place' ? OBJ[it.obj] : null;
+  if (d && d.warp) { const w = portalWhy(x, y); if (w) return w; }
+  if (it.kind === 'wall' && G.wall[idx(x, y)]) { if (wallSwapOk(x, y, it)) return null; const w = G.wall[idx(x, y)]; return w === it.wall ? '같은 벽이에요' : (WALLS[w] || {}).tier > pickTier() ? '더 좋은 곡괭이가 있어야 바꿀 수 있어요' : '이 벽은 바꿀 수 없어요'; }
+  if (d && d.sz) { const fp = bmFp(id, rot), a = bmAnchor(id, x, y, rot); return fpFree(a.x, a.y, fp, !!d.solid, null, skip) ? null : '자리가 모자라요'; }
+  return canPlace(x, y, it, skip) ? null : '여기엔 놓을 수 없어요'; }
+// 벽을 바꿀 때 원래 벽은 캔 것과 같이 (가방으로, 넘치면 발밑에)
+function wallBack(x, y) { const w = G.wall[idx(x, y)], def = WALLS[w]; if (!def) return;
+  for (const [id, a, b, chance] of def.drop) if (rand() < chance) { const c = rint(a, b); if (c > 0) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, x + .5, y + .5); } } }
+const toBag = (id, t) => { const l = addItem(id, 1, false); if (l) spawnDrop(id, l, t.x + .5, t.y + .5); };
+// ---- 놓기 명령 ----
+defineCmd('bplace', c => {
+  const p = G.p, it = ITEMS[c.id]; if (!p || p.dead > 0 || !it || !BUILD_KINDS.includes(it.kind) || !Array.isArray(c.cells)) return false;
+  const rot = rotN(it.obj) > 1 ? (c.rot | 0) % rotN(it.obj) : 0, cells = c.cells.slice(0, BM_MAX), st = bmStations();
+  let n = 0, made = 0, why = null, last = null;
+  for (const cell of cells) { const x = cell[0] | 0, y = cell[1] | 0; let w = bmWhy(c.id, x, y, rot);
+    // 한 칸만 놓을 때는 단축칸 놓기처럼 내 몸이 비켜서요 (v67)
+    if (w && cells.length === 1 && !(OBJ[it.obj] || {}).sz && !bmWhy(c.id, x, y, rot, p)) { const sp = pushSpot(x, y, it); if (sp) { p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; w = null; } }
+    if (w) { why = why || w; continue; }
+    const ch = bmChests(); let s;
+    if (bmCount(c.id, ch).all > 0) s = bmTake(c.id, 1, ch);
+    else { const r = bmRecipe(c.id, st); if (!r || !bmCanMake(r, ch)) { why = r ? '재료가 모자라요' : '가진 것이 없어요'; break; }
+      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id: c.id, c: 1 }; made++;
+      if (r.n > 1) { const l = addItem(c.id, r.n - 1, false); if (l) spawnDrop(c.id, l, p.x, p.y); }
+      G.stats.made = G.stats.made || {}; G.stats.made[c.id] = (G.stats.made[c.id] || 0) + 1; }
+    if (it.kind === 'wall' && G.wall[idx(x, y)]) { wallBack(x, y); G.wdmg.delete(idx(x, y)); }
+    const t = putItem(it, s, { x, y }, { rot, anchor: OBJ[it.obj] && OBJ[it.obj].sz ? bmAnchor(c.id, x, y, rot) : null, give: toBag });
+    emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 3, 1.4, 0.1); n++; last = t; }
+  emit('inv');
+  if (n) { emit('sfx', 'place'); if (made) emit('toast', `재료로 ${made}개를 만들어 놓았어요`, 'good', 'bmake'); if (why && cells.length > 1) emit('toast', `${n}칸 놓았어요 · ${why}`, null, 'bplace'); }
+  else { emit('toast', why || '여기엔 놓을 수 없어요', null, 'bplace'); return false; }
+  return last;
+});
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -6948,6 +7072,7 @@ function renderOverlay(cw, ch) {
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = pxFont(5.4); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const fh = parseFloat(ctx.font), tw = Math.round(ctx.measureText(lb).width + 6 * Z), lx = Math.round(hx + T / 2), ly = Math.round(hy - 5 * Z), bh = Math.round(Math.max(9 * Z, fh + 2 * Z)); ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.fillRect(lx - Math.round(tw / 2), ly - Math.round(bh / 2), tw, bh); pxText(lb, lx, ly, `rgb(${col})`); /* v78: 도트 글꼴, 네모 상자 */
   }
+  drawBuild(T, camX, camY); // v91: 건축 모드 미리보기
   drawHitBars(T, camX, camY); // v65: hit to recover
   drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)
@@ -7263,7 +7388,7 @@ onEvent('close', onlyMe(() => closePanel()));
 onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPanel(); })); // 그 창이 열려 있으면 다시 그리기
 // v76: 창을 연 채 체력이 줄면 (맞음·배고픔·더위·추위) 창은 그대로 두고 화면 가장자리를 빨갛게 번쩍 + 창의 체력 막대·닫기 버튼 강조
 let hitT = 0;
-onEvent('hurt', onlyMe(() => { if (!panel) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
+onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); if (!panel) return; /* v91: 건축 중에도 빨간 번쩍 */ sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----
@@ -7285,7 +7410,7 @@ onEvent('goal', (txt, tag) => { if (txt !== lastGoalTxt) { $('#goalTxt').textCon
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
-function openPanel(kind, data = {}) { if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); if (!data.nav) noteBagOpen(); } if (kind === 'map') { UIS.mapFocus = data.focus || null; UIS.mapWarp = data.warp != null ? data.warp : null; UIS.warpSel = null; } /* v89: 워프포인트·포탈에서 열면 목적지 고르기 */ /* v84: 퀘스트 「지도에서 보기」 */ if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { bmClose(); /* v91: 창을 열면 건축 끝 */ if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); } if (kind === 'map') { UIS.mapFocus = data.focus || null; UIS.mapWarp = data.warp != null ? data.warp : null; UIS.warpSel = null; } /* v89: 워프포인트·포탈에서 열면 목적지 고르기 */ /* v84: 퀘스트 「지도에서 보기」 */ if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 function sheetHpHTML() { if (!G || !started) return ''; const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
@@ -7673,19 +7798,16 @@ function lampHTML() {
     <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요!' : n < max ? `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 돼요 (${n}/${max}${max === 3 ? ' · 셋을 모두 심으면 나무가 깨어나요' : ' · 다섯을 모두 심으면 끝까지 밝아져요'})` : '빛씨앗을 더 찾아 등불나무에 심어요'}</p>`;
 }
 // ---- 가방 탭 ----
-const BAGHINT_K = 'lantern-tree-baghint';
-let bagHintN = 0; try { bagHintN = +localStorage.getItem(BAGHINT_K) || 0; } catch (e) { }
 const pouchOpen = () => { try { return localStorage.getItem('lantern-tree-pouch') === '1'; } catch (e) { return false; } };
 const setPouchOpen = v => { try { localStorage.setItem('lantern-tree-pouch', v ? '1' : '0'); } catch (e) { } };
-function noteBagOpen() { if (bagHintN < 3) { bagHintN++; try { localStorage.setItem(BAGHINT_K, String(bagHintN)); } catch (e) { } } }
 function bagHTML() {
   const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && (G.seen || {})[s0.id] > 1) c += ' new'; return c; };
-  let h = sheetTop(`<button type="button" class="btn ghost sm" data-a="sortBag">정렬</button>`, '가방');
+  let h = sheetTop(`<button type="button" class="btn sm" data-a="buildMode">건축<i class="k"> &#90;</i></button><button type="button" class="btn ghost sm" data-a="sortBag">정렬</button>`, '가방');
   h += `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div><button type="button" class="btn ghost sm" data-a="stashNear" title="내 둘레 16칸 안의 상자 중 같은 물건이 있는 상자에 넣어요">상자에 넣기</button></div>`;
-  h += `<div class="sh-body">${bagHintN <= 3 ? `<p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칸을 누르면 위에 설명이, 아래에 버튼이 나와요.</p>` : ''}<div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 늘려요)</span>' : ''}</div><div class="grid">`;
+  h += `<div class="sh-body"><div class="lbl">가방 · ${G.inv.length - HOT}칸</div><div class="grid">`;
   for (let i = HOT; i < G.inv.length; i++) h += slotHTML(G.inv[i], 'inv', i, cls(i));
   const T = G.tools || [], po = pouchOpen();
-  h += `</div><button type="button" class="lbl fold" data-a="pouchFold" aria-expanded="${po}">${po ? '▾' : '▸'} 도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요)</span></button>`;
+  h += `</div><button type="button" class="lbl fold" data-a="pouchFold" aria-expanded="${po}">${po ? '▾' : '▸'} 도구 주머니 · ${T.length}개</button>`;
   if (po) { h += `<div class="grid">`; T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '') + ((G.seen || {})[s.id] > 1 ? ' new' : '')); }); if (!T.length) h += `<p class="prose" style="grid-column:1/-1;color:var(--muted)">아직 도구가 없어요</p>`; h += `</div>`; }
   h += `</div><div class="lbl hotl">단축칸</div><div class="grid hot9">`;
   for (let i = 0; i < HOT; i++) h += slotHTML(G.inv[i], 'inv', i, cls(i));
@@ -7697,7 +7819,7 @@ function bagHTML() {
 function bagBarHTML() {
   const s = UIS.invSel != null ? G.inv[UIS.invSel] : null, t = UIS.toolSel != null ? (G.tools || [])[UIS.toolSel] : null;
   if (t) return `<div class="bagbar">${isBroken(t) ? '' : `<button class="btn" data-a="holdTool" type="button">${t === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div>`;
-  if (!s) return `<div class="bagbar"><span class="bb-hint">칸을 누르면 여기에 버튼이 나와요</span></div>`;
+  if (!s) return `<div class="bagbar"></div>`;
   const it = ITEMS[s.id]; let h = `<div class="bagbar">`;
   if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
   if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;
@@ -7799,6 +7921,80 @@ function mapView() { const F = UIS.mapFocus, all = UIS.mapWarp != null ? !UIS.wa
 // v89: 지도를 누른 곳에서 가장 가까운 갈 수 있는 곳 (지도 그림 칸 기준 40 안), 없으면 null
 function warpTapAt(el, clientX, clientY) { const r = el.getBoundingClientRect(); if (!r.width) return null; const X = (clientX - r.left) * 600 / r.width, Y = (clientY - r.top) * 600 / r.height, { s, ox, oy } = mapView();
   let best = null, bd = 40; for (const e of warpDests(UIS.mapWarp)) { const d = Math.hypot((e.x + .5 - ox) * s - X, (e.y + .5 - oy) * s - Y); if (d < bd) { bd = d; best = e; } } return best; }
+// ================= v91 건축 모드 (화면): 켜고 끄기, 아래 건축 목록, 화면 누르기·끌기로 놓기, 「놓기」 버튼(앞 칸), 미리보기 =================
+// 규칙은 sim/buildmode.js (명령 'bplace'). 기획: dev/design/건축모드.md
+const BM = { on: false, cat: 'wall', id: null, rot: 0, drag: null, list: [], sup: 0, hover: null };
+function bmOpen() { if (!started || !G || G.p.dead > 0) return; if (panel) closePanel(); ensureAudio();
+  BM.on = true; BM.drag = null; document.body.classList.add('building'); $('#bmBar').hidden = $('#bmTop').hidden = false; joyEnd(); bmRender(); placeJoyIdle(); }
+function bmClose() { if (!BM.on) return; BM.on = false; BM.drag = null; BM.hover = null; document.body.classList.remove('building'); $('#bmBar').hidden = $('#bmTop').hidden = true; $('#bmPut').hidden = $('#bmRot').hidden = true; joyEnd(); placeJoyIdle(); }
+const bmToggle = () => BM.on ? bmClose() : bmOpen();
+const entry = id => BM.list.find(e => e.id === id);
+// 고른 것으로 몇 칸을 놓을 수 있는지 (가진 것 + 재료로 만들 수 있는 것) — 미리보기에서 넘치는 칸은 빨갛게
+function supply(e) { if (!e) return 0; if (e.have) return e.have; if (!e.r || !e.can) return 0; return BM_MAX; }
+function bmRender() { if (!BM.on || !G) return;
+  BM.list = bmList(); const inCat = BM.list.filter(e => e.cat === BM.cat);
+  if (!BM.id || !entry(BM.id)) BM.id = (inCat.find(e => e.can) || inCat[0] || {}).id || null;
+  const sel = entry(BM.id); BM.sup = supply(sel); if (sel && BM.rot && rotN(ITEMS[sel.id].obj) < 2) BM.rot = 0;
+  const cnt = c => BM.list.filter(e => e.cat === c).length;
+  let h = `<div class="bm-info">${sel ? `<b>${ITEMS[sel.id].n}</b> ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
+  h += `<div class="bm-tabs">${BM_CATS.map(([c, n]) => `<button type="button" class="${BM.cat === c ? 'on' : ''}${cnt(c) ? '' : ' empty'}" data-bc="${c}">${n}</button>`).join('')}</div><div class="bm-slots">`;
+  for (const e of inCat) h += `<button type="button" class="slot${e.id === BM.id ? ' pick' : ''}${e.can ? '' : ' dim'}${e.have ? '' : ' mk'}" data-bi="${e.id}" aria-label="${ITEMS[e.id].n}"><img class="px" src="${iconURL(e.id)}" alt=""><span class="cnt">${e.have > 1 ? e.have : ''}</span></button>`;
+  if (!inCat.length) h += `<p class="bm-none">이 칸에 놓을 것이 없어요</p>`;
+  $('#bmBar').innerHTML = h + '</div>';
+  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.id].obj) > 1); $('#bmPut').hidden = !sel;
+  document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); }
+onEvent('inv', onlyMe(() => { if (BM.on) bmRender(); }));
+onEvent('fade', onlyMe(m => { if (m === 'faint' || m === 'show') bmClose(); })); // 기절하면 건축 끝
+function bmRotate() { const e = entry(BM.id); if (!e) return; const n = rotN(ITEMS[e.id].obj); if (n < 2) return; BM.rot = (BM.rot + 1) % n;
+  toast(n === 4 ? `${josa(DIRN[BM.rot], '을', '를')} 보게 놓아요` : BM.rot ? '옆으로 돌려 놓아요' : '정면으로 놓아요'); }
+function bmPick(d) { const l = BM.list.filter(e => e.cat === BM.cat); if (!l.length) return; const k = l.findIndex(e => e.id === BM.id); BM.id = l[(k + d + l.length) % l.length].id; bmRender(); }
+// ---- 화면 칸 고르기 ----
+function tileAt(cx, cy) { const mx = (cx * DPR + VIEW.baseX) / TP, my = (cy * DPR + VIEW.baseY) / TP; let tx = Math.floor(mx), ty = Math.floor(my);
+  if (!(inB(tx, ty) && G.wall[idx(tx, ty)])) { const lf = LIFT / 16; for (let r = ty + 1; r <= ty + Math.ceil(lf); r++) if (inB(tx, r) && G.wall[idx(tx, r)] && my >= r - lf) { ty = r; break; } } // 벽 윗면을 누르면 그 벽 칸
+  return { x: tx, y: ty }; }
+// 앞 칸 (「놓기」 버튼): 보는 쪽으로 한 칸
+function frontTile() { const p = G.p, f = p.face || { x: 0, y: 1 }, px = Math.floor(p.x), py = Math.floor(p.y);
+  return Math.abs(f.x) >= Math.abs(f.y) ? { x: px + Math.sign(f.x || 1), y: py } : { x: px, y: py + Math.sign(f.y) }; }
+function lineTo(path, b) { const a = path[path.length - 1]; if (!a) { path.push(b); return; } let x = a.x, y = a.y;
+  while ((x !== b.x || y !== b.y) && path.length < BM_MAX) { const dx = b.x - x, dy = b.y - y; if (Math.abs(dx) >= Math.abs(dy)) x += Math.sign(dx); else y += Math.sign(dy); path.push({ x, y }); } }
+// 끌기 모양: 바닥은 네모, 벽·울타리·전선은 지나간 길, 그 밖은 마지막 칸
+function dragCells() { const d = BM.drag; if (!d || !BM.id) return []; const m = bmDrag(BM.id);
+  if (m === 'one') return [d.b]; if (m === 'line') return d.path.slice(0, BM_MAX);
+  const out = [], x0 = Math.min(d.a.x, d.b.x), x1 = Math.max(d.a.x, d.b.x), y0 = Math.min(d.a.y, d.b.y), y1 = Math.max(d.a.y, d.b.y);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { out.push({ x, y }); } out.sort((p, q) => Math.hypot(p.x - d.a.x, p.y - d.a.y) - Math.hypot(q.x - d.a.x, q.y - d.a.y)); return out.slice(0, BM_MAX); }
+const overUI = (cx, cy) => { for (const s of ['#bmBar', '#bmTop', '#bmPut', '#bmRot']) { const e = $(s); if (!e || e.hidden) continue; const r = e.getBoundingClientRect(); if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return true; } return inJoyZone(cx, cy); };
+function bmDown(e) { if (!BM.id || paused) return; const t = tileAt(e.clientX, e.clientY); BM.drag = { id: e.pointerId, a: t, b: t, path: [t] }; try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
+function bmMove(e) { const d = BM.drag; if (e.pointerType === 'mouse') BM.hover = tileAt(e.clientX, e.clientY); if (!d || e.pointerId !== d.id) return; const t = tileAt(e.clientX, e.clientY); if (t.x === d.b.x && t.y === d.b.y) return; d.b = t; lineTo(d.path, t); }
+function bmUp(e) { const d = BM.drag; if (!d || e.pointerId !== d.id) return; BM.drag = null;
+  if (e.type === 'pointercancel' || overUI(e.clientX, e.clientY)) return; // 목록·조이스틱 위에서 떼면 취소
+  BM.drag = d; const cells = dragCells(); BM.drag = null; send(cells); }
+function send(cells) { if (!cells.length || !BM.id) return; command({ k: 'bplace', id: BM.id, rot: BM.rot, cells: cells.map(c => [c.x, c.y]) }); }
+const bmPutFront = () => { if (BM.on && G && G.p.dead <= 0) send([frontTile()]); };
+// ---- 폰 조이스틱: 건축 중에는 왼쪽 아래(목록 바로 위)에서만 ----
+function joyZone() { const bar = $('#bmBar'), bh = bar && !bar.hidden ? bar.getBoundingClientRect().height : 0; return { x: 76, y: innerHeight - bh - 76, r: 72 }; }
+const inJoyZone = (cx, cy) => { if (!BM.on || !document.body.classList.contains('touch')) return false; const z = joyZone(); return Math.hypot(cx - z.x, cy - z.y) <= z.r; };
+// ---- 미리보기 (render/world.js renderOverlay에서 화면 좌표로) ----
+function drawBuild(T, camX, camY) { if (!BM.on || !G || G.p.dead > 0) return; const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), zz = T / 16, L = LIFT * zz;
+  ctx.save(); ctx.setLineDash([4 * zz, 3 * zz]); ctx.strokeStyle = 'rgba(255,241,214,.45)'; ctx.lineWidth = zz; // 놓을 수 있는 거리 8칸
+  ctx.strokeRect((px - BM_REACH) * T - camX + .5, (py - BM_REACH) * T - camY + .5, (BM_REACH * 2 + 1) * T - 1, (BM_REACH * 2 + 1) * T - 1); ctx.setLineDash([]);
+  const touch = document.body.classList.contains('touch');
+  const cells = BM.drag ? dragCells() : BM.id ? [touch ? frontTile() : BM.hover].filter(Boolean) : [];
+  const soft = !BM.drag; let used = 0;
+  for (const c of cells) { if (!BM.id) break; const why = bmWhy(BM.id, c.x, c.y, BM.rot); const ok = !why && used < BM.sup; if (ok) used++;
+    const fp = bmFp(BM.id, BM.rot), a = fp[0] * fp[1] > 1 ? bmAnchor(BM.id, c.x, c.y, BM.rot) : c, wall = inB(a.x, a.y) && G.wall[idx(a.x, a.y)] && fp[0] * fp[1] === 1;
+    const X = a.x * T - camX, Y = a.y * T - camY - (wall ? L : 0), w = fp[0] * T, h = fp[1] * T;
+    ctx.fillStyle = ok ? `rgba(95,208,122,${soft ? .25 : .45})` : `rgba(224,90,80,${soft ? .25 : .45})`; ctx.fillRect(X, Y, w, h);
+    ctx.strokeStyle = ok ? 'rgba(200,255,210,.9)' : 'rgba(255,190,180,.9)'; ctx.lineWidth = zz; ctx.strokeRect(X + zz / 2, Y + zz / 2, w - zz, h - zz); }
+  if (BM.drag && cells.length > 1) { ctx.font = pxFont(6.2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(`${used} / ${cells.length}`, clamp((BM.drag.b.x + .5) * T - camX, 30, ctx.canvas.width - 30), BM.drag.b.y * T - camY - 6 * zz, '#fff', '#000'); }
+  ctx.restore(); }
+// ---- 목록·버튼 누르기 ----
+function setupBuild() {
+  $('#bmBar').addEventListener('click', e => { const t = e.target.closest('[data-bc]'), s = e.target.closest('[data-bi]');
+    if (t) { BM.cat = t.dataset.bc; BM.id = null; BM.rot = 0; bmRender(); } else if (s) { if (BM.id !== s.dataset.bi) BM.rot = 0; BM.id = s.dataset.bi; bmRender(); } });
+  $('#bmDone').addEventListener('click', () => bmClose());
+  $('#bmRot').addEventListener('click', () => bmRotate());
+  $('#bmPut').addEventListener('pointerdown', e => { e.preventDefault(); bmPutFront(); });
+}
 function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;
@@ -7816,6 +8012,7 @@ function onSheetClick(e) {
   }
   if (a === 'bagTab') { UIS.bagTab = i; UIS.invSel = null; renderPanel(); return; }
   if (a === 'stash') { if (!(panel && panel.kind === 'chest') || runCmd({ k: 'stash', o: panel.i, same: i === 'same' }) === false) return; renderPanel(); return; }
+  if (a === 'buildMode') { bmOpen(); return; } // v91 건축 모드
   if (a === 'sortBag') { runCmd({ k: 'sortBag' }); UIS.invSel = null; renderPanel(); return; }
   if (a === 'wearOn') { const k = UIS.invSel; if (k != null && G.inv[k]) runCmd({ k: 'wear', i: k }); UIS.invSel = null; renderPanel(); return; }
   if (a === 'chTab') { UIS.chTab = i; UIS.chSlot = null; renderPanel(); return; } // v83: 캐릭터 창 탭 장비 / 스킬 / 등불
@@ -7971,13 +8168,15 @@ function mouseTile() {
 // 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)
 function readCtl() {
   if (panel) return { k: 'ctl', mx: 0, my: 0, stick: null, act: false, atk: false, aim: null }; // v76: 창이 열린 동안 내 캐릭터는 제자리 (세계는 계속)
+  const bm = BM.on; // v91: 건축 중에는 걷기만 (공격·상호작용·조준 없음)
   let mx = 0, my = 0;
   if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
   if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
   if (joy.active) { mx += joy.vx; my += joy.vy; }
   if (dpad.id != null) { mx += dpad.vx; my += dpad.vy; }
   const stick = dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2 ? { x: dpad.vx, y: dpad.vy } : joy.active && Math.hypot(joy.vx, joy.vy) > .2 ? { x: joy.vx, y: joy.vy } : null; // 대시 방향 (방향 패드가 먼저)
-  let aim = null; if (aimMouse()) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
+  let aim = null; if (aimMouse() && !bm) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
+  if (bm) return { k: 'ctl', mx, my, stick, act: false, atk: false, aim: null };
   return { k: 'ctl', mx, my, stick, act: btnHeld || keys.has('Space') || keys.has('KeyE'), atk: atkBtnHeld || mouse.down || keys.has('KeyJ'), aim };
 }
 function sendCtl() { if (G) runCmd(readCtl()); }
@@ -7986,23 +8185,28 @@ function subAction() { if (!started || paused || !G || G.p.dead > 0) return; ens
 function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
 function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
 function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
-function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 80 : 72) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 184 : 120)) + 'px'; } // v78: 와이어프레임 v2 자리(지름 128px, 왼쪽 16px)
+function placeJoyIdle() { const j = $('#joy'); if (BM.on && j) { const z = joyZone(); j.style.left = z.x + 'px'; j.style.top = z.y + 'px'; return; } /* v91: 건축 중에는 목록 바로 위 왼쪽 */ j.style.left = (innerHeight > 600 ? 80 : 72) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 184 : 120)) + 'px'; } // v78: 와이어프레임 v2 자리(지름 128px, 왼쪽 16px)
 function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     ensureAudio(); if (paused) return;
+    if (BM.on) { // v91 건축 모드: 마우스·손가락으로 놓기, 폰 조이스틱은 왼쪽 아래 동그라미 안에서만
+      if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; if (e.button === 0) bmDown(e); return; }
+      document.body.classList.add('touch');
+      if (!joy.active && ctrlPref !== 'pad' && inJoyZone(e.clientX, e.clientY)) { const z = joyZone(); joy.active = true; joy.id = e.pointerId; joy.ox = z.x; joy.oy = z.y; $('#joy').classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } return; }
+      bmDown(e); return; }
     if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; command({ k: 'skill', n: 0 }); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) command({ k: 'tap', b: 'atk' }); /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
     document.body.classList.add('touch'); mouse.used = false;
     if (!joy.active && ctrlPref !== 'pad' && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
   });
-  window.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; mouse.x = e.clientX; mouse.y = e.clientY; mouse.last = performance.now(); mouse.used = true; mouse.over = e.target === cv; });
+  window.addEventListener('pointermove', e => { if (BM.on) bmMove(e); if (e.pointerType !== 'mouse') return; mouse.x = e.clientX; mouse.y = e.clientY; mouse.last = performance.now(); mouse.used = true; mouse.over = e.target === cv; });
   document.addEventListener('mouseleave', () => { mouse.over = false; });
   cv.addEventListener('pointermove', e => {
     if (e.pointerType === 'mouse') return;
     if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 48; /* v78: 받침 128px − 손잡이 32px */ if (l > R) { dx *= R / l; dy *= R / l; } /* v75: the base stays where it was pressed; only the knob is held inside the ring, and the walk keeps that direction at full speed */
       const m = Math.hypot(dx, dy) / R; joy.vx = m > 0.15 ? dx / R : 0; joy.vy = m > 0.15 ? dy / R : 0; $('#joyKnob').style.transform = `translate(${dx}px,${dy}px)`; }
   });
-  const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
+  const up = e => { if (BM.on) bmUp(e); if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); window.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') mouse.down = false; });
   const ab = $('#actBtn');
   ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; command({ k: 'tap', b: 'act' }); ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
@@ -8016,11 +8220,13 @@ function setupInput() {
     if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
     if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
     ensureAudio();
-    if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
+    if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmClose(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
     if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
       if (['KeyI', 'KeyB'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK' || e.code === 'KeyU') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
+    if (e.code === 'KeyZ') { bmToggle(); return; } // v91: Z = 건축 모드
+    if (BM.on) { if (e.code === 'KeyR') bmRotate(); else if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); bmClose(); openPanel('inv'); } if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); if (!['Space', 'KeyE', 'KeyJ', 'KeyR', 'KeyQ', 'KeyF', 'KeyG', 'Tab'].includes(e.code) && !/^Digit/.test(e.code)) keys.add(e.code); return; } // 건축 중에는 걷기 키만
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽
@@ -8056,11 +8262,12 @@ function setupInput() {
   dp.addEventListener('pointermove', padMove);
   const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
   applyCtrl();
-  cv.addEventListener('wheel', e => { if (paused) return; command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
+  cv.addEventListener('wheel', e => { if (paused) return; if (BM.on) { bmPick(e.deltaY > 0 ? 1 : -1); return; } command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
   $('#sheet').addEventListener('click', onSheetClick);
+  setupBuild(); // v91 건축 모드 목록·버튼
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
