@@ -479,6 +479,12 @@ body.building #hotbar,body.building #actBtn,body.building #atkBtn,body.building 
 body.touch #bmTop .k,body.touch .btn .k{display:none}
 #bmBar{position:absolute;left:0;right:0;bottom:0;z-index:6;background:rgba(42,33,57,.97);border-top:2px solid var(--ink);padding:0 calc(env(safe-area-inset-right,0px) + 4px) calc(env(safe-area-inset-bottom,0px) + 4px) calc(env(safe-area-inset-left,0px) + 4px)}
 body:not(.touch) #bmBar{left:50%;right:auto;width:560px;max-width:calc(100% - 16px);transform:translateX(-50%);bottom:8px;border:2px solid var(--ink)}
+.bm-tools{display:flex;gap:2px;padding:4px 0 0}
+.bm-tools button{flex:1;min-width:0;height:36px;padding:0;background:var(--panel2);border:2px solid var(--line);font-size:16px;white-space:nowrap}
+.bm-tools button.on{background:var(--amber);color:var(--ink);border-color:var(--ink)}
+.bm-tools button.undo{flex:1.3;margin-left:6px}
+.bm-tools button:disabled{opacity:.4}
+.bm-tools .k{font-style:normal;opacity:.7}body.touch .bm-tools .k{display:none}
 .bm-info{height:32px;display:flex;align-items:center;gap:8px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bm-info span{color:var(--muted)}.bm-info .mk{color:var(--mint)}.bm-info .no{color:var(--danger)}
 .bm-tabs{display:flex;gap:2px;padding:2px 0 4px}
@@ -2523,7 +2529,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); placeWarps(); /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); placeWarps(); /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2534,7 +2540,7 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'qAct', 'natDay'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'qAct', 'natDay', 'bwall'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
 const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet']);
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
@@ -2604,7 +2610,7 @@ function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, qAct: G.qAct || 'main', natDay: Number.isFinite(G.natDay) ? G.natDay : null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {} };
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, qAct: G.qAct || 'main', natDay: Number.isFinite(G.natDay) ? G.natDay : null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {}, ...(G.bwall && G.bwall.size ? { bwall: [...G.bwall] } : {}) }; // v92: 직접 쌓은 자연 재료 벽 (건축 모드 뜯기)
 }
 function deserialize(s) {
   setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
@@ -2641,7 +2647,7 @@ function deserialize(s) {
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];
   G.under = new Map(Array.isArray(s.under) ? s.under : []); refundRoofTiles(s.roof, roofBack); G.terrain = (s.terrain && typeof s.terrain === 'object') ? s.terrain : {};
   G.fzones = Array.isArray(s.fzones) && s.fzones.length ? cleanZones(s.fzones) : genFlowerZones(); G.regen = Array.isArray(s.regen) ? s.regen.filter(r => Array.isArray(r) && Number.isInteger(r[0]) && OBJ[r[1]]).slice(0, 600) : [];
-  G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []);
+  G.qclaim = (s.qclaim && typeof s.qclaim === 'object') ? s.qclaim : {}; G.wire = new Map(Array.isArray(s.wire) ? s.wire : []); G.bwall = new Set(Array.isArray(s.bwall) ? s.bwall.filter(Number.isInteger) : []);
   G.buffs = Array.isArray(s.buffs) ? s.buffs.filter(b => b && EFF[b.ef] && [1, 2, 3].includes(b.tier) && Number.isFinite(b.end) && b.end > G.time && ITEMS[b.id]).slice(0, BUFF_MAX).map(b => ({ ef: b.ef, tier: b.tier, end: b.end, max: Number.isFinite(b.max) ? b.max : b.end - G.time, id: b.id })) : [];
   G.rpg = cleanRpg(s.rpg); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = Number.isFinite(s.p.mp) ? Math.min(s.p.mp, maxMp()) : maxMp(); G.p.hp = Math.min(G.p.hp, maxHp());
   G.stats.beaten = G.stats.beaten || {}; for (const k of BKEYS) if (G.bossDead[k]) G.stats.beaten[k] = 1;
@@ -3832,7 +3838,7 @@ const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat || d.cro
 // v91: 놓기의 세계 바꾸기 부분 (단축칸 놓기 placeItem과 건축 모드 bplace가 함께 써요) — s = 놓는 물건 칸(배터리 남은 양), op.rot 방향, op.anchor 여러 칸 가구 자리, op.give 걷어 낸 깐 바닥 받기
 const dropAt = (id, t) => spawnDrop(id, 1, t.x + .5, t.y + .5);
 function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give || dropAt;
-  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
+  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); (G.bwall || (G.bwall = new Set())).add(i); /* v92: 직접 쌓은 벽 */ if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) give(FLOOR_ITEM[old], t); else G.under.set(i, old); }
   else if (it.kind === 'ground') { const old = G.floor[i], back = old === PIT || old === WATER || old === LAVA ? null : floorItem(old); G.floor[i] = it.ground; G.under.delete(i); // v87: 바꾼 자연 바닥은 돌려받아요
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
@@ -3870,7 +3876,7 @@ function setFootprints(v) { FPV = v === 2 ? 2 : 1;
 setFootprints(2);
 // ================= 모으기: 벽 캐기·나무 베기·수확, 쳐서 회수(공격 버튼으로 가구 떼기) =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
-function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
+function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
 function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
   faceTo(t.x + .5 - p.x, t.y + .5 - p.y);
@@ -5303,8 +5309,8 @@ function warpTick(dt) { const R = G.warpGo; if (!R) return; const p = G.p;
   if (curPl === myPlayer()) { cam.x = p.x; cam.y = p.y; }
   markLight(); emit('puff', p.x, p.y - .3, '#e3d4ff', 18, 3, .4); emit('sfx', 'win'); G.stats.warps = (G.stats.warps || 0) + 1;
   emit('toast', `도착했어요 · ${R.name}`, 'good', 'warp'); }
-// ================= v91 건축 모드 (규칙): 건축 목록·개수(가방 + 16칸 안 상자), 만들어서 놓기, 놓을 수 있는지, 연속 놓기·벽/바닥 교체 명령 =================
-// 화면(목록·미리보기·누르기)은 ui/build.js. 여기서는 명령 { k: 'bplace', id, cells: [[x, y] …], rot }만 받아요.
+// ================= v91·v92 건축 모드 (규칙): 건축 목록·개수(가방 + 16칸 안 상자), 만들어서 놓기, 놓을 수 있는지, 연속 놓기·벽/바닥 교체, v92 옮기기·뜯기·되돌리기 =================
+// 화면(목록·미리보기·누르기)은 ui/build.js. 여기서는 명령 'bplace' { id, cells: [[x, y] …], rot } · 'bmove' { from, to, rot } · 'btake' { cells } · 'bundo' 만 받아요.
 // 기획: dev/design/건축모드.md (v91 = 켜고 끄기·목록·놓기·연속 놓기·교체, v92 = 옮기기·뜯기·되돌리기)
 const BM_REACH = 8, BM_MAX = 64, BM_CHEST_R = 16;
 // ---- 분류 탭 ----
@@ -5364,13 +5370,14 @@ function bmWhy(id, x, y, rot = 0, skip) { const it = ITEMS[id]; if (!it || !BUIL
   return canPlace(x, y, it, skip) ? null : '여기엔 놓을 수 없어요'; }
 // 벽을 바꿀 때 원래 벽은 캔 것과 같이 (가방으로, 넘치면 발밑에)
 function wallBack(x, y) { const w = G.wall[idx(x, y)], def = WALLS[w]; if (!def) return;
+  if (myWall(idx(x, y)) && wallItem(w)) { toBag(wallItem(w), { x, y }); return; } // v92: 직접 쌓은 벽은 그 벽 그대로 돌려받아요
   for (const [id, a, b, chance] of def.drop) if (rand() < chance) { const c = rint(a, b); if (c > 0) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, x + .5, y + .5); } } }
 const toBag = (id, t) => { const l = addItem(id, 1, false); if (l) spawnDrop(id, l, t.x + .5, t.y + .5); };
 // ---- 놓기 명령 ----
 defineCmd('bplace', c => {
   const p = G.p, it = ITEMS[c.id]; if (!p || p.dead > 0 || !it || !BUILD_KINDS.includes(it.kind) || !Array.isArray(c.cells)) return false;
   const rot = rotN(it.obj) > 1 ? (c.rot | 0) % rotN(it.obj) : 0, cells = c.cells.slice(0, BM_MAX), st = bmStations();
-  let n = 0, made = 0, why = null, last = null;
+  let n = 0, made = 0, why = null, last = null; const undo = [];
   for (const cell of cells) { const x = cell[0] | 0, y = cell[1] | 0; let w = bmWhy(c.id, x, y, rot);
     // 한 칸만 놓을 때는 단축칸 놓기처럼 내 몸이 비켜서요 (v67)
     if (w && cells.length === 1 && !(OBJ[it.obj] || {}).sz && !bmWhy(c.id, x, y, rot, p)) { const sp = pushSpot(x, y, it); if (sp) { p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; w = null; } }
@@ -5383,11 +5390,106 @@ defineCmd('bplace', c => {
       G.stats.made = G.stats.made || {}; G.stats.made[c.id] = (G.stats.made[c.id] || 0) + 1; }
     if (it.kind === 'wall' && G.wall[idx(x, y)]) { wallBack(x, y); G.wdmg.delete(idx(x, y)); }
     const t = putItem(it, s, { x, y }, { rot, anchor: OBJ[it.obj] && OBJ[it.obj].sz ? bmAnchor(c.id, x, y, rot) : null, give: toBag });
-    emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 3, 1.4, 0.1); n++; last = t; }
+    emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 3, 1.4, 0.1); n++; last = t; if (it.kind !== 'seed' && it.kind !== 'ground') undo.push({ x: t.x, y: t.y }); }
+  if (n) setUndo(undo.length ? { k: 'place', id: c.id, cells: undo } : null);
   emit('inv');
   if (n) { emit('sfx', 'place'); if (made) emit('toast', `재료로 ${made}개를 만들어 놓았어요`, 'good', 'bmake'); if (why && cells.length > 1) emit('toast', `${n}칸 놓았어요 · ${why}`, null, 'bplace'); }
   else { emit('toast', why || '여기엔 놓을 수 없어요', null, 'bplace'); return false; }
   return last;
+});
+// ================= v92 건축 모드 2: 옮기기·뜯기·되돌리기 (기획: dev/design/건축모드.md 6~8) =================
+// 직접 놓은 것 = 가구·제작대·조명 같은 물건(회수할 수 있는 것), 직접 쌓은 벽(나무·돌벽돌 벽, v92부터 쌓은 자연 재료 벽 G.bwall), 깐 바닥, 전선.
+// 자연 벽·나무·작물·덮은 자연 바닥은 뜯지 않아요(곡괭이·도끼·낫·삽으로). 되돌리기는 사람마다 마지막 한 번(놓기·옮기기·뜯기), 저장하지 않아요.
+const BW = () => G.bwall || (G.bwall = new Set());
+const myWall = i => { const w = G.wall[i]; return !!w && (w === 6 || w === 7 || BW().has(i)); };
+let WIT = null;
+const wallItem = w => { if (!WIT) { WIT = {}; for (const id in ITEMS) { const it = ITEMS[id]; if (it.kind === 'wall' && !(it.wall in WIT)) WIT[it.wall] = id; } } return WIT[w] || null; };
+function bmObjAt(x, y) { if (!inB(x, y)) return null; const ai = anchorAt(idx(x, y)); if (ai < 0) return null; const o = G.objs.get(ai); return o ? { i: ai, o, x: ai % W, y: (ai / W) | 0 } : null; }
+const notMine = d => !d || !d.item || d.refund || d.lost || d.crop || d.tree || d.nat;
+const canMoveObj = o => !notMine(OBJ[o.t]);
+const canTakeObj = o => canMoveObj(o) && !(OBJ[o.t].chest && o.items && o.items.some(Boolean));
+const retItem = o => TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : OBJ[o.t].item;
+const setUndo = u => { if (G.p) G.p.bmUndo = u || null; };
+const bmUndoKind = () => (G && G.p && G.p.bmUndo && G.p.bmUndo.k) || null;
+// 뜯을 것: 물건 → 벽 → 전선 → 깐 바닥 (위에 있는 것부터)
+function bmTakeAt(x, y, far) {
+  if (!inB(x, y)) return { why: '뜯을 것이 없어요' }; if (!far && !inBmReach(x, y)) return { why: '8칸 안에서만 뜯을 수 있어요' };
+  const i = idx(x, y), a = bmObjAt(x, y);
+  if (a) { if (canTakeObj(a.o)) return { k: 'obj', ...a }; return { why: OBJ[a.o.t] && OBJ[a.o.t].chest && canMoveObj(a.o) ? '물건이 든 상자는 뜯을 수 없어요 · 옮기기는 돼요' : '직접 놓은 것만 뜯을 수 있어요' }; }
+  if (G.wall[i]) return myWall(i) && wallItem(G.wall[i]) ? { k: 'wall', i, x, y } : { why: '직접 쌓은 벽만 뜯어요 · 자연 벽은 곡괭이로 캐요' };
+  if (G.wire.has(i)) return { k: 'wire', i, x, y };
+  if (isPlacedFloor(G.floor[i])) { if ((G.under.has(i) ? G.under.get(i) : 2) === PIT && occupied(x, y)) return { why: '누가 서 있는 칸이에요' }; return { k: 'floor', i, x, y }; }
+  return { why: '직접 놓은 것만 뜯을 수 있어요' }; }
+const bmGive = (id, x, y) => { const l = addItem(id, 1, false); if (l) spawnDrop(id, l, x + .5, y + .5); };
+const copyObj = o => { const c = JSON.parse(JSON.stringify(o)); delete c.job; if (Array.isArray(c.store)) c.store = []; return c; };
+// 한 가지를 뜯어서 가방으로 (가득이면 발밑에) — 되돌리기용 기록을 돌려줘요
+function takeOne(t) { const { x, y, i } = t;
+  if (t.k === 'obj') { const o = t.o, d = OBJ[o.t], rec = { k: 'obj', x, y, o: copyObj(o), it: retItem(o) };
+    delObj(i); if (d.bed && G.spawnPt && G.spawnPt.x === x && G.spawnPt.y === y) G.spawnPt = null;
+    returnObj(o, x + .5, y + .5); if (d.warp) warpsChanged(); emit('puff', x + .5, y + .6, '#e8d8c0', 4, 2); emit('tile', x, y); return rec; }
+  if (t.k === 'wall') { const w = G.wall[i]; G.wall[i] = 0; G.wdmg.delete(i); BW().delete(i); bmGive(wallItem(w), x, y); flowNear(x, y); emit('puff', x + .5, y + .6, '#c9b49a', 5, 2); emit('tile', x, y); return { k: 'wall', x, y, w }; }
+  if (t.k === 'wire') { G.wire.delete(i); bmGive('wire', x, y); emit('tile', x, y); return { k: 'wire', x, y }; }
+  const f = G.floor[i], u = G.under.has(i) ? G.under.get(i) : null; G.floor[i] = u != null ? u : 2; G.under.delete(i); bmGive(FLOOR_ITEM[f], x, y); flowNear(x, y); emit('puff', x + .5, y + .7, '#e8d8c0', 4, 2); emit('tile', x, y); return { k: 'floor', x, y, f, u }; }
+defineCmd('btake', c => {
+  const p = G.p; if (!p || p.dead > 0 || !Array.isArray(c.cells)) return false;
+  const seen = new Set(), recs = []; let why = null;
+  for (const cell of c.cells.slice(0, BM_MAX)) { const t = bmTakeAt(cell[0] | 0, cell[1] | 0); if (t.why) { why = why || t.why; continue; }
+    const key = t.k === 'obj' ? 'o' + t.i : t.k + t.i; if (seen.has(key)) continue; seen.add(key); recs.push(takeOne(t)); }
+  if (!recs.length) { emit('toast', why || '뜯을 것이 없어요', null, 'btake'); return false; }
+  setUndo({ k: 'take', recs }); markLight(); emit('inv'); emit('sfx', 'pick');
+  if (recs.length > 1) emit('toast', `${recs.length}개를 뜯었어요`, null, 'btake'); return recs.length;
+});
+// ---- 옮기기: 새 자리 모든 칸이 비어야 (자기 자리는 빼고), 든 상자·굽는 중인 것도 그대로 ----
+const dirOf = (o, rot) => { const rn = rotN(o.t); return rn > 1 && rot != null ? (rot | 0) % rn : rotOf(o); };
+function moveFp(o, rot) { const d = OBJ[o.t], dir = dirOf(o, rot); return fpOf({ t: o.t, rot: rotSwaps(d) && dir % 2 ? 1 : 0 }); }
+const moveAnchor = (o, x, y, rot) => { const fp = moveFp(o, rot); return { x: x - Math.floor((fp[0] - 1) / 2), y: y - (fp[1] - 1) }; };
+function bmMoveWhy(a, x, y, rot, far) { const o = a.o, d = OBJ[o.t]; if (!canMoveObj(o)) return '옮길 수 없는 물건이에요';
+  const fp = moveFp(o, rot), an = moveAnchor(o, x, y, rot);
+  for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = an.x + dx, ty = an.y + dy; if (!inB(tx, ty)) return '여기엔 놓을 수 없어요'; if (!far && !inBmReach(tx, ty)) return '8칸 안에만 놓을 수 있어요';
+    const j = idx(tx, ty), f = G.floor[j]; if (G.wall[j] || f === WATER || f === LAVA || f === PIT) return '여기엔 놓을 수 없어요';
+    const q = G.objs.get(j); if (q && j !== a.i && !(q.t === '_part' && q.a === a.i)) return '자리가 모자라요';
+    if (d.solid && occupied(tx, ty)) return '누가 서 있는 칸이에요'; if (d.tw && nearWarpPt(tx, ty)) return '워프포인트 둘레에는 세울 수 없어요'; }
+  if (d.warp && noDigZone(an.x, an.y) === 'boss') return '보스방 가까이에는 포탈을 놓을 수 없어요';
+  return null; }
+function moveObj(a, an, dir) { const o = a.o, d = OBJ[o.t], from = { x: a.x, y: a.y, dir: rotOf(o) };
+  delObj(a.i); delete o.dir; delete o.rot; if (dir) { o.dir = dir; if (rotSwaps(d) && dir % 2) o.rot = 1; }
+  const j = idx(an.x, an.y); G.objs.set(j, o); if (d.sz) setParts(j, o);
+  if (d.bed && G.spawnPt && G.spawnPt.x === from.x && G.spawnPt.y === from.y) G.spawnPt = { x: an.x, y: an.y };
+  if (d.warp) warpsChanged(); markLight(); emit('tile', from.x, from.y); emit('tile', an.x, an.y); emit('sfx', 'place'); emit('puff', an.x + .5, an.y + .9, '#e8d8c0', 4, 1.4, 0.1);
+  return from; }
+defineCmd('bmove', c => {
+  const p = G.p; if (!p || p.dead > 0 || !Array.isArray(c.from) || !Array.isArray(c.to)) return false;
+  const a = bmObjAt(c.from[0] | 0, c.from[1] | 0); if (!a || !canMoveObj(a.o)) { emit('toast', '옮길 수 없는 물건이에요', null, 'bmove'); return false; }
+  if (!inBmReach(a.x, a.y)) { emit('toast', '8칸 안에서만 옮길 수 있어요', null, 'bmove'); return false; }
+  const x = c.to[0] | 0, y = c.to[1] | 0, why = bmMoveWhy(a, x, y, c.rot); if (why) { emit('toast', why, null, 'bmove'); return false; }
+  const an = moveAnchor(a.o, x, y, c.rot), dir = dirOf(a.o, c.rot); if (an.x === a.x && an.y === a.y && dir === rotOf(a.o)) return false;
+  const from = moveObj(a, an, dir); setUndo({ k: 'move', o: a.o, from, to: an }); return an;
+});
+// ---- 되돌리기 (마지막 한 번) ----
+function putBack(r) { const i = idx(r.x, r.y), ch = bmChests();
+  if (r.k === 'obj') { const d = OBJ[r.o.t]; if (!d || !fpFree(r.x, r.y, fpOf(r.o), !!d.solid) || bmCount(r.it, ch).all < 1) return false;
+    const s = bmTake(r.it, 1, ch), o = copyObj(r.o); if (s.dur != null && o.t === 'battery') o.e = s.dur;
+    G.objs.set(i, o); if (d.sz) setParts(i, o); if (d.warp) warpsChanged(); return true; }
+  if (r.k === 'wall') { const id = wallItem(r.w); if (G.wall[i] || G.objs.get(i) || occupied(r.x, r.y) || !id || bmCount(id, ch).all < 1) return false; bmTake(id, 1, ch); G.wall[i] = r.w; BW().add(i); return true; }
+  if (r.k === 'wire') { if (G.wire.has(i) || bmCount('wire', ch).all < 1) return false; bmTake('wire', 1, ch); G.wire.set(i, 1); return true; }
+  if (r.k === 'floor') { const id = FLOOR_ITEM[r.f]; if (G.wall[i] || G.floor[i] !== (r.u != null ? r.u : 2) || !id || bmCount(id, ch).all < 1) return false; bmTake(id, 1, ch); G.floor[i] = r.f; if (r.u != null) G.under.set(i, r.u); return true; }
+  return false; }
+defineCmd('bundo', () => {
+  const p = G.p, u = p && p.bmUndo; if (!p || p.dead > 0 || !u) { emit('toast', '되돌릴 것이 없어요', null, 'bundo'); return false; }
+  p.bmUndo = null; let n = 0, miss = 0;
+  if (u.k === 'take') { for (const r of u.recs.slice().reverse()) { if (putBack(r)) { n++; emit('tile', r.x, r.y); } else miss++; } }
+  else if (u.k === 'place') { const it = ITEMS[u.id];
+    for (const c of u.cells.slice().reverse()) { const t = bmTakeAt(c.x, c.y, true); if (t.why) { miss++; continue; }
+      const same = t.k === 'obj' ? t.o.t === it.obj : t.k === 'wall' ? it.kind === 'wall' && G.wall[t.i] === it.wall : t.k === 'wire' ? it.kind === 'wire' : it.kind === 'floor' && G.floor[t.i] === it.floor;
+      if (!same) { miss++; continue; } takeOne(t); n++; } }
+  else if (u.k === 'move') { const ai = idx(u.to.x, u.to.y), o = G.objs.get(ai);
+    if (o === u.o) { const a = { i: ai, o, x: u.to.x, y: u.to.y }, fp = moveFp(o, u.from.dir);
+      const bx = u.from.x + Math.floor((fp[0] - 1) / 2), by = u.from.y + (fp[1] - 1); // 원래 자리를 「아래 줄 가운데」 칸으로 바꿔서 확인
+      if (!bmMoveWhy(a, bx, by, u.from.dir, true)) { moveObj(a, { x: u.from.x, y: u.from.y }, u.from.dir); n++; } else miss++; } else miss++; }
+  markLight(); emit('inv');
+  if (n) { emit('sfx', 'pick'); emit('toast', miss ? `되돌렸어요 · ${miss}개는 되돌리지 못했어요` : '되돌렸어요', 'good', 'bundo'); }
+  else emit('toast', u.k === 'take' ? '되돌리지 못했어요 · 그 물건이 없거나 자리가 막혔어요' : '되돌리지 못했어요', null, 'bundo');
+  return n;
 });
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
@@ -7921,13 +8023,15 @@ function mapView() { const F = UIS.mapFocus, all = UIS.mapWarp != null ? !UIS.wa
 // v89: 지도를 누른 곳에서 가장 가까운 갈 수 있는 곳 (지도 그림 칸 기준 40 안), 없으면 null
 function warpTapAt(el, clientX, clientY) { const r = el.getBoundingClientRect(); if (!r.width) return null; const X = (clientX - r.left) * 600 / r.width, Y = (clientY - r.top) * 600 / r.height, { s, ox, oy } = mapView();
   let best = null, bd = 40; for (const e of warpDests(UIS.mapWarp)) { const d = Math.hypot((e.x + .5 - ox) * s - X, (e.y + .5 - oy) * s - Y); if (d < bd) { bd = d; best = e; } } return best; }
-// ================= v91 건축 모드 (화면): 켜고 끄기, 아래 건축 목록, 화면 누르기·끌기로 놓기, 「놓기」 버튼(앞 칸), 미리보기 =================
-// 규칙은 sim/buildmode.js (명령 'bplace'). 기획: dev/design/건축모드.md
-const BM = { on: false, cat: 'wall', id: null, rot: 0, drag: null, list: [], sup: 0, hover: null };
+// ================= v91·v92 건축 모드 (화면): 켜고 끄기, 아래 건축 목록, 화면 누르기·끌기로 놓기, 「놓기」 버튼(앞 칸), 미리보기, v92 놓기/옮기기/뜯기 고르기·되돌리기 =================
+// 규칙은 sim/buildmode.js (명령 'bplace'·'bmove'·'btake'·'bundo'). 기획: dev/design/건축모드.md
+const BM = { on: false, cat: 'wall', id: null, rot: 0, drag: null, list: [], sup: 0, hover: null, tool: 'place', grab: null };
+const TOOLS = [['place', '놓기', '1'], ['move', '옮기기', '2'], ['take', '뜯기', '3']];
 function bmOpen() { if (!started || !G || G.p.dead > 0) return; if (panel) closePanel(); ensureAudio();
-  BM.on = true; BM.drag = null; document.body.classList.add('building'); $('#bmBar').hidden = $('#bmTop').hidden = false; joyEnd(); bmRender(); placeJoyIdle(); }
-function bmClose() { if (!BM.on) return; BM.on = false; BM.drag = null; BM.hover = null; document.body.classList.remove('building'); $('#bmBar').hidden = $('#bmTop').hidden = true; $('#bmPut').hidden = $('#bmRot').hidden = true; joyEnd(); placeJoyIdle(); }
+  BM.on = true; BM.drag = null; BM.tool = 'place'; BM.grab = null; document.body.classList.add('building'); $('#bmBar').hidden = $('#bmTop').hidden = false; joyEnd(); bmRender(); placeJoyIdle(); }
+function bmClose() { if (!BM.on) return; BM.on = false; BM.drag = null; BM.hover = null; BM.grab = null; document.body.classList.remove('building'); $('#bmBar').hidden = $('#bmTop').hidden = true; $('#bmPut').hidden = $('#bmRot').hidden = true; joyEnd(); placeJoyIdle(); }
 const bmToggle = () => BM.on ? bmClose() : bmOpen();
+const bmEsc = () => { if (BM.grab) { BM.grab = null; bmRender(); } else bmClose(); }; // v92: 잡은 물건이 있으면 먼저 놓아 줘요
 const entry = id => BM.list.find(e => e.id === id);
 // 고른 것으로 몇 칸을 놓을 수 있는지 (가진 것 + 재료로 만들 수 있는 것) — 미리보기에서 넘치는 칸은 빨갛게
 function supply(e) { if (!e) return 0; if (e.have) return e.have; if (!e.r || !e.can) return 0; return BM_MAX; }
@@ -7935,18 +8039,31 @@ function bmRender() { if (!BM.on || !G) return;
   BM.list = bmList(); const inCat = BM.list.filter(e => e.cat === BM.cat);
   if (!BM.id || !entry(BM.id)) BM.id = (inCat.find(e => e.can) || inCat[0] || {}).id || null;
   const sel = entry(BM.id); BM.sup = supply(sel); if (sel && BM.rot && rotN(ITEMS[sel.id].obj) < 2) BM.rot = 0;
-  const cnt = c => BM.list.filter(e => e.cat === c).length;
-  let h = `<div class="bm-info">${sel ? `<b>${ITEMS[sel.id].n}</b> ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
+  const cnt = c => BM.list.filter(e => e.cat === c).length, undo = bmUndoKind();
+  let h = `<div class="bm-tools">${TOOLS.map(([k, n, key]) => `<button type="button" class="${BM.tool === k ? 'on' : ''}" data-bt="${k}">${n}<i class="k"> ${key}</i></button>`).join('')}<button type="button" class="undo" data-bu="1"${undo ? '' : ' disabled'}>되돌리기<i class="k"> Ctrl+&#90;</i></button></div>`;
+  if (BM.tool !== 'place') { gripCheck(); const g = BM.grab && G.objs.get(idx(BM.grab.x, BM.grab.y));
+    h += `<div class="bm-info">${BM.tool === 'take' ? '<span>직접 놓은 것을 누르거나 끌어 뜯어요</span>' : g ? `<b>${OBJ[g.t].n}</b> <span>옮길 자리를 누르세요</span>` : '<span>옮길 물건을 누르세요</span>'}</div>`;
+    $('#bmBar').innerHTML = h; $('#bmRot').hidden = !(g && rotN(g.t) > 1); $('#bmPut').hidden = false; $('#bmPut').textContent = BM.tool === 'take' ? '뜯기' : g ? '내려놓기' : '잡기';
+    document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); return; }
+  h += `<div class="bm-info">${sel ? `<b>${ITEMS[sel.id].n}</b> ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
   h += `<div class="bm-tabs">${BM_CATS.map(([c, n]) => `<button type="button" class="${BM.cat === c ? 'on' : ''}${cnt(c) ? '' : ' empty'}" data-bc="${c}">${n}</button>`).join('')}</div><div class="bm-slots">`;
   for (const e of inCat) h += `<button type="button" class="slot${e.id === BM.id ? ' pick' : ''}${e.can ? '' : ' dim'}${e.have ? '' : ' mk'}" data-bi="${e.id}" aria-label="${ITEMS[e.id].n}"><img class="px" src="${iconURL(e.id)}" alt=""><span class="cnt">${e.have > 1 ? e.have : ''}</span></button>`;
   if (!inCat.length) h += `<p class="bm-none">이 칸에 놓을 것이 없어요</p>`;
   $('#bmBar').innerHTML = h + '</div>';
-  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.id].obj) > 1); $('#bmPut').hidden = !sel;
+  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.id].obj) > 1); $('#bmPut').hidden = !sel; $('#bmPut').textContent = '놓기';
   document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); }
 onEvent('inv', onlyMe(() => { if (BM.on) bmRender(); }));
 onEvent('fade', onlyMe(m => { if (m === 'faint' || m === 'show') bmClose(); })); // 기절하면 건축 끝
-function bmRotate() { const e = entry(BM.id); if (!e) return; const n = rotN(ITEMS[e.id].obj); if (n < 2) return; BM.rot = (BM.rot + 1) % n;
+function bmRotate() { let n; if (BM.tool === 'move') { const g = grabbed(); if (!g) return; n = rotN(g.o.t); } else if (BM.tool === 'place') { const e = entry(BM.id); if (!e) return; n = rotN(ITEMS[e.id].obj); } else return; if (n < 2) return; BM.rot = (BM.rot + 1) % n;
   toast(n === 4 ? `${josa(DIRN[BM.rot], '을', '를')} 보게 놓아요` : BM.rot ? '옆으로 돌려 놓아요' : '정면으로 놓아요'); }
+// ---- v92 놓기·옮기기·뜯기 고르기, 잡은 물건 ----
+function bmTool(k) { if (!BM.on || !TOOLS.some(t => t[0] === k)) return; BM.tool = k; BM.grab = null; BM.drag = null; if (k === 'place') BM.rot = 0; bmRender(); }
+const grabbed = () => { if (!BM.grab || !G) return null; const a = bmObjAt(BM.grab.x, BM.grab.y); return a && a.o === BM.grab.o ? a : null; };
+function gripCheck() { if (BM.grab && !grabbed()) BM.grab = null; } // 잡은 물건이 없어졌으면(다른 사람이 뜯음 등) 놓아 줘요
+function grabAt(t) { const a = bmObjAt(t.x, t.y); if (!a) { toast('옮길 물건이 없어요'); return false; } if (!canMoveObj(a.o)) { toast('옮길 수 없는 물건이에요'); return false; }
+  BM.grab = { x: a.x, y: a.y, o: a.o }; BM.rot = rotOf(a.o); bmRender(); return true; }
+function moveTo(a, t) { const ok = command({ k: 'bmove', from: [a.x, a.y], to: [t.x, t.y], rot: BM.rot }); if (ok) BM.grab = null; bmRender(); return ok; }
+const bmUndo = () => { if (!BM.on || !G || G.p.dead > 0) return; command({ k: 'bundo' }); BM.grab = null; bmRender(); };
 function bmPick(d) { const l = BM.list.filter(e => e.cat === BM.cat); if (!l.length) return; const k = l.findIndex(e => e.id === BM.id); BM.id = l[(k + d + l.length) % l.length].id; bmRender(); }
 // ---- 화면 칸 고르기 ----
 function tileAt(cx, cy) { const mx = (cx * DPR + VIEW.baseX) / TP, my = (cy * DPR + VIEW.baseY) / TP; let tx = Math.floor(mx), ty = Math.floor(my);
@@ -7958,18 +8075,24 @@ function frontTile() { const p = G.p, f = p.face || { x: 0, y: 1 }, px = Math.fl
 function lineTo(path, b) { const a = path[path.length - 1]; if (!a) { path.push(b); return; } let x = a.x, y = a.y;
   while ((x !== b.x || y !== b.y) && path.length < BM_MAX) { const dx = b.x - x, dy = b.y - y; if (Math.abs(dx) >= Math.abs(dy)) x += Math.sign(dx); else y += Math.sign(dy); path.push({ x, y }); } }
 // 끌기 모양: 바닥은 네모, 벽·울타리·전선은 지나간 길, 그 밖은 마지막 칸
-function dragCells() { const d = BM.drag; if (!d || !BM.id) return []; const m = bmDrag(BM.id);
+function dragCells() { const d = BM.drag; if (!d || (BM.tool === 'place' && !BM.id)) return []; const m = BM.tool === 'take' ? 'rect' : BM.tool === 'move' ? 'one' : bmDrag(BM.id);
   if (m === 'one') return [d.b]; if (m === 'line') return d.path.slice(0, BM_MAX);
   const out = [], x0 = Math.min(d.a.x, d.b.x), x1 = Math.max(d.a.x, d.b.x), y0 = Math.min(d.a.y, d.b.y), y1 = Math.max(d.a.y, d.b.y);
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { out.push({ x, y }); } out.sort((p, q) => Math.hypot(p.x - d.a.x, p.y - d.a.y) - Math.hypot(q.x - d.a.x, q.y - d.a.y)); return out.slice(0, BM_MAX); }
 const overUI = (cx, cy) => { for (const s of ['#bmBar', '#bmTop', '#bmPut', '#bmRot']) { const e = $(s); if (!e || e.hidden) continue; const r = e.getBoundingClientRect(); if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return true; } return inJoyZone(cx, cy); };
-function bmDown(e) { if (!BM.id || paused) return; const t = tileAt(e.clientX, e.clientY); BM.drag = { id: e.pointerId, a: t, b: t, path: [t] }; try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
+function bmDown(e) { if ((BM.tool === 'place' && !BM.id) || paused) return; const t = tileAt(e.clientX, e.clientY); BM.drag = { id: e.pointerId, a: t, b: t, path: [t] }; try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
 function bmMove(e) { const d = BM.drag; if (e.pointerType === 'mouse') BM.hover = tileAt(e.clientX, e.clientY); if (!d || e.pointerId !== d.id) return; const t = tileAt(e.clientX, e.clientY); if (t.x === d.b.x && t.y === d.b.y) return; d.b = t; lineTo(d.path, t); }
 function bmUp(e) { const d = BM.drag; if (!d || e.pointerId !== d.id) return; BM.drag = null;
   if (e.type === 'pointercancel' || overUI(e.clientX, e.clientY)) return; // 목록·조이스틱 위에서 떼면 취소
+  if (BM.tool === 'move') { const g = grabbed();
+    if (g) { const o = bmObjAt(d.b.x, d.b.y); if (o && o.o === g.o && d.a.x === d.b.x && d.a.y === d.b.y) { BM.grab = null; bmRender(); return; } moveTo(g, d.b); return; }
+    const a = bmObjAt(d.a.x, d.a.y); if (a && canMoveObj(a.o) && (d.a.x !== d.b.x || d.a.y !== d.b.y)) { BM.rot = rotOf(a.o); moveTo(a, d.b); return; } // 물건에서 끌어 바로 옮기기
+    grabAt(d.b); return; }
   BM.drag = d; const cells = dragCells(); BM.drag = null; send(cells); }
-function send(cells) { if (!cells.length || !BM.id) return; command({ k: 'bplace', id: BM.id, rot: BM.rot, cells: cells.map(c => [c.x, c.y]) }); }
-const bmPutFront = () => { if (BM.on && G && G.p.dead <= 0) send([frontTile()]); };
+function send(cells) { if (!cells.length) return; if (BM.tool === 'take') { command({ k: 'btake', cells: cells.map(c => [c.x, c.y]) }); return; }
+  if (!BM.id) return; command({ k: 'bplace', id: BM.id, rot: BM.rot, cells: cells.map(c => [c.x, c.y]) }); bmRender(); }
+const bmPutFront = () => { if (!BM.on || !G || G.p.dead > 0) return; const f = frontTile();
+  if (BM.tool === 'move') { const g = grabbed(); if (g) moveTo(g, f); else grabAt(f); return; } send([f]); };
 // ---- 폰 조이스틱: 건축 중에는 왼쪽 아래(목록 바로 위)에서만 ----
 function joyZone() { const bar = $('#bmBar'), bh = bar && !bar.hidden ? bar.getBoundingClientRect().height : 0; return { x: 76, y: innerHeight - bh - 76, r: 72 }; }
 const inJoyZone = (cx, cy) => { if (!BM.on || !document.body.classList.contains('touch')) return false; const z = joyZone(); return Math.hypot(cx - z.x, cy - z.y) <= z.r; };
@@ -7977,8 +8100,9 @@ const inJoyZone = (cx, cy) => { if (!BM.on || !document.body.classList.contains(
 function drawBuild(T, camX, camY) { if (!BM.on || !G || G.p.dead > 0) return; const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), zz = T / 16, L = LIFT * zz;
   ctx.save(); ctx.setLineDash([4 * zz, 3 * zz]); ctx.strokeStyle = 'rgba(255,241,214,.45)'; ctx.lineWidth = zz; // 놓을 수 있는 거리 8칸
   ctx.strokeRect((px - BM_REACH) * T - camX + .5, (py - BM_REACH) * T - camY + .5, (BM_REACH * 2 + 1) * T - 1, (BM_REACH * 2 + 1) * T - 1); ctx.setLineDash([]);
-  const touch = document.body.classList.contains('touch');
-  const cells = BM.drag ? dragCells() : BM.id ? [touch ? frontTile() : BM.hover].filter(Boolean) : [];
+  const touch = document.body.classList.contains('touch'), here = touch ? frontTile() : BM.hover;
+  if (BM.tool !== 'place') { drawEdit(T, camX, camY, here, touch); ctx.restore(); return; }
+  const cells = BM.drag ? dragCells() : BM.id ? [here].filter(Boolean) : [];
   const soft = !BM.drag; let used = 0;
   for (const c of cells) { if (!BM.id) break; const why = bmWhy(BM.id, c.x, c.y, BM.rot); const ok = !why && used < BM.sup; if (ok) used++;
     const fp = bmFp(BM.id, BM.rot), a = fp[0] * fp[1] > 1 ? bmAnchor(BM.id, c.x, c.y, BM.rot) : c, wall = inB(a.x, a.y) && G.wall[idx(a.x, a.y)] && fp[0] * fp[1] === 1;
@@ -7987,9 +8111,30 @@ function drawBuild(T, camX, camY) { if (!BM.on || !G || G.p.dead > 0) return; co
     ctx.strokeStyle = ok ? 'rgba(200,255,210,.9)' : 'rgba(255,190,180,.9)'; ctx.lineWidth = zz; ctx.strokeRect(X + zz / 2, Y + zz / 2, w - zz, h - zz); }
   if (BM.drag && cells.length > 1) { ctx.font = pxFont(6.2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(`${used} / ${cells.length}`, clamp((BM.drag.b.x + .5) * T - camX, 30, ctx.canvas.width - 30), BM.drag.b.y * T - camY - 6 * zz, '#fff', '#000'); }
   ctx.restore(); }
+// v92 옮기기·뜯기 미리보기: 뜯을 것은 주황, 못 뜯는 칸은 옅은 빨강 / 잡은 물건은 노란 테두리, 옮길 자리는 초록·빨강
+function bmBox(T, camX, camY, x, y, w, h, fill, line, lift) { const zz = T / 16, X = x * T - camX, Y = y * T - camY - (lift || 0);
+  ctx.fillStyle = fill; ctx.fillRect(X, Y, w * T, h * T); ctx.strokeStyle = line; ctx.lineWidth = zz; ctx.strokeRect(X + zz / 2, Y + zz / 2, w * T - zz, h * T - zz); }
+function drawEdit(T, camX, camY, here, touch) { const L = LIFT * T / 16, soft = !BM.drag;
+  if (BM.tool === 'take') { const cells = BM.drag ? dragCells() : [here].filter(Boolean), seen = new Set(); let n = 0;
+    for (const c of cells) { const t = bmTakeAt(c.x, c.y); if (t.why) { if (!soft) bmBox(T, camX, camY, c.x, c.y, 1, 1, 'rgba(224,90,80,.18)', 'rgba(255,190,180,.5)'); else bmBox(T, camX, camY, c.x, c.y, 1, 1, 'rgba(224,90,80,.2)', 'rgba(255,190,180,.8)', inB(c.x, c.y) && G.wall[idx(c.x, c.y)] ? L : 0); continue; }
+      const key = t.k === 'obj' ? 'o' + t.i : t.k + t.i; if (seen.has(key)) continue; seen.add(key); n++;
+      const fp = t.k === 'obj' ? fpOf(t.o) : [1, 1]; bmBox(T, camX, camY, t.x, t.y, fp[0], fp[1], `rgba(240,150,60,${soft ? .3 : .5})`, 'rgba(255,220,170,.95)', t.k === 'wall' ? L : 0); }
+    if (BM.drag && cells.length > 1) { ctx.font = pxFont(6.2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(`뜯기 ${n}`, clamp((BM.drag.b.x + .5) * T - camX, 30, ctx.canvas.width - 30), BM.drag.b.y * T - camY - 6 * T / 16, '#fff', '#000'); }
+    return; }
+  // 옮기기
+  const g = grabbed();
+  if (!g) { const a0 = BM.drag ? bmObjAt(BM.drag.a.x, BM.drag.a.y) : null;
+    if (a0 && canMoveObj(a0.o) && BM.drag && (BM.drag.a.x !== BM.drag.b.x || BM.drag.a.y !== BM.drag.b.y)) { dest(T, camX, camY, a0, BM.drag.b, rotOf(a0.o)); return; }
+    const t = BM.drag ? BM.drag.b : here; if (!t) return; const a = bmObjAt(t.x, t.y); if (!a) return; const fp = fpOf(a.o);
+    bmBox(T, camX, camY, a.x, a.y, fp[0], fp[1], canMoveObj(a.o) ? 'rgba(255,214,90,.25)' : 'rgba(224,90,80,.2)', canMoveObj(a.o) ? 'rgba(255,230,150,.95)' : 'rgba(255,190,180,.8)'); return; }
+  const fp = fpOf(g.o); bmBox(T, camX, camY, g.x, g.y, fp[0], fp[1], 'rgba(255,214,90,.2)', 'rgba(255,230,150,.95)');
+  const t = BM.drag ? BM.drag.b : here; if (t) dest(T, camX, camY, g, t, BM.rot); }
+function dest(T, camX, camY, a, t, rot) { const why = bmMoveWhy(a, t.x, t.y, rot), fp = moveFp(a.o, rot), an = moveAnchor(a.o, t.x, t.y, rot);
+  bmBox(T, camX, camY, an.x, an.y, fp[0], fp[1], why ? 'rgba(224,90,80,.4)' : 'rgba(95,208,122,.4)', why ? 'rgba(255,190,180,.9)' : 'rgba(200,255,210,.9)'); }
 // ---- 목록·버튼 누르기 ----
 function setupBuild() {
   $('#bmBar').addEventListener('click', e => { const t = e.target.closest('[data-bc]'), s = e.target.closest('[data-bi]');
+    const tl = e.target.closest('[data-bt]'), u = e.target.closest('[data-bu]'); if (tl) { bmTool(tl.dataset.bt); return; } if (u) { bmUndo(); return; }
     if (t) { BM.cat = t.dataset.bc; BM.id = null; BM.rot = 0; bmRender(); } else if (s) { if (BM.id !== s.dataset.bi) BM.rot = 0; BM.id = s.dataset.bi; bmRender(); } });
   $('#bmDone').addEventListener('click', () => bmClose());
   $('#bmRot').addEventListener('click', () => bmRotate());
@@ -8220,13 +8365,14 @@ function setupInput() {
     if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
     if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
     ensureAudio();
-    if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmClose(); else if (started) openPanel('menu'); return; }
+    if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmEsc(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
     if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
       if (['KeyI', 'KeyB'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK' || e.code === 'KeyU') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
+    if (e.code === 'KeyZ' && BM.on && (e.ctrlKey || e.metaKey)) { e.preventDefault(); bmUndo(); return; } // v92: Ctrl·⌘+Z = 되돌리기
     if (e.code === 'KeyZ') { bmToggle(); return; } // v91: Z = 건축 모드
-    if (BM.on) { if (e.code === 'KeyR') bmRotate(); else if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); bmClose(); openPanel('inv'); } if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); if (!['Space', 'KeyE', 'KeyJ', 'KeyR', 'KeyQ', 'KeyF', 'KeyG', 'Tab'].includes(e.code) && !/^Digit/.test(e.code)) keys.add(e.code); return; } // 건축 중에는 걷기 키만
+    if (BM.on) { if (e.code === 'KeyR') bmRotate(); else if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') bmTool(['place', 'move', 'take'][+e.code.slice(5) - 1]); else if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); bmClose(); openPanel('inv'); } if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); if (!['Space', 'KeyE', 'KeyJ', 'KeyR', 'KeyQ', 'KeyF', 'KeyG', 'Tab'].includes(e.code) && !/^Digit/.test(e.code)) keys.add(e.code); return; } // 건축 중에는 걷기 키만
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽
