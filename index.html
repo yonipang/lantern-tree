@@ -1602,7 +1602,7 @@ const BIOME = ['이끼 동굴', '버섯숲', '수정 동굴', '용암 동굴', '
 const FURN_D = '집을 꾸미는 예쁜 가구예요.';
 const ITEMS = {
   wood: { n: '나무', d: '뿌리기둥이나 큰버섯을 베면 얻어요.' },
-  dirt: { n: '흙', kind: 'wall', wall: 1, d: '흙벽을 캐면 나와요. 들고 있으면 흙벽을 쌓을 수 있어요.' },
+  dirt: { n: '흙', kind: 'wall', wall: 1, ground: 2, d: '흙벽을 캐거나 흙 바닥을 파면 나와요. 들고 누르면 흙벽을 쌓고, 구덩이는 메워요. 작은 버튼으로 바닥을 흙으로 바꿀 수도 있어요.' },
   stone: { n: '돌', d: '돌벽을 캐면 나와요. 구리 곡괭이가 필요해요.' },
   fiber: { n: '이끼 섬유', d: '이끼풀을 베면 얻는 부드러운 실.' },
   gel: { n: '말랑 젤', d: '말랑이들이 남기는 말랑말랑한 젤.' },
@@ -1611,7 +1611,7 @@ const ITEMS = {
   crystal: { n: '석영', d: '수정 동굴의 석영 광맥을 캐면 나와요. 가구·회로·귀환석 등 여러 곳에 쓰여요. 용광로에서 정제 석영으로 만들어요.' },
   granite: { n: '화강암', kind: 'wall', wall: 3, mat: 1, d: '수정 동굴의 화강암 벽을 캐면 나와요. 들고 있으면 화강암 벽을 쌓을 수 있어요.' },
   basalt: { n: '현무암', kind: 'wall', wall: 9, mat: 1, d: '용암 동굴의 현무암벽을 캐면 나와요. 들고 있으면 현무암벽을 쌓을 수 있어요.' },
-  iceBlock: { n: '얼음 덩이', kind: 'wall', wall: 11, mat: 1, d: '얼음 동굴의 얼음벽을 캐면 나와요. 들고 있으면 얼음벽을 쌓을 수 있어요.' },
+  iceBlock: { n: '얼음 덩이', kind: 'wall', wall: 11, ground: 20, mat: 1, d: '얼음벽을 캐거나 얼어붙은 물을 파면 나와요. 들고 누르면 얼음벽을 쌓고, 구덩이는 메워요. 작은 버튼으로 바닥을 얼음판으로 바꿀 수도 있어요.' },
   quartzR: { n: '정제 석영', d: '용광로에서 석영 2개를 녹여 만든 맑은 석영. 수정 무기와 상위 도구에 들어가요.' },
   cryGem: { n: '수정결정', d: '수정 동굴의 빛나는 수정 결정에서 가끔 나오는 귀한 결정. 무기·상위 도구·빛나는 장식의 핵심 재료예요.' },
   copperBar: { n: '구리괴', d: '구리 도구와 요리솥을 만들어요.' },
@@ -1682,14 +1682,12 @@ const OBJ = {
 Object.assign(ITEMS, {
   shroomCap: { n: '버섯 갓', d: '큰버섯과 버섯 여왕에게서 얻는 탱글한 갓. 버섯 세트 재료예요.' },
   shovel: { n: '삽', kind: 'shovel', stack: 1, get d() { return shovelDesc(); } },
-  gDirt: { n: '흙 한 삽', kind: 'ground', ground: 2, d: '구덩이를 메우거나 바닥을 흙으로 바꿔요(원래 바닥은 돌려받아요). 물·용암도 메울 수 있어요.' },
-  gMoss: { n: '이끼 한 삽', kind: 'ground', ground: 1, d: '구덩이를 메우거나 바닥을 이끼로 바꿔요. 씨앗을 심을 수 있어요.' },
-  gShroom: { n: '버섯흙 한 삽', kind: 'ground', ground: 3, d: '구덩이를 메우거나 바닥을 버섯흙으로 바꿔요. 포자를 심기 좋아요.' },
-  gCrystal: { n: '수정 모래 한 삽', kind: 'ground', ground: 4, d: '구덩이를 메우거나 바닥을 반짝이는 수정 바닥으로 바꿔요.' },
+  gMoss: { n: '이끼 흙', kind: 'ground', ground: 1, d: '구덩이를 메우거나 바닥을 이끼로 바꿔요. 씨앗을 심을 수 있어요.' },
+  gShroom: { n: '버섯흙', kind: 'ground', ground: 3, d: '구덩이를 메우거나 바닥을 버섯흙으로 바꿔요. 포자를 심기 좋아요.' },
+  gCrystal: { n: '수정 모래', kind: 'ground', ground: 4, d: '구덩이를 메우거나 바닥을 반짝이는 수정 바닥으로 바꿔요.' },
   gWater: { n: '물 한 동이', kind: 'ground', ground: 10, d: '구덩이에 부으면 물이 차고, 이어진 구덩이로 흘러가요. 낚시도 할 수 있어요.' },
-  gAsh: { n: '재 한 삽', kind: 'ground', ground: 18, d: '용암 동굴의 재 바닥을 판 것. 구덩이를 메우거나 바닥을 재 바닥으로 바꿔요.' },
-  gSnow: { n: '눈 한 삽', kind: 'ground', ground: 19, d: '눈 바닥을 판 것. 구덩이를 메우거나 바닥을 눈 바닥으로 바꿔요.' },
-  gIce: { n: '얼음 한 삽', kind: 'ground', ground: 20, d: '얼어붙은 물을 판 얼음. 구덩이를 메우거나 바닥을 얼음판으로 바꿔요.' },
+  gAsh: { n: '재', kind: 'ground', ground: 18, d: '용암 동굴의 재 바닥을 판 것. 구덩이를 메우거나 바닥을 재 바닥으로 바꿔요.' },
+  gSnow: { n: '눈', kind: 'ground', ground: 19, d: '눈 바닥을 판 것. 구덩이를 메우거나 바닥을 눈 바닥으로 바꿔요.' },
   rod: { n: '낚싯대', kind: 'rod', stack: 1, d: '물을 바라보며 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 한 번 더 눌러요!' },
   minnow: { n: '이끼 송사리', kind: 'food', fish: 1, food: 6, heal: 3, d: '이끼 동굴 물가의 작은 물고기.' },
   crucian: { n: '통통 붕어', kind: 'food', fish: 1, food: 10, heal: 4, d: '통통하게 살이 오른 붕어.' },
@@ -1834,7 +1832,6 @@ for (const id in DECOR) { const D = DECOR[id]; ITEMS[id] = { n: D.n, kind: 'plac
 RECIPES.push(
   Rc('rod', 1, [['wood', 3], ['fiber', 2]], null, 'tool'),
   Rc('shovel', 1, [['copperBar', 2], ['wood', 3]], 'bench', 'tool'),
-  Rc('gDirt', 2, [['dirt', 1]], null, 'build'),
   Rc('fishTank', 1, [['stone', 3], ['anyFish', 1]], 'bench', 'furn'),
   Rc('bootPlanter', 1, [['boot', 1], ['dirt', 2]], 'bench', 'furn'),
   Rc('grilledFish', 1, [['anyFish', 1]], 'pot', 'food'),
@@ -2041,7 +2038,7 @@ for (const f in NFLOOR) FLOOR_ITEM[f] = NFLOOR[f][0];
 FLOOR_ITEM[21] = 'meadow';
 // v87: 삽으로 판 자연 바닥이 주는 것 (예전 「지형 배우기」는 없앴어요 — 처음부터 모두 팔 수 있어요). 판 칸은 구덩이(PIT)가 돼요
 // 1 이끼 · 2 흙 · 3 버섯흙 · 4 수정 모래 · 18 재 바닥 · 19 눈 바닥 · 20 얼어붙은 물. 물(10)·용암(17)은 못 파요 (물은 빈 양동이로 떠요)
-const DIG_YIELD = { 1: 'gMoss', 2: 'gDirt', 3: 'gShroom', 4: 'gCrystal', 18: 'gAsh', 19: 'gSnow', 20: 'gIce' };
+const DIG_YIELD = { 1: 'gMoss', 2: 'dirt', 3: 'gShroom', 4: 'gCrystal', 18: 'gAsh', 19: 'gSnow', 20: 'iceBlock' };
 // 바닥 재료로 바꿀 때 돌려주는 것도 같아요. 물·용암을 메우면 돌려주는 것이 없어요
 const BUCKET_FISH = 10; // 물고기를 이만큼 낚으면 빈 양동이를 만들 수 있어요 (예전 「물 뜨기 배우기」 조건)
 // ================= 회로·기계·깊은 지역 데이터 (구조 변경 2단계: content/circuits-regions.js에서 데이터만 옮김) =================
@@ -2094,7 +2091,7 @@ Object.assign(ITEMS, {
 });
 RECIPES.push(Rc('goldBar', 1, [['goldOre', 2]], 'furnace', 'mat'));
 ITEMS.meadow = { n: '풀밭', kind: 'floor', floor: 21, d: '씨앗을 심는 밭이에요. 이끼 포자는 풀밭에서만 자라요.' };
-ITEMS.mossSpore = { n: '이끼 포자', kind: 'seed', crop: 'cropMoss', d: '풀밭에 심으면 1분 30초쯤 뒤 이끼가 소복이 자라요. 거두면 이끼 한 삽과 포자를 다시 얻어요.' };
+ITEMS.mossSpore = { n: '이끼 포자', kind: 'seed', crop: 'cropMoss', d: '풀밭에 심으면 1분 30초쯤 뒤 이끼가 소복이 자라요. 거두면 이끼 흙과 포자를 다시 얻어요.' };
 OBJ.cropMoss = { n: '이끼', crop: 'moss', grow: 90, yield: [['gMoss', 2, 3, 1], ['mossSpore', 1, 2, 1], ['fiber', 1, 1, 0.5]] };
 OBJ.grass.drops.push(['mossSpore', 1, 1, 0.25]);
 RECIPES.push(Rc('meadow', 4, [['dirt', 2], ['fiber', 2]], 'bench', 'nature'), Rc('mossSpore', 2, [['fiber', 3]], null, 'mat'));
@@ -2446,14 +2443,14 @@ function digWhy(x, y) {
   if (nearWarpPt(x, y)) return '워프포인트 둘레는 팔 수 없어요'; // v89
   const z = noDigZone(x, y); if (z && !isPlacedFloor(f)) return z === 'tree' ? '등불나무 둘레는 팔 수 없어요' : '보스방은 팔 수 없어요'; // 깔아 둔 바닥은 어디서나 걷을 수 있어요
   return null; }
-// 바닥이 돌려주는 아이템 (자연 바닥 = 그 한 삽, 깐 바닥 = 그 바닥 아이템, 물·용암·구덩이 = 없음)
+// 바닥이 돌려주는 아이템 (자연 바닥 = 그 바닥 재료, 깐 바닥 = 그 바닥 아이템, 물·용암·구덩이 = 없음)
 const floorItem = f => FLOOR_ITEM[f] || DIG_YIELD[f] || null;
 function checkUnlocks() {
   if (!G.terrain) G.terrain = {};
   if (started && !G.stats.bucketTip && (G.stats.fishCaught || 0) >= BUCKET_FISH) { G.stats.bucketTip = 1; emit('toast', '이제 작업대에서 빈 양동이를 만들 수 있어요! 물을 떠서 구덩이에 부어요', 'good', 'bucket'); emit('sfx', 'craft'); }
   if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => emit('toast', '이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
 }
-function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 한 삽을 얻어요. 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
+function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 재료(흙·이끼 흙·얼음 덩이 …)를 얻어요. 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
 function digGround(t) {
   if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
   if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
@@ -2635,6 +2632,7 @@ function deserialize(s) {
   G.backPt = s.backPt && Number.isFinite(s.backPt.x) && Number.isFinite(s.backPt.y) ? { x: s.backPt.x, y: s.backPt.y } : null; G.recallCd = Number.isFinite(s.recallCd) ? s.recallCd : 0; G.recall = null; G.qAct = typeof s.qAct === 'string' ? s.qAct : 'main'; G.natDay = Number.isFinite(s.natDay) ? s.natDay : null; // v87: 하루 하나 새 자연물 — 마지막으로 센 날 (없으면 오늘부터) // v84 (옛 세이브: 진행 중인 이야기)
   G.look = cleanLook(s.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; emit('look');
   const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
+  mergeShovelful93(); // v93: 흙 한 삽·얼음 한 삽 → 흙·얼음 덩이
   refundPieces(); // v69 (BF-05): removed building pieces turn back into their materials — before unknown items are cleared out just below
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
@@ -2820,6 +2818,12 @@ function freeTileNear(x0, y0) {
 }
 // v77: 세이브에 「본 적 있는 물건」이 없으면 지금 가진 것(가방·도구·장비·상자)을 모두 본 것으로 — 빨간 점이 한꺼번에 뜨지 않게
 function migrateSeen77() { seenAll(true); }
+// v93: 「한 삽」 없애기 — 흙 한 삽은 흙, 얼음 한 삽은 얼음 덩이로 (같은 개수). 모르는 물건을 지우기 전에 불러요
+const SHOVELFUL93 = { gDirt: 'dirt', gIce: 'iceBlock' };
+function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.id]) s.id = SHOVELFUL93[s.id]; };
+  (G.inv || []).forEach(fix); (G.__extra || []).forEach(fix);
+  for (const o of G.objs.values()) { if (Array.isArray(o.items)) o.items.forEach(fix); if (Array.isArray(o.store)) o.store.forEach(fix);
+    if (o.job && Array.isArray(o.job.used)) o.job.used = o.job.used.map(([id, c]) => [SHOVELFUL93[id] || id, c]); } }
 let saveFailWarned = false;
 function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
@@ -3051,7 +3055,7 @@ const Q_META = [['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch',
 GUIDE.forEach((g, k) => { const m = Q_META[k]; g.id = m[0]; g.rw = m[1]; g.xp = m[2]; });
 // side quests: any time, in any order
 const QSIDE = [
-  { id: 's_moss', t: '이끼 섬유로 이끼 한 삽 만들기', h: '[제작 → 재료]에서 이끼 섬유 1개로 만들어요.', done: () => (G.stats.made || {}).gMoss > 0, rw: [['fiber', 6]], xp: 10 },
+  { id: 's_moss', t: '이끼 섬유로 이끼 흙 만들기', h: '[제작 → 재료]에서 이끼 섬유 1개로 만들어요.', done: () => (G.stats.made || {}).gMoss > 0, rw: [['fiber', 6]], xp: 10 },
   { id: 's_lv5', t: '레벨 5 달성하기', h: '몬스터를 물리치고 광석을 캐면 경험치가 쌓여요.', done: () => G.rpg.lv >= 5, rw: [['stew', 2], ['rope', 4]], xp: 0 },
   { id: 's_fish', t: () => `물고기 10마리 낚기 (${Math.min(10, G.stats.fishCaught || 0)}/10)`, h: '물가에서 낚싯대로 낚아요.', done: () => (G.stats.fishCaught || 0) >= 10, rw: [['grilledFish', 3], ['gel', 3]], xp: 30 },
   { id: 's_bag', t: '가방 한 번 늘리기', h: '[작업대 → 도구]에서 튼튼한 가방을 만들어요.', done: () => (G.bagLv || 0) >= 1, rw: [['rope', 6], ['resin', 2]], xp: 30 },
@@ -3828,6 +3832,10 @@ function rotatePlace() { const s = selItem(), it = s && ITEMS[s.id]; if (!it || 
   emit('toast', n === 4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : placeRot ? '옆으로 돌려 놓아요' : '정면으로 놓아요', null, 'prot'); emit('sfx', 'click'); }
 function rotateAction() { if (!started || paused || !G || G.p.dead > 0) return; rotatePlace(); }
 const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
+// v93: 흙·얼음 덩이는 벽 재료이자 바닥 재료 (ITEMS의 ground) — 바닥으로 쓸 때는 이 「바닥 재료」 모습으로 놓아요
+const GR = {};
+const groundOf = it => it && it.kind === 'wall' && it.ground ? (GR[it.ground] || (GR[it.ground] = { n: it.n, kind: 'ground', ground: it.ground, of: it })) : null;
+const groundFill = f => f === PIT || f === WATER || f === LAVA; // 메우기 (바꾸기가 아니라)
 const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
 function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
@@ -3852,8 +3860,8 @@ function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give ||
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   markLight(); emit('tile', t.x, t.y); return t;
 }
-function placeItem(t) {
-  const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
+function placeItem(t, gr) {
+  const s = selItem(); if (!s) return; const it = gr ? groundOf(ITEMS[s.id]) || ITEMS[s.id] : ITEMS[s.id], i = idx(t.x, t.y); // v93 gr: 흙·얼음 덩이를 바닥으로
   if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) { emit('toast', why, 'warn', 'portal'); return; } } // v89 포탈
   // v67 (BF-09): the placing player steps to a free tile next to them first, in the same moment (nothing placed or used up if there is none)
   if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }
@@ -4187,7 +4195,7 @@ function decide() {
   const main = [], alt = [], has = a => main.concat(alt).some(b => b.k === a.k && b.lbl === a.lbl), push = a => { if (a && !has(a)) (a.onlyAlt ? alt : main).push(a); };
   let h = null, hInfo = null;
   if (md !== 'hand' && md !== 'weapon') { h = heldDecide(md, s, it, t, i, o); if (!h || ['info', 'swing', 'none'].includes(h.k)) { hInfo = h && h.k === 'info' ? h : null; h = null; } }
-  if (h && !NOTGT.includes(h.k)) { push(h); if (h.k === 'place' && it.kind === 'place' && rotN(it.obj) > 1) push({ k: 'rot', lbl: '방향', icon: s.id, onlyAlt: 1 }); }
+  if (h && !NOTGT.includes(h.k)) { push(h); if (h.alt2) push(h.alt2); if (h.k === 'place' && it.kind === 'place' && rotN(it.obj) > 1) push({ k: 'rot', lbl: '방향', icon: s.id, onlyAlt: 1 }); }
   // when the thing in front is only to look at for now (a growing crop, an animal not ready …) or a held piece cannot go there,
   // picking it up or digging it out is never the big button — those stay on the small one
   const auto = autoOptions(t, i, o), quiet = (auto[0] && auto[0].k === 'info') || (md === 'build' && !h);
@@ -4208,6 +4216,11 @@ function heldDecide(md, s, it, t, i, o) {
     case 'lasso': { const wa = wildNear(2.8); return wa ? { k: 'lasso', lbl: '포획', icon: 'lasso', w: wa } : no('포획', '올가미 밧줄을 든 채 동물에게 다가가서 눌러요'); }
     case 'build': {
       if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) return no('놓을 수 없음', why); } // v89 포탈
+      { const gi = groundOf(it); // v93: 흙·얼음 덩이 — 구덩이는 메우기, 그 밖은 벽 쌓기 + 작은 버튼에 바닥 쌓기·바꾸기
+        if (gi && i >= 0) { const f = G.floor[i], gOk = canPlace(t.x, t.y, gi), gA = gOk ? { k: 'place', lbl: groundFill(f) ? '바닥 쌓기' : '바닥 바꾸기', icon: s.id, t, gr: 1 } : null;
+          if (!G.wall[i] && f === PIT) return gOk ? { ...gA, lbl: '메우기' } : no('메울 수 없음', '물건이 있는 구덩이는 메울 수 없어요');
+          if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t, alt2: gA && { ...gA, onlyAlt: 1 } };
+          if (gA) return gA; } }
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
@@ -4292,7 +4305,7 @@ function autoOptions(t, i, o) {
     if (can && (can.w || 0) < WCAN_MAX) A({ k: 'fill', lbl: '물 채우기', icon: 'wcan', t, tool: can, onlyAlt: 1 });
     { const bk = bestTool('bucket'); if (bk) A({ k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t, tool: bk, onlyAlt: 1 }); } // v87
     if (rod) A({ k: 'info', lbl: '물가', icon: 'rod', msg: '작은 버튼의 [낚시]를 누르거나, 도구 칸에서 낚싯대를 들고 눌러요', t }); }
-  if (i >= 0 && !G.wall[i] && !o && G.floor[i] === PIT) A({ k: 'info', lbl: '구덩이', icon: 'dots', msg: '구덩이예요 · 흙 한 삽 같은 바닥 재료를 들고 눌러 메우거나, 물 한 동이를 부어요', t }); // v87
+  if (i >= 0 && !G.wall[i] && !o && G.floor[i] === PIT) A({ k: 'info', lbl: '구덩이', icon: 'dots', msg: '구덩이예요 · 흙 같은 바닥 재료를 들고 눌러 메우거나, 물 한 동이를 부어요', t }); // v87
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) { const pk = bestTool('pick'); A({ k: 'mine', lbl: '캐기', icon: pk ? pk.id : 'hand', t, tool: pk }); }
   if (i >= 0 && !G.wall[i] && !o && isPlacedFloor(G.floor[i])) A(dig('걷기'));
   if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) A({ k: 'petpet', lbl: '쓰다듬기', icon: 'hand' });
@@ -4320,7 +4333,7 @@ function perform(a) {
     case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
-    case 'place': placeItem(a.t); G.actCd = 0.14; break;
+    case 'place': placeItem(a.t, a.gr); G.actCd = 0.14; break;
     case 'dig': digGround(a.t); G.actCd = 0.22; break;
     case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
@@ -5315,7 +5328,11 @@ function warpTick(dt) { const R = G.warpGo; if (!R) return; const p = G.p;
 const BM_REACH = 8, BM_MAX = 64, BM_CHEST_R = 16;
 // ---- 분류 탭 ----
 const BM_CATS = [['wall', '벽'], ['floor', '바닥'], ['furn', '가구'], ['light', '조명'], ['stn', '제작대'], ['circ', '회로'], ['nat', '자연']];
-function bmCat(id) { const it = ITEMS[id], k = it.kind;
+// v93: 흙·얼음 덩이는 「벽」 탭(쌓기)과 「바닥」 탭(메우기·바꾸기) 둘 다 — 바닥 탭의 것은 'dirt#g'처럼 #g를 붙인 이름으로 골라요
+const GSUF = '#g';
+const bmBase = id => typeof id === 'string' && id.endsWith(GSUF) ? id.slice(0, -GSUF.length) : id;
+const bmItem = id => { const b = bmBase(id), it = ITEMS[b]; return b !== id ? groundOf(it) : it; };
+function bmCat(id) { if (bmBase(id) !== id) return 'floor'; const it = ITEMS[id], k = it.kind;
   if (k === 'wall') return 'wall'; if (k === 'floor' || k === 'ground') return 'floor'; if (k === 'wire') return 'circ'; if (k === 'seed') return 'nat';
   const d = OBJ[it.obj] || {}; if (d.tw) return 'wall'; if (d.dev || d.sw || d.src || d.gate || it.obj === 'battery' || it.obj === 'eLamp') return 'circ';
   if (d.station || d.chest || it.obj === 'chest' || d.warp) return 'stn'; if (d.light) return 'light'; if (d.nat || d.crop || d.tree || d.ranch || natDecor().has(id)) return 'nat'; return 'furn'; }
@@ -5323,7 +5340,7 @@ let NAT_D = null; // 자연 꾸미기(덤불·꽃밭·연못·바위): 자연 �
 const natDecor = () => NAT_D || (NAT_D = new Set([...Object.keys(NATURE), ...RECIPES.filter(r => r.cat === 'nature').map(r => r.out)]));
 const isBuildItem = id => { const it = ITEMS[id]; return !!it && BUILD_KINDS.includes(it.kind); };
 // 끌어서 여러 칸: 바닥은 네모, 벽·울타리·전선은 끈 길 한 줄, 그 밖은 한 칸
-function bmDrag(id) { const it = ITEMS[id]; if (!it) return 'one'; if (it.kind === 'floor' || it.kind === 'ground') return 'rect';
+function bmDrag(id) { const it = bmItem(id); if (!it) return 'one'; if (it.kind === 'floor' || it.kind === 'ground') return 'rect';
   if (it.kind === 'wall' || it.kind === 'wire') return 'line'; const d = OBJ[it.obj]; return d && d.tw ? 'line' : 'one'; }
 // ---- 가방 + 둘레 16칸 안 보관상자 ----
 function bmChests() { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), out = [];
@@ -5347,7 +5364,8 @@ const bmCanMake = (r, ch) => !!r && r.req.every(([m, c]) => bmCount(m, ch).all >
 // ---- 건축 목록: 가진 것 + 만들 수 있는 레시피 ----
 function bmList() { const ch = bmChests(), st = bmStations(), seen = new Set(), out = [];
   const add = id => { if (seen.has(id) || !isBuildItem(id)) return; seen.add(id); const c = bmCount(id, ch), r = c.all ? null : bmRecipe(id, st); if (!c.all && !r) return;
-    out.push({ id, cat: bmCat(id), bag: c.bag, box: c.box, have: c.all, r, can: c.all > 0 || bmCanMake(r, ch) }); };
+    const e = { id, base: id, cat: bmCat(id), bag: c.bag, box: c.box, have: c.all, r, can: c.all > 0 || bmCanMake(r, ch) }; out.push(e);
+    if (groundOf(ITEMS[id])) out.push({ ...e, id: id + GSUF, cat: 'floor' }); };
   for (const s of G.inv) if (s) add(s.id); for (const o of ch) for (const s of o.items) if (s) add(s.id);
   for (const r of RECIPES) add(r.out);
   return out; }
@@ -5361,7 +5379,7 @@ const inBmReach = (x, y) => { const p = G.p; return Math.abs(x - Math.floor(p.x)
 function wallSwapOk(x, y, it) { const i = idx(x, y), w = G.wall[i]; if (!w || it.kind !== 'wall' || w === it.wall) return false; const def = WALLS[w];
   return !!def && def.tier <= pickTier() && noDigZone(x, y) !== 'boss' && !G.objs.get(i); }
 // null = 놓을 수 있음, 아니면 까닭 (skip: 내 몸은 비켜설 수 있으니 무시)
-function bmWhy(id, x, y, rot = 0, skip) { const it = ITEMS[id]; if (!it || !BUILD_KINDS.includes(it.kind)) return '놓을 수 없는 물건이에요';
+function bmWhy(id, x, y, rot = 0, skip) { const it = bmItem(id); if (!it || !BUILD_KINDS.includes(it.kind)) return '놓을 수 없는 물건이에요';
   if (!inB(x, y)) return '여기엔 놓을 수 없어요'; if (!inBmReach(x, y)) return '8칸 안에만 놓을 수 있어요';
   const d = it.kind === 'place' ? OBJ[it.obj] : null;
   if (d && d.warp) { const w = portalWhy(x, y); if (w) return w; }
@@ -5375,7 +5393,7 @@ function wallBack(x, y) { const w = G.wall[idx(x, y)], def = WALLS[w]; if (!def)
 const toBag = (id, t) => { const l = addItem(id, 1, false); if (l) spawnDrop(id, l, t.x + .5, t.y + .5); };
 // ---- 놓기 명령 ----
 defineCmd('bplace', c => {
-  const p = G.p, it = ITEMS[c.id]; if (!p || p.dead > 0 || !it || !BUILD_KINDS.includes(it.kind) || !Array.isArray(c.cells)) return false;
+  const p = G.p, it = bmItem(c.id), id = bmBase(c.id); if (!p || p.dead > 0 || !it || !BUILD_KINDS.includes(it.kind) || !Array.isArray(c.cells)) return false;
   const rot = rotN(it.obj) > 1 ? (c.rot | 0) % rotN(it.obj) : 0, cells = c.cells.slice(0, BM_MAX), st = bmStations();
   let n = 0, made = 0, why = null, last = null; const undo = [];
   for (const cell of cells) { const x = cell[0] | 0, y = cell[1] | 0; let w = bmWhy(c.id, x, y, rot);
@@ -5383,15 +5401,15 @@ defineCmd('bplace', c => {
     if (w && cells.length === 1 && !(OBJ[it.obj] || {}).sz && !bmWhy(c.id, x, y, rot, p)) { const sp = pushSpot(x, y, it); if (sp) { p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; w = null; } }
     if (w) { why = why || w; continue; }
     const ch = bmChests(); let s;
-    if (bmCount(c.id, ch).all > 0) s = bmTake(c.id, 1, ch);
-    else { const r = bmRecipe(c.id, st); if (!r || !bmCanMake(r, ch)) { why = r ? '재료가 모자라요' : '가진 것이 없어요'; break; }
-      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id: c.id, c: 1 }; made++;
-      if (r.n > 1) { const l = addItem(c.id, r.n - 1, false); if (l) spawnDrop(c.id, l, p.x, p.y); }
-      G.stats.made = G.stats.made || {}; G.stats.made[c.id] = (G.stats.made[c.id] || 0) + 1; }
+    if (bmCount(id, ch).all > 0) s = bmTake(id, 1, ch);
+    else { const r = bmRecipe(id, st); if (!r || !bmCanMake(r, ch)) { why = r ? '재료가 모자라요' : '가진 것이 없어요'; break; }
+      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id, c: 1 }; made++;
+      if (r.n > 1) { const l = addItem(id, r.n - 1, false); if (l) spawnDrop(id, l, p.x, p.y); }
+      G.stats.made = G.stats.made || {}; G.stats.made[id] = (G.stats.made[id] || 0) + 1; }
     if (it.kind === 'wall' && G.wall[idx(x, y)]) { wallBack(x, y); G.wdmg.delete(idx(x, y)); }
     const t = putItem(it, s, { x, y }, { rot, anchor: OBJ[it.obj] && OBJ[it.obj].sz ? bmAnchor(c.id, x, y, rot) : null, give: toBag });
     emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 3, 1.4, 0.1); n++; last = t; if (it.kind !== 'seed' && it.kind !== 'ground') undo.push({ x: t.x, y: t.y }); }
-  if (n) setUndo(undo.length ? { k: 'place', id: c.id, cells: undo } : null);
+  if (n) setUndo(undo.length ? { k: 'place', id, cells: undo } : null);
   emit('inv');
   if (n) { emit('sfx', 'place'); if (made) emit('toast', `재료로 ${made}개를 만들어 놓았어요`, 'good', 'bmake'); if (why && cells.length > 1) emit('toast', `${n}칸 놓았어요 · ${why}`, null, 'bplace'); }
   else { emit('toast', why || '여기엔 놓을 수 없어요', null, 'bplace'); return false; }
@@ -8038,23 +8056,23 @@ function supply(e) { if (!e) return 0; if (e.have) return e.have; if (!e.r || !e
 function bmRender() { if (!BM.on || !G) return;
   BM.list = bmList(); const inCat = BM.list.filter(e => e.cat === BM.cat);
   if (!BM.id || !entry(BM.id)) BM.id = (inCat.find(e => e.can) || inCat[0] || {}).id || null;
-  const sel = entry(BM.id); BM.sup = supply(sel); if (sel && BM.rot && rotN(ITEMS[sel.id].obj) < 2) BM.rot = 0;
+  const sel = entry(BM.id); BM.sup = supply(sel); if (sel && BM.rot && rotN(ITEMS[sel.base].obj) < 2) BM.rot = 0;
   const cnt = c => BM.list.filter(e => e.cat === c).length, undo = bmUndoKind();
   let h = `<div class="bm-tools">${TOOLS.map(([k, n, key]) => `<button type="button" class="${BM.tool === k ? 'on' : ''}" data-bt="${k}">${n}<i class="k"> ${key}</i></button>`).join('')}<button type="button" class="undo" data-bu="1"${undo ? '' : ' disabled'}>되돌리기<i class="k"> Ctrl+&#90;</i></button></div>`;
   if (BM.tool !== 'place') { gripCheck(); const g = BM.grab && G.objs.get(idx(BM.grab.x, BM.grab.y));
     h += `<div class="bm-info">${BM.tool === 'take' ? '<span>직접 놓은 것을 누르거나 끌어 뜯어요</span>' : g ? `<b>${OBJ[g.t].n}</b> <span>옮길 자리를 누르세요</span>` : '<span>옮길 물건을 누르세요</span>'}</div>`;
     $('#bmBar').innerHTML = h; $('#bmRot').hidden = !(g && rotN(g.t) > 1); $('#bmPut').hidden = false; $('#bmPut').textContent = BM.tool === 'take' ? '뜯기' : g ? '내려놓기' : '잡기';
     document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); return; }
-  h += `<div class="bm-info">${sel ? `<b>${ITEMS[sel.id].n}</b> ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
+  h += `<div class="bm-info">${sel ? `<b>${ITEMS[sel.base].n}</b>${sel.id !== sel.base ? ' <span>바닥으로</span>' : ''} ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
   h += `<div class="bm-tabs">${BM_CATS.map(([c, n]) => `<button type="button" class="${BM.cat === c ? 'on' : ''}${cnt(c) ? '' : ' empty'}" data-bc="${c}">${n}</button>`).join('')}</div><div class="bm-slots">`;
-  for (const e of inCat) h += `<button type="button" class="slot${e.id === BM.id ? ' pick' : ''}${e.can ? '' : ' dim'}${e.have ? '' : ' mk'}" data-bi="${e.id}" aria-label="${ITEMS[e.id].n}"><img class="px" src="${iconURL(e.id)}" alt=""><span class="cnt">${e.have > 1 ? e.have : ''}</span></button>`;
+  for (const e of inCat) h += `<button type="button" class="slot${e.id === BM.id ? ' pick' : ''}${e.can ? '' : ' dim'}${e.have ? '' : ' mk'}" data-bi="${e.id}" aria-label="${ITEMS[e.base].n}"><img class="px" src="${iconURL(e.base)}" alt=""><span class="cnt">${e.have > 1 ? e.have : ''}</span></button>`;
   if (!inCat.length) h += `<p class="bm-none">이 칸에 놓을 것이 없어요</p>`;
   $('#bmBar').innerHTML = h + '</div>';
-  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.id].obj) > 1); $('#bmPut').hidden = !sel; $('#bmPut').textContent = '놓기';
+  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.base].obj) > 1); $('#bmPut').hidden = !sel; $('#bmPut').textContent = '놓기';
   document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); }
 onEvent('inv', onlyMe(() => { if (BM.on) bmRender(); }));
 onEvent('fade', onlyMe(m => { if (m === 'faint' || m === 'show') bmClose(); })); // 기절하면 건축 끝
-function bmRotate() { let n; if (BM.tool === 'move') { const g = grabbed(); if (!g) return; n = rotN(g.o.t); } else if (BM.tool === 'place') { const e = entry(BM.id); if (!e) return; n = rotN(ITEMS[e.id].obj); } else return; if (n < 2) return; BM.rot = (BM.rot + 1) % n;
+function bmRotate() { let n; if (BM.tool === 'move') { const g = grabbed(); if (!g) return; n = rotN(g.o.t); } else if (BM.tool === 'place') { const e = entry(BM.id); if (!e) return; n = rotN(ITEMS[e.base].obj); } else return; if (n < 2) return; BM.rot = (BM.rot + 1) % n;
   toast(n === 4 ? `${josa(DIRN[BM.rot], '을', '를')} 보게 놓아요` : BM.rot ? '옆으로 돌려 놓아요' : '정면으로 놓아요'); }
 // ---- v92 놓기·옮기기·뜯기 고르기, 잡은 물건 ----
 function bmTool(k) { if (!BM.on || !TOOLS.some(t => t[0] === k)) return; BM.tool = k; BM.grab = null; BM.drag = null; if (k === 'place') BM.rot = 0; bmRender(); }
