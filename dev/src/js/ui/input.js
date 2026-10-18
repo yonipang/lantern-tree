@@ -18,7 +18,7 @@ import { DRAG, hotClick, onSheetClick, setupDrag } from './panel-actions.js';
 import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
 import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
 import { idx, inB } from '../world/map.js';
-import { BM, bmClose, bmDown, bmMove, bmPick, bmRotate, bmToggle, bmUp, inJoyZone, joyZone, setupBuild } from './build.js';
+import { BM, bmClose, bmDown, bmEsc, bmMove, bmPick, bmRotate, bmToggle, bmTool, bmUndo, bmUp, inJoyZone, joyZone, setupBuild } from './build.js';
 export const keys = new Set();
 export const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
 export const dpad = { id: null, vx: 0, vy: 0 };
@@ -90,13 +90,14 @@ export function setupInput() {
     if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
     if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
     ensureAudio();
-    if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmClose(); else if (started) openPanel('menu'); return; }
+    if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmEsc(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
     if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
       if (['KeyI', 'KeyB'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK' || e.code === 'KeyU') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
+    if (e.code === 'KeyZ' && BM.on && (e.ctrlKey || e.metaKey)) { e.preventDefault(); bmUndo(); return; } // v92: Ctrl·⌘+Z = 되돌리기
     if (e.code === 'KeyZ') { bmToggle(); return; } // v91: Z = 건축 모드
-    if (BM.on) { if (e.code === 'KeyR') bmRotate(); else if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); bmClose(); openPanel('inv'); } if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); if (!['Space', 'KeyE', 'KeyJ', 'KeyR', 'KeyQ', 'KeyF', 'KeyG', 'Tab'].includes(e.code) && !/^Digit/.test(e.code)) keys.add(e.code); return; } // 건축 중에는 걷기 키만
+    if (BM.on) { if (e.code === 'KeyR') bmRotate(); else if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') bmTool(['place', 'move', 'take'][+e.code.slice(5) - 1]); else if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); bmClose(); openPanel('inv'); } if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); if (!['Space', 'KeyE', 'KeyJ', 'KeyR', 'KeyQ', 'KeyF', 'KeyG', 'Tab'].includes(e.code) && !/^Digit/.test(e.code)) keys.add(e.code); return; } // 건축 중에는 걷기 키만
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽

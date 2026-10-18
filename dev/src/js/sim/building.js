@@ -71,7 +71,7 @@ export const isGround = o => { const d = OBJ[o.t]; return !d.solid && !!(d.nat |
 // v91: 놓기의 세계 바꾸기 부분 (단축칸 놓기 placeItem과 건축 모드 bplace가 함께 써요) — s = 놓는 물건 칸(배터리 남은 양), op.rot 방향, op.anchor 여러 칸 가구 자리, op.give 걷어 낸 깐 바닥 받기
 const dropAt = (id, t) => spawnDrop(id, 1, t.x + .5, t.y + .5);
 export function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give || dropAt;
-  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
+  if (it.kind === 'wall') { G.wall[i] = it.wall; G.wdmg.delete(i); (G.bwall || (G.bwall = new Set())).add(i); /* v92: 직접 쌓은 벽 */ if (G.floor[i] === WATER) G.floor[i] = 2; if (G.floor[i] === LAVA) G.floor[i] = 18; if (G.under.get(i) === WATER) G.under.set(i, 2); }
   else if (it.kind === 'floor') { const old = G.floor[i]; G.floor[i] = it.floor; if (isPlacedFloor(old)) give(FLOOR_ITEM[old], t); else G.under.set(i, old); }
   else if (it.kind === 'ground') { const old = G.floor[i], back = old === PIT || old === WATER || old === LAVA ? null : floorItem(old); G.floor[i] = it.ground; G.under.delete(i); // v87: 바꾼 자연 바닥은 돌려받아요
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
