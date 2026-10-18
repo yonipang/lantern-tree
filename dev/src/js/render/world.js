@@ -32,6 +32,7 @@ import { goalTarget } from '../sim/quests.js';
 import { onFrame } from '../sim/systems.js';
 import { treeStage } from '../sim/tree.js';
 import { aimMouse } from '../ui/input.js';
+import { drawBuild } from '../ui/build.js';
 import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { anchorAt, fpOf, placeAnchor } from '../world/tiles.js';
@@ -266,6 +267,7 @@ export function renderOverlay(cw, ch) {
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = pxFont(5.4); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const fh = parseFloat(ctx.font), tw = Math.round(ctx.measureText(lb).width + 6 * Z), lx = Math.round(hx + T / 2), ly = Math.round(hy - 5 * Z), bh = Math.round(Math.max(9 * Z, fh + 2 * Z)); ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.fillRect(lx - Math.round(tw / 2), ly - Math.round(bh / 2), tw, bh); pxText(lb, lx, ly, `rgb(${col})`); /* v78: 도트 글꼴, 네모 상자 */
   }
+  drawBuild(T, camX, camY); // v91: 건축 모드 미리보기
   drawHitBars(T, camX, camY); // v65: hit to recover
   drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)

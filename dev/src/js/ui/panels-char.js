@@ -4,7 +4,7 @@
 import { charPreview, curChar } from '../art/characters.js';
 import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
 import { ANIMALS } from '../data/gear-animals.js';
-import { BAG_MAX_LV, FURN_D, HOT, ITEMS, RARITY, SETN } from '../data/items.js';
+import { FURN_D, HOT, ITEMS, RARITY, SETN } from '../data/items.js';
 import { $ } from '../engine/util.js';
 import { iconURL } from '../render/icons.js';
 import { animalImg } from '../render/parts.js';
@@ -60,19 +60,16 @@ export function lampHTML() {
     <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요!' : n < max ? `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 돼요 (${n}/${max}${max === 3 ? ' · 셋을 모두 심으면 나무가 깨어나요' : ' · 다섯을 모두 심으면 끝까지 밝아져요'})` : '빛씨앗을 더 찾아 등불나무에 심어요'}</p>`;
 }
 // ---- 가방 탭 ----
-const BAGHINT_K = 'lantern-tree-baghint';
-let bagHintN = 0; try { bagHintN = +localStorage.getItem(BAGHINT_K) || 0; } catch (e) { }
 export const pouchOpen = () => { try { return localStorage.getItem('lantern-tree-pouch') === '1'; } catch (e) { return false; } };
 export const setPouchOpen = v => { try { localStorage.setItem('lantern-tree-pouch', v ? '1' : '0'); } catch (e) { } };
-export function noteBagOpen() { if (bagHintN < 3) { bagHintN++; try { localStorage.setItem(BAGHINT_K, String(bagHintN)); } catch (e) { } } }
 export function bagHTML() {
   const tab = UIS.bagTab || 'all', cls = i => { const s0 = G.inv[i]; let c = UIS.invSel === i ? 'pick' : ''; if (s0 && tab !== 'all' && bagCat(s0.id) !== tab) c += ' dim'; if (s0 && (G.seen || {})[s0.id] > 1) c += ' new'; return c; };
-  let h = sheetTop(`<button type="button" class="btn ghost sm" data-a="sortBag">정렬</button>`, '가방');
+  let h = sheetTop(`<button type="button" class="btn sm" data-a="buildMode">건축<i class="k"> &#90;</i></button><button type="button" class="btn ghost sm" data-a="sortBag">정렬</button>`, '가방');
   h += `<div class="invtools"><div class="tabs">${BAG_TABS.map(([id, n]) => `<button type="button" class="tab ${tab === id ? 'on' : ''}" data-a="bagTab" data-i="${id}">${n}</button>`).join('')}</div><button type="button" class="btn ghost sm" data-a="stashNear" title="내 둘레 16칸 안의 상자 중 같은 물건이 있는 상자에 넣어요">상자에 넣기</button></div>`;
-  h += `<div class="sh-body">${bagHintN <= 3 ? `<p class="hint">칸을 끌거나, 누른 뒤 다른 칸을 누르면 자리가 바뀌어요. 칸을 누르면 위에 설명이, 아래에 버튼이 나와요.</p>` : ''}<div class="lbl">가방 · ${G.inv.length - HOT}칸${(G.bagLv || 0) < BAG_MAX_LV ? ' <span style="color:var(--muted)">(작업대 → 도구에서 늘려요)</span>' : ''}</div><div class="grid">`;
+  h += `<div class="sh-body"><div class="lbl">가방 · ${G.inv.length - HOT}칸</div><div class="grid">`;
   for (let i = HOT; i < G.inv.length; i++) h += slotHTML(G.inv[i], 'inv', i, cls(i));
   const T = G.tools || [], po = pouchOpen();
-  h += `</div><button type="button" class="lbl fold" data-a="pouchFold" aria-expanded="${po}">${po ? '▾' : '▸'} 도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요)</span></button>`;
+  h += `</div><button type="button" class="lbl fold" data-a="pouchFold" aria-expanded="${po}">${po ? '▾' : '▸'} 도구 주머니 · ${T.length}개</button>`;
   if (po) { h += `<div class="grid">`; T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '') + ((G.seen || {})[s.id] > 1 ? ' new' : '')); }); if (!T.length) h += `<p class="prose" style="grid-column:1/-1;color:var(--muted)">아직 도구가 없어요</p>`; h += `</div>`; }
   h += `</div><div class="lbl hotl">단축칸</div><div class="grid hot9">`;
   for (let i = 0; i < HOT; i++) h += slotHTML(G.inv[i], 'inv', i, cls(i));
@@ -84,7 +81,7 @@ export function bagHTML() {
 function bagBarHTML() {
   const s = UIS.invSel != null ? G.inv[UIS.invSel] : null, t = UIS.toolSel != null ? (G.tools || [])[UIS.toolSel] : null;
   if (t) return `<div class="bagbar">${isBroken(t) ? '' : `<button class="btn" data-a="holdTool" type="button">${t === heldTool() ? '들고 있어요' : '들기'}</button>`}<button class="btn ${UIS.trash ? 'warn' : 'ghost'}" data-a="trashTool" type="button">${UIS.trash ? '정말 버릴까요?' : '버리기'}</button></div>`;
-  if (!s) return `<div class="bagbar"><span class="bb-hint">칸을 누르면 여기에 버튼이 나와요</span></div>`;
+  if (!s) return `<div class="bagbar"></div>`;
   const it = ITEMS[s.id]; let h = `<div class="bagbar">`;
   if (it.kind === 'food') h += `<button class="btn" data-a="eat" type="button">먹기</button>`;
   if (it.kind === 'wear') h += `<button class="btn" data-a="wearOn" type="button">${it.slot === 'body' ? '입기' : '달기'}</button>`;

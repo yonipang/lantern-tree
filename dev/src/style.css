@@ -440,7 +440,6 @@ body.touch #hbFlip{width:var(--slotS)}
 .lbl.hotl{flex:none;margin-top:6px}
 .grid.hot9{flex:none;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
 .bagbar{flex:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;margin-top:6px;padding-top:6px;border-top:2px solid var(--line)}
-.bagbar .bb-hint{color:var(--muted);font-size:16px}
 .btip{position:absolute;z-index:5;max-width:min(280px,calc(100% - 8px));box-sizing:border-box;background:var(--ink);border:2px solid var(--line);padding:8px 10px;font-size:16px;line-height:24px;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.35)}
 .btip b{font-weight:400;display:block}
 .btip p{margin:0;color:var(--muted)}
@@ -466,3 +465,32 @@ body.touch #hbFlip{width:var(--slotS)}
 /* v89 워프 고르기: 고른 목적지와 「여기로 이동」 */
 .warpgo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;padding:8px 10px;background:var(--panel2,#2a2236);box-shadow:inset 0 0 0 2px #ffc861}
 .warpgo span{font-size:16px;color:var(--amber,#ffc861)}
+/* ===== v91 건축 모드: 단축칸·공격·상호작용·스킬·이야기 한 줄·오른쪽 위 버튼은 숨기고, 아래 건축 목록·오른쪽 위 「완료」·오른쪽 아래 「놓기」 ===== */
+body.building #hotbar,body.building #actBtn,body.building #atkBtn,body.building #skBar,body.building #altWrap,body.building #hud .side,body.building #goal,body.building #toolRow,body.building #pcHint,body.building #wearAsk{display:none!important}
+#bmTop{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 12px);display:flex;gap:8px;align-items:center;z-index:6}
+#bmTop .bm-title{background:#e9d9a6;color:#2a2139;padding:0 10px;height:32px;line-height:32px;border:2px solid var(--ink)}
+#bmTop .btn{min-height:48px;padding:0 16px;background:var(--amber);color:var(--ink);border:2px solid var(--ink)}
+#bmTop .k,.btn .k{font-style:normal;color:inherit;opacity:.7}
+body.touch #bmTop .k,body.touch .btn .k{display:none}
+#bmBar{position:absolute;left:0;right:0;bottom:0;z-index:6;background:rgba(42,33,57,.97);border-top:2px solid var(--ink);padding:0 calc(env(safe-area-inset-right,0px) + 4px) calc(env(safe-area-inset-bottom,0px) + 4px) calc(env(safe-area-inset-left,0px) + 4px)}
+body:not(.touch) #bmBar{left:50%;right:auto;width:560px;max-width:calc(100% - 16px);transform:translateX(-50%);bottom:8px;border:2px solid var(--ink)}
+.bm-info{height:32px;display:flex;align-items:center;gap:8px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bm-info span{color:var(--muted)}.bm-info .mk{color:var(--mint)}.bm-info .no{color:var(--danger)}
+.bm-tabs{display:flex;gap:2px;padding:2px 0 4px}
+.bm-tabs button{flex:1;min-width:0;height:36px;padding:0;background:var(--panel2);border:2px solid var(--line);font-size:16px;white-space:nowrap}
+.bm-tabs button.on{background:#e9d9a6;color:var(--ink);border-color:var(--ink)}
+.bm-tabs button.empty{opacity:.45}
+.bm-slots{display:flex;flex-wrap:wrap;gap:4px;max-height:108px;overflow-y:auto;padding:2px 0}
+body:not(.touch) .bm-slots{max-height:52px}
+.bm-slots .slot{width:48px;height:48px;flex:none}
+.bm-slots .slot.pick{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber)}
+.bm-slots .slot.dim{opacity:.4}
+.bm-slots .slot.mk::after{content:'';position:absolute;left:3px;top:3px;width:8px;height:8px;background:var(--mint);border:2px solid var(--ink)} /* 만들어서 놓기 */
+.bm-none{margin:12px 8px;color:var(--muted)}
+#bmPut,#bmRot{position:absolute;z-index:6;right:calc(env(safe-area-inset-right,0px) + 16px);border-radius:50%;background:rgba(42,33,57,.92);border:2px solid var(--line);font-size:16px;padding:0}
+#bmPut{width:80px;height:80px;bottom:calc(var(--bmH,184px) + 16px);background:#3c5a46;border-color:var(--mint)}
+#bmRot{width:56px;height:56px;bottom:calc(var(--bmH,184px) + 112px)}
+#bmPut:active{transform:translateY(2px) scale(.96)}
+body:not(.touch) #bmPut{display:none}
+body:not(.touch) #bmRot{border-radius:0;width:auto;height:40px;padding:0 12px;bottom:calc(var(--bmH,120px) + 16px)}
+body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방향키로 고른 사람은 목록 바로 위 */
