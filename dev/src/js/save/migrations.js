@@ -167,3 +167,9 @@ function freeTileNear(x0, y0) {
 }
 // v77: 세이브에 「본 적 있는 물건」이 없으면 지금 가진 것(가방·도구·장비·상자)을 모두 본 것으로 — 빨간 점이 한꺼번에 뜨지 않게
 export function migrateSeen77() { seenAll(true); }
+// v93: 「한 삽」 없애기 — 흙 한 삽은 흙, 얼음 한 삽은 얼음 덩이로 (같은 개수). 모르는 물건을 지우기 전에 불러요
+export const SHOVELFUL93 = { gDirt: 'dirt', gIce: 'iceBlock' };
+export function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.id]) s.id = SHOVELFUL93[s.id]; };
+  (G.inv || []).forEach(fix); (G.__extra || []).forEach(fix);
+  for (const o of G.objs.values()) { if (Array.isArray(o.items)) o.items.forEach(fix); if (Array.isArray(o.store)) o.store.forEach(fix);
+    if (o.job && Array.isArray(o.job.used)) o.job.used = o.job.used.map(([id, c]) => [SHOVELFUL93[id] || id, c]); } }

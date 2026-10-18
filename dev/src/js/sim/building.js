@@ -61,6 +61,10 @@ export function rotatePlace() { const s = selItem(), it = s && ITEMS[s.id]; if (
   emit('toast', n === 4 ? `${josa(DIRN[placeRot], '을', '를')} 보게 놓아요` : placeRot ? '옆으로 돌려 놓아요' : '정면으로 놓아요', null, 'prot'); emit('sfx', 'click'); }
 export function rotateAction() { if (!started || paused || !G || G.p.dead > 0) return; rotatePlace(); }
 export const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
+// v93: 흙·얼음 덩이는 벽 재료이자 바닥 재료 (ITEMS의 ground) — 바닥으로 쓸 때는 이 「바닥 재료」 모습으로 놓아요
+const GR = {};
+export const groundOf = it => it && it.kind === 'wall' && it.ground ? (GR[it.ground] || (GR[it.ground] = { n: it.n, kind: 'ground', ground: it.ground, of: it })) : null;
+export const groundFill = f => f === PIT || f === WATER || f === LAVA; // 메우기 (바꾸기가 아니라)
 export const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
 export function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
@@ -85,8 +89,8 @@ export function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   markLight(); emit('tile', t.x, t.y); return t;
 }
-export function placeItem(t) {
-  const s = selItem(); if (!s) return; const it = ITEMS[s.id], i = idx(t.x, t.y);
+export function placeItem(t, gr) {
+  const s = selItem(); if (!s) return; const it = gr ? groundOf(ITEMS[s.id]) || ITEMS[s.id] : ITEMS[s.id], i = idx(t.x, t.y); // v93 gr: 흙·얼음 덩이를 바닥으로
   if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) { emit('toast', why, 'warn', 'portal'); return; } } // v89 포탈
   // v67 (BF-09): the placing player steps to a free tile next to them first, in the same moment (nothing placed or used up if there is none)
   if (BUILD_KINDS.includes(it.kind) && !canPlace(t.x, t.y, it)) { const sp = pushSpot(t.x, t.y, it); if (!sp) { emit('toast', '여기엔 놓을 수 없어요 · 비켜설 자리가 없어요', null, 'noplace'); return; } const p = G.p; p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; }

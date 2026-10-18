@@ -28,23 +28,23 @@ function supply(e) { if (!e) return 0; if (e.have) return e.have; if (!e.r || !e
 export function bmRender() { if (!BM.on || !G) return;
   BM.list = bmList(); const inCat = BM.list.filter(e => e.cat === BM.cat);
   if (!BM.id || !entry(BM.id)) BM.id = (inCat.find(e => e.can) || inCat[0] || {}).id || null;
-  const sel = entry(BM.id); BM.sup = supply(sel); if (sel && BM.rot && rotN(ITEMS[sel.id].obj) < 2) BM.rot = 0;
+  const sel = entry(BM.id); BM.sup = supply(sel); if (sel && BM.rot && rotN(ITEMS[sel.base].obj) < 2) BM.rot = 0;
   const cnt = c => BM.list.filter(e => e.cat === c).length, undo = bmUndoKind();
   let h = `<div class="bm-tools">${TOOLS.map(([k, n, key]) => `<button type="button" class="${BM.tool === k ? 'on' : ''}" data-bt="${k}">${n}<i class="k"> ${key}</i></button>`).join('')}<button type="button" class="undo" data-bu="1"${undo ? '' : ' disabled'}>되돌리기<i class="k"> Ctrl+&#90;</i></button></div>`;
   if (BM.tool !== 'place') { gripCheck(); const g = BM.grab && G.objs.get(idx(BM.grab.x, BM.grab.y));
     h += `<div class="bm-info">${BM.tool === 'take' ? '<span>직접 놓은 것을 누르거나 끌어 뜯어요</span>' : g ? `<b>${OBJ[g.t].n}</b> <span>옮길 자리를 누르세요</span>` : '<span>옮길 물건을 누르세요</span>'}</div>`;
     $('#bmBar').innerHTML = h; $('#bmRot').hidden = !(g && rotN(g.t) > 1); $('#bmPut').hidden = false; $('#bmPut').textContent = BM.tool === 'take' ? '뜯기' : g ? '내려놓기' : '잡기';
     document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); return; }
-  h += `<div class="bm-info">${sel ? `<b>${ITEMS[sel.id].n}</b> ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
+  h += `<div class="bm-info">${sel ? `<b>${ITEMS[sel.base].n}</b>${sel.id !== sel.base ? ' <span>바닥으로</span>' : ''} ${sel.have ? `× ${sel.have} <span>가방 ${sel.bag} · 상자 ${sel.box}</span>` : sel.can ? `<span class="mk">만들어서 놓기</span> <span>${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>` : `<span class="no">재료가 모자라요 · ${sel.r.req.map(([m, c]) => ITEMS[m].n + ' ' + c).join(' · ')}</span>`}` : '<span>놓을 것이 없어요</span>'}</div>`;
   h += `<div class="bm-tabs">${BM_CATS.map(([c, n]) => `<button type="button" class="${BM.cat === c ? 'on' : ''}${cnt(c) ? '' : ' empty'}" data-bc="${c}">${n}</button>`).join('')}</div><div class="bm-slots">`;
-  for (const e of inCat) h += `<button type="button" class="slot${e.id === BM.id ? ' pick' : ''}${e.can ? '' : ' dim'}${e.have ? '' : ' mk'}" data-bi="${e.id}" aria-label="${ITEMS[e.id].n}"><img class="px" src="${iconURL(e.id)}" alt=""><span class="cnt">${e.have > 1 ? e.have : ''}</span></button>`;
+  for (const e of inCat) h += `<button type="button" class="slot${e.id === BM.id ? ' pick' : ''}${e.can ? '' : ' dim'}${e.have ? '' : ' mk'}" data-bi="${e.id}" aria-label="${ITEMS[e.base].n}"><img class="px" src="${iconURL(e.base)}" alt=""><span class="cnt">${e.have > 1 ? e.have : ''}</span></button>`;
   if (!inCat.length) h += `<p class="bm-none">이 칸에 놓을 것이 없어요</p>`;
   $('#bmBar').innerHTML = h + '</div>';
-  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.id].obj) > 1); $('#bmPut').hidden = !sel; $('#bmPut').textContent = '놓기';
+  $('#bmRot').hidden = !(sel && rotN(ITEMS[sel.base].obj) > 1); $('#bmPut').hidden = !sel; $('#bmPut').textContent = '놓기';
   document.body.style.setProperty('--bmH', Math.round($('#bmBar').getBoundingClientRect().height + (document.body.classList.contains('touch') ? 0 : 8)) + 'px'); placeJoyIdle(); }
 onEvent('inv', onlyMe(() => { if (BM.on) bmRender(); }));
 onEvent('fade', onlyMe(m => { if (m === 'faint' || m === 'show') bmClose(); })); // 기절하면 건축 끝
-export function bmRotate() { let n; if (BM.tool === 'move') { const g = grabbed(); if (!g) return; n = rotN(g.o.t); } else if (BM.tool === 'place') { const e = entry(BM.id); if (!e) return; n = rotN(ITEMS[e.id].obj); } else return; if (n < 2) return; BM.rot = (BM.rot + 1) % n;
+export function bmRotate() { let n; if (BM.tool === 'move') { const g = grabbed(); if (!g) return; n = rotN(g.o.t); } else if (BM.tool === 'place') { const e = entry(BM.id); if (!e) return; n = rotN(ITEMS[e.base].obj); } else return; if (n < 2) return; BM.rot = (BM.rot + 1) % n;
   toast(n === 4 ? `${josa(DIRN[BM.rot], '을', '를')} 보게 놓아요` : BM.rot ? '옆으로 돌려 놓아요' : '정면으로 놓아요'); }
 // ---- v92 놓기·옮기기·뜯기 고르기, 잡은 물건 ----
 export function bmTool(k) { if (!BM.on || !TOOLS.some(t => t[0] === k)) return; BM.tool = k; BM.grab = null; BM.drag = null; if (k === 'place') BM.rot = 0; bmRender(); }

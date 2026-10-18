@@ -11,7 +11,7 @@ import { josa } from '../engine/util.js';
 import { G, guardOf } from '../save/state.js';
 import { openCatch, ranchCollect, ranchReady, wildNear } from './animals.js';
 import { summonBoss, summonDecide } from './bosses.js';
-import { BUILD_KINDS, doorGroup, isGround, placeItem, placeLbl, rotatePlace, rotN, rotOf } from './building.js';
+import { BUILD_KINDS, doorGroup, groundFill, groundOf, isGround, placeItem, placeLbl, rotatePlace, rotN, rotOf } from './building.js';
 import { atkCd, swingAttack } from './combat.js';
 import { ctlOf, defineCmd } from './commands.js';
 import { jobDone, takeJob } from './crafting.js';
@@ -93,7 +93,7 @@ export function decide() {
   const main = [], alt = [], has = a => main.concat(alt).some(b => b.k === a.k && b.lbl === a.lbl), push = a => { if (a && !has(a)) (a.onlyAlt ? alt : main).push(a); };
   let h = null, hInfo = null;
   if (md !== 'hand' && md !== 'weapon') { h = heldDecide(md, s, it, t, i, o); if (!h || ['info', 'swing', 'none'].includes(h.k)) { hInfo = h && h.k === 'info' ? h : null; h = null; } }
-  if (h && !NOTGT.includes(h.k)) { push(h); if (h.k === 'place' && it.kind === 'place' && rotN(it.obj) > 1) push({ k: 'rot', lbl: '방향', icon: s.id, onlyAlt: 1 }); }
+  if (h && !NOTGT.includes(h.k)) { push(h); if (h.alt2) push(h.alt2); if (h.k === 'place' && it.kind === 'place' && rotN(it.obj) > 1) push({ k: 'rot', lbl: '방향', icon: s.id, onlyAlt: 1 }); }
   // when the thing in front is only to look at for now (a growing crop, an animal not ready …) or a held piece cannot go there,
   // picking it up or digging it out is never the big button — those stay on the small one
   const auto = autoOptions(t, i, o), quiet = (auto[0] && auto[0].k === 'info') || (md === 'build' && !h);
@@ -114,6 +114,11 @@ export function heldDecide(md, s, it, t, i, o) {
     case 'lasso': { const wa = wildNear(2.8); return wa ? { k: 'lasso', lbl: '포획', icon: 'lasso', w: wa } : no('포획', '올가미 밧줄을 든 채 동물에게 다가가서 눌러요'); }
     case 'build': {
       if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) return no('놓을 수 없음', why); } // v89 포탈
+      { const gi = groundOf(it); // v93: 흙·얼음 덩이 — 구덩이는 메우기, 그 밖은 벽 쌓기 + 작은 버튼에 바닥 쌓기·바꾸기
+        if (gi && i >= 0) { const f = G.floor[i], gOk = canPlace(t.x, t.y, gi), gA = gOk ? { k: 'place', lbl: groundFill(f) ? '바닥 쌓기' : '바닥 바꾸기', icon: s.id, t, gr: 1 } : null;
+          if (!G.wall[i] && f === PIT) return gOk ? { ...gA, lbl: '메우기' } : no('메울 수 없음', '물건이 있는 구덩이는 메울 수 없어요');
+          if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t, alt2: gA && { ...gA, onlyAlt: 1 } };
+          if (gA) return gA; } }
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
@@ -198,7 +203,7 @@ export function autoOptions(t, i, o) {
     if (can && (can.w || 0) < WCAN_MAX) A({ k: 'fill', lbl: '물 채우기', icon: 'wcan', t, tool: can, onlyAlt: 1 });
     { const bk = bestTool('bucket'); if (bk) A({ k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t, tool: bk, onlyAlt: 1 }); } // v87
     if (rod) A({ k: 'info', lbl: '물가', icon: 'rod', msg: '작은 버튼의 [낚시]를 누르거나, 도구 칸에서 낚싯대를 들고 눌러요', t }); }
-  if (i >= 0 && !G.wall[i] && !o && G.floor[i] === PIT) A({ k: 'info', lbl: '구덩이', icon: 'dots', msg: '구덩이예요 · 흙 한 삽 같은 바닥 재료를 들고 눌러 메우거나, 물 한 동이를 부어요', t }); // v87
+  if (i >= 0 && !G.wall[i] && !o && G.floor[i] === PIT) A({ k: 'info', lbl: '구덩이', icon: 'dots', msg: '구덩이예요 · 흙 같은 바닥 재료를 들고 눌러 메우거나, 물 한 동이를 부어요', t }); // v87
   if (i >= 0 && G.wall[i] && G.wall[i] !== 8) { const pk = bestTool('pick'); A({ k: 'mine', lbl: '캐기', icon: pk ? pk.id : 'hand', t, tool: pk }); }
   if (i >= 0 && !G.wall[i] && !o && isPlacedFloor(G.floor[i])) A(dig('걷기'));
   if (G.petE && G.petOn && Math.hypot(G.petE.x - p.x, G.petE.y - p.y) < 1.4) A({ k: 'petpet', lbl: '쓰다듬기', icon: 'hand' });
@@ -226,7 +231,7 @@ export function perform(a) {
     case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
-    case 'place': placeItem(a.t); G.actCd = 0.14; break;
+    case 'place': placeItem(a.t, a.gr); G.actCd = 0.14; break;
     case 'dig': digGround(a.t); G.actCd = 0.22; break;
     case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }

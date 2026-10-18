@@ -7,7 +7,7 @@ import { ITEMS, OBJ, RECIPES, WALLS } from '../data/items.js';
 import { FLOOR_ITEM, NATURE } from '../data/rpg-nature.js';
 import { rand, rint } from '../engine/random.js';
 import { G } from '../save/state.js';
-import { BUILD_KINDS, putItem, rotN, rotOf, rotSwaps } from './building.js';
+import { BUILD_KINDS, groundOf, putItem, rotN, rotOf, rotSwaps } from './building.js';
 import { defineCmd } from './commands.js';
 import { knows } from './cooking.js';
 import { flowNear } from './digging.js';
@@ -23,7 +23,11 @@ import { anchorAt, canPlace, delObj, fpFree, fpOf, isPlacedFloor, noDigZone, occ
 export const BM_REACH = 8, BM_MAX = 64, BM_CHEST_R = 16;
 // ---- 분류 탭 ----
 export const BM_CATS = [['wall', '벽'], ['floor', '바닥'], ['furn', '가구'], ['light', '조명'], ['stn', '제작대'], ['circ', '회로'], ['nat', '자연']];
-export function bmCat(id) { const it = ITEMS[id], k = it.kind;
+// v93: 흙·얼음 덩이는 「벽」 탭(쌓기)과 「바닥」 탭(메우기·바꾸기) 둘 다 — 바닥 탭의 것은 'dirt#g'처럼 #g를 붙인 이름으로 골라요
+export const GSUF = '#g';
+export const bmBase = id => typeof id === 'string' && id.endsWith(GSUF) ? id.slice(0, -GSUF.length) : id;
+export const bmItem = id => { const b = bmBase(id), it = ITEMS[b]; return b !== id ? groundOf(it) : it; };
+export function bmCat(id) { if (bmBase(id) !== id) return 'floor'; const it = ITEMS[id], k = it.kind;
   if (k === 'wall') return 'wall'; if (k === 'floor' || k === 'ground') return 'floor'; if (k === 'wire') return 'circ'; if (k === 'seed') return 'nat';
   const d = OBJ[it.obj] || {}; if (d.tw) return 'wall'; if (d.dev || d.sw || d.src || d.gate || it.obj === 'battery' || it.obj === 'eLamp') return 'circ';
   if (d.station || d.chest || it.obj === 'chest' || d.warp) return 'stn'; if (d.light) return 'light'; if (d.nat || d.crop || d.tree || d.ranch || natDecor().has(id)) return 'nat'; return 'furn'; }
@@ -31,7 +35,7 @@ let NAT_D = null; // 자연 꾸미기(덤불·꽃밭·연못·바위): 자연 �
 const natDecor = () => NAT_D || (NAT_D = new Set([...Object.keys(NATURE), ...RECIPES.filter(r => r.cat === 'nature').map(r => r.out)]));
 export const isBuildItem = id => { const it = ITEMS[id]; return !!it && BUILD_KINDS.includes(it.kind); };
 // 끌어서 여러 칸: 바닥은 네모, 벽·울타리·전선은 끈 길 한 줄, 그 밖은 한 칸
-export function bmDrag(id) { const it = ITEMS[id]; if (!it) return 'one'; if (it.kind === 'floor' || it.kind === 'ground') return 'rect';
+export function bmDrag(id) { const it = bmItem(id); if (!it) return 'one'; if (it.kind === 'floor' || it.kind === 'ground') return 'rect';
   if (it.kind === 'wall' || it.kind === 'wire') return 'line'; const d = OBJ[it.obj]; return d && d.tw ? 'line' : 'one'; }
 // ---- 가방 + 둘레 16칸 안 보관상자 ----
 export function bmChests() { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), out = [];
@@ -55,7 +59,8 @@ export const bmCanMake = (r, ch) => !!r && r.req.every(([m, c]) => bmCount(m, ch
 // ---- 건축 목록: 가진 것 + 만들 수 있는 레시피 ----
 export function bmList() { const ch = bmChests(), st = bmStations(), seen = new Set(), out = [];
   const add = id => { if (seen.has(id) || !isBuildItem(id)) return; seen.add(id); const c = bmCount(id, ch), r = c.all ? null : bmRecipe(id, st); if (!c.all && !r) return;
-    out.push({ id, cat: bmCat(id), bag: c.bag, box: c.box, have: c.all, r, can: c.all > 0 || bmCanMake(r, ch) }); };
+    const e = { id, base: id, cat: bmCat(id), bag: c.bag, box: c.box, have: c.all, r, can: c.all > 0 || bmCanMake(r, ch) }; out.push(e);
+    if (groundOf(ITEMS[id])) out.push({ ...e, id: id + GSUF, cat: 'floor' }); };
   for (const s of G.inv) if (s) add(s.id); for (const o of ch) for (const s of o.items) if (s) add(s.id);
   for (const r of RECIPES) add(r.out);
   return out; }
@@ -69,7 +74,7 @@ export const inBmReach = (x, y) => { const p = G.p; return Math.abs(x - Math.flo
 export function wallSwapOk(x, y, it) { const i = idx(x, y), w = G.wall[i]; if (!w || it.kind !== 'wall' || w === it.wall) return false; const def = WALLS[w];
   return !!def && def.tier <= pickTier() && noDigZone(x, y) !== 'boss' && !G.objs.get(i); }
 // null = 놓을 수 있음, 아니면 까닭 (skip: 내 몸은 비켜설 수 있으니 무시)
-export function bmWhy(id, x, y, rot = 0, skip) { const it = ITEMS[id]; if (!it || !BUILD_KINDS.includes(it.kind)) return '놓을 수 없는 물건이에요';
+export function bmWhy(id, x, y, rot = 0, skip) { const it = bmItem(id); if (!it || !BUILD_KINDS.includes(it.kind)) return '놓을 수 없는 물건이에요';
   if (!inB(x, y)) return '여기엔 놓을 수 없어요'; if (!inBmReach(x, y)) return '8칸 안에만 놓을 수 있어요';
   const d = it.kind === 'place' ? OBJ[it.obj] : null;
   if (d && d.warp) { const w = portalWhy(x, y); if (w) return w; }
@@ -83,7 +88,7 @@ function wallBack(x, y) { const w = G.wall[idx(x, y)], def = WALLS[w]; if (!def)
 const toBag = (id, t) => { const l = addItem(id, 1, false); if (l) spawnDrop(id, l, t.x + .5, t.y + .5); };
 // ---- 놓기 명령 ----
 defineCmd('bplace', c => {
-  const p = G.p, it = ITEMS[c.id]; if (!p || p.dead > 0 || !it || !BUILD_KINDS.includes(it.kind) || !Array.isArray(c.cells)) return false;
+  const p = G.p, it = bmItem(c.id), id = bmBase(c.id); if (!p || p.dead > 0 || !it || !BUILD_KINDS.includes(it.kind) || !Array.isArray(c.cells)) return false;
   const rot = rotN(it.obj) > 1 ? (c.rot | 0) % rotN(it.obj) : 0, cells = c.cells.slice(0, BM_MAX), st = bmStations();
   let n = 0, made = 0, why = null, last = null; const undo = [];
   for (const cell of cells) { const x = cell[0] | 0, y = cell[1] | 0; let w = bmWhy(c.id, x, y, rot);
@@ -91,15 +96,15 @@ defineCmd('bplace', c => {
     if (w && cells.length === 1 && !(OBJ[it.obj] || {}).sz && !bmWhy(c.id, x, y, rot, p)) { const sp = pushSpot(x, y, it); if (sp) { p.x = sp.x; p.y = sp.y; p.kx = p.ky = 0; if (p.dash) p.dash = null; w = null; } }
     if (w) { why = why || w; continue; }
     const ch = bmChests(); let s;
-    if (bmCount(c.id, ch).all > 0) s = bmTake(c.id, 1, ch);
-    else { const r = bmRecipe(c.id, st); if (!r || !bmCanMake(r, ch)) { why = r ? '재료가 모자라요' : '가진 것이 없어요'; break; }
-      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id: c.id, c: 1 }; made++;
-      if (r.n > 1) { const l = addItem(c.id, r.n - 1, false); if (l) spawnDrop(c.id, l, p.x, p.y); }
-      G.stats.made = G.stats.made || {}; G.stats.made[c.id] = (G.stats.made[c.id] || 0) + 1; }
+    if (bmCount(id, ch).all > 0) s = bmTake(id, 1, ch);
+    else { const r = bmRecipe(id, st); if (!r || !bmCanMake(r, ch)) { why = r ? '재료가 모자라요' : '가진 것이 없어요'; break; }
+      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id, c: 1 }; made++;
+      if (r.n > 1) { const l = addItem(id, r.n - 1, false); if (l) spawnDrop(id, l, p.x, p.y); }
+      G.stats.made = G.stats.made || {}; G.stats.made[id] = (G.stats.made[id] || 0) + 1; }
     if (it.kind === 'wall' && G.wall[idx(x, y)]) { wallBack(x, y); G.wdmg.delete(idx(x, y)); }
     const t = putItem(it, s, { x, y }, { rot, anchor: OBJ[it.obj] && OBJ[it.obj].sz ? bmAnchor(c.id, x, y, rot) : null, give: toBag });
     emit('puff', t.x + .5, t.y + .9, '#e8d8c0', 3, 1.4, 0.1); n++; last = t; if (it.kind !== 'seed' && it.kind !== 'ground') undo.push({ x: t.x, y: t.y }); }
-  if (n) setUndo(undo.length ? { k: 'place', id: c.id, cells: undo } : null);
+  if (n) setUndo(undo.length ? { k: 'place', id, cells: undo } : null);
   emit('inv');
   if (n) { emit('sfx', 'place'); if (made) emit('toast', `재료로 ${made}개를 만들어 놓았어요`, 'good', 'bmake'); if (why && cells.length > 1) emit('toast', `${n}칸 놓았어요 · ${why}`, null, 'bplace'); }
   else { emit('toast', why || '여기엔 놓을 수 없어요', null, 'bplace'); return false; }
