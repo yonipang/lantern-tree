@@ -265,7 +265,8 @@ body.touch #pcHint{display:none}
 .ing.short{color:var(--danger)}
 .at{font-size:16px;color:#ffb4c0;margin-top:4px}
 .mk{min-width:60px}
-#mapCv{width:100%;aspect-ratio:1;border-radius:0;background:#0c0a12;display:block;image-rendering:pixelated}
+#mapCv{touch-action:none;cursor:grab;width:100%;aspect-ratio:1;border-radius:0;background:#0c0a12;display:block;image-rendering:pixelated}
+.mapwrap{position:relative}.mapctl{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:8px}.mapctl .btn{width:40px;min-width:40px;min-height:40px;padding:0;font-size:16px;background:rgba(12,10,18,.8)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:16px;color:var(--muted);margin-top:8px}
 .lgchk{display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:2px 6px 2px 4px;border:1px solid var(--line);border-radius:0;color:var(--text);cursor:pointer}.lgchk input{width:16px;height:16px;margin:0;accent-color:#ffd25c}.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 .seeds{display:flex;gap:12px;justify-content:center;margin:10px 0 12px}
@@ -7528,9 +7529,9 @@ let lastGoalTxt = '';
 function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', (txt, tag) => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } const t = $('#goalTag'), tg = tag || '퀘스트'; if (t && t.textContent !== tg) t.textContent = tg; }); // v84: 활성 퀘스트 한 줄 + 앞의 작은 글자(이야기·도전)
 // ================= UI =================
-const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, mapAll: false, qty: {}, craftOrder: null };
+const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
-function openPanel(kind, data = {}) { bmClose(); /* v91: 창을 열면 건축 끝 */ if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); } if (kind === 'map') { UIS.mapFocus = data.focus || null; UIS.mapWarp = data.warp != null ? data.warp : null; UIS.warpSel = null; } /* v89: 워프포인트·포탈에서 열면 목적지 고르기 */ /* v84: 퀘스트 「지도에서 보기」 */ if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
+function openPanel(kind, data = {}) { bmClose(); /* v91: 창을 열면 건축 끝 */ if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); } if (kind === 'map') { UIS.mapFocus = data.focus || null; UIS.mapWarp = data.warp != null ? data.warp : null; UIS.warpSel = null; UIS.mapV = null; } /* v89: 워프포인트·포탈에서 열면 목적지 고르기 */ /* v84: 퀘스트 「지도에서 보기」 */ if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 function sheetHpHTML() { if (!G || !started) return ''; const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
@@ -7635,12 +7636,12 @@ function renderPanel() {
     h += `<div class="sh-body"><p class="hint">물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요.</p><div class="menu-two stash"><button class="btn" data-a="stash" data-i="all" type="button">가방 → 모두 넣기</button><button class="btn ghost" data-a="stash" data-i="same" type="button">같은 것만 넣기</button></div><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'cin', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'cin', i + HOT)).join('')}</div></div>`;
   } else if (k === 'map' && UIS.mapWarp != null) { // v89: 워프 — 켜진 곳을 지도에서 누르거나 아래 목록에서 골라요
     const L = warpDests(UIS.mapWarp), sel = L.find(e => e.i === UIS.warpSel), from = warpAt(UIS.mapWarp);
-    h += head('워프', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${UIS.warpNear ? '전체 보기' : '가까이 보기'}</button>`) + `<div class="sh-body"><p class="hint">${from ? `지금 여기: ${escHTML(warpName(from))} · ` : ''}켜진 워프포인트·포탈을 눌러 골라요. 고른 뒤 ${WARP_DELAY}초 뒤에 이동하고, 그 사이에 맞으면 멈춰요.</p><canvas id="mapCv" data-a="mapTap" width="600" height="600"></canvas>`
+    h += head('워프', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${mapIsAll() ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><p class="hint">${from ? `지금 여기: ${escHTML(warpName(from))} · ` : ''}켜진 워프포인트·포탈을 눌러 골라요. 고른 뒤 ${WARP_DELAY}초 뒤에 이동하고, 그 사이에 맞으면 멈춰요.</p><div class="mapwrap"><canvas id="mapCv" data-a="mapTap" width="600" height="600"></canvas><div class="mapctl"><button class="btn ghost" data-a="mapZ" data-i="1" type="button" style="font-size:32px" aria-label="확대">+</button><button class="btn ghost" data-a="mapZ" data-i="-1" type="button" style="font-size:32px" aria-label="축소">−</button><button class="btn ghost" data-a="mapMe" type="button" aria-label="내 위치로">나</button></div></div>`
       + (sel ? `<div class="warpgo"><span>${escHTML(sel.name)} · ${Math.round(sel.d)}칸</span><button class="btn" data-a="warpGo" data-i="${sel.i}" type="button">여기로 이동</button></div>` : '')
       + `<div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#c9a6ff"></i>켜진 워프포인트</span><span><i style="background:#6a5a80"></i>안 켜진 워프포인트</span><span><i style="background:#7fe8f0"></i>포탈</span></div>`
       + `<div class="lbl">갈 수 있는 곳</div>${L.length ? `<div class="menu-list">${L.map(e => `<button class="btn ghost" data-a="warpGo" data-i="${e.i}" type="button">${escHTML(e.name)} · ${Math.round(e.d)}칸</button>`).join('')}</div>` : '<p class="hint">아직 켜진 곳이 없어요. 다른 워프포인트를 찾아 만지면 켜져요. 포탈을 만들어 놓아도 돼요 (석영 작업대).</p>'}</div>`;
   } else if (k === 'map') {
-    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${UIS.mapAll ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><canvas id="mapCv" width="600" height="600"></canvas><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span><label class="lgchk"><input type="checkbox" data-a="mapChest" ${mapChestOn() ? 'checked' : ''} aria-label="찾았지만 안 연 보물상자 표시"><i style="background:#ffd25c"></i>찾았지만 안 연 보물상자</label><span><i style="background:#ff9b4a"></i>잃어버린 꾸러미</span><span><i style="background:#b99bff"></i>귀환 표지</span><span><i style="background:#c9a6ff"></i>워프포인트</span><span><i style="background:#7fe8f0"></i>포탈</span>${UIS.mapFocus ? '<span><i style="background:transparent;box-shadow:inset 0 0 0 3px #ffc861"></i>퀘스트 목표</span>' : ''}</div>${regionMatHTML()}</div>`;
+    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${mapIsAll() ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><div class="mapwrap"><canvas id="mapCv" width="600" height="600"></canvas><div class="mapctl"><button class="btn ghost" data-a="mapZ" data-i="1" type="button" style="font-size:32px" aria-label="확대">+</button><button class="btn ghost" data-a="mapZ" data-i="-1" type="button" style="font-size:32px" aria-label="축소">−</button><button class="btn ghost" data-a="mapMe" type="button" aria-label="내 위치로">나</button></div></div><div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#ffc861"></i>등불나무</span><span><i style="background:#ff8fa3"></i>침대</span><span><i style="background:#86d96b"></i>보스</span><span><i style="background:#3f7fb5"></i>물</span><span><i style="background:#fff1b0"></i>빛씨앗 제단</span><span><i style="background:#ff6b81"></i>꽃망울 구역</span><label class="lgchk"><input type="checkbox" data-a="mapChest" ${mapChestOn() ? 'checked' : ''} aria-label="찾았지만 안 연 보물상자 표시"><i style="background:#ffd25c"></i>찾았지만 안 연 보물상자</label><span><i style="background:#ff9b4a"></i>잃어버린 꾸러미</span><span><i style="background:#b99bff"></i>귀환 표지</span><span><i style="background:#c9a6ff"></i>워프포인트</span><span><i style="background:#7fe8f0"></i>포탈</span>${UIS.mapFocus ? '<span><i style="background:transparent;box-shadow:inset 0 0 0 3px #ffc861"></i>퀘스트 목표</span>' : ''}</div>${regionMatHTML()}</div>`;
   } else if (k === 'tree') {
     h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
   } else if (k === 'menu') {
@@ -8035,9 +8036,42 @@ function drawMap() {
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
   if (F) { const X = (F.x - ox) * s, Y = (F.y - oy) * s; g.strokeStyle = INK; g.lineWidth = 8; g.beginPath(); g.arc(X, Y, 16, 0, 6.283); g.stroke(); g.strokeStyle = '#ffc861'; g.lineWidth = 4; g.beginPath(); g.arc(X, Y, 16, 0, 6.283); g.stroke(); dot(F.x, F.y, '#ffc861', 6); }
 }
-// 지도가 보여 주는 범위 (전체 보기면 지도 전체, 아니면 나(또는 목표)를 가운데로 90칸) — v89 워프 고르기는 전체 보기가 먼저
-function mapView() { const F = UIS.mapFocus, all = UIS.mapWarp != null ? !UIS.warpNear : UIS.mapAll, cx0 = F ? F.x : G.p.x, cy0 = F ? F.y : G.p.y;
-  const span = all ? W : 90, s = 600 / span; return { span, s, ox: all ? 0 : clamp(cx0 - span / 2, 0, W - span), oy: all ? 0 : clamp(cy0 - span / 2, 0, H - span) }; }
+// 지도가 보여 주는 범위. v94: 끌어서 옮기고, 두 손가락·휠·+−로 확대·축소해요 (UIS.mapV = 가운데 칸 cx·cy와 보이는 칸 수 span)
+// 처음 열 때: 퀘스트 「지도에서 보기」는 목표 가운데 90칸, 워프 고르기는 전체, 그 밖은 나를 가운데로 지난번 크기(처음은 90칸)
+const MAP_MIN = 20;
+const mapMax = () => Math.max(W, H);
+const MAP_NEAR = 90;
+function mapStart() { const F = UIS.mapFocus; if (F) return { cx: F.x, cy: F.y, span: MAP_NEAR };
+  if (UIS.mapWarp != null) return { cx: W / 2, cy: H / 2, span: mapMax() };
+  const span = UIS.mapSpan || MAP_NEAR; return span >= mapMax() ? { cx: W / 2, cy: H / 2, span } : { cx: G.p.x, cy: G.p.y, span }; }
+function mapView() { const v = UIS.mapV || (UIS.mapV = mapStart()), span = clamp(v.span, MAP_MIN, mapMax()), s = 600 / span;
+  const a = (c, D) => span >= D ? (D - span) / 2 : clamp(c - span / 2, 0, D - span); return { span, s, ox: a(v.cx, W), oy: a(v.cy, H) }; }
+// 보이는 범위를 바꾸고(지도 그림 칸 px·py를 기준점으로 k배 확대, 그다음 dx·dy 그림 칸만큼 옮김) 가장자리 안으로 맞춰요
+function mapMove(k, px, py, dx = 0, dy = 0) { const { span, s, ox, oy } = mapView(), ns = clamp(span / k, MAP_MIN, mapMax()), wx = ox + px / s, wy = oy + py / s, s2 = 600 / ns;
+  UIS.mapV = { cx: wx - (px + dx) / s2 + ns / 2, cy: wy - (py + dy) / s2 + ns / 2, span: ns }; const r = mapView(); UIS.mapV = { cx: r.ox + ns / 2, cy: r.oy + ns / 2, span: ns };
+  if (UIS.mapWarp == null && !UIS.mapFocus) UIS.mapSpan = ns; mapRedraw(); }
+function mapSet(v) { UIS.mapV = v; if (UIS.mapWarp == null && !UIS.mapFocus) UIS.mapSpan = v.span; }
+const mapIsAll = () => mapView().span >= mapMax() - .5;
+let mapRaf = 0;
+function mapRedraw() { if (mapRaf) return; mapRaf = requestAnimationFrame(() => { mapRaf = 0; drawMap(); const b = $('#sheet [data-a=mapzoom]'); if (b) b.textContent = mapIsAll() ? '가까이 보기' : '전체 보기'; }); }
+// 지도 위 손가락·마우스: 하나면 옮기기, 둘이면 벌리고 좁혀 확대·축소, 휠도 확대·축소. 8px 넘게 움직였으면 그 뒤 누르기(워프 고르기)는 무시
+const MG = { p: new Map(), last: null, movedAt: 0, moved: false };
+const mapDragged = () => performance.now() - MG.movedAt < 350;
+function mapPt(e) { const c = $('#mapCv'); if (!c) return null; const r = c.getBoundingClientRect(); if (!r.width) return null; return { x: (e.clientX - r.left) * 600 / r.width, y: (e.clientY - r.top) * 600 / r.height }; }
+function mapPair() { const a = [...MG.p.values()]; if (a.length < 2) return null; return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) }; }
+function setupMapGestures() {
+  document.addEventListener('pointerdown', e => { if (!e.target || e.target.id !== 'mapCv' || (e.pointerType === 'mouse' && e.button !== 0)) return; const q = mapPt(e); if (!q) return;
+    if (!MG.p.size) MG.moved = false; MG.p.set(e.pointerId, { x: q.x, y: q.y, sx: q.x, sy: q.y }); MG.last = mapPair(); });
+  window.addEventListener('pointermove', e => { const P = MG.p.get(e.pointerId); if (!P) return; const q = mapPt(e); if (!q) return; const dx = q.x - P.x, dy = q.y - P.y; P.x = q.x; P.y = q.y;
+    if (!MG.moved && Math.hypot(q.x - P.sx, q.y - P.sy) > 8 * 600 / Math.max(1, ($('#mapCv')?.getBoundingClientRect().width || 600))) MG.moved = true;
+    if (!MG.moved) return; MG.movedAt = performance.now();
+    if (MG.p.size >= 2) { const n = mapPair(), o = MG.last; if (o && n && o.d > 4) mapMove(n.d / o.d, o.x, o.y, n.x - o.x, n.y - o.y); MG.last = n; }
+    else mapMove(1, 0, 0, dx, dy); });
+  const up = e => { if (!MG.p.delete(e.pointerId)) return; if (MG.moved) MG.movedAt = performance.now(); MG.last = mapPair(); };
+  window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  const clear = () => { MG.p.clear(); MG.last = null; }; window.addEventListener('blur', clear); document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
+  document.addEventListener('wheel', e => { if (!e.target || e.target.id !== 'mapCv') return; e.preventDefault(); const q = mapPt(e); if (!q) return; const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; mapMove(Math.exp(-clamp(dy, -200, 200) * .002), q.x, q.y); }, { passive: false });
+}
 // v89: 지도를 누른 곳에서 가장 가까운 갈 수 있는 곳 (지도 그림 칸 기준 40 안), 없으면 null
 function warpTapAt(el, clientX, clientY) { const r = el.getBoundingClientRect(); if (!r.width) return null; const X = (clientX - r.left) * 600 / r.width, Y = (clientY - r.top) * 600 / r.height, { s, ox, oy } = mapView();
   let best = null, bd = 40; for (const e of warpDests(UIS.mapWarp)) { const d = Math.hypot((e.x + .5 - ox) * s - X, (e.y + .5 - oy) * s - Y); if (d < bd) { bd = d; best = e; } } return best; }
@@ -8205,8 +8239,10 @@ function onSheetClick(e) {
   if (a === 'jobCancel') { if (!UIS.jobAsk) { UIS.jobAsk = true; renderPanel(); return; } UIS.jobAsk = false; runCmd({ k: 'jobCancel', o: panel ? panel.i : null }); renderPanel(); return; }
   if (a === 'qty') { const [ri, d] = String(i).split(':'), r = RECIPES[+ri], mx = Math.max(1, Math.min(TIMED[r.at] ? JOB_MAX : 99, maxCraft(r))), cur = clamp(UIS.qty[ri] || 1, 1, mx); UIS.qty[ri] = d === 'max' ? mx : clamp(cur + (+d), 1, mx); renderPanel(); return; }
   if (a === 'mapChest') { setMapChest(!mapChestOn()); try { localStorage.setItem('lantern-tree-map-chest', mapChestOn() ? '1' : '0'); } catch (_) { } renderPanel(); return; }
-  if (a === 'mapzoom') { if (UIS.mapWarp != null) UIS.warpNear = !UIS.warpNear; else UIS.mapAll = !UIS.mapAll; renderPanel(); return; }
-  if (a === 'mapTap') { if (UIS.mapWarp == null) return; const e2 = warpTapAt(b, e.clientX, e.clientY); UIS.warpSel = e2 ? e2.i : null; renderPanel(); return; } // v89: 지도에서 워프 목적지 고르기
+  if (a === 'mapzoom') { const F = UIS.mapFocus, c = F || G.p; mapSet(mapIsAll() ? { cx: c.x, cy: c.y, span: MAP_NEAR } : { cx: W / 2, cy: H / 2, span: mapMax() }); renderPanel(); return; } // v94: 전체 ↔ 가까이(90칸)
+  if (a === 'mapZ') { mapMove(i > 0 ? 1.5 : 1 / 1.5, 300, 300); renderPanel(); return; } // v94: + − 버튼은 가운데를 기준으로
+  if (a === 'mapMe') { mapSet({ cx: G.p.x, cy: G.p.y, span: mapView().span }); renderPanel(); return; } // v94: 지금 크기 그대로 내 위치로
+  if (a === 'mapTap') { if (UIS.mapWarp == null || mapDragged()) return; /* v94: 끌어서 옮긴 뒤에는 고르지 않음 */ const e2 = warpTapAt(b, e.clientX, e.clientY); UIS.warpSel = e2 ? e2.i : null; renderPanel(); return; } // v89: 지도에서 워프 목적지 고르기
   if (a === 'warpGo') { const from = UIS.mapWarp; if (from == null) return; runCmd({ k: 'warp', from, to: i }); closePanel(); return; } // v89
   if (a === 'craft') { // 제작 자리(어느 제작대 창인지)를 함께 보내요
     const res = runCmd({ k: 'craft', r: i, q: UIS.qty[i] || 1, st: craftCtx(), i: panel.i, tier: panel.tier }); if (res === false) return;
@@ -8428,7 +8464,7 @@ function setupInput() {
   applyCtrl();
   cv.addEventListener('wheel', e => { if (paused) return; if (BM.on) { bmPick(e.deltaY > 0 ? 1 : -1); return; } command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
-  setupDrag();
+  setupDrag(); setupMapGestures(); // v94: 지도 끌기·확대
   $('#subBtn').addEventListener('click', () => subAction());
   $('#sheet').addEventListener('click', onSheetClick);
   setupBuild(); // v91 건축 모드 목록·버튼
