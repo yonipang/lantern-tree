@@ -22,7 +22,7 @@ import { hasItem } from './quests.js';
 import { idx, inB, W } from '../world/map.js';
 import { anchorAt, delObj, fpOf } from '../world/tiles.js';
 import { markLight } from './loop.js';
-export function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
+export function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
 export function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
   faceTo(t.x + .5 - p.x, t.y + .5 - p.y);

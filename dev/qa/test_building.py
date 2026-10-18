@@ -750,3 +750,86 @@ def test_build_mode_v91():
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+def test_build_mode_v92():
+    import asyncio, sys
+    # v92 건축 모드 2: 옮기기(든 상자·굽는 중인 것도 그대로, 여러 칸은 새 자리 모두 비어야), 뜯기(누르기·끌기, 직접 놓은 것만, 든 상자는 안 됨),
+    # 되돌리기(마지막 한 번: 뜯기·옮기기·놓기), 직접 쌓은 자연 재료 벽 기록(G.bwall, 세이브에 남음)
+    H2=HOOK.replace("computeLight}","computeLight,runCmd,BM,bmOpen,bmClose,bmTool,myWall,get VIEW(){return VIEW},get TP(){return TP}}")
+    SET="""()=>{const T=__T,G=T.G,X=T.CX+20,Y=T.CY+20;for(let y=Y-12;y<=Y+12;y++)for(let x=X-12;x<=X+12;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.wire.delete(i);G.under.delete(i)}
+  G.enemies.length=0;G.drops.length=0;G.p.dead=0;G.p.sit=null;G.p.x=X+.5;G.p.y=Y+.5;G.p.face={x:1,y:0};G.p.kx=G.p.ky=0;G.p.dash=null;G.p.bmUndo=null;
+  for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.tools=[];return [X,Y]}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await pg.evaluate("()=>document.body.classList.add('touch')")
+            X,Y=await ev(pg,SET)
+            await ev(pg,"()=>__T.bmOpen()")
+            # 뜯기: 직접 쌓은 흙벽은 뜯고(흙 돌려받음), 자연 흙벽은 안 뜯음(곡괭이로)
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;G.inv[12]={id:'dirt',c:3};T.runCmd({k:'bplace',id:'dirt',cells:[[X+2,Y-2]],rot:0});G.wall[T.idx(X+3,Y-2)]=1;
+              const a=[G.wall[T.idx(X+2,Y-2)],T.myWall(T.idx(X+2,Y-2)),T.myWall(T.idx(X+3,Y-2))];T.runCmd({k:'btake',cells:[[X+2,Y-2],[X+3,Y-2]]});
+              a.push(G.wall[T.idx(X+2,Y-2)],G.wall[T.idx(X+3,Y-2)],T.countItem('dirt'));return a}""",[X,Y])
+            rec('뜯기','쌓은 흙벽은 뜯어 흙을 돌려받고, 자연 흙벽은 그대로', r==[1,True,False,0,1,3], str(r))
+            # 뜯기: 가구는 가방으로, 든 상자는 안 됨, 빈 상자는 됨
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;G.objs.set(T.idx(X+2,Y),{t:'chair'});const full={t:'chest',items:Array(18).fill(null)};full.items[0]={id:'wood',c:3};G.objs.set(T.idx(X+2,Y+1),full);G.objs.set(T.idx(X+2,Y+2),{t:'chest',items:Array(18).fill(null)});
+              T.runCmd({k:'btake',cells:[[X+2,Y],[X+2,Y+1],[X+2,Y+2]]});return [!!G.objs.get(T.idx(X+2,Y)),T.countItem('chair'),!!G.objs.get(T.idx(X+2,Y+1)),!!G.objs.get(T.idx(X+2,Y+2)),T.countItem('chest')]}""",[X,Y])
+            rec('뜯기','의자·빈 상자는 가방으로, 물건이 든 상자는 남음', r==[False,1,True,False,1], str(r))
+            # 끌어서 여러 칸: 깐 바닥 3×2 → 바닥 6개 돌려받고 원래 이끼 바닥이 드러남, 그다음 되돌리기
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;G.inv[13]={id:'floorWood',c:6};const c=[];for(let y=Y+3;y<=Y+4;y++)for(let x=X-3;x<=X-1;x++)c.push([x,y]);T.runCmd({k:'bplace',id:'floorWood',cells:c,rot:0});
+              const n0=T.countItem('floorWood');T.runCmd({k:'btake',cells:c});const a=[n0,T.countItem('floorWood'),c.filter(([x,y])=>G.floor[T.idx(x,y)]===1).length];
+              T.runCmd({k:'bundo'});a.push(T.countItem('floorWood'),c.filter(([x,y])=>G.floor[T.idx(x,y)]===5).length,!!G.p.bmUndo);
+              T.runCmd({k:'btake',cells:c});G.p.x=X+.5;return a}""",[X,Y])
+            rec('뜯기·되돌리기','바닥 6칸을 한 번에 뜯고, 되돌리기로 다시 깔림(가방에서 6개), 되돌리기는 한 번만', r==[0,6,6,0,6,False], str(r))
+            # 옮기기: 든 상자는 물건 그대로, 굽는 중인 용광로는 진행 그대로
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;const ch={t:'chest',items:Array(18).fill(null)};ch.items[3]={id:'wood',c:7};G.objs.set(T.idx(X+1,Y-3),ch);
+              const fu={t:'furnace',job:{q:3,t0:G.time,out:'copperBar'}};G.objs.set(T.idx(X-2,Y-3),fu);
+              const a=[T.runCmd({k:'bmove',from:[X+1,Y-3],to:[X+4,Y-3]})!==false,T.runCmd({k:'bmove',from:[X-2,Y-3],to:[X-4,Y-1]})!==false];
+              const c2=G.objs.get(T.idx(X+4,Y-3)),f2=G.objs.get(T.idx(X-4,Y-1));a.push(!!G.objs.get(T.idx(X+1,Y-3)),c2===ch&&c2.items[3].c,f2===fu&&!!f2.job);return a}""",[X,Y])
+            rec('옮기기','물건이 든 상자·굽는 중인 용광로도 내용·진행 그대로 옮김', r==[True,True,False,7,True], str(r))
+            # 되돌리기(옮기기) → 원래 자리
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;T.runCmd({k:'bundo'});return [!!G.objs.get(T.idx(X-2,Y-3)),!!G.objs.get(T.idx(X-4,Y-1))]}""",[X,Y])
+            rec('되돌리기','옮기기를 되돌리면 원래 자리로', r==[True,False], str(r))
+            # 여러 칸 가구: 새 자리 모든 칸이 비어야 / 벽 위로는 안 됨 / 8칸 밖도 안 됨
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;G.inv[14]={id:'bench',c:1};T.runCmd({k:'bplace',id:'bench',cells:[[X+1,Y+6]],rot:0});const a0=T.G.objs.get(T.idx(X+1,Y+6))||T.G.objs.get(T.idx(X,Y+6));
+              let ax=-1;for(let x=X-1;x<=X+2;x++){const o=G.objs.get(T.idx(x,Y+6));if(o&&o.t==='bench')ax=x}G.wall[T.idx(X+6,Y+6)]=6;
+              const bad=T.runCmd({k:'bmove',from:[ax,Y+6],to:[X+6,Y+6]}),far=T.runCmd({k:'bmove',from:[ax,Y+6],to:[X+10,Y+6]}),ok=T.runCmd({k:'bmove',from:[ax,Y+6],to:[X+3,Y+8]});
+              const n=[...G.objs.values()].filter(o=>o.t==='_part'&&G.objs.get(o.a)&&G.objs.get(o.a).t==='bench').length;return [ax>=0,bad,far,!!ok,n,G.objs.get(T.idx(ax,Y+6))?G.objs.get(T.idx(ax,Y+6)).t:null]}""",[X,Y])
+            rec('옮기기','여러 칸 가구: 벽이 걸리거나 8칸 밖이면 안 되고, 빈 자리로는 옮겨지고 옛 칸은 비음', r[:3]==[True,False,False] and r[3] is True and r[4]==1 and r[5] is None, str(r))
+            # 되돌리기(놓기): 마지막에 놓은 것을 걷어 가방으로
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;G.inv[15]={id:'wallWood',c:4};T.runCmd({k:'bplace',id:'wallWood',cells:[[X-5,Y-5],[X-5,Y-4],[X-5,Y-3]],rot:0});const a=[G.wall[T.idx(X-5,Y-4)],T.countItem('wallWood')];
+              T.runCmd({k:'bundo'});a.push(G.wall[T.idx(X-5,Y-4)],T.countItem('wallWood'));return a}""",[X,Y])
+            rec('되돌리기','놓기를 되돌리면 놓은 벽 3칸을 걷어 가방으로', r==[6,1,0,4], str(r))
+            # 세이브: 쌓은 자연 재료 벽 기록이 남음
+            r=await ev(pg,"""([X,Y])=>{const T=__T,G=T.G;G.inv[12]={id:'granite',c:2};T.runCmd({k:'bplace',id:'granite',cells:[[X-6,Y]],rot:0});const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);return [Array.isArray(s.bwall),T.myWall(T.idx(X-6,Y))]}""",[X,Y])
+            rec('세이브','쌓은 화강암 벽 기록이 저장·불러오기 뒤에도 남음', r==[True,True], str(r))
+            # 화면: 뜯기 버튼 → 손가락으로 벽 끌기 / 옮기기 버튼 → 누르고 다른 칸 누르기
+            X,Y=await ev(pg,SET); await ev(pg,"()=>{__T.bmClose();__T.bmOpen()}")
+            await ev(pg,"([X,Y])=>{const T=__T,G=T.G;for(let x=X-3;x<=X-1;x++){G.wall[T.idx(x,Y-2)]=6}G.objs.set(T.idx(X+2,Y+2),{t:'chair'})}",[X,Y])
+            pos=await ev(pg,"""([X,Y])=>{const T=__T,V=T.VIEW,d=devicePixelRatio,f=(x,y)=>[((x+.5)*T.TP-V.baseX)/d,((y+.5)*T.TP-V.baseY)/d];return [f(X-3,Y-2),f(X-1,Y-2),f(X+2,Y+2),f(X+4,Y+3)]}""",[X,Y])
+            async def drag(pts,pid):
+                await pg.dispatch_event('#cv','pointerdown',{'pointerId':pid,'pointerType':'touch','isPrimary':True,'clientX':pts[0][0],'clientY':pts[0][1]})
+                for x,y in pts[1:]: await pg.dispatch_event('#cv','pointermove',{'pointerId':pid,'pointerType':'touch','clientX':x,'clientY':y})
+                await pg.dispatch_event('#cv','pointerup',{'pointerId':pid,'pointerType':'touch','clientX':pts[-1][0],'clientY':pts[-1][1]})
+            await pg.click('[data-bt=take]'); await pg.wait_for_timeout(80)
+            r0=await ev(pg,"()=>[__T.BM.tool,document.getElementById('bmPut').textContent,!!document.querySelector('#bmBar .bm-slots')]")
+            await drag(pos[:2],21); await pg.wait_for_timeout(80)
+            r=await ev(pg,"([X,Y])=>{const T=__T;return [0,1,2].map(k=>T.G.wall[T.idx(X-3+k,Y-2)]).concat([T.countItem('wallWood'),!document.querySelector('[data-bu]').disabled])}",[X,Y])
+            rec('화면','「뜯기」를 고르면 목록 칸이 숨고 버튼이 「뜯기」, 벽 한 줄을 끌어 3칸 뜯음, 되돌리기 버튼 켜짐', r0==['take','뜯기',False] and r==[0,0,0,3,True], str(r0)+str(r))
+            await pg.click('[data-bt=move]'); await pg.wait_for_timeout(60)
+            await drag([pos[2]],22); await pg.wait_for_timeout(60)
+            g=await ev(pg,"()=>[!!__T.BM.grab,document.getElementById('bmPut').textContent]")
+            await drag([pos[3]],23); await pg.wait_for_timeout(60)
+            r=await ev(pg,"([X,Y])=>{const T=__T;const o=T.G.objs.get(T.idx(X+4,Y+3));return [!!T.G.objs.get(T.idx(X+2,Y+2)),o&&o.t,!!T.BM.grab]}",[X,Y])
+            rec('화면','「옮기기」: 의자를 누르면 잡히고(버튼 「내려놓기」), 다른 칸을 누르면 옮겨짐', g==[True,'내려놓기'] and r==[False,'chair',False], str(g)+str(r))
+            await pg.click('[data-bu]'); await pg.wait_for_timeout(60)
+            r=await ev(pg,"([X,Y])=>{const T=__T;return [!!T.G.objs.get(T.idx(X+2,Y+2)),!!T.G.objs.get(T.idx(X+4,Y+3))]}",[X,Y])
+            rec('화면','되돌리기 버튼 → 의자가 원래 자리로', r==[True,False], str(r))
+            await pg.keyboard.press('Digit3'); r1=await ev(pg,"()=>__T.BM.tool"); await pg.keyboard.press('Digit1'); r2=await ev(pg,"()=>__T.BM.tool")
+            rec('화면','PC 키 3 = 뜯기, 1 = 놓기', [r1,r2]==['take','place'], str([r1,r2]))
+            r=await ev(pg,"""()=>{const R=s=>document.querySelector(s).getBoundingClientRect(),bar=R('#bmBar');return [bar.bottom<=innerHeight+1&&bar.left>=-1&&bar.right<=innerWidth+1,document.documentElement.scrollWidth>innerWidth,[...document.querySelectorAll('.bm-tools button')].every(b=>b.scrollWidth<=b.clientWidth+1)]}""")
+            rec('화면','폰: 놓기·옮기기·뜯기·되돌리기 줄이 화면 안에 들어가고 글자가 넘치지 않음', r==[True,False,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
