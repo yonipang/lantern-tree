@@ -33,11 +33,19 @@ export function pxText(t, x, y, col, ink) {
   if (ink) { ctx.fillStyle = ink; for (const [a, b] of [[-d, 0], [d, 0], [0, -d], [0, d], [-d, -d], [d, -d], [-d, d], [d, d]]) ctx.fillText(t, x + a, y + b); }
   ctx.fillStyle = col; ctx.fillText(t, x, y);
 }
+// v90: PC 큰 창 밀림 고치기 — 한 화면에 보이는 칸 수 상한(긴 쪽 24칸·짧은 쪽 14칸, 세로 폰은 원래 이 안이라 그대로)
+// + 큰 화면(짧은 변 500px 넘음)은 내부 해상도를 약 320만 픽셀까지만 (폰은 그대로)
+export const VIEW_MAX_LONG = 24, VIEW_MAX_SHORT = 14, MAX_PIXELS = 3.2e6, PHONE_SHORT = 500;
 export function resize() {
+  const w = innerWidth, h = innerHeight;
   DPR = Math.min(3, window.devicePixelRatio || 1);
-  const w = innerWidth, h = innerHeight; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
+  if (Math.min(w, h) > PHONE_SHORT && w * h * DPR * DPR > MAX_PIXELS) DPR = Math.sqrt(MAX_PIXELS / (w * h));
+  cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
   const zm = { small: .78, normal: 1, large: 1.25 }[zoomPref] || 1;
-  const target = clamp(Math.min(w, h) / 10.5, 30, 54) * zm; Z = Math.max(1, Math.round(target * DPR / 16)); TP = 16 * Z; markLight(); vignette = null;
+  const target = clamp(Math.min(w, h) / 10.5, 30, 54) * zm; Z = Math.max(1, Math.round(target * DPR / 16));
+  const lng = Math.max(cv.width, cv.height), sht = Math.min(cv.width, cv.height);
+  Z = Math.max(Z, Math.ceil(lng / (16 * VIEW_MAX_LONG)), Math.ceil(sht / (16 * VIEW_MAX_SHORT)));
+  TP = 16 * Z; markLight(); vignette = null;
 }
 export function drawImg(img, wx, wyFoot, o = {}) {
   const sx = (o.sx || 1), sy = (o.sy || 1); const sw = effW(img) * Z * sx, sh = effH(img) * Z * sy;

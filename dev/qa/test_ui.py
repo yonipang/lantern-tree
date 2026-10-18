@@ -322,6 +322,28 @@ def test_hud_layout_v77():
     return main
 
 
+def test_view_tile_cap():
+    # v90: PC 큰 창 밀림 고치기 — 한 화면 칸 수 상한(긴 쪽 24·짧은 쪽 14) + 큰 화면 내부 해상도 약 320만 픽셀, 폰은 그대로
+    import asyncio
+    async def main():
+        mkpage(SRC,'qa.html',hook='window.__V={get Z(){return Z},get TP(){return TP},get DPR(){return DPR},cv};'+HOOK)
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            for name,w,h,dpr,touch,exp in [('폰 세로',390,844,3,True,(1170,2532,7)),('폰 가로',844,390,3,True,(2532,1170,7)),
+                                           ('PC 1920×1080',1920,1080,1,False,(1920,1080,5)),('레티나 1440×900',1440,900,2,False,None),('4K',3840,2160,1,False,None)]:
+                ctx=await b.new_context(viewport={'width':w,'height':h},device_scale_factor=dpr,has_touch=touch,is_mobile=touch)
+                pg=await ctx.new_page(); await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(300)
+                r=await ev(pg,"()=>{const V=__V;return [V.cv.width,V.cv.height,V.Z,V.cv.width/V.TP,V.cv.height/V.TP]}")
+                cw,ch,z,tx,ty=r; lng,sht=max(tx,ty),min(tx,ty)
+                ok=lng<=24.01 and sht<=14.01 and (touch or cw*ch<=3.2e6*1.01)
+                if exp: ok=ok and (cw,ch,z)==exp  # 폰은 예전(v89)과 같은 캔버스·배율, PC 1920×1080은 배율 3 → 5
+                rec('화면 크기',f'v90 {name}: 보이는 칸 긴 쪽 24·짧은 쪽 14 이하'+(', 내부 해상도 320만 이하' if not touch else ''),ok,str([cw,ch,z,round(tx,1),round(ty,1)]))
+                await ctx.close()
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_bag_keeps_hotbar_pick():
     import asyncio, sys
     # v66 (BF-06): 가방에서 누른 단축칸이 가방을 닫은 뒤에도 손에 든 칸으로 남아요 (고르기만 — 먹거나 입지 않아요)
