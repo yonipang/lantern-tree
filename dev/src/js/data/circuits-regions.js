@@ -51,7 +51,7 @@ Object.assign(ITEMS, {
 });
 RECIPES.push(Rc('goldBar', 1, [['goldOre', 2]], 'furnace', 'mat'));
 ITEMS.meadow = { n: '풀밭', kind: 'floor', floor: 21, d: '씨앗을 심는 밭이에요. 이끼 포자는 풀밭에서만 자라요.' };
-ITEMS.mossSpore = { n: '이끼 포자', kind: 'seed', crop: 'cropMoss', d: '풀밭에 심으면 1분 30초쯤 뒤 이끼가 소복이 자라요. 거두면 이끼 한 삽과 포자를 다시 얻어요.' };
+ITEMS.mossSpore = { n: '이끼 포자', kind: 'seed', crop: 'cropMoss', d: '풀밭에 심으면 1분 30초쯤 뒤 이끼가 소복이 자라요. 거두면 이끼 흙과 포자를 다시 얻어요.' };
 OBJ.cropMoss = { n: '이끼', crop: 'moss', grow: 90, yield: [['gMoss', 2, 3, 1], ['mossSpore', 1, 2, 1], ['fiber', 1, 1, 0.5]] };
 OBJ.grass.drops.push(['mossSpore', 1, 1, 0.25]);
 RECIPES.push(Rc('meadow', 4, [['dirt', 2], ['fiber', 2]], 'bench', 'nature'), Rc('mossSpore', 2, [['fiber', 3]], null, 'mat'));

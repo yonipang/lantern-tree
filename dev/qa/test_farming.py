@@ -65,7 +65,7 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
             # ---- fertilizer ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.bossDead.queen=false;(G.stats.beaten||{}).queen=0;const f=T.RECIPES.find(x=>x.out==='fert'),fs=T.RECIPES.find(x=>x.out==='fertShroom');const before=[T.recipeOn(f),T.recipeOn(fs)];G.bossDead.queen=true;return [before,T.recipeOn(f),T.recipeOn(fs),f.n,JSON.stringify(f.req),f.at,JSON.stringify(fs.req)]}""")
             rec('비료','버섯 여왕을 물리치기 전엔 비료 레시피가 안 보임', r[0]==[False,False], str(r))
-            rec('비료','처치 뒤 작업대에서 흙 3 + 말랑 젤 1 → 비료 2개, 버섯흙 한 삽 + 포자 1 → 버섯 비료 2개', r[1] and r[2] and r[3]==2 and r[4]=='[["dirt",6],["gel",1]]' and r[5]=='bench' and r[6]=='[["gShroom",1],["spore",1]]', str(r))
+            rec('비료','처치 뒤 작업대에서 흙 3 + 말랑 젤 1 → 비료 2개, 버섯흙 + 포자 1 → 버섯 비료 2개', r[1] and r[2] and r[3]==2 and r[4]=='[["dirt",6],["gel",1]]' and r[5]=='bench' and r[6]=='[["gShroom",1],["spore",1]]', str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const t=T.targetTile();T.addItem('fert',3);const k=G.inv.findIndex((x,j)=>j>0&&x&&x.id==='fert');const s=G.inv[k];G.inv[k]=null;G.inv[0]=s;G.sel=0;
           const o=__crop(t.x,t.y,'cropBerry',10);const a=T.decide();const rem0=110-(G.time-o.p);T.fertCrop(t,o);const rem1=110-(G.time-o.p);const a2=T.decide();T.fertCrop(t,o);return [a.k,a.lbl,+rem0.toFixed(1),+rem1.toFixed(1),o.f,G.inv[0].c,a2.k,G.stats.fert]}""")
             rec('비료','"비료 주기" → 남은 시간이 바로 40% 줄어듦 (100초 → 60초)', r[0]=='fert' and r[2]==100 and r[3]==60, str(r))
@@ -167,7 +167,7 @@ window.__spot=(dx,dy)=>{const G=T.G;return [Math.floor(G.p.x)+dx,Math.floor(G.p.
             # ---- crystal fertilizer ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const f=T.RECIPES.find(x=>x.out==='fertCry');G.bossDead.golem=false;(G.stats.beaten||{}).golem=0;const a=T.recipeOn(f);G.bossDead.golem=true;
           const [x,y]=__spot(6,6);const o=__crop(x,y,'cropBean',10,4);G.inv[0]={id:'fertCry',c:2};G.sel=0;T.fertCrop({x,y},o);G.objs.delete(T.idx(x,y));return [a,T.recipeOn(f),f.at,JSON.stringify(f.req),f.n,o.f]}""")
-            rec('수정 비료','수정골렘 처치 뒤 석영 작업대: 수정 모래 한 삽 + 수정 조각 1 → 2개', r[0] is False and r[1] is True and r[2]=='bench' and r[3]=='[["gCrystal",1],["crystal",1]]' and r[4]==2, str(r))
+            rec('수정 비료','수정골렘 처치 뒤 석영 작업대: 수정 모래 + 수정 조각 1 → 2개', r[0] is False and r[1] is True and r[2]=='bench' and r[3]=='[["gCrystal",1],["crystal",1]]' and r[4]==2, str(r))
             rec('수정 비료','뿌리면 수정 비료 표시 (별 확률 35%)', r[5]==3, str(r))
             # ---- soil hint ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]=null;G.p.face={x:0,y:1};const tt=T.targetTile();__crop(tt.x,tt.y,'cropBerry',10,2);const a=T.decide().msg;__crop(tt.x,tt.y,'cropBerry',10,1);const b2=T.decide().msg;G.bossDead.golem=false;(G.stats.beaten||{}).golem=0;const c=T.decide().msg;G.bossDead.golem=true;G.objs.delete(T.idx(tt.x,tt.y));return [a,b2,c]}""")

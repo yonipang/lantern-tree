@@ -732,14 +732,14 @@ def test_arrow_keys_trees():
                 if st=='bench': await pg.screenshot(path=SP+'bench.png')
                 await ev(pg,"()=>__T.closePanel()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const R=__T.RECIPES.find(r=>r.out==='gMoss');return JSON.stringify(R.req)+R.at}")
-            rec('제작','이끼 한 삽 = 이끼 섬유 1개 (손 제작)', r=='[["fiber",1]]null', r)
+            rec('제작','이끼 흙 = 이끼 섬유 1개 (손 제작)', r=='[["fiber",1]]null', r)
             # moss meadow
             r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'meadow',c:4};G.sel=0;G.p.x=104.5;G.p.y=106.5;G.p.face={x:1,y:0};const i=T.idx(105,106);G.objs.delete(i);let a=T.decide();T.perform(a);const f=G.floor[i];
           G.inv[1]={id:'mossSpore',c:3};G.sel=1;a=T.decide();T.perform(a);const o=G.objs.get(i);
           G.sel=1;G.floor[T.idx(105,107)]=1;return [f,o&&o.t,a.k]}""")
             rec('이끼밭','풀밭 깔고 이끼 포자 심기', r[0]==21 and r[1]=='cropMoss', str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(105,106);G.objs.get(i).p=G.time-200;const a=T.decide();G.drops.length=0;T.perform(a);return [a.k,G.drops.map(d=>d.id).sort().join(','),G.floor[i]]}""")
-            rec('이끼밭','다 자라면 수확: 이끼 한 삽 + 포자, 풀밭은 그대로', r[0]=='harvest' and 'gMoss' in r[1] and 'mossSpore' in r[1] and r[2]==21, str(r))
+            rec('이끼밭','다 자라면 수확: 이끼 흙 + 포자, 풀밭은 그대로', r[0]=='harvest' and 'gMoss' in r[1] and 'mossSpore' in r[1] and r[2]==21, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.p.y=107.5;G.p.face={x:1,y:0};const i=T.idx(105,107);G.objs.delete(i);G.floor[i]=1;G.sel=1;return T.decide().k}""")
             rec('이끼밭','이끼 포자는 풀밭이 아닌 곳엔 못 심음', r!='place', r)
             # d-pad
