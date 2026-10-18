@@ -750,6 +750,62 @@ def test_map_markers():
     return main
 
 
+def test_map_zoom_pan():
+    import asyncio, sys
+    # v94: 지도를 끌어서 옮기고, 휠·두 손가락·+−로 확대·축소, 「나」는 내 위치로, 끈 뒤 누르기는 워프 고르기가 아님
+    H2=HOOK.replace("computeLight}","computeLight,mapView,UIS,W:L.W}") if 'L.W' in HOOK else HOOK.replace("computeLight}","computeLight,mapView,UIS}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{const T=__T,G=T.G;G.explored.fill(1);G.p.x=T.CX+.5;G.p.y=T.CY+20.5;T.openPanel('map')}"); await pg.wait_for_timeout(700)
+            V="(()=>{const v=__T.mapView();return [Math.round(v.span),Math.round(v.ox+v.span/2),Math.round(v.oy+v.span/2)]})()"
+            r0=await ev(pg,"()=>"+V)
+            rec('지도','처음엔 나를 가운데로 90칸', r0[0]==90 and abs(r0[1]-int(await ev(pg,'()=>__T.G.p.x')))<=1, str(r0))
+            bx=await (await pg.query_selector('#mapCv')).bounding_box(); cx=bx['x']+bx['width']/2; cy=bx['y']+bx['height']/2
+            # 한 손가락(마우스) 끌기: 오른쪽으로 끌면 보이는 곳이 왼쪽으로
+            await pg.mouse.move(cx,cy); await pg.mouse.down(); await pg.mouse.move(cx+60,cy+30,steps=6); await pg.mouse.up(); await pg.wait_for_timeout(100)
+            r1=await ev(pg,"()=>"+V); k=90/bx['width']
+            rec('지도','끌면 지도가 따라 움직임 (크기는 그대로)', r1[0]==90 and abs((r0[1]-r1[1])-60*k)<=2 and abs((r0[2]-r1[2])-30*k)<=2, str([r0,r1]))
+            # 휠: 아래로 굴리면 축소, 위로 굴리면 확대, 커서 아래 칸은 그대로
+            await pg.mouse.move(cx,cy); w0=await ev(pg,"()=>{const v=__T.mapView();return [v.ox+(300)/v.s,v.oy+300/v.s]}")
+            await pg.mouse.wheel(0,-300); await pg.wait_for_timeout(100)
+            r2=await ev(pg,"()=>{const v=__T.mapView();return [v.span,v.ox+300/v.s,v.oy+300/v.s]}")
+            rec('지도','휠을 위로 굴리면 확대 (가운데 칸은 그대로)', r2[0]<90 and abs(r2[1]-w0[0])<.6 and abs(r2[2]-w0[1])<.6, str([w0,r2]))
+            for _ in range(10): await pg.mouse.wheel(0,-300)
+            await pg.wait_for_timeout(100)
+            r3=await ev(pg,"()=>__T.mapView().span")
+            rec('지도','가장 크게 확대해도 20칸까지', abs(r3-20)<.01, str(r3))
+            for _ in range(20): await pg.mouse.wheel(0,300)
+            await pg.wait_for_timeout(100)
+            r4=await ev(pg,"()=>[__T.mapView().span===Math.max(__T.G.mapW||0,Math.sqrt(__T.G.wall.length)),__T.mapView().ox,__T.mapView().oy,document.querySelector('#sheet [data-a=mapzoom]').textContent,__T.mapView().span]")
+            MX=r4[4]
+            rec('지도','가장 작게 축소하면 지도 전체 (버튼은 「가까이 보기」)', r4[:4]==[True,0,0,'가까이 보기'], str(r4))
+            # + − 버튼, 「나」 버튼
+            await pg.click('#sheet [data-a=mapZ][data-i="1"]'); await pg.click('#sheet [data-a=mapZ][data-i="1"]'); await pg.wait_for_timeout(100)
+            r5=await ev(pg,"()=>Math.round(__T.mapView().span)")
+            await pg.click('#sheet [data-a=mapMe]'); await pg.wait_for_timeout(100)
+            r6=await ev(pg,"()=>{const v=__T.mapView(),G=__T.G;return [Math.round(v.span),Math.abs(v.ox+v.span/2-G.p.x)<1,Math.abs(v.oy+v.span/2-G.p.y)<1]}")
+            rec('지도','+ 두 번이면 전체의 1/2.25, 「나」는 크기 그대로 내 위치로', r5==round(MX/2.25) and r6==[r5,True,True], str([MX,r5,r6]))
+            # 두 손가락 벌리기(가짜 포인터 두 개)
+            r7=await ev(pg,"""()=>{const c=document.querySelector('#mapCv'),R=c.getBoundingClientRect(),X=R.left+R.width/2,Y=R.top+R.height/2,f=(t,id,x,y)=>c.dispatchEvent(new PointerEvent(t,{pointerId:id,clientX:x,clientY:y,bubbles:true,pointerType:'touch'}));
+              const s0=__T.mapView().span;f('pointerdown',1,X-20,Y);f('pointerdown',2,X+20,Y);for(let k=1;k<=5;k++){f('pointermove',1,X-20-k*8,Y);f('pointermove',2,X+20+k*8,Y)}f('pointerup',1,X-60,Y);f('pointerup',2,X+60,Y);return [Math.round(s0),Math.round(__T.mapView().span)]}""")
+            rec('지도','두 손가락을 벌리면 확대 (40px → 120px면 3배)', r7[1]<r7[0] and abs(r7[0]/r7[1]-3)<.2, str(r7))
+            # 지도를 닫았다 열면 크기는 기억하고 나를 가운데로
+            await ev(pg,"()=>{__T.closePanel();__T.openPanel('map')}"); await pg.wait_for_timeout(500)
+            r8=await ev(pg,"()=>{const v=__T.mapView(),G=__T.G;return [Math.round(v.span),Math.abs(v.ox+v.span/2-G.p.x)<1]}")
+            rec('지도','다시 열면 지난 크기 그대로, 나를 가운데로', r8==[r7[1],True], str(r8))
+            await pg.click('#sheet [data-a=mapzoom]'); await pg.wait_for_timeout(100)
+            await pg.click('#sheet [data-a=mapzoom]'); await pg.wait_for_timeout(100)
+            r9=await ev(pg,"()=>Math.round(__T.mapView().span)")
+            rec('지도','「전체 보기」 → 「가까이 보기」는 90칸', r9==90, str(r9))
+            await pg.screenshot(path=SP+'map_zoom.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_audio_resume():
     import asyncio, sys
     # v66 (BF-02): 화면 잠금·앱 전환 뒤 소리 장치가 「멈춤·끊김(아이폰)·닫힘」이면 다시 켜요. 브라우저가 막으면 다음 터치에서 다시. 소리 끔 설정은 그대로

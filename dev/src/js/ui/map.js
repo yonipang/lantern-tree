@@ -37,9 +37,42 @@ export function drawMap() {
   dot(G.p.x, G.p.y, '#7fe0b5', 8);
   if (F) { const X = (F.x - ox) * s, Y = (F.y - oy) * s; g.strokeStyle = INK; g.lineWidth = 8; g.beginPath(); g.arc(X, Y, 16, 0, 6.283); g.stroke(); g.strokeStyle = '#ffc861'; g.lineWidth = 4; g.beginPath(); g.arc(X, Y, 16, 0, 6.283); g.stroke(); dot(F.x, F.y, '#ffc861', 6); }
 }
-// 지도가 보여 주는 범위 (전체 보기면 지도 전체, 아니면 나(또는 목표)를 가운데로 90칸) — v89 워프 고르기는 전체 보기가 먼저
-export function mapView() { const F = UIS.mapFocus, all = UIS.mapWarp != null ? !UIS.warpNear : UIS.mapAll, cx0 = F ? F.x : G.p.x, cy0 = F ? F.y : G.p.y;
-  const span = all ? W : 90, s = 600 / span; return { span, s, ox: all ? 0 : clamp(cx0 - span / 2, 0, W - span), oy: all ? 0 : clamp(cy0 - span / 2, 0, H - span) }; }
+// 지도가 보여 주는 범위. v94: 끌어서 옮기고, 두 손가락·휠·+−로 확대·축소해요 (UIS.mapV = 가운데 칸 cx·cy와 보이는 칸 수 span)
+// 처음 열 때: 퀘스트 「지도에서 보기」는 목표 가운데 90칸, 워프 고르기는 전체, 그 밖은 나를 가운데로 지난번 크기(처음은 90칸)
+export const MAP_MIN = 20;
+export const mapMax = () => Math.max(W, H);
+export const MAP_NEAR = 90;
+function mapStart() { const F = UIS.mapFocus; if (F) return { cx: F.x, cy: F.y, span: MAP_NEAR };
+  if (UIS.mapWarp != null) return { cx: W / 2, cy: H / 2, span: mapMax() };
+  const span = UIS.mapSpan || MAP_NEAR; return span >= mapMax() ? { cx: W / 2, cy: H / 2, span } : { cx: G.p.x, cy: G.p.y, span }; }
+export function mapView() { const v = UIS.mapV || (UIS.mapV = mapStart()), span = clamp(v.span, MAP_MIN, mapMax()), s = 600 / span;
+  const a = (c, D) => span >= D ? (D - span) / 2 : clamp(c - span / 2, 0, D - span); return { span, s, ox: a(v.cx, W), oy: a(v.cy, H) }; }
+// 보이는 범위를 바꾸고(지도 그림 칸 px·py를 기준점으로 k배 확대, 그다음 dx·dy 그림 칸만큼 옮김) 가장자리 안으로 맞춰요
+export function mapMove(k, px, py, dx = 0, dy = 0) { const { span, s, ox, oy } = mapView(), ns = clamp(span / k, MAP_MIN, mapMax()), wx = ox + px / s, wy = oy + py / s, s2 = 600 / ns;
+  UIS.mapV = { cx: wx - (px + dx) / s2 + ns / 2, cy: wy - (py + dy) / s2 + ns / 2, span: ns }; const r = mapView(); UIS.mapV = { cx: r.ox + ns / 2, cy: r.oy + ns / 2, span: ns };
+  if (UIS.mapWarp == null && !UIS.mapFocus) UIS.mapSpan = ns; mapRedraw(); }
+export function mapSet(v) { UIS.mapV = v; if (UIS.mapWarp == null && !UIS.mapFocus) UIS.mapSpan = v.span; }
+export const mapIsAll = () => mapView().span >= mapMax() - .5;
+let mapRaf = 0;
+function mapRedraw() { if (mapRaf) return; mapRaf = requestAnimationFrame(() => { mapRaf = 0; drawMap(); const b = $('#sheet [data-a=mapzoom]'); if (b) b.textContent = mapIsAll() ? '가까이 보기' : '전체 보기'; }); }
+// 지도 위 손가락·마우스: 하나면 옮기기, 둘이면 벌리고 좁혀 확대·축소, 휠도 확대·축소. 8px 넘게 움직였으면 그 뒤 누르기(워프 고르기)는 무시
+const MG = { p: new Map(), last: null, movedAt: 0, moved: false };
+export const mapDragged = () => performance.now() - MG.movedAt < 350;
+function mapPt(e) { const c = $('#mapCv'); if (!c) return null; const r = c.getBoundingClientRect(); if (!r.width) return null; return { x: (e.clientX - r.left) * 600 / r.width, y: (e.clientY - r.top) * 600 / r.height }; }
+function mapPair() { const a = [...MG.p.values()]; if (a.length < 2) return null; return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) }; }
+export function setupMapGestures() {
+  document.addEventListener('pointerdown', e => { if (!e.target || e.target.id !== 'mapCv' || (e.pointerType === 'mouse' && e.button !== 0)) return; const q = mapPt(e); if (!q) return;
+    if (!MG.p.size) MG.moved = false; MG.p.set(e.pointerId, { x: q.x, y: q.y, sx: q.x, sy: q.y }); MG.last = mapPair(); });
+  window.addEventListener('pointermove', e => { const P = MG.p.get(e.pointerId); if (!P) return; const q = mapPt(e); if (!q) return; const dx = q.x - P.x, dy = q.y - P.y; P.x = q.x; P.y = q.y;
+    if (!MG.moved && Math.hypot(q.x - P.sx, q.y - P.sy) > 8 * 600 / Math.max(1, ($('#mapCv')?.getBoundingClientRect().width || 600))) MG.moved = true;
+    if (!MG.moved) return; MG.movedAt = performance.now();
+    if (MG.p.size >= 2) { const n = mapPair(), o = MG.last; if (o && n && o.d > 4) mapMove(n.d / o.d, o.x, o.y, n.x - o.x, n.y - o.y); MG.last = n; }
+    else mapMove(1, 0, 0, dx, dy); });
+  const up = e => { if (!MG.p.delete(e.pointerId)) return; if (MG.moved) MG.movedAt = performance.now(); MG.last = mapPair(); };
+  window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  const clear = () => { MG.p.clear(); MG.last = null; }; window.addEventListener('blur', clear); document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
+  document.addEventListener('wheel', e => { if (!e.target || e.target.id !== 'mapCv') return; e.preventDefault(); const q = mapPt(e); if (!q) return; const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; mapMove(Math.exp(-clamp(dy, -200, 200) * .002), q.x, q.y); }, { passive: false });
+}
 // v89: 지도를 누른 곳에서 가장 가까운 갈 수 있는 곳 (지도 그림 칸 기준 40 안), 없으면 null
 export function warpTapAt(el, clientX, clientY) { const r = el.getBoundingClientRect(); if (!r.width) return null; const X = (clientX - r.left) * 600 / r.width, Y = (clientY - r.top) * 600 / r.height, { s, ox, oy } = mapView();
   let best = null, bd = 40; for (const e of warpDests(UIS.mapWarp)) { const d = Math.hypot((e.x + .5 - ox) * s - X, (e.y + .5 - oy) * s - Y); if (d < bd) { bd = d; best = e; } } return best; }
