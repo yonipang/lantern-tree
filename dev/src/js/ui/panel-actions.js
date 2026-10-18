@@ -23,6 +23,7 @@ import { markInv, refreshHotbar } from './hud.js';
 import { applyCtrl, ctrlPref, setCtrlPref } from './input.js';
 import { mapChestOn, setMapChest, warpTapAt } from './map.js';
 import { closePanel, craftCtx, openPanel, panel, panelAt, renderPanel, UIS } from './panels.js';
+import { bmOpen } from './build.js';
 import { isNewCell, pouchOpen, setPouchOpen } from './panels-char.js';
 export function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
@@ -41,6 +42,7 @@ export function onSheetClick(e) {
   }
   if (a === 'bagTab') { UIS.bagTab = i; UIS.invSel = null; renderPanel(); return; }
   if (a === 'stash') { if (!(panel && panel.kind === 'chest') || runCmd({ k: 'stash', o: panel.i, same: i === 'same' }) === false) return; renderPanel(); return; }
+  if (a === 'buildMode') { bmOpen(); return; } // v91 건축 모드
   if (a === 'sortBag') { runCmd({ k: 'sortBag' }); UIS.invSel = null; renderPanel(); return; }
   if (a === 'wearOn') { const k = UIS.invSel; if (k != null && G.inv[k]) runCmd({ k: 'wear', i: k }); UIS.invSel = null; renderPanel(); return; }
   if (a === 'chTab') { UIS.chTab = i; UIS.chSlot = null; renderPanel(); return; } // v83: 캐릭터 창 탭 장비 / 스킬 / 등불

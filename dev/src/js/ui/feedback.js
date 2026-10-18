@@ -13,6 +13,7 @@ import { eventWho, onEvent } from '../sim/events.js';
 import { onFrame } from '../sim/systems.js';
 import { CHARS, buildPlayer, lookDef } from '../art/characters.js';
 import { mapPixel, rebuildMap } from '../render/map.js';
+import { BM } from './build.js';
 import { closePanel, craftNote, openPanel, panel, renderPanel, UIS } from './panels.js';
 
 // 개인 사건(소리·알림·흔들림·창·기절 화면·보스 막대 …)은 내 플레이어가 남긴 것만 보여요 — 반짝이·떠오르는 글자는 세계에 그려져서 누구 것이든 (8단계)
@@ -50,7 +51,7 @@ onEvent('close', onlyMe(() => closePanel()));
 onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPanel(); })); // 그 창이 열려 있으면 다시 그리기
 // v76: 창을 연 채 체력이 줄면 (맞음·배고픔·더위·추위) 창은 그대로 두고 화면 가장자리를 빨갛게 번쩍 + 창의 체력 막대·닫기 버튼 강조
 let hitT = 0;
-onEvent('hurt', onlyMe(() => { if (!panel) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
+onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); if (!panel) return; /* v91: 건축 중에도 빨간 번쩍 */ sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----

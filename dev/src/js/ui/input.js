@@ -18,6 +18,7 @@ import { DRAG, hotClick, onSheetClick, setupDrag } from './panel-actions.js';
 import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
 import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
 import { idx, inB } from '../world/map.js';
+import { BM, bmClose, bmDown, bmMove, bmPick, bmRotate, bmToggle, bmUp, inJoyZone, joyZone, setupBuild } from './build.js';
 export const keys = new Set();
 export const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
 export const dpad = { id: null, vx: 0, vy: 0 };
@@ -37,13 +38,15 @@ export function mouseTile() {
 // 매 프레임(그리고 명령을 보내기 바로 전) 지금 조작을 조작 의도로 묶어 보내요 (sim/commands.js 「조작 의도」)
 export function readCtl() {
   if (panel) return { k: 'ctl', mx: 0, my: 0, stick: null, act: false, atk: false, aim: null }; // v76: 창이 열린 동안 내 캐릭터는 제자리 (세계는 계속)
+  const bm = BM.on; // v91: 건축 중에는 걷기만 (공격·상호작용·조준 없음)
   let mx = 0, my = 0;
   if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
   if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
   if (joy.active) { mx += joy.vx; my += joy.vy; }
   if (dpad.id != null) { mx += dpad.vx; my += dpad.vy; }
   const stick = dpad.id != null && Math.hypot(dpad.vx, dpad.vy) > .2 ? { x: dpad.vx, y: dpad.vy } : joy.active && Math.hypot(joy.vx, joy.vy) > .2 ? { x: joy.vx, y: joy.vy } : null; // 대시 방향 (방향 패드가 먼저)
-  let aim = null; if (aimMouse()) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
+  let aim = null; if (aimMouse() && !bm) { const m = mouseTile(); aim = { x: m.mx, y: m.my, tx: m.x, ty: m.y }; }
+  if (bm) return { k: 'ctl', mx, my, stick, act: false, atk: false, aim: null };
   return { k: 'ctl', mx, my, stick, act: btnHeld || keys.has('Space') || keys.has('KeyE'), atk: atkBtnHeld || mouse.down || keys.has('KeyJ'), aim };
 }
 export function sendCtl() { if (G) runCmd(readCtl()); }
@@ -52,23 +55,28 @@ export function subAction() { if (!started || paused || !G || G.p.dead > 0) retu
 export function padEnd() { dpad.id = null; dpad.vx = dpad.vy = 0; const dp = $('#dpad'); if (dp) dp.querySelectorAll('i').forEach(x => x.classList.remove('on')); }
 export function applyCtrl() { document.body.classList.toggle('padmode', ctrlPref === 'pad'); if (ctrlPref === 'pad') joyEnd(); else padEnd(); }
 export function joyEnd() { joy.active = false; joy.id = null; joy.vx = joy.vy = 0; const j = $('#joy'); j.classList.remove('on'); placeJoyIdle(); $('#joyKnob').style.transform = ''; }
-export function placeJoyIdle() { const j = $('#joy'); j.style.left = (innerHeight > 600 ? 80 : 72) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 184 : 120)) + 'px'; } // v78: 와이어프레임 v2 자리(지름 128px, 왼쪽 16px)
+export function placeJoyIdle() { const j = $('#joy'); if (BM.on && j) { const z = joyZone(); j.style.left = z.x + 'px'; j.style.top = z.y + 'px'; return; } /* v91: 건축 중에는 목록 바로 위 왼쪽 */ j.style.left = (innerHeight > 600 ? 80 : 72) + 'px'; j.style.top = (innerHeight - (innerHeight > 600 ? 184 : 120)) + 'px'; } // v78: 와이어프레임 v2 자리(지름 128px, 왼쪽 16px)
 export function setupInput() {
   cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     ensureAudio(); if (paused) return;
+    if (BM.on) { // v91 건축 모드: 마우스·손가락으로 놓기, 폰 조이스틱은 왼쪽 아래 동그라미 안에서만
+      if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; if (e.button === 0) bmDown(e); return; }
+      document.body.classList.add('touch');
+      if (!joy.active && ctrlPref !== 'pad' && inJoyZone(e.clientX, e.clientY)) { const z = joyZone(); joy.active = true; joy.id = e.pointerId; joy.ox = z.x; joy.oy = z.y; $('#joy').classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } return; }
+      bmDown(e); return; }
     if (e.pointerType === 'mouse') { if (e.button === 2) { mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; command({ k: 'skill', n: 0 }); return; } mouse.over = true; mouse.down = e.button === 0; if (mouse.down) command({ k: 'tap', b: 'atk' }); /* v65: the mouse attacks */ mouse.used = true; mouse.last = performance.now(); mouse.x = e.clientX; mouse.y = e.clientY; return; }
     document.body.classList.add('touch'); mouse.used = false;
     if (!joy.active && ctrlPref !== 'pad' && e.clientX < innerWidth * 0.62) { joy.active = true; joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; const j = $('#joy'); j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.classList.add('on'); try { cv.setPointerCapture(e.pointerId); } catch (_) { } }
   });
-  window.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; mouse.x = e.clientX; mouse.y = e.clientY; mouse.last = performance.now(); mouse.used = true; mouse.over = e.target === cv; });
+  window.addEventListener('pointermove', e => { if (BM.on) bmMove(e); if (e.pointerType !== 'mouse') return; mouse.x = e.clientX; mouse.y = e.clientY; mouse.last = performance.now(); mouse.used = true; mouse.over = e.target === cv; });
   document.addEventListener('mouseleave', () => { mouse.over = false; });
   cv.addEventListener('pointermove', e => {
     if (e.pointerType === 'mouse') return;
     if (joy.active && e.pointerId === joy.id) { let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const l = Math.hypot(dx, dy), R = 48; /* v78: 받침 128px − 손잡이 32px */ if (l > R) { dx *= R / l; dy *= R / l; } /* v75: the base stays where it was pressed; only the knob is held inside the ring, and the walk keeps that direction at full speed */
       const m = Math.hypot(dx, dy) / R; joy.vx = m > 0.15 ? dx / R : 0; joy.vy = m > 0.15 ? dy / R : 0; $('#joyKnob').style.transform = `translate(${dx}px,${dy}px)`; }
   });
-  const up = e => { if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
+  const up = e => { if (BM.on) bmUp(e); if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; } if (e.pointerId === joy.id) joyEnd(); };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); window.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') mouse.down = false; });
   const ab = $('#actBtn');
   ab.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (paused) return; btnHeld = true; command({ k: 'tap', b: 'act' }); ab.classList.add('on'); try { ab.setPointerCapture(e.pointerId); } catch (_) { } });
@@ -82,11 +90,13 @@ export function setupInput() {
     if (tf) { if (e.target.offsetParent !== null && e.code !== 'Escape') return; e.target.blur(); } // a hidden text field must never swallow the game keys
     if (e.repeat && !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { if (['Space', 'Tab'].includes(e.code)) e.preventDefault(); return; }
     ensureAudio();
-    if (e.code === 'Escape') { if (panel) closePanel(); else if (started) openPanel('menu'); return; }
+    if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmClose(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
     if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
       if (['KeyI', 'KeyB'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK' || e.code === 'KeyU') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
+    if (e.code === 'KeyZ') { bmToggle(); return; } // v91: Z = 건축 모드
+    if (BM.on) { if (e.code === 'KeyR') bmRotate(); else if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); bmClose(); openPanel('inv'); } if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault(); if (!['Space', 'KeyE', 'KeyJ', 'KeyR', 'KeyQ', 'KeyF', 'KeyG', 'Tab'].includes(e.code) && !/^Digit/.test(e.code)) keys.add(e.code); return; } // 건축 중에는 걷기 키만
     if (e.code === 'Tab') { e.preventDefault(); toolSlotClick(); return; } // v65: the tool row
     if (e.code === 'KeyI' || e.code === 'KeyB') { e.preventDefault(); openPanel('inv'); return; }
     if (e.code === 'KeyC') { openPanel('stat'); return; } if (e.code === 'KeyK') { openPanel('stat', { sk: 1 }); return; } // v77: C = 캐릭터, K = 캐릭터의 스킬 쪽
@@ -122,11 +132,12 @@ export function setupInput() {
   dp.addEventListener('pointermove', padMove);
   const pu = e => { if (e.pointerId === dpad.id) padEnd(); }; dp.addEventListener('pointerup', pu); dp.addEventListener('pointercancel', pu); dp.addEventListener('lostpointercapture', pu);
   applyCtrl();
-  cv.addEventListener('wheel', e => { if (paused) return; command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
+  cv.addEventListener('wheel', e => { if (paused) return; if (BM.on) { bmPick(e.deltaY > 0 ? 1 : -1); return; } command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
   setupDrag();
   $('#subBtn').addEventListener('click', () => subAction());
   $('#sheet').addEventListener('click', onSheetClick);
+  setupBuild(); // v91 건축 모드 목록·버튼
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));

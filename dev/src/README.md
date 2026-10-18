@@ -59,7 +59,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/inventory.js` | 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도(`addItem`·`removeItem`·`countItem`·`moveInto`), 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가방·상자·도구 명령 |
 | `js/sim/gear.js` | 장비·옷·장신구·반지(`wearItem`·`wearing`·`ringV`), 강화 단계와 효과(`upgCost`·`upgText`), 무기 종류·희귀도(`wtOf`·`rarOf`) |
 | `js/sim/crafting.js` | 제작: 가까운 제작대(`nearStations`)·제작 자리(`craftable`·`stationTier`), 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업(`takeJob`) |
-| `js/sim/building.js` | 건축: 얇은 벽·문·자동문 잇기(`twMask`·`doorGroup`), 가구 돌리기(`rotatePlace`)·발자리 크기(`setFootprints`), 놓기(`placeItem`)·줍기 |
+| `js/sim/building.js` | 건축: 얇은 벽·문·자동문 잇기(`twMask`·`doorGroup`), 가구 돌리기(`rotatePlace`)·발자리 크기(`setFootprints`), 놓기(`placeItem`, 세계 바꾸기 부분 `putItem` — v91 건축 모드와 함께 씀)·줍기 |
 | `js/sim/gathering.js` | 모으기: 벽 캐기(`mineWall`)·나무 베기(`hitObj`)·수확(`harvest`), 쳐서 회수(공격 버튼으로 가구 떼기) |
 | `js/sim/player.js` | 플레이어: 능력치·스킬·경험치(`gainXp`·`maxHp`), 매 프레임 움직이기·배고픔, 다치기·기절·깨어나기(`hurtPlayer`·`respawn`), 앉기·자기·먹기, 능력치·스킬·꾸미기 명령 |
 | `js/sim/survival.js` | 생존: 더위·추위(`envTick`), 귀환석(`startRecall`), 긴급 탈출·갇힘 풀기(`emergencyEscape`·`unstick`), 잃어버린 꾸러미 |
@@ -77,6 +77,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/tree.js` | 등불나무: 자라는 단계(`treeStage`), 빛씨앗 넣기(`insertSeeds`) |
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
 | `js/sim/warp.js` | v89 워프포인트·포탈: 놓기(`placeWarps`, 새·옛 세계)·켜기·목적지(`warpDests`)·이동(`startWarp`·`warpTick`)·포탈 제한(`portalWhy`)·둘레 규칙(`nearWarpPt`·`warpSafe`) — `sim/digging.js` 다음 |
+| `js/sim/buildmode.js` | v91 건축 모드 규칙: 건축 목록(`bmList`, 가방 + 16칸 안 상자 `bmCount`·`bmTake`), 분류(`bmCat`), 만들어서 놓기(`bmRecipe`, 제작대 단계), 놓을 수 있는지(`bmWhy`, 8칸·벽 바꾸기 `wallSwapOk`), 놓기 명령 `bplace` — `sim/warp.js` 다음 |
 | `js/art/content.js` | **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
 | `js/render/icecave.js` | 기울어진 벽 가장자리(v79 얼음벽, v80 흙·돌·화강암·현무암·광맥, v82 오토타일 `autoShape`·그림자용 4px 칸 `wallOcc4`): 칸 모양(`wallSolidPx`·`wallMask`)·윗면/앞면 그림(`slantWallArt`), 벽 옆 청록빛·그림자(`wallEdgeChunk`), 얼음 조각 바닥(`drawIceShard`)·얼어붙은 물(`iceFrozenPx`) — 그림은 코드로 만들어 칸마다 기억 |
@@ -95,6 +96,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/ui/hud.js` | HUD: 단축칸(`refreshHotbar`, 규칙은 `emit('inv')`)·체력·배고픔·스킬 막대(`updateHud`), 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시 |
 | `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |
 | `js/ui/map.js` | 지도 창: 상자 표시 설정, 지도 그리기(`drawMap`) |
+| `js/ui/build.js` | v91 건축 모드 화면: 켜고 끄기(`bmOpen`·`bmClose`, 가방 창 「건축」·Z), 아래 목록(`bmRender`), 화면 누르기·끌기(`bmDown`·`bmMove`·`bmUp`, 바닥 네모·벽 한 줄), 「놓기」(앞 칸 `frontTile`), 조이스틱 자리(`joyZone`), 미리보기(`drawBuild`) |
 | `js/ui/panel-actions.js` | 창 안 버튼(`onSheetClick`) → 명령 보내기, 창 안 고르기·확인 묻기(`UIS`), 칸 끌어 옮기기 |
 | `js/ui/input.js` | 입력 상태(`keys`·`mouse`·`joy`·`dpad`)와 **조작 의도 만들기(`readCtl`)·명령 보내기(`command`)**, 키보드·터치·조이스틱 연결(`setupInput`) |
 | `js/ui/picker.js` | 캐릭터 고르기, 시작하기(`beginPlay`) |
