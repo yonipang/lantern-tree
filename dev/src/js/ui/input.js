@@ -15,6 +15,7 @@ import { advanceOffline } from '../sim/crafting.js';
 import { wearItem } from '../sim/gear.js';
 import { flipHotbar, toggleToolRow, toolSlotClick } from './hud.js';
 import { DRAG, hotClick, onSheetClick, setupDrag } from './panel-actions.js';
+import { setupMapGestures } from './map.js';
 import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
 import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
 import { idx, inB } from '../world/map.js';
@@ -135,7 +136,7 @@ export function setupInput() {
   applyCtrl();
   cv.addEventListener('wheel', e => { if (paused) return; if (BM.on) { bmPick(e.deltaY > 0 ? 1 : -1); return; } command({ k: 'sel', d: e.deltaY > 0 ? 1 : -1 }); }, { passive: true });
   $('#hotbar').addEventListener('click', e => { if (performance.now() - DRAG.block < 400) return; if (e.target.closest('[data-tool]')) { toolSlotClick(); return; } const b = e.target.closest('[data-i]'); if (b) { toggleToolRow(false); hotClick(+b.dataset.i); } });
-  setupDrag();
+  setupDrag(); setupMapGestures(); // v94: 지도 끌기·확대
   $('#subBtn').addEventListener('click', () => subAction());
   $('#sheet').addEventListener('click', onSheetClick);
   setupBuild(); // v91 건축 모드 목록·버튼
