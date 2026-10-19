@@ -384,7 +384,7 @@ def test_lantern_tree_growth():
             r=await ev(pg,"()=>{const T=__T;for(let k=0;k<60;k++)T.updateTree(1/30);return [!!T.TREEFX.grow,T.TREEFX.leaves.length]}")
             rec('연출','약 1.5초 뒤 연출이 끝나고 잎·꽃잎이 흩날림', (r[0] is False) and r[1]>=10, str(r))
             await pg.wait_for_timeout(1300); r=await ev(pg,"()=>!!document.querySelector('[data-a=close]')")
-            rec('연출','첫 엔딩 창은 성장 연출이 끝난 뒤에 열림', r is True, r)
+            rec('연출','기억 장면 창(v103, 예전 첫 엔딩 창)은 성장 연출이 끝난 뒤에 열림', r is True, r)
             await ev(pg,"()=>{document.querySelectorAll('[data-a=close]').forEach(b=>b.click())}")
             # blessing
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const plant=(x,y)=>{const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;const o={t:'cropBerry',p:G.time};G.objs.set(i,o);return o};

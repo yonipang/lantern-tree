@@ -21,7 +21,9 @@ export function insertSeeds() {
   const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; const from = treeStage(); removeItem('lightSeed', n); G.treeSeeds += n; markLight();
   TREEFX.grow = { t: 0, from, to: treeStage() }; emit('shake', .15);
   emit('sfx', 'seed'); emit('puff', CX + .5, CY - 1, '#ffd25c', 30, 4, 2); G.p.hp = maxHp(); gainXp(50 * n);
-  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); emit('win', 'win2'); }
-  else if (G.treeSeeds >= 3 && !G.won) { G.won = true; emit('win', 'win'); }
-  else emit('toast', `등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/${G.treeSeeds < 3 ? 3 : 5})`, 'good');
+  // v103: 단계가 오를 때마다 나무가 옛 기억 한 장면을 보여 줘요 (엔딩 두 갈래는 하나로 — 마지막 장면은 가장 깊은 곳에서, v108). won·won2는 옛 세이브·축제 케이크 해금을 위해 그대로 둬요
+  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); }
+  else if (G.treeSeeds >= 3 && !G.won) G.won = true;
+  G.stats.mem = G.stats.mem || {}; const st = treeStage(); if (st > from && !G.stats.mem[st]) { G.stats.mem[st] = 1; emit('memory', st); }
+  else emit('toast', `등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/5)`, 'good');
 }
