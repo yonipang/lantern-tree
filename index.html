@@ -529,6 +529,8 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 .talkface{width:64px;height:76px;image-rendering:pixelated;flex:none;background:#3a2f52}
 /* v105 물물교환 줄 */
 .btn.barter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:left;min-height:48px}.btn.barter.off{opacity:.55}.btn.barter small{flex-basis:100%;color:var(--muted);font-size:16px}.barrow{color:var(--amber)}
+/* v106 일기 */
+.prose.diary{background:#2a2139;border:2px solid #4d3e66;padding:10px;color:#e8dcc0}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -766,6 +768,7 @@ const FRAME_ORDER = [
   'wild',     // 들짐승·펫 (features/gear-animals.js)
   'enemies', 'bosses', // 몬스터·보스 (game/update.js)
   'pshots',   // 내 화살·마법 (game/actions.js)
+  'archives', // v106 기록관 안 그림자 조각
   'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'skills102', // v102 빛 구슬 친구·빛 방패·각성·질주 시간
   'fish',     // 낚시 (game/combat.js)
@@ -2554,7 +2557,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeCocoons(); /* v104 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); /* v104·v106 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2685,7 +2688,7 @@ function deserialize(s) {
   if (!G.stats.nm65) migrateTools65(); // v65 tool pouch
   migrateForges60(oldFp); // v60
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; placeWarps(); placeCocoons(); /* v104 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; placeWarps(); placeArchives(); placeCocoons(); /* v104·v106 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
@@ -3694,6 +3697,19 @@ const MEMORY = {
   5: { t: '다섯 번째 기억 · 나무가 당신에게', s: '다섯 등불이 모두 밝아진 순간, 등불나무가 처음으로 <em>당신의 손</em>에 반응해 저절로 빛났어요.<br>나무 아래, 땅속 가장 깊은 곳에서 무언가가 뒤척이는 소리가 들려요.<br><span style="color:var(--muted)">(마지막 장은 가장 깊은 곳에서 — 다음 이야기에서 이어져요)</span>' },
 };
 const MEM_MAX = 5;
+
+// ---- v106 기록관과 등불지기의 일기 (dev/design/세계관-NPC.md 「기록관」) ----
+// id · 지역(b) · 등불나무에서 거리 · 구출하는 NPC · 깨면 배우는 레시피 · 일기 한 장(제목·글). 글은 Claude 임시(【검토 중】).
+const ARCHIVES = [
+  { id: 'arch0', n: '이끼 굴 기록관', b: 0, minD: 30, maxD: 75, npc: 'scholar', recipe: 'petalPancake',
+    diary: { t: '등불지기의 일기 · 첫 장', s: '「나무가 아직 작다. 오늘 처음으로 어린 가지에 등불을 걸었다. 밭의 아이들이 웃었다.」<br><br>「빛이 닿는 곳에 그림자는 오지 않는다. 우리는 그 사실 하나로 이 땅을 지킨다.」<br><br>종이 끝에 작은 그림이 있어요 — 손잡이가 둥근 등불. <em>당신이 처음부터 들고 있던 등불과 꼭 닮았어요.</em>' } },
+  { id: 'arch2', n: '수정 동굴 기록관', b: 2, minD: 60, maxD: 180, npc: null, recipe: 'glowSoup',
+    diary: { t: '등불지기의 일기 · 둘째 장', s: '「수정에 빛을 담는 법을 익혔다. 어둠이 깊어질수록 더 많은 빛을 담아 둬야 한다.」<br><br>「우리는 무언가를 가두려고 한다. 그것이 무엇인지 적지는 않겠다. 적으면 더 가까워지는 것 같으니.」' } },
+  { id: 'arch3', n: '용암 동굴 기록관', b: 3, minD: 70, maxD: 220, npc: null, recipe: 'fireStew',
+    diary: { t: '등불지기의 일기 · 셋째 장', s: '「화로를 지키는 거북에게 마지막 명령을 남겼다. 불을 지켜라. 누구를 위해서인지는… 잊어도 좋다.」<br><br>「그것을 가두려면 나무를 잠재워야 한다. 그리고 한 사람이 남아 등불을 들어야 한다.」' } },
+  { id: 'arch4', n: '얼음 동굴 기록관', b: 4, minD: 70, maxD: 220, npc: null, recipe: 'frostTea',
+    diary: { t: '등불지기의 일기 · 넷째 장', s: '「우리는 얼음 속에서 잠들기로 했다. 나무가 다시 깨어나는 날, 누군가 우리를 깨워 주기를.」<br><br>「남는 사람은 기억을 지우기로 했다. 그래야 그것이 그를 찾지 못한다.」<br><br>잠든 자리를 세어 둔 줄이 있어요. 숫자 하나가 <em>빈칸</em>이에요. …마지막 장은 찢겨 있어요.' } },
+];
 // ================= v104 이야기 2: 그림자 고치 · NPC 6명 · 등불나무 곁 마을 · 대화 (dev/design/세계관-NPC.md) =================
 // NPC는 그림자 고치(cocoon)에 갇혀 있어요. 고치를 공격 버튼으로 3번 치면(쳐서 회수처럼) 풀려나 등불나무 곁 마을 자리로 가요. 고치 둘레에는 그림자 조각이 지켜요.
 // 이름·대사는 Claude가 임시로 지음(사용자가 바꿀 수 있음, 【검토 중】). 호감도 없음. 기록관 학자(scholar)는 v106 기록관에서 구해요.
@@ -4577,6 +4593,7 @@ function autoOptions(t, i, o) {
       return L; }
     if (d.cocoon) { A({ k: 'info', lbl: '그림자 고치', icon: 'dots', msg: `그림자 고치 · 누군가 갇혀 있어요. 공격 버튼으로 ${COCOON_HITS}번 치면 부서져요 (둘레의 그림자 조각은 빛 안에서 더 아파해요)`, t }); return L; } // v104
     if (d.npc) { A({ k: 'use', u: 'talk', lbl: '말 걸기', icon: 'hand', t, o }); return L; }
+    if (d.diary) { A({ k: 'use', u: 'read2', lbl: '일기 읽기', icon: 'hand', t, o }); return L; } // v106
     if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
     if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
     if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
@@ -4699,6 +4716,7 @@ function useObj(a) {
     case 'pet': emit('hearts', x, t.y, 5); emit('sfx', 'purr'); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); emit('ftext', p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } emit('toast', pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
     case 'lamp': o.off = !o.off; markLight(); emit('sfx', 'click'); break;
     case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); emit('talk', o.npc, 'talk'); break; // v104
+    case 'read2': faceTo(x - p.x, t.y + .5 - p.y); readDiary({ ...o, x, y: t.y + .5 }); break; // v106 일기
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;
@@ -6007,7 +6025,7 @@ onFrame('cocoons', dt => {
       const e = regionEnemy(mkEnemy('shadowBit', ex + .5, ey + .6), G.biome[i] || 0); e.home = { x, y }; G.enemies.push(e); break; } } }
 });
 // 그림자 조각은 고치 둘레를 떠나지 않아요 (sim/enemies.js에서 매 프레임 불러요)
-function shadowLeash(e) { if (e.k !== 'shadowBit' || !e.home) return; const dx = e.x - e.home.x, dy = e.y - e.home.y, d = Math.hypot(dx, dy); if (d > COCOON_GUARD_R) { e.x = e.home.x + dx / d * COCOON_GUARD_R; e.y = e.home.y + dy / d * COCOON_GUARD_R; e.vx = -dx / d * 2; e.vy = -dy / d * 2; e.t = .5; } }
+function shadowLeash(e) { if (e.k !== 'shadowBit' || !e.home) return; const R = e.home.r || COCOON_GUARD_R, dx = e.x - e.home.x, dy = e.y - e.home.y, d = Math.hypot(dx, dy); if (d > R) { e.x = e.home.x + dx / d * R; e.y = e.home.y + dy / d * R; e.vx = -dx / d * 2; e.vy = -dy / d * 2; e.t = .5; } }
 // ---- 대화: 안녕 → 할 일 힌트 → 직책 이야기(번갈아) ----
 function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
@@ -6029,6 +6047,70 @@ defineCmd('barter', c => { const npc = c.npc, k = c.n | 0, row = (BARTER[npc] ||
   for (const [id, n] of get) { const left = addItem(id, n); if (left) spawnDrop(id, left, G.p.x, G.p.y); }
   const B = G.stats.barter = G.stats.barter || {}, key = barterKey(npc, k), old = B[key]; B[key] = old && G.time - old[1] < BARTER_DAY ? [old[0] + 1, old[1]] : [1, G.time];
   emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 10, 2, .5); emit('toast', `${get.map(([id, n]) => `${ITEMS[id].n} ${n}개`).join(', ')}을(를) 받았어요`, 'good', 'barter'); emit('inv'); return true; });
+// ================= v106 기록관(유적): 이끼 굴 시험 기록관 (dev/design/세계관-NPC.md 「기록관」) =================
+// 지도 안 유적 구역(코어키퍼 방식). 벽은 단단한 암반(8, 못 캠), 바닥은 돌바닥(6). 안은 깨기 전까지 지도에서 까맣고(render/light.js), 깨면(일기를 읽으면) 한 번에 모두 보여요.
+// 두 방: 들어가는 방(레버·건전지·전선) → 전기 문 → 일기 방(일기 받침대·기록관 학자 고치·보물상자). 안에는 그림자 조각이 어둠에서 지켜요(빛 안에서 2배).
+// 새 세계·옛 세계 모두 불러올 때 한 번 놓아요(stats.archV). 자리가 없으면 안 생겨요. 기록은 G.stats.arch[]. 글·보상은 Claude 임시(【검토 중】).
+OBJ.diary = { n: '등불지기의 일기', solid: 1, diary: 1, light: [2.5, '#ffe9a8'] };
+USE.diary = 'read2'; USE_LBL.read2 = '일기 읽기';
+// 13 × 9 틀. # 암반 · . 바닥 · E 입구(바닥) · L 레버 · B 건전지 · - 전선 · D 전기 문 · J 일기 · S 학자 고치 · C 보물상자 · t 횃불 자리(없음)
+const ARCH_PLAN = [
+  '#############',
+  '#.....#.....#',
+  '#.....#..J..#',
+  '#..L--D..S..#',
+  '#.....#.....#',
+  '#..B..#..C..#',
+  '#.....#.....#',
+  '###E#########',
+];
+const ARCH_W = ARCH_PLAN[0].length, ARCH_H = ARCH_PLAN.length;
+const ARCH_NOW = ['arch0']; // v106: 이끼 굴 시험 기록관만 (나머지 3개는 v107)
+const archList = () => (G && G.stats && G.stats.arch) || [];
+const archAt = (x, y) => archList().find(a => x >= a.x && x < a.x + ARCH_W && y >= a.y && y < a.y + ARCH_H) || null;
+const archHidden = (x, y) => { const a = archAt(x, y); return !!(a && !a.done && !(y === a.y + ARCH_H - 1)); }; // 깨기 전엔 안이 지도에 안 남아요 (입구 줄은 보여요)
+const freeFor = i => !G.objs.get(i) && !G.wire.has(i) && !G.under.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT;
+function placeArchives() {
+  if (!G || !G.stats || G.stats.archV) return 0; G.stats.archV = 1; G.stats.arch = G.stats.arch || []; let n = 0;
+  const R = rng(((G.seed | 0) ^ 0xa7c41) >>> 0), reach = walkable(), boss = [{ x: BX, y: BY }, SA, SB, SL, SI];
+  for (const A of ARCHIVES.filter(q => ARCH_NOW.includes(q.id))) { if (archList().some(a => a.id === A.id)) continue; const cand = [];
+    for (let y = 4; y < H - ARCH_H - 4; y += 2) for (let x = 4; x < W - ARCH_W - 4; x += 2) {
+      const cx = x + (ARCH_W >> 1), cy = y + ARCH_H; if (G.biome[idx(cx, cy)] !== A.b) continue; const d = Math.hypot(cx - CX, cy - CY); if (d < A.minD || d > A.maxD) continue;
+      if (noDigZone(cx, cy) || roomNear(cx, cy) || Math.hypot(cx - boss[A.b].x, cy - boss[A.b].y) < 20) continue;
+      let ok = true, walls = 0; for (let yy = y - 1; yy <= y + ARCH_H && ok; yy++) for (let xx = x - 1; xx <= x + ARCH_W; xx++) { if (!inB(xx, yy)) { ok = false; break; } const i = idx(xx, yy); if (G.biome[i] !== A.b || !freeFor(i) || G.explored[i]) { ok = false; break; } if (G.wall[i]) walls++; }
+      if (!ok || walls < (ARCH_W + 2) * (ARCH_H + 2) * .7) continue; // 거의 다 벽인 곳에만 파요 (플레이어가 판 굴을 망치지 않게)
+      const ex = x + ARCH_PLAN[ARCH_H - 1].indexOf('E'), ey = y + ARCH_H - 1; let open = false, rock = false; for (let k = 1; k <= 4; k++) { if (!inB(ex, ey + k)) break; const wk = G.wall[idx(ex, ey + k)]; if (k <= 3 && wk === 8) rock = true; if (!wk) open = true; } if (rock) continue; // 입구 아래 3칸은 암반이 아니어야(길을 낼 수 있게), 4칸 안에 트인 곳이 있으면 좋아요
+      cand.push({ x, y, r: reach[idx(ex, Math.min(H - 1, ey + 4))] ? 1 : 0, open: open ? 1 : 0 }); }
+    if (!cand.length) continue; const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
+    carveArch(A, c.x, c.y); n++; }
+  return n; }
+function carveArch(A, x0, y0) { const wires = []; let door = null, diary = null, scholar = null, chest = null, lever = null, batt = null, ent = null;
+  for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) { const ch = ARCH_PLAN[r][c], x = x0 + c, y = y0 + r, i = idx(x, y); G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);
+    if (ch === '#') { G.wall[i] = 8; continue; } G.wall[i] = 0; G.floor[i] = 6;
+    if (ch === 'L') lever = i; else if (ch === 'B') batt = i; else if (ch === '-') wires.push(i); else if (ch === 'D') door = i; else if (ch === 'J') diary = i; else if (ch === 'S') scholar = i; else if (ch === 'C') chest = i; else if (ch === 'E') ent = i; }
+  // 입구 아래로 3칸 길을 내요 (막혀 있으면)
+  const ex = ent % W, ey = (ent / W) | 0; for (let k = 1; k <= 3; k++) { const j = idx(ex, ey + k); if (!inB(ex, ey + k)) break; if (G.wall[j] && G.wall[j] !== 8) { G.wall[j] = 0; if (G.wdmg) G.wdmg.delete(j); } }
+  G.objs.set(lever, { t: 'lever', on: 0, arch: 1 }); G.objs.set(batt, { t: 'battery', e: BATT_MAX, arch: 1 }); for (const i of wires) G.wire.set(i, 1);
+  // 건전지 → 레버 → 문까지 전선: 건전지 위(아래 칸)와 레버·문 사이 벽 안쪽 줄은 이미 '-'로 이어져 있고, 건전지 칸에서 레버까지는 세로로
+  { const bx = batt % W, by = (batt / W) | 0, lx = lever % W, ly = (lever / W) | 0; for (let y = ly + 1; y < by; y++) G.wire.set(idx(bx, y), 1); if (bx !== lx) for (let x = Math.min(bx, lx); x <= Math.max(bx, lx); x++) if (idx(x, ly + 1) !== lever) G.wire.set(idx(x, ly + 1), 1); }
+  G.objs.set(door, { t: 'eDoor', open: 0, arch: 1 }); G.objs.set(diary, { t: 'diary', a: A.id }); G.objs.set(scholar, { t: 'cocoon', npc: A.npc || 'scholar', hits: 0 }); G.objs.set(chest, { t: 'tchest', hid: 0 });
+  G.stats.arch.push({ id: A.id, b: A.b, x: x0, y: y0, done: 0, gT: -999 }); }
+// 안에서는 그림자 조각이 어둠에서 생겨요 (깨기 전, 플레이어가 안에 있을 때, 4마리까지, 45초마다)
+onFrame('archives', dt => { for (const a of archList()) { if (a.done) continue; const pl = playerList().find(q => archAt(Math.floor(q.p.x), Math.floor(q.p.y)) === a); if (!pl) continue;
+  if (G.time - a.gT < 45) continue; const inside = G.enemies.filter(e => e.k === 'shadowBit' && archAt(Math.floor(e.x), Math.floor(e.y)) === a).length; if (inside >= 2) continue; a.gT = G.time;
+  for (let k = inside; k < 4; k++) for (let tr = 0; tr < 12; tr++) { const x = a.x + 1 + Math.floor(rand() * (ARCH_W - 2)), y = a.y + 1 + Math.floor(rand() * (ARCH_H - 2)); const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || Math.hypot(x + .5 - pl.p.x, y + .5 - pl.p.y) < 3) continue;
+    const e = regionEnemy(mkEnemy('shadowBit', x + .5, y + .6), a.b); e.home = { x: a.x + ARCH_W / 2, y: a.y + ARCH_H / 2, r: ARCH_W }; G.enemies.push(e); break; } } });
+// 일기 읽기 → 기록관을 깼어요: 지도가 모두 보이고, 지역 레시피를 배우고, 기록
+function readDiary(o) { const a = archList().find(q => q.id === o.a); if (!a) return; const A = ARCHIVES.find(q => q.id === a.id);
+  if (!a.done) { a.done = 1; for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) G.explored[idx(a.x + c, a.y + r)] = 1; emit('remap'); G.stats.archDone = (G.stats.archDone || 0) + 1;
+    if (A && A.recipe && learnRecipe(A.recipe)) emit('toast', `기록관을 깼어요! 지도에 기록관이 보이고, 등불지기의 레시피 「${(ITEMS['rn_' + A.recipe] || {}).n ? ITEMS['rn_' + A.recipe].n.replace('레시피 쪽지 · ', '') : A.recipe}」를 배웠어요`, 'good', 'arch');
+    else emit('toast', '기록관을 깼어요! 지도에 기록관이 보여요', 'good', 'arch'); emit('sfx', 'win'); emit('puff', o.x, o.y, '#ffe9a8', 24, 3.5, .8); }
+  emit('diary', a.id); }
+const archDiaryIds = () => archList().filter(a => a.done).map(a => a.id);
+// 도전 퀘스트: 이끼 굴 기록관 깨기
+Q_GO.s_arch0 = ['tgt'];
+QSIDE.push({ id: 's_arch0', t: '이끼 굴의 기록관 깨기', h: '이끼 굴 어딘가에 등불지기들이 남긴 기록관이 있어요. 안은 어두워요 — 횃불을 챙기고, 레버로 전기 문을 열어 일기를 읽어요.', done: () => archList().some(a => a.id === 'arch0' && a.done), rw: [['torch', 10], ['glowcap', 6]], xp: 80,
+  target: () => { const a = archList().find(q => q.id === 'arch0'); return a ? { x: a.x + ARCH_PLAN[ARCH_H - 1].indexOf('E') + .5, y: a.y + ARCH_H + .5 } : null; } });
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -6515,6 +6597,8 @@ const NPC_IMG = {};
 function npcImg(id) { const N = NPCS[id]; if (!N) return null; if (!NPC_IMG[id]) { const key = 'npc_' + id; CHARS[key] = lookDef(N.look); if (N.grey) CHARS[key].hc = ['#cfcfd8', '#9a9aa8', '#eeeef4']; NPC_IMG[id] = charFrame(key, 'down', 0, CHARS[key].pal); delete CHARS[key]; } return NPC_IMG[id]; }
 function npcSprites() { for (const id of NPC_IDS) { const img = npcImg(id); if (img) { SPR['npc_' + id] = img; SPR['npc_' + id + 'W'] = whiten(img); } } }
 function shadowBitSpr() { return mk(16, 16, A => { A.e(8, 10, 5.5, 5, '#1e1630'); A.e(8, 9.5, 5, 4.5, '#3a2a5a'); A.poly([[3, 12], [1, 15], [5, 13]], '#3a2a5a'); A.poly([[13, 12], [15, 15], [11, 13]], '#3a2a5a'); A.p(6, 9, '#d6c2ff'); A.p(10, 9, '#d6c2ff'); A.p(6, 8, '#ffffff'); A.p(10, 8, '#ffffff'); A.p(8, 4, '#5a4a7a'); A.p(8, 3, '#5a4a7a'); }); }
+// v106 일기 받침대 (Claude 임시)
+OSPR.diary = [16, 20, A => { A.r(4, 14, 8, 5, '#4a3a5a'); A.r(5, 13, 6, 1, '#6a5a8a'); A.r(3, 18, 10, 1, '#2a2238'); A.poly([[2, 8], [14, 8], [15, 13], [1, 13]], '#8a6a52'); A.poly([[3, 9], [13, 9], [14, 12], [2, 12]], '#f0e2c8'); A.line(8, 9, 8, 12, '#c9a878'); for (const y of [10, 11]) { A.line(4, y, 7, y, '#8a7a6a'); A.line(9, y, 12, y, '#8a7a6a'); } A.p(11, 10, '#ffd25c'); A.p(11, 11, '#ffd25c'); A.e(8, 5, 2.5, 2.5, 'rgba(255,233,168,.35)'); A.p(8, 5, '#fff1b0'); }];
 // ================= 빛: 등불·횃불 빛 계산(computeLight)과 밝기(lightAt), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
@@ -6556,7 +6640,7 @@ function computeLight() {
   for (let i = 0; i < w * h; i++) {
     const r = Math.min(1, LR[i]), g = Math.min(1, LG[i]), b = Math.min(1, LB[i]);
     D[i * 4] = r * 255; D[i * 4 + 1] = g * 255; D[i * 4 + 2] = b * 255; D[i * 4 + 3] = 255;
-    if (r + g + b > 0.95) { const tx = x0 + i % w, ty = y0 + (i / w | 0); if (inB(tx, ty)) { const j = idx(tx, ty); if (!G.explored[j]) { G.explored[j] = 1; mapPixel(tx, ty); } } }
+    if (r + g + b > 0.95) { const tx = x0 + i % w, ty = y0 + (i / w | 0); if (inB(tx, ty)) { const j = idx(tx, ty); if (!G.explored[j] && !archHidden(tx, ty)) { G.explored[j] = 1; mapPixel(tx, ty); } /* v106: 깨기 전 기록관 안은 지도에 안 남아요 */ } }
   }
   lightCtx.putImageData(lightImg, 0, 0);
 }
@@ -8117,6 +8201,8 @@ onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPane
 let hitT = 0;
 onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); if (!panel) return; /* v91: 건축 중에도 빨간 번쩍 */ sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창 (v103부터는 안 씀)
+onEvent('remap', () => rebuildMap()); // v106 기록관을 깨면 지도 다시
+onEvent('diary', onlyMe(id => openPanel('diary', { arch: id }))); // v106 일기 창
 onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' ? 1200 : 0))); // v104 NPC 대화
 onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면
 
@@ -8311,6 +8397,9 @@ function renderPanel() {
         return `<button type="button" class="btn ghost barter ${why ? 'off' : ''}" data-a="barter" data-i="${k}" title="${why || d}"><span class="bgive">${row(give)}</span><span class="barrow">→</span><span class="bget">${row(get)}</span><small>${why ? why : `${left}번 남음`}</small></button>`; }).join('')}</div><div class="menu-list"><button class="btn ghost" data-a="talkBack" type="button">이야기로</button><button class="btn" data-a="close" type="button">잘 가요</button></div></div>`;
     } else
     h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small><p class="prose" style="margin:6px 0 0">${line}</p></div></div><div class="menu-list">${last ? `<button class="btn" data-a="close" type="button">잘 가요</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`;
+  } else if (k === 'diary') { // v106 등불지기의 일기
+    const A = ARCHIVES.find(q => q.id === panel.arch) || ARCHIVES[0], d = A.diary;
+    h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${d.t}</h2><p class="prose diary" style="text-align:left">${d.s}</p><p class="prose" style="color:var(--muted)">${A.n}</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">덮기</button></div>`;
   } else if (k === 'memory') {
     const m = MEMORY[panel.stage] || MEMORY[1];
     h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < (G.treeSeeds | 0) ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${m.t}</h2><p class="prose" style="text-align:left">${m.s}</p>${panel.stage === 5 ? `<p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p>` : ''}<button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">${panel.stage === 5 ? '계속 모험하기' : '돌아가기'}</button></div>`;
@@ -8600,7 +8689,8 @@ function lampHTML() {
     <p class="prose" style="text-align:center;color:var(--amber)">등불나무 · ${TREE_STAGE[st]} (${st + 1}/6단계) · 빛씨앗 ${n}/5</p>
     <div class="lbl">지금 받는 효과</div><div class="keys"><b>몬스터</b><span>나무 둘레 ${13 + n * 4}칸 안에는 몬스터가 생기지 않아요</span><b>나무 빛</b><span>반지름 ${7 + n * 3.5}칸</span><b>축복</b><span>${bl ? `나무 둘레 ${bl}칸 안의 작물이 20% 빨리 자라요` : '아직 없어요 (빛씨앗 3개부터)'}</span></div>
     <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요. 나무 아래 가장 깊은 곳에서 무언가가 깨어나려 해요…' : `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 되고, 나무가 옛 기억 한 장면을 보여 줘요 (${n}/5)`}</p>
-    <div class="lbl">나무의 기억</div><div class="menu-list">${[1, 2, 3, 4, 5].map(k => (G.stats.mem || {})[k] ? `<button type="button" class="btn ghost" data-a="memory" data-i="${k}">${MEMORY[k].t}</button>` : `<button type="button" class="btn ghost" disabled>${k}번째 기억 · ???</button>`).join('')}</div>`;
+    <div class="lbl">나무의 기억</div><div class="menu-list">${[1, 2, 3, 4, 5].map(k => (G.stats.mem || {})[k] ? `<button type="button" class="btn ghost" data-a="memory" data-i="${k}">${MEMORY[k].t}</button>` : `<button type="button" class="btn ghost" disabled>${k}번째 기억 · ???</button>`).join('')}</div>
+    <div class="lbl">등불지기의 일기</div><div class="menu-list">${ARCHIVES.map(A => archList().some(a => a.id === A.id && a.done) ? `<button type="button" class="btn ghost" data-a="diary" data-i="${A.id}">${A.diary.t} · ${A.n}</button>` : `<button type="button" class="btn ghost" disabled>${A.n} · 아직 못 찾음</button>`).join('')}</div>`;
 }
 // ---- 가방 탭 ----
 const pouchOpen = () => { try { return localStorage.getItem('lantern-tree-pouch') === '1'; } catch (e) { return false; } };
@@ -9027,6 +9117,7 @@ function onSheetClick(e) {
   if (a === 'talkShop') { panel.mode = 'shop'; renderPanel(); return; } // v105
   if (a === 'talkBack') { panel.mode = 'talk'; renderPanel(); return; }
   if (a === 'barter') { if (runCmd({ k: 'barter', npc: panel.npc, n: +i })) renderPanel(); return; }
+  if (a === 'diary') { openPanel('diary', { arch: i }); return; } // v106
   if (a === 'memory') { openPanel('memory', { stage: +i }); return; } // v103 나무의 기억 다시 보기
   if (a === 'export') { exportSave(); return; }
   if (a === 'clGoogle') { cloudAuth('google'); return; }
