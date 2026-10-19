@@ -54,7 +54,8 @@ export function placeArchives() {
   for (const A of ARCHIVES.filter(q => ARCH_NOW.includes(q.id))) { if (archList().some(a => a.id === A.id)) continue; const cand = [];
     for (let y = 4; y < H - ARCH_H - 4; y += 2) for (let x = 4; x < W - ARCH_W - 4; x += 2) {
       const cx = x + (ARCH_W >> 1), cy = y + ARCH_H; if (G.biome[idx(cx, cy)] !== A.b) continue; const d = Math.hypot(cx - CX, cy - CY); if (d < A.minD || d > A.maxD) continue;
-      if (noDigZone(cx, cy) || roomNear(cx, cy) || Math.hypot(cx - boss[A.b].x, cy - boss[A.b].y) < 20) continue;
+      { let bad = false; for (const [sx, sy] of [[x, y], [x + ARCH_W, y], [x, y + ARCH_H], [x + ARCH_W, y + ARCH_H], [x + (ARCH_W >> 1), y + (ARCH_H >> 1)]]) { if (!inB(sx, sy)) { bad = true; break; } const i = idx(sx, sy); if (G.biome[i] !== A.b || G.explored[i]) { bad = true; break; } } if (bad) continue; } // 빠른 거르기(5점: 지역·안 밝힌 곳) v108
+      if (Math.hypot(cx - boss[A.b].x, cy - boss[A.b].y) < 20 || noDigZone(cx, cy) || roomNear(cx, cy)) continue;
       let ok = true, walls = 0; for (let yy = y - 1; yy <= y + ARCH_H && ok; yy++) for (let xx = x - 1; xx <= x + ARCH_W; xx++) { if (!inB(xx, yy)) { ok = false; break; } const i = idx(xx, yy); if (G.biome[i] !== A.b || G.explored[i]) { ok = false; break; } if (G.wall[i]) walls++; }
       if (!ok || walls < (ARCH_W + 2) * (ARCH_H + 2) * .7) continue; // 거의 다 벽인 곳에만 파요 (플레이어가 판 굴을 망치지 않게)
       const ex = x + ARCH_PLAN[ARCH_H - 1].indexOf('E'), ey = y + ARCH_H - 1; let open = false, rock = false; for (let k = 1; k <= 4; k++) { if (!inB(ex, ey + k)) break; const wk = G.wall[idx(ex, ey + k)]; if (k <= 3 && wk === 8) rock = true; if (!wk) open = true; } if (rock) continue; // 입구 아래 3칸은 암반이 아니어야(길을 낼 수 있게), 4칸 안에 트인 곳이 있으면 좋아요
