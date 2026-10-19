@@ -5,7 +5,9 @@ import { ITEMS, OBJ, RECIPES, Rc } from './items.js';
 import { BX, BY, SA, SB, SI, SL, W } from '../world/map.js';
 
 // ---- level, stats and skills ----
-export const MAX_LV = 30, XP_NEED = lv => 20 + (lv - 1) * 18;
+// v98 레벨 80: Lv.29까지는 예전 그대로(20 + (레벨-1)×18), Lv.29부터 524 + (레벨-29)×45 + (레벨-29)²×3 — 합계 Lv.30 7,888 · Lv.60 72,898 · Lv.80 220,238 (dev/design/성장확장.md)
+// 능력치 포인트는 Lv.30까지 레벨마다 2점, 그 뒤 1점(STAT_PER)
+export const MAX_LV = 80, XP_NEED = lv => lv < 29 ? 20 + (lv - 1) * 18 : 524 + (lv - 29) * 45 + (lv - 29) * (lv - 29) * 3, STAT_PER = lv => lv <= 30 ? 2 : 1;
 // v66 (BF-03): natural healing (2.5 s per HP, hunger 55+, not in strong heat) waits this long after the last hit
 export const REGEN_WAIT = 5;
 export const STATN = { str: ['힘', '근접 무기 피해 +5% · 캐는 힘 +3%'], dex: ['민첩', '활 피해 +3% · 공격 속도 +1% (최대 20%) · 이동 속도 +1%'], vit: ['체력', '최대 체력 +8 · 배고파지는 속도 −2%'], int: ['지혜', '지팡이·스킬 피해 +3.5% · 최대 기력 +6'] };

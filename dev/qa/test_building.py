@@ -316,7 +316,7 @@ def test_furniture_size():
 def test_building_cleanup():
     import asyncio, sys
     # 건축 정리 (v41): 지붕 삭제, 문 높이·바닥선, 바닥 벽선 맞춤, 양문, 자동 미닫이문 + 최고 레벨 스킬 포인트 (v69: 얇은 벽·창문은 삭제되어 집 벽은 나무 벽)
-    H2=HOOK.replace("computeLight}","computeLight,RECIPES,twSprite,twMask,getChunk,hash2,SPR,circuitTick,gainXp,cleanRpg,MAX_LV,SKILLS,LIFT,cam,TR,floorPx}")
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,twSprite,twMask,getChunk,hash2,SPR,circuitTick,gainXp,cleanRpg,MAX_LV,XP_NEED,SKILLS,LIFT,cam,TR,floorPx}")
     ROOM="""window.__room=()=>{const T=__T,G=T.G,x0=T.CX+14,y0=T.CY+6;
   for(let y=y0-2;y<y0+12;y++)for(let x=x0-3;x<x0+12;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.wire.delete(i)}
   for(let y=y0+1;y<y0+7;y++)for(let x=x0+1;x<x0+8;x++)G.floor[T.idx(x,y)]=5;
@@ -404,10 +404,12 @@ def test_building_cleanup():
             rec('저장','자동 미닫이문 저장/불러오기 (움직임 상태는 저장 안 함)', r[0]=='slideDoor' and 'sl' not in r[1].split(','), str(r))
             # ---- skill points at the top level ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg=T.cleanRpg(null);let n=0;while(G.rpg.lv<T.MAX_LV&&n<500){T.gainXp(5000);n++}const tot=Object.values(T.SKILLS).reduce((a,s)=>a+s.max,0);return [G.rpg.lv,G.rpg.sp,tot]}""")
-            rec('스킬 포인트','최고 레벨 30이면 스킬 포인트 30 (v44부터 스킬이 더 많아 다 올리진 못하고, 다시 배우기는 무료)', r[:2]==[30,30] and r[2]>30, str(r))
+            rec('스킬 포인트','최고 레벨 80이면 스킬 포인트 80 (v98: 보너스 1점은 Lv.80에서)', r[:2]==[80,80], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg=T.cleanRpg(null);let n=0;while(G.rpg.lv<T.MAX_LV&&n<9999){T.gainXp(37);n++}return [G.rpg.lv,G.rpg.pts,T.XP_NEED(29),T.XP_NEED(39),T.XP_NEED(79)]}""")
+            rec('레벨','v98 레벨 80: 능력치 포인트 Lv.30까지 2점·그 뒤 1점(합계 108), 다음까지 경험치 Lv.29→30 524 · 39→40 1,274 · 79→80 10,274', r==[80,108,524,1274,10274], str(r))
             r=await ev(pg,"""()=>{const T=__T;const sk={};let left=29;for(const k in T.SKILLS){const l=Math.min(T.SKILLS[k].max,left);if(l)sk[k]=l;left-=l}
-          const a=T.cleanRpg({lv:30,xp:0,sp:0,sk});const b=T.cleanRpg({lv:30,xp:0,sp:1,sk});const c=T.cleanRpg({lv:12,xp:0,sp:2,sk:{tough:3,miner:3,dash:3}});const d=T.cleanRpg({lv:12,xp:0,sp:11,sk:{}});return [a.sp,b.sp,c.sp,d.sp]}""")
-            rec('스킬 포인트','옛 세이브(최고 레벨, 하나 모자람) 불러오면 +1, 이미 받았으면 그대로', r==[1,1,2,11], str(r))
+          const a=T.cleanRpg({lv:80,xp:0,sp:0,sk});const b=T.cleanRpg({lv:80,xp:0,sp:51,sk});const e=T.cleanRpg({lv:30,xp:0,sp:1,sk}).sp;const c=T.cleanRpg({lv:12,xp:0,sp:2,sk:{tough:3,miner:3,dash:3}});const d=T.cleanRpg({lv:12,xp:0,sp:11,sk:{}});return [a.sp,b.sp,c.sp,d.sp,e]}""")
+            rec('스킬 포인트','최고 레벨(80)에서 모자라면 채움, 이미 받았으면 그대로, 옛 Lv.30 보너스 1점은 그대로 둠', r==[51,51,2,11,1], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
