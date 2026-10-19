@@ -643,9 +643,9 @@ def test_npc_v104():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.npcObjs();const bad=L.filter(e=>{const N=T.NPCS[e.o.npc],d=Math.hypot(e.x-T.CX,e.y-T.CY);return G.biome[e.i]!==N.b||d<N.minD||d>N.maxD||T.G.wall[e.i]});
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.npcObjs();const bad=L.filter(e=>{const N=T.NPCS[e.o.npc],d=Math.hypot(e.x-T.CX,e.y-T.CY);return !N.archive&&(G.biome[e.i]!==N.b||d<N.minD||d>N.maxD||T.G.wall[e.i])});
               return [L.length,L.map(e=>e.o.npc).sort().join(','),bad.length,!!T.SPR.obj.cocoon,T.NPC_IDS.every(id=>T.SPR['npc_'+id]),G.stats.npcV]}""")
-            rec('고치','새 세계에 고치 5개(학자 빼고)가 각자 지역·거리 안에, 그림 있음, 놓았다는 표시(npcV)', r[0]==5 and r[1]=='cook,farmer,guide,shepherd,smith' and r[2]==0 and r[3] and r[4] and r[5]==1, str(r))
+            rec('고치','새 세계에 고치 6개(학자는 v106 기록관 안)가 각자 지역·거리 안에, 그림 있음, 놓았다는 표시(npcV)', r[0]==6 and r[1]=='cook,farmer,guide,scholar,shepherd,smith' and r[2]==0 and r[3] and r[4] and r[5]==1, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.npcV;s.objs=s.objs.filter(([i,o])=>o.t!=='cocoon');
               T.deserialize(s);const n1=T.npcObjs().length;const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return [n1,T.npcObjs().length,T.G.stats.npcV]}""")
             rec('옛 세계','고치가 없는 옛 세이브도 불러올 때 한 번 놓고(npcV), 다시 불러와도 더 안 놓음', r[0]==5 and r[1]==5 and r[2]==1, str(r))
@@ -697,6 +697,43 @@ def test_barter_v105():
             await pg.wait_for_timeout(300)
             r2=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [s.querySelectorAll('[data-a=barter]').length,s.innerText.includes('물물교환'),s.innerText.includes('번 남음')||s.innerText.includes('모자라요')]}")
             rec('창','대화 창에서 「물물교환」 → 농부 거래 5줄', r and r2[0]==5 and r2[1] and r2[2], str(r)+str(r2))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_archive_v106():
+    # v106 이끼 굴 기록관: 자리(지역·거리·거의 벽인 곳), 안은 지도에 안 남음, 레버 → 전기 문, 그림자 조각, 일기 읽기 → 깨짐(지도·레시피·학자 고치)
+    H2=HOOK.replace("computeLight}","computeLight,archList,ARCH_W,ARCH_H,ARCH_PLAN,archHidden,circuitTick,decide,perform,readDiary,runFrame,knows,QSIDE,npcObjs,placeArchives,get SPR(){return SPR}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.archList();if(!L.length)return ['none'];const a=L[0];const cx=a.x+6,cy=a.y+T.ARCH_H,d=Math.hypot(cx-T.CX,cy-T.CY);
+              let rock=0,objs={};for(let r=0;r<T.ARCH_H;r++)for(let c=0;c<T.ARCH_W;c++){const i=T.idx(a.x+c,a.y+r);if(T.ARCH_PLAN[r][c]==='#'&&G.wall[i]===8)rock++;const o=G.objs.get(i);if(o)objs[o.t]=(objs[o.t]||0)+1}
+              const ex=a.x+T.ARCH_PLAN[T.ARCH_H-1].indexOf('E');let path=0;for(let k=0;k<3;k++)if(!G.wall[T.idx(ex,a.y+T.ARCH_H+k)])path++;
+              return [a.id,G.biome[T.idx(cx,cy)],Math.round(d),rock,objs,path,!!T.SPR.obj.diary,G.stats.archV,T.QSIDE.some(q=>q.id==='s_arch0')]}""")
+            rec('기록관','새 세계 이끼 굴 30~75칸에 기록관 1개: 암반 벽, 레버·건전지·전기 문·일기·학자 고치·보물상자, 입구 아래 길 3칸, 도전 퀘스트', r[0]=='arch0' and r[1]==0 and 30<=r[2]<=75 and r[3]==sum(row.count('#') for row in ['#############','#.....#.....#','#.....#..J..#','#..L--D..S..#','#.....#.....#','#..B..#..C..#','#.....#.....#','###E#########']) and r[4]=={'lever':1,'battery':1,'eDoor':1,'diary':1,'cocoon':1,'tchest':1} and r[5]==3 and r[6] and r[7]==1 and r[8], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.archList()[0];G.p.x=a.x+3.5;G.p.y=a.y+5.5;G.enemies.length=0;for(let k=0;k<20;k++)T.runFrame(1/30);T.computeLight();
+              const inside=[];for(let r=1;r<T.ARCH_H-1;r++)for(let c=1;c<T.ARCH_W-1;c++)inside.push(G.explored[T.idx(a.x+c,a.y+r)]?1:0);const guards=G.enemies.filter(e=>e.k==='shadowBit').length;
+              return [inside.some(v=>v),T.archHidden(a.x+2,a.y+2),guards>=2]}""")
+            rec('기록관','깨기 전엔 안에 서서 빛을 비춰도 지도에 안 남고(까맣게), 그림자 조각이 안에서 생김', r==[False,True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.archList()[0];const door=[...G.objs].find(([i,o])=>o.t==='eDoor'&&o.arch);const lev=[...G.objs].find(([i,o])=>o.t==='lever'&&o.arch);
+              T.circuitTick(1/30);const closed=!door[1].open;lev[1].on=1;T.circuitTick(1/30);T.circuitTick(1/30);return [closed,!!door[1].open]}""")
+            rec('회로','레버를 켜면 건전지 전기가 전선으로 흘러 전기 문이 열림', r==[True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.archList()[0];const di=[...G.objs].find(([i,o])=>o.t==='diary');const i=di[0],WW=Math.round(Math.sqrt(G.wall.length)),dx=i%WW,dy=(i/WW)|0;G.p.x=dx+.5;G.p.y=dy+1.6;G.p.face={x:0,y:-1};G.sel=-1;G.enemies.length=0;
+              const act=T.decide();if(act.k==='use')T.perform(act);const A=T.archList()[0];let seen=0,all=0;for(let r=0;r<T.ARCH_H;r++)for(let c=0;c<T.ARCH_W;c++){all++;if(G.explored[T.idx(A.x+c,A.y+r)])seen++}
+              return [act.k,act.u,A.done,seen===all,T.knows('petalPancake'),G.stats.archDone,T.npcObjs().some(e=>e.o.npc==='scholar'&&e.o.t==='cocoon')]}""")
+            rec('일기','일기 앞에서 「일기 읽기」 → 기록관을 깼어요: 안이 지도에 모두 보이고 꽃잎 버섯 부침 레시피, 학자 고치는 그대로(쳐서 구함)', r==['use','read2',1,True,True,1,True], str(r))
+            await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return s&&s.innerText.includes('등불지기의 일기')&&s.innerText.includes('둥근 등불')}")
+            rec('일기','일기 창에 첫 장 글(복선: 둥근 등불)', r is True, r)
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=T.QSIDE.find(q=>q.id==='s_arch0');const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const A=T.archList()[0];return [q.done(),A&&A.done,T.archList().length]}""")
+            rec('저장','도전 퀘스트 완료, 저장·불러오기 뒤에도 기록관 1개·깬 상태 그대로', r==[True,1,1], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.archV;s.stats.arch=[];T.deserialize(s);return [T.archList().length,T.G.stats.archV]}""")
+            rec('옛 세계','기록 없는 옛 세이브도 불러올 때 한 번 놓음 (자리가 있으면)', r[1]==1 and r[0]>=0, str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

@@ -10,6 +10,7 @@ import { fxRand } from '../engine/random.js';
 import { josa } from '../engine/util.js';
 import { G, guardOf } from '../save/state.js';
 import { COCOON_HITS } from '../data/npc.js';
+import { readDiary } from './archive.js';
 import { openCatch, ranchCollect, ranchReady, wildNear } from './animals.js';
 import { summonBoss, summonDecide } from './bosses.js';
 import { BUILD_KINDS, doorGroup, groundFill, groundOf, isGround, placeItem, placeLbl, rotatePlace, rotN, rotOf } from './building.js';
@@ -179,6 +180,7 @@ export function autoOptions(t, i, o) {
       return L; }
     if (d.cocoon) { A({ k: 'info', lbl: '그림자 고치', icon: 'dots', msg: `그림자 고치 · 누군가 갇혀 있어요. 공격 버튼으로 ${COCOON_HITS}번 치면 부서져요 (둘레의 그림자 조각은 빛 안에서 더 아파해요)`, t }); return L; } // v104
     if (d.npc) { A({ k: 'use', u: 'talk', lbl: '말 걸기', icon: 'hand', t, o }); return L; }
+    if (d.diary) { A({ k: 'use', u: 'read2', lbl: '일기 읽기', icon: 'hand', t, o }); return L; } // v106
     if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
     if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
     if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
@@ -301,6 +303,7 @@ export function useObj(a) {
     case 'pet': emit('hearts', x, t.y, 5); emit('sfx', 'purr'); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); emit('ftext', p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } emit('toast', pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
     case 'lamp': o.off = !o.off; markLight(); emit('sfx', 'click'); break;
     case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); emit('talk', o.npc, 'talk'); break; // v104
+    case 'read2': faceTo(x - p.x, t.y + .5 - p.y); readDiary({ ...o, x, y: t.y + .5 }); break; // v106 일기
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;

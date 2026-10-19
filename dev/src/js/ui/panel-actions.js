@@ -109,6 +109,7 @@ export function onSheetClick(e) {
   if (a === 'talkShop') { panel.mode = 'shop'; renderPanel(); return; } // v105
   if (a === 'talkBack') { panel.mode = 'talk'; renderPanel(); return; }
   if (a === 'barter') { if (runCmd({ k: 'barter', npc: panel.npc, n: +i })) renderPanel(); return; }
+  if (a === 'diary') { openPanel('diary', { arch: i }); return; } // v106
   if (a === 'memory') { openPanel('memory', { stage: +i }); return; } // v103 나무의 기억 다시 보기
   if (a === 'export') { exportSave(); return; }
   if (a === 'clGoogle') { cloudAuth('google'); return; }

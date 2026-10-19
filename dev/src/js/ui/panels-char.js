@@ -3,7 +3,8 @@
 // 장비 탭(3×4 칸 + 가운데 캐릭터), 등불 탭, 가방 칸 위 말풍선과 창 맨 아래 버튼 줄.
 import { charPreview, curChar } from '../art/characters.js';
 import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
-import { MEMORY } from '../data/story.js';
+import { ARCHIVES, MEMORY } from '../data/story.js';
+import { archList } from '../sim/archive.js';
 import { ANIMALS } from '../data/gear-animals.js';
 import { FURN_D, HOT, ITEMS, RARITY, SETN } from '../data/items.js';
 import { $ } from '../engine/util.js';
@@ -59,7 +60,8 @@ export function lampHTML() {
     <p class="prose" style="text-align:center;color:var(--amber)">등불나무 · ${TREE_STAGE[st]} (${st + 1}/6단계) · 빛씨앗 ${n}/5</p>
     <div class="lbl">지금 받는 효과</div><div class="keys"><b>몬스터</b><span>나무 둘레 ${13 + n * 4}칸 안에는 몬스터가 생기지 않아요</span><b>나무 빛</b><span>반지름 ${7 + n * 3.5}칸</span><b>축복</b><span>${bl ? `나무 둘레 ${bl}칸 안의 작물이 20% 빨리 자라요` : '아직 없어요 (빛씨앗 3개부터)'}</span></div>
     <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요. 나무 아래 가장 깊은 곳에서 무언가가 깨어나려 해요…' : `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 되고, 나무가 옛 기억 한 장면을 보여 줘요 (${n}/5)`}</p>
-    <div class="lbl">나무의 기억</div><div class="menu-list">${[1, 2, 3, 4, 5].map(k => (G.stats.mem || {})[k] ? `<button type="button" class="btn ghost" data-a="memory" data-i="${k}">${MEMORY[k].t}</button>` : `<button type="button" class="btn ghost" disabled>${k}번째 기억 · ???</button>`).join('')}</div>`;
+    <div class="lbl">나무의 기억</div><div class="menu-list">${[1, 2, 3, 4, 5].map(k => (G.stats.mem || {})[k] ? `<button type="button" class="btn ghost" data-a="memory" data-i="${k}">${MEMORY[k].t}</button>` : `<button type="button" class="btn ghost" disabled>${k}번째 기억 · ???</button>`).join('')}</div>
+    <div class="lbl">등불지기의 일기</div><div class="menu-list">${ARCHIVES.map(A => archList().some(a => a.id === A.id && a.done) ? `<button type="button" class="btn ghost" data-a="diary" data-i="${A.id}">${A.diary.t} · ${A.n}</button>` : `<button type="button" class="btn ghost" disabled>${A.n} · 아직 못 찾음</button>`).join('')}</div>`;
 }
 // ---- 가방 탭 ----
 export const pouchOpen = () => { try { return localStorage.getItem('lantern-tree-pouch') === '1'; } catch (e) { return false; } };
