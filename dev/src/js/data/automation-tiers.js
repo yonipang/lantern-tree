@@ -56,6 +56,6 @@ export const GEAR_IT = ['smelter', 'smelterCu', 'smelterFe', 'smelterQ', 'smelte
 for (let lv = 1; lv <= BENCH_MAX; lv++) ITEMS[GEAR_IT[lv]] = { n: GEAR_N[lv], kind: 'place', obj: 'smelter', blv: lv, d: `${lv}단계 장비제작대. ${GEAR_N.slice(0, lv).join('·')}에서 만드는 장비도 모두 만들어요.` };
 export const TIERED = { bench: BENCH_N, smelter: GEAR_N }, TIER_IT = { bench: BENCH_IT, smelter: GEAR_IT };
 export const GEAR_TOOLS = ['pick', 'shovel', 'rod', 'wcan', 'sickle', 'lasso', 'recall'];
-export const gearCatOf = it => !it || it.bagUp ? null : it.kind === 'sword' || it.kind === 'arrow' ? 'weapon' : it.kind === 'wear' ? (it.slot === 'body' || it.slot === 'head' ? 'armor' : 'acc') : GEAR_TOOLS.includes(it.kind) ? 'tool' : null;
+export const gearCatOf = it => !it || it.bagUp ? null : it.kind === 'sword' || it.kind === 'arrow' ? 'weapon' : it.kind === 'wear' ? (it.slot === 'body' || it.slot === 'head' || it.slot === 'legs' ? 'armor' : 'acc') : GEAR_TOOLS.includes(it.kind) ? 'tool' : null;
 export const recipeTier = r => { for (const [lv, ms] of TIER_MAT) if (r.req.some(([id]) => ms.includes(id))) return lv; return 0; };
 for (const r of RECIPES) { const c = gearCatOf(ITEMS[r.out]); if (!c || !(r.at === 'bench' || r.at === 'smelter' || r.at == null)) continue; if (r.at !== 'bench') r.tier = recipeTier(r); r.at = 'smelter'; r.cat = c; }

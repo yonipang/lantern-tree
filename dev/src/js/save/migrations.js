@@ -36,7 +36,7 @@ export function loadSets(raw, cur) {
     G.eqSets[k] = { e: EQ_SLOTS.some(([sl]) => e[sl]) ? e : null, pet: x.pet && (G.pets || {})[x.pet] ? x.pet : null }; }); }
 export function loadEquip(raw) {
   G.equip = freshEquip(); const se = raw && typeof raw === 'object' ? raw : {}; // v42: the old 'acc' slot moves to the slot that fits (turtle charm → neck, snow brooch → head)
-  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = eqCopy(e); } // v83 버그 수정: 강화 단계(lv)도 그대로 (예전엔 불러오면 입은 장비의 강화가 사라졌어요)
+  for (const sl of ['body', 'head', 'neck', 'ring', 'legs', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = eqCopy(e); } // v83 버그 수정: 강화 단계(lv)도 그대로 (예전엔 불러오면 입은 장비의 강화가 사라졌어요)
   return se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword' ? eqCopy(se.weapon) : null; // v48: no weapon slot any more
 }
 // ---- the world (map regions added in v2 / v3) ----

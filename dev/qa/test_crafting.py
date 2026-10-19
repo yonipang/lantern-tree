@@ -272,7 +272,7 @@ def test_equipment_weapons():
             await ev(pg,"()=>{"+CLEAR+"}")
             # ---- equipment slots (v48: no weapon slot, the equipment sits at the top of the bag) ----
             r=await ev(pg,"()=>{const G=__T.G;return [Object.keys(__T.freshEquip()).join(','),'weapon' in G.equip,G.inv.slice(0,9).some(s=>s&&s.id==='swordWood')]}")
-            rec('장비 칸','4칸(옷·머리장식·목걸이·반지, v48: 무기 칸 없음), 새 게임의 나무 검은 단축칸', r==['body,head,neck,ring',False,True], str(r))
+            rec('장비 칸','5칸(상의·머리장식·목걸이·반지·하의 v100, v48: 무기 칸 없음), 새 게임의 나무 검은 단축칸', r==['body,head,neck,ring,legs',False,True], str(r))
             await ev(pg,"()=>__T.openPanel('stat')"); await pg.wait_for_timeout(500)
             r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [s.querySelectorAll('[data-a=chSlot]').length,['상의','머리','목걸이','반지 1'].every(t=>s.innerText.includes(t)),!!document.querySelector('#bEquip')]}")
             rec('장비 메뉴','v83: 장비는 캐릭터 창 장비 탭 (칸 10개, 따로 있던 [장비] 버튼 없음)', r==[10,True,False], str(r))
@@ -339,7 +339,7 @@ def test_equipment_weapons():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);const s=JSON.parse(JSON.stringify(T.serialize()));s.equip={body:null,acc:{id:'snowBrooch',c:1}};T.deserialize(s);const E=T.G.equip;return [E.head&&E.head.id,E.neck]}""")
             rec('옛 세이브','눈꽃 브로치 → 머리장식', r==['snowBrooch',None], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);const s=JSON.parse(JSON.stringify(T.serialize()));delete s.equip;s.inv[3]={id:'swordCopper',c:1};T.deserialize(s);const E=T.G.equip;return [Object.keys(E).join(','),T.countItem('swordCopper')]}""")
-            rec('옛 세이브','v36 이전(장비 칸 없음) 세이브도 정상', r==['body,head,neck,ring',1], str(r))
+            rec('옛 세이브','v36 이전(장비 칸 없음) 세이브도 정상', r==['body,head,neck,ring,legs',1], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);const s=JSON.parse(JSON.stringify(T.serialize()));s.equip={weapon:{id:'bowIron',c:1,dur:77}};T.deserialize(s);const k=T.G.inv.findIndex(x=>x&&x.id==='bowIron');return [k,T.G.inv[k].dur]}""")
             rec('옛 세이브','v42~v47 세이브: 무기 칸의 무기는 단축칸으로 (내구도 유지)', r==[0,77], str(r))
             await pg.wait_for_timeout(1900)
@@ -569,7 +569,7 @@ def test_materials_upgrades():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[9]={id:'pickIron',c:1,lv:2};const a=T.bestPick().power;G.inv[10]={id:'pickCrystal',c:1};return [+a.toFixed(2),T.bestPick().id]}""")
             rec('강화','곡괭이 +2는 캐는 힘 +20% (더 좋은 곡괭이가 있으면 그걸 씀)', r==[3.6,'pickCrystal'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G,p=G.p;const hit=k=>{p.hp=100;p.inv=0;p.dead=0;T.hurtPlayer(40,p.x+1,p.y,k);const d=100-p.hp;p.hp=100;p.inv=0;return d};G.equip.neck={id:'turtleCharm',c:1};const a=hit('fire');G.equip.neck.lv=5;const b2=hit('fire');G.equip.neck=null;return [a,b2,T.upgText('turtleCharm',5),T.upgText('obsCoat',2)]}""")
-            rec('강화','장신구·옷도 강화 (부적 +5: 불 피해 -50%, 외투 +2: 추위 게이지 40% 속도)', r==[28,20,'불·용암 피해 -50%','추위 게이지 40% 속도'], str(r))
+            rec('강화','장신구·옷도 강화 (부적 +5: 불 피해 -50%, 외투 +2: 추위 게이지 40% 속도)', r==[28,20,'불·용암 피해 -50%','방어력 13 · 추위 게이지 40% 속도'], str(r))
             # ---- rings ----
             r=await ev(pg,"()=>{const T=__T;return ['ringCu','ringFe','ringQ','ringGem','ringGold'].map(id=>{const r=T.RECIPES.find(q=>q.out===id);return [T.ITEMS[id].slot,r&&r.at,r&&r.cat]})}")
             rec('반지','반지 5종 (장비제작대 · 장신구 탭, v61)', all(x==['ring','smelter','acc'] for x in r), str(r))

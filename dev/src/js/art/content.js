@@ -8,6 +8,7 @@ import { DEEP_DISHES } from '../data/deep-survival.js';
 import { DISHES, STAR_OF } from '../data/farming-cooking.js';
 import { FLOWERS } from '../data/rpg-nature.js';
 import { FPAL, OSPR, SPR } from './world.js';
+import { AR_TABLE } from '../data/growth.js';
 import { ICON, UICON, bowIcon, packet, pickIcon, sickleIcon, swordIcon, axeIcon, daggerIcon, hammerIcon, spearIcon, staffIcon } from './characters.js';
 import { RINGS } from '../data/gear-animals.js';
 import { SUMMON } from '../data/quests.js';
@@ -234,6 +235,12 @@ export const W99_ICON = {
   swordSpirit: swordIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), daggerSpirit: daggerIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), spearSpirit: spearIcon('#5a9ac8', '#e8f8ff'), hammerSpirit: hammerIcon('#5a9ac8', '#e8f8ff', '#3a6a98'), staffSpirit: staffIcon('#d4f6ff', '#ffffff'),
 };
 for (const id in W99_ICON) ICON[id] = W99_ICON[id];
+// v100 방어구 아이콘 (Claude 임시 그림: 머리 투구 · 상의 갑옷 · 하의 각반, 단계 재료 색 — 밝은색 c · 어두운색 d · 반짝 l)
+const helmIcon = (c, d, l) => A => { A.e(8, 8, 6, 5.5, d); A.e(8, 7.5, 5, 4.5, c); A.r(2, 9, 12, 3, d); A.r(3, 9, 10, 2, c); A.r(5, 5, 2, 1, l); A.p(4, 7, l); A.r(7, 1, 2, 2, d); };
+const armorIcon = (c, d, l) => A => { A.poly([[2, 4], [5, 2], [11, 2], [14, 4], [13, 8], [12, 7], [12, 14], [4, 14], [4, 7], [3, 8]], d); A.poly([[3, 4.5], [5.5, 3], [10.5, 3], [13, 4.5], [12.3, 6.5], [11, 6], [11, 13], [5, 13], [5, 6], [3.7, 6.5]], c); A.r(7, 3, 2, 10, d); A.p(6, 5, l); A.p(6, 8, l); A.r(5, 11, 6, 1, d); };
+const legsIcon = (c, d, l) => A => { A.r(3, 2, 10, 4, d); A.r(4, 3, 8, 2, c); A.r(3, 6, 4, 9, d); A.r(9, 6, 4, 9, d); A.r(4, 6, 2, 8, c); A.r(10, 6, 2, 8, c); A.p(5, 7, l); A.p(11, 7, l); A.r(3, 14, 4, 1, d); A.r(9, 14, 4, 1, d); };
+const AR_PAL = [['#7fb069', '#4f7a45', '#b8dca0'], [C.copper, C.copperD, C.copperL], [C.iron, C.ironD, C.ironL], [C.cry, C.cryD, C.cryL], ['#ffd25c', '#c9902a', '#fff1b0'], ['#9fd8f0', '#5a9ac8', '#e8f8ff']];
+AR_TABLE.forEach((row, t) => { const [c, d, l] = AR_PAL[t]; ICON[row[0][0]] = helmIcon(c, d, l); ICON[row[1][0]] = t === 4 ? armorIcon('#4a3a5a', '#2a2238', '#ffd25c') : armorIcon(c, d, l); ICON[row[2][0]] = legsIcon(c, d, l); });
 export const arrowIcon = (h, hl) => A => { A.line(2, 14, 11, 5, '#8a6a52', 1); A.line(3, 14, 11, 6, '#b8946a', 1); A.poly([[9.5, 3.5], [14.5, 1.5], [12.5, 6.5]], h); A.p(12, 4, hl); A.r(1, 11, 2, 2, '#eef2f7'); A.r(3, 13, 2, 2, '#eef2f7'); A.p(2, 12, '#ff8fa3'); };
 for (const id in ARROWS) ICON[id] = arrowIcon(ARROWS[id][2], '#ffffff');
 export const stoneDrill = dir => A => { A.r(3, 8, 10, 10, '#8f8aa3'); A.r(3, 8, 10, 2, '#b9b4cc'); A.r(3, 8, 1, 10, '#a39eb5'); A.r(12, 8, 1, 10, '#625d78'); A.p(5, 15, '#625d78'); A.p(10, 11, '#625d78'); A.p(9, 16, '#625d78');
