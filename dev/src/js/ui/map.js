@@ -143,7 +143,7 @@ export function navTick() { const n = navPt(); if (!n || !G.p || G.p.dead > 0) r
 export function navBarHTML() { const P = UIS.mapPin, N = navPt(), d = t => Math.round(Math.hypot(t.x - G.p.x, t.y - G.p.y));
   if (P) { const on = navSame(P, N); return `<div class="warpgo navgo"><span>${escHTML(P.name || '고른 곳')} · ${d(P)}칸</span><span class="navb">${on ? '<button class="btn ghost" data-a="navOff" type="button">길 안내 끄기</button>' : '<button class="btn" data-a="navGo" type="button">위치 찾기</button>'}<button class="btn ghost" data-a="pinClear" type="button" aria-label="고른 곳 지우기">×</button></span></div>`; }
   if (N) return `<div class="warpgo navgo"><span>길 안내 중 · ${escHTML(N.name || '고른 곳')} · ${d(N)}칸</span><span class="navb"><button class="btn ghost" data-a="navOff" type="button">끄기</button></span></div>`;
-  return '<p class="hint" style="margin:6px 0 0">지도를 누르거나 아래 아이콘을 누르면 그곳으로 가는 길을 알려 줘요.</p>'; }
+  return ''; } // v96: 설명 글은 가이드로
 export function mapLegendHTML() { const have = new Set(mapMarks().map(m => m.k)), hasW = () => { for (let i = 0; i < G.floor.length; i++) if (G.explored[i] && !G.wall[i] && G.floor[i] === WATER) return true; return false; };
   const btn = k => { const ok = k === 'water' ? hasW() : have.has(k); return `<button class="lgbtn${ok ? '' : ' off'}" data-a="mapFind" data-i="${k}" type="button"><img class="px" src="${markURL(k)}" alt="">${MK[k].n}</button>`; };
   let h = `<div class="legend lgicons"><button class="lgbtn" data-a="mapMe" type="button"><i style="background:#7fe0b5"></i>나</button>`;

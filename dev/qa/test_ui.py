@@ -966,3 +966,40 @@ def test_bag_character_v83():
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+def test_help_guide():
+    # v96: 창마다 붙어 있던 설명 글을 빼고, 설정 → 가이드(주제 탭)에서 봐요
+    async def main():
+        mkpage(SRC,'qa.html')
+        async with async_playwright() as p:
+            b=await p.chromium.launch()
+            ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>[!!document.getElementById('titleHint'),__T.G.p.hp>0]")
+            rec('제목 화면','조작 한 줄이 빠짐', r==[False,True], str(r))
+            await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(600)  # 창이 막 열린 뒤 0.45초 동안은 창 안 누르기를 무시해요
+            r=await ev(pg,"()=>{const s=document.getElementById('sheet');return [!!s.querySelector('.keys'),/옷장에서 해요|다른 기기로 옮기거나|갇혀 나갈 수 없을 때/.test(s.textContent),!!s.querySelector('[data-a=help]')]}")
+            rec('설정','조작 방법 표·설명 글이 빠지고 「가이드」 버튼', r==[False,False,True], str(r))
+            await pg.screenshot(path=SP+'help_menu.png')
+            await pg.click('[data-a=help]'); await pg.wait_for_timeout(250)
+            r=await ev(pg,"()=>{const s=document.getElementById('sheet');return [document.getElementById('sheetWrap').hidden,[...s.querySelectorAll('[data-a=helpTab]')].map(e=>e.textContent).join(','),s.querySelector('[data-a=helpTab].on').dataset.i,/WASD/.test(s.textContent)]}")
+            rec('가이드','설정 → 가이드: 주제 탭 8개, 처음은 조작', r==[False,'조작,제작,장비,요리,지도,펫,상자,그 밖에','ctrl',True], str(r))
+            await pg.screenshot(path=SP+'help_ctrl.png')
+            await pg.click('[data-a=helpTab][data-i=gear]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const s=document.getElementById('sheet');return [s.querySelector('[data-a=helpTab].on').dataset.i,/최대 \\+5/.test(s.textContent),/70%/.test(s.textContent),/WASD/.test(s.textContent)]}")
+            rec('가이드','장비 탭: 강화(최대 +5)·분해(70%) 설명', r==['gear',True,True,False], str(r))
+            await pg.screenshot(path=SP+'help_gear.png')
+            r=await ev(pg,"()=>document.querySelector('#sheet .tabs').scrollWidth<=document.querySelector('#sheet .tabs').clientWidth+400&&document.documentElement.scrollWidth<=innerWidth")
+            rec('가이드','폰에서 화면 옆으로 넘치지 않음', r is True, str(r))
+            await pg.click('[data-a=helpBack]'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[!!document.querySelector('#sheet [data-a=help]'),!!document.querySelector('#sheet [data-a=helpTab]')]")
+            rec('가이드','「설정」 버튼으로 설정 창에 돌아감', r==[True,False], str(r))
+            # 창 안 설명 글
+            await ev(pg,"()=>{const G=__T.G;G.inv[10]={id:'chest',c:1}}")
+            out=await ev(pg,"""()=>{const T=__T,o=[];const t=k=>{const s=document.getElementById('sheet');return s.textContent};
+              T.openPanel('map');o.push(/아래 아이콘을 누르면/.test(t()));T.openPanel('stat',{tab:'eq'});o.push(/칸을 누르면 지금 장비/.test(t()));
+              T.openPanel('stat',{sk:1});o.push(/경험치가 쌓여요|스킬 칸 두 곳/.test(t()));T.openPanel('inv');o.push(document.querySelectorAll('#sheet .hint').length);T.closePanel();return o}""")
+            rec('창','지도·장비·스킬·가방 창에 설명 글 없음', out==[False,False,False,0], str(out))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

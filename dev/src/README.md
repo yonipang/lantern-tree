@@ -95,6 +95,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/ui/panels-quest.js` | v84 퀘스트 창: 이야기 큰 카드·도전 세 묶음(`questMainHTML`·`questSideHTML`), 진행 막대(`qBarHTML`), 활성화·지도에서 보기 버튼 |
 | `js/ui/hud.js` | HUD: 단축칸(`refreshHotbar`, 규칙은 `emit('inv')`)·체력·배고픔·스킬 막대(`updateHud`), 시간 작업 칸, 버프·더위추위 막대, 옷 권하기, 도구 칸·도구 줄, 버튼 표시 |
 | `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |
+| `js/ui/help.js` | v96 가이드 창(설정 → 가이드): 주제 탭 `HELP_TABS`(조작·제작·장비·요리·지도·펫·상자·그 밖에)와 `helpHTML`. 창 안 설명 글은 여기로 모아요 |
 | `js/ui/map.js` | 지도 창: 상자 표시 설정, 지도 그리기(`drawMap`) |
 | `js/ui/build.js` | v91 건축 모드 화면: 켜고 끄기(`bmOpen`·`bmClose`, 가방 창 「건축」·Z), 아래 목록(`bmRender`), 화면 누르기·끌기(`bmDown`·`bmMove`·`bmUp`, 바닥 네모·벽 한 줄), 「놓기」(앞 칸 `frontTile`), 조이스틱 자리(`joyZone`), 미리보기(`drawBuild`) |
 | `js/ui/panel-actions.js` | 창 안 버튼(`onSheetClick`) → 명령 보내기, 창 안 고르기·확인 묻기(`UIS`), 칸 끌어 옮기기 |

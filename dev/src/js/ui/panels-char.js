@@ -36,17 +36,17 @@ export function charEqHTML() {
   let h = `<div class="eqgrid">`;
   EQ_GRID.forEach((row, r) => row.forEach((c, k) => { if (c) h += `<div class="eqcell" style="grid-row:${r + 1};grid-column:${k + 1}">${cellHTML(c)}<small>${EQ_CELLS[c][0]}</small></div>`; }));
   h += `<div class="eqme" style="grid-row:2/4;grid-column:2"><img class="px" src="${charPreview(curChar(), 0, 'down')}" alt="내 캐릭터"><small>세트 ${SET_N[G.eqSet || 0]}</small></div></div>`;
-  const c = UIS.chSlot; if (!c) return h + `<p class="hint">칸을 누르면 지금 장비의 능력과, 가방 속 그 칸에 맞는 물건이 나와요. 왼쪽 I·II·III로 장비 세트를 바꿔요(언제든).</p>`;
+  const c = UIS.chSlot; if (!c) return h;
   const [n, sl] = EQ_CELLS[c];
   if (!sl) return h + `<div class="detail eqd noimg"><div><h3>${n}</h3><p>아직 넣을 수 있는 물건이 없어요.</p></div></div>`;
   if (sl === 'pet') { const own = Object.keys(ANIMALS).filter(k => ANIMALS[k].pet && (G.pets || {})[k]);
-    if (!own.length) return h + `<div class="detail eqd noimg"><div><h3>펫</h3><p>아직 펫이 없어요 · 올가미 밧줄(작업대)을 들고 강아지(이끼 동굴)·토끼(버섯숲)·고양이(수정 동굴)에게 다가가 포획해요</p></div></div>`;
+    if (!own.length) return h + `<div class="detail eqd noimg"><div><h3>펫</h3><p>아직 펫이 없어요</p></div></div>`;
     return h + `<div class="lbl">펫 <span style="color:var(--muted)">세트마다 한 마리 · 같은 펫을 여러 세트에 골라도 돼요</span></div><div class="eqlist">${own.map(k => `<div class="eqr"><button type="button" class="slot eq ${G.petOn === k ? 'pick' : ''}" data-a="petOn" data-i="${k}" aria-label="${ANIMALS[k].pn}"><img class="px" src="${animalImg(k).toDataURL()}" alt=""></button><div><b>${ANIMALS[k].n} ${ANIMALS[k].pn}${G.petOn === k ? ' · 함께 다니는 중' : ''}</b><small>${ANIMALS[k].fx}</small></div></div>`).join('')}</div>`; }
   const s = G.equip[sl], it = s && ITEMS[s.id];
   h += `<div class="detail eqd ${s ? '' : 'noimg'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">` : ''}<div><h3>${n}${s ? ' · ' + rarName(s.id) + (s.lv ? ` +${s.lv}` : '') : ' · 비어 있어요'}</h3>${s ? `<p>${it.d || ''}</p>${rarOf(s.id) >= 1 ? `<div class="st" style="color:${RARITY[rarOf(s.id)][1]}">★ ${RARITY[rarOf(s.id)][0]} 등급</div>` : ''}<div class="st">${eqEffect(sl, s)}</div>` : ''}</div>${s ? `<div class="btns"><button class="btn ghost" data-a="eqSlot" data-i="${sl}" type="button">벗기</button></div>` : ''}</div>`;
   const cand = G.inv.map((x, i) => ({ x, i })).filter(({ x }) => x && ITEMS[x.id] && ITEMS[x.id].kind === 'wear' && ITEMS[x.id].slot === sl);
   h += `<div class="lbl">가방 속 ${n} 칸 물건</div>`;
-  if (!cand.length) h += `<p class="prose" style="color:var(--muted)">가방에 ${n} 칸에 맞는 물건이 없어요${sl === 'ring' ? ' · 반지는 장비제작대에서 만들어요' : ''}</p>`;
+  if (!cand.length) h += `<p class="prose" style="color:var(--muted)">가방에 ${n} 칸에 맞는 물건이 없어요</p>`;
   else h += `<div class="list">${cand.map(({ x, i }) => `<div class="rc ok"><div class="ri"><img class="px" src="${iconURL(x.id)}" alt=""></div><div class="rn">${rarName(x.id)}${x.lv ? ` +${x.lv}` : ''}<div class="ings"><span class="ing gain">${upgText(x.id, lvOf(x)) || ITEMS[x.id].d || ''}</span>${s ? `<span class="ing">지금: ${upgText(s.id, lvOf(s)) || ITEMS[s.id].n}</span>` : ''}</div></div><button type="button" class="btn mk" data-a="eqPick" data-i="${i}">${sl === 'body' ? '입기' : '달기'}</button></div>`).join('')}</div>`;
   return h;
 }

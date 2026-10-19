@@ -40,7 +40,6 @@ export async function start(data) {
   if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   $('#icHu').src = iconURL('food');
   ['bInv', 'bStat', 'bMap', 'bMenu'].forEach((id, k) => { $('#' + id + ' img').src = iconURL(['bag', 'star', 'map', 'gear'][k]); });
-  if (!document.body.classList.contains('touch')) $('#titleHint').textContent = 'WASD로 이동 · 클릭이나 스페이스로 캐기·공격·놓기';
   setupInput(); resize(); placeJoyIdle();
   for (const ev of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']) window.addEventListener(ev, () => { noteInput(); }, { capture: true, passive: true });
   try { navigator.storage?.persist?.().catch(() => { }); } catch (e) { }
