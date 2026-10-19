@@ -61,7 +61,7 @@ onFrame('cocoons', dt => {
       const e = regionEnemy(mkEnemy('shadowBit', ex + .5, ey + .6), G.biome[i] || 0); e.home = { x, y }; G.enemies.push(e); break; } } }
 });
 // 그림자 조각은 고치 둘레를 떠나지 않아요 (sim/enemies.js에서 매 프레임 불러요)
-export function shadowLeash(e) { if (e.k !== 'shadowBit' || !e.home) return; const dx = e.x - e.home.x, dy = e.y - e.home.y, d = Math.hypot(dx, dy); if (d > COCOON_GUARD_R) { e.x = e.home.x + dx / d * COCOON_GUARD_R; e.y = e.home.y + dy / d * COCOON_GUARD_R; e.vx = -dx / d * 2; e.vy = -dy / d * 2; e.t = .5; } }
+export function shadowLeash(e) { if (e.k !== 'shadowBit' || !e.home) return; const R = e.home.r || COCOON_GUARD_R, dx = e.x - e.home.x, dy = e.y - e.home.y, d = Math.hypot(dx, dy); if (d > R) { e.x = e.home.x + dx / d * R; e.y = e.home.y + dy / d * R; e.vx = -dx / d * 2; e.vy = -dy / d * 2; e.t = .5; } }
 // ---- 대화: 안녕 → 할 일 힌트 → 직책 이야기(번갈아) ----
 export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
