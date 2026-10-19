@@ -1442,6 +1442,7 @@ function buildSprites() {
   applyArt();
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
   for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem', 'magmaSlime', 'frostSlime', 'cinder', 'snowling', 'turtle', 'turtleS', 'spirit']) SPR[k + 'W'] = whiten(SPR[k]);
+  for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];
@@ -3596,6 +3597,39 @@ AR_TABLE.forEach((row, t) => row.forEach(([id, n, req], k) => { const sl = AR_SL
   ITEMS[id] = { n, kind: 'wear', slot: sl, stack: 1, def: AR_DEF[sl][t], rlv: WT_RLV[t], wtier: t, d: `${AR_D[sl]}. 받는 피해를 줄여 줘요.` }; RAR[id] = W_RAR[t];
   const r = Rc(id, 1, req, 'smelter', 'armor'); r.tier = t; r.cat = 'armor'; RECIPES.push(r); }));
 for (const [id, t] of [['obsCoat', 4], ['frostRobe', 5], ['woolHat', 0], ['snowBrooch', 5]]) if (ITEMS[id]) ITEMS[id].def = Math.max(1, Math.round(AR_DEF[ITEMS[id].slot][t] * AR_SPECIAL));
+// ================= v101 성장 확장 4: 새 몬스터 15종 (지금 있는 5지역에 3종씩, dev/design/성장확장.md 4장) =================
+// 움직임은 지금 있는 것(뛰기·걷기·탄·위험 지대·느려짐)을 섞어서: ai 이름별 동작은 sim/monsters.js MON_AI
+// 경험치는 지금처럼 기본 체력의 절반. 지역 난이도 배율(REGION_HP·REGION_DMG)도 그대로 곱해요.
+Object.assign(ENEMY, {
+  // 이끼 동굴 (Lv.1~10)
+  moleMoss: { n: '이끼 두더지', hp: 22, dmg: 7, spd: 2.4, r: 0.32, hop: 0, ai: 'burrow', drops: [['dirt', 1, 2, 0.8], ['fiber', 1, 1, 0.4]], col: '#8a6a52' },
+  fireflyMoss: { n: '반딧벌레', hp: 6, dmg: 3, spd: 3.6, r: 0.22, hop: 0, pack: 3, drops: [['glowcap', 1, 1, 0.25]], col: '#e8f08a' },
+  vineRoot: { n: '뿌리 덩굴', hp: 30, dmg: 8, spd: 0, r: 0.36, hop: 0, ai: 'lash', reach: 1.9, drops: [['wood', 1, 2, 0.7], ['fiber', 1, 2, 0.5]], col: '#6a9a4a' },
+  // 버섯숲 (Lv.8~18)
+  sporeShroom: { n: '포자 버섯', hp: 34, dmg: 9, spd: 1.9, r: 0.3, hop: 0, ai: 'spore', drops: [['spore', 1, 2, 0.7], ['mushroom', 1, 1, 0.5]], col: '#c58cf0' },
+  shroomTurtle: { n: '버섯 거북', hp: 60, dmg: 12, spd: 1.4, r: 0.38, hop: 0, ai: 'shell', drops: [['shroomCap', 1, 2, 0.7], ['resin', 1, 1, 0.3]], col: '#b673de' },
+  toadPoison: { n: '독 개구리', hp: 40, dmg: 10, spd: 4.2, r: 0.32, hop: 1, air: .6, ai: 'toad', drops: [['gel', 1, 2, 0.7], ['spore', 1, 1, 0.4]], col: '#7fd06a' },
+  // 수정 동굴 (Lv.15~28)
+  crySpider: { n: '수정 거미', hp: 70, dmg: 14, spd: 2.8, r: 0.34, hop: 0, ai: 'web', aggro: 6, drops: [['rope', 1, 2, 0.6], ['crystal', 1, 1, 0.4]], col: '#9a8ad0' },
+  mirrorCry: { n: '거울 수정', hp: 80, dmg: 16, spd: 0.6, r: 0.34, hop: 0, ai: 'beam', aggro: 6.5, drops: [['crystal', 1, 2, 0.8], ['cryGem', 1, 1, 0.25]], col: '#d6c2ff' },
+  crySnail: { n: '수정 달팽이', hp: 160, dmg: 12, spd: 0.9, r: 0.38, hop: 0, drops: [['crystal', 2, 4, 1], ['cryGem', 1, 1, 0.4], ['granite', 1, 2, 0.5]], col: '#b493f5' },
+  // 용암 동굴 (Lv.25~40)
+  lavaSala: { n: '용암 도롱뇽', hp: 120, dmg: 22, spd: 2.9, r: 0.34, hop: 0, ai: 'trail', aggro: 6.5, drops: [['obsidian', 1, 1, 0.3], ['fireBerry', 1, 1, 0.3]], col: '#ff6a2a' },
+  bombSlime: { n: '화산탄 말랑이', hp: 70, dmg: 18, spd: 3.1, r: 0.34, hop: 1, ai: 'bomb', aggro: 6.5, drops: [['gel', 1, 2, 0.6], ['goldOre', 1, 1, 0.3]], col: '#e8501f' },
+  obsGolem: { n: '작은 흑요석 골렘', hp: 170, dmg: 26, spd: 1.8, r: 0.38, hop: 0, ai: 'charge', aggro: 6.5, drops: [['obsidian', 1, 2, 0.8], ['basalt', 1, 2, 0.5]], col: '#4a3a5a' },
+  // 얼음 동굴 (Lv.35~50)
+  frostWolf: { n: '서리 늑대', hp: 110, dmg: 22, spd: 4.2, r: 0.34, hop: 0, pack: 2, aggro: 6.5, drops: [['wool', 1, 1, 0.3], ['frostShard', 1, 1, 0.35]], col: '#cfe6f4' },
+  icicleSprite: { n: '고드름 정령', hp: 90, dmg: 18, spd: 1.6, r: 0.3, hop: 0, ai: 'icicle', aggro: 7, drops: [['frostShard', 1, 2, 0.5], ['iceBlock', 1, 1, 0.4]], col: '#9fd8f0' },
+  yetiBaby: { n: '아기 설인', hp: 150, dmg: 24, spd: 2.0, r: 0.38, hop: 0, ai: 'throw', aggro: 6.5, drops: [['wool', 1, 2, 0.5], ['frostShard', 1, 1, 0.4]], col: '#f4f8ff' },
+});
+// 지역별 나오는 몬스터와 비율 (지금 몬스터 비율은 조금 줄어요)
+const MON_TABLE = [
+  [['slimeG', .5], ['moleMoss', .2], ['fireflyMoss', .15], ['vineRoot', .15]],
+  [['slimeO', .35], ['shroomy', .25], ['sporeShroom', .15], ['shroomTurtle', .12], ['toadPoison', .13]],
+  [['slimeP', .45], ['shroomy', .15], ['crySpider', .15], ['mirrorCry', .12], ['crySnail', .13]],
+  [['magmaSlime', .35], ['cinder', .25], ['lavaSala', .15], ['bombSlime', .13], ['obsGolem', .12]],
+  [['frostSlime', .35], ['snowling', .25], ['frostWolf', .15], ['icicleSprite', .12], ['yetiBaby', .13]],
+];
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -4642,9 +4676,9 @@ function dotTick(e, dt, boss) {
   if (e.slow > 0) { e.slow -= dt; if (fxRand() < dt * 4) emit('puff', e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
 }
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
-function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
+function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
 function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
   if (fx === 'split') applyFx(e, fx, dmg);
   if (e.hp <= 0) enemyDie(e);
@@ -4687,7 +4721,9 @@ function enemyStep(e, dt) {
     chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
   } else e.losT = 0;
   e.chasing = chase; if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
-  if (def.hop) {
+  const special = def.ai && MON_AI[def.ai] && MON_AI[def.ai](e, def, dt, d, dx, dy, chase, sm); // v101: 특별한 움직임이 true면 기본 움직임은 건너뛰어요
+  if (special) { if (!G.enemies.includes(e)) return; }
+  else if (def.hop) {
     if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
     else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; let flee = null; if (!chase) { flee = litFlee(e); if (flee) { ax = flee[0] * 2; ay = flee[1] * 2; } else if (litAhead(e, ax, ay, sp * 0.42 + def.r + .2)) ax = ay = 0; } e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase || flee ? 0.45 : 1.2) + rand() * 0.6; } } // v88: 밝은 곳에서 나갈 때는 쫓을 때처럼 자주 뛰어요
   } else {
@@ -4701,12 +4737,13 @@ function enemyStep(e, dt) {
   }
   if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
   e.hurt = Math.max(0, (e.hurt || 0) - dt);
-  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
+  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
 const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];
 function regionEnemy(e, b) { const m = REGION_HP[b] || 1; if (m !== 1) { e.hp = Math.round(e.hp * m); e.mh = e.hp; } if ((REGION_DMG[b] || 1) !== 1) e.dm = REGION_DMG[b]; return e; }
 function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: rand(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
+function pickMon(b) { const row = MON_TABLE[b] || MON_TABLE[0]; let r = rand(); for (const [k, w] of row) { r -= w; if (r < 0) return k; } return row[0][0]; }
 function trySpawn() {
   const p = G.p; if (p.dead > 0) return; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= (SPAWN_CAP[pb] || 7)) return;
   for (let k = 0; k < 10; k++) {
@@ -4716,9 +4753,10 @@ function trySpawn() {
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
     if (warpSafe(x + .5, y + .5)) continue; // v89: 워프포인트·포탈 둘레 6칸
-    const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (rand() < .55 ? 'slimeO' : 'shroomy') : b === 3 ? (rand() < .55 ? 'magmaSlime' : 'cinder') : b === 4 ? (rand() < .55 ? 'frostSlime' : 'snowling') : (rand() < .75 ? 'slimeP' : 'shroomy');
+    const b = G.biome[idx(x, y)]; const kk = pickMon(b); // v101: 지역별 표(MON_TABLE)
     G.enemies.push(regionEnemy(mkEnemy(kk, x + .5, y + .6), b));
-    if (rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
+    const packN = ENEMY[kk].pack || 0; for (let q = 0; q < packN; q++) { const dx = Math.round((rand() - .5) * 3), dy = Math.round((rand() - .5) * 3); if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); } // v101 떼 몬스터
+    if (!packN && rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
     return;
   }
 }
@@ -4763,6 +4801,7 @@ function updateHazards(dt) {
   for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } const live = alivePlayers(); if (h.t < h.warn || !live.length) continue;
     const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
     if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
+    else if (h.k === 'poison') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } // v101 독 구름·독 웅덩이(닿아 있는 동안 계속)
     else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
 function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; emit('ftext', b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
@@ -4876,7 +4915,7 @@ function updateShots(dt) {
     if (inB(tx, ty) && pillarBlocks(s, tx, ty)) { G.shots.splice(i, 1); continue; }
     if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { emit('puff', s.x, s.y, s.k === 'spore' ? '#d59bff' : C.cryL, 3, 1.5, .2); G.shots.splice(i, 1); continue; }
     const pl = alivePlayers().find(q => Math.hypot(s.x - q.p.x, s.y - (q.p.y - .3)) < 0.42); // 살아 있는 플레이어 누구든
-    if (pl) { withPlayer(pl, () => hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null)); G.shots.splice(i, 1); }
+    if (pl) { withPlayer(pl, () => { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null); if (s.slow) { G.p.slowT = Math.max(G.p.slowT || 0, s.slow); emit('ftext', G.p.x, G.p.y - 1.6, '끈적!', '#e8e4f8'); } }); G.shots.splice(i, 1); } // v101 거미줄
   }
 }
 const bossStage = b => b.hp > b.max * 2 / 3 ? 1 : b.hp > b.max / 3 ? 2 : 3;
@@ -5636,6 +5675,72 @@ defineCmd('bundo', () => {
   else emit('toast', u.k === 'take' ? '되돌리지 못했어요 · 그 물건이 없거나 자리가 막혔어요' : '되돌리지 못했어요', null, 'bundo');
   return n;
 });
+// ================= v101 새 몬스터 움직임 (data/growth.js의 ENEMY ai 이름별) =================
+// sim/enemies.js enemyStep이 몬스터마다 부르고, true를 돌려주면 그 장의 기본 움직임(뛰기·걷기)을 건너뛰어요. 밀려나기·닿으면 다침은 그대로.
+// 탄은 보스와 같은 G.shots, 위험 지대는 G.hz(보스 것과 같이 sim/bosses.js가 움직이고 그려요). 무작위는 rand().
+const dmgOf = (e, def, k = 1) => Math.round(def.dmg * (e.dm || 1) * k);
+const hz = h => { G.hz = G.hz || []; G.hz.push(Object.assign({ t: 0 }, h)); };
+const shoot = (e, dx, dy, d, spd, k, dmg, extra) => G.shots.push(Object.assign({ x: e.x, y: e.y - .3, vx: dx / d * spd, vy: dy / d * spd, life: 2.6, dmg, k }, extra || {}));
+const tick = (e, k, dt) => { e[k] = (e[k] || 0) - dt; return e[k]; };
+const MON_AI = {
+  // 이끼 두더지: 쫓을 때 땅속으로 숨어(안 맞음) 빠르게 다가왔다가 튀어나와요
+  burrow(e, def, dt, d, dx, dy, chase, sm) {
+    if (!chase) { if (e.under) { e.under = false; emit('puff', e.x, e.y, '#8a6a52', 6, 2); } return false; }
+    const t = tick(e, 'bt', dt);
+    if (!e.under && t <= 0 && d > 1.6) { e.under = true; e.bt = 1.6; emit('puff', e.x, e.y, '#8a6a52', 6, 2); return true; }
+    if (e.under) { if (t <= 0 || d < 1.1) { e.under = false; e.bt = 1.4; emit('puff', e.x, e.y, '#8a6a52', 10, 2.6); emit('sfx', 'mine'); return false; }
+      moveEnt(e, dx / d * def.spd * 1.5 * dt * sm, dy / d * def.spd * 1.5 * dt * sm, def.r); return true; }
+    return false; },
+  // 뿌리 덩굴: 움직이지 않고, 가까이 오면 0.45초 뒤 휘둘러요
+  lash(e, def, dt, d) { const p = G.p; tick(e, 'cd', dt);
+    if (e.wind > 0) { e.wind -= dt; e.flash = 1; if (e.wind <= 0) { e.flash = 0; e.cd = 1.2; emit('puff', e.x, e.y - .3, '#9be37a', 8, 2.4); emit('sfx', 'swing'); if (d < def.reach + .2 && p.dead <= 0) hurtPlayer(dmgOf(e, def), e.x, e.y); } }
+    else if (d < def.reach && p.dead <= 0 && e.cd <= 0) e.wind = .45;
+    return true; },
+  // 포자 버섯: 쓰러지면 독 구름 (onEnemyDie)
+  spore() { return false; },
+  // 버섯 거북: 천천히 돌아서 앞쪽에서 때리면 피해가 적어요 (hitEnemy → shellCut)
+  shell(e, def, dt, d, dx, dy, chase) { const want = Math.atan2(dy, dx); if (e.fa == null) e.fa = want;
+    if (chase) { let da = want - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; e.fa += Math.max(-1.6 * dt, Math.min(1.6 * dt, da)); e.flip = Math.cos(e.fa) < 0; }
+    return false; },
+  // 독 개구리: 멀리 뛰고, 내 가까이 내려앉으면 독 웅덩이
+  toad(e, def, dt, d, dx, dy, chase) { if (e.wasAir && !(e.air > 0) && chase && d < 2.6) hz({ x: e.x, y: e.y, r: .8, warn: .2, life: 2.2, dmg: dmgOf(e, def, .5), k: 'poison' }); e.wasAir = e.air > 0; return false; },
+  // 수정 거미: 끈적한 거미줄을 쏴서 느리게 해요
+  web(e, def, dt, d, dx, dy, chase) { if (tick(e, 'cd', dt) <= 0 && chase && e.sees && d < 6) { e.cd = 2.6; shoot(e, dx, dy, d, 6, 'web', dmgOf(e, def, .5), { slow: 2 }); emit('sfx', 'cast'); } return false; },
+  // 거울 수정: 멈춰서 0.7초 모았다가 빛줄기(빠른 파편 5개가 한 줄로)
+  beam(e, def, dt, d, dx, dy, chase) { tick(e, 'cd', dt);
+    if (e.wind > 0) { e.wind -= dt; e.flash = 1; if (e.wind <= 0) { e.flash = 0; const a = e.aimA; for (let k = 0; k < 5; k++) G.shots.push({ x: e.x - Math.cos(a) * k * .35, y: e.y - .3 - Math.sin(a) * k * .35, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: 1.4, dmg: dmgOf(e, def), k: 'shard', a }); emit('sfx', 'clink'); } return true; }
+    if (chase && e.sees && d < 7 && e.cd <= 0) { e.cd = 3.2; e.wind = .7; e.aimA = Math.atan2(dy, dx); return true; }
+    return e.cd > 2.4; },
+  // 용암 도롱뇽: 쫓는 동안 지나간 자리에 불 웅덩이
+  trail(e, def, dt, d, dx, dy, chase) { if (chase && tick(e, 'tr', dt) <= 0) { e.tr = .6; hz({ x: e.x, y: e.y, r: .65, warn: .25, life: 2.4, dmg: dmgOf(e, def, .5), k: 'lava' }); } return false; },
+  // 화산탄 말랑이: 가까이 오면 1초 깜빡이다 터져요 (터지면 드롭·경험치 없음)
+  bomb(e, def, dt, d, dx, dy, chase) {
+    if (e.fuse > 0) { e.fuse -= dt; e.flash = 1; if (e.fuse <= 0) { const at = G.enemies.indexOf(e); if (at >= 0) G.enemies.splice(at, 1);
+        emit('puff', e.x, e.y, '#ff8a3d', 26, 4.5, .5); emit('puff', e.x, e.y, '#ffc861', 12, 3, .7); emit('shake', .35); emit('sfx', 'brk');
+        for (const pl of alivePlayers()) if (Math.hypot(pl.p.x - e.x, pl.p.y - e.y) < 2) withPlayer(pl, () => hurtPlayer(dmgOf(e, def, 1.6), e.x, e.y, 'fire')); }
+      return true; }
+    if (chase && d < 1.7 && !(e.air > 0)) { e.fuse = 1; return true; } return false; },
+  // 작은 흑요석 골렘: 0.7초 조준(그 방향을 기억) → 0.45초 돌진
+  charge(e, def, dt, d, dx, dy, chase, sm) { tick(e, 'cd', dt);
+    if (e.dash > 0) { e.dash -= dt; moveEnt(e, e.cx * 8 * dt * sm, e.cy * 8 * dt * sm, def.r); e.anim = (e.anim || 0) + dt * 2; return true; }
+    if (e.aim > 0) { e.aim -= dt; e.flash = 1; if (e.aim <= 0) { e.flash = 0; e.dash = .45; emit('sfx', 'swing'); } return true; }
+    if (chase && e.sees && d < 6 && e.cd <= 0) { e.cd = 3; e.aim = .7; e.cx = dx / d; e.cy = dy / d; e.flip = dx < 0; return true; }
+    return false; },
+  // 고드름 정령: 거리를 두고, 내 자리에 경고 원 뒤 고드름
+  icicle(e, def, dt, d, dx, dy, chase, sm) { if (!chase) return false; const p = G.p;
+    if (tick(e, 'cd', dt) <= 0 && e.sees && d < 7) { e.cd = 3.2; hz({ x: p.x, y: p.y, r: 1, warn: .9, life: 1.05, dmg: dmgOf(e, def), k: 'frost', slow: 1.5 }); emit('sfx', 'cast'); }
+    if (d < 3.5) { moveEnt(e, -dx / d * def.spd * dt * sm, -dy / d * def.spd * dt * sm, def.r); e.anim = (e.anim || 0) + dt; e.flip = dx > 0; return true; }
+    return false; },
+  // 아기 설인: 눈덩이를 던져요
+  throw(e, def, dt, d, dx, dy, chase) { if (tick(e, 'cd', dt) <= 0 && chase && e.sees && d < 6.5) { e.cd = 2.3; shoot(e, dx, dy, d, 6.5, 'snow', dmgOf(e, def, .8)); emit('sfx', 'swing'); } return false; },
+};
+// 쓰러질 때 (sim/combat.js enemyDie)
+function onEnemyDie(e) { const def = ENEMY[e.k]; if (def && def.ai === 'spore') hz({ x: e.x, y: e.y, r: 1.4, warn: .35, life: 3.2, dmg: Math.max(3, Math.round(def.dmg * .5)), k: 'poison' }); }
+// 맞을 때 피해 바꾸기 (sim/combat.js hitEnemy): 땅속 두더지는 안 맞고, 버섯 거북은 앞에서 맞으면 30%
+function monDmg(e, dmg) { const def = ENEMY[e.k]; if (!def || !def.ai) return dmg;
+  if (e.under) return 0;
+  if (def.ai === 'shell' && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * .3)); }
+  return dmg; }
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -6064,6 +6169,25 @@ ICON.rn_festCake = noteIcon;
 // ---- 조작 (features/controls.js) ----
 // an arrow icon for the 「방향」 option
 ICON.rotate = A => { for (let k = 0; k <= 20; k++) { const a = -0.4 + k / 20 * 4.6; A.r(8 + Math.cos(a) * 5 - .5, 8 + Math.sin(a) * 5 - .5, 2, 2, '#7fe0b5'); } A.poly([[10.5, 1], [15, 3.5], [10.5, 6.5]], '#7fe0b5'); };
+
+// ---- v101 새 몬스터 15종 그림 (Claude 임시 그림, 16×16 — 지금 몬스터 그림 크기·외곽선 느낌에 맞춤. 손그림으로 바꾸려면 dev/art/mon/<id>.png) ----
+const MON_SPR_DEF = {
+  moleMoss: () => mk(16, 16, A => { A.e(8, 11, 5.5, 4, '#5a4232'); A.e(8, 10.5, 5, 3.5, '#8a6a52'); A.e(8, 7, 3.5, 3, '#8a6a52'); A.e(8.5, 8.5, 2, 1.3, '#f0c8a8'); A.p(6, 6, INK); A.p(10, 6, INK); A.r(2, 12, 2, 2, '#f0c8a8'); A.r(12, 12, 2, 2, '#f0c8a8'); A.p(7, 4, '#7fb069'); A.p(10, 4, '#7fb069'); }),
+  fireflyMoss: () => mk(16, 16, A => { A.e(8, 9, 3, 2.4, '#4a3a2a'); A.e(8, 8.5, 2.5, 2, '#6a5a3a'); A.e(8, 11, 2, 1.5, '#e8f08a'); A.p(8, 11, '#ffffff'); A.e(5.5, 7, 2.2, 1.4, 'rgba(220,240,255,.7)'); A.e(10.5, 7, 2.2, 1.4, 'rgba(220,240,255,.7)'); A.p(7, 8, INK); A.p(9, 8, INK); }),
+  vineRoot: () => mk(16, 18, A => { A.e(8, 15, 5, 2.2, '#3a2a1a'); A.line(8, 15, 7, 6, '#4f7a45', 3); A.line(8, 15, 11, 8, '#4f7a45', 2); A.line(8, 15, 4, 9, '#4f7a45', 2); A.line(7, 6, 8, 2, '#6a9a4a', 2); A.e(7, 5, 2.5, 2, '#6a9a4a'); A.p(6, 5, INK); A.p(8, 5, INK); A.p(3, 7, '#9be37a'); A.p(12, 6, '#9be37a'); A.p(9, 1, '#b8dca0'); }),
+  sporeShroom: () => mk(16, 16, A => { A.r(5, 14, 2, 1, C.dirtD); A.r(9, 14, 2, 1, C.dirtD); A.e(8, 11, 3.6, 3.2, C.cream); A.p(7, 11, INK); A.p(9, 11, INK); A.e(8, 6, 7, 4, '#8a4fb0'); A.e(8, 5.5, 6.5, 3.5, '#c58cf0'); A.p(5, 5, '#f6e6ff'); A.p(10, 4, '#f6e6ff'); A.p(8, 6, '#f6e6ff'); A.p(2, 3, '#d59bff'); A.p(14, 2, '#d59bff'); A.p(12, 1, '#d59bff'); }),
+  shroomTurtle: () => mk(18, 16, A => { A.e(9, 13, 2.5, 1.5, '#6a8a4a'); A.e(3, 11, 2, 1.6, '#7fb069'); A.e(15, 11, 2, 1.6, '#7fb069'); A.e(9, 9, 7.5, 5.5, '#7d3fa3'); A.e(9, 8.5, 7, 5, '#b673de'); A.e(7, 7, 2, 1.4, '#e2b8ff'); A.p(11, 9, '#e2b8ff'); A.p(13, 7, '#e2b8ff'); A.e(16, 8, 2, 1.8, '#7fb069'); A.p(16, 7, INK); }),
+  toadPoison: () => mk(16, 14, A => { A.e(8, 9, 6, 4, '#4f9e45'); A.e(8, 8.5, 5.5, 3.5, '#7fd06a'); A.e(5, 5, 1.8, 1.8, '#7fd06a'); A.e(11, 5, 1.8, 1.8, '#7fd06a'); A.p(5, 5, INK); A.p(11, 5, INK); A.p(7, 8, '#d59bff'); A.p(10, 9, '#d59bff'); A.p(5, 10, '#d59bff'); A.r(2, 11, 3, 2, '#4f9e45'); A.r(11, 11, 3, 2, '#4f9e45'); }),
+  crySpider: () => mk(18, 14, A => { for (const [x1, y1, x2, y2] of [[6, 8, 1, 4], [6, 9, 1, 10], [12, 8, 17, 4], [12, 9, 17, 10], [7, 10, 3, 13], [11, 10, 15, 13]]) A.line(x1, y1, x2, y2, '#6a6488', 1); A.e(9, 9, 4.5, 3.5, '#6a6488'); A.e(9, 8.5, 4, 3, '#9a8ad0'); A.e(9, 5, 2.5, 2, '#9a8ad0'); A.p(8, 5, '#ff9ab0'); A.p(10, 5, '#ff9ab0'); A.p(9, 8, C.cryL); A.p(7, 9, C.cryL); }),
+  mirrorCry: () => mk(16, 18, A => { A.e(8, 16, 5, 2, '#3a3050'); A.poly([[8, 1], [13, 9], [8, 17], [3, 9]], C.cryD); A.poly([[8, 2.5], [12, 9], [8, 15.5], [4, 9]], C.cry); A.poly([[8, 2.5], [8, 9], [4, 9]], C.cryL); A.poly([[8, 9], [12, 9], [8, 15.5]], '#8f78d8'); A.p(7, 8, INK); A.p(9, 8, INK); A.p(6, 5, '#ffffff'); }),
+  crySnail: () => mk(18, 14, A => { A.e(6, 11, 5, 2.5, '#8a7ab0'); A.e(5, 10.5, 4.5, 2, '#b493f5'); A.e(4, 7, 1.8, 2.5, '#b493f5'); A.p(3, 6, INK); A.p(5, 6, INK); A.line(3, 5, 2, 2, '#b493f5', 1); A.line(5, 5, 6, 2, '#b493f5', 1); A.e(12, 8, 5.5, 5, C.cryD); A.e(12, 7.5, 5, 4.5, C.cry); A.poly([[11, 4], [14, 7], [11, 10], [8, 7]], C.cryL); A.p(12, 7, '#ffffff'); }),
+  lavaSala: () => mk(20, 14, A => { A.line(16, 9, 19, 5, '#c04a1a', 2); A.e(9, 9, 7, 3.5, '#c04a1a'); A.e(9, 8.5, 6.5, 3, '#ff6a2a'); A.e(4, 7, 3, 2.5, '#ff6a2a'); A.p(3, 6, '#ffe9a8'); A.p(5, 6, '#ffe9a8'); for (const x of [7, 10, 13]) A.p(x, 8, '#ffc861'); A.r(5, 11, 2, 2, '#c04a1a'); A.r(12, 11, 2, 2, '#c04a1a'); }),
+  bombSlime: () => mk(16, 14, A => { A.e(8, 8, 6.5, 5, '#8a2a10'); A.e(8, 7.5, 6, 4.5, '#e8501f'); A.e(5.6, 5.6, 1.9, 1.1, '#ffb36b'); A.r(6, 7, 1, 2, INK); A.r(10, 7, 1, 2, INK); A.p(8, 9, INK); A.line(8, 3, 9, 1, '#5a3a2e', 1); A.p(10, 0, '#ffe9a8'); A.p(9, 1, '#ffc861'); for (const [x, y] of [[4, 9], [12, 9], [8, 11]]) A.p(x, y, '#ffc861'); }),
+  obsGolem: () => mk(18, 20, A => { A.r(3, 17, 4, 2, '#2a2238'); A.r(11, 17, 4, 2, '#2a2238'); A.poly([[3, 6], [15, 6], [16, 16], [2, 16]], '#2a2238'); A.poly([[4, 7], [14, 7], [15, 15], [3, 15]], '#4a3a5a'); A.r(1, 7, 3, 8, '#2a2238'); A.r(14, 7, 3, 8, '#2a2238'); A.r(5, 2, 8, 5, '#4a3a5a'); A.r(6, 3, 6, 3, '#6a5a8a'); A.p(7, 4, '#ff8a3d'); A.p(10, 4, '#ff8a3d'); A.p(8, 10, '#ff8a3d'); A.p(9, 12, '#ffc861'); }),
+  frostWolf: () => mk(20, 14, A => { A.line(16, 8, 19, 4, '#9fb8d0', 2); A.e(9, 8.5, 7, 3.5, '#9fb8d0'); A.e(9, 8, 6.5, 3, '#cfe6f4'); A.e(4, 6, 3.2, 2.6, '#cfe6f4'); A.poly([[2, 4], [3, 1], [4, 4]], '#cfe6f4'); A.poly([[5, 4], [6, 1], [7, 4]], '#cfe6f4'); A.p(3, 6, '#7fd8f0'); A.p(5, 6, '#7fd8f0'); A.p(1, 7, INK); A.r(5, 11, 2, 2, '#9fb8d0'); A.r(12, 11, 2, 2, '#9fb8d0'); }),
+  icicleSprite: () => mk(16, 18, A => { A.e(8, 6, 4, 4, '#5a9ac8'); A.e(8, 5.5, 3.5, 3.5, '#9fd8f0'); A.p(7, 5, INK); A.p(9, 5, INK); A.p(8, 3, '#ffffff'); for (const [x, h] of [[4, 5], [8, 7], [12, 5]]) A.poly([[x - 1.5, 9], [x + 1.5, 9], [x, 9 + h]], '#d4f6ff'); for (const [x, h] of [[4, 5], [8, 7], [12, 5]]) A.line(x, 9, x, 9 + h - 2, '#ffffff', 1); }),
+  yetiBaby: () => mk(18, 18, A => { A.e(9, 12, 7, 5.5, '#c8dcef'); A.e(9, 11.5, 6.5, 5, '#f4f8ff'); A.e(9, 5.5, 4.5, 4, '#f4f8ff'); A.e(9, 6.5, 3, 2.2, '#9fb8d0'); A.p(8, 6, INK); A.p(10, 6, INK); A.p(9, 7, '#5a88b0'); A.r(2, 10, 3, 5, '#f4f8ff'); A.r(13, 10, 3, 5, '#f4f8ff'); A.e(3, 9, 2, 2, '#d4f6ff'); A.r(5, 16, 3, 2, '#c8dcef'); A.r(10, 16, 3, 2, '#c8dcef'); }),
+};
 // ================= 빛: 등불·횃불 빛 계산(computeLight)과 밝기(lightAt), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
@@ -7419,7 +7543,8 @@ function drawEntity(it, t) {
     const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
     else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
-    drawImg(e.hurt > 0 ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip });
+    if (e.under) { ctx.fillStyle = '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
+    else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
     if (e.slow > 0 || e.poison || e.burn) { ctx.fillStyle = e.burn ? '#ff9b4a' : e.poison ? '#9be37a' : '#bfe6ff'; ctx.fillRect(Math.round(e.x * T - camX) - Z, Math.round((e.y - 1.15 - (e.z || 0)) * T - camY), 2 * Z, 2 * Z); }
     if (e.hp < (e.mh || def.hp)) { const w = 12 * Z, hx = e.x * T - camX - w / 2, hy = (e.y - .95 - (e.z || 0)) * T - camY; ctx.fillStyle = INK; ctx.fillRect(hx - Z, hy - Z, w + 2 * Z, 3 * Z); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(hx, hy, w * Math.max(0, e.hp / (e.mh || def.hp)), Z); }
     return;
@@ -7526,7 +7651,8 @@ function twIcon(id) { const { type, mat } = OBJ[id].tw, h = Math.min(10, Math.ro
 function drawHazards(T, camX, camY) {
   const t = performance.now() / 1000;
   for (const h of G.hz || []) { const X = h.x * T - camX, Y = h.y * T - camY, warn = h.t < h.warn;
-    if (h.k === 'lava') { const a = warn ? .25 + .25 * Math.sin(t * 20) : Math.min(1, (h.life - h.t) * 1.5); ctx.globalAlpha = a; ctx.fillStyle = warn ? '#ff8a3d' : '#e8501f'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); if (!warn) { ctx.fillStyle = '#ffc861'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * .55, h.r * T * .32, 0, 0, 6.283); ctx.fill(); } ctx.globalAlpha = 1; }
+    if (h.k === 'poison') { const a = warn ? .2 : Math.min(.75, (h.life - h.t) * 1.2); ctx.globalAlpha = a; ctx.fillStyle = '#9be37a'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); ctx.fillStyle = '#d59bff'; ctx.beginPath(); ctx.ellipse(X - h.r * T * .3, Y - h.r * T * .1, h.r * T * .3, h.r * T * .2, 0, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; } // v101
+    else if (h.k === 'lava') { const a = warn ? .25 + .25 * Math.sin(t * 20) : Math.min(1, (h.life - h.t) * 1.5); ctx.globalAlpha = a; ctx.fillStyle = warn ? '#ff8a3d' : '#e8501f'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); if (!warn) { ctx.fillStyle = '#ffc861'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * .55, h.r * T * .32, 0, 0, 6.283); ctx.fill(); } ctx.globalAlpha = 1; }
     else if (warn) { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(191,230,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(191,230,255,${pr * .25})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } }
 }
 const ROTC = new WeakMap(), turned = c => { let k = ROTC.get(c); if (!k) { k = rot90(c); ROTC.set(c, k); } return k; };
