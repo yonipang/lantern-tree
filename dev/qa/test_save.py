@@ -16,8 +16,13 @@ def test_save_file_dev_tools():
             await ev(pg,"()=>{const G=__T.G;G.p.x=105.5;G.p.y=110.5;__T.addItem('stone',77);G.objs.set(__T.idx(104,112),{t:'chair'})}")
             await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
             html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
-            rec('세이브파일','메뉴에 내보내기/불러오기 버튼', '파일로 내보내기' in html and '파일 불러오기' in html)
+            rec('세이브파일','v111: 기본 설정에는 내보내기/불러오기·클라우드 저장이 안 보임', '파일로 내보내기' not in html and '파일 불러오기' not in html and '클라우드 저장' not in html, html[-200:])
             rec('개발자','기본 상태에서는 개발자 도구가 안 보임', '마을 표시' not in html)
+            # dev mode: tap title 7 times → 개발자 도구 + 세이브 파일·클라우드 (v111)
+            for _ in range(7): await pg.click('#sheet [data-a=devtap]'); await pg.wait_for_timeout(60)
+            html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
+            rec('개발자','메뉴 제목 7번 누르면 개발자 도구', '마을 표시' in html)
+            rec('세이브파일','개발자 모드에서는 내보내기/불러오기 버튼', '파일로 내보내기' in html and '파일 불러오기' in html)
             async with pg.expect_download() as di:
                 await pg.click('button[data-a=export]')
             d=await di.value; path=SP+'exported.json'; await d.save_as(path)
@@ -37,10 +42,8 @@ def test_save_file_dev_tools():
             await pg.set_input_files('#fileIn', SP+'bad.json'); await pg.wait_for_timeout(400)
             t=await ev(pg,"()=>document.querySelector('#toasts').innerText")
             rec('세이브파일','엉뚱한 파일은 거절', '세이브 파일이 아니에요' in t, t[-40:])
-            # dev mode: tap title 7 times
-            for _ in range(7): await pg.click('#sheet [data-a=devtap]'); await pg.wait_for_timeout(60)
             html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
-            rec('개발자','메뉴 제목 7번 누르면 개발자 도구', '마을 표시' in html)
+            rec('개발자','개발자 모드는 다시 열어도 그대로', '마을 표시' in html)
             await pg.click('button[data-a=markAdd]'); await ev(pg,"()=>{__T.G.p.x=112.5;__T.G.p.y=116.5}"); await pg.wait_for_timeout(100); await pg.click('button[data-a=markAdd]'); await pg.wait_for_timeout(200)
             html=await ev(pg,"()=>document.querySelector('#sheet').innerText")
             rec('개발자','표시 2개 (시작/끝)', '마을 1 · 시작 (105, 110)' in html and '마을 1 · 끝 (112, 116)' in html, html[-120:])
@@ -174,7 +177,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             await ctx.add_init_script(MOCK)
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(500)
+            await pg.goto(URL+'qa.html?dev=1'); await pg.wait_for_timeout(500)
             await pg.tap('#btnNew'); await pg.wait_for_timeout(200); await pg.tap('#charGo'); await pg.wait_for_timeout(600)
             await ev(pg,"()=>{__T.addItem('crystal',33)}")
             await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
@@ -189,17 +192,17 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             r=await ev(pg,"()=>{const c=JSON.parse(localStorage.getItem('mockcloud')||'{}')['u_juyeon@test.kr'];return [!!c, c&&JSON.parse(c.data).inv.some(s=>s&&s.id==='crystal'&&s.c===33), document.querySelector('#sheet .sh-body').innerText.includes('마지막 업로드')]}")
             rec('클라우드','로그인하면 바로 클라우드에 올라감', r==[True,True,True], str(r))
             await pg.screenshot(path=SP+'menu.png')
-            # play more, auto upload via 지금 올리기
-            await ev(pg,"()=>{__T.addItem('crystal',10)}"); await pg.tap('#sheet [data-a=clUpNow]'); await pg.wait_for_timeout(400)
+            # v111: 「지금 올리기」 대신 「지금 저장하기」가 클라우드에도 올려요
+            await ev(pg,"()=>{__T.addItem('crystal',10)}"); await pg.tap('#sheet [data-a=save]'); await pg.wait_for_timeout(400)
             r=await ev(pg,"()=>JSON.parse(JSON.parse(localStorage.getItem('mockcloud'))['u_juyeon@test.kr'].data).inv.find(s=>s&&s.id==='crystal').c")
-            rec('클라우드','지금 올리기', r==43, r)
+            rec('클라우드','지금 저장하기 → 클라우드에도 올라감 (「지금 올리기」 버튼 없음)', r==43 and not await ev(pg,"()=>!!document.querySelector('#sheet [data-a=clUpNow]')"), r)
             cloud=await ev(pg,"()=>localStorage.getItem('mockcloud')")
             await ctx.close()
             # second device: empty local save, logged in, cloud has data
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             await ctx.add_init_script(MOCK); await ctx.add_init_script("if(!localStorage.getItem('mockcloud')){localStorage.setItem('mockcloud',"+json.dumps(cloud)+");localStorage.setItem('mockauth',JSON.stringify({uid:'u_juyeon@test.kr',email:'juyeon@test.kr'}))}")
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(900)
+            await pg.goto(URL+'qa.html?dev=1'); await pg.wait_for_timeout(900)
             r=await ev(pg,"()=>[!document.querySelector('#cloudAsk').hidden, document.querySelector('#cloudAsk').innerText.slice(0,30)]")
             rec('다른 기기','새 기기 첫 화면에 클라우드 세이브 불러오기 안내', r[0], str(r))
             await pg.screenshot(path=SP+'title.png')
@@ -254,7 +257,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
         init+="}"
         await ctx.add_init_script(init)
         pg=await ctx.new_page(); errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
-        await pg.goto(URL+'qa.html'); await pg.wait_for_timeout(900)
+        await pg.goto(URL+'qa.html?dev=1'); await pg.wait_for_timeout(900)
         return ctx,pg,errs
     async def start_new(pg):
         await pg.tap('#btnNew'); await pg.wait_for_timeout(200)
@@ -286,10 +289,10 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             rec('구간 기록','목표를 이루면 그때 플레이 시간이 남음', r[0] is not None and 1234<=r[0]<=1240 and r[1]>=1, str(r))
             r=await ev(pg,"()=>[__T.fmtPlay(30),__T.fmtPlay(125),__T.fmtPlay(3*3600+12*60+5),__T.fmtPlay(7200,true)]")
             rec('표시','시간 표시 형식', r==['1분 미만','2분','3시간 12분','약 2시간 0분'], str(r))
-            await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(600)
+            await ev(pg,"()=>__T.openPanel('profile')"); await pg.wait_for_timeout(600) # v111: 플레이 기록은 프로필로
             await pg.tap('#sheet [data-a=qtShow]'); await pg.wait_for_timeout(250)
             txt=await ev(pg,"()=>document.querySelector('#sheet .sh-body').innerText")
-            rec('메뉴','메뉴에 플레이 시간과 구간 기록', '플레이 시간' in txt and '20분' in txt and '뿌리기둥을 베어 나무 모으기' in txt, txt[:200])
+            rec('프로필','프로필에 플레이 시간과 구간 기록', '플레이 시간' in txt and '20분' in txt and '뿌리기둥을 베어 나무 모으기' in txt, txt[:200])
             await pg.screenshot(path=SP+'menu.png')
             # save round trip
             r=await ev(pg,"()=>{const s=__T.serialize();const run=__T.G.run;__T.deserialize(JSON.parse(JSON.stringify(s)));return [s.run===run,__T.G.run===run,__T.G.playT===s.playT,__T.G.qt.wood===s.qt.wood,__T.G.playTEst]}")
@@ -303,7 +306,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             await ctx.close()
             # old save loaded through the title: already-cleared quests are NOT stamped with today's time
             old=await (await b.new_context()).new_page()
-            await old.goto(URL+'qa.html'); await old.wait_for_timeout(500)
+            await old.goto(URL+'qa.html?dev=1'); await old.wait_for_timeout(500)
             olds=await old.evaluate("()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));delete s.run;delete s.playT;delete s.qt;delete s.playTEst;delete s.stats.naru110;s.time=5000;s.stats.wood=9;s.stats.bench=1;return JSON.stringify(s)}")
             await old.context.close()
             ctx,pg,errs=await ctx_with(b, local=olds); allerr+=errs

@@ -607,8 +607,8 @@ def test_materials_upgrades():
             r=await ev(pg,"()=>{const G=__T.G;const t=G.texts.filter(t=>/^-\\d+$/.test(t.txt)).map(t=>-(+t.txt));const d=t.length?Math.max(...t):100-G.p.hp;G.enemies.length=0;G.p.hp=100;return d}")
             rec('난이도','수정 동굴 보라 말랑이 피해 ×1.1 (18 → 20)', r in (20,40), r)
             # ---- map legend ----
-            r=await ev(pg,"()=>{__T.openPanel('map');const t=document.querySelector('#sheet').innerText;__T.closePanel();return [t.includes('지역 재료'),t.includes('이끼 동굴'),t.includes('지형 · 흙'),t.includes('???')]}")
-            rec('지도','지도에 지역별 지형·광물·고유 재료 (안 가 본 곳은 ???)', r==[True,True,True,True], str(r))
+            r=await ev(pg,"()=>{__T.openPanel('map');const t=document.querySelector('#sheet').innerText;__T.closePanel();return [t.includes('지역 재료'),t.includes('지형 · 흙')]}")
+            rec('지도','v111: 지도 창에 「지역 재료」 목록이 없음', r==[False,False], str(r))
             await ev(pg,"()=>{const T=__T,G=T.G;let best=-1;for(let i=0;i<G.wall.length;i++){if(G.wall[i]!==13||G.biome[i]!==2)continue;const x=i%640||0;best=i;break}const W=Math.round(Math.sqrt(G.wall.length));const x=best%W,y=Math.floor(best/W);for(let dy=-1;dy<=1;dy++)for(let dx=-3;dx<=-1;dx++){const j=T.idx(x+dx,y+dy+2);G.wall[j]=0;G.objs.delete(j)}G.p.x=x-1.5;G.p.y=y+2.5;G.enemies.length=0;for(let i=0;i<G.explored.length;i++)G.explored[i]=1}")
             await pg.wait_for_timeout(800); await pg.screenshot(path=SP+'cave.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])

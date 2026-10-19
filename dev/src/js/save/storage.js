@@ -135,7 +135,7 @@ export function cloudMenuHTML() {
     return h;
   }
   if (CLOUD.pending) h += `<div class="impbox"><p>${CLOUD.diffRun ? '클라우드에 다른 모험이 있어요' : `클라우드에 더 최근 세이브가 있어요`}<br><span style="color:var(--muted);font-size:16px">${CLOUD.diffRun ? '어느 쪽으로 할까요? 고르기 전까지는 클라우드에 올리지 않아요. 고르지 않은 쪽은 백업해 둬요.' : '불러오면 지금 세이브는 백업해 둬요.'}</span></p>${cloudCompareHTML(CLOUD.pending)}<div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
-  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
+  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-list"><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
   if (CLOUD.prev && !CLOUD.pending) { const i = saveInfo(parseSave(CLOUD.prev.data), CLOUD.prev.at);
     h += `<p class="hint" style="margin-top:10px">클라우드 백업 · 덮어쓰기 전 세이브<br>${infoLine(i)}</p><div class="menu-list"><button class="btn ${UIS.prevAsk ? 'warn' : 'ghost'}" data-a="clPrev" type="button">${UIS.prevAsk ? '정말 되돌릴까요? (지금 세이브는 백업돼요)' : '클라우드 백업으로 되돌리기'}</button></div>`; }
   return h;

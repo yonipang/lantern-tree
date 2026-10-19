@@ -18,7 +18,7 @@ import { MAX_LV, SK_CAT, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
 import { C } from '../engine/canvas.js';
 import { $, clamp, josa } from '../engine/util.js';
 import { G, setPaused, soundOn, started } from '../save/state.js';
-import { canDev, clearImport, cloudPendingHTML, escHTML, importFrom, pendingImp, playRecordHTML } from '../save/storage.js';
+import { canDev, clearImport, cloudMenuHTML, cloudPendingHTML, escHTML, importFrom, pendingImp, playRecordHTML } from '../save/storage.js';
 import { bestArrow } from '../sim/combat.js';
 import { runCmd } from '../sim/commands.js';
 import { buffText, knows, noteHint } from '../sim/cooking.js';
@@ -161,7 +161,7 @@ export function renderPanel() {
     const marks = G.marks || [];
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:6px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">설정</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button><button class="btn ghost" data-a="help" type="button">가이드</button></div>
-      ${cloudPendingHTML()}
+      ${canDev() ? `<div class="lbl" style="margin-top:12px">세이브 파일 (개발자 모드)</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div>${cloudMenuHTML()}` : cloudPendingHTML()}
       <div class="lbl" style="margin-top:12px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="menu-list" style="margin-top:12px"><button class="btn ${UIS.confirmEsc ? 'warn' : 'ghost'}" data-a="escape" type="button">${UIS.confirmEsc ? '한 번 더 누르면 트인 곳으로 옮겨요' : '긴급 탈출'}</button></div>
       <div class="menu-list" style="margin-top:12px"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
