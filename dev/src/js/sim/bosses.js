@@ -5,6 +5,7 @@ import { PHASE_BOSS, PHASE_TIP } from '../data/deep-survival.js';
 import { ACC_OF, broochMul } from '../data/gear-animals.js';
 import { ITEMS, UNIQ_OF } from '../data/items.js';
 import { BOSS_W } from '../data/growth.js';
+import { darkCanHit, darkDown } from './deep.js';
 import { BKEYS, BOSSES, REMATCH } from '../data/rpg-nature.js';
 import { C } from '../engine/canvas.js';
 import { fxRand, rand } from '../engine/random.js';
@@ -34,6 +35,7 @@ export function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b
 export function hitBoss(b, dmg, crit, fx) {
   if (dmg > 0) G.p.fightAt = G.time; // v77: 싸우는 중 → 머리 위 체력 막대
   if ((b.inv || 0) > 0) { if (dmg > 0) emit('ftext', b.x, b.y - 2.3, '막힘', '#bfe6ff'); return; }
+  if (!darkCanHit(b)) { if (dmg > 0) emit('ftext', b.x, b.y - 2.3, '어둠 속', '#8a6ad0'); return; } // v108 큰 어둠은 밝힌 곳에서만
   if (b.k === 'turtle' && b.ph === 'open' && dmg > 0) { dmg = Math.round(dmg * 1.5); crit = true; }
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
@@ -44,6 +46,7 @@ export function hitBoss(b, dmg, crit, fx) {
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
+    if (b.k === 'dark') darkDown(b); // v108 엔딩
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'slime') { spawnDrop('lightSeed', 1, b.x, b.y); spawnDrop('gel', 8, b.x, b.y); spawnDrop('copperBar', 5, b.x, b.y); spawnDrop('ironOre', 4, b.x, b.y); emit('toast', '말랑대왕을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }

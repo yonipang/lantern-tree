@@ -203,7 +203,7 @@ def test_random_world():
             r=await ev(pg,"""()=>{const T=__T,G=T.G,L=T.L,A=L.ANCH,deg=P=>Math.atan2(P.y-L.CY,P.x-L.CX)*180/Math.PI,dist=P=>Math.hypot(P.x-L.CX,P.y-L.CY);
           const P={B:{x:L.BX,y:L.BY},A:L.SA,SB:L.SB,SL:L.SL,SI:L.SI},win=[];for(const k in P){const [a0,a1]=T.BF04.ang[k],[d0,d1]=k==='B'||k==='A'?T.BF04.near:T.BF04.far;win.push(deg(P[k])>=a0-1&&deg(P[k])<=a1+1&&dist(P[k])>=d0-1&&dist(P[k])<=d1+1)}
           let gap=1e9;const ks=Object.keys(P);for(const a of ks)for(const c of ks)if(a<c)gap=Math.min(gap,Math.hypot(P[a].x-P[c].x,P[a].y-P[c].y));
-          const sh=[L.SA,L.SB,L.SL,L.SI].map(S=>(G.objs.get(T.idx(S.x,S.y))||{}).t);const home=T.BKEYS.map(k=>{const h=T.BOSSES[k].home();return Math.round(Math.min(...Object.values(P).map(S=>Math.hypot(h.x-S.x,h.y-S.y))))});
+          const sh=[L.SA,L.SB,L.SL,L.SI].map(S=>(G.objs.get(T.idx(S.x,S.y))||{}).t);const home=T.BKEYS.filter(k=>k!=='dark').map(k=>{const h=T.BOSSES[k].home();return Math.round(Math.min(...Object.values(P).map(S=>Math.hypot(h.x-S.x,h.y-S.y))))});
           const bio=[G.biome[T.idx(L.BX,L.BY)],G.biome[T.idx(L.SA.x,L.SA.y)],G.biome[T.idx(L.SB.x,L.SB.y)],G.biome[T.idx(L.SL.x,L.SL.y)],G.biome[T.idx(L.SI.x,L.SI.y)]];
           return [L.MAPV,L.LAY,L.W,!!A,win,Math.round(gap),sh,home,bio,G.rooms.length]}""")
             rec('새 세계','지도 버전 3, 600×600 고리 지도, 보스방 자리를 저장', r[0:4]==[3,2,600,True], str(r[:4]))
