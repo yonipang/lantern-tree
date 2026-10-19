@@ -55,12 +55,13 @@ export function placeArchives() {
     for (let y = 4; y < H - ARCH_H - 4; y += 2) for (let x = 4; x < W - ARCH_W - 4; x += 2) {
       const cx = x + (ARCH_W >> 1), cy = y + ARCH_H; if (G.biome[idx(cx, cy)] !== A.b) continue; const d = Math.hypot(cx - CX, cy - CY); if (d < A.minD || d > A.maxD) continue;
       if (noDigZone(cx, cy) || roomNear(cx, cy) || Math.hypot(cx - boss[A.b].x, cy - boss[A.b].y) < 20) continue;
-      let ok = true, walls = 0; for (let yy = y - 1; yy <= y + ARCH_H && ok; yy++) for (let xx = x - 1; xx <= x + ARCH_W; xx++) { if (!inB(xx, yy)) { ok = false; break; } const i = idx(xx, yy); if (G.biome[i] !== A.b || !freeFor(i) || G.explored[i]) { ok = false; break; } if (G.wall[i]) walls++; }
+      let ok = true, walls = 0; for (let yy = y - 1; yy <= y + ARCH_H && ok; yy++) for (let xx = x - 1; xx <= x + ARCH_W; xx++) { if (!inB(xx, yy)) { ok = false; break; } const i = idx(xx, yy); if (G.biome[i] !== A.b || G.explored[i]) { ok = false; break; } if (G.wall[i]) walls++; }
       if (!ok || walls < (ARCH_W + 2) * (ARCH_H + 2) * .7) continue; // 거의 다 벽인 곳에만 파요 (플레이어가 판 굴을 망치지 않게)
       const ex = x + ARCH_PLAN[ARCH_H - 1].indexOf('E'), ey = y + ARCH_H - 1; let open = false, rock = false; for (let k = 1; k <= 4; k++) { if (!inB(ex, ey + k)) break; const wk = G.wall[idx(ex, ey + k)]; if (k <= 3 && wk === 8) rock = true; if (!wk) open = true; } if (rock) continue; // 입구 아래 3칸은 암반이 아니어야(길을 낼 수 있게), 4칸 안에 트인 곳이 있으면 좋아요
       cand.push({ x, y, r: reach[idx(ex, Math.min(H - 1, ey + 4))] ? 1 : 0, open: open ? 1 : 0 }); }
-    if (!cand.length) continue; const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
-    carveArch(A, c.x, c.y); n++; }
+    const clear = c => { for (let yy = c.y - 1; yy <= c.y + ARCH_H; yy++) for (let xx = c.x - 1; xx <= c.x + ARCH_W; xx++) if (!freeFor(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (v108: 빠르게)
+    while (cand.length) { const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
+      if (clear(c)) { carveArch(A, c.x, c.y); n++; break; } cand.splice(cand.indexOf(c), 1); } }
   return n; }
 function carveArch(A, x0, y0) { const wires = [], sleepers = [], PLAN = planOf(A.id); let door = null, diary = null, scholar = null, chest = null, lever = null, batt = null, ent = null;
   for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) { const ch = PLAN[r][c], x = x0 + c, y = y0 + r, i = idx(x, y); G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);

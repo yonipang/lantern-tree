@@ -2,6 +2,7 @@
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
 import { archHidden } from '../sim/archive.js';
+import { deepHidden } from '../sim/deep.js';
 import { SPR } from '../art/world.js';
 import { OBJ } from '../data/items.js';
 import { BKEYS, BOSSES } from '../data/rpg-nature.js';
@@ -53,7 +54,7 @@ export function computeLight() {
   for (let i = 0; i < w * h; i++) {
     const r = Math.min(1, LR[i]), g = Math.min(1, LG[i]), b = Math.min(1, LB[i]);
     D[i * 4] = r * 255; D[i * 4 + 1] = g * 255; D[i * 4 + 2] = b * 255; D[i * 4 + 3] = 255;
-    if (r + g + b > 0.95) { const tx = x0 + i % w, ty = y0 + (i / w | 0); if (inB(tx, ty)) { const j = idx(tx, ty); if (!G.explored[j] && !archHidden(tx, ty)) { G.explored[j] = 1; mapPixel(tx, ty); } /* v106: 깨기 전 기록관 안은 지도에 안 남아요 */ } }
+    if (r + g + b > 0.95) { const tx = x0 + i % w, ty = y0 + (i / w | 0); if (inB(tx, ty)) { const j = idx(tx, ty); if (!G.explored[j] && !archHidden(tx, ty) && !deepHidden(tx, ty)) { G.explored[j] = 1; mapPixel(tx, ty); } /* v106: 깨기 전 기록관 안은 지도에 안 남아요 */ } }
   }
   lightCtx.putImageData(lightImg, 0, 0);
 }

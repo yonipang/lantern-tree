@@ -49,9 +49,10 @@ export function portalWhy(x, y) { if (noDigZone(x, y) === 'boss') return '보스
 export const freeTile = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && !G.objs.get(i);
 export function roomNear(x, y) { for (const r of G.rooms || []) if (x >= r.x - 3 && x <= r.x + 6 && y >= r.y - 3 && y <= r.y + 5) return true; return false; }
 // 걸어서(캐지 않고) 등불나무에서 닿는 칸
-export function walkable() { const N = W * H, seen = new Uint8Array(N), q = [idx(CX, CY + 2)]; seen[q[0]] = 1;
+let WK = null, WKG = null; // v108: 한 번 불러올 때 워프·고치·기록관·가장 깊은 곳이 같이 써요 (그 사이 벽을 조금 파도 「닿는 곳」 판단은 그대로 써요)
+export function walkable() { if (WK && WKG === G) return WK; const N = W * H, seen = new Uint8Array(N), q = [idx(CX, CY + 2)]; seen[q[0]] = 1;
   for (let k = 0; k < q.length; k++) { const i = q[k], x = i % W; for (const [d, dx] of [[1, 1], [-1, -1], [W, 0], [-W, 0]]) { const j = i + d; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N || seen[j] || G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA || G.floor[j] === PIT) continue; seen[j] = 1; q.push(j); } }
-  return seen; }
+  WK = seen; WKG = G; return seen; }
 // 등불나무 곁: 나무 오른쪽(6칸)에서 가까운 빈 칸 (아래 칸도 비어 있어야 앞에 설 수 있어요), 시작 바닥(나무 아래 앞마당)은 피해요
 function homeSpot() { let best = null, bd = 1e9;
   for (let y = CY - 9; y <= CY + 9; y++) for (let x = CX - 9; x <= CX + 9; x++) { const d = Math.hypot(x - CX, y - CY); if (d < 4.5 || d > 8.5 || !inB(x, y + 1)) continue;

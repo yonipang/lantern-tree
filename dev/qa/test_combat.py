@@ -231,7 +231,7 @@ def test_bosses_regions():
           s.v=2;s.wall=rle(wall);s.floor=rle(floor);s.biome=rle(biome);s.explored=rle(ex);s.objs=s.objs.filter(([i,o])=>!['shrine','fireBloom','iceCluster'].includes(o.t)||(i!==T.idx(T.SL.x,T.SL.y)&&i!==T.idx(T.SI.x,T.SI.y)));s.objs=s.objs.filter(([i,o])=>o.t!=='fireBloom'&&o.t!=='iceCluster');delete s.bossDead.turtle;delete s.bossDead.spirit;
           T.deserialize(s);const G2=T.G;let n3=0,keep=0;for(let i=0;i<N;i++){if(G2.biome[i]===3)n3++;if(ex[i]&&G2.floor[i]===4)keep++}
           return [n3>800,G2.objs.get(T.idx(T.SL.x,T.SL.y))?.t,G2.bossDead.turtle,keep===exN,Object.keys(G2.bosses).length]}""")
-            rec('저장','옛 저장(v2) 불러오면 안 가 본 곳에 새 지역 생성 · 가 본 곳은 그대로', r[0] and r[1]=='shrine' and r[2] is False and r[3] and r[4]==5, str(r))
+            rec('저장','옛 저장(v2) 불러오면 안 가 본 곳에 새 지역 생성 · 가 본 곳은 그대로 (보스 6: v108 큰 어둠)', r[0] and r[1]=='shrine' and r[2] is False and r[3] and r[4]==6, str(r))
             r=await ev(pg,"()=>{try{const s=JSON.stringify(__T.serialize());__T.deserialize(JSON.parse(s));return JSON.parse(s).v}catch(e){return String(e)}}")
             rec('저장','새 저장 버전 3 왕복', r==3, str(r))
             # look at the ice cave
@@ -752,6 +752,36 @@ def test_archives_v107():
             rec('기록관 4개','600×600 새 세계에 네 지역 기록관이 각자 지역·거리에, 얼음 기록관엔 얼음 속 등불지기 5(빈자리 복선), 학자 고치는 이끼 굴만, 도전 퀘스트 3개', r[0]==[['arch0',True,True,0,1],['arch2',True,True,0,0],['arch3',True,True,0,0],['arch4',True,True,5,0]] and r[1] and r[2], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const out=[];for(const a of T.archList()){const di=[...G.objs].find(([i,o])=>o.t==='diary'&&o.a===a.id);const i=di[0],WW=600;T.readDiary({...di[1],x:i%WW+.5,y:((i/WW)|0)+.5});T.closePanel();out.push([a.done,T.knows(T.ARCHIVES.find(q=>q.id===a.id).recipe)])}return [out,G.stats.archDone,T.QSIDE.filter(q=>q.id.startsWith('s_arch')).every(q=>q.done())]}""")
             rec('일기','네 일기를 읽으면 각 지역 레시피(꽃잎 버섯 부침·빛버섯 수정 수프·불꽃 스튜·서리 차)를 배우고 네 기록관 모두 깬 것으로', r[0]==[[1,True],[1,True],[1,True],[1,True]] and r[1]==4 and r[2], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_deep_ending_v108():
+    # v108 가장 깊은 곳: 자리, 빛씨앗 5개 전엔 막힘, 마지막 장 → 문 열림, 큰 어둠은 횃대 빛 안에서만 맞음·횃대 끄기, 쓰러지면 엔딩
+    H2=HOOK.replace("computeLight}","computeLight,DEEP_W,DEEP_H,DEEP_PLAN,hitBoss,updateBosses,freshBoss,readLast,lightBrazier,GUIDE,deepGateTick,isLit,runFrame,darkHome,get SPR(){return SPR}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep;if(!d)return ['none'];const C=300;let objs={};for(let r=0;r<T.DEEP_H;r++)for(let c=0;c<T.DEEP_W;c++){const o=G.objs.get(T.idx(d.x+c,d.y+r));if(o)objs[o.t]=(objs[o.t]||0)+1}
+              const ex=d.x+T.DEEP_PLAN[T.DEEP_H-1].indexOf('E');let path=0;for(let k=0;k<3;k++)if(!G.wall[T.idx(ex,d.y+T.DEEP_H+k)])path++;const bo=G.bosses.dark;
+              return [[3,4].includes(G.biome[T.idx(d.x+10,d.y+15)]),Math.hypot(d.x+10-C,d.y+15-C)>=110,objs,path,G.wall[d.gate],bo.st,Math.floor(bo.x)===d.bx,!!T.SPR.dark&&!!T.SPR.obj.brazier&&!!T.SPR.objOff.brazier,T.GUIDE.map(g=>g.id).slice(-3).join(',')]}""")
+            rec('가장 깊은 곳','용암·얼음 깊은 곳(110칸 밖)에 21×15 유적: 횃대 6·마지막 장, 입구 길, 보스 문은 암반, 큰 어둠은 보스 자리에서 잠듦, 이야기 퀘스트 deep·dark', r==[True,True,{'brazier':6,'diaryLast':1},3,8,'sleep',True,True,'deep,dark,free'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep;G.treeSeeds=4;G.p.x=d.x+10.5;G.p.y=d.y+13.5;T.deepGateTick();const out=[G.p.y>d.y+T.DEEP_H];G.treeSeeds=5;G.p.x=d.x+10.5;G.p.y=d.y+13.5;T.deepGateTick();out.push(Math.abs(G.p.y-(d.y+13.5))<.01);
+              T.readLast();out.push(G.wall[d.gate],d.read);return out}""")
+            rec('문','빛씨앗 4개면 어둠이 밀어내고, 5개면 들어감 · 마지막 장을 읽으면 보스 문(암반)이 열림', r==[True,True,0,1], str(r))
+            await pg.wait_for_timeout(300); r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return s&&s.innerText.includes('마지막 등불지기는')}"); rec('반전','찢긴 마지막 장 창: 「마지막 등불지기는 — 당신」', r is True, r)
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep,b=G.bosses.dark;G.enemies.length=0;G.p.x=d.bx+.5;G.p.y=d.by+3.5;G.p.hp=500;G.rpg.lv=80;b.st='fight';b.t=1;b.ph='walk';
+              const hp0=b.hp;T.hitBoss(b,100,false);const dark=b.hp===hp0;const brz=[...G.objs].filter(([i,o])=>o.t==='brazier');for(const [i,o] of brz)T.lightBrazier(o,i%600+.5,((i/600)|0)+.5);T.computeLight();
+              const lit=T.isLit(b.x,b.y);T.hitBoss(b,100,false);const hit=hp0-b.hp;let blown=false;for(let k=0;k<60*20&&!blown;k++){G.p.hp=500;G.p.dead=0;T.updateBosses(1/60);blown=brz.some(([i,o])=>o.off)}return [dark,lit,hit,blown,b.ph]}""")
+            rec('큰 어둠','어둠 속(횃대 꺼짐)에선 안 맞고, 횃대를 켜 밝힌 곳에선 맞음, 보스는 20초 안에 횃대를 꺼뜨림', r[0] is True and r[1] is True and r[2]==100 and r[3] is True, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep,b=G.bosses.dark;const brz=[...G.objs].filter(([i,o])=>o.t==='brazier');for(const [i,o] of brz)o.off=0;T.markLight&&0;T.computeLight();b.hp=1;T.hitBoss(b,5,false);return [G.bossDead.dark,d.done,G.stats.ending,G.explored[T.idx(d.x+3,d.y+3)]]}""")
+            rec('엔딩','큰 어둠이 쓰러지면 가장 깊은 곳 지도가 보이고 엔딩 기록', r==[True,1,1,1], str(r))
+            await pg.wait_for_timeout(2600); r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return s&&s.innerText.includes('등불나무 아래')&&s.innerText.includes('계속 살아가기')}")
+            rec('엔딩','2초 뒤 엔딩 창(등불나무 아래 · 계속 살아가기)', r is True, r)
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

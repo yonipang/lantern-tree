@@ -53,7 +53,9 @@ onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPane
 let hitT = 0;
 onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); if (!panel) return; /* v91: 건축 중에도 빨간 번쩍 */ sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창 (v103부터는 안 씀)
-onEvent('remap', () => rebuildMap()); // v106 기록관을 깨면 지도 다시
+onEvent('remap', () => rebuildMap());
+onEvent('diaryLast', onlyMe(() => openPanel('diaryLast'))); // v108
+onEvent('ending', onlyMe(() => setTimeout(() => { SFX.win(); openPanel('ending'); }, 2200))); // v106 기록관을 깨면 지도 다시
 onEvent('diary', onlyMe(id => openPanel('diary', { arch: id }))); // v106 일기 창
 onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' ? 1200 : 0))); // v104 NPC 대화
 onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면

@@ -2,7 +2,7 @@
 import { GLST, lightPref } from '../render/glight.js';
 import { CHARS, cleanLook, curChar, EYEC, HAIRC, HAIRS, HATS, lookDef, OUTC, OUTFITS2 } from '../art/characters.js';
 import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
-import { ARCHIVES, MEMORY } from '../data/story.js';
+import { ARCHIVES, DEEP_DIARY, ENDING, MEMORY } from '../data/story.js';
 import { NPCS } from '../data/npc.js';
 import { barterLeft, barterWhy, talkLines, villagers } from '../sim/npc.js';
 import { BARTER, BARTER_PER } from '../data/npc.js';
@@ -215,6 +215,9 @@ export function renderPanel() {
         return `<button type="button" class="btn ghost barter ${why ? 'off' : ''}" data-a="barter" data-i="${k}" title="${why || d}"><span class="bgive">${row(give)}</span><span class="barrow">→</span><span class="bget">${row(get)}</span><small>${why ? why : `${left}번 남음`}</small></button>`; }).join('')}</div><div class="menu-list"><button class="btn ghost" data-a="talkBack" type="button">이야기로</button><button class="btn" data-a="close" type="button">잘 가요</button></div></div>`;
     } else
     h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small><p class="prose" style="margin:6px 0 0">${line}</p></div></div><div class="menu-list">${last ? `<button class="btn" data-a="close" type="button">잘 가요</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`;
+  } else if (k === 'diaryLast' || k === 'ending') { // v108 찢긴 마지막 장 · 엔딩
+    const d = k === 'ending' ? ENDING : DEEP_DIARY;
+    h += `<div class="sh-body memory" style="text-align:center;padding-top:6px">${k === 'ending' ? `<div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div>` : ''}<h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${d.t}</h2><p class="prose ${k === 'ending' ? '' : 'diary'}" style="text-align:left">${d.s}</p>${k === 'ending' ? `<p class="prose" style="color:var(--muted)">끝까지 함께해 줘서 고마워요. 엔딩 뒤에도 계속 살 수 있어요.</p>` : ''}<button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">${k === 'ending' ? '계속 살아가기' : '덮기'}</button></div>`;
   } else if (k === 'diary') { // v106 등불지기의 일기
     const A = ARCHIVES.find(q => q.id === panel.arch) || ARCHIVES[0], d = A.diary;
     h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${d.t}</h2><p class="prose diary" style="text-align:left">${d.s}</p><p class="prose" style="color:var(--muted)">${A.n}</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">덮기</button></div>`;
