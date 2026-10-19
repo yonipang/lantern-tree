@@ -59,6 +59,10 @@ jobs:
         run: |
           if [ '${{ steps.what.outputs.art_only }}' = 1 ]; then python3 dev/qa/run.py hand_drawn_art furniture_size lantern_tree_growth dress_up
           else python3 dev/qa/run.py; fi
+      - name: 실패한 점검을 알림으로 (Claude 세션에서도 결과를 읽을 수 있게)
+        if: failure()
+        run: |
+          if [ -f dev/qa/out/summary.txt ]; then grep -E 'QA |FAIL' dev/qa/out/summary.txt | head -20 | cut -c1-500 | while IFS= read -r l; do echo "::error::$l"; done; fi
       - name: 테스트 결과 보관
         if: always()
         uses: actions/upload-artifact@v4
