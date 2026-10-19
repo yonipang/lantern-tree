@@ -83,13 +83,13 @@ def test_new_light_terrain():
             ok=await wait_until(pg,"()=>{const d=__T.glDebug();return d.failed||d.frames>10}")
             r=await ev(pg,"()=>{const d=__T.glDebug();return [d.on,d.failed,d.err2,d.frames>10]}")
             rec('빛','새 빛이 돌아감 (매 장 빛 계산, GL 오류 없음)', ok and r[0] and not r[1] and r[2]==0 and r[3], str(r))
-            # 메뉴에서 예전 빛 ↔ 새 빛 (기기에 저장)
+            # v111: 설정에 「빛 효과」가 없어요. 예전 빛(자동 대체)으로 바꾸면 새 빛 계산을 멈춰요
             await ev(pg,"()=>{__T.openPanel('menu')}"); await pg.wait_for_timeout(300)
-            n_tabs=await ev(pg,"()=>document.querySelectorAll('[data-a=light]').length")
-            await pg.click('[data-a=light][data-i=old]'); await pg.wait_for_timeout(200)
-            f0=await ev(pg,"()=>__T.glDebug().frames"); await ev(pg,"()=>__T.closePanel()"); await wait_game(pg,.6)
-            r=await ev(pg,"()=>[__T.lightPref,localStorage.getItem('lantern-tree-light'),__T.glDebug().frames]")
-            rec('빛','메뉴 「빛 효과」에서 예전 빛을 고르면 새 빛 계산을 멈추고 기기에 기억', n_tabs==2 and r[0]=='old' and r[1]=='old' and r[2]==f0, f'{n_tabs} {r} {f0}')
+            n_tabs=await ev(pg,"()=>document.querySelectorAll('[data-a=light]').length+(document.querySelector('#sheet').innerText.includes('빛 효과')?1:0)")
+            await ev(pg,"()=>{__T.setLightPref('old');__T.closePanel()}"); await wait_game(pg,.2)
+            f0=await ev(pg,"()=>__T.glDebug().frames"); await wait_game(pg,.6)
+            r=await ev(pg,"()=>[__T.lightPref,__T.glDebug().frames]")
+            rec('빛','설정에 「빛 효과」 없음, 예전 빛이면 새 빛 계산을 멈춤', n_tabs==0 and r[0]=='old' and r[1]==f0, f'{n_tabs} {r} {f0}')
             await ev(pg,"()=>__T.setLightPref('force')"); await wait_game(pg,.3)
             await pg.screenshot(path=SP+'new_light.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
@@ -331,7 +331,7 @@ window.__eat=(id)=>{const T=__T,G=T.G;G.inv[0]={id,c:1};G.sel=0;G.p.hunger=10;T.
 def test_hidden_rooms():
     import asyncio, sys
     # 숨은 방 (v35): 지역마다 1~2개, 금 간 벽, 보물상자, 옛 세이브에도 생성
-    H2=HOOK.replace("computeLight}","computeLight,placeRooms,genWorld,roomTick,openTreasure,ROOM_LOOT,ROOM_DECO,QSIDE,questState,targetTile,get DOORS(){return DOORS},drawMap,lightAt,cam}")
+    H2=HOOK.replace("computeLight}","computeLight,placeRooms,genWorld,roomTick,openTreasure,ROOM_LOOT,ROOM_DECO,QSIDE,questState,targetTile,get DOORS(){return DOORS},drawMap,lightAt,cam,mapMarks}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -371,8 +371,8 @@ def test_hidden_rooms():
             r=await ev(pg,"()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_rooms');G.stats.chests=2;const a=T.questState(q).done;G.stats.chests=3;return [a,T.questState(q).done,JSON.stringify(q.rw),q.xp]}")
             rec('도전','숨은 방 보물상자 3개 열기', r[0] is False and r[1] is True, str(r))
             # map
-            r=await ev(pg,"()=>{const T=__T,G=T.G;const rm=G.rooms[G.rooms.length-1];rm.found=1;rm.open=0;T.openPanel('map');const t=document.querySelector('#sheet').innerText;T.closePanel();return t.includes('찾았지만 안 연 보물상자')}")
-            rec('지도','찾았지만 안 연 보물상자가 지도에 표시 (범례 포함)', r is True, r)
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const rm=G.rooms[G.rooms.length-1];rm.found=1;rm.open=0;return T.mapMarks().some(m=>m.k==='chest')}")
+            rec('지도','찾았지만 안 연 보물상자가 지도에 표시 (v111: 범례에서는 뺌)', r is True, r)
             # save round trip
             r=await ev(pg,"""()=>{const T=__T;const a=JSON.stringify(T.G.rooms);const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);return [JSON.stringify(T.G.rooms)===a,T.G.rooms.length]}""")
             rec('세이브','방 위치·찾음·열림이 저장·불러오기 뒤에도 그대로 (다시 파지 않음)', r[0] is True, str(r))

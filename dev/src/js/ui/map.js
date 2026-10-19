@@ -19,7 +19,7 @@ import { UIS } from './panels.js';
 import { CX, CY, H, idx, SA, SB, W } from '../world/map.js';
 export let mapChestPref = null;
 export const setMapChest = v => { mapChestPref = v; };
-export function mapChestOn() { if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
+export function mapChestOn() { return true; /* v111: 범례의 「표시」 체크를 없애 늘 보여요 */ if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
 export function drawMap() {
   const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
   flushMap();
@@ -147,6 +147,6 @@ export function navBarHTML() { const P = UIS.mapPin, N = navPt(), d = t => Math.
 export function mapLegendHTML() { const have = new Set(mapMarks().map(m => m.k)), hasW = () => { for (let i = 0; i < G.floor.length; i++) if (G.explored[i] && !G.wall[i] && G.floor[i] === WATER) return true; return false; };
   const btn = k => { const ok = k === 'water' ? hasW() : have.has(k); return `<button class="lgbtn${ok ? '' : ' off'}" data-a="mapFind" data-i="${k}" type="button"><img class="px" src="${markURL(k)}" alt="">${MK[k].n}</button>`; };
   let h = `<div class="legend lgicons"><button class="lgbtn" data-a="mapMe" type="button"><i style="background:#7fe0b5"></i>나</button>`;
-  for (const k in MK) { if (k === 'chest') { h += `<span class="lgpair">${btn(k)}<label class="lgchk" title="지도에 표시"><input type="checkbox" data-a="mapChest" ${mapChestOn() ? 'checked' : ''} aria-label="찾았지만 안 연 보물상자 표시">표시</label></span>`; continue; } h += btn(k); }
+  for (const k in MK) { if (k === 'chest') continue; /* v111: 범례에서 뺌 (지도에는 그대로 보여요) */ h += btn(k); }
   if (UIS.mapFocus) h += '<span><i style="background:transparent;box-shadow:inset 0 0 0 3px #ffc861"></i>퀘스트 목표</span>';
   return h + '</div>'; }

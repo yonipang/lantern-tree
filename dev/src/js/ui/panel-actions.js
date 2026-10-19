@@ -102,7 +102,7 @@ export function onSheetClick(e) {
   if (a === 'skUp') { if (runCmd({ k: 'skUp', s: i }) === false) return; renderPanel(); return; }
   if (a === 'skReset') { if (!UIS.skAsk) { UIS.skAsk = true; renderPanel(); return; } runCmd({ k: 'skReset' }); UIS.skAsk = false; renderPanel(); return; }
   if (a === 'skSlot') { const [id, n] = String(i).split(':'); if (runCmd({ k: 'skSlot', s: id, n: +n }) === false) return; renderPanel(); return; }
-  if (a === 'save') { saveLocal(); return; }
+  if (a === 'save') { if (CLOUD.user && !CLOUD.pending) { saveLocal(true); cloudUpload(true).then(ok => toast(ok ? '저장했어요 · 클라우드에도 올렸어요' : '저장했어요 (클라우드에는 올리지 못했어요)', ok ? 'good' : 'warn')); } else saveLocal(); return; } // v111: 「지금 올리기」 대신 — 로그인했으면 클라우드에도
   if (a === 'escape') { if (!UIS.confirmEsc) { UIS.confirmEsc = true; renderPanel(); return; } UIS.confirmEsc = false; closePanel(); if (runCmd({ k: 'escape' })) saveLocal(true); return; }
   if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
   if (a === 'talkNext') { panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v104

@@ -108,7 +108,7 @@ export function updateHud() { navTick(); // v95: 길 안내 도착
   const R = G.rpg, pts = (R.pts || 0) + (R.sp || 0);
   if (panel && panel.kind === 'stat') ptsSeen = pts; else if (pts < ptsSeen) ptsSeen = pts;
   const mk2 = R.lv + '|' + R.xp + '|' + (pts > ptsSeen);
-  if (mk2 !== lastMp) { lastMp = mk2; $('#lvTxt').textContent = R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#face').title = `Lv.${R.lv} · 경험치 ${R.lv >= MAX_LV ? '최고' : R.xp + '/' + XP_NEED(R.lv)}`; for (const id of ['#bStat', '#face']) $(id).classList.toggle('dot', pts > ptsSeen); }
+  if (mk2 !== lastMp) { lastMp = mk2; $('#lvTxt').textContent = R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#face').title = `Lv.${R.lv} · 경험치 ${R.lv >= MAX_LV ? '최고' : R.xp + '/' + XP_NEED(R.lv)}`; $('#bStat').classList.toggle('dot', pts > ptsSeen); /* v111: 얼굴은 프로필이라 빨간 점은 캐릭터 버튼에만 */ }
   // 가방 빨간 점 = 처음 얻은 물건 (가방을 열면 꺼져요, 열려 있는 동안 들어온 것도)
   const bn = bagNew(); if (bn && panel && panel.kind === 'inv') runCmd({ k: 'seenBag' }); const bd = bn && !(panel && panel.kind === 'inv'); if ($('#bInv').classList.contains('dot') !== bd) $('#bInv').classList.toggle('dot', bd);
   updateSkBar();

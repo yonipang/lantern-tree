@@ -123,6 +123,8 @@ export function playRecordHTML() {
   if (UIS.qtShow) h += `<div class="qtlist">${rows.length ? rows.join('') : '<p class="hint">아직 기록된 목표가 없어요. 이제부터 목표를 이룰 때마다 그때의 플레이 시간이 남아요.</p>'}</div>`;
   return h;
 }
+// v111: 설정의 「클라우드 저장」은 숨기고, 클라우드와 이 기기의 모험이 다를 때 고르는 상자만 보여요 (고르기 전에는 클라우드에 올리지 않아서)
+export function cloudPendingHTML() { if (CLOUD.st !== 'in' || !CLOUD.pending) return ''; const h = cloudMenuHTML(); const i = h.indexOf('<div class="impbox">'); return i < 0 ? '' : h.slice(i, h.indexOf('</div></div>', i) + 12); }
 export function cloudMenuHTML() {
   let h = `<div class="lbl" style="margin-top:16px">클라우드 저장</div>`;
   if (CLOUD.st === 'na') return h + `<p class="hint">${CLOUD.err === 'load' ? '클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.' : '사이트 주소(홈 화면 앱)로 연 게임에서 쓸 수 있어요.'}</p>`;
@@ -133,7 +135,7 @@ export function cloudMenuHTML() {
     return h;
   }
   if (CLOUD.pending) h += `<div class="impbox"><p>${CLOUD.diffRun ? '클라우드에 다른 모험이 있어요' : `클라우드에 더 최근 세이브가 있어요`}<br><span style="color:var(--muted);font-size:16px">${CLOUD.diffRun ? '어느 쪽으로 할까요? 고르기 전까지는 클라우드에 올리지 않아요. 고르지 않은 쪽은 백업해 둬요.' : '불러오면 지금 세이브는 백업해 둬요.'}</span></p>${cloudCompareHTML(CLOUD.pending)}<div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
-  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
+  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-list"><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
   if (CLOUD.prev && !CLOUD.pending) { const i = saveInfo(parseSave(CLOUD.prev.data), CLOUD.prev.at);
     h += `<p class="hint" style="margin-top:10px">클라우드 백업 · 덮어쓰기 전 세이브<br>${infoLine(i)}</p><div class="menu-list"><button class="btn ${UIS.prevAsk ? 'warn' : 'ghost'}" data-a="clPrev" type="button">${UIS.prevAsk ? '정말 되돌릴까요? (지금 세이브는 백업돼요)' : '클라우드 백업으로 되돌리기'}</button></div>`; }
   return h;
