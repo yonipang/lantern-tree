@@ -27,6 +27,7 @@ export function updateHazards(dt) {
   for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } const live = alivePlayers(); if (h.t < h.warn || !live.length) continue;
     const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
     if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
+    else if (h.k === 'poison') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } // v101 독 구름·독 웅덩이(닿아 있는 동안 계속)
     else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
 export function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; emit('ftext', b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
@@ -140,7 +141,7 @@ export function updateShots(dt) {
     if (inB(tx, ty) && pillarBlocks(s, tx, ty)) { G.shots.splice(i, 1); continue; }
     if (s.life <= 0 || !inB(tx, ty) || G.wall[idx(tx, ty)]) { emit('puff', s.x, s.y, s.k === 'spore' ? '#d59bff' : C.cryL, 3, 1.5, .2); G.shots.splice(i, 1); continue; }
     const pl = alivePlayers().find(q => Math.hypot(s.x - q.p.x, s.y - (q.p.y - .3)) < 0.42); // 살아 있는 플레이어 누구든
-    if (pl) { withPlayer(pl, () => hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null)); G.shots.splice(i, 1); }
+    if (pl) { withPlayer(pl, () => { hurtPlayer(s.dmg, s.x - s.vx, s.y - s.vy, s.k === 'fire' ? 'fire' : null); if (s.slow) { G.p.slowT = Math.max(G.p.slowT || 0, s.slow); emit('ftext', G.p.x, G.p.y - 1.6, '끈적!', '#e8e4f8'); } }); G.shots.splice(i, 1); } // v101 거미줄
   }
 }
 export const bossStage = b => b.hp > b.max * 2 / 3 ? 1 : b.hp > b.max / 3 ? 2 : 3;

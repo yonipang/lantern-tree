@@ -6,6 +6,7 @@ import { FLOWERS, YOUNG_TREES } from '../data/rpg-nature.js';
 import { ICON, UICON, bossSpr, buildPlayer, dimmed, golemSpr, queenSpr, shotSpr, shroomySpr, slimeSpr, waterTex } from './characters.js';
 import { clamp, hexRgb } from '../engine/util.js';
 import { hash2, rng } from '../engine/random.js';
+import { MON_SPR_DEF } from './content.js';
 import { bloomSpr, bossExtraSprites, emberSpr, giantSpr, natFloorTex, regFloorTex, snowSpr, spiritSpr, turtleSpr, wildSpr } from './content.js';
 import { rot90, twIcon, twSprite } from '../render/parts.js';
 import { FPV, GREW, GROW_SPR, setFootprints } from '../sim/building.js';
@@ -325,6 +326,7 @@ export function buildSprites() {
   applyArt();
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
   for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem', 'magmaSlime', 'frostSlime', 'cinder', 'snowling', 'turtle', 'turtleS', 'spirit']) SPR[k + 'W'] = whiten(SPR[k]);
+  for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];

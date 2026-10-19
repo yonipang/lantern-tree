@@ -13,6 +13,8 @@ import { onFrame } from './systems.js';
 import { BX, BY, CX, CY, idx, inB, SA, SB, SI, SL, W } from '../world/map.js';
 import { canSee, fpOf, isSolid, moveEnt } from '../world/tiles.js';
 import { warpSafe } from './warp.js';
+import { MON_TABLE } from '../data/growth.js';
+import { MON_AI } from './monsters.js';
 onFrame('enemies', updateEnemies);
 onFrame('spawn', dt => { const p = G.p;
   G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
@@ -35,7 +37,9 @@ export function enemyStep(e, dt) {
     chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
   } else e.losT = 0;
   e.chasing = chase; if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
-  if (def.hop) {
+  const special = def.ai && MON_AI[def.ai] && MON_AI[def.ai](e, def, dt, d, dx, dy, chase, sm); // v101: 특별한 움직임이 true면 기본 움직임은 건너뛰어요
+  if (special) { if (!G.enemies.includes(e)) return; }
+  else if (def.hop) {
     if (e.air > 0) { moveEnt(e, e.vx * dt * sm, e.vy * dt * sm, def.r); e.air -= dt * sm; e.z = Math.sin((1 - Math.max(0, e.air) / e.airMax) * Math.PI) * 0.35; if (e.air <= 0) { e.z = 0; e.land = 0.15; } }
     else { e.t -= dt; e.land = Math.max(0, (e.land || 0) - dt); if (e.t <= 0) { let ax, ay; if (chase) { ax = dx / d; ay = dy / d; } else { const a = rand() * 6.283; ax = Math.cos(a); ay = Math.sin(a); } const sp = chase ? def.spd : def.spd * 0.5; let flee = null; if (!chase) { flee = litFlee(e); if (flee) { ax = flee[0] * 2; ay = flee[1] * 2; } else if (litAhead(e, ax, ay, sp * 0.42 + def.r + .2)) ax = ay = 0; } e.vx = ax * sp; e.vy = ay * sp; e.air = e.airMax = 0.42; e.t = (chase || flee ? 0.45 : 1.2) + rand() * 0.6; } } // v88: 밝은 곳에서 나갈 때는 쫓을 때처럼 자주 뛰어요
   } else {
@@ -49,12 +53,13 @@ export function enemyStep(e, dt) {
   }
   if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
   e.hurt = Math.max(0, (e.hurt || 0) - dt);
-  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0)) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
+  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
 export const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];
 export function regionEnemy(e, b) { const m = REGION_HP[b] || 1; if (m !== 1) { e.hp = Math.round(e.hp * m); e.mh = e.hp; } if ((REGION_DMG[b] || 1) !== 1) e.dm = REGION_DMG[b]; return e; }
 export function mkEnemy(k, x, y) { return { k, x, y, hp: ENEMY[k].hp, t: rand(), air: 0, airMax: .42, z: 0, vx: 0, vy: 0, kx: 0, ky: 0, hurt: 0 }; }
+export function pickMon(b) { const row = MON_TABLE[b] || MON_TABLE[0]; let r = rand(); for (const [k, w] of row) { r -= w; if (r < 0) return k; } return row[0][0]; }
 export function trySpawn() {
   const p = G.p; if (p.dead > 0) return; const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0; const near = G.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 20).length; if (near >= (SPAWN_CAP[pb] || 7)) return;
   for (let k = 0; k < 10; k++) {
@@ -64,9 +69,10 @@ export function trySpawn() {
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
     if (warpSafe(x + .5, y + .5)) continue; // v89: 워프포인트·포탈 둘레 6칸
-    const b = G.biome[idx(x, y)]; const kk = b === 0 ? 'slimeG' : b === 1 ? (rand() < .55 ? 'slimeO' : 'shroomy') : b === 3 ? (rand() < .55 ? 'magmaSlime' : 'cinder') : b === 4 ? (rand() < .55 ? 'frostSlime' : 'snowling') : (rand() < .75 ? 'slimeP' : 'shroomy');
+    const b = G.biome[idx(x, y)]; const kk = pickMon(b); // v101: 지역별 표(MON_TABLE)
     G.enemies.push(regionEnemy(mkEnemy(kk, x + .5, y + .6), b));
-    if (rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
+    const packN = ENEMY[kk].pack || 0; for (let q = 0; q < packN; q++) { const dx = Math.round((rand() - .5) * 3), dy = Math.round((rand() - .5) * 3); if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); } // v101 떼 몬스터
+    if (!packN && rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
     return;
   }
 }
