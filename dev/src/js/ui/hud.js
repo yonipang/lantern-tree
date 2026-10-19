@@ -23,6 +23,7 @@ import { maxHp } from '../sim/player.js';
 import { canClaim } from '../sim/quests.js';
 import { envFxV } from '../sim/survival.js';
 import { onlyMe } from './feedback.js';
+import { navTick } from './map.js';
 import { panel, renderPanel } from './panels.js';
 export let jobUiT = 0;
 export function jobPanelTick(dt) { if (!panel || panel.kind !== 'craft' || !TIMED[panel.st]) return; jobUiT -= dt; if (jobUiT > 0) return; jobUiT = .25;
@@ -96,7 +97,8 @@ function drawFace() { const f = SPR.player && SPR.player.down && SPR.player.down
 let ptsSeen = 0;
 onEvent('loaded', () => { ptsSeen = 0; faceOf = null; lastHud = lastMp = ''; if (G) resetHotbarPage(); });
 let toastY = null;
-export function updateHud() {
+export function updateHud() { navTick(); // v95: 길 안내 도착
+
   const p = G.p; const k = Math.round(p.hp) + '|' + Math.round(p.hunger) + '|' + maxHp();
   drawBuffs(); drawEnv(); drawFace();
   if (k !== lastHud) { lastHud = k; const hu = $('#huRing'); hu.style.setProperty('--f', (clamp(p.hunger, 0, 100) / 100).toFixed(3)); hu.classList.toggle('low', p.hunger < 25); hu.title = '배고픔 ' + Math.round(p.hunger); const sf = document.getElementById('shHpFill'); if (sf) { sf.style.width = Math.max(0, p.hp / maxHp() * 100) + '%'; $('#shHpTxt').textContent = Math.round(p.hp); } }

@@ -33,6 +33,7 @@ import { onFrame } from '../sim/systems.js';
 import { treeStage } from '../sim/tree.js';
 import { aimMouse } from '../ui/input.js';
 import { drawBuild } from '../ui/build.js';
+import { NAV_ARRIVE, NAV_COL, navPt } from '../ui/map.js';
 import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
 import { anchorAt, fpOf, placeAnchor } from '../world/tiles.js';
@@ -278,6 +279,11 @@ export function renderOverlay(cw, ch) {
     ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 230)) * Z; ctx.fillStyle = '#ff9b4a'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(7 * Z + bob, 0); ctx.lineTo(3 * Z + bob, -3 * Z); ctx.lineTo(3 * Z + bob, 3 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
     const im = SPR.obj.lostBag; if (im) { const sz = 9 * Z; ctx.imageSmoothingEnabled = false; ctx.drawImage(im, Math.round(cx - sz / 2), Math.round(cy - sz / 2), sz, sz); } } }
+  // v95: 지도에서 고른 곳 길 안내 — 하늘색 화살표 + 남은 칸, 퀘스트·꾸러미 화살표보다 조금 더 바깥
+  { const n = p.dead <= 0 ? navPt() : null, d = n ? Math.hypot(n.x - p.x, n.y - p.y) : 0; if (n && d > NAV_ARRIVE) { const a = Math.atan2(n.y - p.y, n.x - p.x), r = 2.75, cx = (p.x + Math.cos(a) * r) * T - camX, cy = (p.y - .4 + Math.sin(a) * r) * T - camY;
+    ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 260)) * Z; ctx.fillStyle = NAV_COL; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(5 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4.5 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4.5 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.font = pxFont(4.6); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const ty = Math.round(cy + (Math.sin(a) > .3 ? -7 : 7) * Z); pxText(`${Math.round(d)}칸`, Math.round(cx), ty, NAV_COL, INK); } }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = pxFont(6.2); ctx.lineJoin = 'round';
   for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); pxText(tx.txt, tx.x * T - camX, tx.y * T - camY, tx.col, INK); } // v78: 도트 글꼴 + 도트 테두리
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;

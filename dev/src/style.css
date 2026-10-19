@@ -466,6 +466,19 @@ body.touch #hbFlip{width:var(--slotS)}
 /* v89 워프 고르기: 고른 목적지와 「여기로 이동」 */
 .warpgo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;padding:8px 10px;background:var(--panel2,#2a2236);box-shadow:inset 0 0 0 2px #ffc861}
 .warpgo span{font-size:16px;color:var(--amber,#ffc861)}
+/* v95: 지도 범례 아이콘(누르면 가장 가까운 그곳) · 고른 곳 줄 */
+.legend.lgicons{gap:6px;color:var(--text)}
+.lgbtn{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:2px 8px 2px 2px;background:var(--panel2,#2a2236);border:1px solid var(--line);border-radius:0;color:var(--text);font:inherit;font-size:16px;cursor:pointer}
+.lgbtn img{width:32px;height:32px;image-rendering:pixelated}
+.lgbtn i{display:inline-block;width:16px;height:16px;border-radius:50%;margin:0 4px 0 8px;box-shadow:0 0 0 3px #1b1426}
+.lgbtn.off{opacity:.45}
+.lgbtn:active{transform:translateY(2px)}
+.lgpair{display:inline-flex;align-items:center;gap:4px}
+.lgpair .lgchk{min-height:36px}
+.navgo .navb{display:flex;gap:6px;flex-shrink:0}
+.navgo .navb .btn{min-height:40px;padding:0 12px;font-size:16px}
+.navgo>span:first-child{color:#7fd8ff;overflow:hidden;text-overflow:ellipsis}
+.navgo{box-shadow:inset 0 0 0 2px #7fd8ff}
 /* ===== v91 건축 모드: 단축칸·공격·상호작용·스킬·이야기 한 줄·오른쪽 위 버튼은 숨기고, 아래 건축 목록·오른쪽 위 「완료」·오른쪽 아래 「놓기」 ===== */
 body.building #hotbar,body.building #actBtn,body.building #atkBtn,body.building #skBar,body.building #altWrap,body.building #hud .side,body.building #goal,body.building #toolRow,body.building #pcHint,body.building #wearAsk{display:none!important}
 #bmTop{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 12px);display:flex;gap:8px;align-items:center;z-index:6}

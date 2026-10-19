@@ -806,6 +806,63 @@ def test_map_zoom_pan():
     return main
 
 
+def test_map_nav():
+    import asyncio, sys
+    # v95: 범례 아이콘을 누르면 가장 가까운 그곳에 핀, 지도를 누르면 그 자리에 핀, 「위치 찾기」로 길 안내(화살표), 3칸 안에 오면 끝, 끄기
+    H2=HOOK.replace("computeLight}","computeLight,mapView,UIS,navPt}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{const T=__T,G=T.G;G.explored.fill(1);G.backPt=null;G.p.x=T.CX+.5;G.p.y=T.CY+40.5;T.openPanel('map')}"); await pg.wait_for_timeout(700)
+            r=await ev(pg,"()=>{const q=k=>document.querySelector('#sheet [data-a=mapFind][data-i='+k+']');return [!!q('tree'),(q('tree')?.querySelector('img')?.src||'').startsWith('data:image'),!!q('warp'),q('back')?.classList.contains('off'),!!document.querySelector('#sheet [data-a=mapChest]'),!!document.querySelector('#sheet [data-a=mapMe]')]}")
+            rec('지도','범례가 아이콘 버튼 (등불나무·워프 …, 없는 것은 흐리게, 보물상자 표시 체크박스 그대로)', r==[True,True,True,True,True,True], str(r))
+            await pg.click('#sheet [data-a=mapFind][data-i=back]'); await pg.wait_for_timeout(100)
+            r=await ev(pg,"()=>[__T.UIS.mapPin,[...document.querySelectorAll('#toasts *,.toast')].map(x=>x.textContent).join('|')]")
+            rec('지도','아직 없는 것을 누르면 핀 없이 「아직 찾지 못했어요」', r[0] is None and '아직 찾지 못했어요' in r[1], str(r))
+            await pg.click('#sheet [data-a=mapFind][data-i=tree]'); await pg.wait_for_timeout(150)
+            r=await ev(pg,"()=>{const T=__T,P=T.UIS.mapPin,v=T.mapView();return [P&&P.name,P&&P.x===T.CX+.5&&P.y===T.CY,Math.abs(v.ox+v.span/2-P.x)<1&&Math.abs(v.oy+v.span/2-P.y)<1,!!document.querySelector('#sheet [data-a=navGo]'),document.querySelector('#sheet .navgo span')?.textContent]}")
+            rec('지도','등불나무 아이콘 → 핀을 꽂고 지도 가운데로, 「위치 찾기」 버튼', r[:4]==['등불나무',True,True,True] and '41칸' in (r[4] or ''), str(r))
+            await pg.screenshot(path=SP+'map_nav_pin.png')
+            await pg.click('#sheet [data-a=navGo]'); await pg.wait_for_timeout(100)
+            r=await ev(pg,"()=>{const n=__T.navPt();return [document.querySelector('#sheetWrap').hidden,n&&n.name,__T.UIS.mapPin]}")
+            rec('지도','「위치 찾기」 → 창이 닫히고 길 안내 시작', r==[True,'등불나무',None], str(r))
+            await wait_game(pg,.3); await pg.screenshot(path=SP+'map_nav_arrow.png')
+            await ev(pg,"()=>{const T=__T;T.G.p.x=T.CX+.5;T.G.p.y=T.CY+2.5}")
+            await wait_until(pg,"()=>!__T.navPt()")
+            r=await ev(pg,"()=>[__T.navPt(),[...document.querySelectorAll('#toasts *,.toast')].map(x=>x.textContent).join('|')]")
+            rec('지도','3칸 안에 오면 길 안내가 끝나고 「도착했어요」', r[0] is None and '도착했어요' in r[1], str(r))
+            # 지도를 누르면 그 자리에 핀 (장소 표시가 없는 곳)
+            await ev(pg,"()=>{const T=__T;T.G.p.x=T.CX+.5;T.G.p.y=T.CY+40.5;T.openPanel('map')}"); await pg.wait_for_timeout(700)
+            bx=await (await pg.query_selector('#mapCv')).bounding_box()
+            tx,ty=bx['x']+bx['width']*.5,bx['y']+bx['height']*.85
+            await pg.mouse.click(tx,ty); await pg.wait_for_timeout(150)
+            r=await ev(pg,"()=>{const P=__T.UIS.mapPin,v=__T.mapView();return P&&[P.name,Math.abs(P.x-(v.ox+.5*v.span))<1.1,Math.abs(P.y-(v.oy+.85*v.span))<1.1,document.querySelector('#sheet .navgo span')?.textContent]}")
+            rec('지도','지도를 누르면 그 칸에 핀 (「고른 곳」)', r is not None and r[:3]==['',True,True] and '고른 곳' in (r[3] or ''), str(r))
+            await pg.click('#sheet [data-a=navGo]'); await pg.wait_for_timeout(100)
+            await ev(pg,"()=>__T.openPanel('map')"); await pg.wait_for_timeout(700)
+            r=await ev(pg,"()=>[!!__T.navPt(),document.querySelector('#sheet .navgo span')?.textContent||'',!!document.querySelector('#sheet [data-a=navOff]')]")
+            rec('지도','지도를 다시 열면 「길 안내 중」 줄과 끄기 버튼', r[0] and '길 안내 중' in r[1] and r[2], str(r))
+            await pg.click('#sheet [data-a=navOff]'); await pg.wait_for_timeout(100)
+            r=await ev(pg,"()=>[__T.navPt(),!!document.querySelector('#sheet [data-a=navOff]')]")
+            rec('지도','끄기 → 길 안내가 꺼짐', r==[None,False], str(r))
+            # 끌어서 옮긴 뒤 손을 떼면 핀을 꽂지 않음
+            cx,cy=bx['x']+bx['width']/2,bx['y']+bx['height']/2
+            await pg.mouse.move(cx,cy); await pg.mouse.down(); await pg.mouse.move(cx+60,cy+40,steps=6); await pg.mouse.up(); await pg.wait_for_timeout(100)
+            r=await ev(pg,"()=>__T.UIS.mapPin")
+            rec('지도','끌어서 옮긴 뒤에는 핀이 안 꽂힘', r is None, str(r))
+            # 다른 세계를 불러오면 길 안내가 없어짐
+            await pg.click('#sheet [data-a=mapFind][data-i=tree]'); await pg.wait_for_timeout(100); await pg.click('#sheet [data-a=navGo]'); await pg.wait_for_timeout(100)
+            r0=await ev(pg,"()=>!!__T.navPt()")
+            await ev(pg,"()=>{const T=__T,s=T.serialize();T.deserialize(s)}")
+            r=await ev(pg,"()=>__T.navPt()")
+            rec('지도','불러오기를 하면 길 안내 없음', r0 and r is None, str([r0,r]))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_audio_resume():
     import asyncio, sys
     # v66 (BF-02): 화면 잠금·앱 전환 뒤 소리 장치가 「멈춤·끊김(아이폰)·닫힘」이면 다시 켜요. 브라우저가 막으면 다음 터치에서 다시. 소리 끔 설정은 그대로
