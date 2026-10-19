@@ -3,6 +3,7 @@
 import { ENV_TXT, LOST_MAX, LOST_SHARE, RECALL_CD, RECALL_T } from '../data/deep-survival.js';
 import { EFF } from '../data/farming-cooking.js';
 import { guardMul } from '../data/gear-animals.js';
+import { GUIDE } from '../data/quests.js';
 import { ITEMS, OBJ } from '../data/items.js';
 import { fxRand } from '../engine/random.js';
 import { $, clamp } from '../engine/util.js';
@@ -113,7 +114,7 @@ export function bagNear() { const p = G.p, px = Math.floor(p.x), py = Math.floor
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = px + dx, y = py + dy; if (!inB(x, y)) continue; const i = idx(x, y), o = G.objs.get(i); if (!myBag(o)) continue; const d = Math.hypot(x + .5 - p.x, y + .5 - p.y); if (!best || d < best.d) best = { t: { x, y }, o, d }; }
   return best; }
 export function dropLost() {
-  if ((G.guide || 0) < 6) return 0; // no loss before the copper pickaxe
+  if ((G.guide || 0) < GUIDE.findIndex(q => q.id === 'pick')) return 0; // no loss before the copper pickaxe (v110: 퀘스트 id로)
   const p = G.p, items = []; for (let i = 0; i < G.inv.length; i++) { const s = G.inv[i]; if (!s || bagCat(s.id) !== 'mat' || ITEMS[s.id].kind === 'key') continue; const n = Math.floor(s.c * LOST_SHARE); if (n <= 0) continue; s.c -= n; if (!s.c) G.inv[i] = null; const e = items.find(x => x.id === s.id); if (e) e.c += n; else items.push({ id: s.id, c: n }); }
   if (!items.length) return 0; emit('inv');
   const bags = []; for (const [i, o] of G.objs) if (myBag(o)) bags.push([i, o]); // v68: up to LOST_MAX of my own

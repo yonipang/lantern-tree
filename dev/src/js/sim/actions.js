@@ -10,6 +10,7 @@ import { fxRand } from '../engine/random.js';
 import { josa } from '../engine/util.js';
 import { G, guardOf } from '../save/state.js';
 import { COCOON_HITS } from '../data/npc.js';
+import { talkTo } from './npc.js';
 import { readDiary } from './archive.js';
 import { lightBrazier, readLast } from './deep.js';
 import { openCatch, ranchCollect, ranchReady, wildNear } from './animals.js';
@@ -305,7 +306,7 @@ export function useObj(a) {
     case 'sleep': sleepIn(t); break;
     case 'pet': emit('hearts', x, t.y, 5); emit('sfx', 'purr'); if ((o.cd || 0) <= G.time) { o.cd = G.time + 20; p.hp = Math.min(maxHp(), p.hp + 5); emit('ftext', p.x, p.y - 1.3, '♥ +5', '#ff8fa3'); } emit('toast', pickOne(['골골골…', '말랑말랑해요', '쿠션이 기분 좋아 보여요']), null, 'pet'); break;
     case 'lamp': o.off = !o.off; markLight(); emit('sfx', 'click'); break;
-    case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); emit('talk', o.npc, 'talk'); break; // v104
+    case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); talkTo(o.npc); break; // v104 · v110 나루 첫 장면
     case 'read2': faceTo(x - p.x, t.y + .5 - p.y); if (o.t === 'diaryLast') readLast(); else readDiary({ ...o, x, y: t.y + .5 }); break; // v106 일기 · v108 마지막 장
     case 'brazier': lightBrazier(o, x, t.y + .3); break; // v108 횃대
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;

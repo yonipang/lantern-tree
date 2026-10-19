@@ -22,7 +22,7 @@ function qCardHTML(q, st, side, big) {
   if (st.done && !st.claimed && st.has) btn += `<button type="button" class="btn" data-a="qClaim" data-i="${q.id}">보상 받기</button>`;
   if (live && !(st.done && !side)) btn += act ? `<button type="button" class="btn ghost" data-a="qAct" data-i="none">활성화 해제</button>` : `<button type="button" class="btn ghost" data-a="qAct" data-i="${q.id}">활성화</button>`;
   if (go) btn += `<button type="button" class="btn ghost" data-a="qMap" data-i="${q.id}">지도에서 보기</button>`;
-  return `<div class="qcard ${big ? 'big' : ''} ${act ? 'act' : ''}"><div class="qc-top">${chip}${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(q))}</h4></div>${!st.done && q.h ? `<p>${escHTML(typeof q.h === 'function' ? q.h() : q.h)}</p>` : ''}${!st.claimed ? qBarHTML(q) : ''}${st.has && !st.claimed ? rwHTML(q) : ''}${live && go === null ? `<p class="qmsg">화살표: ${questGoMsg(q)}</p>` : ''}${btn ? `<div class="qbtns">${btn}</div>` : ''}</div>`;
+  return `<div class="qcard ${big ? 'big' : ''} ${act ? 'act' : ''}"><div class="qc-top">${chip}${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(q))}</h4></div>${!st.done && q.h ? `<p>${GUIDE.includes(q) ? '<b style="color:var(--amber)">나루</b> 「' : ''}${escHTML(typeof q.h === 'function' ? q.h() : q.h)}${GUIDE.includes(q) ? '」' : ''}</p>` : ''}${!st.claimed ? qBarHTML(q) : ''}${st.has && !st.claimed ? rwHTML(q) : ''}${live && go === null ? `<p class="qmsg">화살표: ${questGoMsg(q)}</p>` : ''}${btn ? `<div class="qbtns">${btn}</div>` : ''}</div>`;
 }
 const qFold = (a, open, n, label) => `<button type="button" class="lbl fold" data-a="${a}" aria-expanded="${open}">${open ? '▾' : '▸'} ${label} · ${n}개</button>`;
 export function questMainHTML() {

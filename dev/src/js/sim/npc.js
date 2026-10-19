@@ -1,6 +1,6 @@
 // ================= v104 그림자 고치 · NPC · 마을 · 대화 (데이터는 data/npc.js) =================
 // 고치 놓기(새 세계·옛 세계 모두 불러올 때 한 번, 워프포인트처럼) → 고치 둘레 그림자 조각 → 공격 버튼으로 3번 치면 풀려나 등불나무 곁 마을 자리에 서요 → 말 걸기(대화 창).
-import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NPC_IDS, NPCS } from '../data/npc.js';
+import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_INTRO, NPC_IDS, NPCS } from '../data/npc.js';
 import { ITEMS } from '../data/items.js';
 import { defineCmd } from './commands.js';
 import { addItem, countItem, removeItem } from './inventory.js';
@@ -20,10 +20,11 @@ export const cocoonAt = i => { const o = G.objs.get(i); return o && o.t === 'coc
 export const npcObjs = () => { const out = []; for (const [i, o] of G.objs) if (o.t === 'npc' || o.t === 'cocoon') out.push({ i, o, x: i % W, y: (i / W) | 0 }); return out; };
 export const npcState = id => { for (const [, o] of G.objs) if ((o.t === 'npc' || o.t === 'cocoon') && o.npc === id) return o.t; return null; }; // 'cocoon' 갇힘 · 'npc' 구함 · null 없음
 export function placeCocoons() {
+  if (G && G.stats) settleStarters(); // v110: 처음부터 마을에 있는 NPC(나루)
   if (!G || !G.stats || G.stats.npcV) return 0; G.stats.npcV = 1; let n = 0;
   const R = rng(((G.seed | 0) ^ 0x5c0c0) >>> 0), reach = walkable(), boss = [{ x: BX, y: BY }, SA, SB, SL, SI];
   const taken = [];
-  for (const id of NPC_IDS) { const N = NPCS[id]; if (N.archive || npcState(id)) continue; // 기록관 학자는 v106 기록관에서
+  for (const id of NPC_IDS) { const N = NPCS[id]; if (N.archive || N.start || npcState(id)) continue; // 기록관 학자는 v106 기록관에서
     const cand = [];
     for (let y = 3; y < H - 3; y += 2) for (let x = 3; x < W - 3; x += 2) { const i = idx(x, y); if (G.biome[i] !== N.b || !freeTile(i)) continue;
       const d = Math.hypot(x - CX, y - CY); if (d < N.minD || d > N.maxD || noDigZone(x, y) || roomNear(x, y)) continue;
@@ -39,6 +40,16 @@ export function villageSpot(id) { const N = NPCS[id], a = N.ang * Math.PI / 180;
     const i = idx(x, y); if (!freeTile(i) || isSolid(x, y + 1) || G.objs.get(idx(x, y + 1))) continue; if (y >= CY + 1 && y <= CY + 5 && x >= CX - 5 && x <= CX + 5) continue;
     const s = (r - 11) * (r - 11) + Math.abs(da) / 10; if (s < bd) { bd = s; best = { x, y }; } }
   return best; }
+// v110: 처음부터 마을에 있는 NPC(start: 나루) — 새 세계는 바로 마을에, 옛 세계는 고치에 갇혀 있으면 고치를 없애고 마을로 (구한 표시도).
+// 마을 자리를 못 찾으면 첫 장면을 건너뛴 것으로 봐요(첫 이야기 퀘스트가 막히지 않게).
+export function settleStarters() { for (const id of NPC_IDS) { if (!NPCS[id].start || npcState(id) === 'npc') continue;
+  for (const [i, o] of [...G.objs]) if (o.t === 'cocoon' && o.npc === id) { G.objs.delete(i); COC.delete(i); G.enemies = G.enemies.filter(e => !(e.k === 'shadowBit' && e.home && Math.hypot(e.home.x - (i % W + .5), e.home.y - (((i / W) | 0) + .5)) < 1)); }
+  const s = villageSpot(id); if (s) G.objs.set(idx(s.x, s.y), { t: 'npc', npc: id, met: 0 }); else if (id === 'guide') G.stats.naruMet = 1;
+  G.stats.rescued = G.stats.rescued || {}; G.stats.rescued[id] = 1; } }
+export const naruSpot = () => { for (const [i, o] of G.objs) if (o.t === 'npc' && o.npc === 'guide') return { x: i % W + .5, y: ((i / W) | 0) + .5 }; return null; };
+export const naruWaits = () => !G.stats.naruMet; // 머리 위 느낌표 (render/world.js)
+// 말 걸기 (sim/actions.js use 'talk'): 처음 한 번은 첫 장면
+export function talkTo(id) { if (id === 'guide' && !G.stats.naruMet) { G.stats.naruMet = 1; emit('talk', id, 'intro'); return; } emit('talk', id, 'talk'); }
 // ---- 치기 (sim/combat.js doAttack: 가까운 적이 없을 때 앞 칸 고치) ----
 export const COC = new Map();
 export function cocoonTarget(t) { if (!inB(t.x, t.y)) return null; const i = idx(t.x, t.y), o = cocoonAt(i); return o ? { t, i, o } : null; }
@@ -65,6 +76,7 @@ export function shadowLeash(e) { if (e.k !== 'shadowBit' || !e.home) return; con
 // ---- 대화: 안녕 → 할 일 힌트 → 직책 이야기(번갈아) ----
 export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
+  if (kind === 'intro') return NARU_INTRO.slice(); // v110
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1; return [N.talk[(o.met - 1) % N.talk.length]]; }
   return [N.talk[0]]; }
 export const villagers = () => NPC_IDS.filter(id => npcState(id) === 'npc');

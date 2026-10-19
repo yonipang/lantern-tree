@@ -643,9 +643,9 @@ def test_npc_v104():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.npcObjs();const bad=L.filter(e=>{const N=T.NPCS[e.o.npc],d=Math.hypot(e.x-T.CX,e.y-T.CY);return !N.archive&&(G.biome[e.i]!==N.b||d<N.minD||d>N.maxD||T.G.wall[e.i])});
-              return [L.length,L.map(e=>e.o.npc).sort().join(','),bad.length,!!T.SPR.obj.cocoon,T.NPC_IDS.every(id=>T.SPR['npc_'+id]),G.stats.npcV]}""")
-            rec('고치','새 세계에 고치 6개(학자는 v106 기록관 안)가 각자 지역·거리 안에, 그림 있음, 놓았다는 표시(npcV)', r[0]==6 and r[1]=='cook,farmer,guide,scholar,shepherd,smith' and r[2]==0 and r[3] and r[4] and r[5]==1, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.npcObjs();const bad=L.filter(e=>{const N=T.NPCS[e.o.npc],d=Math.hypot(e.x-T.CX,e.y-T.CY);return !N.archive&&!N.start&&(G.biome[e.i]!==N.b||d<N.minD||d>N.maxD||T.G.wall[e.i])});
+              const nr=L.find(e=>e.o.npc==='guide');return [L.length,L.map(e=>e.o.npc).sort().join(','),bad.length,!!T.SPR.obj.cocoon,T.NPC_IDS.every(id=>T.SPR['npc_'+id]),G.stats.npcV,nr&&nr.o.t,nr&&Math.round(Math.hypot(nr.x-T.CX,nr.y-T.CY))]}""")
+            rec('고치','새 세계에 고치 5개(학자는 v106 기록관 안)가 각자 지역·거리 안에 + 나루는 처음부터 마을(v110), 그림 있음, 놓았다는 표시(npcV)', r[0]==6 and r[1]=='cook,farmer,guide,scholar,shepherd,smith' and r[2]==0 and r[3] and r[4] and r[5]==1 and r[6]=='npc' and 9<=r[7]<=17, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.npcV;s.objs=s.objs.filter(([i,o])=>o.t!=='cocoon');
               T.deserialize(s);const n1=T.npcObjs().length;const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return [n1,T.npcObjs().length,T.G.stats.npcV]}""")
             rec('옛 세계','고치가 없는 옛 세이브도 불러올 때 한 번 놓고(npcV), 다시 불러와도 더 안 놓음', r[0]==5 and r[1]==5 and r[2]==1, str(r))
@@ -675,6 +675,42 @@ def test_npc_v104():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+
+def test_naru_start_v110():
+    # v110 시작 길잡이 나루: 새 세계는 나루가 처음부터 마을에, 첫 이야기 「나루에게 말 걸기」(느낌표) → 첫 장면, 끝날 때 한마디, 빛씨앗 /5, 옛 세이브는 고치 → 마을
+    H2=HOOK.replace("computeLight}","computeLight,npcObjs,naruSpot,naruWaits,npcState,GUIDE,checkGuide,questGo,perform,runFrame,closePanel}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=0;T.checkGuide();const n=T.naruSpot();const q=T.GUIDE[G.guide];const go=T.questGo(q);
+              return [q.id,T.npcState('guide'),n&&Math.round(Math.hypot(n.x-T.CX,n.y-T.CY)),T.naruWaits(),!!go&&go.x===n.x&&go.y===n.y,G.stats.naru110,T.npcObjs().filter(e=>e.o.t==='cocoon').length]}""")
+            rec('나루','새 세계: 첫 이야기는 나루에게 말 걸기, 나루는 처음부터 마을(나무에서 10~16칸), 느낌표, 화살표가 나루를 가리킴, 고치는 5개(학자 포함)', r[0]=='naru' and r[1]=='npc' and 9<=r[2]<=17 and r[3] and r[4] and r[5]==1 and r[6]==5, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const n=T.naruSpot();G.enemies.length=0;G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};G.p.dead=0;G.sel=-1;const a=T.decide();if(a.k==='use')T.perform(a);return [a.k,a.u,G.stats.naruMet]}""")
+            await pg.wait_for_timeout(300)
+            r2=await ev(pg,"()=>{const T=__T,G=T.G;const t=document.querySelector('#sheet');const tx=t?t.innerText:'';T.checkGuide();return [tx.includes('아, 깼어요?'),T.GUIDE[G.guide].id,T.naruWaits()]}")
+            rec('첫 장면','나루 앞에서 상호작용 = 말 걸기 → 첫 장면 대화, 퀘스트가 뿌리기둥으로 넘어가고 느낌표 사라짐', r[:2]==['use','talk'] and r[2]==1 and r2==[True,'wood',False], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return a.u}""")
+            await pg.wait_for_timeout(300)
+            r2=await ev(pg,"()=>{const t=document.querySelector('#sheet');return t?[t.innerText.includes('아, 깼어요?'),!!document.querySelector('#sheet [data-a=talkShop]')]:null}")
+            rec('두 번째','다시 말 걸면 첫 장면이 아니라 보통 이야기, 물물교환 버튼', r=='talk' and r2==[False,True], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.wood=6;T.checkGuide();return [T.GUIDE[G.guide].id]}""")
+            await pg.wait_for_timeout(200)
+            r2=await ev(pg,"()=>document.body.innerText.includes('나무 냄새 좋다')")
+            rec('한마디','뿌리기둥 퀘스트가 끝나면 나루의 한마디 알림', r==['bench'] and r2, str(r)+str(r2))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.seedsFound=2;G.treeSeeds=1;const t=id=>T.GUIDE.find(q=>q.id===id).t();return [t('seeds'),t('tree'),t('seeds2'),t('tree2')]}""")
+            rec('빛씨앗 /5','빛씨앗 퀘스트 숫자는 모두 /5', all('/5)' in x for x in r) and '(2/5)' in r[0], str(r))
+            r=await ev(pg,"""()=>{const T=__T;let s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.naru110;delete s.stats.naruMet;delete s.qclaim.naru;
+              s.objs=s.objs.map(([i,o])=>o.t==='npc'&&o.npc==='guide'?[i,{t:'cocoon',npc:'guide',hits:0}]:[i,o]);T.deserialize(s);let G=T.G;T.checkGuide();
+              const coc=T.npcObjs().filter(e=>e.o.t==='cocoon'&&e.o.npc==='guide').length;const a=[T.npcState('guide'),coc,G.stats.naruMet,G.qclaim.naru,T.GUIDE[G.guide].id!=='naru'];
+              const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);G=T.G;a.push(T.npcObjs().filter(e=>e.o.npc==='guide').length,G.qclaim.naru);return a}""")
+            rec('옛 세이브','고치 속 나루는 마을로, 첫 장면은 건너뜀(끝냄·보상 받은 것으로), 다시 불러와도 나루 한 명', r==['npc',0,1,1,True,1,1], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
 
 def test_barter_v105():
     # v105 물물교환: NPC 대화 창 「물물교환」 → 줄마다 주는 것 → 받는 것, 가방 재료만, 하루 3번, 쪽지는 한 번만

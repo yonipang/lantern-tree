@@ -63,6 +63,7 @@ export function questGo(q) {
   if (k === 'biome') { const want = a.filter(b => !G.stats['seen' + b]); return want.length ? nearestTile(i => want.includes(G.biome[i]) && !G.wall[i], 140) : null; }
   if (k === 'boss') { if (G.bossDead[a[0]]) return null; const h = BOSSES[a[0]].home(); return qSeen(h.x, h.y) ? { x: h.x, y: h.y } : null; }
   if (k === 'tgt') { const t = q.target && q.target(); return t && qSeen(t.x, t.y) ? t : null; }
+  if (k === 'near') { const t = q.target && q.target(); return t || null; } // v110: 나루처럼 처음부터 아는 곳 (밝히지 않아도)
   if (k === 'enemy') return nearestOf(G.enemies.map(e => ({ x: e.x, y: e.y })));
   if (k === 'zone') return nearestOf((G.fzones || []).map(z => ({ x: z.x + .5, y: z.y + .5 })));
   if (k === 'room') return nearestOf((G.rooms || []).filter(r => r.found && !r.open).map(r => ({ x: r.cx + .5, y: r.cy + .5 })));
@@ -75,8 +76,8 @@ const QTGT = { t: -9, q: null, v: null };
 export function activeLine() { const a = G.qAct || 'main', q = activeQuest(); if (!q) return ['', '퀘스트 고르기'];
   const side = isSide(q), st = side ? questState(q) : null; if (side && st.done && !st.claimed && st.has) return ['도전', `보상 받기 · ${qText(q)}`]; return [side ? '도전' : '이야기', qText(q)]; }
 export function checkGuide() {
-  let n = 0; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { if (started && !G.qt[GUIDE[G.guide].id]) G.qt[GUIDE[G.guide].id] = Math.max(1, Math.round(G.playT || 0)); G.guide++; n++; }
-  if (n === 1 && started) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); }
+  let n = 0, say = null; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { if (started && !G.qt[GUIDE[G.guide].id]) G.qt[GUIDE[G.guide].id] = Math.max(1, Math.round(G.playT || 0)); say = GUIDE[G.guide].say || null; G.guide++; n++; }
+  if (n === 1 && started) { emit('toast', say ? `나루 「${say}」` : '목표 달성!', 'good'); emit('sfx', 'craft'); } // v110: 처음 일곱 이야기는 끝날 때 나루가 한마디
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
   // v84: 화살표는 활성 퀘스트 하나 — 가장 가까운 할 곳을 1초에 한 번 찾아요 (밝힌 곳만)
   const q = activeQuest(); if (q !== QTGT.q || G.time - QTGT.t >= 1 || G.time < QTGT.t) { QTGT.q = q; QTGT.t = G.time; const v = q && !(isSide(q) && q.done()) ? questGo(q) : null; QTGT.v = v || null; }
