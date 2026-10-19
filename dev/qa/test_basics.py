@@ -329,7 +329,7 @@ def test_held_item_actions():
             await ev(pg,"()=>{const G=__T.G;__clear();G.inv[0]={id:'swordCopper',c:1};G.inv[12]={id:'woolHat',c:1};G.sel=0;G.pets={dog:1};G.petOn='dog';__T.openPanel('equip')}"); await pg.wait_for_timeout(600)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [__T.panel.kind,__T.EQ_SLOTS.map(x=>x[0]).join(','),'weapon' in __T.G.equip,t.includes('무기 칸'),document.querySelectorAll('#sheet [data-a=chSlot]').length,!!document.querySelector('#sheet .otab.on[data-i=eq]'),!!document.querySelector('#bEquip')]}")
             await pg.screenshot(path=SP+'bag.png')
-            rec('캐릭터','장비는 캐릭터 창 장비 탭(v83): 칸 10개(무기 칸 없음), [장비] 버튼 따로 없음', r==['stat','body,head,neck,ring',False,False,10,True,False], str(r))
+            rec('캐릭터','장비는 캐릭터 창 장비 탭(v83): 칸 10개(무기 칸 없음), [장비] 버튼 따로 없음', r==['stat','body,head,neck,ring,legs',False,False,10,True,False], str(r))
             await ev(pg,"()=>document.querySelector('#sheet [data-a=chSlot][data-i=pet]').click()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>document.querySelector('#sheet').innerText.includes('멍멍이 · 함께 다니는 중')")
             rec('캐릭터','펫 칸을 누르면 펫 고르기', r, r)

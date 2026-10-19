@@ -373,7 +373,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -753,7 +754,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -1121,7 +1123,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -1579,7 +1582,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -1949,7 +1953,8 @@ null
 "c": 1
 },
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {
 "dog": 1,
@@ -2312,7 +2317,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -2684,7 +2690,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -3064,7 +3071,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -3448,7 +3456,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -3847,7 +3856,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -4306,7 +4316,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -4760,7 +4771,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -5214,7 +5226,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -5586,7 +5599,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,
@@ -5968,7 +5982,8 @@ null
 "body": null,
 "head": null,
 "neck": null,
-"ring": null
+"ring": null,
+"legs": null
 },
 "pets": {},
 "petOn": null,

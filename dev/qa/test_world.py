@@ -310,7 +310,7 @@ window.__eat=(id)=>{const T=__T,G=T.G;G.inv[0]={id,c:1};G.sel=0;G.p.hunger=10;T.
             rec('쪽지','용암·얼음 숨은 방에 불꽃 열매 젤리·불꽃 꽃잎 파이 쪽지 (방이 없으면 그 지역 보스가 줌)', ('fireJelly' in (r[0].get('r30','') if r[3][0] else r[1])) and ('firePie' in (r[0].get('r40','') if r[3][1] else r[2])), str(r))
             r=await ev(pg,"""()=>{const T=__T;const sv=JSON.parse(JSON.stringify(T.serialize()));sv.recipes={skewer:1};sv.rooms.forEach(r=>{r.open=r.b===3?1:0});for(const k in sv.bossDead)sv.bossDead[k]=false;sv.stats.beaten={};sv.qclaim={cpick:1};delete sv.equip;delete sv.env;
           T.deserialize(sv);const G=T.G;return [T.knows('skewer'),T.knows('fireJelly')||!G.rooms.some(r=>r.b===3),T.knows('hotTea')&&T.knows('coolPunch'),JSON.stringify(G.equip),G.env.k]}""")
-            rec('옛 세이브','v36 세이브: 이미 연 용암 방·받은 퀘스트의 새 쪽지를 바로 해금, 장비 칸은 비어서 시작 (v48: 4칸)', r==[True,True,True,'{"body":null,"head":null,"neck":null,"ring":null}',None], str(r))
+            rec('옛 세이브','v36 세이브: 이미 연 용암 방·받은 퀘스트의 새 쪽지를 바로 해금, 장비 칸은 비어서 시작 (v48: 4칸)', r==[True,True,True,'{"body":null,"head":null,"neck":null,"ring":null,"legs":null}',None], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.equip.body={id:'frostRobe',c:1};G.equip.neck={id:'turtleCharm',c:1};G.env={k:'hot',v:63,lv:1,t:0};const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const G2=T.G;return [G2.equip.body.id,G2.equip.neck.id,G2.env.k,G2.env.v]}""")
             rec('세이브','장비와 게이지가 저장·불러오기 뒤에도 그대로', r==['frostRobe','turtleCharm','hot',63], str(r))
             # screenshots: hot at 100, and the bag with the equipment row
@@ -777,7 +777,7 @@ def test_ranch():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.ranchK={cow:1,chicken:1};const q=T.QSIDE.find(x=>x.id==='s_ranch');const a=q.done();G.stats.ranchK.sheep=1;return [a,q.done(),typeof q.t==='function'?q.t():q.t]}""")
             rec('도전','「목장 동물 세 종류 데려오기」', r[0] is False and r[1] is True and '3/3' in r[2], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.hatMul();G.equip.head={id:'woolHat',c:1};const b2=T.hatMul();G.equip.head.lv=2;const c=+T.hatMul().toFixed(2);G.equip.head=null;return [a,b2,c,T.upgText('woolHat',2)]}""")
-            rec('털모자','털모자: 추위 게이지 85% 속도 (+2: 79%)', r==[1,0.85,0.79,'추위 게이지 79% 속도'], str(r))
+            rec('털모자','털모자: 추위 게이지 85% 속도 (+2: 79%)', r==[1,0.85,0.79,'방어력 1 · 추위 게이지 79% 속도'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(T.CX+9,T.CY+8),o=G.objs.get(i);o.p=G.time+123;T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const o2=T.G.objs.get(i);return [o2.t,Math.round(o2.p-T.G.time)]}""")
             rec('저장','목장 동물과 남은 시간 저장/불러오기', r==['cow',123], str(r))
             # ---- stone pit (돌 채굴장) ----

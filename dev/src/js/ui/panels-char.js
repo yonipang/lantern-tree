@@ -9,7 +9,7 @@ import { $ } from '../engine/util.js';
 import { iconURL } from '../render/icons.js';
 import { animalImg } from '../render/parts.js';
 import { G } from '../save/state.js';
-import { eqEffect, lvOf, rarOf, rlvOf, rlvOk, SET_N, setPet, upgText } from '../sim/gear.js';
+import { armorDef, armorMul, eqEffect, lvOf, rarOf, rlvOf, rlvOk, SET_N, setPet, upgText } from '../sim/gear.js';
 import { BAG_TABS, bagCat, heldTool, isBroken } from '../sim/inventory.js';
 import { treeStage } from '../sim/tree.js';
 import { slotHTML } from './hud.js';
@@ -23,7 +23,7 @@ export const CH_TABS = [['eq', '장비', 'woolHat'], ['sk', '스킬', 'star'], [
 export const sheetTop = (extra = '', title = '') => `${title ? `<div class="sh-head vh"><h2>${title}</h2></div>` : ''}<div class="sh-top">${sheetHpHTML()}${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div>`;
 // ---- 장비 탭: 3열 × 4줄, 가운데 2·3줄은 캐릭터 (왼쪽 위부터 시계방향 머리 → 목걸이 → 반지 1 → 반지 2 → 가방 → 펫 → 버프 아이템 → 등불 → 하의 → 상의) ----
 // eq: 지금 있는 장비 칸(G.equip), 'pet': 펫, 그 밖은 새 칸(아직 넣을 물건 없음)
-export const EQ_CELLS = { head: ['머리', 'head'], neck: ['목걸이', 'neck'], ring: ['반지 1', 'ring'], ring2: ['반지 2'], bag: ['가방'], pet: ['펫', 'pet'], buff: ['버프 아이템'], lamp: ['등불'], legs: ['하의'], body: ['상의', 'body'] };
+export const EQ_CELLS = { head: ['머리', 'head'], neck: ['목걸이', 'neck'], ring: ['반지 1', 'ring'], ring2: ['반지 2'], bag: ['가방'], pet: ['펫', 'pet'], buff: ['버프 아이템'], lamp: ['등불'], legs: ['하의', 'legs'], body: ['상의', 'body'] };
 const EQ_GRID = [['head', 'neck', 'ring'], ['body', null, 'ring2'], ['legs', null, 'bag'], ['lamp', 'buff', 'pet']];
 export const isNewCell = c => !EQ_CELLS[c] || !EQ_CELLS[c][1];
 function cellHTML(c) {
@@ -35,7 +35,7 @@ function cellHTML(c) {
 export function charEqHTML() {
   let h = `<div class="eqgrid">`;
   EQ_GRID.forEach((row, r) => row.forEach((c, k) => { if (c) h += `<div class="eqcell" style="grid-row:${r + 1};grid-column:${k + 1}">${cellHTML(c)}<small>${EQ_CELLS[c][0]}</small></div>`; }));
-  h += `<div class="eqme" style="grid-row:2/4;grid-column:2"><img class="px" src="${charPreview(curChar(), 0, 'down')}" alt="내 캐릭터"><small>세트 ${SET_N[G.eqSet || 0]}</small></div></div>`;
+  h += `<div class="eqme" style="grid-row:2/4;grid-column:2"><img class="px" src="${charPreview(curChar(), 0, 'down')}" alt="내 캐릭터"><small>세트 ${SET_N[G.eqSet || 0]}</small></div></div><div class="eqdef">방어력 ${armorDef()} · 받는 피해 −${Math.round((1 - armorMul()) * 100)}%</div>`;
   const c = UIS.chSlot; if (!c) return h;
   const [n, sl] = EQ_CELLS[c];
   if (!sl) return h + `<div class="detail eqd noimg"><div><h3>${n}</h3><p>아직 넣을 수 있는 물건이 없어요.</p></div></div>`;

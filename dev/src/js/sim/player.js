@@ -12,7 +12,7 @@ import { faceTo } from './actions.js';
 import { ctlOf, defineCmd } from './commands.js';
 import { applyBuff, buffCheck, bval } from './cooking.js';
 import { emit } from './events.js';
-import { eqLv, ringV, wearing } from './gear.js';
+import { armorMul, eqLv, ringV, wearing } from './gear.js';
 import { refillHot } from './inventory.js';
 import { dropLost, envLv, unstick } from './survival.js';
 import { onFrame } from './systems.js';
@@ -71,6 +71,7 @@ export const hitRecently = p => p.hitAt != null && G.time - p.hitAt < REGEN_WAIT
 export function hurtPlayer(dmg, sx, sy, kind) {
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
+  dmg *= armorMul(); // v100 방어력
   const p = G.p; if (p.inv > 0 || p.dead > 0 || p.sleep) return; if (p.sit) standUp(); dmg = Math.max(1, Math.round(dmg * (1 - skl('tough') * 0.07) * (1 - bval('def'))));
   p.hp -= dmg; p.hitAt = G.time; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
   emit('shake', 0.28); emit('sfx', 'hurt'); emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');

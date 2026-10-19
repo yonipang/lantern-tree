@@ -522,3 +522,28 @@ def test_weapon_tiers_v99():
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_armor_v100():
+    # v100 성장 확장 3: 방어구 머리·상의·하의 × 6단계, 방어력(받는 피해 × 50/(50+방어력)), 착용 레벨, 특수 옷도 방어력
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,AR_TABLE,AR_DEF,WT_RLV,wearItem,hurtPlayer,armorDef,ICON}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,bad=[],sl=['head','body','legs'];T.AR_TABLE.forEach((row,t)=>row.forEach(([id],k)=>{const it=T.ITEMS[id],rc=T.RECIPES.find(x=>x.out===id);
+              if(!it||it.slot!==sl[k]||it.def!==T.AR_DEF[sl[k]][t]||it.rlv!==T.WT_RLV[t]||!rc||rc.at!=='smelter'||rc.tier!==t||!T.ICON[id])bad.push(id)}));
+              return [T.AR_TABLE.flat().length,bad.join(','),['obsCoat','frostRobe','woolHat','snowBrooch'].map(id=>T.ITEMS[id].def+'/'+(T.ITEMS[id].rlv||1)).join(',')]}""")
+            rec('방어구','머리·상의·하의 × 6단계 18개, 방어력·착용 레벨·장비제작대 단계·아이콘 / 특수 옷 방어력 70%·착용 레벨 없음', r==[18,'','11/1,15/1,1/1,9/1'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.equip={body:null,head:null,neck:null,ring:null,legs:null};G.rpg.lv=1;G.inv[0]={id:'armorIron',c:1};T.wearItem(0);const a=[G.equip.body,G.inv[0]&&G.inv[0].id];
+              G.rpg.lv=12;T.wearItem(0);G.inv[1]={id:'helmIron',c:1};G.inv[2]={id:'legsIron',c:1};T.wearItem(1);T.wearItem(2);
+              const d=T.armorDef();G.p.inv=0;G.p.dead=0;G.p.sleep=null;G.p.sit=null;G.p.hp=500;G.buffs=[];G.rpg.sk={};T.hurtPlayer(100,G.p.x+1,G.p.y);const lost=500-G.p.hp;
+              const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);return [a[0],a[1],T.G.equip.body&&T.G.equip.body.id,T.G.equip.legs&&T.G.equip.legs.id,d,lost]}""")
+            rec('방어구','Lv.1은 철 갑옷 못 입음 → Lv.12면 입음, 하의 칸, 철 한 벌 방어력 15 → 피해 100이 77, 저장·불러오기 그대로', r==[None,'armorIron','armorIron','legsIron',15,77], str(r))
+            await ev(pg,"()=>{__T.openPanel('stat',{tab:'eq'})}"); await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [t.includes('방어력 15'),t.includes('받는 피해 −23%')]}")
+            rec('방어구','캐릭터 창 장비 탭에 「방어력 15 · 받는 피해 −23%」', r==[True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

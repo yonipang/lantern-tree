@@ -2356,7 +2356,8 @@
 "slot": "body",
 "guard": "cold",
 "stack": 1,
-"d": "얼음 동굴의 추위 게이지가 반 속도로 올라요. 입으면 어두운 보랏빛 외투가 보여요."
+"d": "얼음 동굴의 추위 게이지가 반 속도로 올라요. 입으면 어두운 보랏빛 외투가 보여요.",
+"def": 11
 },
 "frostRobe": {
 "n": "서리 비단옷",
@@ -2364,7 +2365,8 @@
 "slot": "body",
 "guard": "hot",
 "stack": 1,
-"d": "용암 동굴의 더위 게이지가 반 속도로 올라요. 입으면 하늘빛 비단옷이 보여요."
+"d": "용암 동굴의 더위 게이지가 반 속도로 올라요. 입으면 하늘빛 비단옷이 보여요.",
+"def": 15
 },
 "turtleCharm": {
 "n": "거북 등껍질 부적",
@@ -2378,7 +2380,8 @@
 "kind": "wear",
 "slot": "head",
 "stack": 1,
-"d": "서리 정령의 눈꽃. 머리에 꽂으면 얼어서 느려지는 시간이 절반이 돼요."
+"d": "서리 정령의 눈꽃. 머리에 꽂으면 얼어서 느려지는 시간이 절반이 돼요.",
+"def": 9
 },
 "smelter": {
 "n": "장비제작대",
@@ -2487,7 +2490,8 @@
 "kind": "wear",
 "slot": "head",
 "stack": 1,
-"d": "머리에 쓰면 얼음 동굴의 추위 게이지가 천천히 올라요 (옷과 함께 쓰면 더 좋아요)."
+"d": "머리에 쓰면 얼음 동굴의 추위 게이지가 천천히 올라요 (옷과 함께 쓰면 더 좋아요).",
+"def": 1
 },
 "woolRug": {
 "n": "양털 러그",
@@ -3402,6 +3406,186 @@
 "dmg": 48,
 "rlv": 40,
 "wtier": 5
+},
+"helmMoss": {
+"n": "이끼 두건",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 1,
+"rlv": 1,
+"wtier": 0,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorMoss": {
+"n": "이끼 조끼",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 2,
+"rlv": 1,
+"wtier": 0,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsMoss": {
+"n": "이끼 바지",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 1,
+"rlv": 1,
+"wtier": 0,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"helmCopper": {
+"n": "구리 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 2,
+"rlv": 5,
+"wtier": 1,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorCopper": {
+"n": "구리 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 4,
+"rlv": 5,
+"wtier": 1,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsCopper": {
+"n": "구리 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 2,
+"rlv": 5,
+"wtier": 1,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"helmIron": {
+"n": "철 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 4,
+"rlv": 12,
+"wtier": 2,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorIron": {
+"n": "철 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 7,
+"rlv": 12,
+"wtier": 2,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsIron": {
+"n": "철 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 4,
+"rlv": 12,
+"wtier": 2,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"helmCrystal": {
+"n": "수정 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 6,
+"rlv": 20,
+"wtier": 3,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorCrystal": {
+"n": "수정 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 11,
+"rlv": 20,
+"wtier": 3,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsCrystal": {
+"n": "수정 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 6,
+"rlv": 20,
+"wtier": 3,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"helmGold": {
+"n": "황금 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 9,
+"rlv": 30,
+"wtier": 4,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorObsidian": {
+"n": "흑요석 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 16,
+"rlv": 30,
+"wtier": 4,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsGold": {
+"n": "황금 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 9,
+"rlv": 30,
+"wtier": 4,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"helmFrost": {
+"n": "서리 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 13,
+"rlv": 40,
+"wtier": 5,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorFrost": {
+"n": "서리 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 22,
+"rlv": 40,
+"wtier": 5,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsFrost": {
+"n": "서리 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 13,
+"rlv": 40,
+"wtier": 5,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
 }
 },
 "OBJ": {
@@ -9958,6 +10142,324 @@
 "at": "smelter",
 "cat": "weapon",
 "tier": 5
+},
+{
+"out": "helmMoss",
+"n": 1,
+"req": [
+[
+"fiber",
+6
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 0
+},
+{
+"out": "armorMoss",
+"n": 1,
+"req": [
+[
+"fiber",
+10
+],
+[
+"rope",
+2
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 0
+},
+{
+"out": "legsMoss",
+"n": 1,
+"req": [
+[
+"fiber",
+8
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 0
+},
+{
+"out": "helmCopper",
+"n": 1,
+"req": [
+[
+"copperBar",
+3
+],
+[
+"fiber",
+2
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 1
+},
+{
+"out": "armorCopper",
+"n": 1,
+"req": [
+[
+"copperBar",
+5
+],
+[
+"fiber",
+4
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 1
+},
+{
+"out": "legsCopper",
+"n": 1,
+"req": [
+[
+"copperBar",
+4
+],
+[
+"fiber",
+3
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 1
+},
+{
+"out": "helmIron",
+"n": 1,
+"req": [
+[
+"ironBar",
+3
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 2
+},
+{
+"out": "armorIron",
+"n": 1,
+"req": [
+[
+"ironBar",
+5
+],
+[
+"rope",
+2
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 2
+},
+{
+"out": "legsIron",
+"n": 1,
+"req": [
+[
+"ironBar",
+4
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 2
+},
+{
+"out": "helmCrystal",
+"n": 1,
+"req": [
+[
+"crystal",
+4
+],
+[
+"ironBar",
+1
+],
+[
+"cryGem",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 3
+},
+{
+"out": "armorCrystal",
+"n": 1,
+"req": [
+[
+"crystal",
+7
+],
+[
+"ironBar",
+2
+],
+[
+"cryGem",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 3
+},
+{
+"out": "legsCrystal",
+"n": 1,
+"req": [
+[
+"crystal",
+5
+],
+[
+"ironBar",
+2
+],
+[
+"cryGem",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 3
+},
+{
+"out": "helmGold",
+"n": 1,
+"req": [
+[
+"goldBar",
+3
+],
+[
+"obsidian",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 4
+},
+{
+"out": "armorObsidian",
+"n": 1,
+"req": [
+[
+"goldBar",
+4
+],
+[
+"obsidian",
+3
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 4
+},
+{
+"out": "legsGold",
+"n": 1,
+"req": [
+[
+"goldBar",
+3
+],
+[
+"obsidian",
+2
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 4
+},
+{
+"out": "helmFrost",
+"n": 1,
+"req": [
+[
+"frostShard",
+4
+],
+[
+"goldBar",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 5
+},
+{
+"out": "armorFrost",
+"n": 1,
+"req": [
+[
+"frostShard",
+7
+],
+[
+"goldBar",
+2
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 5
+},
+{
+"out": "legsFrost",
+"n": 1,
+"req": [
+[
+"frostShard",
+5
+],
+[
+"goldBar",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 5
 }
 ],
 "ENEMY": {
@@ -11942,7 +12444,25 @@
 "daggerSpirit": 3,
 "spearSpirit": 3,
 "hammerSpirit": 3,
-"staffSpirit": 3
+"staffSpirit": 3,
+"helmMoss": 0,
+"armorMoss": 0,
+"legsMoss": 0,
+"helmCopper": 0,
+"armorCopper": 0,
+"legsCopper": 0,
+"helmIron": 1,
+"armorIron": 1,
+"legsIron": 1,
+"helmCrystal": 2,
+"armorCrystal": 2,
+"legsCrystal": 2,
+"helmGold": 3,
+"armorObsidian": 3,
+"legsGold": 3,
+"helmFrost": 3,
+"armorFrost": 3,
+"legsFrost": 3
 },
 "TIERNAME": [
 "나무 곡괭이",
@@ -17774,6 +18294,24 @@ null,
 "spearSpirit": "[그림 16x16 96edf0aa]",
 "hammerSpirit": "[그림 16x16 89115f9c]",
 "staffSpirit": "[그림 16x16 75f17704]",
+"helmMoss": "[그림 16x16 ea21da72]",
+"armorMoss": "[그림 16x16 23600e45]",
+"legsMoss": "[그림 16x16 1433056f]",
+"helmCopper": "[그림 16x16 80344878]",
+"armorCopper": "[그림 16x16 b1faef52]",
+"legsCopper": "[그림 16x16 7182f3d1]",
+"helmIron": "[그림 16x16 c411fd59]",
+"armorIron": "[그림 16x16 9cbb75bb]",
+"legsIron": "[그림 16x16 58028e95]",
+"helmCrystal": "[그림 16x16 bb4c86f7]",
+"armorCrystal": "[그림 16x16 26af5e8a]",
+"legsCrystal": "[그림 16x16 bc73c628]",
+"helmGold": "[그림 16x16 b6c9995d]",
+"armorObsidian": "[그림 16x16 7772bd87]",
+"legsGold": "[그림 16x16 c89517c1]",
+"helmFrost": "[그림 16x16 a739053c]",
+"armorFrost": "[그림 16x16 7497c75e]",
+"legsFrost": "[그림 16x16 45cc62e9]",
 "arrowStone": "[그림 16x16 ab61a433]",
 "arrowCopper": "[그림 16x16 3051e2a1]",
 "arrowIron": "[그림 16x16 a3ec5cc2]",
@@ -20207,6 +20745,24 @@ null
 "daggerSpirit": "4655d52c",
 "spearSpirit": "96edf0aa",
 "hammerSpirit": "89115f9c",
-"staffSpirit": "75f17704"
+"staffSpirit": "75f17704",
+"helmMoss": "ea21da72",
+"armorMoss": "23600e45",
+"legsMoss": "1433056f",
+"helmCopper": "80344878",
+"armorCopper": "b1faef52",
+"legsCopper": "7182f3d1",
+"helmIron": "c411fd59",
+"armorIron": "9cbb75bb",
+"legsIron": "58028e95",
+"helmCrystal": "bb4c86f7",
+"armorCrystal": "26af5e8a",
+"legsCrystal": "bc73c628",
+"helmGold": "b6c9995d",
+"armorObsidian": "7772bd87",
+"legsGold": "c89517c1",
+"helmFrost": "a739053c",
+"armorFrost": "7497c75e",
+"legsFrost": "45cc62e9"
 }
 }
