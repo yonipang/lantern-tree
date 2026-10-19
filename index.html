@@ -3049,26 +3049,26 @@ for (const id in SUMMON) { const [n, k, req] = SUMMON[id];
   RECIPES.push(Rc(id, 1, req, 'forge', 'tool')); }
 
 const GUIDE = [
-  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '초록 이끼가 덮인 기둥 앞에서 손 버튼(PC는 E)을 눌러요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
-  { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [가방] → [제작] 탭 → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
-  { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '횃불은 어디서나 만들 수 있어요. 밝은 곳에는 몬스터가 생기지 않아요.', done: () => G.stats.torch > 0 },
+  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '등불나무 아래에서 기억 없이 깨어났어요. 초록 이끼가 덮인 기둥 앞에서 손 버튼(PC는 E)을 눌러 나무를 모아요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
+  { t: () => '제작에서 작업대 만들고 설치하기', h: '등불지기들이 살던 마을 터예요. 오른쪽 위 [가방] → [제작] 탭 → 작업대. 만든 뒤 단축칸에서 고르고 빈 땅을 바라보며 눌러요.', done: () => G.stats.bench },
+  { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '그림자는 빛이 꺼진 어둠에서 생겨요. 횃불은 어디서나 만들 수 있고, 밝은 곳에는 그림자가 들어오지 못해요.', done: () => G.stats.torch > 0 },
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽을 찾아 캐요. 흙은 용광로 재료가 돼요.', done: () => G.stats.copperOre >= 6 },
   { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만든 뒤 설치하고, 용광로를 열어 구리괴를 만들어요.', done: () => G.stats.copperBar >= 1 },
   { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·돌로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
-  { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비를 먼저 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
-  { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼해요. 음식을 넉넉히 챙기고, 점프 후 착지할 때 멀리 떨어져요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
-  { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '빨간 점선이 보이면 옆으로 피해요! 벽에 부딪혀 기절했을 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
-  { t: () => `빛씨앗 모으기 (${Math.min(3, G.stats.seedsFound)}/3)`, h: '봉인이 풀린 두 제단의 씨앗과, 말랑대왕이 남긴 씨앗을 모아요.', done: () => G.stats.seedsFound >= 3,
+  { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '마을 창고를 지키던 동물이 주인을 잃고 커진 거예요. 화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비를 먼저 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
+  { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '말랑대왕도 창고를 지키던 녀석이에요. 화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼해요. 음식을 넉넉히 챙기고, 점프 후 착지할 때 멀리 떨어져요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
+  { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '수정 동굴은 등불지기들이 빛을 수정에 담아 두던 보관소예요. 빨간 점선이 보이면 옆으로 피해요! 벽에 부딪혀 기절했을 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
+  { t: () => `빛씨앗 모으기 (${Math.min(3, G.stats.seedsFound)}/3)`, h: '빛씨앗은 등불지기들이 맡겨 둔 나무의 빛이에요. 봉인이 풀린 두 제단의 씨앗과, 말랑대왕이 남긴 씨앗을 모아요.', done: () => G.stats.seedsFound >= 3,
     target: () => { const p = G.p; const c = [SA, SB].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
-  { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/3)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 3, target: () => ({ x: CX + .5, y: CY + .5 }) },
+  { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/3)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요. 나무가 한 단계 깨어날 때마다 옛 기억 한 장면을 보여 줘요.', done: () => G.treeSeeds >= 3, target: () => ({ x: CX + .5, y: CY + .5 }) },
   { t: () => '수정 핵으로 수정 곡괭이 만들기', h: '수정골렘이 남긴 수정 핵으로 석영 장비제작대(장비제작대를 석영 단계까지 올려요)에서 만들어요. 남쪽 용암 동굴과 서쪽 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.', done: () => ['pickCrystal', 'pickGold', 'pickStar'].some(hasItem) || beat('turtle') || beat('spirit') },
-  { t: () => '남쪽 용암 동굴의 용암 거북 물리치기', h: '등껍질에 숨어 굴러올 때는 거의 다치지 않아요. 벽에 튕기다 멈추면 그때 공격해요! 바닥이 주황색으로 반짝이면 곧 용암이 고여요.', done: () => beat('turtle'), target: () => BOSSES.turtle.home() },
-  { t: () => '서쪽 얼음 동굴의 서리 정령 물리치기', h: '얼음 고리는 빈틈 쪽으로 빠져나가요. 정령이 사라지면 곁에 다시 나타나 얼음을 터뜨려요. 점선 원 밖으로 피해요!', done: () => beat('spirit'), target: () => BOSSES.spirit.home() },
+  { t: () => '남쪽 용암 동굴의 용암 거북 물리치기', h: '용암 동굴은 등불지기들의 대장간이었어요. 거북은 화로를 지키던 수호자인데, 누구를 위해 지키는지 잊었어요. 등껍질에 숨어 굴러올 때는 거의 다치지 않아요. 벽에 튕기다 멈추면 그때 공격해요! 바닥이 주황색으로 반짝이면 곧 용암이 고여요.', done: () => beat('turtle'), target: () => BOSSES.turtle.home() },
+  { t: () => '서쪽 얼음 동굴의 서리 정령 물리치기', h: '얼음 동굴에는 등불지기들이 시간을 얼려 잠들어 있고, 정령이 그 잠을 지켜요. 얼음 고리는 빈틈 쪽으로 빠져나가요. 정령이 사라지면 곁에 다시 나타나 얼음을 터뜨려요. 점선 원 밖으로 피해요!', done: () => beat('spirit'), target: () => BOSSES.spirit.home() },
   { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.max(0, Math.min(2, G.stats.seedsFound - 3))}/2)`, h: '용암 거북과 서리 정령이 쓰러지면 빛씨앗을 떨어뜨려요. 예전 세이브라면 보스방 가운데 제단에 놓여 있을 수도 있어요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
     target: () => { const p = G.p; const c = [SL, SI].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
-  { t: () => `등불나무의 마지막 등불 밝히기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요.', done: () => G.treeSeeds >= 5, target: () => ({ x: CX + .5, y: CY + .5 }) },
-  { t: () => '낚시하고 지역 가구로 꾸미기', h: '물가에서 낚시를 하고, 제작에서 이끼·버섯·수정 세트 가구를 만들어 나만의 아지트를 꾸며 보세요.', done: () => false },
+  { t: () => `등불나무의 마지막 등불 밝히기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요. 다섯 등불이 모두 밝아지면 나무가 마지막 기억을 보여 줘요.', done: () => G.treeSeeds >= 5, target: () => ({ x: CX + .5, y: CY + .5 }) },
+  { t: () => '등불나무 곁에서 살아가기', h: '나무 아래 가장 깊은 곳에서 무언가가 깨어나려 해요 (다음 이야기에서 이어져요). 그동안 물가에서 낚시를 하고, 이끼·버섯·수정 세트 가구로 나만의 마을을 꾸며 보세요.', done: () => false },
 ];
 // quest ids, rewards and xp (main story, in order)
 const Q_META = [['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch', 4]], 10], ['torch', [['berrySeed', 3], ['rope', 2]], 10], ['ore', [['copperOre', 3], ['resin', 1]], 15], ['bar', [['resin', 2], ['gel', 2]], 15],
@@ -3677,6 +3677,17 @@ SK_CAT.length = 0; SK_CAT.push(
   ['magic', '마법', ['bolt', 'heal', 'frostRing', 'fireball', 'chain', 'lightShield', 'orbFriend', 'arcane']],
   ['life', '생활', ['quake', 'miner', 'gourmet', 'lucky', 'farmer', 'fisher', 'chef', 'porter', 'animalFriend']],
   ['ult', '큰 스킬', ['dawnLight', 'starRain', 'awaken', 'earthSplit']]);
+// ================= v103 이야기: 등불나무의 기억 장면 (dev/design/세계관-NPC.md) =================
+// 빛씨앗을 심어 나무가 한 단계 깨어날 때마다 나무가 옛 기억 한 장면을 보여 줘요 (sim/tree.js → emit('memory', 단계) → ui/panels.js 'memory' 창).
+// 본 장면은 G.stats.mem에 남아 캐릭터 창 「등불」 탭에서 다시 읽을 수 있어요. 글은 Claude가 임시로 씀(【검토 중】 사용자가 고칠 수 있음).
+const MEMORY = {
+  1: { t: '첫 번째 기억 · 어린 나무', s: '누군가의 손이 아직 작은 나무에 등불 하나를 겁니다.<br>「네가 자라면, 이 땅은 다시 어둡지 않을 거야.」<br>그 손이 든 등불은… 어쩐지 낯익어요.' },
+  2: { t: '두 번째 기억 · 등불지기들', s: '나무 둘레에 사람들이 모여 있어요. 밭을 가꾸고, 등불을 손질하고, 웃고 있어요.<br>빛이 닿는 곳에는 그림자가 들어오지 못했어요.<br>사람들은 서로를 <em>등불지기</em>라고 불렀어요.' },
+  3: { t: '세 번째 기억 · 수정에 담은 빛', s: '수정 동굴. 등불지기들이 수정 하나하나에 빛을 담아 두고 있어요.<br>「무언가가 깨어나려 해. 우리가 가둬야 해.」<br>누군가의 낮은 목소리가 들렸어요.' },
+  4: { t: '네 번째 기억 · 얼어붙은 잠', s: '얼음 동굴. 등불지기들이 스스로 얼음 속에 들어가 잠들어요.<br>「나무가 다시 깨어날 때까지.」<br>줄지어 잠든 자리 가운데, <em>빈자리 하나</em>가 보였어요.' },
+  5: { t: '다섯 번째 기억 · 나무가 당신에게', s: '다섯 등불이 모두 밝아진 순간, 등불나무가 처음으로 <em>당신의 손</em>에 반응해 저절로 빛났어요.<br>나무 아래, 땅속 가장 깊은 곳에서 무언가가 뒤척이는 소리가 들려요.<br><span style="color:var(--muted)">(마지막 장은 가장 깊은 곳에서 — 다음 이야기에서 이어져요)</span>' },
+};
+const MEM_MAX = 5;
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -5379,9 +5390,11 @@ function insertSeeds() {
   const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; const from = treeStage(); removeItem('lightSeed', n); G.treeSeeds += n; markLight();
   TREEFX.grow = { t: 0, from, to: treeStage() }; emit('shake', .15);
   emit('sfx', 'seed'); emit('puff', CX + .5, CY - 1, '#ffd25c', 30, 4, 2); G.p.hp = maxHp(); gainXp(50 * n);
-  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); emit('win', 'win2'); }
-  else if (G.treeSeeds >= 3 && !G.won) { G.won = true; emit('win', 'win'); }
-  else emit('toast', `등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/${G.treeSeeds < 3 ? 3 : 5})`, 'good');
+  // v103: 단계가 오를 때마다 나무가 옛 기억 한 장면을 보여 줘요 (엔딩 두 갈래는 하나로 — 마지막 장면은 가장 깊은 곳에서, v108). won·won2는 옛 세이브·축제 케이크 해금을 위해 그대로 둬요
+  if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); }
+  else if (G.treeSeeds >= 3 && !G.won) G.won = true;
+  G.stats.mem = G.stats.mem || {}; const st = treeStage(); if (st > from && !G.stats.mem[st]) { G.stats.mem[st] = 1; emit('memory', st); }
+  else emit('toast', `등불나무가 조금 더 밝아졌어요 (${G.treeSeeds}/5)`, 'good');
 }
 // ================= 매 프레임 진행(update → sim/systems.js 순서표), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
@@ -7945,7 +7958,8 @@ onEvent('refresh', onlyMe(kind => { if (panel && panel.kind === kind) renderPane
 // v76: 창을 연 채 체력이 줄면 (맞음·배고픔·더위·추위) 창은 그대로 두고 화면 가장자리를 빨갛게 번쩍 + 창의 체력 막대·닫기 버튼 강조
 let hitT = 0;
 onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtEdge'), sh = $('#sheet'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); if (!panel) return; /* v91: 건축 중에도 빨간 번쩍 */ sh.classList.add('hit'); clearTimeout(hitT); hitT = setTimeout(() => sh.classList.remove('hit'), 1500); }));
-onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창
+onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창 (v103부터는 안 씀)
+onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----
 onEvent('fade', onlyMe(mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기
@@ -8078,7 +8092,7 @@ function renderPanel() {
   } else if (k === 'map') {
     h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${mapIsAll() ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><div class="mapwrap"><canvas id="mapCv" data-a="mapPin" width="600" height="600"></canvas><div class="mapctl"><button class="btn ghost" data-a="mapZ" data-i="1" type="button" style="font-size:32px" aria-label="확대">+</button><button class="btn ghost" data-a="mapZ" data-i="-1" type="button" style="font-size:32px" aria-label="축소">−</button><button class="btn ghost" data-a="mapMe" type="button" aria-label="내 위치로">나</button></div></div>${navBarHTML()}${mapLegendHTML()}${regionMatHTML()}</div>`;
   } else if (k === 'tree') {
-    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
+    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">옛날 <em>등불지기</em>들이 돌보던 등불나무가 잠들어 있어요. 등불지기들이 맡겨 둔 나무의 빛, <em>빛씨앗</em>을 심을 때마다 나무가 한 단계 깨어나고 빛이 넓어져요. 깨어날 때마다 옛 기억 한 장면을 보여 줘요.</p><p class="prose" style="color:var(--muted)">빛씨앗은 동쪽 동굴의 말랑대왕, 서쪽 버섯숲과 북쪽 수정동굴의 제단, 그리고 남쪽 용암·서쪽 얼음 동굴 깊은 곳의 수호자들이 품고 있어요.</p></div>`;
   } else if (k === 'menu') {
     const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:16px">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
     const marks = G.marks || [];
@@ -8129,6 +8143,9 @@ function renderPanel() {
     if (Object.keys(R.sk).length) h += `<div class="menu-list"><button type="button" class="btn ${UIS.skAsk ? 'warn' : 'ghost'}" data-a="skReset">${UIS.skAsk ? '정말 스킬 포인트를 모두 돌려받을까요?' : '스킬 다시 배우기 (무료)'}</button></div>`;
     h += `</div>`;
     }
+  } else if (k === 'memory') {
+    const m = MEMORY[panel.stage] || MEMORY[1];
+    h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < (G.treeSeeds | 0) ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${m.t}</h2><p class="prose" style="text-align:left">${m.s}</p>${panel.stage === 5 ? `<p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p>` : ''}<button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">${panel.stage === 5 ? '계속 모험하기' : '돌아가기'}</button></div>`;
   } else if (k === 'win2') {
     h += `<div class="sh-body" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">다섯 등불이 모두 밝아졌어요!</h2><p class="prose">용암과 얼음 깊은 곳까지 빛이 닿았어요. 땅속 세상 전체가 등불나무의 품 안에서 반짝여요. 끝까지 함께해 줘서 고마워요!</p><p class="prose" style="color:var(--muted)">전설 장비를 모으고, 남은 도전 퀘스트를 깨고, 나만의 정원을 마음껏 꾸며 보세요.</p><p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">계속 모험하기</button></div>`;
   } else if (k === 'win') {
@@ -8414,7 +8431,8 @@ function lampHTML() {
   return `<div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < n ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div>
     <p class="prose" style="text-align:center;color:var(--amber)">등불나무 · ${TREE_STAGE[st]} (${st + 1}/6단계) · 빛씨앗 ${n}/5</p>
     <div class="lbl">지금 받는 효과</div><div class="keys"><b>몬스터</b><span>나무 둘레 ${13 + n * 4}칸 안에는 몬스터가 생기지 않아요</span><b>나무 빛</b><span>반지름 ${7 + n * 3.5}칸</span><b>축복</b><span>${bl ? `나무 둘레 ${bl}칸 안의 작물이 20% 빨리 자라요` : '아직 없어요 (빛씨앗 3개부터)'}</span></div>
-    <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요!' : n < max ? `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 돼요 (${n}/${max}${max === 3 ? ' · 셋을 모두 심으면 나무가 깨어나요' : ' · 다섯을 모두 심으면 끝까지 밝아져요'})` : '빛씨앗을 더 찾아 등불나무에 심어요'}</p>`;
+    <div class="lbl">다음 목표</div><p class="prose">${n >= 5 ? '다섯 등불이 모두 밝아졌어요. 나무 아래 가장 깊은 곳에서 무언가가 깨어나려 해요…' : `빛씨앗을 하나 더 심으면 ${TREE_STAGE[Math.min(5, st + 1)]} 단계가 되고, 나무가 옛 기억 한 장면을 보여 줘요 (${n}/5)`}</p>
+    <div class="lbl">나무의 기억</div><div class="menu-list">${[1, 2, 3, 4, 5].map(k => (G.stats.mem || {})[k] ? `<button type="button" class="btn ghost" data-a="memory" data-i="${k}">${MEMORY[k].t}</button>` : `<button type="button" class="btn ghost" disabled>${k}번째 기억 · ???</button>`).join('')}</div>`;
 }
 // ---- 가방 탭 ----
 const pouchOpen = () => { try { return localStorage.getItem('lantern-tree-pouch') === '1'; } catch (e) { return false; } };
@@ -8837,6 +8855,7 @@ function onSheetClick(e) {
   if (a === 'save') { saveLocal(); return; }
   if (a === 'escape') { if (!UIS.confirmEsc) { UIS.confirmEsc = true; renderPanel(); return; } UIS.confirmEsc = false; closePanel(); if (runCmd({ k: 'escape' })) saveLocal(true); return; }
   if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
+  if (a === 'memory') { openPanel('memory', { stage: +i }); return; } // v103 나무의 기억 다시 보기
   if (a === 'export') { exportSave(); return; }
   if (a === 'clGoogle') { cloudAuth('google'); return; }
   if (a === 'clEmailT') { UIS.clEmail = !UIS.clEmail; renderPanel(); return; }
