@@ -12,6 +12,7 @@ export const FRAME_ORDER = [
   'wild',     // 들짐승·펫 (features/gear-animals.js)
   'enemies', 'bosses', // 몬스터·보스 (game/update.js)
   'pshots',   // 내 화살·마법 (game/actions.js)
+  'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'skills102', // v102 빛 구슬 친구·빛 방패·각성·질주 시간
   'fish',     // 낚시 (game/combat.js)
   'drops', 'fx', // 떨어진 물건 줍기 · 반짝이·떠오르는 글자 (game/update.js)

@@ -634,3 +634,43 @@ def test_skills_v102():
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_npc_v104():
+    # v104 이야기 2: 그림자 고치(지역별 자리·옛 세계에도), 그림자 조각(빛 안 2배, 고치 둘레), 3번 치면 구출 → 마을 자리, 말 걸기 대화
+    H2=HOOK.replace("computeLight}","computeLight,npcObjs,villageSpot,NPC_IDS,NPCS,cocoonTarget,hitCocoon,curWeapon,mkEnemy,hitEnemy,placeCocoons,decide,perform,runFrame,get SPR(){return SPR}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.npcObjs();const bad=L.filter(e=>{const N=T.NPCS[e.o.npc],d=Math.hypot(e.x-T.CX,e.y-T.CY);return G.biome[e.i]!==N.b||d<N.minD||d>N.maxD||T.G.wall[e.i]});
+              return [L.length,L.map(e=>e.o.npc).sort().join(','),bad.length,!!T.SPR.obj.cocoon,T.NPC_IDS.every(id=>T.SPR['npc_'+id]),G.stats.npcV]}""")
+            rec('고치','새 세계에 고치 5개(학자 빼고)가 각자 지역·거리 안에, 그림 있음, 놓았다는 표시(npcV)', r[0]==5 and r[1]=='cook,farmer,guide,shepherd,smith' and r[2]==0 and r[3] and r[4] and r[5]==1, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.npcV;s.objs=s.objs.filter(([i,o])=>o.t!=='cocoon');
+              T.deserialize(s);const n1=T.npcObjs().length;const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return [n1,T.npcObjs().length,T.G.stats.npcV]}""")
+            rec('옛 세계','고치가 없는 옛 세이브도 불러올 때 한 번 놓고(npcV), 다시 불러와도 더 안 놓음', r[0]==5 and r[1]==5 and r[2]==1, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const c=T.npcObjs().find(e=>e.o.npc==='farmer');G.enemies.length=0;G.p.x=c.x+.5;G.p.y=c.y+1.6;G.p.face={x:0,y:-1};G.p.dead=0;G.rpg.lv=40;
+              for(let k=0;k<30;k++)T.runFrame(1/30);const guards=G.enemies.filter(e=>e.k==='shadowBit');const far=guards.every(e=>Math.hypot(e.x-c.x-.5,e.y-c.y-.5)<8);
+              const e=guards[0];let a=null;if(e){for(let y=c.y-2;y<=c.y+2;y++)for(let x=c.x-2;x<=c.x+2;x++){const i=T.idx(x,y);G.objs.delete(i)}G.objs.set(c.i,c.o);G.stats.npcV=1;
+                const h0=e.hp;T.hitEnemy(e,10,false,0);a=h0-e.hp}
+              return [guards.length>=2,far,a]}""")
+            rec('그림자 조각','고치 가까이 가면 그림자 조각이 2~3마리 생기고 고치 둘레에 머묾 (어두운 곳에선 피해 그대로 10)', r[0] and r[1] and r[2]==10, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const c=T.npcObjs().find(e=>e.o.npc==='farmer');G.enemies.length=0;G.drops.length=0;G.p.x=c.x+.5;G.p.y=c.y+1.6;G.p.face={x:0,y:-1};G.inv.fill(null);G.inv[0]={id:'swordWood',c:1};G.sel=0;
+              const w=T.curWeapon();const out=[];for(let k=0;k<3;k++){const tg=T.cocoonTarget({x:c.x,y:c.y});out.push(!!tg);if(tg)T.hitCocoon(tg,w)}
+              const gone=!G.objs.get(c.i);const v=T.npcObjs().find(e=>e.o.npc==='farmer');return [out.join(','),gone,v&&v.o.t,v&&Math.round(Math.hypot(v.x-T.CX,v.y-T.CY)),G.drops.some(d=>d.id==='cocoonBit'),G.stats.rescued&&G.stats.rescued.farmer]}""")
+            rec('구출','고치를 3번 치면 부서지고 도라 할머니가 등불나무 곁(10~16칸) 마을 자리에 서요, 그림자 실 드롭, 구출 기록', r[0]=='true,true,true' and r[1] and r[2]=='npc' and 9<=r[3]<=17 and r[4] and r[5]==1, str(r))
+            await pg.wait_for_timeout(1500)
+            r=await ev(pg,"()=>{const t=document.querySelector('#sheet');return [!!t&&t.innerText.includes('도라 할머니'),!!document.querySelector('#sheet [data-a=talkNext]')]}")
+            rec('대화','구하면 잠시 뒤 인사 대화 창(다음 버튼)', r==[True,True], str(r))
+            await pg.wait_for_timeout(600); await ev(pg,"()=>{document.querySelector('#sheet [data-a=talkNext]').click()}"); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [t.includes('등불나무 곁에서 지낼게'),!!document.querySelector('#sheet [data-a=close]')]}")
+            rec('대화','다음 → 두 번째 줄, 마지막엔 잘 가요', r==[True,True], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const v=T.npcObjs().find(e=>e.o.npc==='farmer');G.p.x=v.x+.5;G.p.y=v.y+1.6;G.p.face={x:0,y:-1};G.sel=-1;const a=T.decide();if(a.k==='use')T.perform(a);return [a.k,a.u,a.lbl]}""")
+            await pg.wait_for_timeout(300)
+            r2=await ev(pg,"()=>{const t=document.querySelector('#sheet');return t?t.innerText.includes('밭은 흙이 반이야'):false}")
+            rec('대화','마을 사람 앞에서 상호작용 = 말 걸기 → 직책 이야기', r[:2]==['use','talk'] and r[2]=='말 걸기' and r2, str(r)+str(r2))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

@@ -18,6 +18,8 @@ import { isBroken, selItem, wear } from './inventory.js';
 import { atkSpd, gainXp, magicMul, maxHp, meleeMul, rangeMul, RS, skl, standUp } from './player.js';
 import { onFrame } from './systems.js';
 import { monDmg, onEnemyDie } from './monsters.js';
+import { cocoonTarget, hitCocoon } from './npc.js';
+import { isLit } from './enemies.js';
 import { idx, inB, W } from '../world/map.js';
 export function bestArrow() { for (const id of ARROW_ORD) { const k = G.inv.findIndex(s => s && s.id === id); if (k >= 0) return k; } return -1; }
 export function takeArrow() { const k = bestArrow(); if (k < 0) return null; const s = G.inv[k], a = ITEMS[s.id].arw; s.c--; if (s.c <= 0) G.inv[k] = null; emit('inv'); G.stats.arrows = (G.stats.arrows || 0) + 1; return a; }
@@ -126,7 +128,7 @@ export function dotTick(e, dt, boss) {
 export function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
 export function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
 export function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
   if (fx === 'split') applyFx(e, fx, dmg);
   if (e.hp <= 0) enemyDie(e);
@@ -141,7 +143,7 @@ export function doAttack() {
   let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
   if (en && !ctlOf(p).aim) faceTo(en.x - p.x, en.y - p.y); // the nearest monster first
-  if (!en && !nearestEnemy(4)) { const tg = recoverTarget(); if (tg) { hitRecover(tg, w); G.atkT = .32; return; } }
+  if (!en && !nearestEnemy(4)) { const ct = cocoonTarget(targetTile()); if (ct) { hitCocoon(ct, w); G.atkT = .32; return; } const tg = recoverTarget(); if (tg) { hitRecover(tg, w); G.atkT = .32; return; } } // v104 그림자 고치
   G.atkT = swingAttack() === false ? .3 : atkCd();
 }
 export function los(x0, y0, x1, y1) { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, x = x0, y = y0; while (true) { if (x === x1 && y === y1) return true; if (!(x === x0 && y === y0) && G.wall[idx(x, y)]) return false; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }

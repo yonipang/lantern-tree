@@ -105,6 +105,7 @@ export function onSheetClick(e) {
   if (a === 'save') { saveLocal(); return; }
   if (a === 'escape') { if (!UIS.confirmEsc) { UIS.confirmEsc = true; renderPanel(); return; } UIS.confirmEsc = false; closePanel(); if (runCmd({ k: 'escape' })) saveLocal(true); return; }
   if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
+  if (a === 'talkNext') { panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v104
   if (a === 'memory') { openPanel('memory', { stage: +i }); return; } // v103 나무의 기억 다시 보기
   if (a === 'export') { exportSave(); return; }
   if (a === 'clGoogle') { cloudAuth('google'); return; }
