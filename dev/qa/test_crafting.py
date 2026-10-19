@@ -385,7 +385,7 @@ def test_weapons_skills():
             b=await p.chromium.launch()
             ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             # ---- quest order ----
-            r=await ev(pg,"()=>{const G=__T.G;Object.assign(G.stats,{wood:6,bench:1,torch:1,copperOre:6,copperBar:1,forge:1});__T.addItem('pickCopper',1);G.guide=0;__T.checkGuide();const a=document.querySelector('#goalTxt').textContent;G.bossDead.queen=true;__T.checkGuide();const b=document.querySelector('#goalTxt').textContent;return [a,b]}")
+            r=await ev(pg,"()=>{const G=__T.G;Object.assign(G.stats,{naruMet:1,wood:6,bench:1,torch:1,copperOre:6,copperBar:1,forge:1});__T.addItem('pickCopper',1);G.guide=0;__T.checkGuide();const a=document.querySelector('#goalTxt').textContent;G.bossDead.queen=true;__T.checkGuide();const b=document.querySelector('#goalTxt').textContent;return [a,b]}")
             rec('퀘스트','버섯 여왕이 먼저', '버섯 여왕' in r[0], r[0]); rec('퀘스트','여왕 다음 말랑대왕', '말랑대왕' in r[1], r[1])
             r=await ev(pg,"()=>{const G=__T.G;G.bossDead.queen=false;G.bossDead.slime=true;const s=__T.serialize();s.guide=8;__T.deserialize(s);__T.checkGuide();return document.querySelector('#goalTxt').textContent}")
             rec('퀘스트','예전 세이브(말랑대왕만 잡음)도 여왕부터 안내', '버섯 여왕' in r, r)
