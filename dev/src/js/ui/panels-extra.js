@@ -19,7 +19,7 @@ export const rarName = id => { const c = rarCol(id), n = ITEMS[id].n; return c ?
 export const otherSetSlots = () => (G.eqSets || []).flatMap((x, k) => k === (G.eqSet || 0) || !x || !x.e ? [] : EQ_SLOTS.map(([sl, n]) => ({ s: x.e[sl], i: `s:${k}:${sl}`, tag: `세트 ${SET_N[k]} · ${n}` })).filter(o => o.s));
 export function upgListHTML(ok) {
   const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...otherSetSlots(), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
-  let h = `<div class="sh-body"><p class="hint">${ok ? `재료를 넣어 장비를 강화해요 (최대 +${UPG_MAX}). 무기는 공격력, 곡괭이는 캐는 힘, 옷·장신구·반지는 효과가 좋아져요.` : '장비제작대 근처에서 강화할 수 있어요.'}</p><div class="list">`;
+  let h = `<div class="sh-body">${ok ? '' : '<p class="hint">장비제작대 근처에서 강화할 수 있어요.</p>'}<div class="list">`;
   if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">강화할 장비가 없어요</p>`;
   for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && cost.every(([id, c]) => availCount(id) >= c);
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
@@ -34,11 +34,11 @@ export function catchLoop() { if (!panel || panel.kind !== 'catch') return; cons
     g.fillStyle = inZone(a, c) ? '#7fe0b5' : '#ffd25c'; g.beginPath(); g.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, 11, 0, 6.283); g.fill();
     const im = animalImg(c.w.k); if (im) { g.imageSmoothingEnabled = false; g.drawImage(im, cx - 32, cy - 32, 64, 64); } }
   requestAnimationFrame(catchLoop); }
-export function catchHTML() { const c = panel, W2 = ANIMALS[c.w.k]; return head(`${W2.n} 포획`, 'lasso') + `<div class="sh-body" style="text-align:center"><p class="hint">빙글빙글 도는 밧줄이 <b style="color:#7fe0b5">초록 구간</b>에 왔을 때 던져요. 세 번 성공하면 친구가 되고, 두 번 놓치면 도망가요.</p>
+export function catchHTML() { const c = panel, W2 = ANIMALS[c.w.k]; return head(`${W2.n} 포획`, 'lasso') + `<div class="sh-body" style="text-align:center">
   <canvas id="catchCv" width="220" height="220" style="width:176px;height:176px;margin:4px auto;display:block"></canvas><p class="prose">성공 ${'●'.repeat(c.hits)}${'○'.repeat(3 - c.hits)} · 실패 ${'✕'.repeat(c.miss)}${'·'.repeat(2 - c.miss)}</p>
   <button type="button" class="btn" data-a="catchThrow" style="min-height:52px;font-size:16px;width:100%">던지기!</button></div>`; }
 export function petHTML() { const own = Object.keys(ANIMALS).filter(k => ANIMALS[k].pet && (G.pets || {})[k]);
-  if (!own.length) return `<div class="lbl">펫</div><p class="prose" style="color:var(--muted)">아직 펫이 없어요 · 올가미 밧줄(작업대)을 들고 강아지(이끼 동굴)·토끼(버섯숲)·고양이(수정 동굴)에게 다가가 포획해요</p>`;
+  if (!own.length) return `<div class="lbl">펫</div><p class="prose" style="color:var(--muted)">아직 펫이 없어요</p>`;
   return `<div class="lbl">펫 <span style="color:var(--muted);font-size:16px">한 마리만 함께 다녀요</span></div><div class="eqlist">${own.map(k => `<div class="eqr"><button type="button" class="slot eq ${G.petOn === k ? 'pick' : ''}" data-a="petOn" data-i="${k}" aria-label="${ANIMALS[k].pn}"><img class="px" src="${animalImg(k).toDataURL()}" alt=""></button><div><b>${ANIMALS[k].n} ${ANIMALS[k].pn}${G.petOn === k ? ' · 함께 다니는 중' : ''}</b><small>${ANIMALS[k].fx}</small></div></div>`).join('')}</div>`; }
 export function regionMatHTML() { const seen = new Set(); for (let i = 0; i < G.explored.length; i++) if (G.explored[i]) seen.add(G.biome[i]);
   return `<div class="lbl">지역 재료</div><div class="rmat">${REGION_MAT.map((m, b) => `<div><b>${seen.has(b) ? BIOME[b] : '???'}</b>${seen.has(b) ? ['지형', '광물', '고유'].map((t, k) => `<span><img class="px" src="${iconURL(m[k])}" alt="">${t} · ${ITEMS[m[k]].n}</span>`).join('') : '<span>아직 가 보지 않은 곳</span>'}</div>`).join('')}</div>`; }

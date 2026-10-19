@@ -115,6 +115,9 @@ export function onSheetClick(e) {
   if (a === 'clTake') { cloudTakePending(); return; }
   if (a === 'clKeep') { cloudKeepLocal(); return; }
   if (a === 'clPrev') { if (!UIS.prevAsk) { UIS.prevAsk = true; renderPanel(); return; } cloudTakePending(true); return; }
+  if (a === 'help') { openPanel('help', { nav: true }); return; } // v96: 설정 → 가이드
+  if (a === 'helpTab') { UIS.helpTab = i; renderPanel(); return; }
+  if (a === 'helpBack') { openPanel('menu', { nav: true }); return; }
   if (a === 'openLook') { openPanel('look'); return; }
   if (a === 'lookTab') { UIS.lookTab = i; renderPanel(); return; }
   if (a === 'lookSet') { const [k, v] = String(i).split(':'); UIS.look[k] = ['hc', 'eye', 'oc'].includes(k) ? +v : v; SFX.click(); renderPanel(); return; }
