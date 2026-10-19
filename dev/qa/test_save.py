@@ -347,7 +347,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             rec('클라우드 백업','메뉴에 클라우드 백업 정보와 되돌리기 버튼', '클라우드 백업' in txt and '1시간 30분' in txt, txt[txt.find('클라우드 백업'):][:120])
             await pg.screenshot(path=SP+'prev.png')
             # autosave of the same (new) adventure keeps the backup
-            await ev(pg,"()=>{__T.addItem('crystal',1)}"); await pg.tap('#sheet [data-a=clUpNow]'); await pg.wait_for_timeout(400)
+            await ev(pg,"()=>{__T.addItem('crystal',1)}"); await pg.tap('#sheet [data-a=save]'); await pg.wait_for_timeout(400)
             c=await ev(pg,cloud_of)
             rec('클라우드 백업','같은 모험을 계속 올려도 백업은 그대로', await ev(pg,CRY,c['data'])==6 and c.get('prev') and await ev(pg,CRY,c['prev']['data'])==33)
             await pg.tap('#sheet [data-a=clPrev]'); await pg.wait_for_timeout(200)
