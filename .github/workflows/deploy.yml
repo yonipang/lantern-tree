@@ -62,7 +62,7 @@ jobs:
       - name: 실패한 점검을 알림으로 (Claude 세션에서도 결과를 읽을 수 있게)
         if: failure()
         run: |
-          if [ -f dev/qa/out/summary.txt ]; then grep -E 'QA |FAIL' dev/qa/out/summary.txt | head -20 | cut -c1-500 | while IFS= read -r l; do echo "::error::$l"; done; fi
+          if [ -f dev/qa/out/summary.txt ]; then grep -E 'QA | FAIL | 오류|다시 돌려도|다시 돌릴 때만' dev/qa/out/summary.txt | grep -v '다시 돌려 통과' | head -20 | cut -c1-500 | while IFS= read -r l; do echo "::error::$l"; done; fi
       - name: 테스트 결과 보관
         if: always()
         uses: actions/upload-artifact@v4
