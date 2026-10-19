@@ -7,7 +7,7 @@ import { HOT, RECIPES } from '../data/items.js';
 import { ensureAudio, SFX } from '../engine/audio.js';
 import { toast } from '../engine/effects.js';
 import { rand } from '../engine/random.js';
-import { clamp } from '../engine/util.js';
+import { clamp, roJosa } from '../engine/util.js';
 import { iconURL } from '../render/icons.js';
 import { resize, setZoomPref } from '../render/view.js';
 import { G, newGame, setSound, setStarted, soundOn, started } from '../save/state.js';
@@ -21,7 +21,7 @@ import { checkGuide, questById, questGo } from '../sim/quests.js';
 import { resetGoalText } from './feedback.js';
 import { markInv, refreshHotbar } from './hud.js';
 import { applyCtrl, ctrlPref, setCtrlPref } from './input.js';
-import { MAP_NEAR, mapChestOn, mapDragged, mapIsAll, mapMax, mapMove, mapSet, mapView, setMapChest, warpTapAt } from './map.js';
+import { MAP_NEAR, mapChestOn, mapDragged, mapIsAll, mapMax, mapMove, mapSet, mapView, NAV_ARRIVE, navSame, nearestMark, pinTapAt, setMapChest, setNav, warpTapAt } from './map.js';
 import { H, W } from '../world/map.js';
 import { closePanel, craftCtx, openPanel, panel, panelAt, renderPanel, UIS } from './panels.js';
 import { bmOpen } from './build.js';
@@ -76,6 +76,12 @@ export function onSheetClick(e) {
   if (a === 'mapzoom') { const F = UIS.mapFocus, c = F || G.p; mapSet(mapIsAll() ? { cx: c.x, cy: c.y, span: MAP_NEAR } : { cx: W / 2, cy: H / 2, span: mapMax() }); renderPanel(); return; } // v94: 전체 ↔ 가까이(90칸)
   if (a === 'mapZ') { mapMove(i > 0 ? 1.5 : 1 / 1.5, 300, 300); renderPanel(); return; } // v94: + − 버튼은 가운데를 기준으로
   if (a === 'mapMe') { mapSet({ cx: G.p.x, cy: G.p.y, span: mapView().span }); renderPanel(); return; } // v94: 지금 크기 그대로 내 위치로
+  // v95: 지도를 누르면 핀, 범례 아이콘을 누르면 가장 가까운 그곳, 「위치 찾기」로 길 안내
+  if (a === 'mapPin') { if (mapDragged()) return; const t = pinTapAt(b, e.clientX, e.clientY); if (!t) return; UIS.mapPin = UIS.mapPin && navSame(UIS.mapPin, t) && !t.k ? null : t; renderPanel(); return; }
+  if (a === 'mapFind') { const t = nearestMark(i); if (!t) { toast('아직 찾지 못했어요', null, 'mapfind'); return; } UIS.mapPin = { x: t.x, y: t.y, name: t.name, k: t.k }; mapSet({ cx: t.x, cy: t.y, span: mapView().span }); renderPanel(); return; }
+  if (a === 'navGo') { const P = UIS.mapPin; if (!P) return; if (Math.hypot(P.x - G.p.x, P.y - G.p.y) <= NAV_ARRIVE) { toast('이미 가까이 있어요', null, 'navNear'); return; } setNav(P); UIS.mapPin = null; closePanel(); toast(`${roJosa(P.name || '고른 곳')} 가는 길을 알려 줄게요`, 'good', 'nav'); return; }
+  if (a === 'navOff') { setNav(null); UIS.mapPin = null; renderPanel(); return; }
+  if (a === 'pinClear') { UIS.mapPin = null; renderPanel(); return; }
   if (a === 'mapTap') { if (UIS.mapWarp == null || mapDragged()) return; /* v94: 끌어서 옮긴 뒤에는 고르지 않음 */ const e2 = warpTapAt(b, e.clientX, e.clientY); UIS.warpSel = e2 ? e2.i : null; renderPanel(); return; } // v89: 지도에서 워프 목적지 고르기
   if (a === 'warpGo') { const from = UIS.mapWarp; if (from == null) return; runCmd({ k: 'warp', from, to: i }); closePanel(); return; } // v89
   if (a === 'craft') { // 제작 자리(어느 제작대 창인지)를 함께 보내요
