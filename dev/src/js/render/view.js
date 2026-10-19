@@ -18,6 +18,13 @@ export const cv = $('#cv'), mainCtx = cv.getContext('2d');
 export let ctx = mainCtx;
 export const setCtx = c => { ctx = c; }; // v73: the world pass can draw its glows into the light pass's glow layer
 export const lowCv = document.createElement('canvas'), lowCtx = lowCv.getContext('2d');
+// v109: 세계 그림(lowCv, 게임 픽셀 크기)을 화면 크기 캔버스에 매번 늘려 그리지 않고, 그대로 화면에 붙여 브라우저가 늘려 보여 줘요
+// (큰 창에서 늘려 그리기가 창 넓이만큼 무거워 밀리던 것). #cv는 그 위에 투명하게 겹쳐 글자·화살표만 화면 해상도로 그려요
+lowCv.id = 'wcv'; cv.parentNode.insertBefore(lowCv, cv);
+let wcvCss = '';
+// 글자층(#cv)에 무언가 그렸는지: 비어 있던 장이 또 비면 지우지도 다시 올리지도 않아요 (큰 창에서 화면 크기 층을 매번 새로 합치지 않게)
+let ovDrew = true;
+for (const m of ['fill', 'fillRect', 'fillText', 'stroke', 'strokeRect', 'strokeText', 'drawImage', 'putImageData']) { const f = mainCtx[m]; mainCtx[m] = function () { ovDrew = true; return f.apply(mainCtx, arguments); }; }
 export let VIEW = { camX: 0, camY: 0, baseX: 0, baseY: 0 };
 export let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoom') || 'normal'; } catch (e) { }
 export const setZoomPref = v => { zoomPref = v; };
@@ -58,8 +65,8 @@ export function shadow(wx, wy, rw, alpha = 0.32) { ctx.fillStyle = `rgba(12,6,22
 export function render() {
   const cw = cv.width, ch = cv.height, RZ = Z;
   mainCtx.setTransform(1, 0, 0, 1, 0, 0); mainCtx.globalCompositeOperation = 'source-over'; mainCtx.imageSmoothingEnabled = false;
-  mainCtx.fillStyle = '#120f1c'; mainCtx.fillRect(0, 0, cw, ch);
-  if (!G) return;
+  if (!G) { mainCtx.fillStyle = '#120f1c'; mainCtx.fillRect(0, 0, cw, ch); return; }
+  if (ovDrew) { mainCtx.clearRect(0, 0, cw, ch); ovDrew = false; }
   // world is drawn in game pixels on a canvas with HD art pixels per game pixel, then scaled up to the screen
   const bw = Math.ceil(cw / RZ) + 2, bh = Math.ceil(ch / RZ) + 2;
   if (lowCv.width !== bw * HD || lowCv.height !== bh * HD) { lowCv.width = bw * HD; lowCv.height = bh * HD; }
@@ -78,7 +85,8 @@ export function render() {
       if (out) lowCtx.drawImage(out, 0, 0); lowCtx.setTransform(HD, 0, 0, HD, 0, 0); }
     renderWorldPost(bw, bh);
   } finally { ctx = mainCtx; Z = RZ; TP = 16 * RZ; lowCtx.setTransform(1, 0, 0, 1, 0, 0); }
-  mainCtx.drawImage(lowCv, Math.round((ix - gx) * RZ), Math.round((iy - gy) * RZ), bw * RZ, bh * RZ);
+  { const ox = Math.round((ix - gx) * RZ), oy = Math.round((iy - gy) * RZ), css = `${bw * RZ / DPR}|${bh * RZ / DPR}|${ox / DPR}|${oy / DPR}`; // 화면 픽셀 단위로 맞춘 자리·크기
+    if (css !== wcvCss) { wcvCss = css; const st = lowCv.style; st.width = bw * RZ / DPR + 'px'; st.height = bh * RZ / DPR + 'px'; st.transform = `translate(${ox / DPR}px,${oy / DPR}px)`; } }
   VIEW = { camX: gx * RZ, camY: gy * RZ, baseX: bx0 * RZ, baseY: by0 * RZ };
   renderOverlay(cw, ch);
 }
