@@ -17,6 +17,7 @@ import { BX, BY, CX, CY, H, idx, inB, LAVA, PIT, SA, SB, SI, SL, W } from '../wo
 import { isSolid, noDigZone } from '../world/tiles.js';
 import { ARCHIVES } from '../data/story.js';
 OBJ.diary = { n: '등불지기의 일기', solid: 1, diary: 1, light: [2.5, '#ffe9a8'] };
+OBJ.sleeper = { n: '얼음 속 등불지기', solid: 1, sleeper: 1, light: [1.5, '#bfe6ff'] }; // v107 얼음 기록관
 USE.diary = 'read2'; USE_LBL.read2 = '일기 읽기';
 // 13 × 9 틀. # 암반 · . 바닥 · E 입구(바닥) · L 레버 · B 건전지 · - 전선 · D 전기 문 · J 일기 · S 학자 고치 · C 보물상자 · t 횃불 자리(없음)
 export const ARCH_PLAN = [
@@ -30,7 +31,19 @@ export const ARCH_PLAN = [
   '###E#########',
 ];
 export const ARCH_W = ARCH_PLAN[0].length, ARCH_H = ARCH_PLAN.length;
-export const ARCH_NOW = ['arch0']; // v106: 이끼 굴 시험 기록관만 (나머지 3개는 v107)
+export const ARCH_NOW = ['arch0', 'arch2', 'arch3', 'arch4']; // v107: 네 지역 모두
+// 얼음 기록관(arch4)은 일기 방에 얼음 속 등불지기 다섯 자리(F)와 빈자리 하나(복선 ②)
+export const ARCH_PLAN_ICE = [
+  '#############',
+  '#.....#F.F.F#',
+  '#.....#..J..#',
+  '#..L--D.....#',
+  '#.....#F...F#',
+  '#..B..#..C..#',
+  '#.....#.....#',
+  '###E#########',
+];
+export const planOf = id => id === 'arch4' ? ARCH_PLAN_ICE : ARCH_PLAN;
 export const archList = () => (G && G.stats && G.stats.arch) || [];
 export const archAt = (x, y) => archList().find(a => x >= a.x && x < a.x + ARCH_W && y >= a.y && y < a.y + ARCH_H) || null;
 export const archHidden = (x, y) => { const a = archAt(x, y); return !!(a && !a.done && !(y === a.y + ARCH_H - 1)); }; // 깨기 전엔 안이 지도에 안 남아요 (입구 줄은 보여요)
@@ -49,16 +62,16 @@ export function placeArchives() {
     if (!cand.length) continue; const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
     carveArch(A, c.x, c.y); n++; }
   return n; }
-function carveArch(A, x0, y0) { const wires = []; let door = null, diary = null, scholar = null, chest = null, lever = null, batt = null, ent = null;
-  for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) { const ch = ARCH_PLAN[r][c], x = x0 + c, y = y0 + r, i = idx(x, y); G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);
+function carveArch(A, x0, y0) { const wires = [], sleepers = [], PLAN = planOf(A.id); let door = null, diary = null, scholar = null, chest = null, lever = null, batt = null, ent = null;
+  for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) { const ch = PLAN[r][c], x = x0 + c, y = y0 + r, i = idx(x, y); G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);
     if (ch === '#') { G.wall[i] = 8; continue; } G.wall[i] = 0; G.floor[i] = 6;
-    if (ch === 'L') lever = i; else if (ch === 'B') batt = i; else if (ch === '-') wires.push(i); else if (ch === 'D') door = i; else if (ch === 'J') diary = i; else if (ch === 'S') scholar = i; else if (ch === 'C') chest = i; else if (ch === 'E') ent = i; }
+    if (ch === 'L') lever = i; else if (ch === 'B') batt = i; else if (ch === '-') wires.push(i); else if (ch === 'D') door = i; else if (ch === 'J') diary = i; else if (ch === 'S') scholar = i; else if (ch === 'C') chest = i; else if (ch === 'E') ent = i; else if (ch === 'F') sleepers.push(i); }
   // 입구 아래로 3칸 길을 내요 (막혀 있으면)
   const ex = ent % W, ey = (ent / W) | 0; for (let k = 1; k <= 3; k++) { const j = idx(ex, ey + k); if (!inB(ex, ey + k)) break; if (G.wall[j] && G.wall[j] !== 8) { G.wall[j] = 0; if (G.wdmg) G.wdmg.delete(j); } }
   G.objs.set(lever, { t: 'lever', on: 0, arch: 1 }); G.objs.set(batt, { t: 'battery', e: BATT_MAX, arch: 1 }); for (const i of wires) G.wire.set(i, 1);
   // 건전지 → 레버 → 문까지 전선: 건전지 위(아래 칸)와 레버·문 사이 벽 안쪽 줄은 이미 '-'로 이어져 있고, 건전지 칸에서 레버까지는 세로로
   { const bx = batt % W, by = (batt / W) | 0, lx = lever % W, ly = (lever / W) | 0; for (let y = ly + 1; y < by; y++) G.wire.set(idx(bx, y), 1); if (bx !== lx) for (let x = Math.min(bx, lx); x <= Math.max(bx, lx); x++) if (idx(x, ly + 1) !== lever) G.wire.set(idx(x, ly + 1), 1); }
-  G.objs.set(door, { t: 'eDoor', open: 0, arch: 1 }); G.objs.set(diary, { t: 'diary', a: A.id }); G.objs.set(scholar, { t: 'cocoon', npc: A.npc || 'scholar', hits: 0 }); G.objs.set(chest, { t: 'tchest', hid: 0 });
+  G.objs.set(door, { t: 'eDoor', open: 0, arch: 1 }); G.objs.set(diary, { t: 'diary', a: A.id }); if (A.npc) G.objs.set(scholar, { t: 'cocoon', npc: A.npc, hits: 0 }); G.objs.set(chest, { t: 'tchest', hid: 0 }); for (const i of sleepers) G.objs.set(i, { t: 'sleeper' });
   G.stats.arch.push({ id: A.id, b: A.b, x: x0, y: y0, done: 0, gT: -999 }); }
 // 안에서는 그림자 조각이 어둠에서 생겨요 (깨기 전, 플레이어가 안에 있을 때, 4마리까지, 45초마다)
 onFrame('archives', dt => { for (const a of archList()) { if (a.done) continue; const pl = playerList().find(q => archAt(Math.floor(q.p.x), Math.floor(q.p.y)) === a); if (!pl) continue;
@@ -73,6 +86,8 @@ export function readDiary(o) { const a = archList().find(q => q.id === o.a); if 
   emit('diary', a.id); }
 export const archDiaryIds = () => archList().filter(a => a.done).map(a => a.id);
 // 도전 퀘스트: 이끼 굴 기록관 깨기
+for (const [id, nm, b] of [['arch2', '수정 동굴', 2], ['arch3', '용암 동굴', 3], ['arch4', '얼음 동굴', 4]]) { Q_GO['s_' + id] = ['tgt']; QSIDE.push({ id: 's_' + id, t: `${nm}의 기록관 깨기`, h: `${nm} 어딘가에 등불지기들의 기록관이 있어요. 레버로 전기 문을 열고 일기를 읽어요.`, done: () => archList().some(a => a.id === id && a.done), rw: [['torch', 10], [['cryGem', 'obsidian', 'frostShard'][b - 2], 4]], xp: 120 + b * 20,
+  target: () => { const a = archList().find(q => q.id === id); return a ? { x: a.x + ARCH_PLAN[ARCH_H - 1].indexOf('E') + .5, y: a.y + ARCH_H + .5 } : null; } }); } // v107
 Q_GO.s_arch0 = ['tgt'];
 QSIDE.push({ id: 's_arch0', t: '이끼 굴의 기록관 깨기', h: '이끼 굴 어딘가에 등불지기들이 남긴 기록관이 있어요. 안은 어두워요 — 횃불을 챙기고, 레버로 전기 문을 열어 일기를 읽어요.', done: () => archList().some(a => a.id === 'arch0' && a.done), rw: [['torch', 10], ['glowcap', 6]], xp: 80,
   target: () => { const a = archList().find(q => q.id === 'arch0'); return a ? { x: a.x + ARCH_PLAN[ARCH_H - 1].indexOf('E') + .5, y: a.y + ARCH_H + .5 } : null; } });

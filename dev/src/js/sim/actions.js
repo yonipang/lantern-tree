@@ -181,6 +181,7 @@ export function autoOptions(t, i, o) {
     if (d.cocoon) { A({ k: 'info', lbl: '그림자 고치', icon: 'dots', msg: `그림자 고치 · 누군가 갇혀 있어요. 공격 버튼으로 ${COCOON_HITS}번 치면 부서져요 (둘레의 그림자 조각은 빛 안에서 더 아파해요)`, t }); return L; } // v104
     if (d.npc) { A({ k: 'use', u: 'talk', lbl: '말 걸기', icon: 'hand', t, o }); return L; }
     if (d.diary) { A({ k: 'use', u: 'read2', lbl: '일기 읽기', icon: 'hand', t, o }); return L; } // v106
+    if (d.sleeper) { A({ k: 'info', lbl: '얼음 속 등불지기', icon: 'dots', msg: '얼음 속에서 잠든 등불지기예요. 깨울 수 없어요… 나무가 다 깨어나면.', t }); return L; } // v107
     if (d.tree) { A(countItem('lightSeed') ? { k: 'insert', lbl: '씨앗 심기', icon: 'lightSeed', t } : { k: 'tree', lbl: '살펴보기', icon: 'hand', t }); return L; }
     if (d.giant) { A({ k: 'giant', lbl: '거대 수확!', icon: OBJ[o.c] ? OBJ[o.c].yield[0][0] : 'berry', t, o, tool: bestTool('sickle') }); return L; }
     if (o.cake) A({ k: 'cakeTake', lbl: '가져오기', icon: 'festCake', t, o });
