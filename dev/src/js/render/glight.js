@@ -11,7 +11,7 @@ import { LIGHTS } from './light.js';
 import { GLOW_RULE } from './terrain.js';
 import { wallOcc4 } from './icecave.js';
 
-export let lightPref = 'new'; try { lightPref = localStorage.getItem('lantern-tree-light') || 'new'; } catch (e) { }
+export let lightPref = 'new'; try { if (localStorage.getItem('lantern-tree-light') === 'force') lightPref = 'force'; } catch (e) { } // v111: 설정 「빛 효과」를 없애고 새 빛으로 고정 (못 쓰는 기기는 그대로 자동으로 예전 빛)
 export const setLightPref = v => { lightPref = v; try { localStorage.setItem('lantern-tree-light', v); } catch (e) { } };
 export const GLST = { failed: false, err: '', frames: 0, renderer: '', soft: false };
 // ---------------- G-buffer (2D 캔버스 두 장) ----------------

@@ -387,9 +387,9 @@ body.touch #pcHint{display:none}
 .goal .ql{line-height:16px}
 .side{gap:8px}
 .sbtn{width:48px;height:48px;gap:0}
-.sbtn img{display:none}
-body:not(.touch) .sbtn{padding-top:12px}
-#bossbar{top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 16px + 52px + 8px)}
+.sbtn img{display:block;width:32px;height:32px} /* v111: 글자 대신 아이콘 (이름은 aria-label·말풍선 title) */
+.sbtn span,body:not(.touch) .sbtn .k{display:none}
+#bossbar{top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 16px + 48px + 8px)}
 /* 큰 버튼·스킬: 공격은 단축칸 위 32px, 상호작용은 공격 위 16px, 스킬 두 개는 공격 왼쪽 8px에 위아래(사이 8) */
 #atkBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px + var(--slotS) + 12px + 32px);width:80px;height:80px}
 #actBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px + var(--slotS) + 12px + 32px + 80px + 16px);width:80px;height:80px}
@@ -414,7 +414,6 @@ body.touch #hbFlip{width:var(--slotS)}
 .sheet,.btn,.tab,.goal,#hotbar,#bossbar,.chip,.rc,.slot,.ing,.qty button,#craftNote,.toolchip,.xbtn{--pb:0px;clip-path:polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% + var(--pb) - 2px),calc(100% - 2px) calc(100% + var(--pb) - 2px),calc(100% - 2px) calc(100% + var(--pb)),2px calc(100% + var(--pb)),2px calc(100% + var(--pb) - 2px),0 calc(100% + var(--pb) - 2px),0 2px,2px 2px)}
 .btn{--pb:2px}
 /* 16px 글자가 들어가도록 넓힌 곳 (와이어프레임보다 조금 큼) */
-.sbtn{width:52px}
 .eqlist.eq2{grid-template-columns:repeat(auto-fit,minmax(min(100%,168px),1fr))}
 #pcHint{max-width:340px;line-height:20px}
 
@@ -426,6 +425,7 @@ body.touch #hbFlip{width:var(--slotS)}
 .sheet.hasotab{max-height:calc(86% - 42px)}
 .sh-top{flex:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .sh-top .sh-hp{flex:1;margin:0;min-width:0}
+.sh-top .xbtn{margin-left:auto} /* v111: 체력 막대가 없는 창도 닫기 버튼은 오른쪽 */
 .btn.sm{min-height:36px;padding:0 10px;font-size:16px;flex:none}
 .stabs{position:absolute;right:100%;top:56px;display:flex;flex-direction:column;gap:4px}
 .stab{width:44px;height:48px;padding:0;background:var(--panel2);border:2px solid var(--line);border-right:0;color:var(--muted);font-size:16px}
@@ -527,3 +527,13 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 .btn.barter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:left;min-height:48px}.btn.barter.off{opacity:.55}.btn.barter small{flex-basis:100%;color:var(--muted);font-size:16px}.barrow{color:var(--amber)}
 /* v106 일기 */
 .prose.diary{background:#2a2139;border:2px solid #4d3e66;padding:10px;color:#e8dcc0}
+/* v111: 프로필 창 (얼굴을 누르면) — 얼굴 · 이름 · 레벨 · 경험치, 아래에 플레이 기록 */
+.prof{display:flex;gap:12px;align-items:center}
+.prof-face{width:64px;height:60px;flex:none;border:2px solid var(--line);background:rgba(27,20,38,.78)}
+.prof-t{flex:1;min-width:0;display:grid;gap:4px;font-size:16px}
+.prof-t b{font-weight:400;color:var(--amber)}
+.prof-t .bar{padding:2px}
+.xp .fill{background:linear-gradient(#ffe9a8,var(--amber) 45%,#d99a2b)}
+.lgbtn{min-height:28px;padding:2px 6px 2px 2px} /* v111: 범례를 작게 (아이콘 16px) */
+.lgbtn img{width:16px;height:16px}
+.lgbtn i{width:10px;height:10px;margin:0 2px 0 4px;box-shadow:0 0 0 2px #1b1426}

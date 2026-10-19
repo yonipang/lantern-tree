@@ -123,6 +123,8 @@ export function playRecordHTML() {
   if (UIS.qtShow) h += `<div class="qtlist">${rows.length ? rows.join('') : '<p class="hint">아직 기록된 목표가 없어요. 이제부터 목표를 이룰 때마다 그때의 플레이 시간이 남아요.</p>'}</div>`;
   return h;
 }
+// v111: 설정의 「클라우드 저장」은 숨기고, 클라우드와 이 기기의 모험이 다를 때 고르는 상자만 보여요 (고르기 전에는 클라우드에 올리지 않아서)
+export function cloudPendingHTML() { if (CLOUD.st !== 'in' || !CLOUD.pending) return ''; const h = cloudMenuHTML(); const i = h.indexOf('<div class="impbox">'); return i < 0 ? '' : h.slice(i, h.indexOf('</div></div>', i) + 12); }
 export function cloudMenuHTML() {
   let h = `<div class="lbl" style="margin-top:16px">클라우드 저장</div>`;
   if (CLOUD.st === 'na') return h + `<p class="hint">${CLOUD.err === 'load' ? '클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.' : '사이트 주소(홈 화면 앱)로 연 게임에서 쓸 수 있어요.'}</p>`;

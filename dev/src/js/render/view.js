@@ -26,7 +26,7 @@ let wcvCss = '';
 let ovDrew = true;
 for (const m of ['fill', 'fillRect', 'fillText', 'stroke', 'strokeRect', 'strokeText', 'drawImage', 'putImageData']) { const f = mainCtx[m]; mainCtx[m] = function () { ovDrew = true; return f.apply(mainCtx, arguments); }; }
 export let VIEW = { camX: 0, camY: 0, baseX: 0, baseY: 0 };
-export let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoom') || 'normal'; } catch (e) { }
+export let zoomPref = 'small'; // v111: 설정 「화면 크기」를 없애고 「작게 (넓게 보기)」로 고정 (예전에 고른 값은 안 씀)
 export const setZoomPref = v => { zoomPref = v; };
 export let vignette = null;
 export let TP = 48, Z = 3, DPR = 1; // 화면 배율 (save/state.js에서 옮김, 11단계)

@@ -143,7 +143,7 @@ export function setupInput() {
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
-  $('#face').addEventListener('click', () => started && openPanel('stat')); // v77: 얼굴도 캐릭터 화면
+  $('#face').addEventListener('click', () => started && openPanel('profile')); // v111: 얼굴 → 프로필 (v77: 캐릭터 화면)
   $('#hbFlip').addEventListener('click', () => { if (!started) return; ensureAudio(); flipHotbar(); });
   $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); command({ k: 'skill', n: +b.dataset.n }); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
