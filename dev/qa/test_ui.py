@@ -32,7 +32,7 @@ def test_character_menu():
             await ev(pg,"()=>{document.getElementById('toasts').style.display=''}")
             await ev(pg,"()=>__T.openPanel('menu')"); await pg.wait_for_timeout(500)
             r=await ev(pg,"()=>[document.querySelectorAll('#sheet .cp-card').length,document.querySelector('#sheet').innerText.includes('옷장에서')]")
-            rec('메뉴','v83: 메뉴에는 캐릭터 고르기·꾸미기가 없고 옷장 안내 한 줄', r==[0,True], str(r))
+            rec('메뉴','v83: 메뉴에는 캐릭터 고르기·꾸미기가 없음 (v96: 옷장 안내 글은 가이드로)', r==[0,False], str(r))
             await ev(pg,"()=>__T.openPanel('look',{tab:'char'})"); await pg.wait_for_timeout(500) # 옷장 [꾸미기]와 같은 창 — 첫 탭이 캐릭터
             n=await ev(pg,"()=>document.querySelectorAll('#sheet .cp-card').length")
             await pg.tap('#sheet .cp-card[data-c=momo]'); await pg.wait_for_timeout(300)
