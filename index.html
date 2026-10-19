@@ -522,6 +522,8 @@ body:not(.touch) .bm-slots{max-height:52px}
 body:not(.touch) #bmPut{display:none}
 body:not(.touch) #bmRot{border-radius:0;width:auto;height:40px;padding:0 12px;bottom:calc(var(--bmH,120px) + 16px)}
 body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방향키로 고른 사람은 목록 바로 위 */
+/* v100 캐릭터 창 방어력 줄 */
+.eqdef{text-align:center;font-size:16px;color:var(--muted);margin:6px 0 2px}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -2705,7 +2707,7 @@ function loadSets(raw, cur) {
     G.eqSets[k] = { e: EQ_SLOTS.some(([sl]) => e[sl]) ? e : null, pet: x.pet && (G.pets || {})[x.pet] ? x.pet : null }; }); }
 function loadEquip(raw) {
   G.equip = freshEquip(); const se = raw && typeof raw === 'object' ? raw : {}; // v42: the old 'acc' slot moves to the slot that fits (turtle charm → neck, snow brooch → head)
-  for (const sl of ['body', 'head', 'neck', 'ring', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = eqCopy(e); } // v83 버그 수정: 강화 단계(lv)도 그대로 (예전엔 불러오면 입은 장비의 강화가 사라졌어요)
+  for (const sl of ['body', 'head', 'neck', 'ring', 'legs', 'acc']) { const e = se[sl]; if (e && ITEMS[e.id] && ITEMS[e.id].kind === 'wear' && !G.equip[ITEMS[e.id].slot]) G.equip[ITEMS[e.id].slot] = eqCopy(e); } // v83 버그 수정: 강화 단계(lv)도 그대로 (예전엔 불러오면 입은 장비의 강화가 사라졌어요)
   return se.weapon && ITEMS[se.weapon.id] && ITEMS[se.weapon.id].kind === 'sword' ? eqCopy(se.weapon) : null; // v48: no weapon slot any more
 }
 // ---- the world (map regions added in v2 / v3) ----
@@ -3288,7 +3290,7 @@ Object.assign(ITEMS, {
 });
 RECIPES.push(Rc('obsCoat', 1, [['obsidian', 4], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'), Rc('frostRobe', 1, [['frostShard', 6], ['fiber', 10], ['goldBar', 1]], 'forge', 'tool'));
 // v42: slots in their own 「장비」 menu — clothes · head · neck · ring (rings arrive with the smelter in v43); v48: the weapon slot is gone (the held weapon is used)
-const EQ_SLOTS = [['body', '상의'], ['head', '머리장식'], ['neck', '목걸이'], ['ring', '반지']] /* v83: 옷 → 상의 */, EQ_N = Object.fromEntries(EQ_SLOTS);
+const EQ_SLOTS = [['body', '상의'], ['head', '머리장식'], ['neck', '목걸이'], ['ring', '반지'], ['legs', '하의']] /* v83: 옷 → 상의 · v100: 하의 */, EQ_N = Object.fromEntries(EQ_SLOTS);
 // ---- v43 smelter 「용광로」 (v58: renamed 「장비제작대」): upgrade gear (+1 … +5) and break it down; rings are made here too ----
 ITEMS.smelter = { n: '장비제작대', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요. (v58 전 이름: 용광로)' };
 OBJ.smelter = { n: '장비제작대', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
@@ -3446,7 +3448,7 @@ const GEAR_IT = ['smelter', 'smelterCu', 'smelterFe', 'smelterQ', 'smelterAu', '
 for (let lv = 1; lv <= BENCH_MAX; lv++) ITEMS[GEAR_IT[lv]] = { n: GEAR_N[lv], kind: 'place', obj: 'smelter', blv: lv, d: `${lv}단계 장비제작대. ${GEAR_N.slice(0, lv).join('·')}에서 만드는 장비도 모두 만들어요.` };
 const TIERED = { bench: BENCH_N, smelter: GEAR_N }, TIER_IT = { bench: BENCH_IT, smelter: GEAR_IT };
 const GEAR_TOOLS = ['pick', 'shovel', 'rod', 'wcan', 'sickle', 'lasso', 'recall'];
-const gearCatOf = it => !it || it.bagUp ? null : it.kind === 'sword' || it.kind === 'arrow' ? 'weapon' : it.kind === 'wear' ? (it.slot === 'body' || it.slot === 'head' ? 'armor' : 'acc') : GEAR_TOOLS.includes(it.kind) ? 'tool' : null;
+const gearCatOf = it => !it || it.bagUp ? null : it.kind === 'sword' || it.kind === 'arrow' ? 'weapon' : it.kind === 'wear' ? (it.slot === 'body' || it.slot === 'head' || it.slot === 'legs' ? 'armor' : 'acc') : GEAR_TOOLS.includes(it.kind) ? 'tool' : null;
 const recipeTier = r => { for (const [lv, ms] of TIER_MAT) if (r.req.some(([id]) => ms.includes(id))) return lv; return 0; };
 for (const r of RECIPES) { const c = gearCatOf(ITEMS[r.out]); if (!c || !(r.at === 'bench' || r.at === 'smelter' || r.at == null)) continue; if (r.at !== 'bench') r.tier = recipeTier(r); r.at = 'smelter'; r.cat = c; }
 // ================= v65 조작 데이터 (구조 변경 2단계: features/controls.js에서 데이터만 옮김) =================
@@ -3574,6 +3576,26 @@ for (const b in BOSS_W) { const B = BOSS_W[b], t = BOSS_TIER[b];
 }
 // 새벽빛 검(전설, 두 핵으로 만듦)은 표 밖이라 공격력 그대로, 착용 레벨만 서리 단계와 같이. 도끼(도구)도 단계에 맞춰 착용 레벨
 Object.assign(ITEMS.swordDawn, { rlv: 40 }); ITEMS.axeStone.rlv = 1; ITEMS.axeCopper.rlv = 5; ITEMS.axeIron.rlv = 12;
+// ================= v100 성장 확장 3: 방어구 머리·상의·하의 × 6단계 + 방어력 (dev/design/성장확장.md 3장) =================
+// 받는 피해 × 50 / (50 + 방어력 합계) (sim/player.js hurtPlayer). 강화 단계마다 방어력 +8%(무기 공격력과 같이). 착용 레벨은 무기와 같은 표(WT_RLV).
+// 지금 특수 옷 4개(흑요석 외투·서리 비단옷·털모자·눈꽃 브로치)도 그 단계 방어력의 70%를 받아 방어구가 돼요 — 특수 옷은 착용 레벨 없음(그 동굴에 가려고 입는 옷이라)
+const AR_SLOTS = ['head', 'body', 'legs'];
+const AR_DEF = { head: [1, 2, 4, 6, 9, 13], body: [2, 4, 7, 11, 16, 22], legs: [1, 2, 4, 6, 9, 13] };
+const AR_K = 50, AR_SPECIAL = .7;
+// 단계마다 [id, 이름, 재료] × 머리·상의·하의
+const AR_TABLE = [
+  [['helmMoss', '이끼 두건', [['fiber', 6], ['rope', 1]]], ['armorMoss', '이끼 조끼', [['fiber', 10], ['rope', 2]]], ['legsMoss', '이끼 바지', [['fiber', 8], ['rope', 1]]]],
+  [['helmCopper', '구리 투구', [['copperBar', 3], ['fiber', 2]]], ['armorCopper', '구리 갑옷', [['copperBar', 5], ['fiber', 4]]], ['legsCopper', '구리 각반', [['copperBar', 4], ['fiber', 3]]]],
+  [['helmIron', '철 투구', [['ironBar', 3], ['rope', 1]]], ['armorIron', '철 갑옷', [['ironBar', 5], ['rope', 2]]], ['legsIron', '철 각반', [['ironBar', 4], ['rope', 1]]]],
+  [['helmCrystal', '수정 투구', [['crystal', 4], ['ironBar', 1], ['cryGem', 1]]], ['armorCrystal', '수정 갑옷', [['crystal', 7], ['ironBar', 2], ['cryGem', 1]]], ['legsCrystal', '수정 각반', [['crystal', 5], ['ironBar', 2], ['cryGem', 1]]]],
+  [['helmGold', '황금 투구', [['goldBar', 3], ['obsidian', 1]]], ['armorObsidian', '흑요석 갑옷', [['goldBar', 4], ['obsidian', 3]]], ['legsGold', '황금 각반', [['goldBar', 3], ['obsidian', 2]]]],
+  [['helmFrost', '서리 투구', [['frostShard', 4], ['goldBar', 1]]], ['armorFrost', '서리 갑옷', [['frostShard', 7], ['goldBar', 2]]], ['legsFrost', '서리 각반', [['frostShard', 5], ['goldBar', 1]]]],
+];
+const AR_D = { head: '머리에 써요', body: '몸에 입어요', legs: '다리에 입어요' };
+AR_TABLE.forEach((row, t) => row.forEach(([id, n, req], k) => { const sl = AR_SLOTS[k];
+  ITEMS[id] = { n, kind: 'wear', slot: sl, stack: 1, def: AR_DEF[sl][t], rlv: WT_RLV[t], wtier: t, d: `${AR_D[sl]}. 받는 피해를 줄여 줘요.` }; RAR[id] = W_RAR[t];
+  const r = Rc(id, 1, req, 'smelter', 'armor'); r.tier = t; r.cat = 'armor'; RECIPES.push(r); }));
+for (const [id, t] of [['obsCoat', 4], ['frostRobe', 5], ['woolHat', 0], ['snowBrooch', 5]]) if (ITEMS[id]) ITEMS[id].def = Math.max(1, Math.round(AR_DEF[ITEMS[id].slot][t] * AR_SPECIAL));
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -3754,7 +3776,7 @@ const rarOf = id => RAR[id] != null ? RAR[id] : -1;
 const rarCol = id => rarOf(id) >= 1 ? RARITY[rarOf(id)][1] : null;
 // ---- clothes (body) and charms (accessory): two slots; clothes halve the cold or heat gauge, charms come from the deep bosses ----
 const WEAR_PAL = { obsCoat: ['#5a4a78', '#3a2f52', '#8a7ab0'], frostRobe: ['#8fd0f0', '#5a9ac8', '#d8f2ff'] };
-const freshEquip = () => ({ body: null, head: null, neck: null, ring: null });
+const freshEquip = () => ({ body: null, head: null, neck: null, ring: null, legs: null });
 // ---- v83 장비 세트 I·II·III: 세트마다 장비 칸·함께 다니는 펫을 따로 (가방 밖) ----
 // 지금 세트는 G.equip·G.petOn이 그대로 맡고, G.eqSets[k]에는 다른 세트의 것만 들어 있어요 (지금 세트 자리는 비어 있음).
 const SET_N = ['I', 'II', 'III'];
@@ -3775,7 +3797,9 @@ const inOtherSet = id => !!(G && G.eqSets && G.eqSets.some((x, k) => k !== (G.eq
 const eqSlotOf = id => { const it = ITEMS[id]; return !it ? null : it.kind === 'wear' ? it.slot : null; };
 const wearing = id => !!(G && G.equip && EQ_SLOTS.some(([sl]) => G.equip[sl] && G.equip[sl].id === id));
 const eqCopy = s => { const c = { id: s.id, c: 1 }; if (s.dur != null) c.dur = s.dur; if (s.lv) c.lv = s.lv; return c; };
-function wearItem(i) { const s = G.inv[i], it = s && ITEMS[s.id], sl = s && eqSlotOf(s.id); if (!sl) return; const old = G.equip[sl];
+function wearItem(i) { const s = G.inv[i], it = s && ITEMS[s.id], sl = s && eqSlotOf(s.id); if (!sl) return;
+  if (!rlvOk(s.id)) { emit('toast', `${it.n}은(는) Lv.${rlvOf(s.id)}부터 입을 수 있어요`, 'bad', 'rlv'); emit('sfx', 'clink'); return; } // v100 착용 레벨
+  const old = G.equip[sl];
   G.equip[sl] = eqCopy(s);
   G.inv[i] = old ? eqCopy(old) : null; // the clothes taken off go where the new ones were
   if (sl === 'body') emit('look'); emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, sl === 'body' ? (WEAR_PAL[s.id] || ['#fff'])[0] : '#ffe9a8', 12, 2.2, .5);
@@ -3792,7 +3816,9 @@ function upgCost(id, lv) { const t = upgTier(id), c = [[UPG_MAT[t], 2 + 2 * lv]]
 function upgSpent(id, lv) { const m = {}; for (let k = 0; k < lv; k++) for (const [x, c] of upgCost(id, k)) m[x] = (m[x] || 0) + c; return Object.entries(m); }
 const eqLv = id => { if (!G || !G.equip) return -1; for (const [sl] of EQ_SLOTS) { const e = G.equip[sl]; if (e && e.id === id) return lvOf(e); } return -1; };
 const ringV = k => { const e = G && G.equip && G.equip.ring, R = e && RINGS[e.id]; return R && R[1] === k ? R[2] + R[3] * lvOf(e) : 0; };
-function upgText(id, lv) { const it = ITEMS[id];
+// v100: 방어력이 있는 옷은 「방어력 N」을 앞에
+function upgText(id, lv) { const it = ITEMS[id], t = upgText0(id, lv); if (!it || !it.def) return t; const d = `방어력 ${defOf(it, lv)}`; return t ? `${d} · ${t}` : d; }
+function upgText0(id, lv) { const it = ITEMS[id];
   if (it.kind === 'sword') return `공격력 ${Math.round(it.dmg * (1 + UPG_DMG * lv))}`;
   if (it.kind === 'pick') return `캐는 힘 ${+(it.power * (1 + UPG_POW * lv)).toFixed(1)}`;
   if (it.kind === 'axe') return `베는 힘 ${+(it.power * (1 + UPG_POW * lv)).toFixed(1)}`;
@@ -3809,6 +3835,12 @@ function eqEffect(sl, s) {
 // v99 착용 레벨: 레벨이 모자라면 들 수 없어요 (무기 rlv, v100부터 방어구도)
 const rlvOf = id => (ITEMS[id] && ITEMS[id].rlv) || 1;
 const rlvOk = id => rlvOf(id) <= ((G && G.rpg && G.rpg.lv) || 1);
+// v100 방어력: 입은 옷(지금 세트)의 방어력 합계, 강화 +8%/단계 · 받는 피해 × 50 / (50 + 방어력)
+const defOf = (it, lv) => Math.round(it.def * (1 + UPG_DMG * (lv || 0)));
+const armorDef = () => { let d = 0; if (!G || !G.equip) return 0; for (const [sl] of EQ_SLOTS) { const e = G.equip[sl], it = e && ITEMS[e.id]; if (it && it.def) d += defOf(it, lvOf(e)); } return d; };
+const armorMul = () => AR_K / (AR_K + armorDef());
+// 방어구 상의 색 (Claude 임시: 단계 재료 색)
+Object.assign(WEAR_PAL, { armorMoss: ['#7fb069', '#4f7a45', '#b8dca0'], armorCopper: ['#d9824a', '#a85a2e', '#f0b080'], armorIron: ['#aab4c4', '#6e7888', '#dfe6ee'], armorCrystal: ['#b493f5', '#7d5fc0', '#e0d0ff'], armorObsidian: ['#4a3a5a', '#2a2238', '#ffd25c'], armorFrost: ['#9fd8f0', '#5a9ac8', '#e8f8ff'] });
 // ================= 제작: 가까운 제작대·제작 자리, 만들 수 있는지, 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // recipes people usually make many of at once get a quantity picker
@@ -4075,6 +4107,7 @@ const hitRecently = p => p.hitAt != null && G.time - p.hitAt < REGEN_WAIT;
 function hurtPlayer(dmg, sx, sy, kind) {
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
+  dmg *= armorMul(); // v100 방어력
   const p = G.p; if (p.inv > 0 || p.dead > 0 || p.sleep) return; if (p.sit) standUp(); dmg = Math.max(1, Math.round(dmg * (1 - skl('tough') * 0.07) * (1 - bval('def'))));
   p.hp -= dmg; p.hitAt = G.time; p.inv = 0.75; p.hurt = 0.18; const dx = p.x - sx, dy = p.y - sy, l = Math.hypot(dx, dy) || 1; p.kx = dx / l * 9; p.ky = dy / l * 9;
   emit('shake', 0.28); emit('sfx', 'hurt'); emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-' + dmg, '#ff7a8a');
@@ -5828,6 +5861,12 @@ const W99_ICON = {
   swordSpirit: swordIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), daggerSpirit: daggerIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), spearSpirit: spearIcon('#5a9ac8', '#e8f8ff'), hammerSpirit: hammerIcon('#5a9ac8', '#e8f8ff', '#3a6a98'), staffSpirit: staffIcon('#d4f6ff', '#ffffff'),
 };
 for (const id in W99_ICON) ICON[id] = W99_ICON[id];
+// v100 방어구 아이콘 (Claude 임시 그림: 머리 투구 · 상의 갑옷 · 하의 각반, 단계 재료 색 — 밝은색 c · 어두운색 d · 반짝 l)
+const helmIcon = (c, d, l) => A => { A.e(8, 8, 6, 5.5, d); A.e(8, 7.5, 5, 4.5, c); A.r(2, 9, 12, 3, d); A.r(3, 9, 10, 2, c); A.r(5, 5, 2, 1, l); A.p(4, 7, l); A.r(7, 1, 2, 2, d); };
+const armorIcon = (c, d, l) => A => { A.poly([[2, 4], [5, 2], [11, 2], [14, 4], [13, 8], [12, 7], [12, 14], [4, 14], [4, 7], [3, 8]], d); A.poly([[3, 4.5], [5.5, 3], [10.5, 3], [13, 4.5], [12.3, 6.5], [11, 6], [11, 13], [5, 13], [5, 6], [3.7, 6.5]], c); A.r(7, 3, 2, 10, d); A.p(6, 5, l); A.p(6, 8, l); A.r(5, 11, 6, 1, d); };
+const legsIcon = (c, d, l) => A => { A.r(3, 2, 10, 4, d); A.r(4, 3, 8, 2, c); A.r(3, 6, 4, 9, d); A.r(9, 6, 4, 9, d); A.r(4, 6, 2, 8, c); A.r(10, 6, 2, 8, c); A.p(5, 7, l); A.p(11, 7, l); A.r(3, 14, 4, 1, d); A.r(9, 14, 4, 1, d); };
+const AR_PAL = [['#7fb069', '#4f7a45', '#b8dca0'], [C.copper, C.copperD, C.copperL], [C.iron, C.ironD, C.ironL], [C.cry, C.cryD, C.cryL], ['#ffd25c', '#c9902a', '#fff1b0'], ['#9fd8f0', '#5a9ac8', '#e8f8ff']];
+AR_TABLE.forEach((row, t) => { const [c, d, l] = AR_PAL[t]; ICON[row[0][0]] = helmIcon(c, d, l); ICON[row[1][0]] = t === 4 ? armorIcon('#4a3a5a', '#2a2238', '#ffd25c') : armorIcon(c, d, l); ICON[row[2][0]] = legsIcon(c, d, l); });
 const arrowIcon = (h, hl) => A => { A.line(2, 14, 11, 5, '#8a6a52', 1); A.line(3, 14, 11, 6, '#b8946a', 1); A.poly([[9.5, 3.5], [14.5, 1.5], [12.5, 6.5]], h); A.p(12, 4, hl); A.r(1, 11, 2, 2, '#eef2f7'); A.r(3, 13, 2, 2, '#eef2f7'); A.p(2, 12, '#ff8fa3'); };
 for (const id in ARROWS) ICON[id] = arrowIcon(ARROWS[id][2], '#ffffff');
 const stoneDrill = dir => A => { A.r(3, 8, 10, 10, '#8f8aa3'); A.r(3, 8, 10, 2, '#b9b4cc'); A.r(3, 8, 1, 10, '#a39eb5'); A.r(12, 8, 1, 10, '#625d78'); A.p(5, 15, '#625d78'); A.p(10, 11, '#625d78'); A.p(9, 16, '#625d78');
@@ -7656,7 +7695,7 @@ function head(title, icon, extra = '') { return `<div class="sh-head"><h2>${icon
 function itemStat(it, s) { const up = s && lvOf(s) && upgOk(s.id) ? `<br>강화 +${s.lv} · ${upgText(s.id, s.lv)}` : ''; return itemStat1(it, s) + up + (s && it.kind === 'sword' && wtOf(it).ranged === 'arrow' ? arrowInfo() : ''); }
 const arrowInfo = () => { const k = bestArrow(); return k >= 0 ? `<br>화살: ${ITEMS[G.inv[k].id].n} ${countItem(G.inv[k].id)}개 · 좋은 화살부터 써요` : '<br>화살: 나무 화살 · 광물 화살을 만들어 가방에 넣으면 더 세져요'; };
 function itemStat1(it, s) { if (s && s.id === 'wcan') return `물 ${s.w || 0}/${WCAN_MAX}`; const du = s && DUR[s.id] ? ` · 내구도 ${durOf(s)}/${DUR[s.id][0]}${isBroken(s) ? ' (망가짐)' : ''}` : ''; return itemStat0(it) + (itemStat0(it) ? du : du.slice(3)); }
-function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸'; if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; if (it.kind === 'axe') return `도구 · 나무 베는 힘 ${it.power}`; return ''; }
+function itemStat0(it) { if (it.kind === 'wear') return EQ_N[it.slot] + ' 칸' + (it.def ? ` · 방어력 ${it.def}` : ''); if (it.kind === 'arrow') { const a = it.arw; return `화살 · 활 공격력 ×${a.mul}${a.pierce ? ' · 적 하나를 꿰뚫어요' : ''}${a.fx ? `<br>✦ ${FXN[a.fx]}` : ''}`; } if (it.kind === 'food') return `포만감 +${it.food}${it.heal ? ` · 체력 +${it.heal}` : ''}${it.buff ? `<br>✦ ${buffText(it)}` : ''}`; if (it.kind === 'sword') { const W = wtOf(it); return `${W.n} · 공격력 ${it.dmg}${W.ranged ? ' · 원거리' : ''}${W.mp ? ` · 한 발에 기력 ${W.mp}` : ''}${W.chop ? ` · 나무 베기 ×${W.chop}` : ''}${it.fx ? `<br>✦ ${FXN[it.fx]}` : ''}`; } if (it.kind === 'pick') return `캐는 힘 ${it.power} · ${['흙벽', '돌벽', '화강암 벽·석영 광맥', '현무암·얼음벽'][it.tier]}까지`; if (it.kind === 'axe') return `도구 · 나무 베는 힘 ${it.power}`; return ''; }
 // v62: the workbench window — 1st row 전체/재료/도구/제작대/가구/건축/편의 (icons), 2nd row per tab. Hand recipes can be made at the workbench too
 const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['tool', '도구', 'bagUp1'], ['stn', '제작대', 'bench'], ['furn', '가구', 'chair'], ['build', '건축', 'wallBrick'], ['conv', '편의', 'lever']];
 const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], ['cook', '요리']],
@@ -8058,7 +8097,7 @@ const CH_TABS = [['eq', '장비', 'woolHat'], ['sk', '스킬', 'star'], ['lamp',
 const sheetTop = (extra = '', title = '') => `${title ? `<div class="sh-head vh"><h2>${title}</h2></div>` : ''}<div class="sh-top">${sheetHpHTML()}${extra}<button class="xbtn" data-a="close" type="button" aria-label="닫기">✕</button></div>`;
 // ---- 장비 탭: 3열 × 4줄, 가운데 2·3줄은 캐릭터 (왼쪽 위부터 시계방향 머리 → 목걸이 → 반지 1 → 반지 2 → 가방 → 펫 → 버프 아이템 → 등불 → 하의 → 상의) ----
 // eq: 지금 있는 장비 칸(G.equip), 'pet': 펫, 그 밖은 새 칸(아직 넣을 물건 없음)
-const EQ_CELLS = { head: ['머리', 'head'], neck: ['목걸이', 'neck'], ring: ['반지 1', 'ring'], ring2: ['반지 2'], bag: ['가방'], pet: ['펫', 'pet'], buff: ['버프 아이템'], lamp: ['등불'], legs: ['하의'], body: ['상의', 'body'] };
+const EQ_CELLS = { head: ['머리', 'head'], neck: ['목걸이', 'neck'], ring: ['반지 1', 'ring'], ring2: ['반지 2'], bag: ['가방'], pet: ['펫', 'pet'], buff: ['버프 아이템'], lamp: ['등불'], legs: ['하의', 'legs'], body: ['상의', 'body'] };
 const EQ_GRID = [['head', 'neck', 'ring'], ['body', null, 'ring2'], ['legs', null, 'bag'], ['lamp', 'buff', 'pet']];
 const isNewCell = c => !EQ_CELLS[c] || !EQ_CELLS[c][1];
 function cellHTML(c) {
@@ -8070,7 +8109,7 @@ function cellHTML(c) {
 function charEqHTML() {
   let h = `<div class="eqgrid">`;
   EQ_GRID.forEach((row, r) => row.forEach((c, k) => { if (c) h += `<div class="eqcell" style="grid-row:${r + 1};grid-column:${k + 1}">${cellHTML(c)}<small>${EQ_CELLS[c][0]}</small></div>`; }));
-  h += `<div class="eqme" style="grid-row:2/4;grid-column:2"><img class="px" src="${charPreview(curChar(), 0, 'down')}" alt="내 캐릭터"><small>세트 ${SET_N[G.eqSet || 0]}</small></div></div>`;
+  h += `<div class="eqme" style="grid-row:2/4;grid-column:2"><img class="px" src="${charPreview(curChar(), 0, 'down')}" alt="내 캐릭터"><small>세트 ${SET_N[G.eqSet || 0]}</small></div></div><div class="eqdef">방어력 ${armorDef()} · 받는 피해 −${Math.round((1 - armorMul()) * 100)}%</div>`;
   const c = UIS.chSlot; if (!c) return h;
   const [n, sl] = EQ_CELLS[c];
   if (!sl) return h + `<div class="detail eqd noimg"><div><h3>${n}</h3><p>아직 넣을 수 있는 물건이 없어요.</p></div></div>`;
