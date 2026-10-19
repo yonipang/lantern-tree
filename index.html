@@ -392,9 +392,9 @@ body.touch #pcHint{display:none}
 .goal .ql{line-height:16px}
 .side{gap:8px}
 .sbtn{width:48px;height:48px;gap:0}
-.sbtn img{display:none}
-body:not(.touch) .sbtn{padding-top:12px}
-#bossbar{top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 16px + 52px + 8px)}
+.sbtn img{display:block;width:32px;height:32px} /* v111: 글자 대신 아이콘 (이름은 aria-label·말풍선 title) */
+.sbtn span,body:not(.touch) .sbtn .k{display:none}
+#bossbar{top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 16px + 48px + 8px)}
 /* 큰 버튼·스킬: 공격은 단축칸 위 32px, 상호작용은 공격 위 16px, 스킬 두 개는 공격 왼쪽 8px에 위아래(사이 8) */
 #atkBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px + var(--slotS) + 12px + 32px);width:80px;height:80px}
 #actBtn{right:calc(env(safe-area-inset-right,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px + var(--slotS) + 12px + 32px + 80px + 16px);width:80px;height:80px}
@@ -419,7 +419,6 @@ body.touch #hbFlip{width:var(--slotS)}
 .sheet,.btn,.tab,.goal,#hotbar,#bossbar,.chip,.rc,.slot,.ing,.qty button,#craftNote,.toolchip,.xbtn{--pb:0px;clip-path:polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% + var(--pb) - 2px),calc(100% - 2px) calc(100% + var(--pb) - 2px),calc(100% - 2px) calc(100% + var(--pb)),2px calc(100% + var(--pb)),2px calc(100% + var(--pb) - 2px),0 calc(100% + var(--pb) - 2px),0 2px,2px 2px)}
 .btn{--pb:2px}
 /* 16px 글자가 들어가도록 넓힌 곳 (와이어프레임보다 조금 큼) */
-.sbtn{width:52px}
 .eqlist.eq2{grid-template-columns:repeat(auto-fit,minmax(min(100%,168px),1fr))}
 #pcHint{max-width:340px;line-height:20px}
 
@@ -431,6 +430,7 @@ body.touch #hbFlip{width:var(--slotS)}
 .sheet.hasotab{max-height:calc(86% - 42px)}
 .sh-top{flex:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .sh-top .sh-hp{flex:1;margin:0;min-width:0}
+.sh-top .xbtn{margin-left:auto} /* v111: 체력 막대가 없는 창도 닫기 버튼은 오른쪽 */
 .btn.sm{min-height:36px;padding:0 10px;font-size:16px;flex:none}
 .stabs{position:absolute;right:100%;top:56px;display:flex;flex-direction:column;gap:4px}
 .stab{width:44px;height:48px;padding:0;background:var(--panel2);border:2px solid var(--line);border-right:0;color:var(--muted);font-size:16px}
@@ -532,6 +532,16 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 .btn.barter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:left;min-height:48px}.btn.barter.off{opacity:.55}.btn.barter small{flex-basis:100%;color:var(--muted);font-size:16px}.barrow{color:var(--amber)}
 /* v106 일기 */
 .prose.diary{background:#2a2139;border:2px solid #4d3e66;padding:10px;color:#e8dcc0}
+/* v111: 프로필 창 (얼굴을 누르면) — 얼굴 · 이름 · 레벨 · 경험치, 아래에 플레이 기록 */
+.prof{display:flex;gap:12px;align-items:center}
+.prof-face{width:64px;height:60px;flex:none;border:2px solid var(--line);background:rgba(27,20,38,.78)}
+.prof-t{flex:1;min-width:0;display:grid;gap:4px;font-size:16px}
+.prof-t b{font-weight:400;color:var(--amber)}
+.prof-t .bar{padding:2px}
+.xp .fill{background:linear-gradient(#ffe9a8,var(--amber) 45%,#d99a2b)}
+.lgbtn{min-height:28px;padding:2px 6px 2px 2px} /* v111: 범례를 작게 (아이콘 16px) */
+.lgbtn img{width:16px;height:16px}
+.lgbtn i{width:10px;height:10px;margin:0 2px 0 4px;box-shadow:0 0 0 2px #1b1426}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -539,7 +549,7 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
   <div id="hud">
     <div class="stat">
       <div class="top">
-        <button class="face" id="face" type="button" aria-label="캐릭터"><img class="px" id="faceImg" alt=""><span class="lv" id="lvTxt">1</span><i class="xpbar"><b id="xpFill"></b></i></button>
+        <button class="face" id="face" type="button" aria-label="프로필"><img class="px" id="faceImg" alt=""><span class="lv" id="lvTxt">1</span><i class="xpbar"><b id="xpFill"></b></i></button>
         <div class="ring hu" id="huRing" title="배고픔"><img class="px" id="icHu" alt="배고픔"></div>
         <div class="ring env" id="envRing" title="더위·추위" hidden><img class="px" id="icEnv" alt="더위·추위"></div>
       </div>
@@ -548,10 +558,10 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
     </div>
     <div id="bossbar" hidden><div class="bn">말랑대왕</div><div class="track"><div class="fill" id="bossFill"></div><i class="tk" style="left:33.3%"></i><i class="tk" style="left:66.7%"></i></div></div>
     <div class="side">
-      <button class="sbtn" id="bStat" type="button"><img class="px" alt=""><span>캐릭터</span><i class="k">C</i></button>
-      <button class="sbtn" id="bMap" type="button"><img class="px" alt=""><span>지도</span><i class="k">M</i></button>
-      <button class="sbtn" id="bInv" type="button"><img class="px" alt=""><span>가방</span><i class="k">I</i><em class="full">가득</em></button>
-      <button class="sbtn" id="bMenu" type="button"><img class="px" alt=""><span>설정</span><i class="k">Esc</i></button>
+      <button class="sbtn" id="bStat" type="button" aria-label="캐릭터" title="캐릭터 (C)"><img class="px" alt=""><span>캐릭터</span><i class="k">C</i></button>
+      <button class="sbtn" id="bMap" type="button" aria-label="지도" title="지도 (M)"><img class="px" alt=""><span>지도</span><i class="k">M</i></button>
+      <button class="sbtn" id="bInv" type="button" aria-label="가방" title="가방 (I)"><img class="px" alt=""><span>가방</span><i class="k">I</i><em class="full">가득</em></button>
+      <button class="sbtn" id="bMenu" type="button" aria-label="설정" title="설정 (Esc)"><img class="px" alt=""><span>설정</span><i class="k">Esc</i></button>
     </div>
   </div>
   <div id="toasts" aria-live="polite"></div>
@@ -2982,6 +2992,8 @@ function playRecordHTML() {
   if (UIS.qtShow) h += `<div class="qtlist">${rows.length ? rows.join('') : '<p class="hint">아직 기록된 목표가 없어요. 이제부터 목표를 이룰 때마다 그때의 플레이 시간이 남아요.</p>'}</div>`;
   return h;
 }
+// v111: 설정의 「클라우드 저장」은 숨기고, 클라우드와 이 기기의 모험이 다를 때 고르는 상자만 보여요 (고르기 전에는 클라우드에 올리지 않아서)
+function cloudPendingHTML() { if (CLOUD.st !== 'in' || !CLOUD.pending) return ''; const h = cloudMenuHTML(); const i = h.indexOf('<div class="impbox">'); return i < 0 ? '' : h.slice(i, h.indexOf('</div></div>', i) + 12); }
 function cloudMenuHTML() {
   let h = `<div class="lbl" style="margin-top:16px">클라우드 저장</div>`;
   if (CLOUD.st === 'na') return h + `<p class="hint">${CLOUD.err === 'load' ? '클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.' : '사이트 주소(홈 화면 앱)로 연 게임에서 쓸 수 있어요.'}</p>`;
@@ -2992,7 +3004,7 @@ function cloudMenuHTML() {
     return h;
   }
   if (CLOUD.pending) h += `<div class="impbox"><p>${CLOUD.diffRun ? '클라우드에 다른 모험이 있어요' : `클라우드에 더 최근 세이브가 있어요`}<br><span style="color:var(--muted);font-size:16px">${CLOUD.diffRun ? '어느 쪽으로 할까요? 고르기 전까지는 클라우드에 올리지 않아요. 고르지 않은 쪽은 백업해 둬요.' : '불러오면 지금 세이브는 백업해 둬요.'}</span></p>${cloudCompareHTML(CLOUD.pending)}<div class="menu-two"><button class="btn" data-a="clTake" type="button">클라우드 것 불러오기</button><button class="btn ghost" data-a="clKeep" type="button">이 기기 것 쓰기</button></div></div>`;
-  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-two"><button class="btn ghost" data-a="clUpNow" type="button" ${CLOUD.busy ? 'disabled' : ''}>지금 올리기</button><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
+  h += `<p class="hint">${escHTML(CLOUD.user.name)} · ${CLOUD.lastUp ? '마지막 업로드 ' + fmtTime(CLOUD.lastUp) : '아직 올리지 않았어요'} · 2분마다 자동으로 올려요</p><div class="menu-list"><button class="btn ghost" data-a="clOut" type="button">로그아웃</button></div>`;
   if (CLOUD.prev && !CLOUD.pending) { const i = saveInfo(parseSave(CLOUD.prev.data), CLOUD.prev.at);
     h += `<p class="hint" style="margin-top:10px">클라우드 백업 · 덮어쓰기 전 세이브<br>${infoLine(i)}</p><div class="menu-list"><button class="btn ${UIS.prevAsk ? 'warn' : 'ghost'}" data-a="clPrev" type="button">${UIS.prevAsk ? '정말 되돌릴까요? (지금 세이브는 백업돼요)' : '클라우드 백업으로 되돌리기'}</button></div>`; }
   return h;
@@ -7238,7 +7250,7 @@ function floorPx(f, wx, wy) { if (!TR.tex) bakeFloor(0, 0, 0, 0); const t = TR.t
 // 몬스터가 생기는 규칙·지도 밝히기는 예전처럼 render/light.js의 칸 단위 밝기를 써요 (보이는 것만 바뀜).
 // 그래픽 칩을 못 쓰거나 메뉴에서 「예전 빛」을 고르면 예전 방식 그대로예요.
 
-let lightPref = 'new'; try { lightPref = localStorage.getItem('lantern-tree-light') || 'new'; } catch (e) { }
+let lightPref = 'new'; try { if (localStorage.getItem('lantern-tree-light') === 'force') lightPref = 'force'; } catch (e) { } // v111: 설정 「빛 효과」를 없애고 새 빛으로 고정 (못 쓰는 기기는 그대로 자동으로 예전 빛)
 const setLightPref = v => { lightPref = v; try { localStorage.setItem('lantern-tree-light', v); } catch (e) { } };
 const GLST = { failed: false, err: '', frames: 0, renderer: '', soft: false };
 // ---------------- G-buffer (2D 캔버스 두 장) ----------------
@@ -7536,7 +7548,7 @@ let wcvCss = '';
 let ovDrew = true;
 for (const m of ['fill', 'fillRect', 'fillText', 'stroke', 'strokeRect', 'strokeText', 'drawImage', 'putImageData']) { const f = mainCtx[m]; mainCtx[m] = function () { ovDrew = true; return f.apply(mainCtx, arguments); }; }
 let VIEW = { camX: 0, camY: 0, baseX: 0, baseY: 0 };
-let zoomPref = 'normal'; try { zoomPref = localStorage.getItem('lantern-tree-zoom') || 'normal'; } catch (e) { }
+let zoomPref = 'small'; // v111: 설정 「화면 크기」를 없애고 「작게 (넓게 보기)」로 고정 (예전에 고른 값은 안 씀)
 const setZoomPref = v => { zoomPref = v; };
 let vignette = null;
 let TP = 48, Z = 3, DPR = 1; // 화면 배율 (save/state.js에서 옮김, 11단계)
@@ -8120,7 +8132,11 @@ function drawEntity(it, t) {
     if (e.under) { ctx.fillStyle = '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
     else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
     if (e.slow > 0 || e.poison || e.burn) { ctx.fillStyle = e.burn ? '#ff9b4a' : e.poison ? '#9be37a' : '#bfe6ff'; ctx.fillRect(Math.round(e.x * T - camX) - Z, Math.round((e.y - 1.15 - (e.z || 0)) * T - camY), 2 * Z, 2 * Z); }
-    if (e.hp < (e.mh || def.hp)) { const w = 12 * Z, hx = e.x * T - camX - w / 2, hy = (e.y - .95 - (e.z || 0)) * T - camY; ctx.fillStyle = INK; ctx.fillRect(hx - Z, hy - Z, w + 2 * Z, 3 * Z); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(hx, hy, w * Math.max(0, e.hp / (e.mh || def.hp)), Z); }
+    if (e.hp < (e.mh || def.hp)) { // v111: 픽셀 칸에 맞춰(반올림) 그림 머리 위에 — 키 큰 몬스터 그림을 덮지 않게
+      const img = SPR[e.k], top = e.y + .12 - (e.under || !img ? 14 : effH(img)) / 16 - (e.z || 0), w = 12 * Z, hh = 2 * Z,
+        hx = Math.round(e.x * T - camX - w / 2), hy = Math.round(top * T - camY) - 2 * Z - hh;
+      ctx.fillStyle = INK; ctx.fillRect(hx - Z, hy - Z, w + 2 * Z, hh + 2 * Z); ctx.fillStyle = '#4a1d2a'; ctx.fillRect(hx, hy, w, hh);
+      ctx.fillStyle = '#ff8fa3'; ctx.fillRect(hx, hy, Math.max(e.hp > 0 ? Z : 0, Math.round(w * clamp(e.hp / (e.mh || def.hp), 0, 1) / Z) * Z), hh); }
     return;
   }
   if (it.k === 'b') {
@@ -8391,7 +8407,7 @@ const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, qty: {}
 let panel = null, panelAt = 0;
 function openPanel(kind, data = {}) { bmClose(); /* v91: 창을 열면 건축 끝 */ if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); } if (kind === 'map') { UIS.mapFocus = data.focus || null; UIS.mapWarp = data.warp != null ? data.warp : null; UIS.warpSel = null; UIS.mapV = null; UIS.mapPin = null; } /* v89: 워프포인트·포탈에서 열면 목적지 고르기 */ /* v84: 퀘스트 「지도에서 보기」 */ if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
-function sheetHpHTML() { if (!G || !started) return ''; const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
+function sheetHpHTML() { if (!G || !started || !panel || panel.kind !== 'stat') return ''; /* v111: 창 맨 위 체력 막대는 캐릭터 창에만 */ const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
@@ -8499,7 +8515,7 @@ function renderPanel() {
       + `<div class="legend"><span><i style="background:#7fe0b5"></i>나</span><span><i style="background:#c9a6ff"></i>켜진 워프포인트</span><span><i style="background:#6a5a80"></i>안 켜진 워프포인트</span><span><i style="background:#7fe8f0"></i>포탈</span></div>`
       + `<div class="lbl">갈 수 있는 곳</div>${L.length ? `<div class="menu-list">${L.map(e => `<button class="btn ghost" data-a="warpGo" data-i="${e.i}" type="button">${escHTML(e.name)} · ${Math.round(e.d)}칸</button>`).join('')}</div>` : '<p class="hint">아직 켜진 곳이 없어요.</p>'}</div>`;
   } else if (k === 'map') {
-    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${mapIsAll() ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><div class="mapwrap"><canvas id="mapCv" data-a="mapPin" width="600" height="600"></canvas><div class="mapctl"><button class="btn ghost" data-a="mapZ" data-i="1" type="button" style="font-size:32px" aria-label="확대">+</button><button class="btn ghost" data-a="mapZ" data-i="-1" type="button" style="font-size:32px" aria-label="축소">−</button><button class="btn ghost" data-a="mapMe" type="button" aria-label="내 위치로">나</button></div></div>${navBarHTML()}${mapLegendHTML()}${regionMatHTML()}</div>`;
+    h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${mapIsAll() ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><div class="mapwrap"><canvas id="mapCv" data-a="mapPin" width="600" height="600"></canvas><div class="mapctl"><button class="btn ghost" data-a="mapZ" data-i="1" type="button" style="font-size:32px" aria-label="확대">+</button><button class="btn ghost" data-a="mapZ" data-i="-1" type="button" style="font-size:32px" aria-label="축소">−</button><button class="btn ghost" data-a="mapMe" type="button" aria-label="내 위치로">나</button></div></div>${navBarHTML()}${mapLegendHTML()}</div>`;
   } else if (k === 'tree') {
     h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">옛날 <em>등불지기</em>들이 돌보던 등불나무가 잠들어 있어요. 등불지기들이 맡겨 둔 나무의 빛, <em>빛씨앗</em>을 심을 때마다 나무가 한 단계 깨어나고 빛이 넓어져요. 깨어날 때마다 옛 기억 한 장면을 보여 줘요.</p><p class="prose" style="color:var(--muted)">빛씨앗은 동쪽 동굴의 말랑대왕, 서쪽 버섯숲과 북쪽 수정동굴의 제단, 그리고 남쪽 용암·서쪽 얼음 동굴 깊은 곳의 수호자들이 품고 있어요.</p></div>`;
   } else if (k === 'menu') {
@@ -8507,11 +8523,13 @@ function renderPanel() {
     const marks = G.marks || [];
     const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:6px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
     h += head('<span data-a="devtap">설정</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button><button class="btn ghost" data-a="help" type="button">가이드</button></div>
-      ${playRecordHTML()}
-      <div class="lbl" style="margin-top:12px">세이브 파일</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div>${cloudMenuHTML()}
-      <div class="lbl" style="margin-top:12px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:12px">화면 크기</div><div class="tabs">${[['small', '작게 (넓게 보기)'], ['normal', '보통'], ['large', '크게']].map(([k, n]) => `<button type="button" class="tab ${zoomPref === k ? 'on' : ''}" data-a="zoom" data-i="${k}">${n}</button>`).join('')}</div><div class="lbl" style="margin-top:12px">빛 효과${GLST.failed ? ' <span style="opacity:.7">(이 기기에서는 새 빛을 쓸 수 없어 예전 빛으로 보여요)</span>' : ''}</div><div class="tabs">${[['new', '새 빛 (부드러운 그림자)'], ['old', '예전 빛 (가볍게)']].map(([k, n]) => `<button type="button" class="tab ${(lightPref === 'force' ? 'new' : lightPref) === k ? 'on' : ''}" data-a="light" data-i="${k}">${n}</button>`).join('')}</div>
-      <div class="lbl" style="margin-top:12px">갇혔을 때</div><div class="menu-list"><button class="btn ${UIS.confirmEsc ? 'warn' : 'ghost'}" data-a="escape" type="button">${UIS.confirmEsc ? '한 번 더 누르면 트인 곳으로 옮겨요' : '긴급 탈출'}</button></div>
+      ${canDev() ? `<div class="lbl" style="margin-top:12px">세이브 파일 (개발자 모드)</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div>${cloudMenuHTML()}` : cloudPendingHTML()}
+      <div class="lbl" style="margin-top:12px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div>
+      <div class="menu-list" style="margin-top:12px"><button class="btn ${UIS.confirmEsc ? 'warn' : 'ghost'}" data-a="escape" type="button">${UIS.confirmEsc ? '한 번 더 누르면 트인 곳으로 옮겨요' : '긴급 탈출'}</button></div>
       <div class="menu-list" style="margin-top:12px"><button class="btn ${UIS.confirmNew ? 'warn' : 'ghost'}" data-a="newgame" type="button">${UIS.confirmNew ? '정말 처음부터 시작할까요? (지금 세이브는 백업돼요)' : '처음부터 다시 하기'}</button></div>${dev}</div>`;
+  } else if (k === 'profile') { // v111: 왼쪽 위 얼굴 → 프로필 (캐릭터 이름·레벨·플레이 기록, 플레이 기록은 설정에서 옮김)
+    const R = G.rpg, need = XP_NEED(R.lv), mx = R.lv >= MAX_LV, fi = document.getElementById('faceImg');
+    h += head('프로필', 'star') + `<div class="sh-body"><div class="prof"><img class="px prof-face" src="${fi && fi.src ? fi.src : ''}" alt=""><div class="prof-t"><b>${escHTML(CHARS[curChar()].n)}</b><span>Lv.${R.lv}${mx ? ' · 최고 레벨' : ''}</span><div class="bar xp"><div class="track"><div class="fill" style="width:${mx ? 100 : clamp(R.xp / need * 100, 0, 100)}%"></div></div></div><span class="hint" style="margin:0">경험치 ${mx ? '최고' : R.xp + ' / ' + need}</span></div></div>${playRecordHTML()}</div>`;
   } else if (k === 'help') { h += helpHTML(); // v96: 설정 → 가이드
   } else if (k === 'look') {
     const L = UIS.look; CHARS.__look = lookDef(L); const pv = d => `<img class="px" src="${charPreview('__look', 0, d)}" alt="">`;
@@ -8682,7 +8700,7 @@ function updateHud() { navTick(); // v95: 길 안내 도착
   const R = G.rpg, pts = (R.pts || 0) + (R.sp || 0);
   if (panel && panel.kind === 'stat') ptsSeen = pts; else if (pts < ptsSeen) ptsSeen = pts;
   const mk2 = R.lv + '|' + R.xp + '|' + (pts > ptsSeen);
-  if (mk2 !== lastMp) { lastMp = mk2; $('#lvTxt').textContent = R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#face').title = `Lv.${R.lv} · 경험치 ${R.lv >= MAX_LV ? '최고' : R.xp + '/' + XP_NEED(R.lv)}`; for (const id of ['#bStat', '#face']) $(id).classList.toggle('dot', pts > ptsSeen); }
+  if (mk2 !== lastMp) { lastMp = mk2; $('#lvTxt').textContent = R.lv; $('#xpFill').style.width = (R.lv >= MAX_LV ? 100 : R.xp / XP_NEED(R.lv) * 100) + '%'; $('#face').title = `Lv.${R.lv} · 경험치 ${R.lv >= MAX_LV ? '최고' : R.xp + '/' + XP_NEED(R.lv)}`; $('#bStat').classList.toggle('dot', pts > ptsSeen); /* v111: 얼굴은 프로필이라 빨간 점은 캐릭터 버튼에만 */ }
   // 가방 빨간 점 = 처음 얻은 물건 (가방을 열면 꺼져요, 열려 있는 동안 들어온 것도)
   const bn = bagNew(); if (bn && panel && panel.kind === 'inv') runCmd({ k: 'seenBag' }); const bd = bn && !(panel && panel.kind === 'inv'); if ($('#bInv').classList.contains('dot') !== bd) $('#bInv').classList.toggle('dot', bd);
   updateSkBar();
@@ -8953,7 +8971,7 @@ function questSideHTML() {
 // the map's unopened-treasure markers can be hidden; a per-viewer setting kept in this browser
 let mapChestPref = null;
 const setMapChest = v => { mapChestPref = v; };
-function mapChestOn() { if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
+function mapChestOn() { return true; /* v111: 범례의 「표시」 체크를 없애 늘 보여요 */ if (mapChestPref == null) { try { mapChestPref = localStorage.getItem('lantern-tree-map-chest') !== '0'; } catch (_) { mapChestPref = true; } } return mapChestPref; }
 function drawMap() {
   const c = $('#mapCv'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#0c0a12'; g.fillRect(0, 0, 600, 600);
   flushMap();
@@ -9081,7 +9099,7 @@ function navBarHTML() { const P = UIS.mapPin, N = navPt(), d = t => Math.round(M
 function mapLegendHTML() { const have = new Set(mapMarks().map(m => m.k)), hasW = () => { for (let i = 0; i < G.floor.length; i++) if (G.explored[i] && !G.wall[i] && G.floor[i] === WATER) return true; return false; };
   const btn = k => { const ok = k === 'water' ? hasW() : have.has(k); return `<button class="lgbtn${ok ? '' : ' off'}" data-a="mapFind" data-i="${k}" type="button"><img class="px" src="${markURL(k)}" alt="">${MK[k].n}</button>`; };
   let h = `<div class="legend lgicons"><button class="lgbtn" data-a="mapMe" type="button"><i style="background:#7fe0b5"></i>나</button>`;
-  for (const k in MK) { if (k === 'chest') { h += `<span class="lgpair">${btn(k)}<label class="lgchk" title="지도에 표시"><input type="checkbox" data-a="mapChest" ${mapChestOn() ? 'checked' : ''} aria-label="찾았지만 안 연 보물상자 표시">표시</label></span>`; continue; } h += btn(k); }
+  for (const k in MK) { if (k === 'chest') continue; /* v111: 범례에서 뺌 (지도에는 그대로 보여요) */ h += btn(k); }
   if (UIS.mapFocus) h += '<span><i style="background:transparent;box-shadow:inset 0 0 0 3px #ffc861"></i>퀘스트 목표</span>';
   return h + '</div>'; }
 // ================= v91·v92 건축 모드 (화면): 켜고 끄기, 아래 건축 목록, 화면 누르기·끌기로 놓기, 「놓기」 버튼(앞 칸), 미리보기, v92 놓기/옮기기/뜯기 고르기·되돌리기 =================
@@ -9277,7 +9295,7 @@ function onSheetClick(e) {
   if (a === 'skUp') { if (runCmd({ k: 'skUp', s: i }) === false) return; renderPanel(); return; }
   if (a === 'skReset') { if (!UIS.skAsk) { UIS.skAsk = true; renderPanel(); return; } runCmd({ k: 'skReset' }); UIS.skAsk = false; renderPanel(); return; }
   if (a === 'skSlot') { const [id, n] = String(i).split(':'); if (runCmd({ k: 'skSlot', s: id, n: +n }) === false) return; renderPanel(); return; }
-  if (a === 'save') { saveLocal(); return; }
+  if (a === 'save') { if (CLOUD.user && !CLOUD.pending) { saveLocal(true); cloudUpload(true).then(ok => toast(ok ? '저장했어요 · 클라우드에도 올렸어요' : '저장했어요 (클라우드에는 올리지 못했어요)', ok ? 'good' : 'warn')); } else saveLocal(); return; } // v111: 「지금 올리기」 대신 — 로그인했으면 클라우드에도
   if (a === 'escape') { if (!UIS.confirmEsc) { UIS.confirmEsc = true; renderPanel(); return; } UIS.confirmEsc = false; closePanel(); if (runCmd({ k: 'escape' })) saveLocal(true); return; }
   if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
   if (a === 'talkNext') { panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v104
@@ -9496,7 +9514,7 @@ function setupInput() {
   $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win') closePanel(); });
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
-  $('#face').addEventListener('click', () => started && openPanel('stat')); // v77: 얼굴도 캐릭터 화면
+  $('#face').addEventListener('click', () => started && openPanel('profile')); // v111: 얼굴 → 프로필 (v77: 캐릭터 화면)
   $('#hbFlip').addEventListener('click', () => { if (!started) return; ensureAudio(); flipHotbar(); });
   $('#skBar').addEventListener('pointerdown', e => { const b = e.target.closest('.skb'); if (!b) return; e.preventDefault(); ensureAudio(); command({ k: 'skill', n: +b.dataset.n }); });
   $('#bMap').addEventListener('click', () => started && openPanel('map'));
