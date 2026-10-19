@@ -130,6 +130,7 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 .slot .dur i{display:block;height:100%}
 .slot.broken img{filter:grayscale(1);opacity:.45}
 .slot .brk{position:absolute;top:2px;right:4px;font-size:16px;color:#ff6b7a;text-shadow:0 1px 0 #000}
+.slot .rlvb{position:absolute;left:2px;top:1px;font-size:16px;color:#ff6b5e;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000;pointer-events:none}
 .slot .lvb{position:absolute;right:4px;top:1px;font-size:16px;font-weight:700;color:#ffd25c;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}.slot .cnt{position:absolute;right:4px;bottom:2px;font-size:16px;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}
 .slot .key{position:absolute;left:4px;top:2px;font-size:16px;color:var(--muted)}
 .slot.r1{border-color:#5fbf93}.slot.r2{border-color:#6a9cf0}.slot.r3{border-color:#b07cf5;box-shadow:0 0 6px rgba(176,124,245,.55),inset 0 -2px 0 rgba(0,0,0,.25)}.slot.r4{border-color:#ffc35a;box-shadow:0 0 6px rgba(255,195,90,.6),inset 0 -2px 0 rgba(0,0,0,.25)}
@@ -3507,6 +3508,72 @@ OBJ.warpPt = { n: '워프포인트', solid: 1, warp: 'pt' }; // 회수할 수 �
 OBJ.portal = { n: '포탈', solid: 1, item: 'portal', warp: 'portal' };
 ITEMS.portal = { n: '포탈', kind: 'place', obj: 'portal', d: '놓으면 워프 목적지가 하나 늘어요. 포탈이나 켜진 워프포인트 앞에서 누르면 지도에서 켜진 곳을 골라 이동해요. 한 사람당 5개까지 · 보스방 가까이에는 못 놓아요.' };
 RECIPES.push(Object.assign(Rc('portal', 1, [['crystal', 8], ['ironBar', 4], ['cryGem', 2], ['glowcap', 4]], 'bench', 'furn'), { tier: 3 }));
+// ================= v99 성장 확장 2: 무기 6종 × 6단계 + 착용 레벨 + 보스 특별 무기 6종씩 (dev/design/성장확장.md 2장) =================
+// 단계(0~5) = 작업대·장비제작대 단계(나무 · 구리 · 철 · 수정 · 금·흑요석 · 서리). 7~9단계는 가장 깊은 곳·그림자 틈을 만들 때.
+// 공격력 = 그 단계 검 공격력 × 종류 배율(반올림). 지금 무기도 이 표대로 고쳐요(이름·id 그대로). 도끼는 도구라 이 표 밖이에요.
+// 이 파일은 data/automation-tiers.js 뒤에 있어서 「지형 재료 2배」·레시피 단계 나누기가 적용되지 않아요 — 재료 개수와 단계(tier)를 여기 적힌 그대로 써요.
+const WT_SW = [6, 11, 17, 26, 36, 48]; // 단계별 검 공격력
+const WT_MUL = { sword: 1, dagger: .65, spear: 1.05, hammer: 1.5, bow: .85, staff: .8 };
+const WT_RLV = [1, 5, 12, 20, 30, 40]; // 단계별 착용 레벨
+const WT_ORDER = ['sword', 'dagger', 'spear', 'hammer', 'bow', 'staff'];
+const tierDmg = (t, wt) => Math.round(WT_SW[t] * WT_MUL[wt]);
+// 단계마다 종류별 id (지금 있는 무기는 그 자리에, 없던 자리는 새로)
+const WT_TABLE = [
+  ['swordWood', 'daggerWood', 'spearWood', 'hammerWood', 'bowWood', 'staffWood'],
+  ['swordCopper', 'daggerCopper', 'spearCopper', 'hammerCopper', 'bowCopper', 'staffGlow'],
+  ['swordIron', 'daggerIron', 'spearIron', 'hammerIron', 'bowIron', 'staffIron'],
+  ['swordCrystal', 'daggerCrystal', 'spearCrystal', 'hammerCrystal', 'bowCrystal', 'staffCrystal'],
+  ['swordGold', 'daggerObsidian', 'spearGold', 'hammerObsidian', 'bowGold', 'staffGold'],
+  ['swordFrost', 'daggerFrost', 'spearFrost', 'hammerFrost', 'bowIce', 'staffFrost'],
+];
+// 새 일반 무기 13개: id → [이름, 재료, 고치는 재료, 설명, 구슬 색]
+const NEW_W = {
+  hammerWood: ['나무 망치', [['wood', 8], ['rope', 1]], [['wood', 3]], '느리지만 넓게 쿵! 적을 멀리 밀어내요.'],
+  staffWood: ['나무 지팡이', [['wood', 6], ['glowcap', 1], ['fiber', 2]], [['wood', 2]], '기력을 조금 써서 빛 구슬을 쏴요. 지혜가 높을수록 세져요.', '#cdeccb'],
+  bowCopper: ['구리 활', [['copperBar', 3], ['wood', 4], ['rope', 2]], [['copperBar', 1]], '구리로 보강한 활. 화살이 조금 더 세게 날아가요.'],
+  daggerIron: ['철 단검', [['ironBar', 3], ['wood', 1], ['rope', 1]], [['ironBar', 1]], '날카로운 철 단검. 치명타가 잘 터져요.'],
+  staffIron: ['철 지팡이', [['ironBar', 3], ['glowcap', 4], ['gel', 2]], [['ironBar', 1]], '철 고리로 감싼 지팡이. 단단한 빛 구슬을 쏴요.', '#e6f0ff'],
+  daggerCrystal: ['수정 단검', [['crystal', 6], ['ironBar', 2], ['rope', 1]], [['crystal', 2]], '보랏빛 수정 단검. 빠르게 콕콕 찔러요.'],
+  spearCrystal: ['수정 창', [['crystal', 8], ['ironBar', 3], ['wood', 3]], [['crystal', 3]], '끝이 수정으로 된 창. 멀리서 깊게 찔러요.'],
+  hammerCrystal: ['수정 망치', [['crystal', 10], ['ironBar', 4], ['wood', 2]], [['crystal', 3]], '수정 덩어리를 박은 망치. 쾅! 하고 반짝여요.'],
+  spearGold: ['황금 창', [['goldBar', 4], ['obsidian', 1], ['wood', 3]], [['goldBar', 2]], '황금빛으로 빛나는 긴 창.'],
+  staffGold: ['흑요석 지팡이', [['obsidian', 4], ['goldBar', 2], ['glowcap', 3]], [['obsidian', 2]], '검은 흑요석 끝에서 불빛 구슬이 날아가요.', '#ffc861'],
+  swordFrost: ['서리 검', [['frostShard', 8], ['goldBar', 2], ['ironBar', 2]], [['frostShard', 3]], '차갑게 빛나는 서리 검.'],
+  daggerFrost: ['서리 단검', [['frostShard', 5], ['goldBar', 1], ['rope', 1]], [['frostShard', 2]], '얼음처럼 날카로운 단검.'],
+  hammerFrost: ['서리 망치', [['frostShard', 10], ['goldBar', 3], ['wood', 2]], [['frostShard', 3]], '얼음 덩어리를 단 망치. 땅이 얼 만큼 무거워요.'],
+  bowIce: ['얼음 활', [['frostShard', 6], ['goldBar', 2], ['rope', 3]], [['frostShard', 2]], '얼음으로 깎은 활. 차가운 화살이 멀리 날아가요.'],
+};
+const W_DUR = [160, 310, 550, 800, 1000, 1300], W_RAR = [0, 0, 1, 2, 3, 3];
+for (let t = 0; t < WT_TABLE.length; t++) WT_TABLE[t].forEach((id, k) => {
+  const wt = WT_ORDER[k], nw = NEW_W[id];
+  if (nw) { const [n, req, fix, d, orb] = nw; ITEMS[id] = { n, kind: 'sword', wt, stack: 1, d, orb }; DUR[id] = [W_DUR[t], fix]; RAR[id] = W_RAR[t];
+    const r = Rc(id, 1, req, 'smelter', 'weapon'); r.tier = t; r.cat = 'weapon'; RECIPES.push(r); }
+  Object.assign(ITEMS[id], { dmg: tierDmg(t, wt), rlv: WT_RLV[t], wtier: t });
+});
+// 황금 활은 금 단계인데 재료에 서리 조각이 있어 서리 장비제작대에서만 만들던 것 → 흑요석으로 바꿔 금 장비제작대에서
+{ const r = RECIPES.find(x => x.out === 'bowGold'); if (r) { r.req = r.req.map(([m, c]) => m === 'frostShard' ? ['obsidian', c] : [m, c]); r.tier = 4; } }
+// ---- 보스 특별 무기: 보스마다 6종, 그 보스 단계 공격력 × 1.25 + 그 보스의 효과. 지금 보스 무기 5개는 그 보스의 6종 가운데 하나 ----
+const BOSS_TIER = { slime: 1, queen: 2, golem: 3, turtle: 4, spirit: 5 };
+const SP_MUL = 1.25;
+// 보스 → 종류별 id (지금 있는 것 그대로) · 이름 앞말 · 효과 · 고치는 재료 · 구슬 색
+const BOSS_W = {
+  slime: { ids: ['swordSlime', 'daggerSlime', 'spearSlime', 'hammerSlime', 'bowSlime', 'staffSlime'], pre: '말랑대왕', fx: 'slow', fix: [['gel', 6]], orb: '#b8f09a' },
+  queen: { ids: ['swordQueen', 'daggerQueen', 'spearQueen', 'hammerQueen', 'bowQueen', 'staffQueen'], pre: '포자 여왕의', fx: 'poison', fix: [['shroomCap', 3]], orb: '#e2b8ff' },
+  golem: { ids: ['swordGolem', 'daggerGolem', 'spearGolem', 'hammerGolem', 'bowGolem', 'staffGolem'], pre: '수정 거인의', fx: 'split', fix: [['crystal', 4]], orb: '#d6c2ff' },
+  turtle: { ids: ['swordLava', 'daggerLava', 'spearLava', 'hammerLava', 'bowLava', 'staffLava'], pre: '용암 거북의', fx: 'burn', fix: [['obsidian', 3]], orb: '#ffb36b' },
+  spirit: { ids: ['swordSpirit', 'daggerSpirit', 'spearSpirit', 'hammerSpirit', 'bowFrost', 'staffSpirit'], pre: '서리 정령의', fx: 'chill', fix: [['frostShard', 3]], orb: '#d4f6ff' },
+};
+const SP_NAME = { sword: '검', dagger: '단검', spear: '창', hammer: '망치', bow: '활', staff: '지팡이' };
+const SP_D = { slow: '맞은 적이 끈적해져 느려져요.', poison: '맞을 때마다 독 포자가 퍼져요.', split: '맞은 곳에서 수정 파편이 튀어요.', burn: '맞은 자리에 불꽃이 일어요.', chill: '맞은 적이 얼어붙어요.' };
+const SP_DUR = [0, 700, 800, 900, 1300, 1300];
+const SP_OF = {}; // 특별 무기 id → 보스
+for (const b in BOSS_W) { const B = BOSS_W[b], t = BOSS_TIER[b];
+  B.ids.forEach((id, k) => { const wt = WT_ORDER[k]; SP_OF[id] = b;
+    if (!ITEMS[id]) { ITEMS[id] = { n: `${B.pre} ${SP_NAME[wt]}`, kind: 'sword', wt, stack: 1, fx: B.fx, d: `${josa(B.pre.replace(/의$/, ''), '이', '가')} 남긴 ${SP_NAME[wt]}. ${SP_D[B.fx]}`, orb: wt === 'staff' ? B.orb : undefined }; DUR[id] = [SP_DUR[t], B.fix]; }
+    Object.assign(ITEMS[id], { dmg: Math.round(tierDmg(t, wt) * SP_MUL), rlv: WT_RLV[t], wtier: t, fx: B.fx }); RAR[id] = 3; });
+}
+// 새벽빛 검(전설, 두 핵으로 만듦)은 표 밖이라 공격력 그대로, 착용 레벨만 서리 단계와 같이. 도끼(도구)도 단계에 맞춰 착용 레벨
+Object.assign(ITEMS.swordDawn, { rlv: 40 }); ITEMS.axeStone.rlv = 1; ITEMS.axeCopper.rlv = 5; ITEMS.axeIron.rlv = 12;
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -3739,6 +3806,9 @@ const hatMul = () => wearing('woolHat') ? .85 - .03 * eqLv('woolHat') : 1;
 function eqEffect(sl, s) {
   if (!s) return sl === 'ring' ? '비어 있어요 · 장비제작대에서 만들어요' : '비어 있어요';
   return (s.lv ? `강화 +${s.lv} · ` : '') + upgText(s.id, lvOf(s)); }
+// v99 착용 레벨: 레벨이 모자라면 들 수 없어요 (무기 rlv, v100부터 방어구도)
+const rlvOf = id => (ITEMS[id] && ITEMS[id].rlv) || 1;
+const rlvOk = id => rlvOf(id) <= ((G && G.rpg && G.rpg.lv) || 1);
 // ================= 제작: 가까운 제작대·제작 자리, 만들 수 있는지, 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // recipes people usually make many of at once get a quantity picker
@@ -4444,8 +4514,8 @@ function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; const h = sel
 // v48: the weapon held in the hotbar is the weapon (there is no weapon slot any more); otherwise the fist
 const FIST = { n: '주먹', dmg: 3, id: 'hand', wt: 'fist' };
 const wpOf = s => { const it = ITEMS[s.id]; return { ...it, id: s.id, slot: s, dmg: it.dmg * (1 + UPG_DMG * lvOf(s)) }; }; // v43: each upgrade level adds 8% damage
-function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'sword' && !isBroken(s)) return wpOf(s); // v65: the attack button always has a weapon
-  const all = G.inv.filter(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x)); if (!all.length) return FIST;
+function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'sword' && !isBroken(s) && rlvOk(s.id)) return wpOf(s); // v65: the attack button always has a weapon (v99: 착용 레벨이 모자란 무기는 빼고)
+  const all = G.inv.filter(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x) && rlvOk(x.id)); if (!all.length) return FIST;
   const last = G.lastW && all.find(x => x.id === G.lastW); if (last) return wpOf(last);
   let b = all[0]; for (const x of all) if (wpOf(x).dmg > wpOf(b).dmg) b = x; return wpOf(b); }
 const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1); // v44 매의 눈
@@ -4551,6 +4621,7 @@ onFrame('attack', dt => attackTick(dt));
 function attackTick(dt) { const p = G.p; G.atkT -= dt; G.atkQ = Math.max(0, G.atkQ - dt); if (p.dead > 0 || p.sleep) { G.atkQ = 0; return; } if ((G.atkQ > 0 || ctlOf(p).atk) && G.atkT <= 0) { G.atkQ = 0; doAttack(); } }
 function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
+  { const h = selItem(); if (h && ITEMS[h.id] && ITEMS[h.id].kind === 'sword' && !rlvOk(h.id)) emit('toast', `${ITEMS[h.id].n}은(는) Lv.${rlvOf(h.id)}부터 들 수 있어요`, 'bad', 'rlv'); }
   const w = curWeapon(), WT = wtOf(w); if (w.id !== 'hand') G.lastW = w.id;
   let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
@@ -4673,7 +4744,7 @@ function hitBoss(b, dmg, crit, fx) {
     G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
-    if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { G.stats.uniq[b.k] = 1; spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); } }
+    if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -4682,7 +4753,7 @@ function hitBoss(b, dmg, crit, fx) {
     if (b.k === 'golem') { spawnDrop('crystal', 8, b.x, b.y); spawnDrop('cryGem', 3, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); emit('toast', '수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
   }
 }
-function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
+function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   emit('toast', `${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
   if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
@@ -4789,6 +4860,12 @@ function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx, dy] o
 function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); emit('puff', e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
 function cloneTick(b, dt) { const cl = G.enemies.filter(e => e.k === 'spiritClone'); cl.forEach((e, i) => { const a = (b.anim || 0) * .9 + i * Math.PI + .8, tx = b.x + Math.cos(a) * 2.8, ty = b.y + Math.sin(a) * 1.8, k = Math.min(1, dt * 3); if (!boxHits(e.x + (tx - e.x) * k, e.y + (ty - e.y) * k, .3)) { e.x += (tx - e.x) * k; e.y += (ty - e.y) * k; } e.z = .45; e.anim = b.anim; }); return cl; }
 function pillarBlocks(s, tx, ty) { const i = idx(tx, ty), o = G.objs.get(i); if (!o || o.t !== 'icePillar') return false; o.hp = (o.hp || 4) - 1; emit('puff', s.x, s.y, '#d4f6ff', 4, 1.6, .2); if (o.hp <= 0) { G.objs.delete(i); emit('puff', tx + .5, ty + .5, '#e8f8ff', 14, 3, .4); emit('sfx', 'brk'); markLight(); } return true; }
+// v99 보스 특별 무기: 보스마다 6종(검·단검·창·망치·활·지팡이) 가운데 아직 안 받은 것부터 하나 (첫 처치 1개 확정, 재도전 35%)
+// 옛 세이브에서 이미 받은 그 보스의 예전 무기(UNIQ_OF)는 받은 것으로 쳐요
+function pickSp(k) {
+  const B = BOSS_W[k]; if (!B) return UNIQ_OF[k]; const got = G.stats.spGot = G.stats.spGot || {};
+  if (G.stats.uniq && G.stats.uniq[k] && UNIQ_OF[k]) got[UNIQ_OF[k]] = 1;
+  const left = B.ids.filter(id => !got[id]), pool = left.length ? left : B.ids, id = pool[Math.floor(rand() * pool.length)]; got[id] = 1; return id; }
 // ================= 자연: 꽃잎 구역, 작물·어린나무 자라기, 벤 뒤 처리, 하루 하나 새 자연물 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const WATER = 10;
@@ -5736,6 +5813,21 @@ ICON.swordLava = swordIcon('#e8501f', '#ffc861', '#5a3a2e');
 ICON.bowFrost = bowIcon('#5a9ac8', '#e8f8ff', '#7fd8f0');
 ICON.swordDawn = swordIcon('#ffe9a8', '#ffffff', '#ff8fa3');
 ICON.pickStar = pickIcon('#ffe9a8', '#ffffff');
+// v99 새 무기 아이콘 (Claude 임시 그림 — 지금 무기 아이콘 모양에 색만 바꿈. 손그림으로 바꾸려면 dev/art/icons/<id>.png)
+const W99_ICON = {
+  hammerWood: hammerIcon(C.wood, C.woodL, C.woodD), staffWood: staffIcon('#9fd89a', '#e8ffe0'), bowCopper: bowIcon(C.copper, C.copperL, C.copperL),
+  daggerIron: daggerIcon(C.iron, C.ironL, C.amber), staffIron: staffIcon('#c8d0dc', '#ffffff'),
+  daggerCrystal: daggerIcon(C.cry, C.cryL, C.ironD), spearCrystal: spearIcon(C.cry, C.cryL), hammerCrystal: hammerIcon(C.cry, C.cryL, C.cryD),
+  spearGold: spearIcon('#ffd25c', '#fff1b0'), staffGold: staffIcon('#ff9b4a', '#ffe0a8'),
+  swordFrost: swordIcon('#7fd8f0', '#e8f8ff', '#5a9ac8'), daggerFrost: daggerIcon('#7fd8f0', '#e8f8ff', '#5a9ac8'), hammerFrost: hammerIcon('#9fd8f0', '#e8f8ff', '#5a9ac8'), bowIce: bowIcon('#9fd8f0', '#ffffff', '#7fd8f0'),
+  // 보스 특별 무기 (보스 색)
+  swordSlime: swordIcon('#86d96b', '#d2f7b8', '#4f9e45'), daggerSlime: daggerIcon('#86d96b', '#d2f7b8', '#4f9e45'), spearSlime: spearIcon('#86d96b', '#d2f7b8'), bowSlime: bowIcon('#4f9e45', '#86d96b', '#d2f7b8'), staffSlime: staffIcon('#86d96b', '#d2f7b8'),
+  swordQueen: swordIcon('#c58cf0', '#f6e6ff', '#7d3fa3'), spearQueen: spearIcon('#c58cf0', '#f6e6ff'), hammerQueen: hammerIcon('#c58cf0', '#f6e6ff', '#7d3fa3'), bowQueen: bowIcon('#7d3fa3', '#c58cf0', '#f6e6ff'), staffQueen: staffIcon('#c58cf0', '#f6e6ff'),
+  swordGolem: swordIcon('#8f86b8', C.cryL, '#6a6488'), daggerGolem: daggerIcon('#8f86b8', C.cryL, '#6a6488'), spearGolem: spearIcon('#8f86b8', C.cryL), hammerGolem: hammerIcon('#8f86b8', C.cryL, '#6a6488'), staffGolem: staffIcon('#b493f5', C.cryL),
+  daggerLava: daggerIcon('#e8501f', '#ffc861', '#5a3a2e'), spearLava: spearIcon('#e8501f', '#ffc861'), hammerLava: hammerIcon('#e8501f', '#ffc861', '#5a3a2e'), bowLava: bowIcon('#5a3a2e', '#e8501f', '#ffc861'), staffLava: staffIcon('#ff7a3d', '#ffc861'),
+  swordSpirit: swordIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), daggerSpirit: daggerIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), spearSpirit: spearIcon('#5a9ac8', '#e8f8ff'), hammerSpirit: hammerIcon('#5a9ac8', '#e8f8ff', '#3a6a98'), staffSpirit: staffIcon('#d4f6ff', '#ffffff'),
+};
+for (const id in W99_ICON) ICON[id] = W99_ICON[id];
 const arrowIcon = (h, hl) => A => { A.line(2, 14, 11, 5, '#8a6a52', 1); A.line(3, 14, 11, 6, '#b8946a', 1); A.poly([[9.5, 3.5], [14.5, 1.5], [12.5, 6.5]], h); A.p(12, 4, hl); A.r(1, 11, 2, 2, '#eef2f7'); A.r(3, 13, 2, 2, '#eef2f7'); A.p(2, 12, '#ff8fa3'); };
 for (const id in ARROWS) ICON[id] = arrowIcon(ARROWS[id][2], '#ffffff');
 const stoneDrill = dir => A => { A.r(3, 8, 10, 10, '#8f8aa3'); A.r(3, 8, 10, 2, '#b9b4cc'); A.r(3, 8, 1, 10, '#a39eb5'); A.r(12, 8, 1, 10, '#625d78'); A.p(5, 15, '#625d78'); A.p(10, 11, '#625d78'); A.p(9, 16, '#625d78');
@@ -7767,7 +7859,7 @@ function drawEnv() { const E = G.env || {}, bar = $('#envRing'), on = !!E.k; if 
 // ---- the tool slot (front of the hotbar) and its row ----
 let toolRowOpen = false;
 function toolSlotHTML() { const s = heldTool() || toolRowList()[0] || null, on = G.sel < 0;
-  return `<button type="button" class="slot tslot ${on ? 'sel' : ''} ${s && isBroken(s) ? 'broken' : ''}" data-tool="1" aria-label="도구 칸${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}` : '<span class="tnone">도구</span>'}<span class="tup">▲</span></button>`; }
+  return `<button type="button" class="slot tslot ${on ? 'sel' : ''} ${s && isBroken(s) ? 'broken' : ''}" data-tool="1" aria-label="도구 칸${s ? ' · ' + ITEMS[s.id].n : ''}">${s ? `<img class="px" src="${iconURL(s.id)}" alt="">${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${rlvOk(s.id) ? '' : `<span class="rlvb">Lv.${rlvOf(s.id)}</span>`}${durBar(s)}` : '<span class="tnone">도구</span>'}<span class="tup">▲</span></button>`; }
 function toggleToolRow(force) { toolRowOpen = force != null ? force : !toolRowOpen; renderToolRow(); }
 function renderToolRow() { let el = $('#toolRow'); if (!el) { el = document.createElement('div'); el.id = 'toolRow'; $('#game').appendChild(el);
     el.addEventListener('click', e => { const b = e.target.closest('[data-tk]'); if (!b) return; ensureAudio(); const s = G.tools[+b.dataset.tk]; if (s) { runCmd({ k: 'hold', i: +b.dataset.tk }); emit('sfx', 'click'); } toggleToolRow(false); }); }
@@ -7783,7 +7875,7 @@ function updateCtrlHud() { const a = G.act || {};
   const alt = curAlt(), sb = $('#subBtn'); if (sb) { if (sb.hidden === !!alt) sb.hidden = !alt; const key = alt ? alt.lbl + '|' + alt.icon : ''; if (alt && sb.dataset.k !== key) { sb.dataset.k = key; $('#subIcon').src = iconURL(alt.k === 'rot' ? 'rotate' : alt.icon || 'hand'); $('#subLbl').textContent = alt.lbl; sb.setAttribute('aria-label', alt.lbl); } }
   const nx = $('#altNext'); if (nx) { const v = !!alt && G.alts.length > 1; if (nx.hidden === v) nx.hidden = !v; } }
 function durBar(s) { if (s && s.id === 'wcan') return `<span class="dur"><i style="width:${Math.max(4, Math.round((s.w || 0) / WCAN_MAX * 100))}%;background:${s.w ? '#6fb8ff' : '#ff6b7a'}"></i></span>`; if (!s || !DUR[s.id]) return ''; const mx = DUR[s.id][0], d = durOf(s); if (d >= mx) return ''; const f = d / mx, col = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; return `<span class="dur"><i style="width:${Math.max(4, Math.round(f * 100))}%;background:${col}"></i></span>`; }
-function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
+function slotHTML(s, a, i, cls = '') { const br = isBroken(s), rr = s ? rarOf(s.id) : -1; return `<button type="button" class="slot ${cls} ${br ? 'broken' : ''} ${rr >= 1 ? 'r' + rr : ''}" data-a="${a}" data-i="${i}" aria-label="${s ? ITEMS[s.id].n + (br ? ' (망가짐)' : '') + ' ' + s.c + '개' : '빈 칸'}">${s ? `<img class="px" src="${iconURL(s.id)}" alt=""><span class="cnt">${s.c > 1 ? s.c : ''}</span>${s.lv ? `<span class="lvb">+${s.lv}</span>` : ''}${rlvOk(s.id) ? '' : `<span class="rlvb">Lv.${rlvOf(s.id)}</span>`}${durBar(s)}${br ? '<span class="brk">!</span>' : ''}` : ''}</button>`; }
 let invDirty = true; // 단축칸을 다시 그릴 때 (규칙은 emit('inv'), 8단계부터 내 플레이어 것만)
 const markInv = () => { invDirty = true; };
 onEvent('inv', onlyMe(() => { invDirty = true; }));
@@ -8033,7 +8125,7 @@ function bagBarHTML() {
 }
 // 칸 위 말풍선 (고른 칸, PC는 마우스를 올린 칸)
 function tipFor(s) { if (!s) return ''; const it = ITEMS[s.id], st = itemStat(it, s), r = rarOf(s.id);
-  return `<b>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}${s.c > 1 ? ` <span style="color:var(--muted)">× ${s.c}</span>` : ''}</b><p>${it.d || FURN_D}</p>${r >= 0 && (it.kind === 'sword' || it.kind === 'pick' || r >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, r)][1]}">★ ${RARITY[Math.max(0, r)][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}`; }
+  return `<b>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}${s.c > 1 ? ` <span style="color:var(--muted)">× ${s.c}</span>` : ''}</b><p>${it.d || FURN_D}</p>${r >= 0 && (it.kind === 'sword' || it.kind === 'pick' || r >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, r)][1]}">★ ${RARITY[Math.max(0, r)][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${rlvOf(s.id) > 1 ? `<div class="st"${rlvOk(s.id) ? '' : ' style="color:#ff7a6b"'}>착용 레벨 ${rlvOf(s.id)}${rlvOk(s.id) ? '' : ' · 레벨이 모자라요'}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}`; }
 function tipHTML() { const t = UIS.toolSel != null ? (G.tools || [])[UIS.toolSel] : null; return tipFor(t || (UIS.invSel != null ? G.inv[UIS.invSel] : null)); }
 // 말풍선을 칸 바로 위에 (자리가 없으면 아래에)
 function placeTip(sh, el) {
