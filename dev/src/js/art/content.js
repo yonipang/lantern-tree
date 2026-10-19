@@ -457,3 +457,35 @@ export const MON_SPR_DEF = {
   icicleSprite: () => mk(16, 18, A => { A.e(8, 6, 4, 4, '#5a9ac8'); A.e(8, 5.5, 3.5, 3.5, '#9fd8f0'); A.p(7, 5, INK); A.p(9, 5, INK); A.p(8, 3, '#ffffff'); for (const [x, h] of [[4, 5], [8, 7], [12, 5]]) A.poly([[x - 1.5, 9], [x + 1.5, 9], [x, 9 + h]], '#d4f6ff'); for (const [x, h] of [[4, 5], [8, 7], [12, 5]]) A.line(x, 9, x, 9 + h - 2, '#ffffff', 1); }),
   yetiBaby: () => mk(18, 18, A => { A.e(9, 12, 7, 5.5, '#c8dcef'); A.e(9, 11.5, 6.5, 5, '#f4f8ff'); A.e(9, 5.5, 4.5, 4, '#f4f8ff'); A.e(9, 6.5, 3, 2.2, '#9fb8d0'); A.p(8, 6, INK); A.p(10, 6, INK); A.p(9, 7, '#5a88b0'); A.r(2, 10, 3, 5, '#f4f8ff'); A.r(13, 10, 3, 5, '#f4f8ff'); A.e(3, 9, 2, 2, '#d4f6ff'); A.r(5, 16, 3, 2, '#c8dcef'); A.r(10, 16, 3, 2, '#c8dcef'); }),
 };
+
+// ---- v102 새 스킬 아이콘 26개 (Claude 임시 그림: 분류 색 바탕 + 간단한 모양) ----
+{ const base = (bg, fn) => A => { A.e(8, 8, 7, 7, bg); fn(A); };
+  const SW2 = C.ironL, AMB2 = '#ffd25c', MAG2 = '#bfa8ff', LIFE2 = C.leaf, ULT2 = '#fff1b0';
+  Object.assign(UICON, {
+    sk_lunge: base('#3a3050', A => { A.line(2, 12, 12, 4, SW2, 2); A.poly([[11, 2], [15, 1], [14, 5]], SW2); A.line(1, 8, 5, 8, '#ffffff'); A.line(2, 10, 5, 10, '#ffffff'); }),
+    sk_parry: base('#3a3050', A => { A.line(4, 12, 10, 4, SW2, 2); A.line(12, 12, 6, 4, SW2, 2); A.p(8, 7, AMB2); A.p(8, 8, AMB2); }),
+    sk_shadowStep: base('#241b2f', A => { A.e(10, 9, 3, 4, '#4a3f5c'); A.e(5, 9, 3, 4, '#6a5a7c'); A.p(10, 7, '#ff9ab0'); A.p(11, 7, '#ff9ab0'); A.line(2, 14, 6, 11, '#8a7a9c'); }),
+    sk_vital: base('#241b2f', A => { A.e(8, 8, 4, 4, '#ff6b81'); A.e(8, 8, 2, 2, '#ffffff'); A.line(8, 1, 8, 4, SW2); A.line(8, 12, 8, 15, SW2); A.line(1, 8, 4, 8, SW2); A.line(12, 8, 15, 8, SW2); }),
+    sk_pierceDash: base('#2e3a4a', A => { A.line(1, 13, 12, 2, C.wood, 2); A.poly([[11, 1], [15, 1], [15, 5]], SW2); A.p(2, 10, '#ffffff'); A.p(4, 12, '#ffffff'); }),
+    sk_longArm: base('#2e3a4a', A => { A.line(1, 15, 13, 3, C.wood, 2); A.poly([[12, 1], [15, 1], [15, 4]], SW2); A.line(2, 4, 6, 4, '#ffffff'); A.p(4, 2, '#ffffff'); A.p(4, 6, '#ffffff'); }),
+    sk_heavyHand: base('#3a2a2a', A => { A.line(3, 13, 8, 8, C.woodD, 2); A.poly([[6, 6], [10, 2], [14, 6], [10, 10]], C.ironL); A.p(12, 12, AMB2); A.p(14, 10, AMB2); A.p(13, 14, AMB2); }),
+    sk_earthquake: base('#3a2a2a', A => { A.e(8, 11, 6.5, 3, C.stone); A.line(3, 10, 8, 12, INK); A.line(8, 12, 13, 9, INK); A.poly([[5, 2], [9, 1], [11, 5], [7, 6]], C.ironL); A.line(4, 8, 7, 5, C.woodD, 2); }),
+    sk_pierceArrow: base('#2a3a2a', A => { A.line(1, 14, 12, 3, '#8a6a52', 2); A.poly([[11, 1], [15, 1], [15, 5]], ULT2); for (const x of [5, 8, 11]) A.e(x, 15 - x + 2, 1.5, 1.5, '#bfe6ff'); }),
+    sk_trapArrow: base('#2a3a2a', A => { A.e(8, 11, 5, 2.5, '#e8e4f8'); A.line(8, 11, 12, 3, '#8a6a52', 2); A.poly([[11, 1], [15, 1], [15, 5]], SW2); A.p(5, 11, '#b8a8d8'); A.p(10, 12, '#b8a8d8'); }),
+    sk_fireball: base('#3a2a20', A => { A.e(8, 9, 4.5, 4.5, '#ff6a2a'); A.e(8, 9, 2.5, 2.5, '#ffc861'); A.poly([[8, 1], [11, 6], [5, 6]], '#ff6a2a'); A.p(8, 3, '#ffe9a8'); }),
+    sk_chain: base('#2a2a44', A => { A.poly([[9, 1], [5, 8], [8, 8], [6, 15], [12, 7], [9, 7]], ULT2); A.p(3, 4, MAG2); A.p(13, 12, MAG2); }),
+    sk_lightShield: base('#2a2a44', A => { A.poly([[4, 3], [12, 3], [12, 9], [8, 14], [4, 9]], ULT2); A.poly([[5, 4], [11, 4], [11, 9], [8, 12.5], [5, 9]], AMB2); A.p(7, 6, '#ffffff'); }),
+    sk_orbFriend: base('#2a2a44', A => { A.e(10, 6, 3.5, 3.5, ULT2); A.e(10, 6, 1.8, 1.8, '#ffffff'); A.p(9, 6, INK); A.p(11, 6, INK); A.e(4, 11, 2, 2, MAG2); A.p(14, 12, MAG2); }),
+    sk_sprint: base('#2a3a3a', A => { A.poly([[6, 3], [13, 1], [10, 7], [14, 6], [5, 14], [8, 8], [3, 9]], '#e8f0ff'); A.line(1, 5, 3, 5, '#ffffff'); A.line(1, 11, 2, 11, '#ffffff'); }),
+    sk_leech: base('#2a3a3a', A => { UICON.heart(A); A.e(8, 5, 2.5, 2, '#9be37a'); A.p(8, 3, '#9be37a'); }),
+    sk_secondWind: base('#2a3a3a', A => { UICON.heart(A); A.r(7, 5, 2, 5, '#ffffff'); A.p(8, 11, '#ffffff'); }),
+    sk_farmer: base('#243a24', A => { A.line(8, 15, 8, 7, LIFE2, 2); A.e(5, 7, 3, 2, '#7fb069'); A.e(11, 6, 3, 2, '#7fb069'); A.e(8, 3, 2.5, 2.5, '#ffd25c'); A.r(5, 14, 6, 1, C.dirtD); }),
+    sk_fisher: base('#243a3a', A => { A.line(2, 13, 11, 3, C.wood, 1); A.line(11, 3, 12, 9, '#ffffff'); A.e(9, 11, 3, 2, '#9fd8f0'); A.poly([[12, 11], [14, 9], [14, 13]], '#9fd8f0'); A.p(8, 11, INK); }),
+    sk_chef: base('#3a2a24', A => { A.e(8, 11, 5, 3, '#c8d0dc'); A.r(3, 10, 10, 2, '#aab4c4'); A.e(8, 6, 4.5, 3.5, '#ffffff'); A.e(5, 5, 2, 2, '#ffffff'); A.e(11, 5, 2, 2, '#ffffff'); }),
+    sk_porter: base('#3a2a24', A => { UICON.bag(A); A.r(10, 1, 6, 6, '#7fe0b5'); A.r(12, 2, 2, 4, '#241b2f'); A.r(11, 3, 4, 2, '#241b2f'); }),
+    sk_animalFriend: base('#243a24', A => { A.e(8, 10, 4.5, 3.5, '#f0c890'); A.e(8, 6, 3.5, 3, '#f0c890'); A.poly([[5, 4], [5, 1], [7, 4]], '#f0c890'); A.poly([[11, 4], [11, 1], [9, 4]], '#f0c890'); A.p(7, 6, INK); A.p(9, 6, INK); A.p(13, 3, '#ff8fa3'); }),
+    sk_dawnLight: base('#4a3a10', A => { A.e(8, 8, 5, 5, ULT2); A.e(8, 8, 3, 3, '#ffffff'); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; A.p(Math.round(8 + Math.cos(a) * 6.5), Math.round(8 + Math.sin(a) * 6.5), AMB2); } }),
+    sk_starRain: base('#4a3a10', A => { for (const [x, y] of [[4, 3], [10, 2], [13, 7], [6, 8], [10, 11], [3, 12]]) { A.p(x, y, ULT2); A.p(x, y + 2, AMB2); } }),
+    sk_awaken: base('#4a3a10', A => { A.r(6, 5, 4, 7, AMB2); A.poly([[8, 1], [10, 5], [6, 5]], '#ff8a3d'); A.p(8, 3, ULT2); A.r(5, 12, 6, 2, C.woodD); A.p(2, 4, ULT2); A.p(14, 3, ULT2); }),
+    sk_earthSplit: base('#4a3a10', A => { A.e(8, 11, 6.5, 3.5, C.stone); A.line(2, 12, 14, 8, INK, 2); A.line(5, 13, 10, 11, '#ff8a3d'); A.poly([[7, 1], [10, 1], [9, 8], [8, 8]], C.ironL); }),
+  }); }

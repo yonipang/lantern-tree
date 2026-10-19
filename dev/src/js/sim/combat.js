@@ -46,10 +46,12 @@ export function swingAttack() {
   const big = W.arc > 2, dur = big ? 0.3 : W === WTYPE.dagger ? 0.14 : 0.22;
   G.swing = { t: dur, max: dur, ang, icon: w.id === 'hand' ? null : w.id, wt: w.wt, arc: big ? 2 : 1.2, rad: big ? 1.2 : 0.95 };
   emit('sfx', 'swing'); if (big) emit('shake', 0.12);
-  const hit = (e, rr) => { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy); if (d > W.reach + rr) return false; let da = Math.abs(Math.atan2(dy, dx) - ang); if (da > Math.PI) da = 2 * Math.PI - da; return da < W.arc || d < 0.6 + rr; };
-  const roll = () => { const crit = rand() < 0.1 + (W.crit || 0); return [Math.round(w.dmg * meleeMul() * (crit ? 1.6 : 1) * (0.9 + rand() * 0.2)), crit]; };
+  const reach = W.reach * (w.wt === 'spear' ? 1 + skl('longArm') * .15 : 1); // v102 긴 팔
+  const hit = (e, rr) => { const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy); if (d > reach + rr) return false; let da = Math.abs(Math.atan2(dy, dx) - ang); if (da > Math.PI) da = 2 * Math.PI - da; return da < W.arc || d < 0.6 + rr; };
+  const critP = 0.1 + (W.crit || 0) + (w.wt === 'dagger' ? skl('vital') * .05 : 0), parryMul = w.wt === 'sword' && p.parryT > 0 ? 1 + skl('parry') * .25 : 1; if (parryMul > 1) p.parryT = 0; // v102 급소 노리기·받아치기
+  const roll = () => { const crit = rand() < critP; return [Math.round(w.dmg * meleeMul() * parryMul * (crit ? 1.6 : 1) * (0.9 + rand() * 0.2)), crit]; };
   let landed = false;
-  for (const e of G.enemies.slice()) if (hit(e, ENEMY[e.k].r)) { const [dmg, crit] = roll(); hitEnemy(e, dmg, crit, W.kb, w.fx); landed = true; }
+  for (const e of G.enemies.slice()) if (hit(e, ENEMY[e.k].r)) { const [dmg, crit] = roll(); hitEnemy(e, dmg, crit, W.kb, w.fx); landed = true; if (w.wt === 'hammer' && skl('heavyHand') && rand() < skl('heavyHand') * .1 && G.enemies.includes(e)) { e.stun = Math.max(e.stun || 0, 1); emit('ftext', e.x, e.y - 1.1, '기절!', '#ffe9a8'); } } // v102 무거운 손
   for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; if (b.st === 'fight' && hit(b, BOSSES[k].hr)) { if (b.z > 0.7) emit('ftext', b.x, b.y - 2, '빗나감', '#bfaed3'); else { const [dmg, crit] = roll(); hitBoss(b, dmg, crit, w.fx); landed = true; } } }
   if (landed) wear(w.slot);
   return true;
@@ -122,7 +124,7 @@ export function dotTick(e, dt, boss) {
   if (e.slow > 0) { e.slow -= dt; if (fxRand() < dt * 4) emit('puff', e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
 }
 export function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
-export function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
+export function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
 export function hitEnemy(e, dmg, crit, kb = 8, fx) {
   const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);

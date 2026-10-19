@@ -12,6 +12,7 @@ export const FRAME_ORDER = [
   'wild',     // 들짐승·펫 (features/gear-animals.js)
   'enemies', 'bosses', // 몬스터·보스 (game/update.js)
   'pshots',   // 내 화살·마법 (game/actions.js)
+  'skills102', // v102 빛 구슬 친구·빛 방패·각성·질주 시간
   'fish',     // 낚시 (game/combat.js)
   'drops', 'fx', // 떨어진 물건 줍기 · 반짝이·떠오르는 글자 (game/update.js)
   'seen',     // v77: 처음 얻은 물건 찾기 — 빨간 점 (sim/inventory.js)
@@ -27,7 +28,7 @@ export const FRAME_ORDER = [
   'shake',    // 화면 흔들림 줄이기 (ui/feedback.js)
 ];
 // 플레이어마다 한 번씩 도는 칸 (그동안 G.p·G.inv … 가 그 플레이어 것). 나머지 칸은 세계에 한 번 (화면 쪽은 내 플레이어 기준)
-export const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'warp', 'hunger', 'pshots', 'fish', 'spawn', 'seen']);
+export const PER_PLAYER_FRAMES = new Set(['player', 'act', 'attack', 'buff', 'env', 'recall', 'warp', 'hunger', 'pshots', 'skills102', 'fish', 'spawn', 'seen']);
 const SYS = new Map();
 export function onFrame(name, fn) {
   if (!FRAME_ORDER.includes(name)) throw new Error('매 프레임 순서표(sim/systems.js)에 없는 이름이에요: ' + name);
