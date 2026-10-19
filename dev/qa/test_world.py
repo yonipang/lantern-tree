@@ -194,7 +194,7 @@ def test_random_world():
     import asyncio, sys
     # v70 (BF-04): 새 세계는 지도 버전 3 — 지역은 그대로, 지역 안 지형이 시드마다 다르고 보스방 5곳(제단)이 지역 안에서 시드마다 다른 자리
     # (말랑대왕·버섯 여왕 55~80칸, 깊은 세 보스 150~200칸, 서로 60칸 이상), 길·지역·자원 점검 20번까지, 안 되면 고정 자리. 옛 세계(1·2)는 그대로
-    H2=HOOK.replace("computeLight}","computeLight,newGame,makeWorld3,checkWorld,genWorld,setLayout,naturalWalls,BKEYS,GUIDE,dirKo,ANCH2,BF04,get L(){return {LAY,MAPV,ANCH,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
+    H2=HOOK.replace("computeLight}","computeLight,newGame,makeWorld3,checkWorld,genWorld,setLayout,naturalWalls,BKEYS,GUIDE,dirKo,ANCH2,BF04,START_DIRT_R,get L(){return {LAY,MAPV,ANCH,W,H,CX,CY,BX,BY,SA,SB,SL,SI}}}")
     async def main():
         mkpage(SRC,'qa.html',H2,layout=3)
         async with async_playwright() as p:
@@ -225,6 +225,11 @@ def test_random_world():
             let same=JSON.stringify(T.L.ANCH)===a&&m2.tries===m.tries;for(let i=0;i<m.w.wall.length&&same;i+=97)if(m.w.wall[i]!==m2.w.wall[i])same=false;out.push([m.tries,T.checkWorld(m.w),same,a,seed,m.why])}
           return [out.filter(o=>o[0]>=1&&o[0]<=20&&o[1]==='').length,out.filter(o=>o[2]).length,new Set(out.map(o=>o[3])).size,out.filter(o=>!(o[0]>=1&&o[1]==='')).map(o=>[o[4],o[0],o[1],o[5]])]}""")
             rec('20개 세계','20개 시드 모두 점검 통과 (고정 자리로 돌아간 세계 없음), 같은 시드는 같은 세계, 자리는 세계마다 다름', r[:3]==[20,20,20], str(r))
+            # v109: 시작 둘레(등불나무 35칸 안 이끼 지역)는 돌벽 없이 흙벽 — 구리 광맥과 그 밖의 돌벽은 그대로
+            r=await ev(pg,"""()=>{const T=__T,R=T.START_DIRT_R;let inS=0,inD=0,inCu=0,outS=0;for(let k=0;k<10;k++){const m=T.makeWorld3(5003+k*911),L=T.L,w=m.w;
+            for(let y=L.CY-60;y<=L.CY+60;y++)for(let x=L.CX-60;x<=L.CX+60;x++){const i=y*L.W+x,d=Math.hypot(x-L.CX-.5,y-L.CY-.5),v=w.wall[i];if(w.biome[i]!==0)continue;
+              if(d<=R){if(v===2)inS++;if(v===1)inD++;if(v===4)inCu++}else if(d>R+3&&v===2)outS++}}return [R,inS,inD>0,inCu>0,outS>0]}""")
+            rec('시작 둘레','새 세계 10개: 등불나무 35칸 안 이끼 지역에 돌벽 0개 (흙벽·구리 광맥은 있음), 그 밖 이끼 지역 돌벽은 그대로', r==[35,0,True,True,True], str(r))
             # when no try passes: layout 2's fixed places (the world is still version 3)
             r=await ev(pg,"""()=>{const T=__T;const m=T.makeWorld3(31337,()=>'x');const L=T.L;return [m.tries,m.why.length,L.MAPV,JSON.stringify(L.ANCH)===JSON.stringify({...T.ANCH2,t:-1}),L.BX,L.BY,L.SB.x,L.SB.y]}""")
             rec('실패 대비','20번 모두 안 되면 예전 고정 자리 (말랑대왕 352,263 · 수정골렘 300,128)', r==[0,20,3,True,352,263,300,128], str(r))

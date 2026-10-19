@@ -95,6 +95,8 @@ export function genWorld(seed) {
   for (const [S, b, fl] of [[SL, 3, 18], [SI, 4, 19]]) circ(S.x + .5, S.y + .5, 9.6, (x, y, i, d) => { if (wall[i] === 8) return; biome[i] = b; if (d < 7.6) { wall[i] = 0; floor[i] = d < 3 ? 6 : fl; } else wall[i] = b === 3 ? 9 : 11; });
   // bug fix (v49.1): on the ring map the slime king's rock ring was drawn over the tunnels, so his room (and the golem's tunnel, which starts there) was often sealed — carve them through again
   if (LAY === 2) (MAPV === 3 ? walks3 : walks2)();
+  // v109: 시작 둘레(등불나무에서 START_DIRT_R칸 안, 이끼 지역)의 돌벽은 흙벽으로 — 나무 곡괭이로 처음부터 캘 수 있게 (구리 광맥은 그대로)
+  if (LAY === 2) circ(CX + .5, CY + .5, START_DIRT_R, (x, y, i) => { if (wall[i] === 2 && biome[i] === 0) wall[i] = 1; });
   // natural objects
   const nearSafe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5 || Math.hypot(x - SL.x, y - SL.y) < 10.5 || Math.hypot(x - SI.x, y - SI.y) < 10.5;
   addWater({ wall, floor, objs }, seed, nearSafe, null);
@@ -189,6 +191,8 @@ export function openTreasure(t, o) {
 // A world passes when the tunnels really lead from the tree to the slime king, the queen and the golem, and to the rock rings of the
 // lava and ice rooms (which stay sealed as before); each room sits in its own region; and every resource has at least 80% of the
 // smallest amount seen on the fixed ring map (layout 2, 130 seeds; root pillars cut to 1/3 in v74, so 252 → 84). Up to 20 tries, then the fixed places of layout 2.
+// v109: 새 세계에서 등불나무 둘레 이 칸 수 안의 이끼 지역 돌벽은 흙벽으로 (genWorld)
+export const START_DIRT_R = 35;
 export const BF04 = { tries: 20, gap: 60, near: [55, 80], far: [150, 200],
   ang: { B: [-75, -35], A: [100, 145], SB: [-115, -65], SL: [5, 55], SI: [125, 175] }, reg: { B: 0, A: 1, SB: 2, SL: 3, SI: 4 },
   minWall: { 4: 1460, 5: 2176, 10: 2402, 12: 2852, 13: 1276 }, minObj: { root: 84, bigShroom: 68, cluster: 201, glow: 208, fireBloom: 220, iceCluster: 176 } };

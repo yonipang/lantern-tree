@@ -17,6 +17,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 img.px{image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain}
 #game{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;image-rendering:pixelated}
+#wcv{position:absolute;left:0;top:0;display:block;transform-origin:0 0;pointer-events:none;image-rendering:pixelated;image-rendering:crisp-edges}
 #vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(10,6,18,0) 55%,rgba(10,6,18,.5) 100%)}
 
 /* HUD */
