@@ -2,6 +2,7 @@
 import { GLST, lightPref } from '../render/glight.js';
 import { CHARS, cleanLook, curChar, EYEC, HAIRC, HAIRS, HATS, lookDef, OUTC, OUTFITS2 } from '../art/characters.js';
 import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
+import { MEMORY } from '../data/story.js';
 import { TIERED } from '../data/automation-tiers.js';
 import { DUR } from '../data/circuits-regions.js';
 import { DISH, JOB_MAX, TIMED, WCAN_MAX } from '../data/farming-cooking.js';
@@ -149,7 +150,7 @@ export function renderPanel() {
   } else if (k === 'map') {
     h += head('지도', 'map', `<button class="btn ghost" data-a="mapzoom" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${mapIsAll() ? '가까이 보기' : '전체 보기'}</button>`) + `<div class="sh-body"><div class="mapwrap"><canvas id="mapCv" data-a="mapPin" width="600" height="600"></canvas><div class="mapctl"><button class="btn ghost" data-a="mapZ" data-i="1" type="button" style="font-size:32px" aria-label="확대">+</button><button class="btn ghost" data-a="mapZ" data-i="-1" type="button" style="font-size:32px" aria-label="축소">−</button><button class="btn ghost" data-a="mapMe" type="button" aria-label="내 위치로">나</button></div></div>${navBarHTML()}${mapLegendHTML()}${regionMatHTML()}</div>`;
   } else if (k === 'tree') {
-    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">오래된 등불나무가 잠들어 있어요. 땅속 어딘가에 흩어진 <em>빛씨앗 세 개</em>를 심으면 다시 환하게 빛날 거예요.</p><p class="prose" style="color:var(--muted)">하나는 동쪽 동굴의 말랑대왕이, 나머지는 서쪽 버섯숲과 북쪽 수정동굴의 제단이 품고 있대요. 씨앗을 심을 때마다 나무의 빛이 넓어지고 주변에 몬스터가 덜 나타나요.</p>${G.won ? '<p class="prose" style="color:var(--amber)">나무 꼭대기에 빈 등불이 두 개 더 있어요. 남쪽 용암 동굴의 용암 거북과 서쪽 얼음 동굴의 서리 정령이 마지막 빛씨앗을 지키고 있대요.</p>' : ''}</div>`;
+    h += head('등불나무', 'lightSeed') + `<div class="sh-body"><div class="seeds">${(G.won ? [0, 1, 2, 3, 4] : [0, 1, 2]).map(i => `<div class="${i < G.treeSeeds ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><p class="prose" style="text-align:center;color:var(--amber)">지금 모습 · ${TREE_STAGE[treeStage()]}</p>${TREE_BLESS(treeStage()) ? `<p class="prose">나무 둘레 <em>${TREE_BLESS(treeStage())}칸</em> 안의 작물이 20% 빨리 자라요. 빛가루가 떠다니는 곳까지예요.</p>` : ''}<p class="prose">옛날 <em>등불지기</em>들이 돌보던 등불나무가 잠들어 있어요. 등불지기들이 맡겨 둔 나무의 빛, <em>빛씨앗</em>을 심을 때마다 나무가 한 단계 깨어나고 빛이 넓어져요. 깨어날 때마다 옛 기억 한 장면을 보여 줘요.</p><p class="prose" style="color:var(--muted)">빛씨앗은 동쪽 동굴의 말랑대왕, 서쪽 버섯숲과 북쪽 수정동굴의 제단, 그리고 남쪽 용암·서쪽 얼음 동굴 깊은 곳의 수호자들이 품고 있어요.</p></div>`;
   } else if (k === 'menu') {
     const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:16px">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
     const marks = G.marks || [];
@@ -200,6 +201,9 @@ export function renderPanel() {
     if (Object.keys(R.sk).length) h += `<div class="menu-list"><button type="button" class="btn ${UIS.skAsk ? 'warn' : 'ghost'}" data-a="skReset">${UIS.skAsk ? '정말 스킬 포인트를 모두 돌려받을까요?' : '스킬 다시 배우기 (무료)'}</button></div>`;
     h += `</div>`;
     }
+  } else if (k === 'memory') {
+    const m = MEMORY[panel.stage] || MEMORY[1];
+    h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < (G.treeSeeds | 0) ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${m.t}</h2><p class="prose" style="text-align:left">${m.s}</p>${panel.stage === 5 ? `<p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p>` : ''}<button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">${panel.stage === 5 ? '계속 모험하기' : '돌아가기'}</button></div>`;
   } else if (k === 'win2') {
     h += `<div class="sh-body" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(() => `<div class="lit"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">다섯 등불이 모두 밝아졌어요!</h2><p class="prose">용암과 얼음 깊은 곳까지 빛이 닿았어요. 땅속 세상 전체가 등불나무의 품 안에서 반짝여요. 끝까지 함께해 줘서 고마워요!</p><p class="prose" style="color:var(--muted)">전설 장비를 모으고, 남은 도전 퀘스트를 깨고, 나만의 정원을 마음껏 꾸며 보세요.</p><p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p><button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">계속 모험하기</button></div>`;
   } else if (k === 'win') {

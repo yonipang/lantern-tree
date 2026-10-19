@@ -219,8 +219,10 @@ def test_bosses_regions():
             r=await ev(pg,"()=>{const T=__T,G=T.G;T.addItem('lightSeed',2);T.checkGuide();const g=T.GUIDE[G.guide].id;T.insertSeeds();return [g,G.treeSeeds,G.won2]}")
             await pg.wait_for_timeout(2000)
             r2=await ev(pg,"()=>document.querySelector('#sheet h2,#sheet .sh-body h2')?.textContent||''")
-            rec('이야기','다섯 번째 씨앗 → 진 엔딩 창', r[1]==5 and r[2] is True and '다섯 등불' in r2, str(r)+r2)
+            rec('이야기','v103: 다섯 번째 씨앗 → 나무의 다섯 번째 기억 장면(엔딩 창 대신), 축제 케이크 해금 표시는 그대로(won2)', r[1]==5 and r[2] is True and '다섯 번째 기억' in r2, str(r)+r2)
             await pg.screenshot(path=SP+'win2.png'); await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const seen=Object.keys(G.stats.mem||{}).map(Number).sort().join(',');T.openPanel('stat',{tab:'lamp'});const t=document.querySelector('#sheet').innerText;T.closePanel();return [seen,t.includes('다섯 번째 기억'),t.includes('나무의 기억')]}")
+            rec('이야기','v103: 본 기억은 저장(stats.mem)되고 캐릭터 창 등불 탭에서 다시 볼 수 있음', r[0]=='5' and r[1] and r[2], str(r))
             # save migration from an old (v2) save
             r=await ev(pg,"""()=>{const T=__T;T.newGame(999);const G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));
           const N=40000,wall=new Uint8Array(N),floor=new Uint8Array(N),biome=new Uint8Array(N);const un=(r,a)=>{let k=0;for(let i=0;i<r.length;i+=2){a.fill(r[i],k,k+r[i+1]);k+=r[i+1]}};un(s.wall,wall);un(s.floor,floor);un(s.biome,biome);
