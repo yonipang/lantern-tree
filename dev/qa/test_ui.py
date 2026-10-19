@@ -661,14 +661,14 @@ def test_drag_zones_layout():
                     r=await ev(pg,"()=>[__T.G.inv[26]&&__T.G.inv[26].id,__T.G.inv[14]]")
                     rec('드래그','모바일 빠르게 위로 밀면 옮기지 않고 스크롤', r[0]=='dirt' and r[1] is None, str(r))
                     # v86: 아이폰에서 「손 뗌」이 빠져 끌기 상태가 남아도, 다시 누르면 새 손가락으로 넘어가요 / 넘기는 중에 창이 다시 그려져도 계속 넘어가요
-                    SW="""(o)=>{const b0=document.querySelector('#sheet .sh-body');b0.scrollTop=0;const top0=b0.scrollTop,room=b0.scrollHeight-b0.clientHeight; /* v91: 가방 설명 글을 빼서 넘길 거리가 줄었어요 — 맨 위에서 얼마나 넘어갔는지 봐요 */const el=()=>document.querySelector('#sheet [data-a=inv][data-i="20"]');
+                    SW="""(o)=>{const b0=document.querySelector('#sheet .sh-body');b0.scrollTop=0;const top0=b0.scrollTop,room=b0.scrollHeight-b0.clientHeight; /* v91: 가방 설명 글을 빼서 넘길 거리가 줄었어요 — 맨 위에서 얼마나 넘어갔는지 봐요 / v97: 가운데 모달은 양옆 여백만큼 칸이 작아 넘길 거리가 약 31px — 끝까지 넘어가면 통과 */const el=()=>document.querySelector('#sheet [data-a=inv][data-i="20"]');
                       const r=el().getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,P=(t,id,yy,tg)=>(tg||window).dispatchEvent(new PointerEvent(t,{pointerId:id,pointerType:'touch',isPrimary:true,clientX:x,clientY:yy,button:0,bubbles:true}));
                       if(o.stuck)P('pointerdown',7,y,el()); /* 떼는 신호 없이 남은 손가락 */
                       P('pointerdown',8,y,el());P('pointermove',8,y-12);if(o.redraw)__T.renderPanel();P('pointermove',8,y-40);const b=document.querySelector('#sheet .sh-body'),top=b.scrollTop-top0;P('pointerup',8,y-40);return [top,b0.isConnected,room]}"""
                     r=await ev(pg,SW,{'stuck':True,'redraw':False})
-                    rec('드래그','v86 모바일 끌기가 남은 채(손 뗌 놓침) 다시 밀어도 가방이 넘어감', r[2]>=40 and r[0]>=30, str(r))
+                    rec('드래그','v86 모바일 끌기가 남은 채(손 뗌 놓침) 다시 밀어도 가방이 넘어감', r[2]>=24 and r[0]>=min(30,r[2]-1), str(r))
                     r=await ev(pg,SW,{'stuck':False,'redraw':True})
-                    rec('드래그','v86 모바일 넘기는 중에 창이 다시 그려져도 계속 넘어감', r[2]>=40 and r[0]>=30 and not r[1], str(r))
+                    rec('드래그','v86 모바일 넘기는 중에 창이 다시 그려져도 계속 넘어감', r[2]>=24 and r[0]>=min(30,r[2]-1) and not r[1], str(r))
                 await ev(pg,"()=>__T.closePanel()")
                 # chest
                 await ev(pg,"()=>{const G=__T.G;const i=__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)+1);G.objs.set(i,{t:'chest',items:Array(18).fill(null)});G.objs.get(i).items[0]={id:'crystal',c:7};__T.openPanel('chest',{i})}")
@@ -919,8 +919,8 @@ def test_bag_character_v83():
             rec('가방','가까운 상자에 넣기: 16칸 안 같은 물건 있는 상자만, 가까운 상자부터(같은 물건 칸에 겹친 뒤 그 상자 빈칸), 단축칸·다른 물건은 그대로', r==[10,1,'torch99,torch9','torch1','stone1','berry1',5,None,7,3], str(r))
             # 가방 창: 바깥 탭, 제목 줄 없음, 장비·펫 없음, 버튼 줄과 말풍선
             await ev(pg,"()=>{const G=__T.G;G.inv[12]={id:'berry',c:4};__T.openPanel('inv')}"); await pg.wait_for_timeout(500)
-            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [[...s.querySelectorAll('.otabs .otab')].map(e=>e.textContent.trim()).join('|'),!!s.querySelector('.otab.on[data-i=inv]'),!!s.querySelector('[data-a=eqSlot],[data-a=petOn]'),!!s.querySelector('[data-a=stashNear]'),!!s.querySelector('.bagbar'),s.querySelectorAll('.grid.hot9 .slot').length,Math.round(s.getBoundingClientRect().top),innerHeight]}")
-            rec('가방','창 위 바깥 탭 가방|제작, 장비·펫 칸 없음, 상자에 넣기 버튼, 맨 아래 단축칸 9칸·버튼 줄, 폰은 아래 2/3', r[:6]==['가방|제작',True,False,True,True,9] and r[6]>r[7]*0.3, str(r))
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [[...s.querySelectorAll('.otabs .otab')].map(e=>e.textContent.trim()).join('|'),!!s.querySelector('.otab.on[data-i=inv]'),!!s.querySelector('[data-a=eqSlot],[data-a=petOn]'),!!s.querySelector('[data-a=stashNear]'),!!s.querySelector('.bagbar'),s.querySelectorAll('.grid.hot9 .slot').length,Math.round(s.getBoundingClientRect().top),Math.round(innerHeight-s.getBoundingClientRect().bottom),innerHeight,Math.round(s.getBoundingClientRect().height)]}")
+            rec('가방','창 위 바깥 탭 가방|제작, 장비·펫 칸 없음, 상자에 넣기 버튼, 맨 아래 단축칸 9칸·버튼 줄, 폰은 높이 2/3 · 가운데(v97, 바깥 탭 42px 포함)', r[:6]==['가방|제작',True,False,True,True,9] and abs(r[6]-42-r[7])<=4 and abs(r[9]-(r[8]*0.666-42))<=4, str(r))
             await ev(pg,"()=>document.querySelector('#sheet .slot[data-a=inv][data-i=\"12\"]').click()"); await pg.wait_for_timeout(300)
             r=await ev(pg,"()=>{const s=document.querySelector('#sheet'),t=s.querySelector('#bagTip'),sl=s.querySelector('.slot[data-a=inv][data-i=\"12\"]');if(!t)return null;const a=t.getBoundingClientRect(),b=sl.getBoundingClientRect();return [t.innerText.includes('딸기')||t.innerText.length>0,a.bottom<=b.top+1||a.top>=b.bottom-1,!!s.querySelector('.bagbar [data-a=eat]'),!!s.querySelector('.bagbar [data-a=tohot]')]}")
             rec('가방','칸을 누르면 그 칸 위(또는 아래)에 말풍선, 버튼(먹기·단축칸으로)은 맨 아래 줄', r==[True,True,True,True], str(r))
