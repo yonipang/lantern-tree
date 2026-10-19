@@ -296,7 +296,7 @@ def test_held_item_actions():
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             await ev(pg,"()=>{"+CLEAR+"}")
             # building first
             r=await ev(pg,"""()=>{const G=__T.G;__clear();G.inv[0]={id:'torch',c:5};const a=__d();__en();const b2=__d();__put('chest',{items:Array(16).fill(null)});const c=__T.decide();G.enemies.length=0;return [a,b2,c.k,c.lbl,__alts()]}""")
@@ -354,7 +354,7 @@ def test_held_item_actions():
             rec('새 게임','v65: 도구 칸에 나무 곡괭이를 든 채 시작, 나무 검은 단축칸 3번, 가방은 비어 있음', r==[-1,'berry,berrySeed,swordWood,-','','pickWood','swordWood','pickWood'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'berry',c:1};T.addItem('swordCopper',1);const a=G.inv.findIndex(x=>x&&x.id==='swordCopper');T.addItem('swordIron',1);const b2=G.inv.findIndex(x=>x&&x.id==='swordIron');return [a,b2]}""")
             rec('무기','v65: 새로 얻은 물건은 빈 단축칸부터 (무기도)', r==[1,2], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.inv[0]={id:'bowWood',c:1};G.inv[12]={id:'swordIron',c:1};G.sel=0;const a=T.curWeapon().id;G.sel=1;return [a,T.curWeapon().id]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear();G.rpg.lv=40;G.inv[0]={id:'bowWood',c:1};G.inv[12]={id:'swordIron',c:1};G.sel=0;const a=T.curWeapon().id;G.sel=1;return [a,T.curWeapon().id]}""")
             rec('무기','든 활이 무기, 다른 칸을 고르면 가방의 가장 센 무기 (마지막 무기가 없으니)', r==['bowWood','swordIron'], str(r))
             await ev(pg,"()=>{__clear();const G=__T.G;G.inv[0]={id:'swordCopper',c:1};G.inv[1]={id:'shovel',c:1};G.inv[2]={id:'torch',c:4};G.sel=2;__put('chest',{items:Array(16).fill(null)})}"); await pg.wait_for_timeout(500)
             await pg.screenshot(path=SP+'hold.png')
@@ -373,7 +373,7 @@ def test_tool_pouch():
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             await ev(pg,"()=>{"+CLEAR+"}")
             r=await ev(pg,"()=>{const G=__T.G,s=document.querySelector('#hbSlots').children[0];return [G.tools.map(x=>x.id).join(','),G.sel,__T.heldTool()&&__T.heldTool().id,s.classList.contains('tslot'),s.classList.contains('sel'),!!s.querySelector('img'),G.inv.some(x=>x&&x.id==='pickWood')]}")
             rec('도구 칸','새 게임: 단축칸 맨 앞 도구 칸에 나무 곡괭이를 든 채 시작 (가방에는 없음)', r==['pickWood',-1,'pickWood',True,True,True,False], str(r))
@@ -436,7 +436,7 @@ def test_attack_button():
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             await ev(pg,"()=>{"+CLEAR+"}")
             r=await ev(pg,"()=>{const b=document.querySelector('#atkBtn');const cs=getComputedStyle(b);return [__T.G.lastW,__T.curWeapon().id,cs.display!=='none',b.dataset.w]}")
             rec('공격 버튼','새 게임: 나무 곡괭이를 들어도 공격 버튼은 나무 검 (버튼에 무기 그림)', r==['swordWood','swordWood',True,'swordWood'], str(r))

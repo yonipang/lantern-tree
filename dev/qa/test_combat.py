@@ -16,16 +16,16 @@ def test_balance():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             await ev(pg,f"()=>{{window.FIGHT={FIGHT}}}")
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.rpg.dex=18;const a=[T.ITEMS.bowCrystal.dmg,T.ITEMS.swordCrystal.dmg];return a}")
-            rec('밸런스','별빛 활 18 · 수정 검 26 그대로', r==[18,26], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.dex=18;G.rpg.str=0;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'bowCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};
+            rec('밸런스','v99 표대로: 별빛 활 22 · 수정 검 26', r==[22,26], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.lv=40;G.rpg.dex=18;G.rpg.str=0;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'bowCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};
           const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);const mr=Math.random;Math.random=()=>.5;try{T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60)}finally{Math.random=mr}return [9999-e.hp,Math.abs(e.kx||0)]}""")
             # 한 발 피해는 치명타(10%, 1.6배)가 아닐 때의 값을 봐요 — 계산하는 동안만 무작위 값을 고정해 치명타가 안 나오게 (예전에는 10번에 1번꼴로 실패)
-            rec('밸런스','민첩 18 별빛 활 한 발 25~32 · 밀어내기 약함', 22<=r[0]<=33 and r[1]<3, str(r))
+            rec('밸런스','민첩 18 별빛 활(22) 한 발 28~40 · 밀어내기 약함', 28<=r[0]<=40 and r[1]<3, str(r))
             r=await ev(pg,"()=>{const T=__T;return [T.ITEMS.bowWood.dmg,T.ITEMS.bowIron.dmg,T.ITEMS.bowGold.dmg,T.ITEMS.bowGolem.dmg,T.ITEMS.bowFrost.dmg]}")
-            rec('밸런스','활 공격력 하향 (나무4·사냥꾼11·황금28·수정거인24·서리32)', r==[4,11,28,24,32], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.dex=0;G.rpg.int=18;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'staffCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};G.p.mp=999;
+            rec('밸런스','v99 활 공격력 표대로 (나무5·사냥꾼14·황금31·수정거인28·서리정령51)', r==[5,14,31,28,51], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.lv=40;G.rpg.dex=0;G.rpg.int=18;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'staffCrystal',c:1};G.sel=0;G.enemies.length=0;G.pshots.length=0;G.p.face={x:1,y:0};G.p.mp=999;
           const e=T.mkEnemy('slimeP',G.p.x+2.5,G.p.y);e.hp=9999;G.enemies.push(e);const mr=Math.random;Math.random=()=>.5;try{T.swingAttack();for(let k=0;k<30;k++)T.updatePShots(1/60)}finally{Math.random=mr}return [9999-e.hp,Math.abs(e.kx||0),T.ITEMS.staffGlow.dmg,T.ITEMS.staffFrost.dmg]}""")
-            rec('밸런스','지혜 18 수정 지팡이 한 발 24~32 · 밀어내기 약함 · 지팡이 하향(빛버섯9·눈꽃28)', 22<=r[0]<=33 and r[1]<3 and r[2:]==[9,28], str(r))
+            rec('밸런스','지혜 18 수정 지팡이(21) 한 발 27~41 · 밀어내기 약함 · v99 표대로(빛버섯9·눈꽃38)', 27<=r[0]<=41 and r[1]<3 and r[2:]==[9,38], str(r))
             r=await ev(pg,"()=>{const B=__T.BOSSES;return ['slime','queen','golem','turtle','spirit'].map(k=>B[k].hp)}")
             rec('보스','체력: 말랑대왕 그대로 720 · 여왕 700 · 골렘 1500 · 거북 2300 · 정령 2000', r==[720,700,1500,2300,2000], str(r))
             for k,need in [('queen',['cast','walk']),('golem',['aim','dash','walk']),('turtle',['hide','shell','spit','walk']),('spirit',['fade','nova','ring','walk'])]:
@@ -137,11 +137,11 @@ def test_boss_effects_rarity():
             r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;G.pshots.length=0;const a=__T.mkEnemy('slimeP',110.5,110.5),b2=__T.mkEnemy('slimeP',111.6,110.5);a.hp=b2.hp=999;G.enemies.push(a,b2);__T.hitEnemy(a,30,false,0,'split');const n=G.pshots.length;for(let k=0;k<20;k++)__T.updatePShots(1/60);return [n,999-b2.hp>=0,G.pshots.length]}")
             rec('효과','수정 파편: 3개가 튀고 금방 사라짐', r[0]==3 and r[2]==0, str(r))
             # bosses: poison works, slow does not change patterns, death by dot
-            r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;const b=G.bosses.queen;b.st='fight';b.hp=8;G.p.x=b.x+3;G.p.y=b.y;__T.hitBoss(b,5,false,'poison');__T.hitBoss(b,1,false,'slow');const s=b.slow;for(let k=0;k<400&&!G.bossDead.queen;k++){G.p.hp=999;G.p.inv=1;__T.updateBosses(1/30)}return [G.bossDead.queen,s,G.stats.uniq&&G.stats.uniq.queen,G.drops.some(d=>d.id==='daggerQueen')]}")
+            r=await ev(pg,"()=>{const G=__T.G;G.enemies.length=0;const b=G.bosses.queen;b.st='fight';b.hp=8;G.p.x=b.x+3;G.p.y=b.y;__T.hitBoss(b,5,false,'poison');__T.hitBoss(b,1,false,'slow');const s=b.slow;for(let k=0;k<400&&!G.bossDead.queen;k++){G.p.hp=999;G.p.inv=1;__T.updateBosses(1/30)}return [G.bossDead.queen,s,G.stats.uniq&&G.stats.uniq.queen,G.drops.some(d=>['swordQueen','daggerQueen','spearQueen','hammerQueen','bowQueen','staffQueen'].includes(d.id))]}")
             rec('보스','독은 보스에게도 · 끈적은 보스에게 안 걸림 · 독으로 처치', r[0] is True and r[1] is None, str(r))
-            rec('보스','버섯 여왕 전용 무기(영웅) 드롭', r[2]==1 and r[3], str(r))
+            rec('보스','버섯 여왕 특별 무기 6종 가운데 하나(영웅) 드롭 (v99)', r[2]==1 and r[3], str(r))
             r=await ev(pg,"()=>{const G=__T.G;G.drops.length=0;const b=G.bosses.golem;b.st='fight';b.hp=1;__T.hitBoss(b,5,false);return [G.drops.map(d=>d.id).sort().join(',')]}")
-            rec('보스','수정골렘: 전용 활 + 수정 핵', 'bowGolem' in r[0] and 'golemCore' in r[0], str(r))
+            rec('보스','수정골렘: 전용 활 + 수정 핵', any(x in r[0] for x in ['swordGolem','daggerGolem','spearGolem','hammerGolem','bowGolem','staffGolem']) and 'golemCore' in r[0], str(r))
             # old saves get the weapon once
             r=await ev(pg,"()=>{const G=__T.G;G.drops.length=0;const s=JSON.parse(JSON.stringify(__T.serialize()));s.bossDead={slime:true,queen:true,golem:false};delete s.stats.uniq;for(let i=0;i<s.inv.length;i++)s.inv[i]=null;__T.deserialize(s);const a=[__T.countItem('hammerSlime'),__T.countItem('daggerQueen'),__T.countItem('bowGolem')];const s2=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s2);return a.concat([__T.countItem('hammerSlime')])}")
             rec('저장','이미 잡은 보스의 무기는 불러올 때 한 번만 받음', r==[1,1,0,1], str(r))
@@ -197,7 +197,7 @@ def test_bosses_regions():
             await ev(pg,"()=>{const G=__T.G;const b=G.bosses.turtle;G.p.x=b.x;G.p.y=b.y+3.5}")
             await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'turtle.png')
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.turtle;b.hp=1;b.ph='walk';T.hitBoss(b,50,false);return [G.bossDead.turtle,G.drops.map(d=>d.id+':'+d.c).sort().join(','),(G.hz||[]).length]}")
-            rec('보스','용암 거북 처치: 전용 대검 + 용암 핵 2 + 금괴', r[0] is True and 'swordLava' in r[1] and 'lavaCore:2' in r[1] and r[2]==0, str(r))
+            rec('보스','용암 거북 처치: 전용 대검 + 용암 핵 2 + 금괴', r[0] is True and any(x in r[1] for x in ['swordLava','daggerLava','spearLava','hammerLava','bowLava','staffLava']) and 'lavaCore:2' in r[1] and r[2]==0, str(r))
             # spirit fight
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;G.enemies.length=0;const b=G.bosses.spirit;const h=T.BOSSES.spirit.home();G.p.x=h.x-3;G.p.y=h.y;const ph=new Set();let nova=0,slowed=0,gapOk=null;
           for(let k=0;k<1800;k++){G.p.hp=999;if(G.p.inv>0)G.p.inv=0;T.updateBosses(1/60);ph.add(b.ph);if((G.hz||[]).some(x=>x.k==='frost'))nova++;if(G.p.slowT>0)slowed++;
@@ -208,7 +208,7 @@ def test_bosses_regions():
             await ev(pg,"()=>{const G=__T.G;const b=G.bosses.spirit;G.p.x=b.x+3;G.p.y=b.y}")
             await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'spirit.png')
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.spirit;b.hp=1;b.ph='walk';T.hitBoss(b,50,false);return [G.bossDead.spirit,G.drops.map(d=>d.id+':'+d.c).sort().join(',')]}")
-            rec('보스','서리 정령 처치: 전용 활 + 서리 핵 2', r[0] is True and 'bowFrost' in r[1] and 'frostCore:2' in r[1], str(r))
+            rec('보스','서리 정령 처치: 전용 활 + 서리 핵 2', r[0] is True and any(x in r[1] for x in ['swordSpirit','daggerSpirit','spearSpirit','hammerSpirit','bowFrost','staffSpirit']) and 'frostCore:2' in r[1], str(r))
             # legendary recipes
             r=await ev(pg,"()=>{const T=__T;return ['swordDawn','pickStar','swordGold','pickGold','staffFrost','goldBar'].map(id=>{const R=T.RECIPES.find(r=>r.out===id);return R?R.at+':'+T.rarOf(id):'none'})}")
             rec('장비','전설·영웅 장비와 금괴 레시피', r==['smelter:4','smelter:4','smelter:3','smelter:3','smelter:3','furnace:2'], str(r))
@@ -312,14 +312,14 @@ def test_boss_rematch():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             # ---- boss rematch ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);const first=G.drops.map(d=>d.id);G.drops.length=0;
-          for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'queenIdol',c:1};G.sel=0;const h=T.BOSSES.queen.home();G.p.x=h.x+20;G.p.y=h.y;const far=T.decide();G.p.x=h.x;G.p.y=h.y+5;const a=T.decide();T.perform(a);return [first.includes('daggerQueen'),far.k,a.k,G.bossDead.queen,T.countItem('queenIdol')]}""")
+          for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'queenIdol',c:1};G.sel=0;const h=T.BOSSES.queen.home();G.p.x=h.x+20;G.p.y=h.y;const far=T.decide();G.p.x=h.x;G.p.y=h.y+5;const a=T.decide();T.perform(a);return [first.some(id=>['swordQueen','daggerQueen','spearQueen','hammerQueen','bowQueen','staffQueen'].includes(id)),far.k,a.k,G.bossDead.queen,T.countItem('queenIdol')]}""")
             rec('재도전','보스를 잡은 뒤 보스방에서 소환 조각상 사용 → 다시 나타남 (멀면 소환 안 함, v65: 앞에 다른 할 일이 있으면 그걸 추천)', r[0] is True and r[1]!='summon' and r[2:]==['summon',False,0], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=0;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;T.addItem('pickCopper',1,false);T.checkGuide();return T.GUIDE[G.guide].id}""")
             rec('재도전','보스가 다시 살아나도 이야기 진행이 되돌아가지 않음', r!='queen', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G;return [G2.bossDead.queen,G2.stats.beaten.queen]}""")
             rec('재도전','다시 불러낸 상태로 저장·불러오기 유지', r==[False,1], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const k0=T.countItem('lightSeed');let got=0;for(let n=0;n<40;n++){G.bossDead.queen=false;G.bosses.queen=T.freshBoss('queen');const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);}const ids=G.drops.map(d=>d.id);return [ids.filter(i=>i==='daggerQueen').length,ids.includes('shroomCap'),ids.includes('lightSeed'),G.stats.rematch]}""")
-            rec('재도전','다시 잡으면 재료 + 가끔(약 35%) 전용 장비, 빛씨앗은 안 나옴', 4<=r[0]<=26 and r[1] and not r[2] and r[3]>=40, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const k0=T.countItem('lightSeed');let got=0;for(let n=0;n<40;n++){G.bossDead.queen=false;G.bosses.queen=T.freshBoss('queen');const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);}const ids=G.drops.map(d=>d.id);return [ids.filter(i=>['swordQueen','daggerQueen','spearQueen','hammerQueen','bowQueen','staffQueen'].includes(i)).length,ids.includes('shroomCap'),ids.includes('lightSeed'),G.stats.rematch]}""")
+            rec('재도전','다시 잡으면 재료 + 가끔(약 35%) 특별 무기(6종 가운데), 빛씨앗은 안 나옴', 4<=r[0]<=26 and r[1] and not r[2] and r[3]>=40, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;G.stats.beaten.slime=1;G.bossDead.slime=false;G.bosses.slime=T.freshBoss('slime');const b=G.bosses.slime;b.st='fight';b.hp=1;T.hitBoss(b,5,false);return G.drops.map(d=>d.id).includes('lightSeed')}""")
             rec('재도전','말랑대왕 재도전에서도 빛씨앗이 또 나오지 않음', r is False, str(r))
             r=await ev(pg,"()=>['queenIdol','slimeIdol','golemIdol','turtleIdol','spiritIdol'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
@@ -491,6 +491,33 @@ def test_monsters_avoid_light():
             rec('빛','쫓을 때는 밝은 곳에 들어와 붙음', r['chase'][0] and r['chase'][1]<1 and r['chase'][2], str(r['chase']))
             rec('빛','쫓기가 끝나면 밝은 곳에서 나감', r['after']==[False,False], str(r['after']))
             rec('빛','꽃 구역 가운데가 밝으면 끌려가지 않고, 어두우면 돌아감', r['zoneLit']==[0,0] and r['zoneDark'], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_weapon_tiers_v99():
+    # v99 성장 확장 2: 무기 6종 × 6단계(공격력 = 단계 검 × 종류 배율), 착용 레벨, 보스 특별 무기 6종씩
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,WT_TABLE,WT_ORDER,WT_SW,WT_MUL,WT_RLV,BOSS_W,pickSp,curWeapon,slotHTML,ICON}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,bad=[];T.WT_TABLE.forEach((row,t)=>row.forEach((id,k)=>{const it=T.ITEMS[id],wt=T.WT_ORDER[k];
+              if(!it||it.wt!==wt||it.dmg!==Math.round(T.WT_SW[t]*T.WT_MUL[wt])||it.rlv!==T.WT_RLV[t]||!T.ICON[id])bad.push(id)}));
+              return [T.WT_TABLE.flat().length,new Set(T.WT_TABLE.flat()).size,bad.join(','),T.ITEMS.hammerCopper.dmg,T.ITEMS.spearFrost.dmg]}""")
+            rec('무기','6종 × 6단계 36개, 공격력·착용 레벨이 표대로, 아이콘 있음 (구리 망치 17·서리 창 50)', r==[36,36,'',17,50], str(r))
+            r=await ev(pg,"""()=>{const T=__T,out=[];T.WT_TABLE.forEach((row,t)=>row.forEach(id=>{if(id==='swordWood')return;const rc=T.RECIPES.find(x=>x.out===id);if(!rc||rc.at!=='smelter'||rc.tier!==t)out.push(id+':'+(rc?rc.at+rc.tier:'없음'))}));return out.join(',')}""")
+            rec('무기','나무 검 말고 모두 장비제작대 그 단계에서 만듦 (황금 활은 금 단계로)', r=='', r)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'swordIron',c:1};G.inv[1]={id:'swordCopper',c:1};G.sel=0;G.lastW=null;
+              const a=[];for(const lv of [1,5,12]){G.rpg.lv=lv;a.push(T.curWeapon().id)}const h=T.slotHTML(G.inv[0],'inv',0);G.rpg.lv=1;const h1=T.slotHTML(G.inv[0],'inv',0);return [a.join(','),h.includes('rlvb'),h1.includes('rlvb')&&h1.includes('Lv.12')]}""")
+            rec('착용 레벨','레벨이 모자란 무기는 못 들고 다른 무기로(Lv.1 주먹 · Lv.5 구리 검 · Lv.12 철 검), 칸에 빨간 Lv.12', r==['hand,swordCopper,swordIron',False,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.spGot={};G.stats.uniq={};const ids=T.BOSS_W.queen.ids,got=[];for(let i=0;i<6;i++)got.push(T.pickSp('queen'));
+              const seven=T.pickSp('queen');G.stats.spGot={};G.stats.uniq={queen:1};const old=[];for(let i=0;i<5;i++)old.push(T.pickSp('queen'));
+              const bad=Object.entries(T.BOSS_W).flatMap(([k,B])=>B.ids.filter(id=>!T.ITEMS[id]||!T.ICON[id]||T.ITEMS[id].fx!==B.fx));
+              return [new Set(got).size,got.every(id=>ids.includes(id)),ids.includes(seven),old.includes('daggerQueen'),new Set(old).size,bad.join(','),T.ITEMS.daggerQueen.dmg,T.ITEMS.hammerSlime.dmg]}""")
+            rec('특별 무기','보스마다 6종, 안 받은 것부터 하나씩(6번에 6종), 옛 세이브에서 받은 예전 무기는 받은 것으로 침, 효과는 보스 것 (여왕 단검 14·말랑대왕 망치 21)', r==[6,True,True,False,5,'',14,21], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

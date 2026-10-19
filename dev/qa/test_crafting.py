@@ -268,7 +268,7 @@ def test_equipment_weapons():
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             await ev(pg,"()=>{"+CLEAR+"}")
             # ---- equipment slots (v48: no weapon slot, the equipment sits at the top of the bag) ----
             r=await ev(pg,"()=>{const G=__T.G;return [Object.keys(__T.freshEquip()).join(','),'weapon' in G.equip,G.inv.slice(0,9).some(s=>s&&s.id==='swordWood')]}")
@@ -383,7 +383,7 @@ def test_weapons_skills():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch()
-            ctx,pg,errs=await new_ctx(b,390,844,True)
+            ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             # ---- quest order ----
             r=await ev(pg,"()=>{const G=__T.G;Object.assign(G.stats,{wood:6,bench:1,torch:1,copperOre:6,copperBar:1,forge:1});__T.addItem('pickCopper',1);G.guide=0;__T.checkGuide();const a=document.querySelector('#goalTxt').textContent;G.bossDead.queen=true;__T.checkGuide();const b=document.querySelector('#goalTxt').textContent;return [a,b]}")
             rec('퀘스트','버섯 여왕이 먼저', '버섯 여왕' in r[0], r[0]); rec('퀘스트','여왕 다음 말랑대왕', '말랑대왕' in r[1], r[1])

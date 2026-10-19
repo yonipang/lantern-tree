@@ -413,7 +413,7 @@ def test_tools_migration():
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
-            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True); await ev(pg,"()=>{__T.G.rpg.lv=40}")  # v99: 착용 레벨이 있는 무기를 쓰므로
             await ev(pg,"()=>{window.__old="+OLD+"}")
             r=await ev(pg,"()=>{const T=__T;T.deserialize(__old(2));const G=T.G;return [G.tools.map(x=>x.id+':'+(x.dur==null?'-':x.dur)).join(','),G.inv.filter(Boolean).map(x=>x.id).join(','),G.sel,T.heldTool()&&T.heldTool().id,G.tHand,G.stats.nm65]}")
             rec('옛 세이브','도구는 주머니로 (내구도 그대로, 겹친 삽 2개는 2개로), 다른 건 그대로', r[0]=='axeStone:90,pickCopper:120,shovel:-,shovel:-,rod:5,pickWood:200' and r[1]=='berry,swordCopper,swordIron' and r[5]==1, str(r))

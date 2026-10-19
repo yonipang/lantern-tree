@@ -4,6 +4,7 @@
 import { PHASE_BOSS, PHASE_TIP } from '../data/deep-survival.js';
 import { ACC_OF, broochMul } from '../data/gear-animals.js';
 import { ITEMS, UNIQ_OF } from '../data/items.js';
+import { BOSS_W } from '../data/growth.js';
 import { BKEYS, BOSSES, REMATCH } from '../data/rpg-nature.js';
 import { C } from '../engine/canvas.js';
 import { fxRand, rand } from '../engine/random.js';
@@ -40,7 +41,7 @@ export function hitBoss(b, dmg, crit, fx) {
     G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
-    if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { G.stats.uniq[b.k] = 1; spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); } }
+    if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -49,7 +50,7 @@ export function hitBoss(b, dmg, crit, fx) {
     if (b.k === 'golem') { spawnDrop('crystal', 8, b.x, b.y); spawnDrop('cryGem', 3, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); emit('toast', '수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
   }
 }
-export function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(UNIQ_OF[b.k], 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
+export function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   emit('toast', `${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 export function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
   if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
@@ -156,3 +157,9 @@ export function spiritPillars(b) { b.pillars = []; const p = G.p; for (const [dx
 export function spiritClones(b, n) { for (let k = 0; k < n; k++) { const e = mkEnemy('spiritClone', b.x + (k ? 2 : -2), b.y); e.z = .45; G.enemies.push(e); emit('puff', e.x, e.y - .5, '#d4f6ff', 10, 2.5); } }
 export function cloneTick(b, dt) { const cl = G.enemies.filter(e => e.k === 'spiritClone'); cl.forEach((e, i) => { const a = (b.anim || 0) * .9 + i * Math.PI + .8, tx = b.x + Math.cos(a) * 2.8, ty = b.y + Math.sin(a) * 1.8, k = Math.min(1, dt * 3); if (!boxHits(e.x + (tx - e.x) * k, e.y + (ty - e.y) * k, .3)) { e.x += (tx - e.x) * k; e.y += (ty - e.y) * k; } e.z = .45; e.anim = b.anim; }); return cl; }
 export function pillarBlocks(s, tx, ty) { const i = idx(tx, ty), o = G.objs.get(i); if (!o || o.t !== 'icePillar') return false; o.hp = (o.hp || 4) - 1; emit('puff', s.x, s.y, '#d4f6ff', 4, 1.6, .2); if (o.hp <= 0) { G.objs.delete(i); emit('puff', tx + .5, ty + .5, '#e8f8ff', 14, 3, .4); emit('sfx', 'brk'); markLight(); } return true; }
+// v99 보스 특별 무기: 보스마다 6종(검·단검·창·망치·활·지팡이) 가운데 아직 안 받은 것부터 하나 (첫 처치 1개 확정, 재도전 35%)
+// 옛 세이브에서 이미 받은 그 보스의 예전 무기(UNIQ_OF)는 받은 것으로 쳐요
+export function pickSp(k) {
+  const B = BOSS_W[k]; if (!B) return UNIQ_OF[k]; const got = G.stats.spGot = G.stats.spGot || {};
+  if (G.stats.uniq && G.stats.uniq[k] && UNIQ_OF[k]) got[UNIQ_OF[k]] = 1;
+  const left = B.ids.filter(id => !got[id]), pool = left.length ? left : B.ids, id = pool[Math.floor(rand() * pool.length)]; got[id] = 1; return id; }

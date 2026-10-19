@@ -13,7 +13,7 @@ import { maybeNote } from './cooking.js';
 import { rollDrops } from './drops.js';
 import { emit } from './events.js';
 import { breakWall, hitRecover, recoverTarget } from './gathering.js';
-import { lvOf, wtOf } from './gear.js';
+import { lvOf, rlvOf, rlvOk, wtOf } from './gear.js';
 import { isBroken, selItem, wear } from './inventory.js';
 import { atkSpd, gainXp, magicMul, maxHp, meleeMul, rangeMul, RS, skl, standUp } from './player.js';
 import { onFrame } from './systems.js';
@@ -26,8 +26,8 @@ export function bestPick() { let b = { power: 0.5, tier: 0, id: 'hand' }; const 
 // v48: the weapon held in the hotbar is the weapon (there is no weapon slot any more); otherwise the fist
 export const FIST = { n: '주먹', dmg: 3, id: 'hand', wt: 'fist' };
 export const wpOf = s => { const it = ITEMS[s.id]; return { ...it, id: s.id, slot: s, dmg: it.dmg * (1 + UPG_DMG * lvOf(s)) }; }; // v43: each upgrade level adds 8% damage
-export function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'sword' && !isBroken(s)) return wpOf(s); // v65: the attack button always has a weapon
-  const all = G.inv.filter(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x)); if (!all.length) return FIST;
+export function curWeapon() { const s = selItem(), it = s && ITEMS[s.id]; if (it && it.kind === 'sword' && !isBroken(s) && rlvOk(s.id)) return wpOf(s); // v65: the attack button always has a weapon (v99: 착용 레벨이 모자란 무기는 빼고)
+  const all = G.inv.filter(x => x && ITEMS[x.id] && ITEMS[x.id].kind === 'sword' && !isBroken(x) && rlvOk(x.id)); if (!all.length) return FIST;
   const last = G.lastW && all.find(x => x.id === G.lastW); if (last) return wpOf(last);
   let b = all[0]; for (const x of all) if (wpOf(x).dmg > wpOf(b).dmg) b = x; return wpOf(b); }
 export const wRange = W => W.range * (W.ranged === 'arrow' ? 1 + skl('hawk') * .15 : 1); // v44 매의 눈
@@ -133,6 +133,7 @@ onFrame('attack', dt => attackTick(dt));
 export function attackTick(dt) { const p = G.p; G.atkT -= dt; G.atkQ = Math.max(0, G.atkQ - dt); if (p.dead > 0 || p.sleep) { G.atkQ = 0; return; } if ((G.atkQ > 0 || ctlOf(p).atk) && G.atkT <= 0) { G.atkQ = 0; doAttack(); } }
 export function doAttack() {
   const p = G.p; if (p.dead > 0 || p.sleep) return; if (p.sit) standUp(); G.fish = null;
+  { const h = selItem(); if (h && ITEMS[h.id] && ITEMS[h.id].kind === 'sword' && !rlvOk(h.id)) emit('toast', `${ITEMS[h.id].n}은(는) Lv.${rlvOf(h.id)}부터 들 수 있어요`, 'bad', 'rlv'); }
   const w = curWeapon(), WT = wtOf(w); if (w.id !== 'hand') G.lastW = w.id;
   let en = nearestEnemy(WT.ranged ? wRange(WT) : Math.max(WT.reach + .9, 2));
   if (en && WT.ranged && !los(Math.floor(p.x), Math.floor(p.y), Math.floor(en.x), Math.floor(en.y))) en = null;
