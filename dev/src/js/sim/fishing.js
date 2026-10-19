@@ -13,7 +13,8 @@ import { addItem, bestTool, usableItem, wear } from './inventory.js';
 import { gainXp } from './player.js';
 import { onFrame } from './systems.js';
 import { idx } from '../world/map.js';
-export function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: 1.6 + rand() * 3.4, bite: 0, win: .95, fly: 0.3, nib: 0 }; emit('sfx', 'cast'); }
+const FISHER = () => ((G && G.rpg && G.rpg.sk && G.rpg.sk.fisher) || 0);
+export function startFish(t) { const p = G.p; faceTo(t.x + .5 - p.x, t.y + .5 - p.y); G.fish = { tx: t.x, ty: t.y, bx: t.x + .5 + (fxRand() - .5) * .3, by: t.y + .55, st: 'wait', t: (1.6 + rand() * 3.4) * (1 - FISHER() * .12), bite: 0, win: .95 * (1 + FISHER() * .15), fly: 0.3, nib: 0 }; emit('sfx', 'cast'); } // v102 낚시꾼: 기다림 −12%/단계, 입질 시간 +15%/단계
 onFrame('fish', dt => updateFish(dt));
 export function updateFish(dt) {
   if (G.fishFx) { G.fishFx.t += dt; if (G.fishFx.t > 0.55) G.fishFx = null; }

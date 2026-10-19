@@ -9,6 +9,7 @@ import { markRuleLit } from './enemies.js';
 import { emit } from './events.js';
 import { rarCol, rarOf } from './gear.js';
 import { addItem, moveInto } from './inventory.js';
+import { skl } from './player.js';
 import { checkBiome, checkGuide } from './quests.js';
 import { onFrame, runFrame } from './systems.js';
 import { roomTick } from '../world/gen.js';
@@ -36,7 +37,7 @@ export function dropStep(d, dt) {
     moveEnt(d, d.vx * dt, d.vy * dt, 0.15); d.vx *= Math.pow(0.05, dt); d.vy *= Math.pow(0.05, dt);
     d.hold = Math.max(0, d.hold - dt);
     const dx = p.x - d.x, dy = p.y - .3 - d.y, l = Math.hypot(dx, dy);
-    const mag = petIs('dog') ? 1.6 : 1; // v45: the dog pulls drops in from further away
+    const mag = petIs('dog') ? 1.6 * (1 + skl('animalFriend') * .25) : 1; // v102 동물 친구 // v45: the dog pulls drops in from further away
     if (d.t > 0.4 && l < 2.2 * mag && d.hold <= 0 && p.dead <= 0) { const s = 9 * Math.max(.15, 1 - l / (2.6 * mag)) + 2; d.x += dx / l * s * dt; d.y += dy / l * s * dt;
       if (l < 0.45) { const left = d.dur != null || d.lv ? moveInto(G.inv, { id: d.id, c: d.c, dur: d.dur, lv: d.lv }) : addItem(d.id, d.c); if (ITEMS[d.id] && /^petal/.test(d.id)) { G.stats.petals = G.stats.petals || {}; G.stats.petals[d.id.slice(5)] = 1; } const got = d.c - left; if (got) { emit('sfx', 'pick'); emit('ftext', p.x, p.y - 1.4, `+${got} ${ITEMS[d.id].n}`, rarCol(d.id) || '#fff1d6'); if (rarOf(d.id) >= 3) emit('toast', `${RARITY[rarOf(d.id)][0]} 장비 ${josa(ITEMS[d.id].n, '을', '를')} 얻었어요!`, 'good'); } if (left) { d.c = left; d.hold = 1.5; emit('toast', '가방이 가득 찼어요', null, 'full-inv'); } else G.drops.splice(G.drops.indexOf(d), 1); } }
     if (d.t > 400) G.drops.splice(G.drops.indexOf(d), 1);

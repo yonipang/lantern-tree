@@ -41,7 +41,7 @@ export function returnObj(o, x, y) {
   emit('inv');
 }
 // ================= inventory =================
-export const invSize = () => HOT + BAG0 + BAG_STEP * ((G && G.bagLv) || 0);
+export const invSize = () => HOT + BAG0 + BAG_STEP * ((G && G.bagLv) || 0) + 3 * ((G && G.rpg && G.rpg.sk && G.rpg.sk.porter) || 0); // v102 짐꾼 +3칸/단계
 export const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt || !!it.mat;
 export const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting

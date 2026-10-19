@@ -4,7 +4,7 @@
 // 이 파일은 data/automation-tiers.js 뒤에 있어서 「지형 재료 2배」·레시피 단계 나누기가 적용되지 않아요 — 재료 개수와 단계(tier)를 여기 적힌 그대로 써요.
 import { DUR } from './circuits-regions.js';
 import { ITEMS, RAR, RECIPES, Rc } from './items.js';
-import { ENEMY } from './rpg-nature.js';
+import { ENEMY, SK_CAT, SKILLS } from './rpg-nature.js';
 import { josa } from '../engine/util.js';
 export const WT_SW = [6, 11, 17, 26, 36, 48]; // 단계별 검 공격력
 export const WT_MUL = { sword: 1, dagger: .65, spear: 1.05, hammer: 1.5, bow: .85, staff: .8 };
@@ -121,3 +121,49 @@ export const MON_TABLE = [
   [['magmaSlime', .35], ['cinder', .25], ['lavaSala', .15], ['bombSlime', .13], ['obsGolem', .12]],
   [['frostSlime', .35], ['snowling', .25], ['frostWolf', .15], ['icicleSprite', .12], ['yetiBaby', .13]],
 ];
+// ================= v102 성장 확장 5: 새 스킬 26개 (dev/design/성장확장.md 5장) =================
+// 지금처럼 스킬마다 3단계, 스킬 포인트는 레벨마다 1점. 무기 전용 스킬은 그 종류 무기를 들어야 써요(sim/skills.js). 동작은 sim/skills.js, 항상 효과는 각 규칙 파일(skl('이름')).
+Object.assign(SKILLS, {
+  // 검
+  lunge: { n: '돌진 베기', act: 1, lv: 14, max: 3, mp: () => 14, cd: l => 6 - l, d: l => `검을 들고 앞으로 2.5칸 돌진하며 지나는 적을 베요. 무기 피해의 ${120 + 30 * l}% (검을 들고 있어야 해요)` },
+  parry: { n: '받아치기 자세', lv: 30, max: 3, d: l => `검을 들면 받는 피해 −${4 * l}% · 맞은 뒤 3초 안의 다음 공격 피해 +${25 * l}%` },
+  // 단검
+  shadowStep: { n: '그림자 걸음', act: 1, lv: 18, max: 3, mp: () => 16, cd: l => 7 - l, d: l => `가장 가까운 적(6칸) 뒤로 순간이동해 치명타로 찔러요. 무기 피해의 ${150 + 40 * l}% (단검을 들고 있어야 해요)` },
+  vital: { n: '급소 노리기', lv: 22, max: 3, d: l => `단검을 들면 치명타 확률 +${5 * l}%` },
+  // 창
+  pierceDash: { n: '꿰뚫기 돌진', act: 1, lv: 16, max: 3, mp: () => 16, cd: l => 7 - l, d: l => `창을 들고 4칸을 꿰뚫으며 돌진해요. 무기 피해의 ${130 + 30 * l}% (창을 들고 있어야 해요)` },
+  longArm: { n: '긴 팔', lv: 26, max: 3, d: l => `창 사거리 +${15 * l}%` },
+  // 망치
+  heavyHand: { n: '무거운 손', lv: 20, max: 3, d: l => `망치로 때리면 ${10 * l}% 확률로 적이 1초 기절해요` },
+  earthquake: { n: '지진', act: 1, lv: 24, max: 3, mp: () => 26, cd: l => 11 - l, d: l => `망치로 땅을 내리쳐 둘레 3.5칸의 적에게 무기 피해의 ${150 + 40 * l}%를 주고 1초 기절시켜요 (망치를 들고 있어야 해요)` },
+  // 활
+  pierceArrow: { n: '꿰뚫는 화살', act: 1, lv: 20, max: 3, mp: () => 14, cd: l => 5 - l * .5, d: l => `적 셋을 꿰뚫는 화살 한 발. 활 피해의 ${180 + 40 * l}% (활을 들고 있어야 해요)` },
+  trapArrow: { n: '덫 화살', act: 1, lv: 32, max: 3, mp: () => 18, cd: () => 9, d: l => `가장 가까운 적(사거리 안) 둘레 2칸을 끈적하게 해 ${3 + l}초 동안 느리게 해요 (활을 들고 있어야 해요)` },
+  // 마법
+  fireball: { n: '불꽃 구슬', act: 1, lv: 15, max: 3, mp: () => 14, cd: () => 1.6, d: l => `불타는 구슬을 쏴요. 피해 ${14 + 8 * l} + 불꽃 (지혜로 강해져요)` },
+  chain: { n: '번개 사슬', act: 1, lv: 28, max: 3, mp: () => 22, cd: l => 7 - l, d: l => `가장 가까운 적에게 번개가 떨어지고 3칸 안의 적 ${2 + l}마리에게 더 튀어요. 피해 ${16 + 8 * l} (지혜로 강해져요)` },
+  lightShield: { n: '빛 방패', act: 1, lv: 35, max: 3, mp: () => 24, cd: () => 16, d: l => `8초 동안 피해 ${30 + 15 * l}를 대신 받아 주는 빛 방패` },
+  orbFriend: { n: '빛 구슬 친구', act: 1, lv: 45, max: 3, mp: () => 30, cd: () => 24, d: l => `${12 + 4 * l}초 동안 빛 구슬이 따라다니며 0.8초마다 가까운 적을 스스로 쏴요. 피해 ${8 + 4 * l} (지혜로 강해져요)` },
+  // 일반
+  sprint: { n: '질주', act: 1, lv: 13, max: 3, mp: () => 10, cd: () => 10, d: l => `${4 + l}초 동안 이동 속도 +40%` },
+  leech: { n: '생명 흡수', lv: 38, max: 3, d: l => `적을 물리치면 최대 체력의 ${2 * l + 1}%를 회복해요` },
+  secondWind: { n: '두 번째 숨', lv: 40, max: 3, d: l => `기절할 피해를 받아도 체력 1로 한 번 버텨요 (${150 - 30 * l}초마다 한 번)` },
+  // 생활
+  farmer: { n: '농부의 손', lv: 10, max: 3, d: l => `작물이 ${10 * l}% 빨리 자라요` },
+  fisher: { n: '낚시꾼', lv: 12, max: 3, d: l => `물고기가 ${12 * l}% 빨리 물고, 당길 수 있는 시간 +${15 * l}%` },
+  chef: { n: '요리사', lv: 17, max: 3, d: l => `음식 버프가 ${15 * l}% 오래가요` },
+  porter: { n: '짐꾼', lv: 25, max: 3, d: l => `가방 칸 +${3 * l}` },
+  animalFriend: { n: '동물 친구', lv: 30, max: 3, d: l => `펫 효과 강화: 강아지 끌어오는 거리 +${25 * l}% · 토끼 추가 드롭 +${10 * l}%${l >= 2 ? ' · 고양이 행운 +1' : ''}` },
+  // 큰 스킬 (Lv.50~)
+  dawnLight: { n: '새벽빛', act: 1, lv: 55, max: 3, mp: () => 40, cd: () => 20, d: l => `빛이 터져 둘레 4칸의 적에게 피해 ${40 + 20 * l} (그림자 몬스터에게 2배, 지혜로 강해져요)` },
+  starRain: { n: '별빛 화살비', act: 1, lv: 65, max: 3, mp: () => 44, cd: () => 22, d: l => `가장 가까운 적(8칸) 둘레 3.5칸에 별빛 화살 ${8 + 4 * l}발이 떨어져요. 한 발 피해 ${12 + 6 * l} (지혜로 강해져요)` },
+  awaken: { n: '등불지기의 각성', act: 1, lv: 70, max: 3, mp: () => 50, cd: () => 60, d: l => `${8 + 2 * l}초 동안 모든 스킬의 기다리는 시간이 2배 빨리 줄어요` },
+  earthSplit: { n: '대지 가르기', act: 1, lv: 75, max: 3, mp: () => 48, cd: () => 18, d: l => `바라보는 쪽 6칸을 한 줄로 가르며 적에게 무기 피해의 ${200 + 50 * l}%와 1초 기절` },
+});
+SK_CAT.length = 0; SK_CAT.push(
+  ['gen', '일반', ['dash', 'spin', 'stomp', 'sprint', 'tough', 'warrior', 'swift', 'leech', 'secondWind']],
+  ['sword', '검', ['lunge', 'parry']], ['dagger', '단검', ['shadowStep', 'vital']], ['spear', '창', ['pierceDash', 'longArm']], ['hammer', '망치', ['earthquake', 'heavyHand']],
+  ['bow', '활', ['volley', 'pierceArrow', 'trapArrow', 'hawk']],
+  ['magic', '마법', ['bolt', 'heal', 'frostRing', 'fireball', 'chain', 'lightShield', 'orbFriend', 'arcane']],
+  ['life', '생활', ['quake', 'miner', 'gourmet', 'lucky', 'farmer', 'fisher', 'chef', 'porter', 'animalFriend']],
+  ['ult', '큰 스킬', ['dawnLight', 'starRain', 'awaken', 'earthSplit']]);

@@ -26,7 +26,7 @@ export function bossNoteIds(k) { const list = (BOSS_NOTES[k] || []).slice(), rg 
 // ---- buffs ----
 export const activeBuffs = () => (G && G.buffs ? G.buffs.filter(b => b.end > G.time) : []);
 export function bval(ef) { if (!G || !G.buffs) return 0; let best = null; for (const b of G.buffs) if (b.ef === ef && b.end > G.time && (!best || b.tier > best.tier)) best = b; return best ? EFF[ef].v[best.tier - 1] : 0; }
-export const luckTier = () => Math.max(bval('luck'), (G.luck || 0) > G.time ? 2 : 0, petIs('cat') ? 1 : 0); // the fountain wish counts as a tier-2 luck effect
+export const luckTier = () => Math.max(bval('luck'), (G.luck || 0) > G.time ? 2 : 0, petIs('cat') ? (SK('animalFriend') >= 2 ? 2 : 1) : 0); // v102 동물 친구 // the fountain wish counts as a tier-2 luck effect
 export let buffAsk = null;
 export function buffCheck(it, id) { const [ef, tier] = it.buff, act = activeBuffs(), same = act.find(b => b.ef === ef);
   if (same) { if (same.tier > tier) { emit('toast', '더 좋은 효과가 이미 있어요 · 배만 불러요', null, 'buffLow'); return 'lower'; } return 'ok'; }
@@ -34,7 +34,8 @@ export function buffCheck(it, id) { const [ef, tier] = it.buff, act = activeBuff
   if (buffAsk && buffAsk.id === id && performance.now() < buffAsk.until) { buffAsk = null; return 'ok'; }
   const sh = act.reduce((a, b) => b.end < a.end ? b : a); buffAsk = { id, until: performance.now() + 5000 };
   emit('toast', `효과 칸이 가득 찼어요. 한 번 더 먹으면 남은 시간이 가장 짧은 「${EFF[sh.ef].n}」 효과와 바꿔요`, 'warn', 'buffFull'); return 'ask'; }
-export function applyBuff(it, id) { const [ef, tier] = it.buff, dur = BUFF_DUR[tier - 1] * (it.star ? 1.5 : 1); G.buffs = activeBuffs();
+const SK = k => ((G && G.rpg && G.rpg.sk && G.rpg.sk[k]) || 0); // v102 (sim/player.js의 skl을 여기서 못 불러요)
+export function applyBuff(it, id) { const [ef, tier] = it.buff, dur = BUFF_DUR[tier - 1] * (it.star ? 1.5 : 1) * (1 + SK('chef') * .15); // v102 요리사 G.buffs = activeBuffs();
   const same = G.buffs.find(b => b.ef === ef); if (same) Object.assign(same, { tier, end: G.time + dur, max: dur, id });
   else { if (G.buffs.length >= BUFF_MAX) { const sh = G.buffs.reduce((a, b) => b.end < a.end ? b : a); G.buffs.splice(G.buffs.indexOf(sh), 1); } G.buffs.push({ ef, tier, end: G.time + dur, max: dur, id }); }
   if (ef === 'maxhp') G.p.hp = Math.min(maxHp(), G.p.hp); emit('toast', `${EFF[ef].n} ${EFF[ef].t(EFF[ef].v[tier - 1])} · ${Math.round(dur / 6) / 10}분`, 'good', 'buff'); emit('buffs'); }

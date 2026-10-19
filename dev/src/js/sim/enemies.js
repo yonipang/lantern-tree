@@ -37,6 +37,7 @@ export function enemyStep(e, dt) {
     chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
   } else e.losT = 0;
   e.chasing = chase; if (chase) p.chasedAt = G.time; // v77: 몬스터가 나를 쫓음 = 싸우는 중
+  if (e.stun > 0) { e.stun -= dt; e.vx = e.vy = 0; if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; } e.hurt = Math.max(0, (e.hurt || 0) - dt); return; } // v102 기절: 안 움직이고 안 때려요
   const special = def.ai && MON_AI[def.ai] && MON_AI[def.ai](e, def, dt, d, dx, dy, chase, sm); // v101: 특별한 움직임이 true면 기본 움직임은 건너뛰어요
   if (special) { if (!G.enemies.includes(e)) return; }
   else if (def.hop) {

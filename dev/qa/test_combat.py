@@ -54,7 +54,7 @@ def test_skills():
             await ev(pg,"()=>{"+CLEAR+"}")
             r=await ev(pg,"""()=>{const T=__T;const all=Object.keys(T.SKILLS),cat=T.SK_CAT.flatMap(c=>c[2]);const nw=['stomp','warrior','volley','hawk','frostRing','arcane'];
           return [all.length,cat.length,all.every(k=>cat.includes(k)),T.SK_CAT.map(c=>c[1]+':'+c[2].filter(k=>nw.includes(k)).length).join(','),nw.map(k=>T.SKILLS[k].lv).join(','),nw.filter(k=>T.SKILLS[k].act).join(',')]}""")
-            rec('스킬','새 스킬 6개 (일반·마법·활 2개씩), 모두 16개, Lv.7~12에 열림', r==[16,16,True,'일반:2,마법:2,활:2,생활:0','7,8,9,10,11,12','stomp,volley,frostRing'], str(r))
+            rec('스킬','v44 스킬 6개 (일반·마법·활 2개씩), v102부터 모두 42개·분류 9개, Lv.7~12에 열림', r==[42,42,True,'일반:2,검:0,단검:0,창:0,망치:0,활:2,마법:2,생활:0,큰 스킬:0','7,8,9,10,11,12','stomp,volley,frostRing'], str(r))
             await ev(pg,"()=>{__T.G.rpg.sp=5;__T.openPanel('stat',{tab:'sk'})}"); await pg.wait_for_timeout(500)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return ['일반 스킬','마법 스킬','활 스킬','생활 스킬','땅울림','화살비','서리 고리','마력 순환','매의 눈','전사의 기술'].map(x=>t.includes(x))}")
             rec('표시','능력 창에 스킬이 일반·마법·활·생활로 나뉘어 보임', all(r), str(r))
@@ -587,6 +587,47 @@ def test_monsters_v101():
               G.enemies.length=0;G.hz=[];e=T.mkEnemy('icicleSprite',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);for(let i=0;i<10;i++)T.enemyStep(e,1/30);const ic=G.hz.some(h=>h.k==='frost');
               G.enemies.length=0;G.hz=[];e=T.mkEnemy('lavaSala',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);for(let i=0;i<30;i++)T.enemyStep(e,1/30);const lv=G.hz.some(h=>h.k==='lava');return [bomb,dashed,ic,lv]}""")
             rec('움직임','화산탄 말랑이는 가까이서 터져 사라짐(드롭 없음·피해), 흑요석 골렘 돌진, 고드름 정령 경고 원, 용암 도롱뇽 불 웅덩이', r==[[True,True,True],True,True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_skills_v102():
+    # v102 성장 확장 5: 새 스킬 26개 — 무기 전용(그 무기를 들어야)·마법·일반·생활·큰 스킬, 항상 효과
+    H2=HOOK.replace("computeLight}","computeLight,SKILLS,SK_CAT,useSkill,SK_FN,mkEnemy,hurtPlayer,hitEnemy,invSize,runCmd,swingAttack,enemyStep,curWeapon,get SPR(){return SPR}}")
+    ARENA="const T=__T,G=T.G;for(let y=100;y<120;y++)for(let x=100;x<120;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.pshots.length=0;G.shots.length=0;G.hz=[];G.drops.length=0;G.p.x=110.5;G.p.y=110.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.hp=500;G.p.mp=999;G.p.inv=0;G.p.sleep=null;G.p.sit=null;G.p.shield=0;G.p.orb=null;G.rpg.lv=80;G.rpg.sk={};G.rpg.slot=[null,null];G.skcd={};G.buffs=[];G.equip={body:null,head:null,neck:null,ring:null,legs:null};G.inv.fill(null);G.sel=0;G.lastW=null;const en=(k,dx,dy)=>{const e=T.mkEnemy(k||'slimeO',G.p.x+dx,G.p.y+dy);e.hp=e.mh=9999;e.cd=99;e.t=99;G.enemies.push(e);return e};const use=(k,l)=>{G.rpg.sk[k]=l||1;G.rpg.slot[0]=k;G.skcd={};G.p.mp=999;T.useSkill(0)};"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            NEW=['lunge','parry','shadowStep','vital','pierceDash','longArm','heavyHand','earthquake','pierceArrow','trapArrow','fireball','chain','lightShield','orbFriend','sprint','leech','secondWind','farmer','fisher','chef','porter','animalFriend','dawnLight','starRain','awaken','earthSplit']
+            r=await ev(pg,"""(NEW)=>{const T=__T;const all=Object.keys(T.SKILLS),cat=T.SK_CAT.flatMap(c=>c[2]);const bad=NEW.filter(k=>!T.SKILLS[k]||!T.SPR.ui['sk_'+k]||(T.SKILLS[k].act&&!T.SK_FN[k]));
+              return [all.length,bad.join(','),all.every(k=>cat.includes(k)),cat.length===new Set(cat).size,T.SK_CAT.map(c=>c[1]).join(','),Object.values(T.SKILLS).reduce((a,s)=>a+s.max,0)]}""",NEW)
+            rec('스킬','새 스킬 26개(모두 42개), 아이콘·동작 있음, 분류 9개에 빠짐·겹침 없음, 단계 합계 126 > 스킬 포인트 80', r==[42,'',True,True,'일반,검,단검,창,망치,활,마법,생활,큰 스킬',126], str(r))
+            # 무기 전용: 안 맞는 무기면 안 써짐(기력 안 줄고 쿨다운 없음), 맞는 무기면 적을 때림
+            r=await ev(pg,"()=>{"+ARENA+"""G.inv[0]={id:'bowWood',c:1};const e=en('slimeO',1.5,0);use('lunge');const a=[G.skcd.lunge>0,e.hp];G.inv[0]={id:'swordIron',c:1};G.p.x=110.5;use('lunge');return a.concat([G.skcd.lunge>0,e.hp<9999,G.p.x>110.5])}""")
+            rec('무기 전용','돌진 베기: 활을 들면 안 써지고, 검을 들면 앞으로 돌진하며 적을 벰', r==[False,9999,True,True,True], str(r))
+            r=await ev(pg,"()=>{"+ARENA+"""G.inv[0]={id:'daggerIron',c:1};const e=en('slimeO',3,0);use('shadowStep');const a=[G.p.x>e.x,e.hp<9999];G.enemies.length=0;G.inv[0]={id:'hammerIron',c:1};G.p.x=110.5;const e2=en('slimeO',2,1);use('earthquake');a.push(e2.hp<9999,e2.stun>0);G.enemies.length=0;G.inv[0]={id:'spearIron',c:1};G.p.x=110.5;const e3=en('slimeO',3,0);use('pierceDash');a.push(e3.hp<9999);return a}""")
+            rec('무기 전용','그림자 걸음은 적 뒤로 이동해 때림 · 지진은 둘레 적을 때리고 기절 · 꿰뚫기 돌진', r==[True,True,True,True,True], str(r))
+            r=await ev(pg,"()=>{"+ARENA+"""G.inv[0]={id:'bowIron',c:1};const e=en('slimeO',2,0),e2=en('slimeO',3,0),e3=en('slimeO',4,0);use('pierceArrow');for(let i=0;i<40;i++)T.updatePShots&&0;return [G.pshots.length,G.pshots[0]&&G.pshots[0].pierce]}""")
+            rec('활','꿰뚫는 화살: 관통 3 화살 한 발', r==[1,3], str(r))
+            r=await ev(pg,"()=>{"+ARENA+"""G.inv[0]={id:'bowIron',c:1};const e=en('slimeO',3,0),e2=en('slimeO',4,1),far=en('slimeO',8,0);use('trapArrow',2);return [e.slow,e2.slow,far.slow||0]}""")
+            rec('활','덫 화살: 가장 가까운 적 둘레 2칸이 (3+단계)초 느려짐', r==[5,5,0], str(r))
+            # 마법
+            r=await ev(pg,"()=>{"+ARENA+"""use('fireball');const a=[G.pshots.length===1&&G.pshots[0].fx==='burn'];G.pshots.length=0;const e=en('slimeO',2,0),e2=en('slimeO',3.5,0),e3=en('slimeO',5,0),e4=en('slimeO',9,0);use('chain',1);a.push(e.hp<9999,e2.hp<9999,e3.hp<9999,e4.hp===9999);
+              use('lightShield',1);a.push(G.p.shield===45);T.hurtPlayer(20,G.p.x+1,G.p.y);a.push(G.p.hp===500&&G.p.shield===25);G.p.inv=0;T.hurtPlayer(60,G.p.x+1,G.p.y);a.push(G.p.shield===0&&G.p.hp<500);return a}""")
+            rec('마법','불꽃 구슬(불꽃) · 번개 사슬이 3칸씩 이어 3마리(멀리 있는 건 안 맞음) · 빛 방패 45가 피해를 대신 받음', r==[True,True,True,True,True,True,True,True], str(r))
+            # 일반·항상: 질주, 생명 흡수, 두 번째 숨, 받아치기, 급소, 긴 팔, 무거운 손
+            r=await ev(pg,"()=>{"+ARENA+"""use('sprint',1);const a=[G.p.sprintT>4];G.rpg.sk={leech:2};G.p.hp=50;const e=en('slimeO',1,0);e.hp=1;T.hitEnemy(e,5,false,0);a.push(G.p.hp===55);
+              G.rpg.sk={secondWind:1};G.p.hp=10;G.p.inv=0;G.p.secondAt=-9999;T.hurtPlayer(100,G.p.x+1,G.p.y);a.push(G.p.hp===1&&G.p.dead<=0);G.p.inv=0;T.hurtPlayer(100,G.p.x+1,G.p.y);a.push(G.p.hp===0||G.p.dead>0);
+              G.p.dead=0;G.p.hp=500;G.p.inv=0;G.rpg.sk={parry:2};G.inv[0]={id:'swordIron',c:1};G.p.inv=0;G.p.hp=500;T.hurtPlayer(100,G.p.x+1,G.p.y);a.push(500-G.p.hp,G.p.parryT>0);return a}""")
+            rec('일반·항상','질주 시간 · 생명 흡수로 처치 때 회복 · 두 번째 숨은 한 번만 · 받아치기 자세(검, 2단계)는 받는 피해 −8%(100 → 92)', r==[True,True,True,True,92,True], str(r))
+            r=await ev(pg,"()=>{"+ARENA+"""G.rpg.sk={porter:2};T.runCmd({k:'skUp',s:'porter'});const n0=G.inv.length;G.rpg.sk={porter:3};G.rpg.sp=0;const a=[T.invSize()-(9+24),n0];G.inv[G.inv.length-1]={id:'wood',c:5};G.inv.length=T.invSize();T.runCmd({k:'skReset'});return a.concat([G.inv.length,T.invSize(),G.drops.length+G.inv.filter(x=>x&&x.id==='wood').length])}""")
+            rec('짐꾼','가방 칸 +3/단계, 스킬을 되돌리면 칸이 줄고 넘친 물건은 가방 빈칸이나 발밑으로', r[0]==9 and r[2]==33 and r[3]==33 and r[4]>=1, str(r))
+            # 큰 스킬
+            r=await ev(pg,"()=>{"+ARENA+"""const e=en('slimeO',2,0),f=en('slimeO',7,0);use('dawnLight',1);const a=[e.hp<9999,f.hp===9999];e.hp=9999;use('starRain',1);a.push(e.hp<9999);use('awaken',1);G.skcd.heal=10;a.push(G.p.awakeT>8);G.inv[0]={id:'hammerIron',c:1};const g=en('slimeO',4,0);use('earthSplit',1);a.push(g.hp<9999,g.stun>0);return a}""")
+            rec('큰 스킬','새벽빛 둘레 4칸 · 별빛 화살비 · 각성 · 대지 가르기(앞 6칸 한 줄, 기절)', r==[True,True,True,True,True,True], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
