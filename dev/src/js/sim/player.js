@@ -4,7 +4,7 @@
 import { CHARS, cleanLook, lookDef } from '../art/characters.js';
 import { turtleCut } from '../data/gear-animals.js';
 import { ITEMS, OBJ } from '../data/items.js';
-import { BKEYS, MAX_LV, REGEN_WAIT, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
+import { BKEYS, MAX_LV, REGEN_WAIT, SKILLS, STATN, STAT_PER, XP_NEED } from '../data/rpg-nature.js';
 import { fxRand } from '../engine/random.js';
 import { clamp, roJosa } from '../engine/util.js';
 import { alivePlayers, cam, freshBoss, G } from '../save/state.js';
@@ -42,7 +42,7 @@ export const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02
 export function gainXp(n, x, y) {
   const R = G && G.rpg; if (!R || !(n > 0) || R.lv >= MAX_LV) return; n = Math.max(n, Math.round(n * (1 + bval('xp') + ringV('xp')))); R.xp += n;
   if (x != null && n >= 3) emit('ftext', x, y - 0.9, `+${n} 경험치`, '#b8e0ff');
-  let up = 0; while (R.lv < MAX_LV && R.xp >= XP_NEED(R.lv)) { R.xp -= XP_NEED(R.lv); R.lv++; R.pts += 2; R.sp += 1; up++; }
+  let up = 0; while (R.lv < MAX_LV && R.xp >= XP_NEED(R.lv)) { R.xp -= XP_NEED(R.lv); R.lv++; R.pts += STAT_PER(R.lv); R.sp += 1; up++; }
   if (R.lv >= MAX_LV) { R.xp = 0; if (up) R.sp += 1; } // reaching the top level gives one more skill point (since v44 there are more skills than points: 스킬 다시 배우기 is free)
   if (up) { const p = G.p; p.hp = maxHp(); p.mp = maxMp(); emit('puff', p.x, p.y - .5, '#ffe9a8', 26, 3.5, .8); emit('ftext', p.x, p.y - 1.6, `Lv.${R.lv}!`, '#ffd25c'); emit('sfx', 'seed'); emit('toast', R.lv >= MAX_LV ? `최고 레벨 Lv.${R.lv}! 보너스 스킬 포인트 +1 · [캐릭터]에서 올려요` : `레벨 업! Lv.${R.lv} · [캐릭터]에서 능력치와 스킬을 올려요`, 'good'); emit('refresh', 'stat'); }
 }
