@@ -46,10 +46,10 @@ export function portalWhy(x, y) { if (noDigZone(x, y) === 'boss') return '보스
   if (myPortals() >= PORTAL_MAX) return `포탈은 한 사람당 ${PORTAL_MAX}개까지 놓을 수 있어요 · 놓아 둔 포탈을 회수하면 다시 놓을 수 있어요`; return null; }
 
 // ---- 워프포인트 놓기 (새 세계: 만들 때 · 옛 세계: 불러올 때 한 번) ----
-const freeTile = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && !G.objs.get(i);
-function roomNear(x, y) { for (const r of G.rooms || []) if (x >= r.x - 3 && x <= r.x + 6 && y >= r.y - 3 && y <= r.y + 5) return true; return false; }
+export const freeTile = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && !G.objs.get(i);
+export function roomNear(x, y) { for (const r of G.rooms || []) if (x >= r.x - 3 && x <= r.x + 6 && y >= r.y - 3 && y <= r.y + 5) return true; return false; }
 // 걸어서(캐지 않고) 등불나무에서 닿는 칸
-function walkable() { const N = W * H, seen = new Uint8Array(N), q = [idx(CX, CY + 2)]; seen[q[0]] = 1;
+export function walkable() { const N = W * H, seen = new Uint8Array(N), q = [idx(CX, CY + 2)]; seen[q[0]] = 1;
   for (let k = 0; k < q.length; k++) { const i = q[k], x = i % W; for (const [d, dx] of [[1, 1], [-1, -1], [W, 0], [-W, 0]]) { const j = i + d; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N || seen[j] || G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA || G.floor[j] === PIT) continue; seen[j] = 1; q.push(j); } }
   return seen; }
 // 등불나무 곁: 나무 오른쪽(6칸)에서 가까운 빈 칸 (아래 칸도 비어 있어야 앞에 설 수 있어요), 시작 바닥(나무 아래 앞마당)은 피해요

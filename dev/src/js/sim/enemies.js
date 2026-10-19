@@ -15,6 +15,7 @@ import { canSee, fpOf, isSolid, moveEnt } from '../world/tiles.js';
 import { warpSafe } from './warp.js';
 import { MON_TABLE } from '../data/growth.js';
 import { MON_AI } from './monsters.js';
+import { shadowLeash } from './npc.js';
 onFrame('enemies', updateEnemies);
 onFrame('spawn', dt => { const p = G.p;
   G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
@@ -53,7 +54,7 @@ export function enemyStep(e, dt) {
     if (Math.abs(e.vx) > 0.05) e.flip = e.vx < 0;
   }
   if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
-  e.hurt = Math.max(0, (e.hurt || 0) - dt);
+  e.hurt = Math.max(0, (e.hurt || 0) - dt); shadowLeash(e); /* v104 */
   if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)

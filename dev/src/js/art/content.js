@@ -9,6 +9,8 @@ import { DISHES, STAR_OF } from '../data/farming-cooking.js';
 import { FLOWERS } from '../data/rpg-nature.js';
 import { FPAL, OSPR, SPR } from './world.js';
 import { AR_TABLE } from '../data/growth.js';
+import { NPC_IDS, NPCS } from '../data/npc.js';
+import { CHARS, charFrame, lookDef } from './characters.js';
 import { ICON, UICON, bowIcon, packet, pickIcon, sickleIcon, swordIcon, axeIcon, daggerIcon, hammerIcon, spearIcon, staffIcon } from './characters.js';
 import { RINGS } from '../data/gear-animals.js';
 import { SUMMON } from '../data/quests.js';
@@ -489,3 +491,10 @@ export const MON_SPR_DEF = {
     sk_awaken: base('#4a3a10', A => { A.r(6, 5, 4, 7, AMB2); A.poly([[8, 1], [10, 5], [6, 5]], '#ff8a3d'); A.p(8, 3, ULT2); A.r(5, 12, 6, 2, C.woodD); A.p(2, 4, ULT2); A.p(14, 3, ULT2); }),
     sk_earthSplit: base('#4a3a10', A => { A.e(8, 11, 6.5, 3.5, C.stone); A.line(2, 12, 14, 8, INK, 2); A.line(5, 13, 10, 11, '#ff8a3d'); A.poly([[7, 1], [10, 1], [9, 8], [8, 8]], C.ironL); }),
   }); }
+
+// ---- v104 그림자 고치·NPC 그림 (Claude 임시): 고치는 코드 그림, NPC는 꾸미기 캐릭터 조립(lookDef)으로 ----
+OSPR.cocoon = [16, 24, A => { A.e(8, 14, 6.5, 8, '#2a1f3a'); A.e(8, 13.5, 6, 7.5, '#3a2a5a'); A.e(6.5, 11, 2.5, 3.5, '#5a4a7a'); for (const [x1, y1, x2, y2] of [[2, 6, 7, 20], [13, 7, 9, 21], [4, 18, 12, 10], [3, 12, 12, 16]]) A.line(x1, y1, x2, y2, '#8a6ad0', 1); A.p(7, 13, '#d6c2ff'); A.p(10, 15, '#d6c2ff'); A.line(8, 1, 8, 6, '#2a1f3a', 2); A.e(8, 22, 6, 1.5, 'rgba(0,0,0,.25)'); }];
+const NPC_IMG = {};
+export function npcImg(id) { const N = NPCS[id]; if (!N) return null; if (!NPC_IMG[id]) { const key = 'npc_' + id; CHARS[key] = lookDef(N.look); if (N.grey) CHARS[key].hc = ['#cfcfd8', '#9a9aa8', '#eeeef4']; NPC_IMG[id] = charFrame(key, 'down', 0, CHARS[key].pal); delete CHARS[key]; } return NPC_IMG[id]; }
+export function npcSprites() { for (const id of NPC_IDS) { const img = npcImg(id); if (img) { SPR['npc_' + id] = img; SPR['npc_' + id + 'W'] = whiten(img); } } }
+export function shadowBitSpr() { return mk(16, 16, A => { A.e(8, 10, 5.5, 5, '#1e1630'); A.e(8, 9.5, 5, 4.5, '#3a2a5a'); A.poly([[3, 12], [1, 15], [5, 13]], '#3a2a5a'); A.poly([[13, 12], [15, 15], [11, 13]], '#3a2a5a'); A.p(6, 9, '#d6c2ff'); A.p(10, 9, '#d6c2ff'); A.p(6, 8, '#ffffff'); A.p(10, 8, '#ffffff'); A.p(8, 4, '#5a4a7a'); A.p(8, 3, '#5a4a7a'); }); }

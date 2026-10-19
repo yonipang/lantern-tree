@@ -519,3 +519,6 @@ body:not(.touch) #bmRot{border-radius:0;width:auto;height:40px;padding:0 12px;bo
 body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방향키로 고른 사람은 목록 바로 위 */
 /* v100 캐릭터 창 방어력 줄 */
 .eqdef{text-align:center;font-size:16px;color:var(--muted);margin:6px 0 2px}
+/* v104 NPC 대화 */
+.talkbox{display:flex;gap:10px;align-items:flex-start;background:#2a2139;border:2px solid #4d3e66;padding:10px}
+.talkface{width:64px;height:76px;image-rendering:pixelated;flex:none;background:#3a2f52}

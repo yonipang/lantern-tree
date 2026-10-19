@@ -3586,6 +3586,10 @@
 "rlv": 40,
 "wtier": 5,
 "d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"cocoonBit": {
+"n": "그림자 실",
+"d": "그림자 고치를 부수면 나오는 검은 실. 어둠을 담아 둔 것처럼 차가워요."
 }
 },
 "OBJ": {
@@ -4854,6 +4858,20 @@
 "solid": 1,
 "item": "portal",
 "warp": "portal"
+},
+"cocoon": {
+"n": "그림자 고치",
+"solid": 1,
+"cocoon": 1,
+"light": [
+1.5,
+"#8a6ad0"
+]
+},
+"npc": {
+"n": "사람",
+"solid": 1,
+"npc": 1
 }
 },
 "RECIPES": [
@@ -11153,6 +11171,25 @@
 ]
 ],
 "col": "#f4f8ff"
+},
+"shadowBit": {
+"n": "그림자 조각",
+"hp": 40,
+"dmg": 9,
+"spd": 2.6,
+"r": 0.3,
+"hop": 0,
+"aggro": 6,
+"shadow": 1,
+"drops": [
+[
+"cocoonBit",
+1,
+1,
+0.5
+]
+],
+"col": "#3a2a5a"
 }
 },
 "BOSSES": {
@@ -18706,7 +18743,8 @@ null,
 "quarry": "farm",
 "treeFarm": "farm",
 "sprinkler": "sprk",
-"harvester": "harv"
+"harvester": "harv",
+"npc": "talk"
 },
 "SETN": {
 "moss": "이끼 세트",
@@ -19355,6 +19393,7 @@ null,
 "icePillar": "[그림 16x26 22a106d6]",
 "sprinkler": "[그림 16x18 4b873be]",
 "harvester": "[그림 16x20 d061fc16]",
+"cocoon": "[그림 16x24 f9865ecd]",
 "bFenceWood": "[그림 16x42 dac4d609]",
 "bDoorWood": "[그림 16x42 7a5ebd37]",
 "bFenceStone": "[그림 16x42 7dd1a0e0]",
@@ -20138,6 +20177,20 @@ null,
 "icicleSpriteW": "[그림 16x18 6109c0ea]",
 "yetiBaby": "[그림 18x18 a002076f]",
 "yetiBabyW": "[그림 18x18 27b55769]",
+"npc_farmer": "[그림 16x19 14b26e87]",
+"npc_farmerW": "[그림 16x19 675a1b21]",
+"npc_cook": "[그림 16x19 ee8ccb08]",
+"npc_cookW": "[그림 16x19 57b80ed4]",
+"npc_shepherd": "[그림 16x19 166128e5]",
+"npc_shepherdW": "[그림 16x19 fc2bc18c]",
+"npc_smith": "[그림 16x19 15fc43b4]",
+"npc_smithW": "[그림 16x19 368c01f1]",
+"npc_guide": "[그림 16x19 6166eb55]",
+"npc_guideW": "[그림 16x19 19668935]",
+"npc_scholar": "[그림 16x19 de67d7f1]",
+"npc_scholarW": "[그림 16x19 201c0ae5]",
+"shadowBit": "[그림 16x16 542aca03]",
+"shadowBitW": "[그림 16x16 4c729d4]",
 "objOff": {
 "torch": "[그림 14x24 2087b6]",
 "lampShroom": "[그림 16x24 6d9988a]",
@@ -21447,6 +21500,7 @@ null
 "legsGold": "c89517c1",
 "helmFrost": "a739053c",
 "armorFrost": "7497c75e",
-"legsFrost": "45cc62e9"
+"legsFrost": "45cc62e9",
+"cocoonBit": "7dc590a9"
 }
 }
