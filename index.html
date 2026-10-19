@@ -527,6 +527,8 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 /* v104 NPC 대화 */
 .talkbox{display:flex;gap:10px;align-items:flex-start;background:#2a2139;border:2px solid #4d3e66;padding:10px}
 .talkface{width:64px;height:76px;image-rendering:pixelated;flex:none;background:#3a2f52}
+/* v105 물물교환 줄 */
+.btn.barter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:left;min-height:48px}.btn.barter.off{opacity:.55}.btn.barter small{flex-basis:100%;color:var(--muted);font-size:16px}.barrow{color:var(--amber)}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -3718,6 +3720,51 @@ USE.npc = 'talk'; USE_LBL.talk = '말 걸기';
 // 고치를 지키는 그림자 조각: 빛 안에서 받는 피해 2배 (sim/combat.js), 고치 둘레 5칸을 떠나지 않음 (sim/npc.js)
 Object.assign(ENEMY, { shadowBit: { n: '그림자 조각', hp: 40, dmg: 9, spd: 2.6, r: 0.3, hop: 0, aggro: 6, shadow: 1, drops: [['cocoonBit', 1, 1, 0.5]], col: '#3a2a5a' } });
 const COCOON_HITS = 3, COCOON_GUARDS = 3, COCOON_GUARD_R = 5, COCOON_WAKE = 9;
+// ================= v105 물물교환 가게 (data/npc.js에 덧붙임) =================
+// NPC마다 자기 기능에 맞는 물건을 바꿔 줘요. 돈 없음. 교환은 [주는 것 ×n] → [받는 것 ×m]. 가방 + 16칸 안 상자 재료를 함께 써요(제작과 같음).
+// 하루(게임 시간 20분 = 1200초) 제한: NPC마다 한 줄에 3번까지, 지나면 다시 채워져요(stats.barter[npc][k] = [횟수, 채워지는 시각]). 수치는 Claude 임시(【검토 중】).
+const BARTER_DAY = 1200, BARTER_PER = 3;
+// npc → [[주는 [id, n]…], [받는 [id, n]…], 설명]
+const BARTER = {
+  farmer: [
+    [[['berry', 6]], [['berrySeed', 3]], '통통베리를 씨앗으로'],
+    [[['mushroom', 6]], [['spore', 3]], '버섯을 포자로'],
+    [[['fiber', 10], ['gel', 2]], [['fert', 2]], '이끼 섬유와 젤로 비료'],
+    [[['wood', 12]], [['glowSpore', 2]], '나무를 빛버섯 포자로'],
+    [[['cocoonBit', 3]], [['cbeanSeed', 2]], '그림자 실을 수정 콩 씨앗으로'],
+  ],
+  cook: [
+    [[['mushroom', 3], ['berry', 2]], [['stew', 1]], '버섯 스튜 한 그릇'],
+    [[['minnow', 2]], [['grilledFish', 2]], '피라미를 구운 생선으로'],
+    [[['fireBerry', 2]], [['rn_fireSkewer', 1]], '불꽃 열매를 요리 쪽지로 (한 번만)'],
+    [[['shroomCap', 4]], [['rn_capSteak', 1]], '버섯 갓을 요리 쪽지로 (한 번만)'],
+    [[['cocoonBit', 2]], [['pie', 2]], '그림자 실을 베리 파이로'],
+  ],
+  shepherd: [
+    [[['fiber', 8], ['rope', 2]], [['lasso', 1]], '올가미 밧줄'],
+    [[['wool', 3]], [['rope', 6]], '양모를 이끼 끈으로'],
+    [[['egg', 2]], [['berry', 6]], '달걀을 통통베리로'],
+    [[['milk', 2]], [['stew', 1]], '우유를 스튜로'],
+    [[['cocoonBit', 3]], [['wool', 4]], '그림자 실을 양모로'],
+  ],
+  smith: [
+    [[['copperOre', 6]], [['copperBar', 2]], '구리광석을 구리괴로 (용광로 없이)'],
+    [[['ironOre', 6]], [['ironBar', 2]], '철광석을 철괴로'],
+    [[['goldOre', 6]], [['goldBar', 2]], '금광석을 금괴로'],
+    [[['obsidian', 4], ['frostShard', 4]], [['cryGem', 1]], '흑요석·서리 결정을 수정결정으로'],
+    [[['cocoonBit', 4]], [['obsidian', 3]], '그림자 실을 흑요석으로'],
+  ],
+  guide: [
+    [[['crystal', 8], ['ironBar', 2]], [['quartzR', 2]], '석영을 정제 석영으로'],
+    [[['glowcap', 6]], [['torch', 10]], '빛버섯을 횃불로'],
+    [[['cryGem', 2]], [['homeStone', 1]], '수정결정을 귀환석으로'],
+    [[['cocoonBit', 5]], [['crystal', 10]], '그림자 실을 석영으로'],
+  ],
+  scholar: [
+    [[['cocoonBit', 2]], [['rn_gelSoup', 1]], '그림자 실을 옛 요리 쪽지로 (한 번만)'],
+  ],
+};
+// 쪽지(rn_…)는 받은 적이 있으면 다시 안 줘요 (sim/npc.js barterCan)
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -5967,6 +6014,21 @@ function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1; return [N.talk[(o.met - 1) % N.talk.length]]; }
   return [N.talk[0]]; }
 const villagers = () => NPC_IDS.filter(id => npcState(id) === 'npc');
+
+// ---- v105 물물교환 (data/npc.js BARTER) ----
+// 가방 안 재료만 써요(상자는 안 봄). 한 줄은 하루(게임 시간 1200초)에 3번. 쪽지는 이미 배웠거나 가졌으면 안 줘요.
+const barterKey = (npc, k) => npc + ':' + k;
+function barterLeft(npc, k) { const B = (G.stats.barter || {})[barterKey(npc, k)]; if (!B) return BARTER_PER; if (G.time - B[1] >= BARTER_DAY) return BARTER_PER; return Math.max(0, BARTER_PER - B[0]); }
+function barterWhy(npc, k) { const row = (BARTER[npc] || [])[k]; if (!row) return '없는 거래예요'; const [give, get] = row;
+  if (barterLeft(npc, k) <= 0) return '오늘은 더 바꿀 수 없어요 (잠시 뒤에 다시)';
+  for (const [id, n] of get) if (id.startsWith('rn_')) { const dish = id.slice(3); if ((G.recipes && G.recipes[dish]) || countItem(id) > 0) return '이미 가진 쪽지예요'; }
+  for (const [id, n] of give) if (countItem(id) < n) return `${ITEMS[id].n}이(가) ${n - countItem(id)}개 모자라요`;
+  return null; }
+defineCmd('barter', c => { const npc = c.npc, k = c.n | 0, row = (BARTER[npc] || [])[k]; if (!row || !npcState(npc)) return false; const why = barterWhy(npc, k); if (why) { emit('toast', why, null, 'barter'); emit('sfx', 'clink'); return false; }
+  const [give, get] = row; for (const [id, n] of give) removeItem(id, n);
+  for (const [id, n] of get) { const left = addItem(id, n); if (left) spawnDrop(id, left, G.p.x, G.p.y); }
+  const B = G.stats.barter = G.stats.barter || {}, key = barterKey(npc, k), old = B[key]; B[key] = old && G.time - old[1] < BARTER_DAY ? [old[0] + 1, old[1]] : [1, G.time];
+  emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 10, 2, .5); emit('toast', `${get.map(([id, n]) => `${ITEMS[id].n} ${n}개`).join(', ')}을(를) 받았어요`, 'good', 'barter'); emit('inv'); return true; });
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -8242,7 +8304,13 @@ function renderPanel() {
     }
   } else if (k === 'talk') {
     const N = NPCS[panel.npc]; if (!panel.lines) { panel.lines = talkLines(panel.npc, panel.mode); panel.at = 0; } const line = panel.lines[panel.at] || '', last = panel.at >= panel.lines.length - 1, img = npcImg(panel.npc);
-    h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small><p class="prose" style="margin:6px 0 0">${line}</p></div></div><div class="menu-list">${last ? `<button class="btn" data-a="close" type="button">잘 가요</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`;
+    const shop = BARTER[panel.npc] || [];
+    if (panel.mode === 'shop') { // v105 물물교환
+      h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">물물교환 · 한 줄에 하루 ${BARTER_PER}번</small><p class="prose" style="margin:6px 0 0">가방에 있는 것으로 바꿔요.</p></div></div><div class="menu-list">${shop.map(([give, get, d], k) => { const why = barterWhy(panel.npc, k), left = barterLeft(panel.npc, k);
+        const row = L => L.map(([id, n]) => `<img class="px" src="${iconURL(id)}" alt="" style="width:16px;height:16px;vertical-align:middle"> ${ITEMS[id].n} ${n}`).join(' + ');
+        return `<button type="button" class="btn ghost barter ${why ? 'off' : ''}" data-a="barter" data-i="${k}" title="${why || d}"><span class="bgive">${row(give)}</span><span class="barrow">→</span><span class="bget">${row(get)}</span><small>${why ? why : `${left}번 남음`}</small></button>`; }).join('')}</div><div class="menu-list"><button class="btn ghost" data-a="talkBack" type="button">이야기로</button><button class="btn" data-a="close" type="button">잘 가요</button></div></div>`;
+    } else
+    h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small><p class="prose" style="margin:6px 0 0">${line}</p></div></div><div class="menu-list">${last ? `<button class="btn" data-a="close" type="button">잘 가요</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`;
   } else if (k === 'memory') {
     const m = MEMORY[panel.stage] || MEMORY[1];
     h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < (G.treeSeeds | 0) ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${m.t}</h2><p class="prose" style="text-align:left">${m.s}</p>${panel.stage === 5 ? `<p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p>` : ''}<button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">${panel.stage === 5 ? '계속 모험하기' : '돌아가기'}</button></div>`;
@@ -8956,6 +9024,9 @@ function onSheetClick(e) {
   if (a === 'escape') { if (!UIS.confirmEsc) { UIS.confirmEsc = true; renderPanel(); return; } UIS.confirmEsc = false; closePanel(); if (runCmd({ k: 'escape' })) saveLocal(true); return; }
   if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
   if (a === 'talkNext') { panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v104
+  if (a === 'talkShop') { panel.mode = 'shop'; renderPanel(); return; } // v105
+  if (a === 'talkBack') { panel.mode = 'talk'; renderPanel(); return; }
+  if (a === 'barter') { if (runCmd({ k: 'barter', npc: panel.npc, n: +i })) renderPanel(); return; }
   if (a === 'memory') { openPanel('memory', { stage: +i }); return; } // v103 나무의 기억 다시 보기
   if (a === 'export') { exportSave(); return; }
   if (a === 'clGoogle') { cloudAuth('google'); return; }
