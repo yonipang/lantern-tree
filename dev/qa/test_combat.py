@@ -184,7 +184,7 @@ def test_bosses_regions():
             # spawns
             r=await ev(pg,"""()=>{const T=__T,G=T.G;let i=-1;for(let k=0;k<40000;k++){if(G.biome[k]===3&&!G.wall[k]&&G.floor[k]===18&&Math.hypot(k%200-T.SL.x,((k/200)|0)-T.SL.y)>14){i=k;break}}const x=i%200,y=(i/200)|0;for(let dy=-18;dy<=18;dy++)for(let dx=-18;dx<=18;dx++){const j=T.idx(x+dx,y+dy);if(x+dx>2&&y+dy>2&&x+dx<197&&y+dy<197&&G.wall[j]!==8&&Math.hypot(x+dx-T.SL.x,y+dy-T.SL.y)>12){G.biome[j]=3;G.wall[j]=0;G.floor[j]=18;G.objs.delete(j)}}G.p.x=x+.5;G.p.y=y+.5;G.enemies.length=0;for(let k=0;k<40;k++)T.trySpawn();return [...new Set(G.enemies.map(e=>e.k+'@'+G.biome[T.idx(Math.floor(e.x),Math.floor(e.y))]))]}""")
             # 몬스터는 10~16칸 떨어진 곳에 무리로 생겨요 → 그 범위(18칸)를 모두 용암 동굴로 만들어 둬요 (지역 경계에서 옆 지역 몬스터 무리가 넘어오는 지도 모양에 기대지 않게)
-            rec('적','용암 동굴에는 용암 말랑이·불씨 도깨비', len(r)>0 and any(k.endswith('@3') for k in r) and all(k.split('@')[0] in ('magmaSlime','cinder') for k in r if k.endswith('@3')), str(r))
+            rec('적','용암 동굴에는 용암 말랑이·불씨 도깨비 + v101 용암 도롱뇽·화산탄 말랑이·작은 흑요석 골렘', len(r)>0 and any(k.endswith('@3') for k in r) and all(k.split('@')[0] in ('magmaSlime','cinder','lavaSala','bombSlime','obsGolem') for k in r if k.endswith('@3')), str(r))
             await pg.wait_for_timeout(700); await pg.screenshot(path=SP+'lava.png')
             # turtle fight
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const b=G.bosses.turtle;const h=T.BOSSES.turtle.home();G.p.x=h.x;G.p.y=h.y+4;const ph=new Set();let hz=0,shots=0,shellHit=null;
@@ -543,6 +543,50 @@ def test_armor_v100():
             await ev(pg,"()=>{__T.openPanel('stat',{tab:'eq'})}"); await pg.wait_for_timeout(400)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [t.includes('방어력 15'),t.includes('받는 피해 −23%')]}")
             rec('방어구','캐릭터 창 장비 탭에 「방어력 15 · 받는 피해 −23%」', r==[True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_monsters_v101():
+    # v101 성장 확장 4: 새 몬스터 15종(지역별 3종), 움직임(땅속·휘두르기·독 구름·등딱지·탄·위험 지대·돌진·터지기), 지역별 출현 표
+    H2=HOOK.replace("computeLight}","computeLight,ENEMY,MON_TABLE,MON_AI,mkEnemy,enemyStep,hitEnemy,pickMon,updateHazards,updateShots,get SPR(){return SPR}}")
+    ARENA="const T=__T,G=T.G;for(let y=100;y<120;y++)for(let x=100;x<120;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();G.enemies.length=0;G.shots.length=0;G.hz=[];G.p.x=110.5;G.p.y=110.5;G.p.dead=0;G.p.hp=500;G.p.inv=0;G.p.sleep=null;G.p.sit=null;G.rpg.lv=40;G.buffs=[];G.equip={body:null,head:null,neck:null,ring:null,legs:null};"
+    NEW=['moleMoss','fireflyMoss','vineRoot','sporeShroom','shroomTurtle','toadPoison','crySpider','mirrorCry','crySnail','lavaSala','bombSlime','obsGolem','frostWolf','icicleSprite','yetiBaby']
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""(NEW)=>{const T=__T;const bad=NEW.filter(k=>!T.ENEMY[k]||!T.SPR[k]||!T.SPR[k+'W']||(T.ENEMY[k].ai&&!T.MON_AI[T.ENEMY[k].ai]));
+              const sums=T.MON_TABLE.map(row=>Math.round(row.reduce((a,[,w])=>a+w,0)*100)/100),cnt=T.MON_TABLE.map(row=>row.filter(([k])=>NEW.includes(k)).length);
+              const picks=new Set();for(let i=0;i<400;i++)picks.add(T.pickMon(2));return [bad.join(','),sums.join(','),cnt.join(','),[...picks].sort().join(',')]}""",NEW)
+            rec('몬스터','새 몬스터 15종 모두 데이터·그림·움직임 있음, 지역별 표 합계 1, 지역마다 새 몬스터 3종, 수정 동굴에서 5종 다 나옴', r==['','1,1,1,1,1','3,3,3,3,3','crySnail,crySpider,mirrorCry,shroomy,slimeP'], str(r))
+            # 두더지: 쫓으면 땅속(안 맞음) → 가까이 오면 튀어나옴
+            r=await ev(pg,"""()=>{"""+ARENA+"""const e=T.mkEnemy('moleMoss',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);
+              let under=false,blocked=0;for(let i=0;i<40;i++){T.enemyStep(e,1/30);if(e.under){under=true;const h=e.hp;T.hitEnemy(e,10,false,0);if(e.hp===h)blocked++;}}
+              let out=false;for(let i=0;i<120&&!out;i++){T.enemyStep(e,1/30);if(!e.under)out=true}return [under,blocked>0,out,Math.hypot(e.x-G.p.x,e.y-G.p.y)<2.5]}""")
+            rec('두더지','쫓을 때 땅속으로 숨어(안 맞음) 다가왔다가 가까이서 튀어나옴', r==[True,True,True,True], str(r))
+            # 뿌리 덩굴: 안 움직이고, 가까이 오면 휘둘러 피해
+            r=await ev(pg,"()=>{"+ARENA+"const e=T.mkEnemy('vineRoot',111.8,110.5);e.sees=true;G.enemies.push(e);const x0=e.x;for(let i=0;i<60;i++)T.enemyStep(e,1/30);return [e.x===x0,500-G.p.hp>0]}")
+            rec('뿌리 덩굴','제자리에서 가까운 적을 휘둘러 때림', r==[True,True], str(r))
+            # 포자 버섯: 쓰러지면 독 구름(위험 지대 poison)
+            r=await ev(pg,"()=>{"+ARENA+"const e=T.mkEnemy('sporeShroom',112.5,110.5);G.enemies.push(e);T.hitEnemy(e,999,false,0);const h=G.hz.find(x=>x.k==='poison');G.p.x=112.5;for(let i=0;i<40;i++)T.updateHazards(1/30);return [!!h,500-G.p.hp>0]}")
+            rec('포자 버섯','쓰러지면 독 구름이 남아 닿으면 아픔', r==[True,True], str(r))
+            # 버섯 거북: 앞에서 때리면 30%
+            r=await ev(pg,"()=>{"+ARENA+"const e=T.mkEnemy('shroomTurtle',113.5,110.5);e.fa=Math.PI;G.enemies.push(e);T.hitEnemy(e,20,false,0);const a=60-e.hp;e.hp=60;e.fa=0;T.hitEnemy(e,20,false,0);return [a,60-e.hp]}")
+            rec('버섯 거북','앞(나를 향한 쪽)에서 맞으면 피해 30%, 뒤에서는 그대로', r==[6,20], str(r))
+            # 수정 거미 거미줄 → 느려짐 / 아기 설인 눈덩이 / 거울 수정 빛줄기
+            r=await ev(pg,"""()=>{"""+ARENA+"""const out=[];for(const [k,kind] of [['crySpider','web'],['yetiBaby','snow'],['mirrorCry','shard']]){G.shots.length=0;G.p.slowT=0;const e=T.mkEnemy(k,114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);
+              let n=0;for(let i=0;i<90&&!n;i++){T.enemyStep(e,1/30);n=G.shots.filter(s=>s.k===kind).length}out.push(n>0);G.enemies.length=0}
+              G.shots.length=0;G.shots.push({x:G.p.x+.6,y:G.p.y-.3,vx:-3,vy:0,life:2,dmg:5,k:'web',slow:2});for(let i=0;i<20;i++)T.updateShots(1/30);out.push(G.p.slowT>0);return out}""")
+            rec('탄','수정 거미 거미줄·아기 설인 눈덩이·거울 수정 빛줄기(파편)를 쏘고, 거미줄에 맞으면 느려짐', r==[True,True,True,True], str(r))
+            # 화산탄 말랑이: 가까이 오면 터져 사라짐(드롭 없음) · 흑요석 골렘 돌진 · 고드름 정령 경고 원 · 도롱뇽 불 웅덩이
+            r=await ev(pg,"""()=>{"""+ARENA+"""G.drops.length=0;let e=T.mkEnemy('bombSlime',111.6,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);for(let i=0;i<60;i++)if(G.enemies.includes(e))T.enemyStep(e,1/30);const bomb=[!G.enemies.includes(e),G.drops.length===0,500-G.p.hp>0];
+              G.p.hp=500;G.enemies.length=0;e=T.mkEnemy('obsGolem',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);let dashed=false;for(let i=0;i<60;i++){T.enemyStep(e,1/30);if(e.dash>0)dashed=true}
+              G.enemies.length=0;G.hz=[];e=T.mkEnemy('icicleSprite',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);for(let i=0;i<10;i++)T.enemyStep(e,1/30);const ic=G.hz.some(h=>h.k==='frost');
+              G.enemies.length=0;G.hz=[];e=T.mkEnemy('lavaSala',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);for(let i=0;i<30;i++)T.enemyStep(e,1/30);const lv=G.hz.some(h=>h.k==='lava');return [bomb,dashed,ic,lv]}""")
+            rec('움직임','화산탄 말랑이는 가까이서 터져 사라짐(드롭 없음·피해), 흑요석 골렘 돌진, 고드름 정령 경고 원, 용암 도롱뇽 불 웅덩이', r==[[True,True,True],True,True,True], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

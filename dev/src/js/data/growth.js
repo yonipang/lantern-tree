@@ -4,6 +4,7 @@
 // 이 파일은 data/automation-tiers.js 뒤에 있어서 「지형 재료 2배」·레시피 단계 나누기가 적용되지 않아요 — 재료 개수와 단계(tier)를 여기 적힌 그대로 써요.
 import { DUR } from './circuits-regions.js';
 import { ITEMS, RAR, RECIPES, Rc } from './items.js';
+import { ENEMY } from './rpg-nature.js';
 import { josa } from '../engine/util.js';
 export const WT_SW = [6, 11, 17, 26, 36, 48]; // 단계별 검 공격력
 export const WT_MUL = { sword: 1, dagger: .65, spear: 1.05, hammer: 1.5, bow: .85, staff: .8 };
@@ -87,3 +88,36 @@ AR_TABLE.forEach((row, t) => row.forEach(([id, n, req], k) => { const sl = AR_SL
   ITEMS[id] = { n, kind: 'wear', slot: sl, stack: 1, def: AR_DEF[sl][t], rlv: WT_RLV[t], wtier: t, d: `${AR_D[sl]}. 받는 피해를 줄여 줘요.` }; RAR[id] = W_RAR[t];
   const r = Rc(id, 1, req, 'smelter', 'armor'); r.tier = t; r.cat = 'armor'; RECIPES.push(r); }));
 for (const [id, t] of [['obsCoat', 4], ['frostRobe', 5], ['woolHat', 0], ['snowBrooch', 5]]) if (ITEMS[id]) ITEMS[id].def = Math.max(1, Math.round(AR_DEF[ITEMS[id].slot][t] * AR_SPECIAL));
+// ================= v101 성장 확장 4: 새 몬스터 15종 (지금 있는 5지역에 3종씩, dev/design/성장확장.md 4장) =================
+// 움직임은 지금 있는 것(뛰기·걷기·탄·위험 지대·느려짐)을 섞어서: ai 이름별 동작은 sim/monsters.js MON_AI
+// 경험치는 지금처럼 기본 체력의 절반. 지역 난이도 배율(REGION_HP·REGION_DMG)도 그대로 곱해요.
+Object.assign(ENEMY, {
+  // 이끼 동굴 (Lv.1~10)
+  moleMoss: { n: '이끼 두더지', hp: 22, dmg: 7, spd: 2.4, r: 0.32, hop: 0, ai: 'burrow', drops: [['dirt', 1, 2, 0.8], ['fiber', 1, 1, 0.4]], col: '#8a6a52' },
+  fireflyMoss: { n: '반딧벌레', hp: 6, dmg: 3, spd: 3.6, r: 0.22, hop: 0, pack: 3, drops: [['glowcap', 1, 1, 0.25]], col: '#e8f08a' },
+  vineRoot: { n: '뿌리 덩굴', hp: 30, dmg: 8, spd: 0, r: 0.36, hop: 0, ai: 'lash', reach: 1.9, drops: [['wood', 1, 2, 0.7], ['fiber', 1, 2, 0.5]], col: '#6a9a4a' },
+  // 버섯숲 (Lv.8~18)
+  sporeShroom: { n: '포자 버섯', hp: 34, dmg: 9, spd: 1.9, r: 0.3, hop: 0, ai: 'spore', drops: [['spore', 1, 2, 0.7], ['mushroom', 1, 1, 0.5]], col: '#c58cf0' },
+  shroomTurtle: { n: '버섯 거북', hp: 60, dmg: 12, spd: 1.4, r: 0.38, hop: 0, ai: 'shell', drops: [['shroomCap', 1, 2, 0.7], ['resin', 1, 1, 0.3]], col: '#b673de' },
+  toadPoison: { n: '독 개구리', hp: 40, dmg: 10, spd: 4.2, r: 0.32, hop: 1, air: .6, ai: 'toad', drops: [['gel', 1, 2, 0.7], ['spore', 1, 1, 0.4]], col: '#7fd06a' },
+  // 수정 동굴 (Lv.15~28)
+  crySpider: { n: '수정 거미', hp: 70, dmg: 14, spd: 2.8, r: 0.34, hop: 0, ai: 'web', aggro: 6, drops: [['rope', 1, 2, 0.6], ['crystal', 1, 1, 0.4]], col: '#9a8ad0' },
+  mirrorCry: { n: '거울 수정', hp: 80, dmg: 16, spd: 0.6, r: 0.34, hop: 0, ai: 'beam', aggro: 6.5, drops: [['crystal', 1, 2, 0.8], ['cryGem', 1, 1, 0.25]], col: '#d6c2ff' },
+  crySnail: { n: '수정 달팽이', hp: 160, dmg: 12, spd: 0.9, r: 0.38, hop: 0, drops: [['crystal', 2, 4, 1], ['cryGem', 1, 1, 0.4], ['granite', 1, 2, 0.5]], col: '#b493f5' },
+  // 용암 동굴 (Lv.25~40)
+  lavaSala: { n: '용암 도롱뇽', hp: 120, dmg: 22, spd: 2.9, r: 0.34, hop: 0, ai: 'trail', aggro: 6.5, drops: [['obsidian', 1, 1, 0.3], ['fireBerry', 1, 1, 0.3]], col: '#ff6a2a' },
+  bombSlime: { n: '화산탄 말랑이', hp: 70, dmg: 18, spd: 3.1, r: 0.34, hop: 1, ai: 'bomb', aggro: 6.5, drops: [['gel', 1, 2, 0.6], ['goldOre', 1, 1, 0.3]], col: '#e8501f' },
+  obsGolem: { n: '작은 흑요석 골렘', hp: 170, dmg: 26, spd: 1.8, r: 0.38, hop: 0, ai: 'charge', aggro: 6.5, drops: [['obsidian', 1, 2, 0.8], ['basalt', 1, 2, 0.5]], col: '#4a3a5a' },
+  // 얼음 동굴 (Lv.35~50)
+  frostWolf: { n: '서리 늑대', hp: 110, dmg: 22, spd: 4.2, r: 0.34, hop: 0, pack: 2, aggro: 6.5, drops: [['wool', 1, 1, 0.3], ['frostShard', 1, 1, 0.35]], col: '#cfe6f4' },
+  icicleSprite: { n: '고드름 정령', hp: 90, dmg: 18, spd: 1.6, r: 0.3, hop: 0, ai: 'icicle', aggro: 7, drops: [['frostShard', 1, 2, 0.5], ['iceBlock', 1, 1, 0.4]], col: '#9fd8f0' },
+  yetiBaby: { n: '아기 설인', hp: 150, dmg: 24, spd: 2.0, r: 0.38, hop: 0, ai: 'throw', aggro: 6.5, drops: [['wool', 1, 2, 0.5], ['frostShard', 1, 1, 0.4]], col: '#f4f8ff' },
+});
+// 지역별 나오는 몬스터와 비율 (지금 몬스터 비율은 조금 줄어요)
+export const MON_TABLE = [
+  [['slimeG', .5], ['moleMoss', .2], ['fireflyMoss', .15], ['vineRoot', .15]],
+  [['slimeO', .35], ['shroomy', .25], ['sporeShroom', .15], ['shroomTurtle', .12], ['toadPoison', .13]],
+  [['slimeP', .45], ['shroomy', .15], ['crySpider', .15], ['mirrorCry', .12], ['crySnail', .13]],
+  [['magmaSlime', .35], ['cinder', .25], ['lavaSala', .15], ['bombSlime', .13], ['obsGolem', .12]],
+  [['frostSlime', .35], ['snowling', .25], ['frostWolf', .15], ['icicleSprite', .12], ['yetiBaby', .13]],
+];

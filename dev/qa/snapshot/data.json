@@ -10784,6 +10784,375 @@
 "calm": 1,
 "drops": [],
 "col": "#d4f6ff"
+},
+"moleMoss": {
+"n": "이끼 두더지",
+"hp": 22,
+"dmg": 7,
+"spd": 2.4,
+"r": 0.32,
+"hop": 0,
+"ai": "burrow",
+"drops": [
+[
+"dirt",
+1,
+2,
+0.8
+],
+[
+"fiber",
+1,
+1,
+0.4
+]
+],
+"col": "#8a6a52"
+},
+"fireflyMoss": {
+"n": "반딧벌레",
+"hp": 6,
+"dmg": 3,
+"spd": 3.6,
+"r": 0.22,
+"hop": 0,
+"pack": 3,
+"drops": [
+[
+"glowcap",
+1,
+1,
+0.25
+]
+],
+"col": "#e8f08a"
+},
+"vineRoot": {
+"n": "뿌리 덩굴",
+"hp": 30,
+"dmg": 8,
+"spd": 0,
+"r": 0.36,
+"hop": 0,
+"ai": "lash",
+"reach": 1.9,
+"drops": [
+[
+"wood",
+1,
+2,
+0.7
+],
+[
+"fiber",
+1,
+2,
+0.5
+]
+],
+"col": "#6a9a4a"
+},
+"sporeShroom": {
+"n": "포자 버섯",
+"hp": 34,
+"dmg": 9,
+"spd": 1.9,
+"r": 0.3,
+"hop": 0,
+"ai": "spore",
+"drops": [
+[
+"spore",
+1,
+2,
+0.7
+],
+[
+"mushroom",
+1,
+1,
+0.5
+]
+],
+"col": "#c58cf0"
+},
+"shroomTurtle": {
+"n": "버섯 거북",
+"hp": 60,
+"dmg": 12,
+"spd": 1.4,
+"r": 0.38,
+"hop": 0,
+"ai": "shell",
+"drops": [
+[
+"shroomCap",
+1,
+2,
+0.7
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+],
+"col": "#b673de"
+},
+"toadPoison": {
+"n": "독 개구리",
+"hp": 40,
+"dmg": 10,
+"spd": 4.2,
+"r": 0.32,
+"hop": 1,
+"air": 0.6,
+"ai": "toad",
+"drops": [
+[
+"gel",
+1,
+2,
+0.7
+],
+[
+"spore",
+1,
+1,
+0.4
+]
+],
+"col": "#7fd06a"
+},
+"crySpider": {
+"n": "수정 거미",
+"hp": 70,
+"dmg": 14,
+"spd": 2.8,
+"r": 0.34,
+"hop": 0,
+"ai": "web",
+"aggro": 6,
+"drops": [
+[
+"rope",
+1,
+2,
+0.6
+],
+[
+"crystal",
+1,
+1,
+0.4
+]
+],
+"col": "#9a8ad0"
+},
+"mirrorCry": {
+"n": "거울 수정",
+"hp": 80,
+"dmg": 16,
+"spd": 0.6,
+"r": 0.34,
+"hop": 0,
+"ai": "beam",
+"aggro": 6.5,
+"drops": [
+[
+"crystal",
+1,
+2,
+0.8
+],
+[
+"cryGem",
+1,
+1,
+0.25
+]
+],
+"col": "#d6c2ff"
+},
+"crySnail": {
+"n": "수정 달팽이",
+"hp": 160,
+"dmg": 12,
+"spd": 0.9,
+"r": 0.38,
+"hop": 0,
+"drops": [
+[
+"crystal",
+2,
+4,
+1
+],
+[
+"cryGem",
+1,
+1,
+0.4
+],
+[
+"granite",
+1,
+2,
+0.5
+]
+],
+"col": "#b493f5"
+},
+"lavaSala": {
+"n": "용암 도롱뇽",
+"hp": 120,
+"dmg": 22,
+"spd": 2.9,
+"r": 0.34,
+"hop": 0,
+"ai": "trail",
+"aggro": 6.5,
+"drops": [
+[
+"obsidian",
+1,
+1,
+0.3
+],
+[
+"fireBerry",
+1,
+1,
+0.3
+]
+],
+"col": "#ff6a2a"
+},
+"bombSlime": {
+"n": "화산탄 말랑이",
+"hp": 70,
+"dmg": 18,
+"spd": 3.1,
+"r": 0.34,
+"hop": 1,
+"ai": "bomb",
+"aggro": 6.5,
+"drops": [
+[
+"gel",
+1,
+2,
+0.6
+],
+[
+"goldOre",
+1,
+1,
+0.3
+]
+],
+"col": "#e8501f"
+},
+"obsGolem": {
+"n": "작은 흑요석 골렘",
+"hp": 170,
+"dmg": 26,
+"spd": 1.8,
+"r": 0.38,
+"hop": 0,
+"ai": "charge",
+"aggro": 6.5,
+"drops": [
+[
+"obsidian",
+1,
+2,
+0.8
+],
+[
+"basalt",
+1,
+2,
+0.5
+]
+],
+"col": "#4a3a5a"
+},
+"frostWolf": {
+"n": "서리 늑대",
+"hp": 110,
+"dmg": 22,
+"spd": 4.2,
+"r": 0.34,
+"hop": 0,
+"pack": 2,
+"aggro": 6.5,
+"drops": [
+[
+"wool",
+1,
+1,
+0.3
+],
+[
+"frostShard",
+1,
+1,
+0.35
+]
+],
+"col": "#cfe6f4"
+},
+"icicleSprite": {
+"n": "고드름 정령",
+"hp": 90,
+"dmg": 18,
+"spd": 1.6,
+"r": 0.3,
+"hop": 0,
+"ai": "icicle",
+"aggro": 7,
+"drops": [
+[
+"frostShard",
+1,
+2,
+0.5
+],
+[
+"iceBlock",
+1,
+1,
+0.4
+]
+],
+"col": "#9fd8f0"
+},
+"yetiBaby": {
+"n": "아기 설인",
+"hp": 150,
+"dmg": 24,
+"spd": 2,
+"r": 0.38,
+"hop": 0,
+"ai": "throw",
+"aggro": 6.5,
+"drops": [
+[
+"wool",
+1,
+2,
+0.5
+],
+[
+"frostShard",
+1,
+1,
+0.4
+]
+],
+"col": "#f4f8ff"
 }
 },
 "BOSSES": {
@@ -18146,7 +18515,9 @@ null,
 "spore": "[그림 8x8 5e9d18ab]",
 "shard": "[그림 8x8 7ff4de08]",
 "fire": "[그림 8x8 e441deff]",
-"ice": "[그림 8x8 86cfc490]"
+"ice": "[그림 8x8 86cfc490]",
+"web": "[그림 8x8 f68da5fe]",
+"snow": "[그림 8x8 b010bf53]"
 },
 "magmaSlime": "[그림 16x14 eab41d48]",
 "frostSlime": "[그림 16x14 b3d49230]",
@@ -19454,6 +19825,36 @@ null,
 "turtleW": "[그림 40x32 160dfdd1]",
 "turtleSW": "[그림 40x32 61be2b0a]",
 "spiritW": "[그림 32x36 258f7084]",
+"moleMoss": "[그림 16x16 489c8383]",
+"moleMossW": "[그림 16x16 f131d74e]",
+"fireflyMoss": "[그림 16x16 6d7e2b4e]",
+"fireflyMossW": "[그림 16x16 a23a2c17]",
+"vineRoot": "[그림 16x18 95b9a0ec]",
+"vineRootW": "[그림 16x18 3cecb6c8]",
+"sporeShroom": "[그림 16x16 4585f324]",
+"sporeShroomW": "[그림 16x16 87b79728]",
+"shroomTurtle": "[그림 18x16 664f8cbf]",
+"shroomTurtleW": "[그림 18x16 ee3bf8b1]",
+"toadPoison": "[그림 16x14 e1966b9]",
+"toadPoisonW": "[그림 16x14 10a5d07b]",
+"crySpider": "[그림 18x14 2ba1b660]",
+"crySpiderW": "[그림 18x14 ff8debb7]",
+"mirrorCry": "[그림 16x18 1359a2ec]",
+"mirrorCryW": "[그림 16x18 f4ef882c]",
+"crySnail": "[그림 18x14 594fa129]",
+"crySnailW": "[그림 18x14 76d8a0ab]",
+"lavaSala": "[그림 20x14 3f6b8578]",
+"lavaSalaW": "[그림 20x14 dbabde96]",
+"bombSlime": "[그림 16x14 f041de8f]",
+"bombSlimeW": "[그림 16x14 d671e044]",
+"obsGolem": "[그림 18x20 fd90f577]",
+"obsGolemW": "[그림 18x20 e49a6fbc]",
+"frostWolf": "[그림 20x14 e2d88c7f]",
+"frostWolfW": "[그림 20x14 dabbebe3]",
+"icicleSprite": "[그림 16x18 ee99a0aa]",
+"icicleSpriteW": "[그림 16x18 6109c0ea]",
+"yetiBaby": "[그림 18x18 a002076f]",
+"yetiBabyW": "[그림 18x18 27b55769]",
 "objOff": {
 "torch": "[그림 14x24 2087b6]",
 "lampShroom": "[그림 16x24 6d9988a]",

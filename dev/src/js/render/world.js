@@ -347,7 +347,8 @@ export function drawEntity(it, t) {
     const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
     else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
-    drawImg(e.hurt > 0 ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip });
+    if (e.under) { ctx.fillStyle = '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
+    else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
     if (e.slow > 0 || e.poison || e.burn) { ctx.fillStyle = e.burn ? '#ff9b4a' : e.poison ? '#9be37a' : '#bfe6ff'; ctx.fillRect(Math.round(e.x * T - camX) - Z, Math.round((e.y - 1.15 - (e.z || 0)) * T - camY), 2 * Z, 2 * Z); }
     if (e.hp < (e.mh || def.hp)) { const w = 12 * Z, hx = e.x * T - camX - w / 2, hy = (e.y - .95 - (e.z || 0)) * T - camY; ctx.fillStyle = INK; ctx.fillRect(hx - Z, hy - Z, w + 2 * Z, 3 * Z); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(hx, hy, w * Math.max(0, e.hp / (e.mh || def.hp)), Z); }
     return;
