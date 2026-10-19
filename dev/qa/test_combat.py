@@ -731,9 +731,27 @@ def test_archive_v106():
             rec('일기','일기 창에 첫 장 글(복선: 둥근 등불)', r is True, r)
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=T.QSIDE.find(q=>q.id==='s_arch0');const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const A=T.archList()[0];return [q.done(),A&&A.done,T.archList().length]}""")
-            rec('저장','도전 퀘스트 완료, 저장·불러오기 뒤에도 기록관 1개·깬 상태 그대로', r==[True,1,1], str(r))
+            rec('저장','도전 퀘스트 완료, 저장·불러오기 뒤에도 기록관(v107부터 4개)·깬 상태 그대로', r[:2]==[True,1] and r[2]>=1, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.archV;s.stats.arch=[];T.deserialize(s);return [T.archList().length,T.G.stats.archV]}""")
             rec('옛 세계','기록 없는 옛 세이브도 불러올 때 한 번 놓음 (자리가 있으면)', r[1]==1 and r[0]>=0, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_archives_v107():
+    # v107 수정·용암·얼음 기록관: 600×600 새 세계에 4개 모두, 지역·거리, 얼음엔 잠든 등불지기 5 + 빈자리, 일기 2~4장과 레시피, 도전 퀘스트 3개
+    H2=HOOK.replace("computeLight}","computeLight,archList,ARCH_W,ARCH_H,planOf,readDiary,knows,QSIDE,ARCHIVES,get SPR(){return SPR}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const C=Math.round(Math.sqrt(G.wall.length))/2;const L=T.archList();const info=L.map(a=>{const A=T.ARCHIVES.find(q=>q.id===a.id);const d=Math.hypot(a.x+6-C,a.y+8-C);let sl=0,coc=0;for(let r=0;r<T.ARCH_H;r++)for(let c=0;c<T.ARCH_W;c++){const o=G.objs.get(T.idx(a.x+c,a.y+r));if(o&&o.t==='sleeper')sl++;if(o&&o.t==='cocoon')coc++}
+              return [a.id,G.biome[T.idx(a.x+6,a.y+8)]===A.b,d>=A.minD&&d<=A.maxD,sl,coc]});return [info,!!T.SPR.obj.sleeper,['s_arch2','s_arch3','s_arch4'].every(id=>T.QSIDE.some(q=>q.id===id))]}""")
+            rec('기록관 4개','600×600 새 세계에 네 지역 기록관이 각자 지역·거리에, 얼음 기록관엔 얼음 속 등불지기 5(빈자리 복선), 학자 고치는 이끼 굴만, 도전 퀘스트 3개', r[0]==[['arch0',True,True,0,1],['arch2',True,True,0,0],['arch3',True,True,0,0],['arch4',True,True,5,0]] and r[1] and r[2], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const out=[];for(const a of T.archList()){const di=[...G.objs].find(([i,o])=>o.t==='diary'&&o.a===a.id);const i=di[0],WW=600;T.readDiary({...di[1],x:i%WW+.5,y:((i/WW)|0)+.5});T.closePanel();out.push([a.done,T.knows(T.ARCHIVES.find(q=>q.id===a.id).recipe)])}return [out,G.stats.archDone,T.QSIDE.filter(q=>q.id.startsWith('s_arch')).every(q=>q.done())]}""")
+            rec('일기','네 일기를 읽으면 각 지역 레시피(꽃잎 버섯 부침·빛버섯 수정 수프·불꽃 스튜·서리 차)를 배우고 네 기록관 모두 깬 것으로', r[0]==[[1,True],[1,True],[1,True],[1,True]] and r[1]==4 and r[2], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
