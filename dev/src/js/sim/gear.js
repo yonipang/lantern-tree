@@ -66,3 +66,6 @@ export const hatMul = () => wearing('woolHat') ? .85 - .03 * eqLv('woolHat') : 1
 export function eqEffect(sl, s) {
   if (!s) return sl === 'ring' ? '비어 있어요 · 장비제작대에서 만들어요' : '비어 있어요';
   return (s.lv ? `강화 +${s.lv} · ` : '') + upgText(s.id, lvOf(s)); }
+// v99 착용 레벨: 레벨이 모자라면 들 수 없어요 (무기 rlv, v100부터 방어구도)
+export const rlvOf = id => (ITEMS[id] && ITEMS[id].rlv) || 1;
+export const rlvOk = id => rlvOf(id) <= ((G && G.rpg && G.rpg.lv) || 1);

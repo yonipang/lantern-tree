@@ -219,6 +219,21 @@ ICON.swordLava = swordIcon('#e8501f', '#ffc861', '#5a3a2e');
 ICON.bowFrost = bowIcon('#5a9ac8', '#e8f8ff', '#7fd8f0');
 ICON.swordDawn = swordIcon('#ffe9a8', '#ffffff', '#ff8fa3');
 ICON.pickStar = pickIcon('#ffe9a8', '#ffffff');
+// v99 새 무기 아이콘 (Claude 임시 그림 — 지금 무기 아이콘 모양에 색만 바꿈. 손그림으로 바꾸려면 dev/art/icons/<id>.png)
+export const W99_ICON = {
+  hammerWood: hammerIcon(C.wood, C.woodL, C.woodD), staffWood: staffIcon('#9fd89a', '#e8ffe0'), bowCopper: bowIcon(C.copper, C.copperL, C.copperL),
+  daggerIron: daggerIcon(C.iron, C.ironL, C.amber), staffIron: staffIcon('#c8d0dc', '#ffffff'),
+  daggerCrystal: daggerIcon(C.cry, C.cryL, C.ironD), spearCrystal: spearIcon(C.cry, C.cryL), hammerCrystal: hammerIcon(C.cry, C.cryL, C.cryD),
+  spearGold: spearIcon('#ffd25c', '#fff1b0'), staffGold: staffIcon('#ff9b4a', '#ffe0a8'),
+  swordFrost: swordIcon('#7fd8f0', '#e8f8ff', '#5a9ac8'), daggerFrost: daggerIcon('#7fd8f0', '#e8f8ff', '#5a9ac8'), hammerFrost: hammerIcon('#9fd8f0', '#e8f8ff', '#5a9ac8'), bowIce: bowIcon('#9fd8f0', '#ffffff', '#7fd8f0'),
+  // 보스 특별 무기 (보스 색)
+  swordSlime: swordIcon('#86d96b', '#d2f7b8', '#4f9e45'), daggerSlime: daggerIcon('#86d96b', '#d2f7b8', '#4f9e45'), spearSlime: spearIcon('#86d96b', '#d2f7b8'), bowSlime: bowIcon('#4f9e45', '#86d96b', '#d2f7b8'), staffSlime: staffIcon('#86d96b', '#d2f7b8'),
+  swordQueen: swordIcon('#c58cf0', '#f6e6ff', '#7d3fa3'), spearQueen: spearIcon('#c58cf0', '#f6e6ff'), hammerQueen: hammerIcon('#c58cf0', '#f6e6ff', '#7d3fa3'), bowQueen: bowIcon('#7d3fa3', '#c58cf0', '#f6e6ff'), staffQueen: staffIcon('#c58cf0', '#f6e6ff'),
+  swordGolem: swordIcon('#8f86b8', C.cryL, '#6a6488'), daggerGolem: daggerIcon('#8f86b8', C.cryL, '#6a6488'), spearGolem: spearIcon('#8f86b8', C.cryL), hammerGolem: hammerIcon('#8f86b8', C.cryL, '#6a6488'), staffGolem: staffIcon('#b493f5', C.cryL),
+  daggerLava: daggerIcon('#e8501f', '#ffc861', '#5a3a2e'), spearLava: spearIcon('#e8501f', '#ffc861'), hammerLava: hammerIcon('#e8501f', '#ffc861', '#5a3a2e'), bowLava: bowIcon('#5a3a2e', '#e8501f', '#ffc861'), staffLava: staffIcon('#ff7a3d', '#ffc861'),
+  swordSpirit: swordIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), daggerSpirit: daggerIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), spearSpirit: spearIcon('#5a9ac8', '#e8f8ff'), hammerSpirit: hammerIcon('#5a9ac8', '#e8f8ff', '#3a6a98'), staffSpirit: staffIcon('#d4f6ff', '#ffffff'),
+};
+for (const id in W99_ICON) ICON[id] = W99_ICON[id];
 export const arrowIcon = (h, hl) => A => { A.line(2, 14, 11, 5, '#8a6a52', 1); A.line(3, 14, 11, 6, '#b8946a', 1); A.poly([[9.5, 3.5], [14.5, 1.5], [12.5, 6.5]], h); A.p(12, 4, hl); A.r(1, 11, 2, 2, '#eef2f7'); A.r(3, 13, 2, 2, '#eef2f7'); A.p(2, 12, '#ff8fa3'); };
 for (const id in ARROWS) ICON[id] = arrowIcon(ARROWS[id][2], '#ffffff');
 export const stoneDrill = dir => A => { A.r(3, 8, 10, 10, '#8f8aa3'); A.r(3, 8, 10, 2, '#b9b4cc'); A.r(3, 8, 1, 10, '#a39eb5'); A.r(12, 8, 1, 10, '#625d78'); A.p(5, 15, '#625d78'); A.p(10, 11, '#625d78'); A.p(9, 16, '#625d78');

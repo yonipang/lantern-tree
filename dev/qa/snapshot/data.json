@@ -159,7 +159,9 @@
 "dmg": 6,
 "stack": 1,
 "d": "처음부터 가진 검. 칼 버튼으로 휘둘러요.",
-"wt": "sword"
+"wt": "sword",
+"rlv": 1,
+"wtier": 0
 },
 "swordCopper": {
 "n": "구리 검",
@@ -167,7 +169,9 @@
 "dmg": 11,
 "stack": 1,
 "d": "가볍고 튼튼한 검.",
-"wt": "sword"
+"wt": "sword",
+"rlv": 5,
+"wtier": 1
 },
 "swordIron": {
 "n": "철 검",
@@ -175,7 +179,9 @@
 "dmg": 17,
 "stack": 1,
 "d": "묵직한 한 방.",
-"wt": "sword"
+"wt": "sword",
+"rlv": 12,
+"wtier": 2
 },
 "swordCrystal": {
 "n": "수정 검",
@@ -183,7 +189,9 @@
 "dmg": 26,
 "stack": 1,
 "d": "보랏빛으로 반짝이는 검.",
-"wt": "sword"
+"wt": "sword",
+"rlv": 20,
+"wtier": 3
 },
 "bench": {
 "n": "작업대",
@@ -685,7 +693,9 @@
 "dmg": 4,
 "stack": 1,
 "d": "짧지만 아주 빠르게 찔러요. 치명타가 잘 터져요.",
-"orb": null
+"orb": null,
+"rlv": 1,
+"wtier": 0
 },
 "spearWood": {
 "n": "나무 창",
@@ -694,25 +704,31 @@
 "dmg": 6,
 "stack": 1,
 "d": "멀리 있는 적을 콕 찔러요. 앞쪽 좁은 곳만 맞혀요.",
-"orb": null
+"orb": null,
+"rlv": 1,
+"wtier": 0
 },
 "bowWood": {
 "n": "나무 활",
 "kind": "sword",
 "wt": "bow",
-"dmg": 4,
+"dmg": 5,
 "stack": 1,
 "d": "멀리 화살을 쏴요. 화살은 따로 필요 없어요.",
-"orb": null
+"orb": null,
+"rlv": 1,
+"wtier": 0
 },
 "daggerCopper": {
 "n": "구리 단검",
 "kind": "sword",
 "wt": "dagger",
-"dmg": 8,
+"dmg": 7,
 "stack": 1,
 "d": "빠르게 콕콕! 치명타가 잘 터져요.",
-"orb": null
+"orb": null,
+"rlv": 5,
+"wtier": 1
 },
 "spearCopper": {
 "n": "구리 창",
@@ -721,16 +737,20 @@
 "dmg": 12,
 "stack": 1,
 "d": "긴 창으로 멀리서 안전하게 찔러요.",
-"orb": null
+"orb": null,
+"rlv": 5,
+"wtier": 1
 },
 "hammerCopper": {
 "n": "구리 망치",
 "kind": "sword",
 "wt": "hammer",
-"dmg": 20,
+"dmg": 17,
 "stack": 1,
 "d": "느리지만 넓게 쾅! 적을 멀리 밀어내요.",
-"orb": null
+"orb": null,
+"rlv": 5,
+"wtier": 1
 },
 "staffGlow": {
 "n": "빛버섯 지팡이",
@@ -739,52 +759,64 @@
 "dmg": 9,
 "stack": 1,
 "d": "기력을 조금 써서 적을 꿰뚫는 빛 구슬을 쏴요. 지혜가 높을수록 세져요.",
-"orb": "#9ff2e6"
+"orb": "#9ff2e6",
+"rlv": 5,
+"wtier": 1
 },
 "spearIron": {
 "n": "철 창",
 "kind": "sword",
 "wt": "spear",
-"dmg": 19,
+"dmg": 18,
 "stack": 1,
 "d": "묵직한 철 창. 멀리서 깊게 찔러요.",
-"orb": null
+"orb": null,
+"rlv": 12,
+"wtier": 2
 },
 "hammerIron": {
 "n": "철 망치",
 "kind": "sword",
 "wt": "hammer",
-"dmg": 32,
+"dmg": 26,
 "stack": 1,
 "d": "바닥이 울릴 만큼 강한 한 방.",
-"orb": null
+"orb": null,
+"rlv": 12,
+"wtier": 2
 },
 "bowIron": {
 "n": "사냥꾼의 활",
 "kind": "sword",
 "wt": "bow",
-"dmg": 11,
+"dmg": 14,
 "stack": 1,
 "d": "팽팽한 시위로 빠른 화살을 쏴요.",
-"orb": null
+"orb": null,
+"rlv": 12,
+"wtier": 2
 },
 "staffCrystal": {
 "n": "수정 지팡이",
 "kind": "sword",
 "wt": "staff",
-"dmg": 17,
+"dmg": 21,
 "stack": 1,
 "d": "보랏빛 구슬이 적 여럿을 꿰뚫어요.",
-"orb": "#d6c2ff"
+"orb": "#d6c2ff",
+"rlv": 20,
+"wtier": 3
 },
 "bowCrystal": {
 "n": "별빛 활",
 "kind": "sword",
 "wt": "bow",
-"dmg": 18,
+"dmg": 22,
 "stack": 1,
 "d": "별빛처럼 반짝이는 화살을 쏴요.",
-"orb": null
+"orb": null,
+"rlv": 20,
+"wtier": 3
 },
 "axeStone": {
 "n": "돌 도끼",
@@ -793,7 +825,8 @@
 "d": "돌로 만든 도끼. 나무를 손이나 곡괭이보다 빨리 베어요.",
 "orb": null,
 "power": 1.6,
-"tier": 0
+"tier": 0,
+"rlv": 1
 },
 "axeCopper": {
 "n": "구리 도끼",
@@ -802,7 +835,8 @@
 "d": "단단한 구리 도끼. 큰 나무도 금방 베어요.",
 "orb": null,
 "power": 3.2,
-"tier": 1
+"tier": 1,
+"rlv": 5
 },
 "axeIron": {
 "n": "철 도끼",
@@ -811,37 +845,44 @@
 "d": "날이 선 철 도끼. 어떤 나무든 몇 번이면 베어요.",
 "orb": null,
 "power": 4.8,
-"tier": 2
+"tier": 2,
+"rlv": 12
 },
 "daggerQueen": {
 "n": "포자 여왕의 단검",
 "kind": "sword",
 "wt": "dagger",
-"dmg": 18,
+"dmg": 14,
 "stack": 1,
 "d": "버섯 여왕이 남긴 단검. 찌를 때마다 독 포자가 퍼져요.",
 "fx": "poison",
-"orb": "#d6c2ff"
+"orb": "#d6c2ff",
+"rlv": 12,
+"wtier": 2
 },
 "hammerSlime": {
 "n": "말랑대왕 망치",
 "kind": "sword",
 "wt": "hammer",
-"dmg": 34,
+"dmg": 21,
 "stack": 1,
 "d": "말랑대왕의 왕관 조각으로 만든 망치. 맞은 적이 끈적해져 느려져요.",
 "fx": "slow",
-"orb": "#d6c2ff"
+"orb": "#d6c2ff",
+"rlv": 5,
+"wtier": 1
 },
 "bowGolem": {
 "n": "수정 거인의 활",
 "kind": "sword",
 "wt": "bow",
-"dmg": 24,
+"dmg": 28,
 "stack": 1,
 "d": "수정골렘의 팔로 만든 활. 화살이 맞으면 수정 파편이 튀어요.",
 "fx": "split",
-"orb": "#d6c2ff"
+"orb": "#d6c2ff",
+"rlv": 20,
+"wtier": 3
 },
 "golemCore": {
 "n": "수정 핵",
@@ -1120,17 +1161,21 @@
 "stack": 1,
 "d": "묵직하게 빛나는 황금 검.",
 "orb": null,
-"fx": null
+"fx": null,
+"rlv": 30,
+"wtier": 4
 },
 "daggerObsidian": {
 "n": "흑요석 단검",
 "kind": "sword",
 "wt": "dagger",
-"dmg": 24,
+"dmg": 23,
 "stack": 1,
 "d": "유리처럼 날카로운 단검. 치명타가 잘 터져요.",
 "orb": null,
-"fx": null
+"fx": null,
+"rlv": 30,
+"wtier": 4
 },
 "hammerObsidian": {
 "n": "흑요석 망치",
@@ -1140,37 +1185,45 @@
 "stack": 1,
 "d": "땅이 갈라질 만큼 무거운 한 방.",
 "orb": null,
-"fx": null
+"fx": null,
+"rlv": 30,
+"wtier": 4
 },
 "spearFrost": {
 "n": "서리 창",
 "kind": "sword",
 "wt": "spear",
-"dmg": 34,
+"dmg": 50,
 "stack": 1,
 "d": "찌르면 적이 꽁꽁 얼어붙어요.",
 "orb": null,
-"fx": "chill"
+"fx": "chill",
+"rlv": 40,
+"wtier": 5
 },
 "staffFrost": {
 "n": "눈꽃 지팡이",
 "kind": "sword",
 "wt": "staff",
-"dmg": 28,
+"dmg": 38,
 "stack": 1,
 "d": "눈꽃 구슬이 적을 꿰뚫고 얼려요.",
 "orb": "#d4f6ff",
-"fx": "chill"
+"fx": "chill",
+"rlv": 40,
+"wtier": 5
 },
 "bowGold": {
 "n": "황금 활",
 "kind": "sword",
 "wt": "bow",
-"dmg": 28,
+"dmg": 31,
 "stack": 1,
 "d": "황금빛 화살이 멀리 날아가요.",
 "orb": null,
-"fx": null
+"fx": null,
+"rlv": 30,
+"wtier": 4
 },
 "pickGold": {
 "n": "황금 곡괭이",
@@ -1184,19 +1237,23 @@
 "n": "용암 거북의 대검",
 "kind": "sword",
 "wt": "sword",
-"dmg": 44,
+"dmg": 45,
 "stack": 1,
 "fx": "burn",
-"d": "용암 거북의 등껍질을 깎아 만든 대검. 벤 자리에 불꽃이 일어요."
+"d": "용암 거북의 등껍질을 깎아 만든 대검. 벤 자리에 불꽃이 일어요.",
+"rlv": 30,
+"wtier": 4
 },
 "bowFrost": {
 "n": "서리 정령의 활",
 "kind": "sword",
 "wt": "bow",
-"dmg": 32,
+"dmg": 51,
 "stack": 1,
 "fx": "chill",
-"d": "서리 정령이 남긴 활. 화살에 맞은 적이 얼어붙어요."
+"d": "서리 정령이 남긴 활. 화살에 맞은 적이 얼어붙어요.",
+"rlv": 40,
+"wtier": 5
 },
 "swordDawn": {
 "n": "새벽빛 검",
@@ -1205,7 +1262,8 @@
 "dmg": 62,
 "stack": 1,
 "fx": "burn",
-"d": "용암과 서리의 핵을 함께 벼린 전설의 검. 새벽처럼 환하게 타올라요."
+"d": "용암과 서리의 핵을 함께 벼린 전설의 검. 새벽처럼 환하게 타올라요.",
+"rlv": 40
 },
 "pickStar": {
 "n": "별빛 곡괭이",
@@ -2890,6 +2948,460 @@
 "kind": "place",
 "obj": "portal",
 "d": "놓으면 워프 목적지가 하나 늘어요. 포탈이나 켜진 워프포인트 앞에서 누르면 지도에서 켜진 곳을 골라 이동해요. 한 사람당 5개까지 · 보스방 가까이에는 못 놓아요."
+},
+"hammerWood": {
+"n": "나무 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"d": "느리지만 넓게 쿵! 적을 멀리 밀어내요.",
+"orb": null,
+"dmg": 9,
+"rlv": 1,
+"wtier": 0
+},
+"staffWood": {
+"n": "나무 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"d": "기력을 조금 써서 빛 구슬을 쏴요. 지혜가 높을수록 세져요.",
+"orb": "#cdeccb",
+"dmg": 5,
+"rlv": 1,
+"wtier": 0
+},
+"bowCopper": {
+"n": "구리 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"d": "구리로 보강한 활. 화살이 조금 더 세게 날아가요.",
+"orb": null,
+"dmg": 9,
+"rlv": 5,
+"wtier": 1
+},
+"daggerIron": {
+"n": "철 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"d": "날카로운 철 단검. 치명타가 잘 터져요.",
+"orb": null,
+"dmg": 11,
+"rlv": 12,
+"wtier": 2
+},
+"staffIron": {
+"n": "철 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"d": "철 고리로 감싼 지팡이. 단단한 빛 구슬을 쏴요.",
+"orb": "#e6f0ff",
+"dmg": 14,
+"rlv": 12,
+"wtier": 2
+},
+"daggerCrystal": {
+"n": "수정 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"d": "보랏빛 수정 단검. 빠르게 콕콕 찔러요.",
+"orb": null,
+"dmg": 17,
+"rlv": 20,
+"wtier": 3
+},
+"spearCrystal": {
+"n": "수정 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"d": "끝이 수정으로 된 창. 멀리서 깊게 찔러요.",
+"orb": null,
+"dmg": 27,
+"rlv": 20,
+"wtier": 3
+},
+"hammerCrystal": {
+"n": "수정 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"d": "수정 덩어리를 박은 망치. 쾅! 하고 반짝여요.",
+"orb": null,
+"dmg": 39,
+"rlv": 20,
+"wtier": 3
+},
+"spearGold": {
+"n": "황금 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"d": "황금빛으로 빛나는 긴 창.",
+"orb": null,
+"dmg": 38,
+"rlv": 30,
+"wtier": 4
+},
+"staffGold": {
+"n": "흑요석 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"d": "검은 흑요석 끝에서 불빛 구슬이 날아가요.",
+"orb": "#ffc861",
+"dmg": 29,
+"rlv": 30,
+"wtier": 4
+},
+"swordFrost": {
+"n": "서리 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"d": "차갑게 빛나는 서리 검.",
+"orb": null,
+"dmg": 48,
+"rlv": 40,
+"wtier": 5
+},
+"daggerFrost": {
+"n": "서리 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"d": "얼음처럼 날카로운 단검.",
+"orb": null,
+"dmg": 31,
+"rlv": 40,
+"wtier": 5
+},
+"hammerFrost": {
+"n": "서리 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"d": "얼음 덩어리를 단 망치. 땅이 얼 만큼 무거워요.",
+"orb": null,
+"dmg": 72,
+"rlv": 40,
+"wtier": 5
+},
+"bowIce": {
+"n": "얼음 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"d": "얼음으로 깎은 활. 차가운 화살이 멀리 날아가요.",
+"orb": null,
+"dmg": 41,
+"rlv": 40,
+"wtier": 5
+},
+"swordSlime": {
+"n": "말랑대왕 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "slow",
+"d": "말랑대왕이 남긴 검. 맞은 적이 끈적해져 느려져요.",
+"orb": null,
+"dmg": 14,
+"rlv": 5,
+"wtier": 1
+},
+"daggerSlime": {
+"n": "말랑대왕 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "slow",
+"d": "말랑대왕이 남긴 단검. 맞은 적이 끈적해져 느려져요.",
+"orb": null,
+"dmg": 9,
+"rlv": 5,
+"wtier": 1
+},
+"spearSlime": {
+"n": "말랑대왕 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "slow",
+"d": "말랑대왕이 남긴 창. 맞은 적이 끈적해져 느려져요.",
+"orb": null,
+"dmg": 15,
+"rlv": 5,
+"wtier": 1
+},
+"bowSlime": {
+"n": "말랑대왕 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "slow",
+"d": "말랑대왕이 남긴 활. 맞은 적이 끈적해져 느려져요.",
+"orb": null,
+"dmg": 11,
+"rlv": 5,
+"wtier": 1
+},
+"staffSlime": {
+"n": "말랑대왕 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "slow",
+"d": "말랑대왕이 남긴 지팡이. 맞은 적이 끈적해져 느려져요.",
+"orb": "#b8f09a",
+"dmg": 11,
+"rlv": 5,
+"wtier": 1
+},
+"swordQueen": {
+"n": "포자 여왕의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "poison",
+"d": "포자 여왕이 남긴 검. 맞을 때마다 독 포자가 퍼져요.",
+"orb": null,
+"dmg": 21,
+"rlv": 12,
+"wtier": 2
+},
+"spearQueen": {
+"n": "포자 여왕의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "poison",
+"d": "포자 여왕이 남긴 창. 맞을 때마다 독 포자가 퍼져요.",
+"orb": null,
+"dmg": 23,
+"rlv": 12,
+"wtier": 2
+},
+"hammerQueen": {
+"n": "포자 여왕의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "poison",
+"d": "포자 여왕이 남긴 망치. 맞을 때마다 독 포자가 퍼져요.",
+"orb": null,
+"dmg": 33,
+"rlv": 12,
+"wtier": 2
+},
+"bowQueen": {
+"n": "포자 여왕의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "poison",
+"d": "포자 여왕이 남긴 활. 맞을 때마다 독 포자가 퍼져요.",
+"orb": null,
+"dmg": 18,
+"rlv": 12,
+"wtier": 2
+},
+"staffQueen": {
+"n": "포자 여왕의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "poison",
+"d": "포자 여왕이 남긴 지팡이. 맞을 때마다 독 포자가 퍼져요.",
+"orb": "#e2b8ff",
+"dmg": 18,
+"rlv": 12,
+"wtier": 2
+},
+"swordGolem": {
+"n": "수정 거인의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "split",
+"d": "수정 거인이 남긴 검. 맞은 곳에서 수정 파편이 튀어요.",
+"orb": null,
+"dmg": 33,
+"rlv": 20,
+"wtier": 3
+},
+"daggerGolem": {
+"n": "수정 거인의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "split",
+"d": "수정 거인이 남긴 단검. 맞은 곳에서 수정 파편이 튀어요.",
+"orb": null,
+"dmg": 21,
+"rlv": 20,
+"wtier": 3
+},
+"spearGolem": {
+"n": "수정 거인의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "split",
+"d": "수정 거인이 남긴 창. 맞은 곳에서 수정 파편이 튀어요.",
+"orb": null,
+"dmg": 34,
+"rlv": 20,
+"wtier": 3
+},
+"hammerGolem": {
+"n": "수정 거인의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "split",
+"d": "수정 거인이 남긴 망치. 맞은 곳에서 수정 파편이 튀어요.",
+"orb": null,
+"dmg": 49,
+"rlv": 20,
+"wtier": 3
+},
+"staffGolem": {
+"n": "수정 거인의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "split",
+"d": "수정 거인이 남긴 지팡이. 맞은 곳에서 수정 파편이 튀어요.",
+"orb": "#d6c2ff",
+"dmg": 26,
+"rlv": 20,
+"wtier": 3
+},
+"daggerLava": {
+"n": "용암 거북의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "burn",
+"d": "용암 거북이 남긴 단검. 맞은 자리에 불꽃이 일어요.",
+"orb": null,
+"dmg": 29,
+"rlv": 30,
+"wtier": 4
+},
+"spearLava": {
+"n": "용암 거북의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "burn",
+"d": "용암 거북이 남긴 창. 맞은 자리에 불꽃이 일어요.",
+"orb": null,
+"dmg": 48,
+"rlv": 30,
+"wtier": 4
+},
+"hammerLava": {
+"n": "용암 거북의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "burn",
+"d": "용암 거북이 남긴 망치. 맞은 자리에 불꽃이 일어요.",
+"orb": null,
+"dmg": 68,
+"rlv": 30,
+"wtier": 4
+},
+"bowLava": {
+"n": "용암 거북의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "burn",
+"d": "용암 거북이 남긴 활. 맞은 자리에 불꽃이 일어요.",
+"orb": null,
+"dmg": 39,
+"rlv": 30,
+"wtier": 4
+},
+"staffLava": {
+"n": "용암 거북의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "burn",
+"d": "용암 거북이 남긴 지팡이. 맞은 자리에 불꽃이 일어요.",
+"orb": "#ffb36b",
+"dmg": 36,
+"rlv": 30,
+"wtier": 4
+},
+"swordSpirit": {
+"n": "서리 정령의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "chill",
+"d": "서리 정령이 남긴 검. 맞은 적이 얼어붙어요.",
+"orb": null,
+"dmg": 60,
+"rlv": 40,
+"wtier": 5
+},
+"daggerSpirit": {
+"n": "서리 정령의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "chill",
+"d": "서리 정령이 남긴 단검. 맞은 적이 얼어붙어요.",
+"orb": null,
+"dmg": 39,
+"rlv": 40,
+"wtier": 5
+},
+"spearSpirit": {
+"n": "서리 정령의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "chill",
+"d": "서리 정령이 남긴 창. 맞은 적이 얼어붙어요.",
+"orb": null,
+"dmg": 63,
+"rlv": 40,
+"wtier": 5
+},
+"hammerSpirit": {
+"n": "서리 정령의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "chill",
+"d": "서리 정령이 남긴 망치. 맞은 적이 얼어붙어요.",
+"orb": null,
+"dmg": 90,
+"rlv": 40,
+"wtier": 5
+},
+"staffSpirit": {
+"n": "서리 정령의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "chill",
+"d": "서리 정령이 남긴 지팡이. 맞은 적이 얼어붙어요.",
+"orb": "#d4f6ff",
+"dmg": 48,
+"rlv": 40,
+"wtier": 5
 }
 },
 "OBJ": {
@@ -6456,13 +6968,13 @@
 3
 ],
 [
-"frostShard",
+"obsidian",
 2
 ]
 ],
 "at": "smelter",
 "cat": "weapon",
-"tier": 5
+"tier": 4
 },
 {
 "out": "pickGold",
@@ -9156,6 +9668,296 @@
 "at": "bench",
 "cat": "furn",
 "tier": 3
+},
+{
+"out": "hammerWood",
+"n": 1,
+"req": [
+[
+"wood",
+8
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 0
+},
+{
+"out": "staffWood",
+"n": 1,
+"req": [
+[
+"wood",
+6
+],
+[
+"glowcap",
+1
+],
+[
+"fiber",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 0
+},
+{
+"out": "bowCopper",
+"n": 1,
+"req": [
+[
+"copperBar",
+3
+],
+[
+"wood",
+4
+],
+[
+"rope",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 1
+},
+{
+"out": "daggerIron",
+"n": 1,
+"req": [
+[
+"ironBar",
+3
+],
+[
+"wood",
+1
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 2
+},
+{
+"out": "staffIron",
+"n": 1,
+"req": [
+[
+"ironBar",
+3
+],
+[
+"glowcap",
+4
+],
+[
+"gel",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 2
+},
+{
+"out": "daggerCrystal",
+"n": 1,
+"req": [
+[
+"crystal",
+6
+],
+[
+"ironBar",
+2
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 3
+},
+{
+"out": "spearCrystal",
+"n": 1,
+"req": [
+[
+"crystal",
+8
+],
+[
+"ironBar",
+3
+],
+[
+"wood",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 3
+},
+{
+"out": "hammerCrystal",
+"n": 1,
+"req": [
+[
+"crystal",
+10
+],
+[
+"ironBar",
+4
+],
+[
+"wood",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 3
+},
+{
+"out": "spearGold",
+"n": 1,
+"req": [
+[
+"goldBar",
+4
+],
+[
+"obsidian",
+1
+],
+[
+"wood",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 4
+},
+{
+"out": "staffGold",
+"n": 1,
+"req": [
+[
+"obsidian",
+4
+],
+[
+"goldBar",
+2
+],
+[
+"glowcap",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 4
+},
+{
+"out": "swordFrost",
+"n": 1,
+"req": [
+[
+"frostShard",
+8
+],
+[
+"goldBar",
+2
+],
+[
+"ironBar",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 5
+},
+{
+"out": "daggerFrost",
+"n": 1,
+"req": [
+[
+"frostShard",
+5
+],
+[
+"goldBar",
+1
+],
+[
+"rope",
+1
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 5
+},
+{
+"out": "hammerFrost",
+"n": 1,
+"req": [
+[
+"frostShard",
+10
+],
+[
+"goldBar",
+3
+],
+[
+"wood",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 5
+},
+{
+"out": "bowIce",
+"n": 1,
+"req": [
+[
+"frostShard",
+6
+],
+[
+"goldBar",
+2
+],
+[
+"rope",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 5
 }
 ],
 "ENEMY": {
@@ -11101,7 +11903,46 @@
 "ringFe": 1,
 "ringQ": 2,
 "ringGem": 2,
-"ringGold": 3
+"ringGold": 3,
+"hammerWood": 0,
+"staffWood": 0,
+"bowCopper": 0,
+"daggerIron": 1,
+"staffIron": 1,
+"daggerCrystal": 2,
+"spearCrystal": 2,
+"hammerCrystal": 2,
+"spearGold": 3,
+"staffGold": 3,
+"swordFrost": 3,
+"daggerFrost": 3,
+"hammerFrost": 3,
+"bowIce": 3,
+"swordSlime": 3,
+"daggerSlime": 3,
+"spearSlime": 3,
+"bowSlime": 3,
+"staffSlime": 3,
+"swordQueen": 3,
+"spearQueen": 3,
+"hammerQueen": 3,
+"bowQueen": 3,
+"staffQueen": 3,
+"swordGolem": 3,
+"daggerGolem": 3,
+"spearGolem": 3,
+"hammerGolem": 3,
+"staffGolem": 3,
+"daggerLava": 3,
+"spearLava": 3,
+"hammerLava": 3,
+"bowLava": 3,
+"staffLava": 3,
+"swordSpirit": 3,
+"daggerSpirit": 3,
+"spearSpirit": 3,
+"hammerSpirit": 3,
+"staffSpirit": 3
 },
 "TIERNAME": [
 "나무 곡괭이",
@@ -13869,6 +14710,357 @@
 2
 ]
 ]
+],
+"hammerWood": [
+160,
+[
+[
+"wood",
+3
+]
+]
+],
+"staffWood": [
+160,
+[
+[
+"wood",
+2
+]
+]
+],
+"bowCopper": [
+310,
+[
+[
+"copperBar",
+1
+]
+]
+],
+"daggerIron": [
+550,
+[
+[
+"ironBar",
+1
+]
+]
+],
+"staffIron": [
+550,
+[
+[
+"ironBar",
+1
+]
+]
+],
+"daggerCrystal": [
+800,
+[
+[
+"crystal",
+2
+]
+]
+],
+"spearCrystal": [
+800,
+[
+[
+"crystal",
+3
+]
+]
+],
+"hammerCrystal": [
+800,
+[
+[
+"crystal",
+3
+]
+]
+],
+"spearGold": [
+1000,
+[
+[
+"goldBar",
+2
+]
+]
+],
+"staffGold": [
+1000,
+[
+[
+"obsidian",
+2
+]
+]
+],
+"swordFrost": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
+],
+"daggerFrost": [
+1300,
+[
+[
+"frostShard",
+2
+]
+]
+],
+"hammerFrost": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
+],
+"bowIce": [
+1300,
+[
+[
+"frostShard",
+2
+]
+]
+],
+"swordSlime": [
+700,
+[
+[
+"gel",
+6
+]
+]
+],
+"daggerSlime": [
+700,
+[
+[
+"gel",
+6
+]
+]
+],
+"spearSlime": [
+700,
+[
+[
+"gel",
+6
+]
+]
+],
+"bowSlime": [
+700,
+[
+[
+"gel",
+6
+]
+]
+],
+"staffSlime": [
+700,
+[
+[
+"gel",
+6
+]
+]
+],
+"swordQueen": [
+800,
+[
+[
+"shroomCap",
+3
+]
+]
+],
+"spearQueen": [
+800,
+[
+[
+"shroomCap",
+3
+]
+]
+],
+"hammerQueen": [
+800,
+[
+[
+"shroomCap",
+3
+]
+]
+],
+"bowQueen": [
+800,
+[
+[
+"shroomCap",
+3
+]
+]
+],
+"staffQueen": [
+800,
+[
+[
+"shroomCap",
+3
+]
+]
+],
+"swordGolem": [
+900,
+[
+[
+"crystal",
+4
+]
+]
+],
+"daggerGolem": [
+900,
+[
+[
+"crystal",
+4
+]
+]
+],
+"spearGolem": [
+900,
+[
+[
+"crystal",
+4
+]
+]
+],
+"hammerGolem": [
+900,
+[
+[
+"crystal",
+4
+]
+]
+],
+"staffGolem": [
+900,
+[
+[
+"crystal",
+4
+]
+]
+],
+"daggerLava": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"spearLava": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"hammerLava": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"bowLava": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"staffLava": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"swordSpirit": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
+],
+"daggerSpirit": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
+],
+"spearSpirit": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
+],
+"hammerSpirit": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
+],
+"staffSpirit": [
+1300,
+[
+[
+"frostShard",
+3
+]
+]
 ]
 },
 "DECOR": {
@@ -16543,6 +17735,45 @@ null,
 "bowFrost": "[그림 16x16 2ba628f1]",
 "swordDawn": "[그림 16x16 401a6081]",
 "pickStar": "[그림 16x16 d99f8d69]",
+"hammerWood": "[그림 16x16 27711245]",
+"staffWood": "[그림 16x16 518f924b]",
+"bowCopper": "[그림 16x16 99028038]",
+"daggerIron": "[그림 16x16 a41b470d]",
+"staffIron": "[그림 16x16 3a22e0cd]",
+"daggerCrystal": "[그림 16x16 85f09e16]",
+"spearCrystal": "[그림 16x16 f2af7f22]",
+"hammerCrystal": "[그림 16x16 3d4b3cae]",
+"spearGold": "[그림 16x16 78927fec]",
+"staffGold": "[그림 16x16 2b9fb372]",
+"swordFrost": "[그림 16x16 4deb42f4]",
+"daggerFrost": "[그림 16x16 8fc19bf2]",
+"hammerFrost": "[그림 16x16 3cd65415]",
+"bowIce": "[그림 16x16 33ca41b0]",
+"swordSlime": "[그림 16x16 b0dc21da]",
+"daggerSlime": "[그림 16x16 e8ebfaf1]",
+"spearSlime": "[그림 16x16 2c361fb7]",
+"bowSlime": "[그림 16x16 12753cdd]",
+"staffSlime": "[그림 16x16 efe2d325]",
+"swordQueen": "[그림 16x16 38bb689c]",
+"spearQueen": "[그림 16x16 9815590f]",
+"hammerQueen": "[그림 16x16 498884a]",
+"bowQueen": "[그림 16x16 920bcc68]",
+"staffQueen": "[그림 16x16 2a5ac88d]",
+"swordGolem": "[그림 16x16 23cbfbea]",
+"daggerGolem": "[그림 16x16 f4f9bc32]",
+"spearGolem": "[그림 16x16 85eaddde]",
+"hammerGolem": "[그림 16x16 24654cce]",
+"staffGolem": "[그림 16x16 89e78f82]",
+"daggerLava": "[그림 16x16 827dc009]",
+"spearLava": "[그림 16x16 ae242a68]",
+"hammerLava": "[그림 16x16 77b8e04a]",
+"bowLava": "[그림 16x16 b7ee26f2]",
+"staffLava": "[그림 16x16 f471acae]",
+"swordSpirit": "[그림 16x16 67a902db]",
+"daggerSpirit": "[그림 16x16 4655d52c]",
+"spearSpirit": "[그림 16x16 96edf0aa]",
+"hammerSpirit": "[그림 16x16 89115f9c]",
+"staffSpirit": "[그림 16x16 75f17704]",
 "arrowStone": "[그림 16x16 ab61a433]",
 "arrowCopper": "[그림 16x16 3051e2a1]",
 "arrowIron": "[그림 16x16 a3ec5cc2]",
@@ -18937,6 +20168,45 @@ null
 "smelterAu": "7c11d58a",
 "smelterFr": "5e5b1d6f",
 "bucket": "7584a5ea",
-"portal": "28c2dfc0"
+"portal": "28c2dfc0",
+"hammerWood": "27711245",
+"staffWood": "518f924b",
+"bowCopper": "99028038",
+"daggerIron": "a41b470d",
+"staffIron": "3a22e0cd",
+"daggerCrystal": "85f09e16",
+"spearCrystal": "f2af7f22",
+"hammerCrystal": "3d4b3cae",
+"spearGold": "78927fec",
+"staffGold": "2b9fb372",
+"swordFrost": "4deb42f4",
+"daggerFrost": "8fc19bf2",
+"hammerFrost": "3cd65415",
+"bowIce": "33ca41b0",
+"swordSlime": "b0dc21da",
+"daggerSlime": "e8ebfaf1",
+"spearSlime": "2c361fb7",
+"bowSlime": "12753cdd",
+"staffSlime": "efe2d325",
+"swordQueen": "38bb689c",
+"spearQueen": "9815590f",
+"hammerQueen": "498884a",
+"bowQueen": "920bcc68",
+"staffQueen": "2a5ac88d",
+"swordGolem": "23cbfbea",
+"daggerGolem": "f4f9bc32",
+"spearGolem": "85eaddde",
+"hammerGolem": "24654cce",
+"staffGolem": "89e78f82",
+"daggerLava": "827dc009",
+"spearLava": "ae242a68",
+"hammerLava": "77b8e04a",
+"bowLava": "b7ee26f2",
+"staffLava": "f471acae",
+"swordSpirit": "67a902db",
+"daggerSpirit": "4655d52c",
+"spearSpirit": "96edf0aa",
+"hammerSpirit": "89115f9c",
+"staffSpirit": "75f17704"
 }
 }

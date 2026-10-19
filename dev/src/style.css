@@ -125,6 +125,7 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 .slot .dur i{display:block;height:100%}
 .slot.broken img{filter:grayscale(1);opacity:.45}
 .slot .brk{position:absolute;top:2px;right:4px;font-size:16px;color:#ff6b7a;text-shadow:0 1px 0 #000}
+.slot .rlvb{position:absolute;left:2px;top:1px;font-size:16px;color:#ff6b5e;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000;pointer-events:none}
 .slot .lvb{position:absolute;right:4px;top:1px;font-size:16px;font-weight:700;color:#ffd25c;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}.slot .cnt{position:absolute;right:4px;bottom:2px;font-size:16px;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}
 .slot .key{position:absolute;left:4px;top:2px;font-size:16px;color:var(--muted)}
 .slot.r1{border-color:#5fbf93}.slot.r2{border-color:#6a9cf0}.slot.r3{border-color:#b07cf5;box-shadow:0 0 6px rgba(176,124,245,.55),inset 0 -2px 0 rgba(0,0,0,.25)}.slot.r4{border-color:#ffc35a;box-shadow:0 0 6px rgba(255,195,90,.6),inset 0 -2px 0 rgba(0,0,0,.25)}

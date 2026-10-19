@@ -9,7 +9,7 @@ import { $ } from '../engine/util.js';
 import { iconURL } from '../render/icons.js';
 import { animalImg } from '../render/parts.js';
 import { G } from '../save/state.js';
-import { eqEffect, lvOf, rarOf, SET_N, setPet, upgText } from '../sim/gear.js';
+import { eqEffect, lvOf, rarOf, rlvOf, rlvOk, SET_N, setPet, upgText } from '../sim/gear.js';
 import { BAG_TABS, bagCat, heldTool, isBroken } from '../sim/inventory.js';
 import { treeStage } from '../sim/tree.js';
 import { slotHTML } from './hud.js';
@@ -90,7 +90,7 @@ function bagBarHTML() {
 }
 // 칸 위 말풍선 (고른 칸, PC는 마우스를 올린 칸)
 export function tipFor(s) { if (!s) return ''; const it = ITEMS[s.id], st = itemStat(it, s), r = rarOf(s.id);
-  return `<b>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}${s.c > 1 ? ` <span style="color:var(--muted)">× ${s.c}</span>` : ''}</b><p>${it.d || FURN_D}</p>${r >= 0 && (it.kind === 'sword' || it.kind === 'pick' || r >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, r)][1]}">★ ${RARITY[Math.max(0, r)][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}`; }
+  return `<b>${rarName(s.id)}${s.lv ? ` +${s.lv}` : ''}${s.c > 1 ? ` <span style="color:var(--muted)">× ${s.c}</span>` : ''}</b><p>${it.d || FURN_D}</p>${r >= 0 && (it.kind === 'sword' || it.kind === 'pick' || r >= 1) ? `<div class="st" style="color:${RARITY[Math.max(0, r)][1]}">★ ${RARITY[Math.max(0, r)][0]} 등급</div>` : ''}${st ? `<div class="st">${st}</div>` : ''}${rlvOf(s.id) > 1 ? `<div class="st"${rlvOk(s.id) ? '' : ' style="color:#ff7a6b"'}>착용 레벨 ${rlvOf(s.id)}${rlvOk(s.id) ? '' : ' · 레벨이 모자라요'}</div>` : ''}${it.set ? `<div class="st">${SETN[it.set]}</div>` : ''}`; }
 function tipHTML() { const t = UIS.toolSel != null ? (G.tools || [])[UIS.toolSel] : null; return tipFor(t || (UIS.invSel != null ? G.inv[UIS.invSel] : null)); }
 // 말풍선을 칸 바로 위에 (자리가 없으면 아래에)
 export function placeTip(sh, el) {
