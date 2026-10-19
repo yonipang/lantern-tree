@@ -99,8 +99,8 @@ onFrame('darkContact', darkContact);
 export function darkDown(b) { const d = G.stats.deep; if (d) d.done = 1; G.stats.ending = (G.stats.ending || 0) + 1; if (d) for (let r = 0; r < DEEP_H; r++) for (let c = 0; c < DEEP_W; c++) G.explored[idx(d.x + c, d.y + r)] = 1; emit('remap'); emit('ending'); }
 // 이야기 퀘스트: 다섯 등불 뒤 → 가장 깊은 곳
 GUIDE.splice(GUIDE.length - 1, 0,
-  { id: 'deep', t: () => '가장 깊은 곳의 마지막 장 찾기', h: '나무가 당신에게 반응했어요. 용암·얼음 동굴 깊은 곳 어딘가에 등불지기들의 마지막 유적이 있어요. 어둠이 길을 막으면 등불 다섯을 먼저 밝혀요.', done: () => !!(G.stats.deep && G.stats.deep.read), rw: [['torch', 12], ['stew', 3]], xp: 300, target: () => { const d = G.stats.deep; return d ? { x: d.x + DEEP_PLAN[DEEP_H - 1].indexOf('E') + .5, y: d.y + DEEP_H + .5 } : null; } },
-  { id: 'dark', t: () => '큰 어둠 물리치기', h: '횃대에 불을 붙여 밝힌 곳에 서 있을 때만 큰 어둠을 때릴 수 있어요. 어둠은 횃대를 하나씩 꺼뜨려요 — 다시 붙이며 싸워요.', done: () => !!G.bossDead.dark, rw: [['goldBar', 8], ['cryGem', 4]], xp: 1200, target: () => darkHome() });
+  { id: 'deep', t: () => '가장 깊은 곳의 마지막 장 찾기', h: '나무가 당신한테 반응했어요! 용암·얼음 동굴 깊은 곳 어딘가에 등불지기들의 마지막 유적이 있대요. 어둠이 길을 막으면 등불 다섯을 먼저 밝혀요.', done: () => !!(G.stats.deep && G.stats.deep.read), rw: [['torch', 12], ['stew', 3]], xp: 300, target: () => { const d = G.stats.deep; return d ? { x: d.x + DEEP_PLAN[DEEP_H - 1].indexOf('E') + .5, y: d.y + DEEP_H + .5 } : null; } },
+  { id: 'dark', t: () => '큰 어둠 물리치기', h: '횃대에 불을 붙여 밝힌 곳에 서 있을 때만 큰 어둠을 때릴 수 있대요. 어둠이 횃대를 하나씩 꺼뜨리니까, 다시 붙이며 싸워요.', done: () => !!G.bossDead.dark, rw: [['goldBar', 8], ['cryGem', 4]], xp: 1200, target: () => darkHome() });
 Q_GO.deep = ['tgt']; Q_GO.dark = ['tgt'];
 // 불러올 때: 가장 깊은 곳 놓기(한 번) + 보스 자리 맞추기
 export function deepOnLoad() { placeDeep(); if (G.stats.deep && !G.bossDead.dark) G.bosses.dark = freshBoss('dark'); }

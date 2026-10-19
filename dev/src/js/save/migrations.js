@@ -173,3 +173,5 @@ export function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.i
   (G.inv || []).forEach(fix); (G.__extra || []).forEach(fix);
   for (const o of G.objs.values()) { if (Array.isArray(o.items)) o.items.forEach(fix); if (Array.isArray(o.store)) o.store.forEach(fix);
     if (o.job && Array.isArray(o.job.used)) o.job.used = o.job.used.map(([id, c]) => [SHOVELFUL93[id] || id, c]); } }
+// v110 시작 길잡이 나루: 옛 세이브는 첫 장면 없이 「나루에게 말 걸기」를 끝낸 것으로 (보상도 받은 것으로). 나루를 고치에서 마을로 옮기는 건 sim/npc.js settleStarters
+export function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }

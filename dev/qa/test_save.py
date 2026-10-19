@@ -281,7 +281,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             await ev(pg,"()=>{__T.lastInputAt=performance.now()-121000}"); a=await ev(pg,"()=>__T.G.playT"); await pg.wait_for_timeout(700); c=await ev(pg,"()=>__T.G.playT")
             rec('플레이 시간','2분 넘게 아무 입력이 없으면 세지 않음 (자리 비움)', abs(c-a)<0.01, [a,c])
             await ev(pg,"()=>{__T.lastInputAt=performance.now();__T.G.playT=1234}")
-            await ev(pg,"()=>{__T.G.stats.wood=6;__T.checkGuide()}"); await pg.wait_for_timeout(200)
+            await ev(pg,"()=>{__T.G.stats.naruMet=1;__T.G.stats.wood=6;__T.checkGuide()}"); await pg.wait_for_timeout(200)
             r=await ev(pg,"()=>[__T.G.qt.wood,__T.G.guide]")
             rec('구간 기록','목표를 이루면 그때 플레이 시간이 남음', r[0] is not None and 1234<=r[0]<=1240 and r[1]>=1, str(r))
             r=await ev(pg,"()=>[__T.fmtPlay(30),__T.fmtPlay(125),__T.fmtPlay(3*3600+12*60+5),__T.fmtPlay(7200,true)]")
@@ -304,7 +304,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             # old save loaded through the title: already-cleared quests are NOT stamped with today's time
             old=await (await b.new_context()).new_page()
             await old.goto(URL+'qa.html'); await old.wait_for_timeout(500)
-            olds=await old.evaluate("()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));delete s.run;delete s.playT;delete s.qt;delete s.playTEst;s.time=5000;s.stats.wood=9;s.stats.bench=1;return JSON.stringify(s)}")
+            olds=await old.evaluate("()=>{const s=JSON.parse(JSON.stringify(__T.serialize()));delete s.run;delete s.playT;delete s.qt;delete s.playTEst;delete s.stats.naru110;s.time=5000;s.stats.wood=9;s.stats.bench=1;return JSON.stringify(s)}")
             await old.context.close()
             ctx,pg,errs=await ctx_with(b, local=olds); allerr+=errs
             await pg.tap('#btnContinue'); await pg.wait_for_timeout(600)

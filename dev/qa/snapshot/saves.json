@@ -9,7 +9,7 @@
 0,
 40000
 ],
-"objs": "[큰 값 28097자 8c0ec19c21fe]",
+"objs": "[큰 값 28094자 764766a6b4b3]",
 "inv": [
 {
 "id": "berry",
@@ -124,7 +124,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -264,6 +266,8 @@ null
 "spirit": 1
 },
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -300,6 +304,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -535,7 +542,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28097자 8c0ec19c21fe]",
+"objs": "[큰 값 28094자 764766a6b4b3]",
 "inv": [
 {
 "id": "berry",
@@ -626,7 +633,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -754,6 +763,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -790,6 +801,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -1005,7 +1019,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28097자 8c0ec19c21fe]",
+"objs": "[큰 값 28094자 764766a6b4b3]",
 "inv": [
 {
 "id": "berry",
@@ -1092,7 +1106,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -1220,6 +1236,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -1256,6 +1274,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -1470,7 +1491,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 27991자 90c6f115515e]",
+"objs": "[큰 값 27988자 b28c08b89734]",
 "inv": [
 {
 "id": "berry",
@@ -1639,7 +1660,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -1776,6 +1799,8 @@ null
 "beaten": {},
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -1812,6 +1837,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -2018,7 +2046,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 21306자 a3f9514b58a3]",
+"objs": "[큰 값 21303자 9c639257c4a8]",
 "inv": [
 {
 "id": "berry",
@@ -2109,7 +2137,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -2237,6 +2267,8 @@ null
 "beaten": {},
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -2273,6 +2305,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -2486,7 +2521,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28041자 1c70243c4858]",
+"objs": "[큰 값 28038자 712de6082660]",
 "inv": [
 {
 "id": "berry",
@@ -2577,7 +2612,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -2693,6 +2730,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -2721,6 +2760,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -2936,7 +2978,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 21306자 a3f9514b58a3]",
+"objs": "[큰 값 21303자 9c639257c4a8]",
 "inv": [
 {
 "id": "berry",
@@ -3027,7 +3069,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -3155,6 +3199,8 @@ null
 "beaten": {},
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -3191,6 +3237,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -3394,7 +3443,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28097자 8c0ec19c21fe]",
+"objs": "[큰 값 28094자 764766a6b4b3]",
 "inv": [
 {
 "id": "berry",
@@ -3504,7 +3553,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -3633,6 +3684,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -3669,6 +3722,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -3890,7 +3946,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28151자 3c2c22615212]",
+"objs": "[큰 값 28148자 66dd93032ec0]",
 "inv": [
 {
 "id": "berry",
@@ -3987,7 +4043,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -4115,6 +4173,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -4151,6 +4211,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -4368,7 +4431,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28097자 8c0ec19c21fe]",
+"objs": "[큰 값 28094자 764766a6b4b3]",
 "inv": [
 {
 "id": "berry",
@@ -4484,7 +4547,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -4612,6 +4677,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -4648,6 +4715,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -4952,7 +5022,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 19380자 5b1e61612fec]",
+"objs": "[큰 값 19376자 b9f98d7331a0]",
 "inv": [
 {
 "id": "berry",
@@ -5041,7 +5111,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12340,
@@ -5169,6 +5241,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -5205,6 +5279,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -5504,7 +5581,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 18240자 ab347ccb02b2]",
+"objs": "[큰 값 18236자 f954a42dc437]",
 "inv": [
 {
 "id": "berry",
@@ -5593,7 +5670,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12340,
@@ -5721,6 +5800,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -5757,6 +5838,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -6056,7 +6140,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 18240자 ab347ccb02b2]",
+"objs": "[큰 값 18236자 f954a42dc437]",
 "inv": [
 {
 "id": "berry",
@@ -6145,7 +6229,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12340,
@@ -6273,6 +6359,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -6309,6 +6397,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -6524,7 +6615,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28097자 8c0ec19c21fe]",
+"objs": "[큰 값 28094자 764766a6b4b3]",
 "inv": [
 {
 "id": "berry",
@@ -6615,7 +6706,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 12720,
@@ -6743,6 +6836,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -6779,6 +6874,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
@@ -7004,7 +7102,7 @@ null
 0,
 32325
 ],
-"objs": "[큰 값 79642자 8df34cfc0589]",
+"objs": "[큰 값 79639자 ac9b167343c5]",
 "inv": [
 {
 "id": "berry",
@@ -7095,7 +7193,9 @@ null,
 null
 ]
 },
-"qclaim": {},
+"qclaim": {
+"naru": 1
+},
 "wire": [
 [
 153254,
@@ -7223,6 +7323,8 @@ null
 "nm65": 1,
 "uniq": {},
 "deepSeed": {},
+"naru110": 1,
+"naruMet": 1,
 "warpV": 1,
 "archV": 1,
 "arch": [
@@ -7259,6 +7361,9 @@ null
 "gT": -999
 }
 ],
+"rescued": {
+"guide": 1
+},
 "npcV": 1,
 "deepV": 1,
 "deep": {
