@@ -522,3 +522,5 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 /* v104 NPC 대화 */
 .talkbox{display:flex;gap:10px;align-items:flex-start;background:#2a2139;border:2px solid #4d3e66;padding:10px}
 .talkface{width:64px;height:76px;image-rendering:pixelated;flex:none;background:#3a2f52}
+/* v105 물물교환 줄 */
+.btn.barter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:left;min-height:48px}.btn.barter.off{opacity:.55}.btn.barter small{flex-basis:100%;color:var(--muted);font-size:16px}.barrow{color:var(--amber)}

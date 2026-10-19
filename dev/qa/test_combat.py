@@ -674,3 +674,30 @@ def test_npc_v104():
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_barter_v105():
+    # v105 물물교환: NPC 대화 창 「물물교환」 → 줄마다 주는 것 → 받는 것, 가방 재료만, 하루 3번, 쪽지는 한 번만
+    H2=HOOK.replace("computeLight}","computeLight,npcObjs,rescue,runCmd,barterLeft,barterWhy,BARTER,countItem,knows}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const c=T.npcObjs().find(e=>e.o.npc==='farmer');T.rescue(c.i,c.o);G.inv.fill(null);G.inv[0]={id:'berry',c:20};G.sel=-1;
+              const bad=[];for(const npc in T.BARTER)for(const [give,get] of T.BARTER[npc])for(const [id] of give.concat(get))if(!T.ITEMS[id])bad.push(id);
+              const a=[T.barterWhy('farmer',0),T.barterLeft('farmer',0)];const ok1=T.runCmd({k:'barter',npc:'farmer',n:0});a.push(ok1,T.countItem('berry'),T.countItem('berrySeed'),T.barterLeft('farmer',0));
+              T.runCmd({k:'barter',npc:'farmer',n:0});T.runCmd({k:'barter',npc:'farmer',n:0});const ok4=T.runCmd({k:'barter',npc:'farmer',n:0});a.push(T.barterLeft('farmer',0),ok4,T.barterWhy('farmer',0));
+              G.time+=1300;a.push(T.barterLeft('farmer',0));a.push(T.barterWhy('farmer',1));a.push(bad.join(','));return a}""")
+            rec('교환','베리 6 → 씨앗 3, 하루 3번(네 번째는 안 됨), 1200초 뒤 다시 3번, 모자라면 이유, 거래표의 물건 id 모두 있음', r==[None,3,True,14,3,2,0,False,'오늘은 더 바꿀 수 없어요 (잠시 뒤에 다시)',3,'버섯이(가) 6개 모자라요',''], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const c=T.npcObjs().find(e=>e.o.npc==='cook');T.rescue(c.i,c.o);G.inv.fill(null);G.inv[0]={id:'fireBerry',c:10};const w0=T.barterWhy('cook',2);const ok=T.runCmd({k:'barter',npc:'cook',n:2});return [w0,ok,T.knows('fireSkewer'),T.barterWhy('cook',2)]}""")
+            rec('쪽지','불꽃 열매 2 → 요리 쪽지는 바로 배우고, 한 번 배우면 「이미 가진 쪽지」', r==[None,True,True,'이미 가진 쪽지예요'], str(r))
+            await ev(pg,"()=>{__T.closePanel();}"); await pg.wait_for_timeout(1400); await ev(pg,"()=>{__T.closePanel();}")
+            await ev(pg,"()=>__T.openPanel('talk',{npc:'farmer',mode:'talk'})"); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');const b=s.querySelector('[data-a=talkShop]');if(b)b.click();return !!b}")
+            await pg.wait_for_timeout(300)
+            r2=await ev(pg,"()=>{const s=document.querySelector('#sheet');return [s.querySelectorAll('[data-a=barter]').length,s.innerText.includes('물물교환'),s.innerText.includes('번 남음')||s.innerText.includes('모자라요')]}")
+            rec('창','대화 창에서 「물물교환」 → 농부 거래 5줄', r and r2[0]==5 and r2[1] and r2[2], str(r)+str(r2))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

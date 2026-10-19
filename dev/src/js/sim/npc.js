@@ -1,7 +1,9 @@
 // ================= v104 그림자 고치 · NPC · 마을 · 대화 (데이터는 data/npc.js) =================
 // 고치 놓기(새 세계·옛 세계 모두 불러올 때 한 번, 워프포인트처럼) → 고치 둘레 그림자 조각 → 공격 버튼으로 3번 치면 풀려나 등불나무 곁 마을 자리에 서요 → 말 걸기(대화 창).
-import { COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NPC_IDS, NPCS } from '../data/npc.js';
-import { OBJ } from '../data/items.js';
+import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NPC_IDS, NPCS } from '../data/npc.js';
+import { ITEMS } from '../data/items.js';
+import { defineCmd } from './commands.js';
+import { addItem, countItem, removeItem } from './inventory.js';
 import { RECOVER_GAP } from '../data/controls.js';
 import { rand, rng } from '../engine/random.js';
 import { G, nearestPlayer, playerList } from '../save/state.js';
@@ -66,3 +68,18 @@ export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1; return [N.talk[(o.met - 1) % N.talk.length]]; }
   return [N.talk[0]]; }
 export const villagers = () => NPC_IDS.filter(id => npcState(id) === 'npc');
+
+// ---- v105 물물교환 (data/npc.js BARTER) ----
+// 가방 안 재료만 써요(상자는 안 봄). 한 줄은 하루(게임 시간 1200초)에 3번. 쪽지는 이미 배웠거나 가졌으면 안 줘요.
+export const barterKey = (npc, k) => npc + ':' + k;
+export function barterLeft(npc, k) { const B = (G.stats.barter || {})[barterKey(npc, k)]; if (!B) return BARTER_PER; if (G.time - B[1] >= BARTER_DAY) return BARTER_PER; return Math.max(0, BARTER_PER - B[0]); }
+export function barterWhy(npc, k) { const row = (BARTER[npc] || [])[k]; if (!row) return '없는 거래예요'; const [give, get] = row;
+  if (barterLeft(npc, k) <= 0) return '오늘은 더 바꿀 수 없어요 (잠시 뒤에 다시)';
+  for (const [id, n] of get) if (id.startsWith('rn_')) { const dish = id.slice(3); if ((G.recipes && G.recipes[dish]) || countItem(id) > 0) return '이미 가진 쪽지예요'; }
+  for (const [id, n] of give) if (countItem(id) < n) return `${ITEMS[id].n}이(가) ${n - countItem(id)}개 모자라요`;
+  return null; }
+defineCmd('barter', c => { const npc = c.npc, k = c.n | 0, row = (BARTER[npc] || [])[k]; if (!row || !npcState(npc)) return false; const why = barterWhy(npc, k); if (why) { emit('toast', why, null, 'barter'); emit('sfx', 'clink'); return false; }
+  const [give, get] = row; for (const [id, n] of give) removeItem(id, n);
+  for (const [id, n] of get) { const left = addItem(id, n); if (left) spawnDrop(id, left, G.p.x, G.p.y); }
+  const B = G.stats.barter = G.stats.barter || {}, key = barterKey(npc, k), old = B[key]; B[key] = old && G.time - old[1] < BARTER_DAY ? [old[0] + 1, old[1]] : [1, G.time];
+  emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 10, 2, .5); emit('toast', `${get.map(([id, n]) => `${ITEMS[id].n} ${n}개`).join(', ')}을(를) 받았어요`, 'good', 'barter'); emit('inv'); return true; });

@@ -4,7 +4,9 @@ import { CHARS, cleanLook, curChar, EYEC, HAIRC, HAIRS, HATS, lookDef, OUTC, OUT
 import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
 import { MEMORY } from '../data/story.js';
 import { NPCS } from '../data/npc.js';
-import { talkLines, villagers } from '../sim/npc.js';
+import { barterLeft, barterWhy, talkLines, villagers } from '../sim/npc.js';
+import { BARTER, BARTER_PER } from '../data/npc.js';
+import { countItem } from '../sim/inventory.js';
 import { npcImg } from '../art/content.js';
 import { TIERED } from '../data/automation-tiers.js';
 import { DUR } from '../data/circuits-regions.js';
@@ -206,7 +208,13 @@ export function renderPanel() {
     }
   } else if (k === 'talk') {
     const N = NPCS[panel.npc]; if (!panel.lines) { panel.lines = talkLines(panel.npc, panel.mode); panel.at = 0; } const line = panel.lines[panel.at] || '', last = panel.at >= panel.lines.length - 1, img = npcImg(panel.npc);
-    h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small><p class="prose" style="margin:6px 0 0">${line}</p></div></div><div class="menu-list">${last ? `<button class="btn" data-a="close" type="button">잘 가요</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`;
+    const shop = BARTER[panel.npc] || [];
+    if (panel.mode === 'shop') { // v105 물물교환
+      h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">물물교환 · 한 줄에 하루 ${BARTER_PER}번</small><p class="prose" style="margin:6px 0 0">가방에 있는 것으로 바꿔요.</p></div></div><div class="menu-list">${shop.map(([give, get, d], k) => { const why = barterWhy(panel.npc, k), left = barterLeft(panel.npc, k);
+        const row = L => L.map(([id, n]) => `<img class="px" src="${iconURL(id)}" alt="" style="width:16px;height:16px;vertical-align:middle"> ${ITEMS[id].n} ${n}`).join(' + ');
+        return `<button type="button" class="btn ghost barter ${why ? 'off' : ''}" data-a="barter" data-i="${k}" title="${why || d}"><span class="bgive">${row(give)}</span><span class="barrow">→</span><span class="bget">${row(get)}</span><small>${why ? why : `${left}번 남음`}</small></button>`; }).join('')}</div><div class="menu-list"><button class="btn ghost" data-a="talkBack" type="button">이야기로</button><button class="btn" data-a="close" type="button">잘 가요</button></div></div>`;
+    } else
+    h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small><p class="prose" style="margin:6px 0 0">${line}</p></div></div><div class="menu-list">${last ? `<button class="btn" data-a="close" type="button">잘 가요</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`;
   } else if (k === 'memory') {
     const m = MEMORY[panel.stage] || MEMORY[1];
     h += `<div class="sh-body memory" style="text-align:center;padding-top:6px"><div class="seeds">${[0, 1, 2, 3, 4].map(i => `<div class="${i < (G.treeSeeds | 0) ? 'lit' : ''}"><img class="px" src="${iconURL('lightSeed')}" alt=""></div>`).join('')}</div><h2 style="font-weight:400;font-size:16px;color:var(--amber);margin:4px 0 8px">${m.t}</h2><p class="prose" style="text-align:left">${m.s}</p>${panel.stage === 5 ? `<p class="prose" style="color:var(--amber)">새 레시피: 등불 축제 케이크 (요리솥)</p>` : ''}<button class="btn" data-a="close" type="button" style="width:100%;min-height:44px">${panel.stage === 5 ? '계속 모험하기' : '돌아가기'}</button></div>`;

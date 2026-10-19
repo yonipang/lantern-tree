@@ -26,3 +26,48 @@ USE.npc = 'talk'; USE_LBL.talk = '말 걸기';
 // 고치를 지키는 그림자 조각: 빛 안에서 받는 피해 2배 (sim/combat.js), 고치 둘레 5칸을 떠나지 않음 (sim/npc.js)
 Object.assign(ENEMY, { shadowBit: { n: '그림자 조각', hp: 40, dmg: 9, spd: 2.6, r: 0.3, hop: 0, aggro: 6, shadow: 1, drops: [['cocoonBit', 1, 1, 0.5]], col: '#3a2a5a' } });
 export const COCOON_HITS = 3, COCOON_GUARDS = 3, COCOON_GUARD_R = 5, COCOON_WAKE = 9;
+// ================= v105 물물교환 가게 (data/npc.js에 덧붙임) =================
+// NPC마다 자기 기능에 맞는 물건을 바꿔 줘요. 돈 없음. 교환은 [주는 것 ×n] → [받는 것 ×m]. 가방 + 16칸 안 상자 재료를 함께 써요(제작과 같음).
+// 하루(게임 시간 20분 = 1200초) 제한: NPC마다 한 줄에 3번까지, 지나면 다시 채워져요(stats.barter[npc][k] = [횟수, 채워지는 시각]). 수치는 Claude 임시(【검토 중】).
+export const BARTER_DAY = 1200, BARTER_PER = 3;
+// npc → [[주는 [id, n]…], [받는 [id, n]…], 설명]
+export const BARTER = {
+  farmer: [
+    [[['berry', 6]], [['berrySeed', 3]], '통통베리를 씨앗으로'],
+    [[['mushroom', 6]], [['spore', 3]], '버섯을 포자로'],
+    [[['fiber', 10], ['gel', 2]], [['fert', 2]], '이끼 섬유와 젤로 비료'],
+    [[['wood', 12]], [['glowSpore', 2]], '나무를 빛버섯 포자로'],
+    [[['cocoonBit', 3]], [['cbeanSeed', 2]], '그림자 실을 수정 콩 씨앗으로'],
+  ],
+  cook: [
+    [[['mushroom', 3], ['berry', 2]], [['stew', 1]], '버섯 스튜 한 그릇'],
+    [[['minnow', 2]], [['grilledFish', 2]], '피라미를 구운 생선으로'],
+    [[['fireBerry', 2]], [['rn_fireSkewer', 1]], '불꽃 열매를 요리 쪽지로 (한 번만)'],
+    [[['shroomCap', 4]], [['rn_capSteak', 1]], '버섯 갓을 요리 쪽지로 (한 번만)'],
+    [[['cocoonBit', 2]], [['pie', 2]], '그림자 실을 베리 파이로'],
+  ],
+  shepherd: [
+    [[['fiber', 8], ['rope', 2]], [['lasso', 1]], '올가미 밧줄'],
+    [[['wool', 3]], [['rope', 6]], '양모를 이끼 끈으로'],
+    [[['egg', 2]], [['berry', 6]], '달걀을 통통베리로'],
+    [[['milk', 2]], [['stew', 1]], '우유를 스튜로'],
+    [[['cocoonBit', 3]], [['wool', 4]], '그림자 실을 양모로'],
+  ],
+  smith: [
+    [[['copperOre', 6]], [['copperBar', 2]], '구리광석을 구리괴로 (용광로 없이)'],
+    [[['ironOre', 6]], [['ironBar', 2]], '철광석을 철괴로'],
+    [[['goldOre', 6]], [['goldBar', 2]], '금광석을 금괴로'],
+    [[['obsidian', 4], ['frostShard', 4]], [['cryGem', 1]], '흑요석·서리 결정을 수정결정으로'],
+    [[['cocoonBit', 4]], [['obsidian', 3]], '그림자 실을 흑요석으로'],
+  ],
+  guide: [
+    [[['crystal', 8], ['ironBar', 2]], [['quartzR', 2]], '석영을 정제 석영으로'],
+    [[['glowcap', 6]], [['torch', 10]], '빛버섯을 횃불로'],
+    [[['cryGem', 2]], [['homeStone', 1]], '수정결정을 귀환석으로'],
+    [[['cocoonBit', 5]], [['crystal', 10]], '그림자 실을 석영으로'],
+  ],
+  scholar: [
+    [[['cocoonBit', 2]], [['rn_gelSoup', 1]], '그림자 실을 옛 요리 쪽지로 (한 번만)'],
+  ],
+};
+// 쪽지(rn_…)는 받은 적이 있으면 다시 안 줘요 (sim/npc.js barterCan)
