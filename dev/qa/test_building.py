@@ -588,7 +588,7 @@ def test_quest_active_v84():
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.stats.fishCaught=10;T.checkGuide();const a=document.querySelector('#goalTxt').textContent;T.claimQuest('s_fish');T.checkGuide();return [a.startsWith('보상 받기'),G.qAct,T.goalTarget,document.querySelector('#goalTxt').textContent,document.querySelector('#goalTag').textContent]}")
             rec('활성','다 하면 HUD에 「보상 받기」, 받으면 활성이 비고 화살표 없음 · 「퀘스트 고르기」', r==[True,'none',None,'퀘스트 고르기','퀘스트'], str(r))
             # 이야기 활성화 → 다음 이야기로 이어짐 · 잠긴 이야기는 활성화 못 함 · 해제
-            await ev(pg,"()=>{__T.G.qAct='none'}")
+            await ev(pg,"()=>{__T.G.qAct='none';__T.G.stats.naruMet=1;__T.checkGuide()}")  # v110: 첫 이야기(나루에게 말 걸기)를 끝내 두고 뿌리기둥부터
             await ev(pg,"()=>{__T.UIS.qTab='main';__T.openPanel('quest')}"); await pg.wait_for_timeout(600)
             r1=await ev(pg,"()=>[!!document.querySelector('#sheet .qcard.big [data-a=qAct][data-i=wood]'),!!document.querySelector('#sheet .qrow.lock [data-a=qAct]')]")
             await ev(pg,"()=>document.querySelector('#sheet .qcard.big [data-a=qAct][data-i=wood]').click()"); await pg.wait_for_timeout(250)
