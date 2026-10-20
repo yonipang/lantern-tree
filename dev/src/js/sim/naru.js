@@ -7,7 +7,7 @@
 //   → 누가 LEAD_ARRIVE칸 안에 오면 한마디(back) → 5초 뒤 집으로(done). 멀리 있으면 걷는 모습 없이 바로 광맥 옆에.
 // - 나루의 부탁(G.stats.askOpen·askEnd): 이야기 퀘스트 after를 끝내면 방울로 부탁 → 끝내면 경험치는 바로, 방울 「마을로 와 줄래요?」 → 마을에서 끝 장면 + 물건.
 // - 상황 한마디(G.stats.nTip): 1부(구리 곡괭이 장면)를 마친 뒤 그 상황이 처음 올 때 방울로 한 줄.
-import { LEAD_ARRIVE, LEAD_SEE, LEAD_SPD, LEAD_STEPS, LEAD_WAIT, LIFE_NEAR, LIFE_R, LIFE_SPD, NARU_ASK, NARU_ASK_CALL, NARU_ASK_OPEN, NARU_LEAD_HERE, NARU_LIFE, NARU_TIP, TIP_GAP, NARU2_DEEP_HERE, NARU2_Q, NARU_BOSS, NARU2_BACK, NARU2_GO, NARU2_SC } from '../data/npc.js';
+import { LEAD_ARRIVE, LEAD_SEE, LEAD_SPD, LEAD_STEPS, LEAD_WAIT, LIFE_NEAR, LIFE_R, LIFE_SPD, NARU_ASK, NARU_ASK_CALL, NARU_ASK_OPEN, NARU_LEAD_HERE, NARU_LIFE, NARU_TIP, TIP_GAP, NARU2_DEEP_HERE, NARU2_Q, NARU_BOSS, NARU2_BACK, NARU2_GO, NARU2_SC, NARU_INTRO } from '../data/npc.js';
 import { BOSSES } from '../data/rpg-nature.js';
 import { DEEP_H, DEEP_PLAN } from './deep.js';
 import { GUIDE, Q_GO, QSIDE } from '../data/quests.js';
@@ -195,7 +195,7 @@ export function sceneLines(kind) { const out = [];
   for (const part of kind.slice(3).split(',')) { const [a, b] = part.split(':'); const L = a === 'go' ? NARU2_GO[b] : a === 'back' ? NARU2_BACK[b] : NARU2_SC[a]; if (L) out.push(...L); }
   return (out.length ? out : ['…']).map(dirFill); }
 // 창을 닫았을 때 (ui/panels.js closePanel → 명령): 나루 장면이 끝나면 나루가 먼저 걸어 나가요 · 큰 어둠 뒤 장면이 끝나면 엔딩 창 · 기억 장면을 닫으면 쌓인 장면을 바로
-defineCmd('talkEnd', c => { const m = String(c.m || ''); if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
+defineCmd('talkEnd', c => { const m = String(c.m || ''); if (m === 'intro') { const at = (G.stats.introAt | 0) + Math.max(0, c.at | 0); if (at < NARU_INTRO.length - 1) G.stats.introAt = at; else delete G.stats.introAt; } /* v120: 첫 장면을 다 못 봤으면 다음에 말 걸 때 그 줄부터 */ if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
 defineCmd('memEnd', () => { if (!G.stats.naruMet || !naruOK() || leadThere() || leadWalking() || G.stats.naruCall) return; const q = curQ(), P = G.stats.nPend || [];
   if (P.includes('tree') || (q && q.id === 'naruGo' && !G.stats.n2go)) { talkTo('guide'); } });
 // 큰 어둠을 물리치면 (sim/deep.js darkDown): 나루가 있으면 마지막 말 → 엔딩 창

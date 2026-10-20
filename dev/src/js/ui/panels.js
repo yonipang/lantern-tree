@@ -50,7 +50,7 @@ export function openPanel(kind, data = {}) { bmClose(); /* v91: 창을 열면 �
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 export function sheetHpHTML() { if (!G || !started || !panel || panel.kind !== 'stat') return ''; /* v111: 창 맨 위 체력 막대는 캐릭터 창에만 */ const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
 export function closePanel() { const was = panel; panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame();
-  if (was && G && started) { if (was.kind === 'talk' && was.npc === 'guide') runCmd({ k: 'talkEnd', m: was.mode }); else if (was.kind === 'memory') runCmd({ k: 'memEnd' }); } } // v119 나루 장면이 끝나면 먼저 걸어 나가기·엔딩 창, 기억 장면 뒤 쌓인 장면
+  if (was && G && started) { if (was.kind === 'talk' && was.npc === 'guide') runCmd({ k: 'talkEnd', m: was.mode, at: was.at || 0, n: was.lines ? was.lines.length : 0 }); /* v120 at·n: 첫 장면을 중간에 닫으면 다음에 거기서 이어서 */ else if (was.kind === 'memory') runCmd({ k: 'memEnd' }); } } // v119 나루 장면이 끝나면 먼저 걸어 나가기·엔딩 창, 기억 장면 뒤 쌓인 장면
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 export function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 // v77: 가방 창 위 탭 「가방 | 제작」 — 손제작은 가방 안에서 (제작대 창은 그대로)
