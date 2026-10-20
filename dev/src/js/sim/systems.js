@@ -25,6 +25,7 @@ export const FRAME_ORDER = [
   'zone', 'grow', // 꽃잎 구역 · 작물·나무 자라기 (content/rpg-nature.js)
   'flow',     // v87: 물·용암이 이어진 구덩이로 흐르기 (sim/digging.js)
   'circuit',  // 빛뿌리·기계 (content/circuits-regions.js)
+  'beaver',   // v114 비버 둥지: 먹이통의 먹이를 먹고 둘레의 다 자란 나무 베기 (sim/beaver.js)
   'light', 'guide', // 빛 계산 · 퀘스트·지역·숨은 방 확인 (game/update.js)
   'autosave', 'backup', 'cloud', // 저장·백업·클라우드 (main.js)
   'camera',   // 카메라 따라가기 (render.js)

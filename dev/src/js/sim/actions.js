@@ -13,6 +13,7 @@ import { COCOON_HITS } from '../data/npc.js';
 import { talkTo } from './npc.js';
 import { readDiary } from './archive.js';
 import { lightBrazier, readLast } from './deep.js';
+import { nestOptions, nestUse } from './beaver.js';
 import { openCatch, ranchCollect, ranchReady, wildNear } from './animals.js';
 import { summonBoss, summonDecide } from './bosses.js';
 import { BUILD_KINDS, doorGroup, groundFill, groundOf, isGround, placeItem, placeLbl, rotatePlace, rotN, rotOf } from './building.js';
@@ -203,6 +204,7 @@ export function autoOptions(t, i, o) {
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
       else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
     if (d.warp) { A(warpDecide(t, o)); if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; } // v89 워프포인트·포탈
+    if (d.nest || d.feeder) { for (const a of nestOptions(t, o)) A(a); return L; } // v114 비버 둥지·먹이통
     if (d.nat) { A(natAct(d, o, t)); return L; }
     if (d.item) { const u = USE[o.t]; if (u) A({ k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o });
       A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
@@ -309,6 +311,7 @@ export function useObj(a) {
     case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); talkTo(o.npc); break; // v104 · v110 나루 첫 장면
     case 'read2': faceTo(x - p.x, t.y + .5 - p.y); if (o.t === 'diaryLast') readLast(); else readDiary({ ...o, x, y: t.y + .5 }); break; // v106 일기 · v108 마지막 장
     case 'brazier': lightBrazier(o, x, t.y + .3); break; // v108 횃대
+    case 'feeder': case 'nestIn': case 'nestTake': case 'nestInfo': nestUse(a); break; // v114
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;

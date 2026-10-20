@@ -20,6 +20,7 @@ import { idx, inB, W } from '../world/map.js';
 import { delObj, fpTiles } from '../world/tiles.js';
 import { markLight } from './loop.js';
 import { onFrame } from './systems.js';
+import { nestContents } from './beaver.js';
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
 // 값: 1 본 것 · 2 새것 (가방 창의 그 칸에 작은 점, 한 번 누르면 1) · 3 새것 + 가방 버튼에 빨간 점 (가방을 열면 2)
 // 가방·도구 주머니에 처음 들어온 물건을 매 프레임 찾아요 — 줍기·제작·상자·보상 … 어느 길로 들어와도 같이 잡혀요
@@ -37,6 +38,7 @@ defineCmd('seenItem', c => { const S = G.seen || {}; if (S[c.id] > 1) S[c.id] = 
 export function returnObj(o, x, y) {
   if (o.job) cancelJob(o, x, y); // v59: a furnace / pot picked up mid-job gives back the finished items and the unused materials
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
+  for (const [id, c] of nestContents(o)) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, x, y); } // v114: 둥지의 비버·먹이통의 먹이
   if (DUR[d.item]) { const it = { id: d.item, c: 1, dur: Math.round(o.e != null ? o.e : DUR[d.item][0]) }; if (moveInto(G.inv, it)) { spawnDrop(d.item, 1, x, y); G.drops[G.drops.length - 1].dur = it.dur; } }
   else if (OLD_AUTO[o.t]) { for (const [m, c] of OLD_AUTO[o.t]) { const l = addItem(m, c, false); if (l) spawnDrop(m, l, x, y); } } // v113: 옛 돌 채굴기는 재료로
   else { const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; const l = addItem(it, 1, false); if (l) spawnDrop(it, 1, x, y); } // v60: an upgraded workbench comes back as its tier item

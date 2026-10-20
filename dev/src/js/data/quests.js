@@ -90,11 +90,11 @@ export const MULTI = {
 };
 for (const id in MULTI) { const [n, d, req, at, cat, sz, ex, use] = MULTI[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = Object.assign({ n, item: id, sz }, ex); if (use) USE[id] = use; RECIPES.push(Rc(id, 1, req, at, cat)); }
 for (const id of ['chair', 'cryChair', 'mossSofa']) if (OBJ[id]) OBJ[id].dir4 = 1;
-QSIDE.push({ id: 's_farm', t: () => `비버 둥지로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '숲에 사는 비버를 올가미로 데려와 비버 둥지에 넣고, 먹이를 넣어 주면 둘레의 다 자란 나무를 베어 와요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
+QSIDE.push({ id: 's_farm', t: () => `비버 둥지로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '이끼 동굴 물가에 사는 비버를 올가미로 데려와 비버 둥지(작업대)에 넣고, 둘레에 먹이통을 놓아 먹이를 넣어 주면 둥지 둘레의 다 자란 나무를 베어 와요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
 // ---- v84 퀘스트 화면: 진행 숫자(진행 막대)와 「가장 가까운 할 곳」 종류 (글·조건·보상은 위 그대로, 칸만 더해요) ----
 // Q_PROG[id]() = [지금, 목표] · Q_GO[id] = 화살표가 가리킬 곳의 종류 (없으면 화살표 없음):
 //   ['obj', 물체…] 그 물체 · ['wall', 벽 번호] 그 광맥 · ['stn', 제작대] 그 물건을 만드는 제작대 · ['boss', 보스] 보스방 · ['tgt'] 이야기에 원래 있던 목표
-//   ['water'] 물가 · ['enemy'] 몬스터 · ['zone'] 꽃망울 구역 · ['biome', 지역…] 그 지역 · ['room'] 찾았지만 안 연 숨은 방 · ['wild'] 데려올 수 있는 동물
+//   ['water'] 물가 · ['enemy'] 몬스터 · ['zone'] 꽃망울 구역 · ['biome', 지역…] 그 지역 · ['room'] 찾았지만 안 연 숨은 방 · ['wild'] 데려올 수 있는 동물 · ['beaver'] 비버 둥지(놓았으면) → 비버 → 이끼 동굴 물가
 const qn = v => v || 0;
 export const Q_PROG = {
   wood: () => [qn(G.stats.wood), 6], ore: () => [qn(G.stats.copperOre), 6], seeds: () => [qn(G.stats.seedsFound), 5], tree: () => [qn(G.treeSeeds), 5],
@@ -107,5 +107,5 @@ export const Q_GO = {
   naru: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
   queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
-  s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'],
+  s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],
 };

@@ -56,6 +56,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/data/automation-tiers.js` | 스프링클러·자동 수확기, 거대 작물, 축제 케이크, **「지형 재료 2배」**, 작업대·장비제작대 단계와 레시피 단계 나누기 |
 | `js/data/controls.js` | 도구 종류, 도끼 → 나무 베기 도구, 쳐서 회수(몇 번·몇 초) |
 | `js/data/warp.js` | v89 워프포인트·포탈 수치(지역마다 2개, 1초, 둘레 6칸, 포탈 5개), 포탈 아이템·레시피(석영 작업대) — `data/digging.js` 다음 |
+| `js/data/beaver.js` | v114 비버 둥지·먹이통 수치(둘레 3칸·30초·안에 60·먹이통 4칸·물 6칸), 먹이 표 `FEED`(먹이 하나로 몇 초), 비버(`ANIMALS.beaver`)·아이템·레시피(작업대) — `data/npc.js` 다음 |
 | `js/sim/inventory.js` | 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도(`addItem`·`removeItem`·`countItem`·`moveInto`), 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가방·상자·도구 명령 |
 | `js/sim/gear.js` | 장비·옷·장신구·반지(`wearItem`·`wearing`·`ringV`), 강화 단계와 효과(`upgCost`·`upgText`), 무기 종류·희귀도(`wtOf`·`rarOf`) |
 | `js/sim/crafting.js` | 제작: 가까운 제작대(`nearStations`)·제작 자리(`craftable`·`stationTier`), 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업(`takeJob`) |
@@ -78,6 +79,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
 | `js/sim/warp.js` | v89 워프포인트·포탈: 놓기(`placeWarps`, 새·옛 세계)·켜기·목적지(`warpDests`)·이동(`startWarp`·`warpTick`)·포탈 제한(`portalWhy`)·둘레 규칙(`nearWarpPt`·`warpSafe`) — `sim/digging.js` 다음 |
 | `js/sim/buildmode.js` | v91 건축 모드 규칙: 건축 목록(`bmList`, 가방 + 16칸 안 상자 `bmCount`·`bmTake`), 분류(`bmCat`), 만들어서 놓기(`bmRecipe`, 제작대 단계), 놓을 수 있는지(`bmWhy`, 8칸·벽 바꾸기 `wallSwapOk`), 놓기 명령 `bplace` — `sim/warp.js` 다음 |
+| `js/sim/beaver.js` | v114 비버 둥지 규칙: 둘레의 다 자란 나무 찾기(`treesNear`)·먹이통에서 먹기·베기(어린나무로 되돌림)·옆 상자로(`nestStep`, `onFrame('beaver')`), 둥지 앞 할 일(`nestOptions`·`nestUse`), 먹이통 명령(`feedIn`·`feedOut`·`feedAll`), 비버 사는 곳(`beaverHome`), 그림용 비버 자리(`beaverPose`) — `sim/deep.js` 다음 |
 | `js/art/content.js` | **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
 | `js/render/icecave.js` | 기울어진 벽 가장자리(v79 얼음벽, v80 흙·돌·화강암·현무암·광맥, v82 오토타일 `autoShape`·그림자용 4px 칸 `wallOcc4`): 칸 모양(`wallSolidPx`·`wallMask`)·윗면/앞면 그림(`slantWallArt`), 벽 옆 청록빛·그림자(`wallEdgeChunk`), 얼음 조각 바닥(`drawIceShard`)·얼어붙은 물(`iceFrozenPx`) — 그림은 코드로 만들어 칸마다 기억 |

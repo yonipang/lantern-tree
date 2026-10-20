@@ -817,3 +817,83 @@ def test_ranch():
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+def test_beaver_nest_v114():
+    import asyncio, sys
+    # v114 자동 생산 2 (dev/design/자동생산.md 3장): 비버 둥지·먹이통 레시피, 둥지 둘레 3칸의 다 자란 나무를 30초마다 하나씩 베어 옆 상자로,
+    # 벤 나무는 어린나무로 돌아가 2분 뒤 다 자람, 먹이는 둘레 먹이통에서(통통베리 1분), 먹이가 없으면 잠, 가득 차면 멈춤,
+    # 비버 넣기·회수(비버·쌓인 것·먹이 돌려받기), 먹이통엔 먹이만, 비버는 이끼 동굴 물가에서만 생기고 잡으면 「비버」 아이템, 퀘스트 셈·화살표
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,ANIMALS,wildTick,openCatch,catchAng,get panel(){return panel},perform,QSIDE,nestStep,beaverPose,beaverHome,growTick,runCmd,questGo,storeN,renderPanel,animalImg}")
+    SETUP="""window.__nest=(o)=>{const T=__T,G=T.G,X=T.CX+40,Y=T.CY+30;for(let y=Y-6;y<=Y+6;y++)for(let x=X-6;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.biome[i]=0}
+  G.enemies.length=0;G.drops.length=0;G.wild=[];G.p.x=X+.5;G.p.y=Y+5.5;G.p.dead=0;G.fish=null;G.inv.fill(null);G.sel=0;const N={t:'beaverNest',bv:1};G.objs.set(T.idx(X,Y),N);
+  if(o.chest)G.objs.set(T.idx(X+1,Y),{t:'chest',items:Array(18).fill(null)});const F={t:'feeder',feed:Array(4).fill(null)};G.objs.set(T.idx(X-1,Y),F);if(o.feed)F.feed[0]={id:o.feed,c:o.n||1};
+  for(const [dx,dy,t] of o.trees||[])G.objs.set(T.idx(X+dx,Y+dy),{t});return {X,Y,N,F}};"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{"+SETUP+"}")
+            r=await ev(pg,"()=>{const R=__T.RECIPES,f=id=>{const q=R.find(r=>r.out===id);return q?[q.at,q.tier||0,q.cat,JSON.stringify(q.req)]:null};return [f('beaverNest'),f('feeder'),__T.ITEMS.beaver.kind,!!__T.animalImg('beaver'),!!__T.animalImg('beaverG'),!!__T.animalImg('beaverZ')]}")
+            rec('레시피','비버 둥지: 작업대(기본) 나무 12·흙 10·이끼 끈 2 · 먹이통: 나무 6·이끼 끈 1 (편의 → 농사)', r[0]==['bench',0,'farm','[["wood",12],["dirt",10],["rope",2]]'] and r[1]==['bench',0,'farm','[["wood",6],["rope",1]]'] and r[2]=='beaver' and all(r[3:]), str(r))
+            # 나무 3그루가 둘레 3칸 안, 1그루는 밖 · 통통베리 1개(1분) → 30초마다 한 그루, 2그루 벤 뒤 배고파 잠듦
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,{X,Y,N,F}=__nest({chest:1,feed:'berry',trees:[[0,-2,'root'],[3,3,'root'],[-3,0,'root'],[5,0,'root']]});const f0=G.stats.farmed||0,box=G.objs.get(T.idx(X+1,Y));
+              const L=[];for(let k=0;k<241;k++){T.nestStep(T.idx(X,Y),N,.25);if(k===119)L.push(N.why,N.work)}
+              const w=box.items.filter(Boolean).filter(s=>s.id==='wood').reduce((a,s)=>a+s.c,0),st=[[0,-2],[3,3],[-3,0],[5,0]].map(([dx,dy])=>{const o=G.objs.get(T.idx(X+dx,Y+dy));return o.t+(o.g?'/'+o.g:'')});
+              return [L,N.why,N.work,w,(G.stats.farmed||0)-f0,st.join(','),F.feed.filter(Boolean).length,(G.objs.get(T.idx(X,Y-2)).at||0)-G.time]}""")
+            rec('둥지','먹이가 있는 동안 일하고, 30초에 한 그루씩 가까운 나무부터 벰 (둘레 3칸 밖 나무는 그대로)', r[0]==['',True] and r[5].split(',')[0]=='stump/root' and r[5].split(',')[3]=='root' and r[5].count('stump')==2, str(r))
+            rec('둥지','통통베리 1개로 1분(2그루) 뒤 먹이가 없으면 잠듦 (먹이통 비어 있음)', r[1]=='food' and r[2] is False and r[6]==0, str(r))
+            rec('둥지','벤 나무는 옆 상자로 (뿌리기둥 2~3개씩) · 퀘스트 셈 「비버 둥지로 나무」', 4<=r[3]<=6 and r[4]==r[3], str(r))
+            rec('나무','벤 나무는 어린나무(2/4단계)로 돌아가 2분 뒤 다 자람', r[7]==120, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+40,Y=T.CY+30,o=G.objs.get(T.idx(X,Y-2));G.time=o.at+1;T.growTick(2);const n=G.objs.get(T.idx(X,Y-2));return [n.t,!!n.yg&&G.time<n.yg]}""")
+            rec('나무','다시 다 자란 뿌리기둥 (원래 나무로)', r==['root',False], str(r))
+            # 먹이를 넣으면 다시 일하고, 다 자란 나무가 없으면 먹이를 먹지 않음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,{X,Y,N,F}=__nest({chest:1,feed:'mushroom',n:3,trees:[]});for(let k=0;k<20;k++)T.nestStep(T.idx(X,Y),N,.25);const a=[N.why,F.feed[0]&&F.feed[0].c];
+              G.objs.set(T.idx(X+2,Y+2),{t:'bigShroom'});G.objs.set(T.idx(X-2,Y-1),{t:'root',yg:G.time+30});for(let k=0;k<4;k++)T.nestStep(T.idx(X,Y),N,.25);return [a,N.why,N.work,F.feed[0]&&F.feed[0].c,N.tgt===T.idx(X+2,Y+2)]}""")
+            rec('둥지','다 자란 나무가 없으면 쉬고 먹이도 그대로 · 젊은 나무는 안 벰', r[0]==['tree',3] and r[1]=='' and r[2] is True and r[3]==2 and r[4], str(r))
+            # 상자 없이 60개까지 둥지 안에 · 가득 차면 멈춤 · 꺼내기
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,{X,Y,N}=__nest({feed:'berry',n:9,trees:[[1,1,'root']]});N.store=[{id:'wood',c:60}];T.nestStep(T.idx(X,Y),N,.25);const a=N.why;N.store=[{id:'wood',c:5}];
+              for(let k=0;k<121;k++)T.nestStep(T.idx(X,Y),N,.25);const n=T.storeN(N);G.p.x=X+.5;G.p.y=Y+1.5;G.p.face={x:0,y:-1};G.actCd=0;const d=T.decide();T.perform(d);return [a,n>5,d.lbl,T.countItem('wood')+T.countItem('resin')===n,T.storeN(N)]}""")
+            rec('둥지','옆 상자가 없으면 둥지 안에 (60개에서 멈춤) · [꺼내기]로 가방에', r[0]=='full' and r[1] and r[2]=='꺼내기' and r[3] and r[4]==0, str(r))
+            # 비버 넣기 · 회수하면 비버·쌓인 것이 돌아옴
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,{X,Y,N}=__nest({feed:'berry',trees:[[1,1,'root']]});N.bv=0;T.nestStep(T.idx(X,Y),N,.25);const a=N.why;G.p.x=X+.5;G.p.y=Y+1.5;G.p.face={x:0,y:-1};G.actCd=0;
+              const d0=T.decide();G.inv[3]={id:'beaver',c:1};const d1=T.decide();T.perform(d1);const b=[N.bv,T.countItem('beaver')];N.store=[{id:'wood',c:7}];
+              T.perform({k:'pickup',t:{x:X,y:Y},o:N});return [a,d0.lbl,d1.lbl,b,!!G.objs.get(T.idx(X,Y)),T.countItem('beaver'),T.countItem('wood'),T.countItem('beaverNest')]}""")
+            rec('둥지','비버가 없으면 쉬고, 가방에 비버가 있으면 [비버 넣기]', r[0]=='beaver' and r[1]=='살펴보기' and r[2]=='비버 넣기' and r[3]==[1,0], str(r))
+            rec('둥지','둥지를 회수하면 비버·쌓인 나무·둥지가 가방으로', r[4:]==[False,1,7,1], str(r))
+            # 먹이통: 먹이만 들어감, 별 작물은 안 들어감 · 모두 넣기 · 회수하면 먹이가 돌아옴
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,{X,Y,F}=__nest({});const i=T.idx(X-1,Y);G.inv[0]={id:'stone',c:5};G.inv[1]={id:'berry',c:4};G.inv[2]={id:'berryS',c:2};G.inv[3]={id:'cbean',c:3};
+              const a=T.runCmd({k:'feedIn',o:i,i:0}),b2=T.runCmd({k:'feedIn',o:i,i:2});T.runCmd({k:'feedAll',o:i});const fe=F.feed.filter(Boolean).map(s=>s.id+':'+s.c).join(',');
+              T.perform({k:'pickup',t:{x:X-1,y:Y},o:F});return [a,b2,fe,T.countItem('berry'),T.countItem('cbean'),T.countItem('berryS'),T.countItem('stone'),T.countItem('feeder')]}""")
+            rec('먹이통','먹이만 넣을 수 있음 (돌·별 작물은 안 됨), 모두 넣기', r[0] is False and r[1] is False and r[2]=='berry:4,cbean:3', str(r))
+            rec('먹이통','먹이통을 회수하면 먹이도 돌아옴', r[3:]==[4,3,2,5,1], str(r))
+            await ev(pg,"()=>{const T=__T,G=T.G,{X,Y}=__nest({feed:'berry',n:2});G.inv[1]={id:'radish',c:2};G.p.x=X-.5;G.p.y=Y+1.5;G.p.face={x:0,y:-1};G.actCd=0;T.perform(T.decide())}"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const P=__T.panel,t=document.querySelector('#sheet').innerText;return [P&&P.kind,t.includes('먹이통'),t.includes('약 2분'),document.querySelectorAll('#sheet [data-a=fdIn]').length]}")
+            rec('먹이통','앞에서 누르면 먹이통 창 (먹이 시간·가방의 먹이)', r==['feeder',True,True,1], str(r))
+            await pg.screenshot(path=SP+'feeder.png')
+            await ev(pg,"()=>{document.querySelector('#sheet [data-a=fdAll]').click()}"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const T=__T,G=T.G,F=G.objs.get(T.idx(T.CX+39,T.CY+30));T.closePanel();return F.feed.filter(Boolean).map(s=>s.id+':'+s.c).join(',')}")
+            rec('먹이통','창의 「가방의 먹이 모두 넣기」', r=='berry:2,radish:2', r)
+            # 그림: 일하는 중이면 비버가 둥지 ↔ 나무를 오가고, 먹이가 없으면 둥지 앞에서 잠
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,{X,Y,N}=__nest({feed:'berry',trees:[[0,-3,'root']]});const i=T.idx(X,Y);T.nestStep(i,N,.25);N.prog=14;const g=T.beaverPose(i,N);N.prog=6;const h=T.beaverPose(i,N);N.work=false;N.why='food';const z=T.beaverPose(i,N);return [g.y<Y,g.img.startsWith('beaver'),Math.abs(h.y-(Y+1.55))<.01,z.img]}""")
+            rec('그림','비버가 나무 앞에서 갉고, 둥지 앞에서 쉬고, 배고프면 잠듦', r[0] and r[1] and r[2] and r[3]=='beaverZ', str(r))
+            await ev(pg,"()=>{const T=__T,G=T.G,{X,Y,N}=__nest({chest:1,feed:'berry',n:5,trees:[[0,-2,'root'],[2,-2,'bigShroom'],[-2,1,'roundTree']]});N.prog=20;G.p.x=X+.5;G.p.y=Y+2.5}"); await pg.wait_for_timeout(400)
+            await pg.screenshot(path=SP+'beaver_nest.png')
+            # 비버가 사는 곳: 이끼 동굴, 물 6칸 안에서만 (물가에 있으면 먼저 나옴)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+40,Y=T.CY+30;for(let y=Y-16;y<=Y+16;y++)for(let x=X-16;x<=X+16;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.biome[i]=0}
+              G.p.x=X+.5;G.p.y=Y+.5;G.pets={};const dry=T.beaverHome(G.p.x,G.p.y);let sawB=0;for(let k=0;k<150;k++){G.wild=[];T.wildTick(6.1);if(G.wild.some(w=>w.k==='beaver'))sawB++}
+              for(let x=X-16;x<=X+16;x++)G.floor[T.idx(x,Y+5)]=T.WATER;const wet=T.beaverHome(G.p.x,G.p.y);let w=null;for(let k=0;k<300&&!w;k++){G.wild=[];T.wildTick(6.1);w=G.wild.find(z=>z.k==='beaver')}
+              const nearW=w&&Math.abs(Math.floor(w.y)-(Y+5))<=3;G.biome[T.idx(X,Y)]=1;const other=T.beaverHome(G.p.x,G.p.y);G.biome[T.idx(X,Y)]=0;return [dry,sawB,wet,!!w,nearW,other]}""")
+            rec('비버','이끼 동굴 물 6칸 안에서만 비버가 나오고 물가 가까이에 생김 (다른 지역·마른 곳은 안 나옴)', r==[False,0,True,True,True,False], str(r))
+            # 올가미로 세 번 → 「비버」 아이템 (펫·목장 동물로 안 셈)
+            await ev(pg,"()=>{const T=__T,G=T.G;G.inv.fill(null);G.stats.ranchK={};G.wild=[{k:'beaver',x:G.p.x+2,y:G.p.y,vx:0,vy:0,t:99,flip:false,anim:0}];T.openCatch(G.wild[0])}"); await pg.wait_for_timeout(650)
+            for k in range(3):
+                await ev(pg,"()=>{const P=__T.panel;P.za=__T.catchAng(P);P.zw=1.2;document.querySelector('#sheet [data-a=catchThrow]').click()}"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const T=__T,G=T.G;return [!!T.panel,T.countItem('beaver'),Object.keys(G.stats.ranchK||{}).length,!!(G.pets&&G.pets.beaver),document.querySelector('#toasts').innerText.includes('비버를 데려왔어요')]}")
+            rec('비버','올가미로 세 번 → 가방에 「비버」 (목장·펫으로 안 셈)', r==[False,1,0,False,True], str(r))
+            # 퀘스트 화살표: 비버를 가졌으면 둥지 → 둥지가 없으면 이끼 동굴 물가
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,q=T.QSIDE.find(q=>q.id==='s_farm'),X=T.CX+40,Y=T.CY+30;G.explored.fill(1);for(const [i,o] of [...G.objs])if(o&&o.t==='beaverNest')G.objs.delete(i);const a=T.questGo(q);G.objs.set(T.idx(X+3,Y-3),{t:'beaverNest'});const b2=T.questGo(q);G.objs.delete(T.idx(X+3,Y-3));
+              return [!!a&&G.floor[T.idx(Math.floor(a.x),Math.floor(a.y))]===T.WATER&&G.biome[T.idx(Math.floor(a.x),Math.floor(a.y))]===0,b2&&[b2.x,b2.y].join(',')==[X+3.5,Y-2.5].join(','),q.h.includes('먹이통')]}""")
+            rec('퀘스트','「비버 둥지로 나무 30개」 화살표: 비버가 있으면 둥지, 없으면 이끼 동굴 물가 · 힌트에 먹이통', r==[True,True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

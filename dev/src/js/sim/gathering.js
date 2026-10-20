@@ -23,6 +23,7 @@ import { hasItem } from './quests.js';
 import { idx, inB, W } from '../world/map.js';
 import { anchorAt, delObj, fpOf } from '../world/tiles.js';
 import { markLight } from './loop.js';
+import { nestContents } from './beaver.js';
 export function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
 export function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
@@ -68,6 +69,7 @@ export function hitRecover(tg, w) { const p = G.p, t = tg.t; faceTo(t.x + .5 - p
 export function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf(o) : [1, 1], x = t.x + fp[0] / 2, y = t.y + fp[1] / 2 + .3;
   delObj(i); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
+  for (const [id, c] of nestContents(o)) spawnDrop(id, c, x, y); // v114: 둥지의 비버·먹이통의 먹이
   if (OLD_AUTO[o.t]) { for (const [m, c] of OLD_AUTO[o.t]) spawnDrop(m, c, x, y); emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); markLight(); emit('tile', t.x, t.y); emit('inv'); return; } // v113: 옛 돌 채굴기는 재료로
   const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
   if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
