@@ -183,7 +183,7 @@ def test_gear_bench_tiers():
           G.objs.delete(si);const s2=JSON.parse(JSON.stringify(T.serialize()));delete s2.stats.nm61;s2.objs=s2.objs.filter(([i,o])=>o.t!=='smelter');s2.objs.push([T.idx(T.CX+11,T.CY+11),{t:'forge'}]);s2.objs=s2.objs.filter(([i,o])=>!(o.t==='bench'));T.deserialize(s2);
           return [a,T.countItem('smelterCu')]}""")
             rec('옛 세이브','v61 전 세이브: 장비제작대는 가진 작업대 단계까지 올라가 있고, 장비제작대가 없으면 그 단계 장비제작대를 받음', r==[2,1], str(r))
-            r=await ev(pg,"()=>{const g=__T.GUIDE.map(q=>(typeof q.h==='function'?q.h():q.h)||'').join('|');return g.includes('장비제작대(작업대에서 나무·돌로')}")
+            r=await ev(pg,"()=>{const g=__T.GUIDE.map(q=>(typeof q.h==='function'?q.h():q.h)||'').join('|');return g.includes('장비제작대(작업대에서 나무·흙으로')}")
             rec('퀘스트','구리 곡괭이 안내: 장비제작대를 놓고 구리 단계로', r is True, str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
@@ -828,7 +828,7 @@ def test_renames():
             r=await ev(pg,"()=>{const T=__T,at=id=>T.RECIPES.find(q=>q.out===id).at;return [['grilled','grilledFish','friedEgg','pancake'].map(at).join(','),['copperBar','ironBar','goldBar','quartzR'].map(at).join(','),T.RECIPES.filter(q=>q.at==='furnace').length]}")
             rec('레시피','구운 버섯·구운 생선·달걀 프라이·팬케이크는 요리솥, 용광로는 괴 4종만', r==['pot,pot,pot,pot','furnace,furnace,furnace,furnace',4], str(r))
             r=await ev(pg,"()=>{const T=__T,rc=T.RECIPES.find(q=>q.out==='smelter');return [rc.at,rc.req.map(([id])=>id).join(',')]}")
-            rec('장비제작대','작업대에서 나무·돌·송진으로 (철괴 없이)', r==['bench','wood,stone,resin'], str(r))
+            rec('장비제작대','작업대에서 나무·흙·송진으로 (철괴 없이)', r==['bench','wood,dirt,resin'], str(r))
             r=await ev(pg,"()=>{const g=__T.GUIDE.map(q=>typeof q.t==='function'?q.t():q.t).join('|');return [g.includes('용광로를 놓고 구리괴'),g.includes('화로')]}")
             rec('퀘스트','메인 퀘스트 문구도 「용광로」로', r==[True,False], str(r))
             # open the furnace: only bars

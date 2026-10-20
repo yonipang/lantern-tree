@@ -36,7 +36,7 @@ export const EQ_SLOTS = [['body', '상의'], ['head', '머리장식'], ['neck', 
 ITEMS.smelter = { n: '장비제작대', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요. (v58 전 이름: 용광로)' };
 OBJ.smelter = { n: '장비제작대', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
 STN.smelter = '장비제작대';
-RECIPES.push(Rc('smelter', 1, [['wood', 10], ['stone', 8], ['resin', 2]], 'bench', 'furn')); // v58: made early at the workbench from wood and stone
+RECIPES.push(Rc('smelter', 1, [['wood', 10], ['dirt', 8], ['resin', 2]], 'bench', 'furn')); // v58: made early at the workbench; v116: dirt instead of stone (stone needs a copper pickaxe)
 // rings: [name, effect, base, per level, recipe, rarity, band, gem]
 export const RINGS = {
   ringCu: ['구리 반지', 'atk', .04, .01, [['copperBar', 4], ['gel', 2]], 0, C.copper, '#ff8fa3'],
