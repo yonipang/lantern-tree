@@ -331,7 +331,7 @@ def test_boss_rematch():
             # ---- usability fixes ----
             await ev(pg,ARENA)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const ai=T.idx(110,104);const o={t:'drillGold',dir:{x:1,y:0}};G.objs.set(ai,o);G.wall[T.idx(111,104)]=10;G.objs.set(T.idx(110,106),{t:'battery',e:600});G.wire.set(T.idx(110,105),1);for(let k=0;k<30;k++)T.circuitTick(.2);return [o.why,(o.store||[]).map(s=>s.id+':'+s.c).join(','),T.RECIPES.some(r=>r.out==='drillGold')]}""")
-            rec('채굴기','황금 채굴기: 이미 놓인 것은 금 광맥에서 금광석을 캠 (v46부터 새로 만드는 건 황금 채굴장)', 'goldOre' in r[1] and not r[2], str(r))
+            rec('채굴기','황금 채굴기: 금 광맥에서 금광석을 캠, 금 작업대 레시피 (v113부터 다시 만듦)', 'goldOre' in r[1] and r[2], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillFe',dir:{x:1,y:0}};const ai=T.idx(110,108);G.objs.set(ai,o);G.wall[T.idx(111,108)]=10;G.objs.set(T.idx(110,110),{t:'battery',e:600});G.wire.set(T.idx(110,109),1);for(let k=0;k<5;k++)T.circuitTick(.2);return o.why}""")
             rec('채굴기','철 채굴기로는 금 광맥 불가 (tier)', r=='tier', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'drillGold',dir:{x:1,y:0}};const ai=T.idx(110,112);G.objs.set(ai,o);G.wall[T.idx(111,112)]=11;G.objs.set(T.idx(110,114),{t:'battery',e:6000});G.wire.set(T.idx(110,113),1);for(let k=0;k<25*40;k++)T.circuitTick(.2);return (o.store||[]).reduce((a,s)=>a+s.c,0)}""")
@@ -341,8 +341,6 @@ def test_boss_rematch():
             rec('의자','위를 보는 의자에 앉기', r==['sit',2], str(r))
             await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'chair.png')
             await ev(pg,"()=>{const G=__T.G;G.p.sit=null;G.p.x=104.5;G.p.y=108.5}")
-            await ev(pg,"()=>{const T=__T,G=T.G;const i=T.idx(106,104);const o={t:'treeFarm',p:G.time};G.objs.set(i,o);for(const j of [i+1,i+200,i+201])G.objs.set(j,{t:'_part',a:i});G.p.x=105.5;G.p.y=107.5}")
-            await pg.wait_for_timeout(600); await pg.screenshot(path=SP+'farm.png')
             # ---- region difficulty ----
             r=await ev(pg,"()=>{const E=__T.ENEMY;return [E.slimeG.hp,E.slimeP.hp,E.magmaSlime.hp,E.snowling.dmg,E.magmaSlime.aggro,E.bloomR.hp]}")
             rec('난이도','몬스터 체력·공격력 상향 (꽃망울은 그대로), 깊은 동굴 알아채는 거리 6.5칸(v85)', r==[18,75,120,22,6.5,18], str(r))

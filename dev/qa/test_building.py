@@ -215,27 +215,15 @@ def test_multi_tile_rotation():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('bigTree');T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='bigTree')ai=i;const x=ai%200,y=(ai/200)|0;G.drops.length=0;G.inv[0]={id:'pickIron',c:1};for(let k=0;k<20&&G.objs.get(ai)&&G.objs.get(ai).t==='bigTree';k++)T.hitObj({x,y},G.objs.get(ai));const o=G.objs.get(ai);const parts=[...G.objs.values()].filter(q=>q.t==='_part').length;
           const sap=G.drops.filter(d=>d.id==='sapling').reduce((n,d)=>n+d.c,0);G.objs.set(ai,{t:'stump',g:'bigTree',at:G.time-1});G.p.x=100.5;T.growTick();const o2=G.objs.get(ai);const parts2=[...G.objs.values()].filter(q=>q.t==='_part').length;return [o?o.t:null,parts,sap,o2.t,parts2]}""")
             rec('자연물','큰 고목: 베면 사라짐(부속 칸 정리)·묘목 1개 / 옛 그루터기 → 다시 2×2로 자람', r==[None,0,1,'bigTree',3], str(r))
-            # tree workshop manual + automation
+            # v113: 나무 작업장은 없어졌어요 (옛 세이브의 것은 재료로 — test_save.py test_auto_refund_v113). 여러 칸 저장은 2인 침대로 확인
             await ev(pg,ARENA)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};GIVE('treeFarm');T.perform(T.decide());let ai=null;for(const[i,o]of G.objs)if(o.t==='treeFarm')ai=i;const o=G.objs.get(ai);G.inv[0]=null;const a=T.decide();const st0=T.farmStage(o);o.p=G.time-T.FARM_GROW-1;const b=T.decide();G.drops.length=0;T.perform(b);return [a.k,a.lbl,st0,b.lbl,G.drops.map(d=>d.id).join(','),T.farmStage(o)]}""")
-            rec('나무 작업장','놓으면 자라기 시작 · 다 자라면 [베기] → 나무 · 다시 처음부터', r[0]=='use' and r[2]==0 and r[3]=='베기' and 'wood' in r[4] and r[5]==0, str(r))
-            await pg.wait_for_timeout(300);
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=null;for(const[i,o]of G.objs)if(o.t==='treeFarm')ai=i;const o=G.objs.get(ai);const x=ai%200,y=(ai/200)|0;
-          G.objs.set(T.idx(x+2,y+1),{t:'chest',items:Array(18).fill(null)});
-          G.objs.set(T.idx(x,y+3),{t:'battery',e:600});G.wire.set(T.idx(x,y+2),1);
-          o.p=G.time-T.FARM_GROW-1;T.circuitTick(.2);const ch=G.objs.get(T.idx(x+2,y+1));const w1=ch.items.filter(Boolean).map(s=>s.id+':'+s.c).join(',');const st=T.farmStage(o);
-          G.wire.clear();o.p=G.time-T.FARM_GROW-1;T.circuitTick(.2);const st2=T.farmStage(o);return [w1,st,st2]}""")
-            rec('나무 작업장','전기 연결(부속 칸 아래 전선) → 다 자라면 저절로 베어 옆 상자에 담음', 'wood' in r[0] and r[1]==0, str(r))
-            rec('나무 작업장','전기가 끊기면 자동으로 베지 않음', r[2]==3, str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=null;for(const[i,o]of G.objs)if(o.t==='treeFarm')ai=i;const o=G.objs.get(ai);const x=ai%200,y=(ai/200)|0;G.objs.delete(T.idx(x+2,y+1));G.wire.set(T.idx(x,y+2),1);for(let k=0;k<3;k++){o.p=G.time-T.FARM_GROW-1;T.circuitTick(.2)}const n=(o.store||[]).reduce((a,s)=>a+s.c,0);G.p.x=x-0.5;G.p.y=y+.5;G.p.face={x:1,y:0};G.inv[0]=null;const a=T.decide();T.perform(a);return [n>0,a.lbl,(o.store||[]).length,T.countItem('wood')>0]}""")
-            rec('나무 작업장','상자가 없으면 안에 모아 두고 [꺼내기]', r[0] and r[1]=='꺼내기' and r[2]==0 and r[3], str(r))
-            await pg.wait_for_timeout(500); await pg.screenshot(path=SP+'farm.png')
+            await ev(pg,"""()=>{const T=__T,G=T.G;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};GIVE('bedDouble');T.perform(T.decide())}""")
             # save / load keeps parts; orphan cleanup
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));s.objs.push([T.idx(118,116),{t:'_part',a:T.idx(1,1)}]);T.deserialize(s);const G2=T.G;let farm=0,parts=0,orph=G2.objs.get(T.idx(118,116));for(const[i,o]of G2.objs){if(o.t==='treeFarm')farm++;if(o.t==='_part')parts++}return [farm,parts>=3,orph||null]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));s.objs.push([T.idx(118,116),{t:'_part',a:T.idx(1,1)}]);T.deserialize(s);const G2=T.G;let farm=0,parts=0,orph=G2.objs.get(T.idx(118,116));for(const[i,o]of G2.objs){if(o.t==='bedDouble')farm++;if(o.t==='_part')parts++}return [farm,parts>=3,orph||null]}""")
             rec('저장','저장 → 불러오기 후에도 여러 칸 가구 유지 · 떨어진 부속 칸 정리', r[0]==1 and r[1] and r[2] is None, str(r))
             # recipes
-            r=await ev(pg,"()=>['bedDouble','longTable','sofa2','bookcase2','kitchenSet','fountainBig','rugBig','rugLong','rugRound','bigTree','bigRock','flowerField','pondBig','treeFarm'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
-            rec('레시피','새 가구·러그·자연물 14종 레시피', 'none' not in r, r)
+            r=await ev(pg,"()=>['bedDouble','longTable','sofa2','bookcase2','kitchenSet','fountainBig','rugBig','rugLong','rugRound','bigTree','bigRock','flowerField','pondBig'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
+            rec('레시피','새 가구·러그·자연물 13종 레시피 (v113: 나무 작업장 없어짐)', 'none' not in r, r)
             # touch rotate button visibility
             await ev(pg,ARENA)
             await ev(pg,"()=>{GIVE('sofa2')}"); await pg.wait_for_timeout(400)
@@ -492,11 +480,11 @@ def test_circuits():
             rec('건전지','다시 놓으면 그 전기 그대로', r==['place','battery',123], str(r))
             # wires: place & pick up with the wire item
             r=await ev(pg,"()=>{const G=__T.G;for(let i=0;i<9;i++)G.inv[i]=null;G.inv[0]={id:'wire',c:5};G.sel=0;G.p.x=114.5;G.p.y=112.5;G.p.face={x:1,y:0};const d1=__T.decide();__T.perform(d1);const a=G.wire.has(__T.idx(115,112));const d2=__T.decide();__T.perform(d2);return [d1.lbl,a,d2.lbl,G.wire.has(__T.idx(115,112)),__T.countItem('wire')]}")
-            rec('전선','전선 깔기 / 같은 칸에서 전선 걷기', r==['전선 깔기',True,'전선 걷기',False,5], str(r))
+            rec('빛뿌리','빛뿌리 깔기 / 같은 칸에서 빛뿌리 걷기 (v113: 전선 → 빛뿌리)', r==['빛뿌리 깔기',True,'빛뿌리 걷기',False,5], str(r))
             r=await ev(pg,"()=>{W([120,121],110);const s=JSON.parse(JSON.stringify(__T.serialize()));__T.deserialize(s);return [__T.G.wire.size>=3,__T.G.objs.get(__T.idx(110,105)).dir.y]}")
             rec('저장','전선·기계 상태가 저장됨', r==[True,-1], str(r))
             r=await ev(pg,"()=>__T.RECIPES.filter(r=>r.cat==='circuit').map(r=>r.out+'@'+r.at).join(',')")
-            rec('제작','회로 탭 레시피 (작업대 단계(v60), v46: 벽 앞 채굴기는 채굴장으로 바뀌어 빠짐)', all(x in r for x in ['wire@bench','battery@bench','generator@bench','crystalGen@bench']) and 'drillCu@bench' not in r, r)
+            rec('제작','회로 탭 레시피 (작업대 단계(v60), 채굴기는 채굴기 탭)', all(x in r for x in ['wire@bench','battery@bench','generator@bench','crystalGen@bench']) and 'drillCu@bench' not in r, r)
             # visual
             await ev(pg,ARENA)
             await ev(pg,"()=>{const G=__T.G;G.treeSeeds=3;O('battery',103,113,{e:400});W([104,105],113);O('lever',106,113,{on:true});W([107,108,109],113);O('eLamp',110,113,{off:true});W([109],112);W([109],111);O('eDoor',109,110);W([104],114);W([104],115);O('plate',105,115);W([106,107],115);O('eLamp',108,115,{off:true});G.wall[__T.idx(113,111)]=5;O('drillCu',113,112,{dir:{x:0,y:-1}});W([111,112],113);W([113],113);O('chest',114,112,{items:Array(18).fill(null)});G.p.x=107.5;G.p.y=117.5;TK(3)}")
@@ -505,6 +493,51 @@ def test_circuits():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+
+
+def test_light_miner_v113():
+    import asyncio, sys
+    # v113 자동 생산 1 (dev/design/자동생산.md): 보이는 이름은 빛, 등불나무에 빛뿌리를 이으면 끝없는 빛, 빛뿌리는 몬스터가 피하는 밝기에 안 들어감,
+    # 채굴기 3단계 레시피(구리·철·금 작업대), 캔 광석이 상자로 날아가는 효과, 옛 돌 채굴기는 그대로 일하고 회수하면 재료
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,circuitTick,wirePowered,perform,decide,QSIDE,ruleLight,markRuleLit}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const I=__T.ITEMS;return ['wire','battery','generator','crystalGen','eLamp','eDoor'].map(k=>I[k].n).join(',')}")
+            rec('빛','보이는 이름: 빛뿌리·빛 항아리·불씨 등잔·수정 빛샘·빛뿌리 램프·빛 문', r=='빛뿌리,빛 항아리,불씨 등잔,수정 빛샘,빛뿌리 램프,빛 문', r)
+            r=await ev(pg,"()=>{const T=__T;return JSON.stringify(Object.values(T.ITEMS).filter(it=>it&&!it.virtual).map(it=>it.n+' '+(it.d||'')).filter(t=>/전기|전선|건전지|발전기/.test(t)))}")
+            rec('빛','아이템 이름·설명에 전기·전선·건전지·발전기가 남지 않음', r=='[]', r[:200])
+            # 등불나무(가운데 3×2칸)에 빛뿌리를 이으면 램프가 켜지고, 아무리 오래 켜도 줄지 않음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+2,Y=T.CY;G.wire=new Map();for(let x=X;x<X+4;x++){const i=T.idx(x,Y);G.wall[i]=0;G.objs.delete(i);G.wire.set(i,1)}const L={t:'eLamp',off:true};G.objs.set(T.idx(X+4,Y),L);
+              for(let k=0;k<50;k++)T.circuitTick(.2);const a=[L.off,T.wirePowered(T.idx(X,Y))];G.wire.delete(T.idx(X,Y));T.circuitTick(.2);return [a,L.off]}""")
+            rec('빛','등불나무에 빛뿌리를 이으면 빛뿌리 램프가 켜짐 (끝없는 빛), 끊으면 꺼짐', r==[[False,True],True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,x=T.CX+30,y=T.CY+40;for(let dy=-4;dy<=4;dy++)for(let dx=-9;dx<=9;dx++){const i=T.idx(x+dx,y+dy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}
+              G.wire=new Map();T.markRuleLit();const b0=T.ruleLight(x,y);for(let k=-4;k<=4;k++)G.wire.set(T.idx(x+k,y),1);G.objs.set(T.idx(x-8,y),{t:'crystalGen'});for(let k=-7;k<=-5;k++)G.wire.set(T.idx(x+k,y),1);T.circuitTick(.2);const pw=T.wirePowered(T.idx(x,y));T.markRuleLit();const b1=T.ruleLight(x,y);G.objs.delete(T.idx(x-8,y));G.wire=new Map();return [true,pw,b0,b1]}""")
+            rec('빛','빛이 흐르는 빛뿌리는 몬스터가 피하는 밝은 곳이 아님 (밝기 그대로)', r[1] and r[2]==r[3], str(r))
+            # 채굴기 레시피
+            r=await ev(pg,"()=>{const R=__T.RECIPES,f=id=>{const q=R.find(r=>r.out===id);return q?[q.at,q.tier,q.cat,JSON.stringify(q.req)]:null};return [f('drillCu'),f('drillFe'),f('drillGold'),['pitCu','pitFe','pitGold','quarry','treeFarm','drillStone'].some(id=>R.some(r=>r.out===id))]}")
+            rec('채굴기','구리 채굴기: 구리 작업대 · 구리괴 6·돌 12·이끼 끈 2', r[0]==['bench',1,'mine','[["copperBar",6],["stone",12],["rope",2]]'], str(r[0]))
+            rec('채굴기','철 채굴기: 철 작업대 · 철괴 6·구리괴 4·석영 2 / 황금 채굴기: 금 작업대 · 금괴 4·흑요석 4·철괴 4', r[1]==['bench',2,'mine','[["ironBar",6],["copperBar",4],["crystal",2]]'] and r[2]==['bench',4,'mine','[["goldBar",4],["obsidian",4],["ironBar",4]]'], str(r[1:3]))
+            rec('채굴기','채굴장·나무 작업장·돌 채굴기는 레시피 없음', r[3] is False, str(r[3]))
+            # 채굴기가 캐면 광석 조각이 상자로 날아감 (보이기만) · 퀘스트 집계
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+3,Y=T.CY+12;for(let y=Y-2;y<=Y+3;y++)for(let x=X-2;x<=X+4;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.wire=new Map();
+              G.wall[T.idx(X,Y-1)]=4;const D={t:'drillCu',dir:{x:0,y:-1}};G.objs.set(T.idx(X,Y),D);const C={t:'chest',items:Array(18).fill(null)};G.objs.set(T.idx(X+1,Y),C);G.objs.set(T.idx(X,Y+2),{t:'crystalGen'});G.wire.set(T.idx(X,Y+1),1);
+              G.p.x=X+.5;G.p.y=Y+2.5;G.parts.length=0;const d0=G.stats.drilled||0;let fly=0;for(let k=0;k<64;k++){T.circuitTick(.2);fly=Math.max(fly,G.parts.filter(q=>q.fly).length)}
+              return [C.items.filter(Boolean).map(s=>s.id+':'+s.c).join(','),(G.stats.drilled||0)-d0,fly>0,T.QSIDE.find(q=>q.id==='s_drill').t()]}""")
+            rec('채굴기','구리 광맥 앞 채굴기가 12초마다 옆 상자에 광석 · 광석 조각이 날아가는 효과', r[0]=='copperOre:1' and r[1]==1 and r[2], str(r))
+            rec('퀘스트','「채굴기로 광물 20개 얻기」(조건·보상 그대로)', r[3].startswith('채굴기로 광물 20개 얻기'), r[3])
+            r=await ev(pg,"()=>{const q=__T.QSIDE.find(q=>q.id==='s_farm');return [q.t(),JSON.stringify(q.rw),q.xp]}")
+            rec('퀘스트','「비버 둥지로 나무 30개 얻기」(조건·보상 그대로)', r[0].startswith('비버 둥지로 나무 30개') and r[1]=='[["rope",4],["battery",1]]' and r[2]==50, str(r))
+            # 옛 돌 채굴기: 그대로 일하고, 회수하면 돌 채굴장 재료
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX-6,Y=T.CY+12;for(let y=Y-2;y<=Y+3;y++)for(let x=X-2;x<=X+3;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}
+              G.objs.set(T.idx(X,Y),{t:'drillStone',dir:{x:0,y:-1}});G.drops.length=0;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.p.x=X+.5;G.p.y=Y+1.5;G.p.face={x:0,y:-1};
+              T.perform({k:'pickup',t:{x:X,y:Y},o:G.objs.get(T.idx(X,Y))});return [!!G.objs.get(T.idx(X,Y)),['stone','wood','rope','quarry','drillStone'].map(id=>T.countItem(id)+G.drops.filter(d=>d.id===id).reduce((a,d)=>a+d.c,0)).join(',')]}""")
+            rec('채굴기','놓인 옛 돌 채굴기를 회수하면 돌 채굴장 재료로 (돌 40·나무 8·이끼 끈 2)', r==[False,'40,8,2,0,0'], str(r))
+            await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'light_miner.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
 
 def test_place_pushes_player():
     import asyncio, sys

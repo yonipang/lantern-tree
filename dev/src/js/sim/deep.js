@@ -54,7 +54,7 @@ export function placeDeep() {
     if (!ok || walls < (DEEP_W + 2) * (DEEP_H + 2) * (W >= 600 ? .6 : .35)) continue;
     const ex = x + DEEP_PLAN[DEEP_H - 1].indexOf('E'), ey = y + DEEP_H - 1; let open = false; for (let k = 1; k <= 8; k++) { if (!inB(ex, ey + k)) break; if (!G.wall[idx(ex, ey + k)]) { open = true; break; } } if (!inB(ex, ey + 3)) continue; // 입구 아래 8칸 안에 트인 곳이 있으면 좋아요 (길은 암반도 뚫어 내요)
     cand.push({ x, y, d, r: reach[idx(ex, Math.min(H - 1, ey + 4))] ? 1 : 0, open: open ? 1 : 0 }); }
-  const near = [], clear = (c, any) => { if (!any && roomInRect(c.x, c.y, c.x + DEEP_W - 1, c.y + DEEP_H + 7)) { near.push(c); return false; } /* v112: 숨은 방과 겹치면 다른 자리를 먼저 (입구 아래 길 8칸까지) */ for (let yy = c.y - 1; yy <= c.y + DEEP_H; yy++) for (let xx = c.x - 1; xx <= c.x + DEEP_W; xx++) if (!freeForDeep(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (빠르게)
+  const near = [], clear = (c, any) => { if (!any && roomInRect(c.x, c.y, c.x + DEEP_W - 1, c.y + DEEP_H + 7)) { near.push(c); return false; } /* v112: 숨은 방과 겹치면 다른 자리를 먼저 (입구 아래 길 8칸까지) */ for (let yy = c.y - 1; yy <= c.y + DEEP_H; yy++) for (let xx = c.x - 1; xx <= c.x + DEEP_W; xx++) if (!freeForDeep(idx(xx, yy))) return false; return true; }; // 물건·빛뿌리·바닥 확인은 고른 곳만 (빠르게)
   while (cand.length) { const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
     if (clear(c)) { carveDeep(c.x, c.y); return 1; } cand.splice(cand.indexOf(c), 1); }
   { const ok = near.find(c => clear(c, true)); if (ok) { carveDeep(ok.x, ok.y); return 1; } } // v112: 다른 자리가 하나도 없으면 예전처럼

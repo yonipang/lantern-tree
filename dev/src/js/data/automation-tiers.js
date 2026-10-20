@@ -11,8 +11,8 @@ import { G } from '../save/state.js';
 export const hasCgen = () => ((G.stats.made || {}).crystalGen || 0) > 0 || [...G.objs.values()].some(o => o.t === 'crystalGen');
 export const HARV_CAP = 60, HARV_EVERY = 3, SPRK_EVERY = 2;
 Object.assign(ITEMS, {
-  sprinkler: { n: '스프링클러', kind: 'place', obj: 'sprinkler', d: '전기가 들어오면 둘레 5×5 칸의 자라는 작물에 물을 줘요 (물 준 작물은 25% 빨리 자라요).' },
-  harvester: { n: '자동 수확기', kind: 'place', obj: 'harvester', d: '전기가 들어오면 둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요 (구리 낫 보너스는 없어요). 상자가 없거나 차면 안에 모아 둬요.' },
+  sprinkler: { n: '스프링클러', kind: 'place', obj: 'sprinkler', d: '빛이 들어오면 둘레 5×5 칸의 자라는 작물에 물을 줘요 (물 준 작물은 25% 빨리 자라요).' },
+  harvester: { n: '자동 수확기', kind: 'place', obj: 'harvester', d: '빛이 들어오면 둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요 (구리 낫 보너스는 없어요). 상자가 없거나 차면 안에 모아 둬요.' },
 });
 Object.assign(OBJ, {
   sprinkler: { n: '스프링클러', solid: 1, item: 'sprinkler', dev: 'sprk', draw: .3, idle: .02 },
@@ -23,7 +23,7 @@ RECIPES.push(Object.assign(Rc('sprinkler', 1, [['ironBar', 4], ['copperBar', 2],
 // giant crops: four of the same crop in a 2×2 square on their own soil, all grown → 3% chance to merge into one giant (6× harvest, 3 seeds)
 export const GIANT_CH = .03;
 OBJ.giantCrop = { n: '거대 작물', sz: [2, 2], solid: 1, giant: 1 };
-QSIDE.push({ id: 's_auto', t: () => `자동 수확기로 작물 20개 거두기 (${Math.min(20, G.stats.autoH || 0)}/20)`, h: '수정 발전기를 만든 뒤 작업대에서 자동 수확기와 스프링클러를 만들어요. 전선으로 전기를 이어 주세요.', done: () => (G.stats.autoH || 0) >= 20, rw: [['crystal', 10], ['goldBar', 2]], xp: 80 },
+QSIDE.push({ id: 's_auto', t: () => `자동 수확기로 작물 20개 거두기 (${Math.min(20, G.stats.autoH || 0)}/20)`, h: '수정 빛샘을 만든 뒤 작업대에서 자동 수확기와 스프링클러를 만들어요. 빛뿌리로 빛을 이어 주세요.', done: () => (G.stats.autoH || 0) >= 20, rw: [['crystal', 10], ['goldBar', 2]], xp: 80 },
   { id: 's_giant', t: '거대 작물 거두기', h: '같은 작물 네 개를 2×2로 맞는 흙에 심어 두면, 다 자랐을 때 아주 가끔 하나로 합쳐져요.', done: () => (G.stats.giantH || 0) >= 1, rw: [['fertCry', 6], ['cbeanSeed', 4]], xp: 100 });
 // festival cake: the true ending's reward; eat it, or set it on a table as decoration
 DISHES.push(['festCake', '등불 축제 케이크', null, 0, 'cake', ['#fff1d6', '#ff7aa2'], [['berry', 5], ['petalR', 1], ['petalB', 1], ['petalY', 1], ['petalW', 1], ['petalK', 1], ['glowcap', 2]], 'ending']);
@@ -32,7 +32,7 @@ ITEMS.festCake = { n: '등불 축제 케이크', kind: 'food', food: 100, heal: 
 ITEMS.rn_festCake = { n: '레시피 쪽지 · 등불 축제 케이크', note: 'festCake', d: '주우면 바로 요리솥 레시피를 알게 돼요.' };
 { const r = Rc('festCake', 1, DISH.festCake.req, 'pot', 'food'); r.dish = 'festCake'; RECIPES.push(r); }
 export const CAKE_TABLES = ['table', 'shroomTable', 'cryTable', 'longTable'];
-TIPS.push('수정 발전기를 만들면 스프링클러와 자동 수확기로 밭을 자동으로 돌볼 수 있어요.', '같은 작물 네 개를 2×2로 맞는 흙에 심으면 가끔 거대 작물이 자라요.');
+TIPS.push('수정 빛샘을 만들면 스프링클러와 자동 수확기로 밭을 자동으로 돌볼 수 있어요.', '같은 작물 네 개를 2×2로 맞는 흙에 심으면 가끔 거대 작물이 자라요.');
 TIPS.push('버프 요리는 세 가지까지 함께 효과가 있어요. 같은 효과는 가장 좋은 것 하나만 적용돼요.', '레시피 쪽지는 몬스터·채집·낚시·숨은 방·보스에서 찾을 수 있어요.', '별 작물을 넣어 만든 요리는 효과가 1.5배 오래가요.');
 // v47: the map is far bigger, so recipes ask for twice as much terrain (dirt, stone, granite, basalt, ice)
 export const TERRAIN_MATS = new Set(['dirt', 'stone', 'granite', 'basalt', 'iceBlock']);

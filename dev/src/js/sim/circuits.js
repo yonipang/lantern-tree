@@ -1,6 +1,7 @@
-// ================= 회로: 전선·전력 계산, 기계 작동 =================
+// ================= 회로: 빛뿌리·빛 계산, 기계 작동 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
-// ---- circuits: wires, power (battery → generator → crystal generator), switches, powered devices ----
+// ---- circuits: wires, power (battery → generator → crystal generator · v113 lantern tree), switches, powered devices ----
+// 보이는 이름은 빛(v113): wire 빛뿌리 · battery 빛 항아리 · generator 불씨 등잔 · crystalGen 수정 빛샘 · 등불나무(treeP)에 이어도 끝없는 빛
 import { WPAL } from '../art/world.js';
 import { DRILL_CAP } from '../data/circuits-regions.js';
 import { OBJ, WALLS } from '../data/items.js';
@@ -34,8 +35,8 @@ export function circuitTick(dt) {
     else { o.tt = (o.tt || 0) + dt; on = Math.floor(o.tt / (o.per || 2)) % 2 === 0; }
     o.lit = on; if (on) { const a = adj(i, false); for (let k = 1; k < a.length; k++) uni(a[0], a[k]); } }
   const rs = new Map();
-  for (const [i, o, d] of comps) { if (!d.src) continue; const ok = d.src === 'cgen' || (d.src === 'gen' && (o.fuel || 0) > 0) || (d.src === 'batt' && (o.e || 0) > 0); o.lit = ok; if (!ok) continue;
-    for (const n of adj(i, true)) { const r = find(n); let e = rs.get(r); if (!e) rs.set(r, e = { inf: false, b: [], g: [], load: 0 }); if (d.src === 'cgen') e.inf = true; else if (d.src === 'gen') { if (!e.g.includes(o)) e.g.push(o); } else if (!e.b.includes(o)) e.b.push(o); } }
+  for (const [i, o, d] of comps) { if (!d.src) continue; const ok = d.src === 'cgen' || d.src === 'tree' || (d.src === 'gen' && (o.fuel || 0) > 0) || (d.src === 'batt' && (o.e || 0) > 0); o.lit = ok; if (!ok) continue;
+    for (const n of adj(i, true)) { const r = find(n); let e = rs.get(r); if (!e) rs.set(r, e = { inf: false, b: [], g: [], load: 0 }); if (d.src === 'cgen' || d.src === 'tree') e.inf = true; else if (d.src === 'gen') { if (!e.g.includes(o)) e.g.push(o); } else if (!e.b.includes(o)) e.b.push(o); } }
   for (const [i, o, d] of comps) { if (!d.dev) continue; let pr = null; for (const n of (d.sz ? [...new Set(fpTiles(i, o).flatMap(j => adj(j, true)))] : adj(i, true))) { const r = find(n); if (rs.has(r)) { pr = r; break; } }
     deviceStep(i, o, d, pr != null, dt); if (pr != null) rs.get(pr).load += (o.work ? (d.draw || 0) : (d.idle || 0)) * dt; }
   for (const [, e] of rs) { if (!e.load || e.inf) continue; if (e.g.length) { for (const g of e.g) { g.fuel = Math.max(0, g.fuel - dt); G.stats.genRun = 1; } continue; } if (e.b.length) { const per = e.load / e.b.length; for (const b of e.b) b.e = Math.max(0, b.e - per); } }
@@ -57,7 +58,8 @@ export function deviceStep(i, o, d, on, dt) {
     if (!can) return; o.prog = (o.prog || 0) + dt;
     if (Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) < 14 && fxRand() < dt * 3) emit('puff', tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, WPAL[w][1], 2, 1.4, .1);
     if (o.prog >= d.every) { o.prog = 0; const dr0 = WALLS[w].drop[0]; if (rand() > (dr0[3] == null ? 1 : dr0[3])) return; const id = dr0[0]; G.stats.drilled = (G.stats.drilled || 0) + 1;
-      let put = false; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const c = G.objs.get(idx(cx, cy)); if (c && c.t === 'chest' && c.items && !moveInto(c.items, { id, c: 1 })) { put = true; break; } }
+      let put = null; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const c = G.objs.get(idx(cx, cy)); if (c && c.t === 'chest' && c.items && !moveInto(c.items, { id, c: 1 })) { put = [cx, cy]; break; } }
+      if (Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) < 14) { const to = put || [x, y]; emit('oreFly', tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, to[0] + .5, to[1] + .6, WPAL[w][1]); emit('sfx', 'pick'); } // v113: 광석이 톡 튀어 상자로
       if (!put) { o.store = o.store || []; const s2 = o.store.find(z => z.id === id); if (s2) s2.c++; else o.store.push({ id, c: 1 }); } } }
 }
 export function wirePowered(i) { const n = CIRC.net.get(i); return n != null && CIRC.pRoots.has(CIRC.find(n)); }

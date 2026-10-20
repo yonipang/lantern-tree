@@ -29,6 +29,9 @@ onEvent('hearts', hearts);
 function splash(x, y, n) { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283; G.parts.push({ x, y, z: .05, vx: Math.cos(a) * 1.2, vy: Math.sin(a) * .6, vz: 2 + fxRand() * 1.5, life: .4, max: .4, col: '#bfe6ff', sz: 1 }); } }
 onEvent('splash', splash);
 // 물뿌리개 물방울 (x, 떨어지는 바닥 y)
+// v113 채굴기: 캔 광석 조각이 톡 튀어 상자(또는 채굴기 안)로 포물선을 그리며 날아가요 — 보이기만 (fxRand)
+onEvent('oreFly', (x, y, tx, ty, col) => { const T0 = .45 + fxRand() * .1, z0 = .7, z1 = .45; for (let k = 0; k < 3; k++) { const tt = T0 + k * .04, ex = tx + (fxRand() - .5) * .3, ey = ty + (fxRand() - .5) * .2;
+  G.parts.push({ x, y, z: z0, vx: (ex - x) / tt, vy: (ey - y) / tt, vz: (z1 - z0 + 4.5 * tt * tt) / tt, life: tt, max: tt * .7, col: k ? '#fff1d0' : col, sz: k ? 1 : 3, fly: 1 }); } });
 onEvent('drips', (x, y) => { for (let k = 0; k < 8; k++) G.parts.push({ x: x + (fxRand() - .5) * .6, y, z: 1.2, vx: (fxRand() - .5), vy: 0, vz: -1, life: .5, max: .5, col: '#8fd0ff', sz: 1 }); });
 // 스프링클러가 사방으로 뿌리는 물
 onEvent('spray', (x, y) => { for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283; G.parts.push({ x, y, z: 1, vx: Math.cos(a) * 3, vy: Math.sin(a) * 2, vz: 1.5, life: .6, max: .6, col: '#8fd0ff', sz: 1 }); } });

@@ -527,3 +527,47 @@ def test_build_piece_refund():
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_auto_refund_v113():
+    import asyncio, sys
+    # v113 (자동 생산 1): 채굴장·나무 작업장이 없어지고, 옛 세이브의 것은 만들 때 든 재료로 (v69 환급과 같은 방법).
+    # 놓인 것(안에 모인 광석·나무도)·가방 것은 가방 먼저 → 넘치면 환급 상자, 상자·꾸러미 속 것은 그 안으로. 놓인 옛 채굴기는 그대로
+    H2=HOOK.replace("computeLight}","computeLight,OLD_AUTO}")
+    OLD="""()=>{const T=__T,G=T.G,X=T.CX+12,Y=T.CY+8;for(let y=Y-3;y<=Y+4;y++)for(let x=X-3;x<=X+8;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i)}
+  for(const [i,o] of [...G.objs])if(o.t==='refundBox'||o.t==='lostBag')G.objs.delete(i);G.enemies.length=0;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[2]={id:'pitGold',c:1};
+  const two=(t,x,y,ex)=>{const i=T.idx(x,y);G.objs.set(i,Object.assign({t,p:G.time},ex||{}));for(const j of [i+1,i+T.W,i+T.W+1])G.objs.set(j,{t:'_part',a:i})};
+  two('pitCu',X,Y);two('treeFarm',X+3,Y,{store:[{id:'wood',c:5}]});G.objs.set(T.idx(X+6,Y),{t:'drillCu',dir:{x:1,y:0}});
+  G.objs.set(T.idx(X,Y+3),{t:'chest',items:[{id:'quarry',c:1},{id:'berry',c:2}].concat(Array(16).fill(null))});
+  G.objs.set(T.idx(X+2,Y+3),{t:'lostBag',items:[{id:'treeFarm',c:1},null,null,null],at:1,own:'me'});
+  const s=JSON.stringify(T.serialize());T.deserialize(JSON.parse(s));return s}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,OLD)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX+12,Y=T.CY+8,A=T.OLD_AUTO,ids=['pitCu','pitFe','pitGold','quarry','treeFarm'];
+              const left=[...G.objs.values()].some(o=>ids.includes(o.t)||(o.items||[]).some(s=>s&&ids.includes(s.id)))||G.inv.some(s=>s&&ids.includes(s.id));
+              const parts=[...G.objs.values()].filter(o=>o.t==='_part'&&ids.includes((G.objs.get(o.a)||{}).t)).length,orphan=[T.idx(X+1,Y),T.idx(X+4,Y+1)].some(i=>G.objs.get(i));
+              const want={};const add=(m,c)=>{want[m]=(want[m]||0)+c};for(const id of ['pitCu','treeFarm','pitGold'])for(const [m,c] of A[id])add(m,c);add('wood',5);
+              const have={};for(const s of G.inv)if(s)have[s.id]=(have[s.id]||0)+s.c;for(const o of G.objs.values())if(o.t==='refundBox')for(const s of o.items)if(s)have[s.id]=(have[s.id]||0)+s.c;
+              const ok=Object.keys(want).every(m=>have[m]===want[m]);
+              const ch=G.objs.get(T.idx(X,Y+3)).items.filter(Boolean).map(s=>s.id+':'+s.c).sort().join(','),chw=A.quarry.map(([m,c])=>m+':'+c).concat(['berry:2']).sort().join(',');
+              const bag=G.objs.get(T.idx(X+2,Y+3)).items.filter(Boolean).map(s=>s.id+':'+s.c).sort().join(','),bagw=A.treeFarm.map(([m,c])=>m+':'+c).sort().join(',');
+              return {left,parts,orphan,ok,want,have,ch:ch===chw,bag:bag===bagw,drill:(G.objs.get(T.idx(X+6,Y))||{}).t,st:G.stats.auto113}}""")
+            rec('환급','옛 채굴장·나무 작업장이 세계·가방·상자·꾸러미 어디에도 남지 않음 (부속 칸도 정리)', r['left'] is False and r['parts']==0 and not r['orphan'], str([r['left'],r['parts'],r['orphan']]))
+            rec('환급','놓인 것·가방 것은 만들 때 든 재료로 + 나무 작업장 안에 모인 나무 5', r['ok'], str(r['want'])+' / '+str(r['have']))
+            rec('환급','상자·꾸러미 속 것은 그 상자·꾸러미로 재료', r['ch'] and r['bag'], str([r['ch'],r['bag']]))
+            rec('환급','놓인 옛 구리 채굴기는 그대로 (채굴장으로 바꾸지 않음)', r['drill']=='drillCu', str(r['drill']))
+            rec('환급','기록: 5개, 놓인 것 2개', r['st']['n']==5 and r['st']['placed']==2, str(r['st']))
+            await pg.wait_for_timeout(2300)
+            t=await ev(pg,"()=>document.querySelector('#toasts').innerText")
+            rec('환급','불러올 때 한 번 알림', '채굴장·나무 작업장이 없어져서' in t, t[:160])
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const n=G.stats.auto113.n,c=T.countItem('copperBar');for(let k=0;k<2;k++)T.deserialize(JSON.parse(JSON.stringify(T.serialize())));return [T.G.stats.auto113.n===n,T.countItem('copperBar')===c]}")
+            rec('환급','여러 번 불러와도 두 번 주지 않음', r==[True,True], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;G.inv[5]={id:'drillCu',c:2};T.deserialize(JSON.parse(JSON.stringify(T.serialize())));return T.countItem('drillCu')}")
+            rec('옛 세이브','가방의 채굴기는 채굴기 그대로 (v46 채굴장 바꾸기 멈춤)', r==2, r)
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

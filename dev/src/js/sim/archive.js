@@ -1,6 +1,6 @@
 // ================= v106 기록관(유적): 이끼 굴 시험 기록관 (dev/design/세계관-NPC.md 「기록관」) =================
 // 지도 안 유적 구역(코어키퍼 방식). 벽은 단단한 암반(8, 못 캠), 바닥은 돌바닥(6). 안은 깨기 전까지 지도에서 까맣고(render/light.js), 깨면(일기를 읽으면) 한 번에 모두 보여요.
-// 두 방: 들어가는 방(레버·건전지·전선) → 전기 문 → 일기 방(일기 받침대·기록관 학자 고치·보물상자). 안에는 그림자 조각이 어둠에서 지켜요(빛 안에서 2배).
+// 두 방: 들어가는 방(레버·빛 항아리·빛뿌리) → 빛 문 → 일기 방(일기 받침대·기록관 학자 고치·보물상자). 안에는 그림자 조각이 어둠에서 지켜요(빛 안에서 2배).
 // 새 세계·옛 세계 모두 불러올 때 한 번 놓아요(stats.archV). 자리가 없으면 안 생겨요. 기록은 G.stats.arch[]. 글·보상은 Claude 임시(【검토 중】).
 import { ITEMS, OBJ, USE, USE_LBL } from '../data/items.js';
 import { BATT_MAX } from '../data/circuits-regions.js';
@@ -19,7 +19,7 @@ import { ARCHIVES } from '../data/story.js';
 OBJ.diary = { n: '등불지기의 일기', solid: 1, diary: 1, light: [2.5, '#ffe9a8'] };
 OBJ.sleeper = { n: '얼음 속 등불지기', solid: 1, sleeper: 1, light: [1.5, '#bfe6ff'] }; // v107 얼음 기록관
 USE.diary = 'read2'; USE_LBL.read2 = '일기 읽기';
-// 13 × 9 틀. # 암반 · . 바닥 · E 입구(바닥) · L 레버 · B 건전지 · - 전선 · D 전기 문 · J 일기 · S 학자 고치 · C 보물상자 · t 횃불 자리(없음)
+// 13 × 9 틀. # 암반 · . 바닥 · E 입구(바닥) · L 레버 · B 빛 항아리 · - 빛뿌리 · D 빛 문 · J 일기 · S 학자 고치 · C 보물상자 · t 횃불 자리(없음)
 export const ARCH_PLAN = [
   '#############',
   '#.....#.....#',
@@ -60,7 +60,7 @@ export function placeArchives() {
       if (!ok || walls < (ARCH_W + 2) * (ARCH_H + 2) * .7) continue; // 거의 다 벽인 곳에만 파요 (플레이어가 판 굴을 망치지 않게)
       const ex = x + ARCH_PLAN[ARCH_H - 1].indexOf('E'), ey = y + ARCH_H - 1; let open = false, rock = false; for (let k = 1; k <= 4; k++) { if (!inB(ex, ey + k)) break; const wk = G.wall[idx(ex, ey + k)]; if (k <= 3 && wk === 8) rock = true; if (!wk) open = true; } if (rock) continue; // 입구 아래 3칸은 암반이 아니어야(길을 낼 수 있게), 4칸 안에 트인 곳이 있으면 좋아요
       cand.push({ x, y, r: reach[idx(ex, Math.min(H - 1, ey + 4))] ? 1 : 0, open: open ? 1 : 0 }); }
-    const near = [], clear = (c, any) => { if (!any && roomInRect(c.x, c.y, c.x + ARCH_W - 1, c.y + ARCH_H + 2)) { near.push(c); return false; } /* v112: 숨은 방과 겹치면 다른 자리를 먼저 (입구 아래 길 3칸까지, 고른 뒤에 봐서 안 겹치는 세계는 자리 그대로) */ for (let yy = c.y - 1; yy <= c.y + ARCH_H; yy++) for (let xx = c.x - 1; xx <= c.x + ARCH_W; xx++) if (!freeFor(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (v108: 빠르게)
+    const near = [], clear = (c, any) => { if (!any && roomInRect(c.x, c.y, c.x + ARCH_W - 1, c.y + ARCH_H + 2)) { near.push(c); return false; } /* v112: 숨은 방과 겹치면 다른 자리를 먼저 (입구 아래 길 3칸까지, 고른 뒤에 봐서 안 겹치는 세계는 자리 그대로) */ for (let yy = c.y - 1; yy <= c.y + ARCH_H; yy++) for (let xx = c.x - 1; xx <= c.x + ARCH_W; xx++) if (!freeFor(idx(xx, yy))) return false; return true; }; // 물건·빛뿌리·바닥 확인은 고른 곳만 (v108: 빠르게)
     while (cand.length) { const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
       if (clear(c)) { carveArch(A, c.x, c.y); n++; break; } cand.splice(cand.indexOf(c), 1); }
     if (!cand.length && near.length) { const ok = near.find(c => clear(c, true)); if (ok) { carveArch(A, ok.x, ok.y); n++; } } } // v112: 다른 자리가 하나도 없으면 예전처럼 (기록관이 아예 안 생기지 않게)
@@ -72,7 +72,7 @@ function carveArch(A, x0, y0) { const wires = [], sleepers = [], PLAN = planOf(A
   // 입구 아래로 3칸 길을 내요 (막혀 있으면)
   const ex = ent % W, ey = (ent / W) | 0; for (let k = 1; k <= 3; k++) { const j = idx(ex, ey + k); if (!inB(ex, ey + k)) break; if (G.wall[j] && G.wall[j] !== 8) { G.wall[j] = 0; if (G.wdmg) G.wdmg.delete(j); } }
   G.objs.set(lever, { t: 'lever', on: 0, arch: 1 }); G.objs.set(batt, { t: 'battery', e: BATT_MAX, arch: 1 }); for (const i of wires) G.wire.set(i, 1);
-  // 건전지 → 레버 → 문까지 전선: 건전지 위(아래 칸)와 레버·문 사이 벽 안쪽 줄은 이미 '-'로 이어져 있고, 건전지 칸에서 레버까지는 세로로
+  // 빛 항아리 → 레버 → 문까지 빛뿌리: 빛 항아리 위(아래 칸)와 레버·문 사이 벽 안쪽 줄은 이미 '-'로 이어져 있고, 빛 항아리 칸에서 레버까지는 세로로
   { const bx = batt % W, by = (batt / W) | 0, lx = lever % W, ly = (lever / W) | 0; for (let y = ly + 1; y < by; y++) G.wire.set(idx(bx, y), 1); if (bx !== lx) for (let x = Math.min(bx, lx); x <= Math.max(bx, lx); x++) if (idx(x, ly + 1) !== lever) G.wire.set(idx(x, ly + 1), 1); }
   G.objs.set(door, { t: 'eDoor', open: 0, arch: 1 }); G.objs.set(diary, { t: 'diary', a: A.id }); if (A.npc) G.objs.set(scholar, { t: 'cocoon', npc: A.npc, hits: 0 }); G.objs.set(chest, { t: 'tchest', hid: 0 }); for (const i of sleepers) G.objs.set(i, { t: 'sleeper' });
   G.stats.arch.push({ id: A.id, b: A.b, x: x0, y: y0, done: 0, gT: -999 }); }
@@ -89,8 +89,8 @@ export function readDiary(o) { const a = archList().find(q => q.id === o.a); if 
   emit('diary', a.id); }
 export const archDiaryIds = () => archList().filter(a => a.done).map(a => a.id);
 // 도전 퀘스트: 이끼 굴 기록관 깨기
-for (const [id, nm, b] of [['arch2', '수정 동굴', 2], ['arch3', '용암 동굴', 3], ['arch4', '얼음 동굴', 4]]) { Q_GO['s_' + id] = ['tgt']; QSIDE.push({ id: 's_' + id, t: `${nm}의 기록관 깨기`, h: `${nm} 어딘가에 등불지기들의 기록관이 있어요. 레버로 전기 문을 열고 일기를 읽어요.`, done: () => archList().some(a => a.id === id && a.done), rw: [['torch', 10], [['cryGem', 'obsidian', 'frostShard'][b - 2], 4]], xp: 120 + b * 20,
+for (const [id, nm, b] of [['arch2', '수정 동굴', 2], ['arch3', '용암 동굴', 3], ['arch4', '얼음 동굴', 4]]) { Q_GO['s_' + id] = ['tgt']; QSIDE.push({ id: 's_' + id, t: `${nm}의 기록관 깨기`, h: `${nm} 어딘가에 등불지기들의 기록관이 있어요. 레버로 빛 문을 열고 일기를 읽어요.`, done: () => archList().some(a => a.id === id && a.done), rw: [['torch', 10], [['cryGem', 'obsidian', 'frostShard'][b - 2], 4]], xp: 120 + b * 20,
   target: () => { const a = archList().find(q => q.id === id); return a ? { x: a.x + ARCH_PLAN[ARCH_H - 1].indexOf('E') + .5, y: a.y + ARCH_H + .5 } : null; } }); } // v107
 Q_GO.s_arch0 = ['tgt'];
-QSIDE.push({ id: 's_arch0', t: '이끼 굴의 기록관 깨기', h: '이끼 굴 어딘가에 등불지기들이 남긴 기록관이 있어요. 안은 어두워요 — 횃불을 챙기고, 레버로 전기 문을 열어 일기를 읽어요.', done: () => archList().some(a => a.id === 'arch0' && a.done), rw: [['torch', 10], ['glowcap', 6]], xp: 80,
+QSIDE.push({ id: 's_arch0', t: '이끼 굴의 기록관 깨기', h: '이끼 굴 어딘가에 등불지기들이 남긴 기록관이 있어요. 안은 어두워요 — 횃불을 챙기고, 레버로 빛 문을 열어 일기를 읽어요.', done: () => archList().some(a => a.id === 'arch0' && a.done), rw: [['torch', 10], ['glowcap', 6]], xp: 80,
   target: () => { const a = archList().find(q => q.id === 'arch0'); return a ? { x: a.x + ARCH_PLAN[ARCH_H - 1].indexOf('E') + .5, y: a.y + ARCH_H + .5 } : null; } });

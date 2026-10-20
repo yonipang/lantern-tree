@@ -34,7 +34,7 @@ export function bmCat(id) { if (bmBase(id) !== id) return 'floor'; const it = IT
 let NAT_D = null; // 자연 꾸미기(덤불·꽃밭·연못·바위): 자연 꾸미기 표와 제작 창 「자연」 탭의 것
 const natDecor = () => NAT_D || (NAT_D = new Set([...Object.keys(NATURE), ...RECIPES.filter(r => r.cat === 'nature').map(r => r.out)]));
 export const isBuildItem = id => { const it = ITEMS[id]; return !!it && BUILD_KINDS.includes(it.kind); };
-// 끌어서 여러 칸: 바닥은 네모, 벽·울타리·전선은 끈 길 한 줄, 그 밖은 한 칸
+// 끌어서 여러 칸: 바닥은 네모, 벽·울타리·빛뿌리는 끈 길 한 줄, 그 밖은 한 칸
 export function bmDrag(id) { const it = bmItem(id); if (!it) return 'one'; if (it.kind === 'floor' || it.kind === 'ground') return 'rect';
   if (it.kind === 'wall' || it.kind === 'wire') return 'line'; const d = OBJ[it.obj]; return d && d.tw ? 'line' : 'one'; }
 // ---- 가방 + 둘레 16칸 안 보관상자 ----
@@ -111,7 +111,7 @@ defineCmd('bplace', c => {
   return last;
 });
 // ================= v92 건축 모드 2: 옮기기·뜯기·되돌리기 (기획: dev/design/건축모드.md 6~8) =================
-// 직접 놓은 것 = 가구·제작대·조명 같은 물건(회수할 수 있는 것), 직접 쌓은 벽(나무·돌벽돌 벽, v92부터 쌓은 자연 재료 벽 G.bwall), 깐 바닥, 전선.
+// 직접 놓은 것 = 가구·제작대·조명 같은 물건(회수할 수 있는 것), 직접 쌓은 벽(나무·돌벽돌 벽, v92부터 쌓은 자연 재료 벽 G.bwall), 깐 바닥, 빛뿌리.
 // 자연 벽·나무·작물·덮은 자연 바닥은 뜯지 않아요(곡괭이·도끼·낫·삽으로). 되돌리기는 사람마다 마지막 한 번(놓기·옮기기·뜯기), 저장하지 않아요.
 const BW = () => G.bwall || (G.bwall = new Set());
 export const myWall = i => { const w = G.wall[i]; return !!w && (w === 6 || w === 7 || BW().has(i)); };
@@ -124,7 +124,7 @@ export const canTakeObj = o => canMoveObj(o) && !(OBJ[o.t].chest && o.items && o
 const retItem = o => TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : OBJ[o.t].item;
 const setUndo = u => { if (G.p) G.p.bmUndo = u || null; };
 export const bmUndoKind = () => (G && G.p && G.p.bmUndo && G.p.bmUndo.k) || null;
-// 뜯을 것: 물건 → 벽 → 전선 → 깐 바닥 (위에 있는 것부터)
+// 뜯을 것: 물건 → 벽 → 빛뿌리 → 깐 바닥 (위에 있는 것부터)
 export function bmTakeAt(x, y, far) {
   if (!inB(x, y)) return { why: '뜯을 것이 없어요' }; if (!far && !inBmReach(x, y)) return { why: '8칸 안에서만 뜯을 수 있어요' };
   const i = idx(x, y), a = bmObjAt(x, y);

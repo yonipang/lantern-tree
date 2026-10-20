@@ -5,7 +5,7 @@ import { BKEYS, BOSSES } from '../data/rpg-nature.js';
 import { BUFF_MAX, DISH, EFF } from '../data/farming-cooking.js';
 import { CHARS, LOOK_DEF, cleanLook } from '../art/characters.js';
 import { clamp } from '../engine/util.js';
-import { migrateNaru110, mergeShovelful93, refundPieces, convertDrills, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, loadSets, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, migrateSeen77, syncNotes } from './migrations.js';
+import { migrateNaru110, mergeShovelful93, refundPieces, refundAuto113, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, loadSets, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, migrateSeen77, syncNotes } from './migrations.js';
 import { rand } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
 import { ANCH, CX, CY, H, MAPV, SA, SB, SI, SL, W, devLayout, idx, setLayout } from '../world/map.js';
@@ -155,13 +155,13 @@ export function deserialize(s) {
   G.look = cleanLook(s.look); G.char = CHARS[s.char] ? s.char : 'sprout'; G.outfit = s.outfit || 0; emit('look');
   const roofBack = refundRoofItems(); // v41: roofs were removed — roof items turn back into their material
   mergeShovelful93(); // v93: 흙 한 삽·얼음 한 삽 → 흙·얼음 덩이
+  refundAuto113(); // v113: 채굴장·나무 작업장 → 재료 (모르는 물건을 지우기 전에)
   refundPieces(); // v69 (BF-05): removed building pieces turn back into their materials — before unknown items are cleared out just below
   const known = x => x && ITEMS[x.id] && !ITEMS[x.id].virtual ? x : null;
   G.inv = G.inv.map(known); for (const o of G.objs.values()) if (o.items) o.items = o.items.map(known);
   G.tools = G.tools.filter(x => known(x) && isTool(x.id)).map(x => ({ ...x, c: 1 })); if (!(G.tsel >= 0 && G.tsel < G.tools.length)) G.tsel = 0;
   if (!(G.sel >= (G.tools.length ? -1 : 0) && G.sel < HOT)) G.sel = 0;
   if (G.__extra) { for (const x of G.__extra) moveInto(G.inv, x); delete G.__extra; }
-  convertDrills(); // v46: old stone drills become stone pits
   if (oldWp) moveOldWeapon(oldWp);
   if (!G.stats.nm58) noticeRename58(); // v58 rename notice for older saves
   G.guide = 0; G.marks = Array.isArray(s.marks) ? s.marks.filter(m => m && Number.isInteger(m.x) && Number.isInteger(m.y)) : [];

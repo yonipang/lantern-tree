@@ -39,8 +39,8 @@ def test_ring_map():
             r=await ev(pg,"""()=>{const T=__T;localStorage.setItem('lantern-tree-layout','1');T.newGame(77);const old=JSON.parse(JSON.stringify(T.serialize()));delete old.mapV;localStorage.setItem('lantern-tree-layout','2');T.deserialize(old);const a=[T.L.LAY,T.L.W,T.G.wall.length,T.L.CX];
           const g=T.GUIDE.map(q=>typeof q.t==='function'?q.t():q.t).join('|');const b2=JSON.parse(JSON.stringify(T.serialize())).mapV;T.newGame(5);return a.concat([g.includes('서쪽 버섯숲'),!g.includes('남서쪽'),b2,T.L.W])}""")
             rec('옛 세이브','v47 전 세이브는 200×200 지도 그대로 (퀘스트 방향도 예전대로), 새 게임은 다시 600×600', r==[1,200,40000,100,True,True,1,600], str(r))
-            r=await ev(pg,"()=>{const T=__T,f=id=>{const r=T.RECIPES.find(q=>q.out===id);return JSON.stringify(r.req)};return [f('furnace'),f('quarry'),f('generator'),f('pot')]}")
-            rec('재료','지형 재료(흙·돌·화강암·현무암·얼음) 필요 개수 2배', r==['[["dirt",20],["wood",4],["resin",1]]','[["stone",40],["wood",8],["rope",2]]','[["ironBar",6],["stone",32],["copperBar",4]]','[["copperBar",3],["stone",8],["wood",2]]'], str(r))
+            r=await ev(pg,"()=>{const T=__T,f=id=>{const r=T.RECIPES.find(q=>q.out===id);return JSON.stringify(r.req)};return [f('furnace'),f('plate'),f('generator'),f('pot')]}")
+            rec('재료','지형 재료(흙·돌·화강암·현무암·얼음) 필요 개수 2배', r==['[["dirt",20],["wood",4],["resin",1]]','[["copperBar",1],["stone",6]]','[["ironBar",6],["stone",32],["copperBar",4]]','[["copperBar",3],["stone",8],["wood",2]]'], str(r))
             # the whole map, all explored
             await ev(pg,"()=>{const T=__T,G=T.G;G.explored.fill(1);T.rebuildMap();T.openPanel('map')}"); await pg.wait_for_timeout(600)
             await pg.click('#sheet [data-a=mapzoom]'); await pg.wait_for_timeout(600)
@@ -812,29 +812,7 @@ def test_ranch():
             rec('털모자','털모자: 추위 게이지 85% 속도 (+2: 79%)', r==[1,0.85,0.79,'방어력 1 · 추위 게이지 79% 속도'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const i=T.idx(T.CX+9,T.CY+8),o=G.objs.get(i);o.p=G.time+123;T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const o2=T.G.objs.get(i);return [o2.t,Math.round(o2.p-T.G.time)]}""")
             rec('저장','목장 동물과 남은 시간 저장/불러오기', r==['cow',123], str(r))
-            # ---- stone pit (돌 채굴장) ----
-            r=await ev(pg,"()=>{const T=__T,rc=T.RECIPES.find(r=>r.out==='quarry');return [rc&&rc.at,rc&&rc.cat,rc&&rc.req.map(x=>x[0]).join(','),T.ITEMS.quarry.n,JSON.stringify(T.OBJ.quarry.sz),!!T.SPR.obj.quarry3,T.RECIPES.some(r=>r.out==='drillStone')]}")
-            rec('돌 채굴장','작업대·채굴장 탭에서 돌·나무·끈으로 만드는 2×2 돌 채굴장 (벽 앞 돌 채굴기는 제작법 없음)', r==['bench','mine','stone,wood,rope','돌 채굴장','[2,2]',True,False], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;__clear(0);G.inv[0]={id:'quarry',c:1};G.sel=0;G.p.face={x:1,y:0};const d=T.decide();return [d.k,d.lbl]}""")
-            await tap(pg,1); await pg.wait_for_timeout(200)
-            r2=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=-1;for(const [i,o] of G.objs)if(o.t==='quarry')ai=i;const o=G.objs.get(ai);G.inv.fill(null);G.sel=1;const t={x:ai%T.W,y:Math.floor(ai/T.W)};
-          const a=T.decide();o.p=G.time-999;const b2=T.decide();T.perform(b2);const got=G.drops.filter(d=>d.id).map(d=>d.id);const n=G.drops.reduce((s,d)=>s+d.c,0);G.drops.length=0;return [!!o,a.lbl,b2.lbl,[...new Set(got)].join(','),n>=5&&n<=7,Math.round(G.time-o.p)]}""")
-            rec('돌 채굴장','내려놓고, 바위가 차오르면 [캐기] → 돌만 5~7개, 다시 차오름', r[0]=='place' and r2[0] and r2[1]=='살펴보기' and r2[2]=='캐기' and r2[3]=='stone' and r2[4] and r2[5]<=1, str([r,r2]))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;let ai=-1;for(const [i,o] of G.objs)if(o.t==='quarry')ai=i;const o=G.objs.get(ai),x=ai%T.W,y=Math.floor(ai/T.W);const ch={t:'chest',items:Array(18).fill(null)};G.objs.set(T.idx(x+2,y),ch);
-          G.wire.set(T.idx(x-1,y),1);G.objs.set(T.idx(x-1,y+1),{t:'battery',e:6000});o.p=G.time-999;T.circuitTick(.2);return [ch.items.filter(Boolean).map(s=>s.id+':'+(s.c>=5)).join(','),G.stats.quarried>0]}""")
-            rec('돌 채굴장','전기를 이으면 저절로 캐서 옆 상자에 돌을 담음', r==['stone:true',True], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);const s=JSON.parse(JSON.stringify(T.serialize()));s.inv[3]={id:'drillStone',c:2};T.deserialize(s);return [T.countItem('quarry'),T.countItem('drillStone'),T.OBJ.drillStone.item]}""")
-            rec('옛 세이브','가방의 돌 채굴기는 돌 채굴장으로, 놓인 돌 채굴기를 회수해도 돌 채굴장', r==[2,0,'quarry'], str(r))
-            # ---- ore pits replace the ore drills ----
-            r=await ev(pg,"()=>{const T=__T;return ['pitCu','pitFe','pitGold'].map(id=>{const rc=T.RECIPES.find(r=>r.out===id);return [T.ITEMS[id].n,rc&&rc.at,rc&&rc.cat,T.OBJ[id].grow,!!T.SPR.obj[id+'3']]}).concat([['drillCu','drillFe','drillGold'].some(id=>T.RECIPES.some(r=>r.out===id))])}")
-            rec('채굴장','구리·철·황금 채굴장 (작업대·채굴장 탭), 벽 앞 채굴기는 제작법 없음', r==[['구리 채굴장','bench','mine',120,True],['철 채굴장','bench','mine',150,True],['황금 채굴장','bench','mine',180,True],False], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const out=[];const d0=G.stats.drilled||0;for(const [k,ore] of [['pitCu','copperOre'],['pitFe','ironOre'],['pitGold','goldOre']]){const x=T.CX+12,y=T.CY+8;G.objs.set(T.idx(x,y),{t:k,p:G.time-999});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y)});
-          G.p.x=x-.5;G.p.y=y+.5;G.p.face={x:1,y:0};G.sel=1;G.drops.length=0;const d=T.decide();T.perform(d);const ids=[...new Set(G.drops.map(q=>q.id))].join(',');const n=G.drops.reduce((a,q)=>a+q.c,0);G.drops.length=0;out.push([d.lbl,ids===ore,n]);for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)G.objs.delete(T.idx(x+dx,y+dy))}return out.concat([(G.stats.drilled||0)-d0>0])}""")
-            rec('채굴장','다 차오르면 [캐기] → 그 광석 한 가지만 (구리·철 3~4, 금 2~3), 도전 퀘스트 집계', [x[:2] for x in r[:3]]==[['캐기',True]]*3 and 3<=r[0][2]<=4 and 3<=r[1][2]<=4 and 2<=r[2][2]<=3 and r[3], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);const s=JSON.parse(JSON.stringify(T.serialize()));s.inv[3]={id:'drillCu',c:1};s.inv[4]={id:'drillFe',c:1};s.inv[5]={id:'drillGold',c:1};T.deserialize(s);return [T.countItem('pitCu'),T.countItem('pitFe'),T.countItem('pitGold'),T.OBJ.drillCu.item,T.OBJ.drillGold.item]}""")
-            rec('옛 세이브','가방의 구리·철·황금 채굴기는 채굴장으로, 놓인 채굴기는 그대로 돌고 회수하면 채굴장', r==[1,1,1,'pitCu','pitGold'], str(r))
-            await ev(pg,"()=>{const T=__T,G=T.G;let ai=-1;for(const [i,o] of G.objs)if(o.t==='quarry')ai=i;const o=G.objs.get(ai);o.p=G.time-40;G.p.x=ai%T.W+1;G.p.y=Math.floor(ai/T.W)+3.2}")
-            await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'quarry.png')
+            # v113: 돌·구리·철·황금 채굴장은 없어졌어요 — 채굴기·환급은 test_building.py test_light_miner_v113 · test_save.py test_auto_refund_v113
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

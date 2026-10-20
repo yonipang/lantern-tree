@@ -61,14 +61,13 @@ export const BT1 = [['all', '전체', 'hammer'], ['mat', '재료', 'rope'], ['to
 export const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제련'], ['cook', '요리']],
   furn: [['all', '전체'], ['seat', '의자'], ['table', '탁자'], ['bed', '침대'], ['store', '수납'], ['light', '조명'], ['deco', '장식']],
   build: [['all', '전체'], ['wall', '벽'], ['floor', '바닥'], ['fence', '울타리'], ['door', '문'], ['nature', '자연']], // v69: thin walls, pillars and windows were removed
-  conv: [['all', '전체'], ['circuit', '회로'], ['farm', '농사'], ['mine', '채굴장']] };
+  conv: [['all', '전체'], ['circuit', '회로'], ['farm', '농사'], ['mine', '채굴기']] };
 export const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe woodWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
 export const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
 export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
   if (o.station) t = ['stn', o.station === 'furnace' ? 'smelt' : o.station === 'pot' ? 'cook' : 'make'];
   else if (c === 'mat') t = ['mat'];
   else if (c === 'tool') t = ['tool'];
-  else if (id === 'treeFarm') t = ['conv', 'mine'];
   else if (c === 'circuit' || c === 'farm' || c === 'mine') t = ['conv', c];
   else if (c === 'nature') t = ['build', 'nature'];
   else if (it.kind === 'floor' || it.kind === 'ground') t = ['build', 'floor'];

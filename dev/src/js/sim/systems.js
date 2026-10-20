@@ -24,7 +24,7 @@ export const FRAME_ORDER = [
   'spawn', 'regrow', // 몬스터 생기기 · 자연 다시 자라기 (game/update.js)
   'zone', 'grow', // 꽃잎 구역 · 작물·나무 자라기 (content/rpg-nature.js)
   'flow',     // v87: 물·용암이 이어진 구덩이로 흐르기 (sim/digging.js)
-  'circuit',  // 전선·기계 (content/circuits-regions.js)
+  'circuit',  // 빛뿌리·기계 (content/circuits-regions.js)
   'light', 'guide', // 빛 계산 · 퀘스트·지역·숨은 방 확인 (game/update.js)
   'autosave', 'backup', 'cloud', // 저장·백업·클라우드 (main.js)
   'camera',   // 카메라 따라가기 (render.js)

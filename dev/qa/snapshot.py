@@ -68,6 +68,8 @@ LEGACY = {
     'old_stations': "delete s.fpV;delete s.stats.nm61;s.objs=s.objs.filter(([i])=>i!==I(4,6)&&i!==I(5,6)&&i!==I(8,6));s.objs.push([I(4,6),{t:'bench'}],[I(8,6),{t:'forge'}]);s.inv[8]={id:'forge',c:1}",
     'bosses_beaten': "s.bossDead={slime:true,queen:true,golem:true,turtle:true,spirit:true};s.treeSeeds=3",
     'no_mapV': "delete s.mapV",
+    # v113 전 세이브: 채굴장·나무 작업장이 놓여 있고(안에 돌) 가방에도 있음 → 만들 때 든 재료로 돌려받음
+    'old_pits_v111': "s.inv[3]={id:'pitCu',c:1};s.inv[4]={id:'treeFarm',c:2};s.objs=s.objs.filter(([i])=>![I(2,4),I(3,4),I(2,5),I(3,5)].includes(i));s.objs.push([I(2,4),{t:'quarry',p:0,store:[{id:'stone',c:7}]}],[I(3,4),{t:'_part',a:I(2,4)}],[I(2,5),{t:'_part',a:I(2,4)}],[I(3,5),{t:'_part',a:I(2,4)}])",
     # v84 전 세이브: 활성 퀘스트가 없음 → 진행 중인 이야기가 활성
     'old_no_quest_active': "delete s.qAct;s.guide=3",
     # v83 전 세이브: 장비 세트가 없음 → 입은 장비(강화 단계 포함)와 펫이 세트 I

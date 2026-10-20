@@ -1,37 +1,37 @@
 // ================= 회로·기계·깊은 지역 데이터 (구조 변경 2단계: content/circuits-regions.js에서 데이터만 옮김) =================
-// 전선·전지·발전기·채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살, 채굴장 산출 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
+// v113: 보이는 이름은 빛 — 빛뿌리(wire) · 빛 항아리(battery) · 불씨 등잔(generator) · 수정 빛샘(crystalGen) · 빛뿌리 램프 · 빛 문 (dev/design/자동생산.md 5장), 코드 id는 그대로. 채굴기, 깊은 동굴 재료·몬스터 수치·생성 수, 황금·전설 장비, 화살 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
 // 이 파일은 shell.html에서 content/circuits-regions.js 바로 앞에 와요 (예전과 같은 실행 순서).
 import { C } from '../engine/canvas.js';
 import { CATCH, ENEMY } from './rpg-nature.js';
 import { DUR2, ITEMS, OBJ, RAR, RECIPES, Rc, UNIQ_OF, USE, USE_LBL, WEAPON_DUR } from './items.js';
 
 Object.assign(ITEMS, {
-  wire: { n: '전선', kind: 'wire', d: '바닥에 깔아 전기를 이어요. 위·아래·옆으로 붙은 전선끼리 연결돼요. 전선을 들고 전선 칸을 누르면 걷어요.' },
-  battery: { n: '건전지', kind: 'place', obj: 'battery', stack: 1, d: '붙은 전선에 전기를 보내요. 쓰면 줄어들고, 작업대 [수리]에서 다시 충전해요.' },
-  generator: { n: '발전기', kind: 'place', obj: 'generator', d: '연료(나무·젤·송진)를 넣으면 건전지 없이 전기를 계속 만들어요. 기계가 일할 때만 연료를 써요.' },
-  crystalGen: { n: '수정 발전기', kind: 'place', obj: 'crystalGen', d: '수정의 힘으로 연료 없이 영원히 전기를 만들어요.' },
-  lever: { n: '레버', kind: 'place', obj: 'lever', d: '누르면 켜고 꺼요. 켜져 있을 때만 양쪽 전선을 이어 줘요.' },
-  plate: { n: '압력판', kind: 'place', obj: 'plate', d: '누군가 올라서 있는 동안만 양쪽 전선을 이어 줘요.' },
-  timer: { n: '타이머 회로', kind: 'place', obj: 'timer', d: '정해진 간격으로 켜졌다 꺼졌다 하며 양쪽 전선을 이어요. 누르면 간격이 바뀌어요.' },
-  eLamp: { n: '전기 램프', kind: 'place', obj: 'eLamp', d: '전기가 들어오면 환하게 켜져요.' },
-  eDoor: { n: '전기 문', kind: 'place', obj: 'eDoor', d: '전기가 들어오면 열리고, 끊기면 닫혀요.' },
-  drillCu: { n: '구리 채굴기', kind: 'place', obj: 'drillCu', d: '놓을 때 바라보는 쪽의 벽에서 광물을 계속 캐요(벽은 사라지지 않아요). 흙·구리·돌·철 광맥까지. 전기가 필요해요.' },
-  drillFe: { n: '철 채굴기', kind: 'place', obj: 'drillFe', d: '화강암 벽·석영 광맥까지 더 빠르게 캐는 채굴기. 전기가 필요해요.' },
+  wire: { n: '빛뿌리', kind: 'wire', d: '등불지기들이 쓰던 빛의 뿌리예요. 바닥에 깔아 빛을 이어요. 위·아래·옆으로 붙은 빛뿌리끼리 이어지고, 등불나무에 이으면 빛이 끝없이 흘러요. 빛뿌리를 들고 빛뿌리 칸을 누르면 걷어요.' },
+  battery: { n: '빛 항아리', kind: 'place', obj: 'battery', stack: 1, d: '빛을 담아 둔 항아리. 붙은 빛뿌리에 빛을 보내요. 쓰면 줄어들고, 작업대 [수리]에서 다시 채워요.' },
+  generator: { n: '불씨 등잔', kind: 'place', obj: 'generator', d: '연료(나무·젤·송진)를 태워 빛 항아리 없이 빛을 계속 만들어요. 기계가 일할 때만 연료를 써요.' },
+  crystalGen: { n: '수정 빛샘', kind: 'place', obj: 'crystalGen', d: '빛을 가득 머금은 수정이에요. 연료 없이 빛을 끝없이 내요. 등불나무에서 먼 곳의 큰 샘이에요.' },
+  lever: { n: '레버', kind: 'place', obj: 'lever', d: '누르면 켜고 꺼요. 켜져 있을 때만 양쪽 빛뿌리를 이어 줘요.' },
+  plate: { n: '압력판', kind: 'place', obj: 'plate', d: '누군가 올라서 있는 동안만 양쪽 빛뿌리를 이어 줘요.' },
+  timer: { n: '타이머 회로', kind: 'place', obj: 'timer', d: '정해진 간격으로 켜졌다 꺼졌다 하며 양쪽 빛뿌리를 이어요. 누르면 간격이 바뀌어요.' },
+  eLamp: { n: '빛뿌리 램프', kind: 'place', obj: 'eLamp', d: '빛이 들어오면 환하게 켜져요.' },
+  eDoor: { n: '빛 문', kind: 'place', obj: 'eDoor', d: '빛이 들어오면 열리고, 끊기면 닫혀요.' },
+  drillCu: { n: '구리 채굴기', kind: 'place', obj: 'drillCu', d: '광맥·벽 바로 앞에 놓으면 바라보는 벽을 계속 캐요(벽은 사라지지 않아요). 흙·돌·구리·철 광맥까지. 빛이 필요해요. 옆에 상자가 있으면 거기에, 없으면 안에 60개까지 담아요.' },
+  drillFe: { n: '철 채굴기', kind: 'place', obj: 'drillFe', d: '화강암 벽·석영 광맥까지 더 빠르게 캐는 채굴기. 빛이 필요해요.' },
 });
 Object.assign(OBJ, {
-  battery: { n: '건전지', solid: 1, item: 'battery', src: 'batt' },
-  generator: { n: '발전기', solid: 1, item: 'generator', src: 'gen', light: [2.5, '#ff9a4a'] },
-  crystalGen: { n: '수정 발전기', solid: 1, item: 'crystalGen', src: 'cgen', light: [4, '#c6b0ff'] },
+  battery: { n: '빛 항아리', solid: 1, item: 'battery', src: 'batt' },
+  generator: { n: '불씨 등잔', solid: 1, item: 'generator', src: 'gen', light: [2.5, '#ff9a4a'] },
+  crystalGen: { n: '수정 빛샘', solid: 1, item: 'crystalGen', src: 'cgen', light: [4, '#c6b0ff'] },
   lever: { n: '레버', solid: 1, item: 'lever', sw: 'lever' },
   plate: { n: '압력판', flat: 1, item: 'plate', sw: 'plate' },
   timer: { n: '타이머 회로', solid: 1, item: 'timer', sw: 'timer' },
-  eLamp: { n: '전기 램프', solid: 1, item: 'eLamp', dev: 'lamp', light: [7, '#fff1c0'], idle: .02 },
-  eDoor: { n: '전기 문', solid: 1, item: 'eDoor', dev: 'door', door: 1, idle: .01 },
-  drillCu: { n: '구리 채굴기', solid: 1, item: 'pitCu', dev: 'drill', tier: 1, every: 12, draw: .5, idle: 0 },
-  drillFe: { n: '철 채굴기', solid: 1, item: 'pitFe', dev: 'drill', tier: 2, every: 7, draw: .8, idle: 0 },
+  eLamp: { n: '빛뿌리 램프', solid: 1, item: 'eLamp', dev: 'lamp', light: [7, '#fff1c0'], idle: .02 },
+  eDoor: { n: '빛 문', solid: 1, item: 'eDoor', dev: 'door', door: 1, idle: .01 },
+  drillCu: { n: '구리 채굴기', solid: 1, item: 'drillCu', dev: 'drill', tier: 1, every: 12, draw: .5, idle: 0 },
+  drillFe: { n: '철 채굴기', solid: 1, item: 'drillFe', dev: 'drill', tier: 2, every: 7, draw: .8, idle: 0 },
 });
-ITEMS.drillGold = { n: '황금 채굴기', kind: 'place', obj: 'drillGold', d: '용암·얼음 동굴의 금·서리 광맥까지 빠르게 캐는 채굴기. 전기가 필요해요.' };
-OBJ.drillGold = { n: '황금 채굴기', solid: 1, item: 'pitGold', dev: 'drill', tier: 3, every: 5, draw: 1, idle: 0 };
+ITEMS.drillGold = { n: '황금 채굴기', kind: 'place', obj: 'drillGold', d: '용암·얼음 동굴의 금·서리 광맥까지 빠르게 캐는 채굴기. 빛이 필요해요.' };
+OBJ.drillGold = { n: '황금 채굴기', solid: 1, item: 'drillGold', dev: 'drill', tier: 3, every: 5, draw: 1, idle: 0 };
 Object.assign(USE, { battery: 'batt', generator: 'fuel', crystalGen: 'cinfo', lever: 'lever', plate: 'cinfo', timer: 'timer', eLamp: 'cinfo', eDoor: 'cinfo', drillCu: 'drill', drillFe: 'drill', drillGold: 'drill' });
 Object.assign(USE_LBL, { batt: '확인', fuel: '연료 넣기', cinfo: '살펴보기', lever: '레버 당기기', timer: '간격 바꾸기', drill: '꺼내기' });
 export const BATT_MAX = 600, FUEL = { wood: 30, gel: 45, resin: 90 }, FUEL_MAX = 3600, DRILL_CAP = 60;
@@ -101,11 +101,10 @@ for (const id in ARROWS) { const [n, mul, tip, req, at, pierce, fx] = ARROWS[id]
   ITEMS[id] = { n, kind: 'arrow', stack: 999, arw: { mul, tip, pierce, fx }, d: `활을 쓸 때 가방에 있으면 한 발에 하나씩 써요. 화살이 없으면 나무 화살을 써요.` }; RECIPES.push(Rc(id, 10, req, at, 'weapon')); }
 Object.assign(RAR, { arrowIron: 1, arrowCrystal: 2, arrowGold: 2 });
 // ---- v42 stone drill: an electric drill like the ore drills, cheaper and quicker, but only for terrain (dirt and stone walls) ----
-ITEMS.drillStone = { n: '돌 채굴기', kind: 'place', obj: 'drillStone', d: '놓을 때 바라보는 쪽의 지형(흙벽·돌벽·화강암 벽)에서 흙·돌·화강암을 계속 캐요(벽은 사라지지 않아요). 광맥은 못 캐는 대신 구리 채굴기보다 빨라요. 전기가 필요해요.' };
-OBJ.drillStone = { n: '돌 채굴기', solid: 1, item: 'quarry', dev: 'drill', tier: 1, only: [1, 2, 3], every: 8, draw: .4, idle: 0 };
+ITEMS.drillStone = { n: '돌 채굴기', kind: 'place', obj: 'drillStone', d: '바라보는 쪽의 지형(흙벽·돌벽·화강암 벽)에서 흙·돌·화강암을 계속 캐는 옛 채굴기예요(벽은 사라지지 않아요). 이제는 만들 수 없고, 회수하면 재료로 돌려받아요. 빛이 필요해요.' };
+OBJ.drillStone = { n: '돌 채굴기', solid: 1, item: 'drillStone', dev: 'drill', tier: 1, only: [1, 2, 3], every: 8, draw: .4, idle: 0 };
 USE.drillStone = 'drill';
-// v46: what was asked for was a Palworld-style stone pit (돌 채굴장, a 2×2 site that only gives stone), so the wall drill has no recipe any more;
-// drills already set down keep working, and picking one up (or loading a save that holds one) gives a 돌 채굴장 instead
+// v46: 채굴기 → 채굴장으로 바꿨다가, v113에서 채굴기를 다시 들이고 채굴장을 없앴어요(data/automation.js). 돌 채굴기는 만들 수 없고, 놓인 것은 그대로 일해요
 // ---- v43 crystal cave materials: granite (terrain) · quartz 석영 (mineral, the old 'crystal' item) · 수정결정 (the region's own core material) ----
 RECIPES.push(Rc('quartzR', 1, [['crystal', 2]], 'furnace', 'mat'));
 Object.assign(RAR, { quartzR: 1, cryGem: 2 });

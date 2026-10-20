@@ -59,14 +59,14 @@ export const QSIDE = [
   { id: 's_bag', t: '가방 한 번 늘리기', h: '[작업대 → 도구]에서 튼튼한 가방을 만들어요.', done: () => (G.bagLv || 0) >= 1, rw: [['rope', 6], ['resin', 2]], xp: 30 },
   { id: 's_kill', t: () => `몬스터 50마리 물리치기 (${Math.min(50, G.stats.kills || 0)}/50)`, h: '꽃망울과 말랑이들도 포함돼요.', done: () => (G.stats.kills || 0) >= 50, rw: [['ironBar', 3], ['stew', 2]], xp: 60 },
   { id: 's_petal', t: () => `꽃잎 다섯 색 모으기 (${Object.keys(FLOWERS).filter(c => countItem('petal' + c) > 0 || (G.stats.petals || {})[c]).length}/5)`, h: '이끼 동굴 곳곳의 꽃망울 구역을 찾아가요.', done: () => Object.keys(FLOWERS).every(c => countItem('petal' + c) > 0 || (G.stats.petals || {})[c]), rw: [['glowcap', 4], ['rope', 4]], xp: 50 },
-  { id: 's_lamp', t: '전기 램프에 불 켜기', h: '건전지 → 전선 → 전기 램프를 이어 놓아요. 모두 구리 작업대에서 만들어요.', done: () => !!G.stats.litLamp, rw: [['wire', 10], ['battery', 1]], xp: 40 },
-  { id: 's_drill', t: () => `채굴장에서 광물 20개 얻기 (${Math.min(20, G.stats.drilled || 0)}/20)`, h: '작업대에서 구리·철 채굴장을 만들어 놓으면 광석이 계속 차올라요. 전기를 이으면 저절로 캐요. 예전 채굴기를 광맥 벽 앞에 놓고 전기를 연결하면 계속 캐요. 옆에 상자가 있으면 거기에 담아요.', done: () => (G.stats.drilled || 0) >= 20, rw: [['battery', 2], ['copperBar', 6]], xp: 60 },
+  { id: 's_lamp', t: '빛뿌리 램프에 불 켜기', h: '빛 항아리 → 빛뿌리 → 빛뿌리 램프를 이어 놓아요. 모두 구리 작업대에서 만들어요.', done: () => !!G.stats.litLamp, rw: [['wire', 10], ['battery', 1]], xp: 40 },
+  { id: 's_drill', t: () => `채굴기로 광물 20개 얻기 (${Math.min(20, G.stats.drilled || 0)}/20)`, h: '작업대에서 구리 채굴기를 만들어 광맥 바로 앞에 놓고, 빛뿌리로 빛을 이어요. 바라보는 광맥을 계속 캐서 옆 상자에 담아요.', done: () => (G.stats.drilled || 0) >= 20, rw: [['battery', 2], ['copperBar', 6]], xp: 60 },
   { id: 's_deep', t: '용암 동굴과 얼음 동굴에 발 들이기', h: '수정 곡괭이로 남쪽·서쪽 깊은 곳의 단단한 벽을 뚫어요.', done: () => !!(G.stats.seen3 && G.stats.seen4), rw: [['fireBerry', 4], ['torch', 6]], xp: 60 },
   { id: 's_gold', t: () => `금괴 10개 만들기 (${Math.min(10, (G.stats.made || {}).goldBar || 0)}/10)`, h: '용암 동굴의 금 광맥에서 금광석을 캐서 용광로에서 녹여요.', done: () => ((G.stats.made || {}).goldBar || 0) >= 10, rw: [['obsidian', 3], ['fireBerry', 3]], xp: 80 },
   { id: 's_epic', t: () => `영웅 장비 3가지 모으기 (${Math.min(3, epicOwned())}/3)`, h: '보스 전용 무기나 황금·흑요석·서리 장비가 영웅 등급이에요.', done: () => epicOwned() >= 3, rw: [['goldBar', 4], ['stew', 3]], xp: 120 },
   { id: 's_legend', t: '전설 장비 만들기', h: '용암 핵과 서리 핵을 모아 서리 장비제작대에서 새벽빛 검이나 별빛 곡괭이를 만들어요.', done: () => ['swordDawn', 'pickStar'].some(id => hasItem(id) || ((G.stats.made || {})[id] || 0) > 0), rw: [['stew', 5], ['goldBar', 4]], xp: 300 },
   { id: 's_rematch', t: '보스 한 마리 다시 불러서 물리치기', h: '보스를 물리친 뒤 작업대에서 소환 조각상을 만들어 보스방에서 써요. 다시 잡으면 재료와 함께 가끔 전용 장비가 떨어져요.', done: () => (G.stats.rematch || 0) > 0, rw: [['stew', 3], ['goldBar', 2]], xp: 120 },
-  { id: 's_gen', t: '발전기 돌리기', h: '발전기를 만들고 연료(나무·젤·송진)를 넣으면 건전지 없이 전기를 계속 써요.', done: () => !!G.stats.genRun, rw: [['ironBar', 4], ['resin', 4]], xp: 60 },
+  { id: 's_gen', t: '불씨 등잔 돌리기', h: '불씨 등잔을 만들고 연료(나무·젤·송진)를 넣으면 빛 항아리 없이 빛을 계속 써요.', done: () => !!G.stats.genRun, rw: [['ironBar', 4], ['resin', 4]], xp: 60 },
 ];
 export const MULTI = {
   bedDouble: ['포근한 2인 침대', '둘이 누워도 넉넉한 커다란 침대 (2×2).', [['wood', 14], ['fiber', 10], ['rope', 3]], 'bench', 'furn', [2, 2], { solid: 1, bed: 1 }, 'sleep'],
@@ -82,15 +82,15 @@ export const MULTI = {
   bigRock: ['이끼 바위', '이끼가 살짝 덮인 큰 바위 (2×1).', [['stone', 16], ['gMoss', 2]], 'bench', 'nature', [2, 1], { solid: 1 }],
   flowerField: ['큰 꽃밭', '온갖 색 꽃이 가득한 꽃밭 (3×2). 위로 걸어 다닐 수 있어요.', [['dirt', 3], ['gMoss', 3], ['petalR', 2], ['petalY', 2], ['petalB', 2], ['petalW', 2]], 'bench', 'nature', [3, 2], { flat: 1, rotV: 1 }],
   pondBig: ['작은 연못', '연잎이 떠 있는 작은 연못 (2×2).', [['gWater', 4], ['stone', 8], ['gMoss', 2]], 'bench', 'nature', [2, 2], { flat: 1, solid: 1 }],
-  pitCu: ['구리 채굴장', '구리 광맥을 옮겨 심은 2×2 채굴장이에요. 아무 데나 놓으면 광맥이 차오를 때마다 구리광석을 캐요. 전기를 이으면 저절로 캐서 옆 상자에 담아요.', [['copperBar', 6], ['stone', 16], ['copperOre', 8], ['rope', 2]], 'forge', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05, grow: 120 }, 'farm'],
-  pitFe: ['철 채굴장', '철 광맥을 옮겨 심은 2×2 채굴장이에요. 광맥이 차오를 때마다 철광석을 캐요. 전기를 이으면 저절로 캐서 옆 상자에 담아요.', [['ironBar', 6], ['copperBar', 4], ['ironOre', 8], ['crystal', 2]], 'forge', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: .8, idle: .05, grow: 150 }, 'farm'],
-  pitGold: ['황금 채굴장', '금 광맥을 옮겨 심은 2×2 채굴장이에요. 광맥이 차오를 때마다 금광석을 캐요. 전기를 이으면 저절로 캐서 옆 상자에 담아요.', [['goldBar', 4], ['obsidian', 4], ['goldOre', 6], ['ironBar', 4]], 'forge', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: 1, idle: .05, grow: 180 }, 'farm'],
-  quarry: ['돌 채굴장', '바위를 쌓아 둔 2×2 채석장이에요. 바위가 다시 차오르면 캐서 돌을 얻어요. 전기를 이으면 다 찰 때마다 저절로 캐서 옆 상자에 담아요.', [['stone', 20], ['wood', 8], ['rope', 2]], 'bench', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05 }, 'farm'],
-  treeFarm: ['나무 작업장', '묘목을 심어 둔 2×2 벌목장이에요. 나무가 다 자라면 베어요. 전기를 이으면 다 자랄 때마다 저절로 베어 옆 상자에 담아요.', [['wood', 20], ['dirt', 10], ['sapling', 2], ['rope', 2]], 'bench', 'nature', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05 }, 'farm'],
+  pitCu: ['구리 채굴장', '구리 광맥을 옮겨 심은 2×2 채굴장이에요. 아무 데나 놓으면 광맥이 차오를 때마다 구리광석을 캐요. 빛을 이으면 저절로 캐서 옆 상자에 담아요.', [['copperBar', 6], ['stone', 16], ['copperOre', 8], ['rope', 2]], 'forge', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05, grow: 120 }, 'farm'],
+  pitFe: ['철 채굴장', '철 광맥을 옮겨 심은 2×2 채굴장이에요. 광맥이 차오를 때마다 철광석을 캐요. 빛을 이으면 저절로 캐서 옆 상자에 담아요.', [['ironBar', 6], ['copperBar', 4], ['ironOre', 8], ['crystal', 2]], 'forge', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: .8, idle: .05, grow: 150 }, 'farm'],
+  pitGold: ['황금 채굴장', '금 광맥을 옮겨 심은 2×2 채굴장이에요. 광맥이 차오를 때마다 금광석을 캐요. 빛을 이으면 저절로 캐서 옆 상자에 담아요.', [['goldBar', 4], ['obsidian', 4], ['goldOre', 6], ['ironBar', 4]], 'forge', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: 1, idle: .05, grow: 180 }, 'farm'],
+  quarry: ['돌 채굴장', '바위를 쌓아 둔 2×2 채석장이에요. 바위가 다시 차오르면 캐서 돌을 얻어요. 빛을 이으면 다 찰 때마다 저절로 캐서 옆 상자에 담아요.', [['stone', 20], ['wood', 8], ['rope', 2]], 'bench', 'mine', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05 }, 'farm'],
+  treeFarm: ['나무 작업장', '묘목을 심어 둔 2×2 벌목장이에요. 나무가 다 자라면 베어요. 빛을 이으면 다 자랄 때마다 저절로 베어 옆 상자에 담아요.', [['wood', 20], ['dirt', 10], ['sapling', 2], ['rope', 2]], 'bench', 'nature', [2, 2], { solid: 1, dev: 'farm', draw: .6, idle: .05 }, 'farm'],
 };
 for (const id in MULTI) { const [n, d, req, at, cat, sz, ex, use] = MULTI[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = Object.assign({ n, item: id, sz }, ex); if (use) USE[id] = use; RECIPES.push(Rc(id, 1, req, at, cat)); }
 for (const id of ['chair', 'cryChair', 'mossSofa']) if (OBJ[id]) OBJ[id].dir4 = 1;
-QSIDE.push({ id: 's_farm', t: () => `나무 작업장으로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '작업대에서 나무 작업장을 만들어 놓고, 다 자라면 베어요. 건전지와 전선으로 전기를 이으면 저절로 베어 옆 상자에 담아요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
+QSIDE.push({ id: 's_farm', t: () => `비버 둥지로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '숲에 사는 비버를 올가미로 데려와 비버 둥지에 넣고, 먹이를 넣어 주면 둘레의 다 자란 나무를 베어 와요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
 // ---- v84 퀘스트 화면: 진행 숫자(진행 막대)와 「가장 가까운 할 곳」 종류 (글·조건·보상은 위 그대로, 칸만 더해요) ----
 // Q_PROG[id]() = [지금, 목표] · Q_GO[id] = 화살표가 가리킬 곳의 종류 (없으면 화살표 없음):
 //   ['obj', 물체…] 그 물체 · ['wall', 벽 번호] 그 광맥 · ['stn', 제작대] 그 물건을 만드는 제작대 · ['boss', 보스] 보스방 · ['tgt'] 이야기에 원래 있던 목표
@@ -106,6 +106,6 @@ export const Q_PROG = {
 export const Q_GO = {
   naru: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
   queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
-  s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['obj', 'pitCu', 'pitFe', 'pitGold', 'quarry'], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
-  s_legend: ['stn', 'smelter'], s_farm: ['obj', 'treeFarm'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'],
+  s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
+  s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'],
 };
