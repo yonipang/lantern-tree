@@ -457,6 +457,8 @@ def test_save_split():
               const w=T.serializeWorld(),c=T.serializeChar(),before=T.serialize();delete w.at; // 저장 시각을 빼요: 컴퓨터가 바빠 1초 넘게 걸리면 「꺼 둔 동안 흐른 시간」만큼 게임 시간이 앞당겨져 가끔 달랐어요
               T.deserializeParts(w,c);const after=T.serialize();delete before.at;delete after.at;
               // 꽃망울 구역의 next(다음 꽃망울까지 1.5초 간격)는 저장하지 않는 잠깐 값이에요. 방금 꽃망울이 생긴 구역이 있으면 before에만 남아 가끔 달랐어요
+              // guide(지금 이야기 번호)도 불러올 때 0으로 두고 다음 프레임에 다시 세요. 앞 단계의 옛 세이브로 이야기가 이미 넘어갔으면 before에만 1 이상이라 가끔 달랐어요
+              for(const o of [before,after])delete o.guide;
               for(const o of [before,after])o.fzones=JSON.parse(JSON.stringify(o.fzones)).map(z=>{delete z.next;return z});
               const diff=Object.keys(before).filter(k=>JSON.stringify(before[k])!==JSON.stringify(after[k])).map(k=>k+':'+JSON.stringify(before[k]).slice(0,80)+'→'+JSON.stringify(after[k]).slice(0,80));
               return [JSON.stringify(before)===JSON.stringify(after),T.G.inv[3]&&T.G.inv[3].c,T.G.petOn,!!T.G.qclaim.wood,'pets' in w,'qclaim' in c,diff]}""")
