@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 900" width="860" height="900" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <!-- 도트 GUI 그림 목록 안내 그림: 번호는 UIUX-재설계.md 「도트 GUI 그림 목록」 표와 같음. 크기는 폰 세로 화면(폭 402) 기준 화면 px -->
+  <style>
+    .scr{fill:#1d1730;stroke:#57476e;stroke-width:2}
+    .el{fill:#352a48;stroke:#ffc861;stroke-width:2}
+    .el2{fill:#2a2139;stroke:#7fe0b5;stroke-width:2}
+    .el3{fill:#2a2139;stroke:#ff8fa3;stroke-width:2}
+    .tag{font-size:12px;font-weight:bold;fill:#120f1c}
+    .tb{fill:#ffc861}.tb2{fill:#7fe0b5}.tb3{fill:#ff8fa3}
+    .t{font-size:12px;fill:#fbefd9}
+    .m{font-size:11px;fill:#bfaed3}
+    .h{font-size:18px;font-weight:bold;fill:#fbefd9}
+  </style>
+  <rect width="860" height="900" fill="#120f1c"/>
+
+  <!-- ===== 왼쪽: HUD (H = HUD, F = 틀) ===== -->
+  <text x="20" y="30" class="h">① 게임 화면 (HUD)</text>
+  <text x="20" y="48" class="m">노랑 = HUD 그림 H · 초록 = 틀 그림 F · 분홍 = 아이콘 I (화면 px, 그릴 크기는 절반)</text>
+  <rect x="20" y="60" width="402" height="820" rx="28" class="scr"/>
+
+  <!-- 얼굴 48 -->
+  <rect x="36" y="110" width="48" height="48" class="el"/>
+  <rect x="34" y="102" width="24" height="16" class="tb"/><text x="37" y="114" class="tag">H3</text>
+  <text x="38" y="172" class="m">얼굴 48</text>
+  <!-- 배고픔·더위추위 동그라미 -->
+  <circle cx="116" cy="134" r="24" class="el"/>
+  <circle cx="172" cy="134" r="24" class="el"/>
+  <rect x="96" y="102" width="40" height="16" class="tb"/><text x="99" y="114" class="tag">H4·5</text>
+  <text x="96" y="172" class="m">배고픔 · 더위추위 48</text>
+  <!-- 버프 -->
+  <rect x="36" y="180" width="24" height="24" class="el"/><rect x="64" y="180" width="24" height="24" class="el"/>
+  <text x="94" y="197" class="m">버프 24 (아이콘 1배)</text>
+  <!-- 이야기 한 줄 -->
+  <rect x="36" y="214" width="190" height="40" class="el2"/>
+  <rect x="34" y="208" width="24" height="16" class="tb2"/><text x="37" y="220" class="tag">F8</text>
+  <text x="66" y="238" class="t">이야기 · 빛씨앗 심기 2/5</text>
+
+  <!-- 오른쪽 위 4개 -->
+  <rect x="190" y="72" width="48" height="48" class="el"/>
+  <rect x="246" y="72" width="48" height="48" class="el"/>
+  <rect x="302" y="72" width="48" height="48" class="el"/>
+  <rect x="358" y="72" width="48" height="48" class="el"/>
+  <rect x="202" y="84" width="24" height="24" fill="none" stroke="#ff8fa3" stroke-width="2" stroke-dasharray="3 2"/>
+  <rect x="190" y="124" width="44" height="16" class="tb"/><text x="193" y="136" class="tag">H1·2</text>
+  <circle cx="404" cy="74" r="5" fill="#ff4f64"/>
+  <rect x="372" y="124" width="30" height="16" class="tb"/><text x="374" y="136" class="tag">H11</text>
+  <text x="240" y="136" class="m">캐릭터·지도·가방·설정 48</text>
+
+  <!-- 보스 막대 -->
+  <rect x="120" y="266" width="210" height="18" class="el2"/>
+  <rect x="118" y="260" width="24" height="16" class="tb2"/><text x="121" y="272" class="tag">F9</text>
+  <text x="200" y="279" class="m">보스 막대</text>
+
+  <!-- 알림 상자 -->
+  <rect x="140" y="400" width="164" height="32" class="el2"/>
+  <rect x="138" y="394" width="30" height="16" class="tb2"/><text x="140" y="406" class="tag">F12</text>
+  <text x="176" y="421" class="t">빛뿌리를 이었어요</text>
+  <!-- 캐릭터 + 머리 위 막대 + 화살표 -->
+  <rect x="203" y="452" width="32" height="12" class="el2"/>
+  <text x="240" y="462" class="m">머리 위 막대 (F10)</text>
+  <rect x="207" y="470" width="24" height="32" fill="#7a5c9e"/>
+  <polygon points="300,486 316,478 316,494" fill="#ffc861"/>
+  <rect x="322" y="478" width="22" height="16" class="tb3"/><text x="324" y="490" class="tag">I5</text>
+
+  <!-- 조이스틱 -->
+  <circle cx="100" cy="700" r="64" class="el" fill-opacity=".6"/>
+  <circle cx="100" cy="700" r="16" class="el"/>
+  <rect x="44" y="628" width="24" height="16" class="tb"/><text x="47" y="640" class="tag">H8</text>
+  <text x="62" y="780" class="m">받침 128 · 손잡이 32</text>
+
+  <!-- 상호작용 / 공격 -->
+  <rect x="246" y="574" width="48" height="48" class="el"/>
+  <rect x="244" y="566" width="30" height="16" class="tb"/><text x="246" y="578" class="tag">H10</text>
+  <text x="300" y="566" class="m">▸</text>
+  <rect x="310" y="558" width="80" height="80" class="el"/>
+  <rect x="310" y="654" width="80" height="80" class="el"/>
+  <rect x="356" y="550" width="24" height="16" class="tb"/><text x="359" y="562" class="tag">H6</text>
+  <text x="326" y="602" class="t">상호작용</text><text x="336" y="698" class="t">공격</text>
+  <!-- 스킬 -->
+  <rect x="266" y="652" width="36" height="36" class="el"/>
+  <rect x="266" y="696" width="36" height="36" class="el"/>
+  <rect x="240" y="664" width="24" height="16" class="tb"/><text x="243" y="676" class="tag">H7</text>
+
+  <!-- 단축칸 -->
+  <rect x="26" y="760" width="390" height="56" class="el" fill-opacity=".5"/>
+  <g>
+    <rect x="34" y="766" width="44" height="44" class="el2"/>
+    <rect x="88" y="766" width="44" height="44" class="el2"/>
+    <rect x="138" y="766" width="44" height="44" class="el2"/>
+    <rect x="188" y="766" width="44" height="44" class="el2"/>
+    <rect x="238" y="766" width="44" height="44" class="el2"/>
+    <rect x="288" y="766" width="44" height="44" class="el2"/>
+    <rect x="364" y="766" width="44" height="44" class="el"/>
+  </g>
+  <rect x="26" y="824" width="24" height="16" class="tb"/><text x="29" y="836" class="tag">H9</text>
+  <rect x="56" y="824" width="24" height="16" class="tb2"/><text x="59" y="836" class="tag">F6</text>
+  <text x="88" y="836" class="m">단축칸 판 · 칸 44 (도구 1 + 5) · 넘기기 44</text>
+
+  <!-- ===== 오른쪽: 창 ===== -->
+  <text x="440" y="30" class="h">② 창 (가방 · 캐릭터)</text>
+  <text x="440" y="48" class="m">모든 창이 같은 틀을 씀 · 폰은 화면 가운데</text>
+
+  <!-- 바깥 탭 -->
+  <rect x="490" y="78" width="100" height="42" class="el2"/>
+  <rect x="592" y="80" width="100" height="40" class="el2" fill-opacity=".55"/>
+  <rect x="508" y="92" width="16" height="16" fill="none" stroke="#ff8fa3" stroke-width="2" stroke-dasharray="3 2"/>
+  <text x="530" y="105" class="t">가방</text><text x="630" y="105" class="t">제작</text>
+  <rect x="488" y="68" width="24" height="16" class="tb2"/><text x="491" y="80" class="tag">F2</text>
+  <rect x="700" y="86" width="22" height="16" class="tb3"/><text x="702" y="98" class="tag">I1</text>
+  <text x="726" y="98" class="m">탭 아이콘 16 (1배)</text>
+
+  <!-- 세트 탭 (왼쪽 바깥) -->
+  <rect x="444" y="160" width="46" height="48" class="el2"/>
+  <rect x="446" y="212" width="44" height="48" class="el2" fill-opacity=".55"/>
+  <rect x="446" y="264" width="44" height="48" class="el2" fill-opacity=".55"/>
+  <text x="461" y="189" class="t">I</text><text x="459" y="241" class="t">II</text><text x="456" y="293" class="t">III</text>
+  <rect x="440" y="150" width="24" height="16" class="tb2"/><text x="443" y="162" class="tag">F3</text>
+
+  <!-- 창 틀 -->
+  <rect x="490" y="118" width="350" height="740" class="el2"/>
+  <rect x="496" y="126" width="24" height="16" class="tb2"/><text x="499" y="138" class="tag">F1</text>
+  <text x="526" y="138" class="m">창 틀 (9조각)</text>
+
+  <!-- 체력 막대 + 닫기 -->
+  <rect x="506" y="152" width="230" height="16" class="el2"/>
+  <text x="510" y="190" class="m">창 체력 막대 (F10, 캐릭터 창만)</text>
+  <rect x="780" y="132" width="48" height="48" class="el2"/>
+  <text x="796" y="163" class="h">×</text>
+  <rect x="790" y="184" width="24" height="16" class="tb2"/><text x="793" y="196" class="tag">F7</text>
+
+  <!-- 장비 칸 3×4 -->
+  <text x="506" y="222" class="m">장비 탭: 칸 56 · 빈 칸 모양 (I2)</text>
+  <g>
+    <rect x="530" y="234" width="56" height="56" class="el2"/><rect x="630" y="234" width="56" height="56" class="el2"/><rect x="730" y="234" width="56" height="56" class="el2"/>
+    <rect x="530" y="300" width="56" height="56" class="el2"/><rect x="730" y="300" width="56" height="56" class="el2"/>
+    <rect x="530" y="366" width="56" height="56" class="el2"/><rect x="730" y="366" width="56" height="56" class="el2"/>
+    <rect x="530" y="432" width="56" height="56" class="el2"/><rect x="630" y="432" width="56" height="56" class="el2"/><rect x="730" y="432" width="56" height="56" class="el2"/>
+    <rect x="636" y="306" width="44" height="110" fill="#7a5c9e"/>
+    <rect x="550" y="254" width="16" height="16" fill="none" stroke="#ff8fa3" stroke-width="2" stroke-dasharray="3 2"/>
+  </g>
+  <rect x="510" y="234" width="18" height="16" class="tb2"/><text x="512" y="246" class="tag">F6</text>
+  <rect x="588" y="246" width="20" height="16" class="tb3"/><text x="590" y="258" class="tag">I2</text>
+
+  <!-- 작은 탭 -->
+  <rect x="506" y="508" width="70" height="34" class="el2"/>
+  <rect x="580" y="508" width="70" height="34" class="el2" fill-opacity=".55"/>
+  <rect x="654" y="508" width="70" height="34" class="el2" fill-opacity=".55"/>
+  <text x="522" y="530" class="t">전체</text><text x="596" y="530" class="t">재료</text><text x="670" y="530" class="t">음식</text>
+  <rect x="728" y="516" width="24" height="16" class="tb2"/><text x="731" y="528" class="tag">F5</text>
+
+  <!-- 가방 칸 -->
+  <g>
+    <rect x="506" y="556" width="44" height="44" class="el2"/><rect x="556" y="556" width="44" height="44" class="el2"/><rect x="606" y="556" width="44" height="44" class="el2" stroke="#ffc861"/><rect x="656" y="556" width="44" height="44" class="el2"/><rect x="706" y="556" width="44" height="44" class="el2"/><rect x="756" y="556" width="44" height="44" class="el2"/>
+    <rect x="506" y="606" width="44" height="44" class="el2"/><rect x="556" y="606" width="44" height="44" class="el2"/><rect x="606" y="606" width="44" height="44" class="el2"/><rect x="656" y="606" width="44" height="44" class="el2"/><rect x="706" y="606" width="44" height="44" class="el2"/><rect x="756" y="606" width="44" height="44" class="el2"/>
+  </g>
+  <text x="506" y="668" class="m">가방 칸 44 · 고른 칸 · 새 물건 (F6) · 등급 색은 코드로</text>
+
+  <!-- 말풍선 -->
+  <rect x="566" y="470" width="190" height="34" class="el2" fill="#352a48"/>
+  <polygon points="620,504 628,514 636,504" fill="#352a48" stroke="#7fe0b5" stroke-width="2"/>
+  <text x="574" y="492" class="t">구리 곡괭이 · 고급</text>
+  <rect x="760" y="478" width="30" height="16" class="tb2"/><text x="762" y="490" class="tag">F11</text>
+
+  <!-- 진행 막대 -->
+  <rect x="506" y="688" width="300" height="14" class="el2"/>
+  <text x="506" y="720" class="m">퀘스트 진행 막대 · 경험치 줄 (F10)</text>
+
+  <!-- 버튼 줄 -->
+  <rect x="506" y="790" width="96" height="48" class="el2" style="fill:#ffc861"/>
+  <rect x="610" y="790" width="96" height="48" class="el2"/>
+  <rect x="714" y="790" width="96" height="48" class="el2" stroke="#ff7a8a"/>
+  <text x="538" y="819" class="t" style="fill:#120f1c">먹기</text><text x="626" y="819" class="t">단축칸으로</text><text x="742" y="819" class="t">버리기</text>
+  <rect x="504" y="770" width="24" height="16" class="tb2"/><text x="507" y="782" class="tag">F4</text>
+  <text x="534" y="782" class="m">버튼: 강조 · 보통 · 경고 (+ 누름 · 못 누름)</text>
+
+  <text x="440" y="890" class="m">건축 모드 버튼(I3)·지도 장소(I4)는 다른 화면이라 표에만 적었어요</text>
+</svg>
