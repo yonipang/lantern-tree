@@ -3110,7 +3110,7 @@ const GUIDE = [
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽이 보이면 캐 봐요. 그게 구리광석이에요. 흙도 버리지 말아요, 용광로 재료가 되거든요.', done: () => G.stats.copperOre >= 6, say: '반짝반짝! 이걸 녹이면 구리괴가 돼요.' },
   { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만들어 놓고, 용광로를 열어 구리괴를 만들어요. 조금 기다리면 돼요.', done: () => G.stats.copperBar >= 1, say: '첫 구리괴예요! 이제 작업대를 올릴 수 있어요.' },
   { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron'), say: '구리 작업대! 할머니 이야기 속 마을이랑 점점 닮아 가요.' },
-  { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·돌로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron'), say: '이제 더 멀리 갈 수 있겠어요. 길은 제가 같이 찾아볼게요!' },
+  { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·흙으로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron'), say: '이제 더 멀리 갈 수 있겠어요. 길은 제가 같이 찾아볼게요!' },
   { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '마을 창고를 지키던 동물이 주인을 잃고 커진 거래요. 화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비부터 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
   { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '말랑대왕도 창고를 지키던 녀석이에요. 화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼하니까 음식을 넉넉히 챙겨요. 점프했다 내려올 때는 멀리 떨어져 있어요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
   { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '수정 동굴은 등불지기들이 빛을 수정에 담아 두던 곳이래요. 빨간 점선이 보이면 옆으로 피해요! 골렘이 벽에 부딪혀 어지러울 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
@@ -3352,7 +3352,7 @@ const EQ_SLOTS = [['body', '상의'], ['head', '머리장식'], ['neck', '목걸
 ITEMS.smelter = { n: '장비제작대', kind: 'place', obj: 'smelter', d: '장비에 재료를 넣어 강화하고(최대 +5), 장비를 분해해 재료 일부를 돌려받아요. 반지도 여기서 만들어요. (v58 전 이름: 용광로)' };
 OBJ.smelter = { n: '장비제작대', solid: 1, station: 'smelter', item: 'smelter', light: [3.4, '#ff8a3d'] };
 STN.smelter = '장비제작대';
-RECIPES.push(Rc('smelter', 1, [['wood', 10], ['stone', 8], ['resin', 2]], 'bench', 'furn')); // v58: made early at the workbench from wood and stone
+RECIPES.push(Rc('smelter', 1, [['wood', 10], ['dirt', 8], ['resin', 2]], 'bench', 'furn')); // v58: made early at the workbench; v116: dirt instead of stone (stone needs a copper pickaxe)
 // rings: [name, effect, base, per level, recipe, rarity, band, gem]
 const RINGS = {
   ringCu: ['구리 반지', 'atk', .04, .01, [['copperBar', 4], ['gel', 2]], 0, C.copper, '#ff8fa3'],
