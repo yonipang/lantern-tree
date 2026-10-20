@@ -678,7 +678,7 @@ def test_npc_v104():
 
 def test_naru_start_v110():
     # v110 시작 길잡이 나루: 새 세계는 나루가 처음부터 마을에, 첫 이야기 「나루에게 말 걸기」(느낌표) → 첫 장면, 끝날 때 한마디, 빛씨앗 /5, 옛 세이브는 고치 → 마을
-    H2=HOOK.replace("computeLight}","computeLight,npcObjs,naruSpot,naruWaits,npcState,GUIDE,checkGuide,questGo,perform,runFrame,closePanel,bellState}")
+    H2=HOOK.replace("computeLight}","computeLight,npcObjs,naruSpot,naruWaits,npcState,GUIDE,checkGuide,questGo,perform,runFrame,closePanel,bellState,get panel(){return panel}}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -690,6 +690,18 @@ def test_naru_start_v110():
             await pg.wait_for_timeout(300)
             r2=await ev(pg,"()=>{const T=__T,G=T.G;const t=document.querySelector('#sheet');const tx=t?t.innerText:'';T.checkGuide();return [tx.includes('아, 깼어요?'),T.GUIDE[G.guide].id,T.naruWaits()]}")
             rec('첫 장면','나루 앞에서 상호작용 = 말 걸기 → 첫 장면 대화, 퀘스트가 뿌리기둥으로 넘어가고 느낌표 사라짐', r[:2]==['use','talk'] and r[2]==1 and r2==[True,'wood',False], str(r)+str(r2))
+            await pg.wait_for_timeout(400)
+            await ev(pg,"()=>document.querySelector('#backdrop').click()")
+            r=await ev(pg,"()=>{const P=__T.panel;return P&&[P.kind,P.mode]}")
+            rec('첫 장면','v120: 남은 줄이 있으면 창 바깥을 눌러도 첫 장면이 안 닫힘', r==['talk','intro'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.panel.at=3;T.closePanel();const k=G.stats.introAt;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return [k,a.u]}""")
+            await pg.wait_for_timeout(300)
+            r2=await ev(pg,"()=>{const T=__T,P=T.panel;return P&&[P.mode,P.lines.length,typeof P.lines[0]==='string'&&P.lines[0].startsWith('할머니가 그랬어요')]}")
+            rec('첫 장면','v120: 첫 장면을 중간에 닫으면 다시 말 걸 때 그 줄부터 이어서', r==[3,'talk'] and r2==['intro',13,True], str(r)+str(r2))
+            await ev(pg,"()=>{const P=__T.panel;P.at=P.lines.length-1}")
+            await ev(pg,"()=>document.querySelector('#backdrop').click()")
+            r=await ev(pg,"()=>[!__T.panel,__T.G.stats.introAt]")
+            rec('첫 장면','v120: 마지막 줄에서는 바깥을 누르면 닫히고, 다 본 것으로', r==[True,None], str(r))
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return a.u}""")
             await pg.wait_for_timeout(300)
@@ -734,7 +746,7 @@ def test_naru_part1_v117():
             rec('이름 짓기','정했어요 → 이름 저장(꺾쇠 빼고 8자까지), 다음 줄에 「{이름}님」', r[0]=='별빛b루나루나루' and r[1]==r[0] and ('별빛b루나루나루님' in r[2]), str(r))
             r=await ev(pg,"()=>{const T=__T,P=T.panel;P.at=P.lines.findIndex(l=>l&&l.me&&l.s.includes('좋아요'));T.renderPanel();T.typeFinish();const box=document.querySelector('#sheet .talkbox');return [box.classList.contains('me'),box.innerText.includes(T.G.pname)]}")
             rec('주인공 줄','주인공이 말하는 줄은 주인공 이름·얼굴', r==[True,True], str(r))
-            await ev(pg,"()=>__T.closePanel()")
+            await ev(pg,"()=>{const P=__T.panel;P.at=P.lines.length-1;__T.closePanel()}")  # v120: 첫 장면은 끝까지 본 것으로
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();T.checkGuide();const q=T.GUIDE[G.guide].id;G.stats.wood=6;const lv=G.rpg.lv,xp=G.rpg.xp;T.checkGuide();const b=T.bellState();
               const st=T.questState(T.GUIDE[1],1);T.runCmd({k:'claim',id:'wood'});return [q,T.GUIDE[G.guide].id,G.rpg.lv>lv||G.rpg.xp-xp===10,!!G.qclaim.wood,T.naruAsk(),T.naruOwed().join(),!!b&&b.lines.length===3&&b.lines[0].includes('나무 냄새'),st.nh,T.canClaim()]}""")
             rec('보상','뿌리기둥 끝: 경험치 10은 바로, 물건은 안 받음(퀘스트 창에서도 못 받음), 나루 머리 위 ?, 방울 대화 3줄', r==['wood','bench',True,False,True,'wood',True,True,False], str(r))
