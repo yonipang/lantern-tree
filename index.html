@@ -792,6 +792,7 @@ const FRAME_ORDER = [
   'zone', 'grow', // 꽃잎 구역 · 작물·나무 자라기 (content/rpg-nature.js)
   'flow',     // v87: 물·용암이 이어진 구덩이로 흐르기 (sim/digging.js)
   'circuit',  // 빛뿌리·기계 (content/circuits-regions.js)
+  'beaver',   // v114 비버 둥지: 먹이통의 먹이를 먹고 둘레의 다 자란 나무 베기 (sim/beaver.js)
   'light', 'guide', // 빛 계산 · 퀘스트·지역·숨은 방 확인 (game/update.js)
   'autosave', 'backup', 'cloud', // 저장·백업·클라우드 (main.js)
   'camera',   // 카메라 따라가기 (render.js)
@@ -3168,11 +3169,11 @@ const MULTI = {
 };
 for (const id in MULTI) { const [n, d, req, at, cat, sz, ex, use] = MULTI[id]; ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = Object.assign({ n, item: id, sz }, ex); if (use) USE[id] = use; RECIPES.push(Rc(id, 1, req, at, cat)); }
 for (const id of ['chair', 'cryChair', 'mossSofa']) if (OBJ[id]) OBJ[id].dir4 = 1;
-QSIDE.push({ id: 's_farm', t: () => `비버 둥지로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '숲에 사는 비버를 올가미로 데려와 비버 둥지에 넣고, 먹이를 넣어 주면 둘레의 다 자란 나무를 베어 와요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
+QSIDE.push({ id: 's_farm', t: () => `비버 둥지로 나무 30개 얻기 (${Math.min(30, G.stats.farmed || 0)}/30)`, h: '이끼 동굴 물가에 사는 비버를 올가미로 데려와 비버 둥지(작업대)에 넣고, 둘레에 먹이통을 놓아 먹이를 넣어 주면 둥지 둘레의 다 자란 나무를 베어 와요.', done: () => (G.stats.farmed || 0) >= 30, rw: [['rope', 4], ['battery', 1]], xp: 50 });
 // ---- v84 퀘스트 화면: 진행 숫자(진행 막대)와 「가장 가까운 할 곳」 종류 (글·조건·보상은 위 그대로, 칸만 더해요) ----
 // Q_PROG[id]() = [지금, 목표] · Q_GO[id] = 화살표가 가리킬 곳의 종류 (없으면 화살표 없음):
 //   ['obj', 물체…] 그 물체 · ['wall', 벽 번호] 그 광맥 · ['stn', 제작대] 그 물건을 만드는 제작대 · ['boss', 보스] 보스방 · ['tgt'] 이야기에 원래 있던 목표
-//   ['water'] 물가 · ['enemy'] 몬스터 · ['zone'] 꽃망울 구역 · ['biome', 지역…] 그 지역 · ['room'] 찾았지만 안 연 숨은 방 · ['wild'] 데려올 수 있는 동물
+//   ['water'] 물가 · ['enemy'] 몬스터 · ['zone'] 꽃망울 구역 · ['biome', 지역…] 그 지역 · ['room'] 찾았지만 안 연 숨은 방 · ['wild'] 데려올 수 있는 동물 · ['beaver'] 비버 둥지(놓았으면) → 비버 → 이끼 동굴 물가
 const qn = v => v || 0;
 const Q_PROG = {
   wood: () => [qn(G.stats.wood), 6], ore: () => [qn(G.stats.copperOre), 6], seeds: () => [qn(G.stats.seedsFound), 5], tree: () => [qn(G.treeSeeds), 5],
@@ -3185,7 +3186,7 @@ const Q_GO = {
   naru: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
   queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
-  s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'],
+  s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],
 };
 // ================= 농사·숨은 방·요리 데이터 (구조 변경 2단계: features/farming-cooking.js에서 데이터만 옮김) =================
 // 낫·물뿌리개·비료, 맞는 흙·별 작물, 숨은 방 장식, 버프·요리·레시피 쪽지, 용광로·요리솥 시간, 낚시 운 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
@@ -3850,6 +3851,31 @@ const BARTER = {
   ],
 };
 // 쪽지(rn_…)는 받은 적이 있으면 다시 안 줘요 (sim/npc.js barterCan)
+// ================= v114 자동 생산 2: 비버 둥지 · 먹이통 =================
+// 기획: dev/design/자동생산.md 3장 (2026-10-20 확정 — 수치는 사용자가 고른 추천표 + 먹이통). 동작은 sim/beaver.js.
+// 비버는 이끼 동굴 물가에 살고(올가미로 잡아 「비버」 아이템), 둥지에 넣으면 둥지 둘레 NEST_R칸 안의 다 자란 나무를
+// NEST_EVERY초마다 하나씩 베어 와요. 먹이는 둥지 둘레 NEST_R칸 안의 먹이통에서 먹고, 먹이가 없으면 둥지에서 잠들어요.
+
+const NEST_R = 3;        // 둥지 둘레 몇 칸 (나무 베기·먹이통 찾기 모두, 7×7)
+const NEST_EVERY = 30;   // 한 그루 베는 데 걸리는 초 (뿌리기둥이면 1분에 나무 약 5개 — 구리 채굴기와 비슷하게)
+const NEST_CAP = 60;     // 옆 상자가 없을 때 둥지 안에 쌓이는 최대 개수 (채굴기와 같게)
+const FEED_SLOTS = 4;    // 먹이통 칸 수
+const BEAVER_WATER_R = 6; // 이끼 동굴에서 물 몇 칸 안에 서 있으면 비버가 먼저 나와요
+// 먹이 하나로 몇 초 일하는지 (이 표에 한 줄 더하면 새 먹이가 돼요 — 별 작물은 아까워서 먹이로 쓰지 않아요)
+const FEED = { berry: 60, mushroom: 60, cbean: 120, fireBerry: 120, radish: 120 };
+
+ANIMALS.beaver = { n: '비버', biome: 0, worker: 1, spd: 1.1, col: '#9a6a44' }; // 일꾼: 펫·목장 동물이 아니에요 (목장 퀘스트에도 안 셈)
+Object.assign(ITEMS, {
+  beaver: { n: '비버', kind: 'beaver', stack: 9, d: '이끼 동굴 물가에서 데려온 비버. 비버 둥지 앞에서 누르면 둥지에 들어가 둘레의 나무를 베어 와요.' },
+  beaverNest: { n: '비버 둥지', kind: 'place', obj: 'beaverNest', d: `비버를 넣으면 둘레 ${NEST_R}칸 안의 다 자란 나무를 ${NEST_EVERY}초마다 하나씩 베어 옆 상자에 담아요. 벤 나무는 어린나무로 돌아가 다시 자라요. 먹이는 둘레의 먹이통에서 먹어요.` },
+  feeder: { n: '먹이통', kind: 'place', obj: 'feeder', d: `비버의 먹이를 담는 통 (${FEED_SLOTS}칸). 통통베리·버섯은 1분, 수정 콩·불꽃 열매·서리 무는 2분 동안 일하게 해요. 둘레 ${NEST_R}칸 안의 비버 둥지가 같이 써요.` },
+});
+OBJ.beaverNest = { n: '비버 둥지', solid: 1, item: 'beaverNest', nest: 1 };
+OBJ.feeder = { n: '먹이통', solid: 1, item: 'feeder', feeder: 1 };
+// 작업대(기본)에서 · 편의 → 농사 탭 (2026-10-20 사용자 선택)
+RECIPES.push(Object.assign(Rc('beaverNest', 1, [['wood', 12], ['dirt', 10], ['rope', 2]], 'bench', 'farm'), { tier: 0 }),
+  Object.assign(Rc('feeder', 1, [['wood', 6], ['rope', 1]], 'bench', 'farm'), { tier: 0 }));
+TIPS.push('이끼 동굴 물가에서 비버를 올가미로 데려와 비버 둥지에 넣으면, 먹이통의 먹이를 먹으며 둘레의 나무를 베어 와요.');
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -3869,6 +3895,7 @@ defineCmd('seenItem', c => { const S = G.seen || {}; if (S[c.id] > 1) S[c.id] = 
 function returnObj(o, x, y) {
   if (o.job) cancelJob(o, x, y); // v59: a furnace / pot picked up mid-job gives back the finished items and the unused materials
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
+  for (const [id, c] of nestContents(o)) { const l = addItem(id, c, false); if (l) spawnDrop(id, l, x, y); } // v114: 둥지의 비버·먹이통의 먹이
   if (DUR[d.item]) { const it = { id: d.item, c: 1, dur: Math.round(o.e != null ? o.e : DUR[d.item][0]) }; if (moveInto(G.inv, it)) { spawnDrop(d.item, 1, x, y); G.drops[G.drops.length - 1].dur = it.dur; } }
   else if (OLD_AUTO[o.t]) { for (const [m, c] of OLD_AUTO[o.t]) { const l = addItem(m, c, false); if (l) spawnDrop(m, l, x, y); } } // v113: 옛 돌 채굴기는 재료로
   else { const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; const l = addItem(it, 1, false); if (l) spawnDrop(it, 1, x, y); } // v60: an upgraded workbench comes back as its tier item
@@ -4196,7 +4223,7 @@ const DIRN = ['아래', '오른쪽', '위', '왼쪽'];
 // A turned piece uses its own drawing when there is one (obj/<id>S.png side, obj/<id>U.png back), otherwise the drawing turned 90°.
 const ROT4 = new Set(['chair', 'cryChair', 'mossSofa', 'ironChair', 'shroomStool', 'stumpStool', 'sofa2', 'logBench', 'stoneBench', 'cushion']);
 const NOROT = new Set(['pictureFrame', 'vase', 'table', 'rugRound', 'cryMirror', 'cryFountain', 'fountainBig', 'fishTank', 'bootPlanter', 'torch']);
-function rotN(t) { const d = OBJ[t]; if (!d || !d.item || d.tw || d.dev || d.src || d.sw || d.chest || d.ranch || d.nat || d.crop || d.tree || d.lost || NOROT.has(t)) return 1; return ROT4.has(t) || d.dir4 ? 4 : 2; }
+function rotN(t) { const d = OBJ[t]; if (!d || !d.item || d.tw || d.dev || d.src || d.sw || d.chest || d.nest || d.feeder || d.ranch || d.nat || d.crop || d.tree || d.lost || NOROT.has(t)) return 1; return ROT4.has(t) || d.dir4 ? 4 : 2; }
 const canRotObj = t => rotN(t) > 1;
 const rotSwaps = d => !!(d && d.sz && d.sz[0] !== d.sz[1]);
 const placeFp = d => d.sz ? (pRot() % 2 && rotSwaps(d) ? [d.sz[1], d.sz[0]] : d.sz) : [1, 1];
@@ -4226,7 +4253,7 @@ function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give ||
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
-  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
+  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
     const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
@@ -4303,6 +4330,7 @@ function hitRecover(tg, w) { const p = G.p, t = tg.t; faceTo(t.x + .5 - p.x, t.y
 function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf(o) : [1, 1], x = t.x + fp[0] / 2, y = t.y + fp[1] / 2 + .3;
   delObj(i); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
+  for (const [id, c] of nestContents(o)) spawnDrop(id, c, x, y); // v114: 둥지의 비버·먹이통의 먹이
   if (OLD_AUTO[o.t]) { for (const [m, c] of OLD_AUTO[o.t]) spawnDrop(m, c, x, y); emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); markLight(); emit('tile', t.x, t.y); emit('inv'); return; } // v113: 옛 돌 채굴기는 재료로
   const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
   if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
@@ -4685,6 +4713,7 @@ function autoOptions(t, i, o) {
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
       else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
     if (d.warp) { A(warpDecide(t, o)); if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; } // v89 워프포인트·포탈
+    if (d.nest || d.feeder) { for (const a of nestOptions(t, o)) A(a); return L; } // v114 비버 둥지·먹이통
     if (d.nat) { A(natAct(d, o, t)); return L; }
     if (d.item) { const u = USE[o.t]; if (u) A({ k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o });
       A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; }
@@ -4791,6 +4820,7 @@ function useObj(a) {
     case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); talkTo(o.npc); break; // v104 · v110 나루 첫 장면
     case 'read2': faceTo(x - p.x, t.y + .5 - p.y); if (o.t === 'diaryLast') readLast(); else readDiary({ ...o, x, y: t.y + .5 }); break; // v106 일기 · v108 마지막 장
     case 'brazier': lightBrazier(o, x, t.y + .3); break; // v108 횃대
+    case 'feeder': case 'nestIn': case 'nestTake': case 'nestInfo': nestUse(a); break; // v114
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
     case 'mirror': emit('puff', p.x, p.y - .8, '#fff7c2', 10, 2, .8); emit('sfx', 'seed'); emit('toast', pickOne(COMPLIMENTS), null, 'mirror'); break;
@@ -5399,9 +5429,12 @@ function wildTick(dt) { petDt = dt;
   G.wild = G.wild || []; wildT -= dt;
   G.wild = G.wild.filter(w => playerList().some(pl => Math.hypot(w.x - pl.p.x, w.y - pl.p.y) < 30)); // 플레이어 누구에게서든 멀면 사라져요 (8단계)
   if (wildT <= 0) { wildT = 6; const pl = nextTurn(), p = pl.p; withPlayer(pl, () => { const pb = G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0;
-    const kinds = Object.keys(ANIMALS).filter(k => ANIMALS[k].biome === pb && !(ANIMALS[k].pet && (G.pets || {})[k]) && !G.wild.some(w => w.k === k));
-    if (kinds.length && G.wild.length < 2 && rand() < .35) for (let tries = 0; tries < 12; tries++) { const a = rand() * 6.283, r = 7 + rand() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
-      if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y)) || G.biome[idx(x, y)] !== pb || G.floor[idx(x, y)] === WATER || G.floor[idx(x, y)] === LAVA) continue;
+    const wet = beaverHome(p.x, p.y); // v114: 비버는 이끼 동굴 물가에서만, 물가에 있으면 먼저 나와요 (다른 동물 2마리와 따로 한 마리 더)
+    let kinds = Object.keys(ANIMALS).filter(k => ANIMALS[k].biome === pb && !(ANIMALS[k].pet && (G.pets || {})[k]) && !G.wild.some(w => w.k === k) && (!ANIMALS[k].worker || wet));
+    if (kinds.includes('beaver')) kinds = ['beaver'];
+    const bv = kinds[0] === 'beaver'; // 무작위 순서는 예전 그대로 (비버가 없을 때 같은 결과)
+    if (kinds.length && G.wild.length < (bv ? 3 : 2) && rand() < .35) for (let tries = 0; tries < 12; tries++) { const a = rand() * 6.283, r = 7 + rand() * 6, x = Math.floor(p.x + Math.cos(a) * r), y = Math.floor(p.y + Math.sin(a) * r);
+      if (!inB(x, y) || isSolid(x, y) || G.objs.get(idx(x, y)) || G.biome[idx(x, y)] !== pb || G.floor[idx(x, y)] === WATER || G.floor[idx(x, y)] === LAVA || (bv && !waterNear(x, y, 3))) continue;
       G.wild.push({ k: kinds[(rand() * kinds.length) | 0], x: x + .5, y: y + .6, vx: 0, vy: 0, t: 1, flip: false, anim: 0 }); break; } }); } // 생기는 곳: 플레이어 돌아가며 (그 플레이어의 펫 종류는 빼고)
   const mdt = Math.min(dt, .1);
   for (const w of G.wild) { w.t -= dt; if (w.t <= 0) { w.t = 1.2 + rand() * 2; if (rand() < .45) { w.vx = 0; w.vy = 0; } else { const a = rand() * 6.283, sp = ANIMALS[w.k].spd; w.vx = Math.cos(a) * sp; w.vy = Math.sin(a) * sp; } }
@@ -5418,7 +5451,9 @@ function openCatch(w) { if (!w || !G.wild.includes(w)) return; openPanel('catch'
 const catchAng = c => ((performance.now() - c.t0) / 1000 * c.spd) % 6.283;
 const inZone = (a, c) => { let d = Math.abs(a - c.za) % 6.283; if (d > Math.PI) d = 6.283 - d; return d < c.zw / 2; };
 function catchThrow() { const c = panel && panel.kind === 'catch' ? panel : null; if (!c || (c.cool || 0) > performance.now()) return; c.cool = performance.now() + 250; const w = c.w, a = catchAng(c);
-  if (inZone(a, c)) { c.hits++; emit('sfx', 'pick'); if (c.hits >= 3 && ANIMALS[w.k].ranch) { G.wild = G.wild.filter(x => x !== w); const l = addItem(w.k, 1); if (l) spawnDrop(w.k, l, G.p.x, G.p.y); G.stats.ranchK = G.stats.ranchK || {}; G.stats.ranchK[w.k] = 1; emit('close'); emit('hearts', w.x, w.y - .5, 6); emit('sfx', 'seed'); emit('toast', `${ANIMALS[w.k].n}${josa(ANIMALS[w.k].n, '을', '를').slice(ANIMALS[w.k].n.length)} 데려왔어요! 원하는 곳에 내려놓으면 ${ANIMALS[w.k].verb.split(' ')[0]}${ANIMALS[w.k].ranch === 'wool' ? '을' : '를'} 줘요`, 'good'); emit('inv'); return; }
+  if (inZone(a, c)) { c.hits++; emit('sfx', 'pick');
+    if (c.hits >= 3 && ANIMALS[w.k].worker) { G.wild = G.wild.filter(x => x !== w); const l = addItem(w.k, 1); if (l) spawnDrop(w.k, l, G.p.x, G.p.y); G.stats.beavers = (G.stats.beavers || 0) + 1; emit('close'); emit('hearts', w.x, w.y - .5, 6); emit('sfx', 'seed'); emit('toast', caughtMsg(w.k), 'good'); emit('inv'); return; } // v114 비버: 일꾼 (목장 퀘스트에 안 셈)
+    if (c.hits >= 3 && ANIMALS[w.k].ranch) { G.wild = G.wild.filter(x => x !== w); const l = addItem(w.k, 1); if (l) spawnDrop(w.k, l, G.p.x, G.p.y); G.stats.ranchK = G.stats.ranchK || {}; G.stats.ranchK[w.k] = 1; emit('close'); emit('hearts', w.x, w.y - .5, 6); emit('sfx', 'seed'); emit('toast', `${ANIMALS[w.k].n}${josa(ANIMALS[w.k].n, '을', '를').slice(ANIMALS[w.k].n.length)} 데려왔어요! 원하는 곳에 내려놓으면 ${ANIMALS[w.k].verb.split(' ')[0]}${ANIMALS[w.k].ranch === 'wool' ? '을' : '를'} 줘요`, 'good'); emit('inv'); return; }
     if (c.hits >= 3) { G.pets = G.pets || {}; G.pets[w.k] = 1; G.wild = G.wild.filter(x => x !== w); if (!G.petOn) { G.petOn = w.k; G.petE = { x: w.x, y: w.y, flip: false, anim: 0, moving: false }; } G.stats.pets = Object.keys(G.pets).length;
       emit('close'); emit('hearts', w.x, w.y - .5, 8); emit('sfx', 'seed'); emit('toast', `${ANIMALS[w.k].n} ${ANIMALS[w.k].pn}${josa(ANIMALS[w.k].pn, '이', '가').slice(ANIMALS[w.k].pn.length)} 친구가 됐어요! [가방]에서 함께 다닐 펫을 골라요`, 'good'); return; }
     c.za = rand() * 6.283; c.zw *= .78; c.spd *= 1.18; }
@@ -5532,7 +5567,11 @@ function questGo(q) {
   if (k === 'enemy') return nearestOf(G.enemies.map(e => ({ x: e.x, y: e.y })));
   if (k === 'zone') return nearestOf((G.fzones || []).map(z => ({ x: z.x + .5, y: z.y + .5 })));
   if (k === 'room') return nearestOf((G.rooms || []).filter(r => r.found && !r.open).map(r => ({ x: r.cx + .5, y: r.cy + .5 })));
-  if (k === 'wild') return nearestOf((G.wild || []).filter(w => ANIMALS[w.k]).map(w => ({ x: w.x, y: w.y })));
+  if (k === 'wild') return nearestOf((G.wild || []).filter(w => ANIMALS[w.k] && !ANIMALS[w.k].worker).map(w => ({ x: w.x, y: w.y })));
+  if (k === 'beaver') { // v114: 비버가 든 둥지(또는 비버를 가졌으면 빈 둥지), 아니면 비버, 없으면 가장 가까운 이끼 동굴 물가
+    const nests = [], hasB = countItem('beaver') > 0; for (const [i, o] of G.objs) if (o && o.t === 'beaverNest' && (o.bv || hasB)) nests.push({ x: i % W + .5, y: ((i / W) | 0) + .5 }); if (nests.length) return nearestOf(nests);
+    const bw = (G.wild || []).filter(w => w.k === 'beaver'); if (bw.length && !countItem('beaver')) return nearestOf(bw.map(w => ({ x: w.x, y: w.y })));
+    return nearestTile(i => G.floor[i] === WATER && !G.wall[i] && G.biome[i] === 0, 80); }
   return undefined; }
 // 장소가 있는데 화살표가 없을 때 안내
 function questGoMsg(q) { const g = q && Q_GO[q.id]; if (!g) return ''; if (g[0] === 'stn') return `${STN[g[1]] || g[1]}를 먼저 놓아요`; return '아직 찾지 못했어요'; }
@@ -6314,6 +6353,92 @@ GUIDE.splice(GUIDE.length - 1, 0,
 Q_GO.deep = ['tgt']; Q_GO.dark = ['tgt'];
 // 불러올 때: 가장 깊은 곳 놓기(한 번) + 보스 자리 맞추기
 function deepOnLoad() { placeDeep(); if (G.stats.deep && !G.bossDead.dark) G.bosses.dark = freshBoss('dark'); }
+// ================= v114 자동 생산 2: 비버 둥지 · 먹이통 (규칙) =================
+// 기획: dev/design/자동생산.md 3장. 수치·먹이 표는 data/beaver.js.
+// 둥지 o: bv(비버가 들어 있음) · fd(먹은 먹이로 남은 초) · prog(이번 나무까지 일한 초) · tgt(베는 나무 칸) · from(방금 벤 나무 칸, 돌아오는 걸음 그림용)
+//        store(옆 상자가 없을 때 쌓인 것) · work · why('beaver' 비버 없음 · 'tree' 다 자란 나무 없음 · 'food' 먹이 없음 · 'full' 가득 참)
+// 먹이통 o: feed(FEED_SLOTS칸, 먹이만 들어가요)
+// 일은 비버가 먹이를 먹은 동안만 하고, 먹이는 일하는 동안만 줄어요 (둘레에 다 자란 나무가 없으면 먹이도 안 먹어요).
+
+const storeN = o => (o.store || []).reduce((a, s) => a + s.c, 0);
+const feedSec = o => (o.feed || []).reduce((a, s) => a + (s && FEED[s.id] ? FEED[s.id] * s.c : 0), 0);
+// 다 자란 나무 (베면 나무가 나오는 것 — 뿌리기둥·큰버섯·벚꽃나무·둥근 나무·큰 고목. 젊은 나무는 아직 안 벰)
+const grownTree = o => !!o && YOUNG_TREES.includes(o.t) && !isYoung(o);
+// 둥지 둘레 NEST_R칸(7×7) 안에서 test에 맞는 것 (여러 칸 나무는 한 칸만 걸쳐도), 가까운 순
+function around(i, test) { const x = i % W, y = (i / W) | 0, out = [], seen = new Set();
+  for (let dy = -NEST_R; dy <= NEST_R; dy++) for (let dx = -NEST_R; dx <= NEST_R; dx++) { if ((!dx && !dy) || !inB(x + dx, y + dy)) continue; const j0 = idx(x + dx, y + dy), j = anchorAt(j0); if (j < 0 || seen.has(j)) continue; const o = G.objs.get(j); if (!o || !test(o)) continue; seen.add(j); out.push({ j, o, d: Math.hypot(dx, dy) }); }
+  return out.sort((a, b) => a.d - b.d || a.j - b.j); }
+const treesNear = i => around(i, grownTree);
+const feedersNear = i => around(i, o => o.t === 'feeder' && !!o.feed);
+// 둘레 먹이통에서 먹이 하나 먹기 → 그 먹이로 일하는 초 (없으면 0)
+function eatOne(i) { for (const { o } of feedersNear(i)) for (let k = 0; k < o.feed.length; k++) { const s = o.feed[k]; if (!s || !FEED[s.id]) continue; const sec = FEED[s.id]; s.c--; if (!s.c) o.feed[k] = null; return sec; } return 0; }
+function chestsBy(i) { const x = i % W, y = (i / W) | 0, out = []; for (const [dx, dy] of D4) { if (!inB(x + dx, y + dy)) continue; const c = G.objs.get(idx(x + dx, y + dy)); if (c && c.t === 'chest' && c.items) out.push({ c, x: x + dx, y: y + dy }); } return out; }
+const roomy = i => chestsBy(i).some(({ c }) => c.items.some(z => !z));
+// 벤 나무에서 나오는 것: 손으로 벨 때의 나무 개수·송진 확률 그대로 (이끼 섬유·버섯·꽃잎·묘목은 안 나옴)
+function beaverYield(t) { const out = []; for (const [id, a, b, ch] of OBJ[t].drops || []) { if (id !== 'wood' && id !== 'resin') continue; if (rand() < (ch == null ? 1 : ch)) { const c = rint(a, b); if (c > 0) out.push([id, c]); } } return out; }
+function chop(i, o, j, tree) { const tx = j % W, ty = (j / W) | 0, nx = i % W, ny = (i / W) | 0, d = OBJ[tree.t], fp = d.sz ? fpOf(tree) : [1, 1];
+  const got = beaverYield(tree.t), cx = tx + fp[0] / 2, cy = ty + fp[1] / 2, near = Math.hypot(cx - G.p.x, cy - G.p.y) < 14;
+  // 벤 나무는 어린나무(4단계 중 2단계)로 돌아가 YOUNG_T×2초 뒤 다 자라요 — 옛 그루터기처럼 원래 나무로 (sim/nature.js growTick)
+  delObj(j); G.objs.set(j, { t: tree.t === 'bigShroom' ? 'capStump' : 'stump', g: tree.t, at: G.time + 2 * YOUNG_T }); markLight(); emit('tile', tx, ty);
+  const ch = chestsBy(i);
+  for (const [id, c] of got) { let left = c; for (const { c: box, x, y } of ch) { if (!left) break; const l = moveInto(box.items, { id, c: left }); if (l < left && near) emit('oreFly', cx, cy, x + .5, y + .6, id === 'resin' ? '#e8a838' : '#b07a48'); left = l; }
+    if (left) { o.store = o.store || []; const add = Math.min(left, NEST_CAP - storeN(o)); if (add > 0) { const s = o.store.find(z => z.id === id); if (s) s.c += add; else o.store.push({ id, c: add }); if (near) emit('oreFly', cx, cy, nx + .5, ny + .6, id === 'resin' ? '#e8a838' : '#b07a48'); } }
+    if (id === 'wood') G.stats.farmed = (G.stats.farmed || 0) + c; } // 퀘스트 「비버 둥지로 나무 30개」
+  if (near) { emit('sfx', 'brk'); emit('puff', cx, cy - .4, '#7fc06a', 12, 2.6, .4); emit('puff', cx, cy + .2, '#b07a48', 6, 1.8, .2); } }
+function nestStep(i, o, dt) {
+  if (!o.bv) { o.work = false; o.why = 'beaver'; return; }
+  if (storeN(o) >= NEST_CAP && !roomy(i)) { o.work = false; o.why = 'full'; return; }
+  let tg = o.tgt != null ? G.objs.get(o.tgt) : null; if (!grownTree(tg) || !treesNear(i).some(e => e.j === o.tgt)) { const L = treesNear(i); if (!L.length) { o.tgt = null; o.work = false; o.why = 'tree'; return; } o.tgt = L[0].j; tg = L[0].o; }
+  if ((o.fd || 0) <= 0) { const sec = eatOne(i); if (!sec) { o.fd = 0; o.work = false; o.why = 'food'; return; } o.fd = sec; }
+  o.work = true; o.why = ''; o.fd = Math.max(0, o.fd - dt); o.prog = (o.prog || 0) + dt;
+  if (o.prog >= NEST_EVERY - 4 && Math.hypot(o.tgt % W + .5 - G.p.x, ((o.tgt / W) | 0) + .5 - G.p.y) < 20) tg.shake = .15; // 쓰러지기 전 흔들흔들
+  if (o.prog >= NEST_EVERY) { o.prog = 0; o.from = o.tgt; chop(i, o, o.tgt, tg); o.tgt = null; G.stats.beaverCut = (G.stats.beaverCut || 0) + 1; } }
+let nestT = 0;
+onFrame('beaver', dt => { nestT += dt; if (nestT < .25) return; const step = nestT; nestT = 0; for (const [i, o] of G.objs) if (o && o.t === 'beaverNest') nestStep(i, o, step); });
+
+// ---- 둥지 앞에서 할 일 (sim/actions.js autoOptions·useObj에서 불러요) ----
+const NEST_WHY = { beaver: '비버가 없어요 · 이끼 동굴 물가의 비버를 올가미로 데려와 넣어 주세요', tree: `둘레 ${NEST_R}칸 안에 다 자란 나무가 없어요 · 묘목을 심어 비버 숲을 만들어요`, food: `배가 고파 잠들었어요 · 둘레 ${NEST_R}칸 안의 먹이통에 먹이를 넣어 주세요`, full: '둥지가 가득 찼어요 · 꺼내거나 옆에 보관상자를 놓아 주세요' };
+function nestInfo(o, i) { if (o.work) { const left = Math.ceil(NEST_EVERY - (o.prog || 0)), food = Math.floor(((o.fd || 0) + feedersNear(i).reduce((a, e) => a + feedSec(e.o), 0)) / 60); return `나무를 갉는 중이에요 · 다음 나무까지 ${left}초 · 먹이로 약 ${food}분 더 일해요`; }
+  return NEST_WHY[o.why] || NEST_WHY.beaver; }
+function nestOptions(t, o) { const L = [], i = idx(t.x, t.y), n = storeN(o);
+  if (o.t === 'feeder') { L.push({ k: 'use', u: 'feeder', lbl: '먹이통 열기', icon: 'hand', t, o }); L.push({ k: 'pickup', lbl: '회수', icon: 'hand', t, o, onlyAlt: 1 }); return L; }
+  if (!o.bv && countItem('beaver')) L.push({ k: 'use', u: 'nestIn', lbl: '비버 넣기', icon: 'beaver', t, o });
+  if (n) L.push({ k: 'use', u: 'nestTake', lbl: '꺼내기', icon: o.store[0].id, t, o });
+  L.push({ k: 'use', u: 'nestInfo', lbl: '살펴보기', icon: 'hand', t, o, msg: nestInfo(o, i) });
+  L.push({ k: 'pickup', lbl: '회수', icon: 'hand', t, o, onlyAlt: 1 }); return L; }
+function nestUse(a) { const o = a.o, t = a.t, i = idx(t.x, t.y);
+  if (a.u === 'feeder') { emit('open', 'feeder', { i }); return; }
+  if (a.u === 'nestIn') { if (o.bv || !countItem('beaver')) return; removeItem('beaver', 1); o.bv = 1; o.prog = 0; o.tgt = null; o.from = null; emit('inv'); emit('sfx', 'seed'); emit('hearts', t.x + .5, t.y, 4); nestStep(i, o, 0);
+    emit('toast', o.why ? `비버가 둥지에 들어갔어요 · ${NEST_WHY[o.why]}` : '비버가 둥지에 들어갔어요! 둘레의 나무를 베어 와요', 'good', 'nest'); return; }
+  if (a.u === 'nestTake') { const n = storeN(o); if (!n) return; for (const s of o.store) s.c = moveInto(G.inv, s); o.store = o.store.filter(s => s.c > 0); emit('sfx', 'pick'); emit('inv');
+    emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `비버 둥지에서 ${n - storeN(o)}개를 꺼냈어요`, 'good', 'nest'); return; }
+  emit('toast', nestInfo(o, i), null, 'nest'); }
+// 둥지·먹이통을 회수하면: 둥지의 비버와 쌓인 것, 먹이통의 먹이도 돌려줘요 (sim/inventory.js returnObj · sim/gathering.js dropObj)
+function nestContents(o) { const out = []; if (o.bv) out.push(['beaver', 1]); if (o.feed) for (const s of o.feed) if (s) out.push([s.id, s.c]); return out; }
+
+// ---- 먹이통 창 (ui/panels.js 「feeder」, 명령은 ui/panel-actions.js에서) ----
+const fdOf = c => { const o = G.objs.get(c.o); return o && o.t === 'feeder' ? (o.feed = o.feed || Array(FEED_SLOTS).fill(null), o) : null; };
+defineCmd('feedIn', c => { const o = fdOf(c), s = o && G.inv[c.i]; if (!s || !FEED[s.id]) return false; const l = moveInto(o.feed, s); if (l === s.c) { emit('toast', '먹이통이 가득 찼어요', null, 'full'); return false; } if (l) s.c = l; else G.inv[c.i] = null; emit('sfx', 'pick'); emit('inv'); });
+defineCmd('feedOut', c => { const o = fdOf(c), s = o && o.feed[c.i]; if (!s) return false; const l = moveInto(G.inv, s); if (l === s.c) { emit('toast', '가방이 가득 찼어요', null, 'full'); return false; } if (l) s.c = l; else o.feed[c.i] = null; emit('sfx', 'pick'); emit('inv'); });
+defineCmd('feedAll', c => { const o = fdOf(c); if (!o) return false; let n = 0, full = false;
+  for (let k = 0; k < G.inv.length; k++) { const s = G.inv[k]; if (!s || !FEED[s.id]) continue; const l = moveInto(o.feed, s); n += s.c - l; if (l) { s.c = l; full = true; } else G.inv[k] = null; }
+  emit('toast', n ? `먹이 ${n}개를 넣었어요${full ? ' · 먹이통이 가득 차서 일부는 남았어요' : ''}` : full ? '먹이통이 가득 찼어요' : '가방에 먹이가 없어요 (통통베리·버섯·수정 콩·불꽃 열매·서리 무)', n ? 'good' : null, 'feed'); if (n) emit('sfx', 'place'); emit('inv'); });
+
+// ---- 비버가 사는 곳: 이끼 동굴 물가 (sim/animals.js wildTick) ----
+function waterNear(x, y, r) { const cx = Math.floor(x), cy = Math.floor(y); for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (!inB(cx + dx, cy + dy)) continue; const j = idx(cx + dx, cy + dy); if (G.floor[j] === WATER && !G.wall[j]) return true; } return false; }
+const beaverHome = (x, y) => G.biome[idx(Math.floor(x), Math.floor(y))] === 0 && waterNear(x, y, BEAVER_WATER_R);
+const caughtMsg = k => `${josa(ITEMS[k].n, '을', '를')} 데려왔어요! 비버 둥지 앞에서 눌러 넣어 주세요`;
+
+// ---- 그림용: 둥지의 비버가 지금 어디서 무엇을 하는지 (규칙 값에서 계산만, 바꾸지 않아요) ----
+// 한 그루 NEST_EVERY초: 0~4초 방금 벤 나무에서 둥지로 · 4~8초 둥지 · 8~12초 다음 나무로 · 12초~ 갉기
+function beaverPose(i, o) { const hx = i % W + .5, hy = ((i / W) | 0) + 1.55, home = { x: hx, y: hy, img: o.why === 'food' ? 'beaverZ' : 'beaver', flip: false, moving: false };
+  if (!o.work) return home;
+  const spot = j => { if (j == null) return null; const tx = j % W + .5, ty = ((j / W) | 0) + .5, dx = hx - tx, dy = hy - ty, d = Math.hypot(dx, dy) || 1; return { x: tx + dx / d * .7, y: ty + dy / d * .7 + .3, fx: tx }; };
+  const p = o.prog || 0, tg = spot(o.tgt), fr = spot(o.from), lerp = (a, b, k) => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k });
+  if (p < 4 && fr) { const q = lerp(fr, home, p / 4); return { ...q, img: 'beaver', flip: home.x < fr.x, moving: true }; }
+  if (p < 8 || !tg) return home;
+  if (p < 12) { const q = lerp(home, tg, (p - 8) / 4); return { ...q, img: 'beaver', flip: tg.x < home.x, moving: true }; }
+  return { x: tg.x, y: tg.y, img: Math.floor(p * 4) % 2 ? 'beaverG' : 'beaver', flip: tg.fx < tg.x, moving: false }; }
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -6703,6 +6828,20 @@ const ANIM_DRAW = {
     for (const x of [4, 6, 9, 11]) A.r(x, 12, 1, 3, '#5a4a52'); },
 };
 for (const k of ['cow', 'chicken', 'sheep']) OSPR[k] = [16, 16, ANIM_DRAW[k]];
+// v114 비버·비버 둥지·먹이통 — Claude가 지금 동물 그림을 참고해 임시로 (손그림은 dev/art/animal/beaver.png·obj/beaverNest.png·obj/feeder.png로 바꿀 수 있어요)
+Object.assign(ANIM_DRAW, {
+  beaver: A => { A.e(2.6, 12, 2.4, 1.3, '#5a3a28'); A.p(2, 12, '#7a5034'); A.p(3, 11, '#7a5034'); A.e(7, 10.5, 4.6, 3.4, '#9a6a44'); A.e(7, 9, 3.6, 1.4, '#b8845a'); A.e(11.8, 8, 3, 2.8, '#9a6a44'); A.e(11.4, 7, 2, 1, '#b8845a');
+    A.p(10.5, 5, '#7a5034'); A.p(13, 7, INK); A.r(14, 8, 2, 1, '#3a2418'); A.r(13, 10, 2, 2, '#fff4e0'); A.r(5, 13, 2, 2, '#5a3a28'); A.r(9, 13, 2, 2, '#5a3a28'); },
+  beaverG: A => { A.e(2.6, 12, 2.4, 1.3, '#5a3a28'); A.p(2, 12, '#7a5034'); A.e(7, 10.5, 4.6, 3.2, '#9a6a44'); A.e(7, 9, 3.6, 1.3, '#b8845a'); A.e(12.4, 9.2, 3, 2.5, '#9a6a44'); A.p(11, 6.8, '#7a5034'); A.p(13, 8, INK);
+    A.r(15, 9, 1, 1, '#3a2418'); A.r(14, 11, 2, 2, '#fff4e0'); A.p(15, 13, '#d9a86a'); A.p(13, 14, '#d9a86a'); A.r(5, 13, 2, 2, '#5a3a28'); A.r(9, 13, 2, 2, '#5a3a28'); },
+  beaverZ: A => { A.e(3, 12.6, 2.4, 1.2, '#5a3a28'); A.e(8, 11.4, 5, 3, '#9a6a44'); A.e(8, 10, 4, 1.3, '#b8845a'); A.e(11.6, 11.6, 2.6, 2.2, '#9a6a44'); A.r(11, 11, 2, 1, INK); A.p(13, 12, '#3a2418'); },
+});
+ICON.beaver = ANIM_DRAW.beaver;
+OSPR.beaverNest = [16, 16, A => { A.e(8, 11.5, 7.4, 4.2, '#5a3a28'); A.e(8, 10.4, 6.4, 3.6, '#6a4a30'); for (const [x0, y0, x1, y1, c] of [[1, 12, 7, 7, '#9a6a44'], [15, 12, 9, 7, '#9a6a44'], [3, 9, 13, 8, '#b8845a'], [4, 12, 12, 6, '#7a5034'], [2, 10, 14, 11, '#b8845a'], [6, 6, 11, 9, '#c9965e']]) A.line(x0, y0, x1, y1, c);
+  A.e(8, 13, 2.8, 1.9, '#2a1810'); A.e(8, 12.4, 2, 1, '#1a0e08'); A.p(5, 8, '#e0b880'); A.p(11, 9, '#e0b880'); A.p(9, 6, '#e0b880'); A.r(1, 14, 14, 1, '#4a3020'); }];
+const feederBase = A => { A.r(3, 13, 2, 2, '#7a5034'); A.r(11, 13, 2, 2, '#7a5034'); A.r(1, 8, 14, 6, '#9a6a44'); A.r(1, 8, 14, 1, '#c9965e'); A.r(2, 9, 12, 3, '#4a3020'); A.r(1, 13, 14, 1, '#6a4a30'); A.p(1, 8, '#e0b880'); A.p(14, 8, '#e0b880'); A.r(7, 10, 2, 3, '#7a5034'); };
+OSPR.feeder = [16, 16, feederBase];
+OSPR.feederF = [16, 16, A => { feederBase(A); for (const [x, y, c] of [[4, 9, '#7a6aff'], [6, 9.5, '#9a8aff'], [10, 9, '#e8c890'], [12, 9.4, '#7a6aff'], [8, 8.6, '#ffb070']]) A.e(x, y, 1.4, 1.1, c); A.p(4, 8, '#ffffff'); A.p(10, 8, '#ffffff'); }];
 OSPR.woolRug = [16, 16, A => { A.r(1, 2, 14, 12, '#e8dcc4'); A.r(2, 3, 12, 10, '#fff4e0'); for (let y = 4; y < 12; y += 3) for (let x = 3 + (y % 2); x < 13; x += 3) A.p(x, y, '#e8dcc4'); A.r(1, 13, 14, 1, '#c9b89a'); for (const x of [1, 4, 7, 10, 13]) A.p(x, 14, '#c9b89a'); }];
 Object.assign(ICON, {
   milk: A => { A.r(5, 4, 6, 10, '#f4f0f8'); A.r(5, 4, 6, 1, '#ffffff'); A.r(6, 2, 4, 2, '#c8d0dc'); A.r(5, 8, 6, 3, '#7fb8ff'); A.r(6, 9, 4, 1, '#bfe0ff'); A.r(10, 4, 1, 10, '#d9d2e6'); },
@@ -7926,7 +8065,8 @@ function renderWorld(cw, ch, glOn = false) {
   const seenA = new Set();
   for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; let ii = idx(x, y), o = G.objs.get(ii); if (o && o.t === '_part') { ii = o.a; o = G.objs.get(ii); if (!o || o.t === '_part') continue; }
     if (o && OBJ[o.t] && OBJ[o.t].sz) { if (seenA.has(ii)) continue; seenA.add(ii); if (OBJ[o.t].flat) continue; const ax = ii % W, ay = (ii / W) | 0, by = ay + fpOf(o)[1] - 1; push(Math.min(by, y1), { k: 'o', x: ax, y: ay, o, s: OBJ[o.t].solid ? by + 1 : by + .01 }); if (o.shake) visibleShakers.add(o); continue; }
-    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
+    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); }
+    if (o && o.t === 'beaverNest' && o.bv) { const b = beaverPose(ii, o); push(Math.min(Math.max(b.y, y0), y1), { k: 'bv', b, s: b.y }); } } // v114 둥지의 비버
   if (CY >= y0 && CY <= y1 + 5) push(Math.min(CY, y1), { k: 'tree', s: CY + 1 });
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
@@ -8130,6 +8270,7 @@ function drawEntity(it, t) {
       return; } // v104 NPC: 캐릭터 그림, 가끔 살짝 들썩
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
+    if (d.feeder && (o.feed || []).some(Boolean)) img = SPR.obj.feederF || img; // v114 먹이가 든 먹이통
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
@@ -8151,6 +8292,7 @@ function drawEntity(it, t) {
     if ((o.t === 'timer' || o.t === 'crystalGen') && o.lit) { ctx.fillStyle = '#7fe0b5'; ctx.fillRect(Math.round(wx * T - camX) - 1, Math.round((it.y + 1) * T - camY) - (o.t === 'timer' ? 14 : 6), 2, 2); }
     if (o.cake) drawImg(SPR.item.festCake, wx, wy - effH(img) / 16 * .55, { sx: .85, sy: .85 });
     if (d.dev === 'harv' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
+    if (d.nest && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 18, 3, 3); } // v114
     if (d.dev === 'drill' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
@@ -8173,6 +8315,8 @@ function drawEntity(it, t) {
   }
   if (it.k === 'w') { const w = it.w, img = animalImg(it.pk || w.k); shadow(w.x, w.y + .1, .28, .3); const mv = it.pk ? w.moving : (w.vx || w.vy), bob = mv && Math.floor((w.anim || 0) * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, w.x, w.y + .12 - bob, { flip: w.flip });
     if (it.pk && Math.sin(t * 1.3 + w.x) > .97) { ctx.fillStyle = '#ff8fa3'; ctx.fillRect(Math.round(w.x * T - camX), Math.round((w.y - 1.05) * T - camY), Z, Z); } return; }
+  if (it.k === 'bv') { const b = it.b, img = animalImg(b.img); shadow(b.x, b.y + .1, .26, .3); const bob = b.moving && Math.floor(t * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, b.x, b.y + .12 - bob, { flip: b.flip }); // v114 비버: 걷기·갉기·잠
+    if (b.img === 'beaverZ') { ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .3 + zz * .3) * T - camX, (b.y - .7 - zz * .5) * T - camY); ctx.globalAlpha = 1; } return; }
   if (it.k === 'e') {
     const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
@@ -8551,6 +8695,10 @@ function renderPanel() {
     }
     h += `</div></div>`;
     }
+  } else if (k === 'feeder') { // v114 먹이통: 위 4칸은 눌러서 꺼내기, 아래는 가방의 먹이만 (눌러서 넣기)
+    const o = G.objs.get(panel.i); if (!o || o.t !== 'feeder') { closePanel(); return; } const feed = o.feed || Array(FEED_SLOTS).fill(null), mine = G.inv.map((s, i) => [s, i]).filter(([s]) => s && FEED[s.id]), min = Math.floor(feedSec(o) / 60);
+    h += head('먹이통', 'feeder') + `<div class="sh-body"><button class="btn" data-a="fdAll" type="button" style="width:100%">가방의 먹이 모두 넣기</button><div class="lbl">먹이통 <span style="color:var(--muted);font-size:16px">약 ${min}분</span></div><div class="grid">${feed.map((s, i) => slotHTML(s, 'fdOut', i)).join('')}</div>`
+      + `<div class="lbl">가방의 먹이</div>${mine.length ? `<div class="grid">${mine.map(([s, i]) => slotHTML(s, 'fdIn', i)).join('')}</div>` : `<p class="prose" style="color:var(--muted)">통통베리·버섯 1분 · 수정 콩·불꽃 열매·서리 무 2분</p>`}</div>`;
   } else if (k === 'chest') {
     const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
     const empty = o.items.every(x => !x), rf = o.t === 'refundBox'; // v69 (BF-05): the refund box — take-only
@@ -8859,6 +9007,8 @@ const HELP_TABS = [
   ['pet', '펫', () => [
     ['포획', '올가미 밧줄(작업대)을 들고 강아지(이끼 동굴)·토끼(버섯숲)·고양이(수정 동굴)에게 다가가 포획해요'],
     ['밧줄 던지기', '빙글빙글 도는 밧줄이 초록 구간에 왔을 때 던져요. 세 번 성공하면 친구가 되고, 두 번 놓치면 도망가요'],
+    ['비버', '이끼 동굴 물가에 비버가 살아요. 올가미로 데려와 비버 둥지(작업대)에 넣으면 둘레 3칸의 다 자란 나무를 30초마다 베어 옆 상자에 담아요. 벤 나무는 어린나무로 돌아가 다시 자라요'],
+    ['먹이통', '비버는 둥지 둘레 3칸 안의 먹이통에서 먹어요. 통통베리·버섯은 1분, 수정 콩·불꽃 열매·서리 무는 2분 일해요. 먹이가 없으면 잠들어요. 꾸밈 나무 옆에 두면 그 나무도 베어요'],
   ]],
   ['box', '상자', () => [
     ['옮기기', '상자 창에서 물건을 누르면 상자와 가방 사이로 옮겨져요. 끌어다 원하는 칸에 놓을 수도 있어요'],
@@ -9332,6 +9482,7 @@ function onSheetClick(e) {
     if (res === 'reorder') UIS.craftOrder = null; renderPanel(); return;
   }
   if (a === 'retrieve') { runCmd({ k: 'retrieve', o: panel.i }); closePanel(); return; }
+  if (a === 'fdIn' || a === 'fdOut' || a === 'fdAll') { if (!(panel && panel.kind === 'feeder') || runCmd({ k: a === 'fdIn' ? 'feedIn' : a === 'fdOut' ? 'feedOut' : 'feedAll', o: panel.i, i }) === false) return; renderPanel(); return; } // v114 먹이통
   if (a === 'cout' || a === 'cin') { if (runCmd({ k: 'chest', o: panel.i, i, out: a === 'cout' }) === false) return; renderPanel(); return; }
   if (a === 'qTab') { UIS.qTab = i; renderPanel(); return; }
   if (a === 'qClaim') { runCmd({ k: 'claim', id: i }); renderPanel(); return; }
