@@ -118,7 +118,7 @@ def test_workbench_tabs():
             rec('편의','편의: 회로·(농사: 여왕을 쓰러뜨리면)·채굴기 (v113)', r[0]=='편의' and r[1] in ('all*,circuit,mine','all*,circuit,farm,mine'), str(r))
             await ev(pg,"()=>__clk('tab2','mine')"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>__ids().sort().join(',')")
-            rec('편의','채굴기 탭: 구리·철·황금 채굴기 (v113: 채굴장·나무 작업장 없어짐)', r=='drillCu,drillFe,drillGold', r)
+            rec('편의','채굴기 탭: 구리·철·황금 채굴기·광석 그물 (v113: 채굴장·나무 작업장 없어짐 · v115 광석 그물)', r=='drillCu,drillFe,drillGold,oreNet', r)
             await ev(pg,"()=>__clk('tab','stn')"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>[__lbl(),__row(1),__ids().sort().join(',')]")
             rec('제작대','제작대: 작업대·장비제작대·용광로·요리솥', r[0]=='제작대' and r[1]=='all*,make,smelt,cook' and r[2]=='bench,furnace,pot,smelter', str(r))
