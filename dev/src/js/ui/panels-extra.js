@@ -11,7 +11,8 @@ import { G } from '../save/state.js';
 import { catchAng, inZone } from '../sim/animals.js';
 import { benchLv, fmtT, jobDone, jobLeft, nowS, tierNames } from '../sim/crafting.js';
 import { eqEffect, lvOf, rarCol, SET_N, upgCost, upgOk, upgText } from '../sim/gear.js';
-import { availCount, heldTool, isBroken, slotList } from '../sim/inventory.js';
+import { availCount, heldTool, isBroken, resetPool, slotList } from '../sim/inventory.js';
+import { SIEVE, SIEVE_MAX } from '../data/sieve.js';
 import { slotHTML } from './hud.js';
 import { head, itemStat, panel, UIS } from './panels.js';
 export const rarName = id => { const c = rarCol(id), n = ITEMS[id].n; return c ? `<span style="color:${c}">${n}</span>` : n; };
@@ -25,8 +26,16 @@ export function upgListHTML(ok) {
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
   return h + `</div></div>`; }
 export function jobHTML(o) { const j = o.job; if (!j) return ''; const d = jobDone(j), it = ITEMS[j.out], prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1);
-  return `<div class="rc ok jobcard" data-done="${d}"><div class="ri"><img class="px" src="${iconURL(j.out)}" alt=""></div><div class="rn">${it.n} ${j.q * j.n}개 ${d >= j.q ? '· 다 됐어요!' : TIMED && o.t === 'furnace' ? '녹이는 중' : '만드는 중'}<div class="fixbar" style="max-width:none"><i id="jobBar" style="width:${Math.round(prog * 100)}%"></i></div><div class="ings"><span class="ing" id="jobTxt">${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}</span></div></div>
-    <div class="btns" style="grid-column:auto;flex-direction:column"><button type="button" class="btn mk" data-a="jobTake" ${d ? '' : 'disabled'}>꺼내기${d ? ` ${d * j.n}` : ''}</button><button type="button" class="btn ghost mk ${UIS.jobAsk ? 'warn' : ''}" data-a="jobCancel">${UIS.jobAsk ? '정말?' : '취소'}</button></div></div>`; }
+  return `<div class="rc ok jobcard" data-done="${d}"><div class="ri"><img class="px" src="${iconURL(j.out)}" alt=""></div><div class="rn">${it.n} ${j.q * j.n}개 ${d >= j.q ? '· 다 됐어요!' : TIMED && o.t === 'furnace' ? '녹이는 중' : j.sv ? '거르는 중' : '만드는 중'}<div class="fixbar" style="max-width:none"><i id="jobBar" style="width:${Math.round(prog * 100)}%"></i></div><div class="ings"><span class="ing" id="jobTxt">${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}</span></div></div>
+    <div class="btns" style="grid-column:auto;flex-direction:column"><button type="button" class="btn mk" data-a="jobTake" ${d ? '' : 'disabled'}>꺼내기${d && !j.sv ? ` ${d * j.n}` : ''}</button><button type="button" class="btn ghost mk ${UIS.jobAsk ? 'warn' : ''}" data-a="jobCancel">${UIS.jobAsk ? '정말?' : '취소'}</button></div></div>`; }
+// v115 광석 그물 창: 가방·가까운 상자에 있는 넣을 재료 한 줄씩 (나오는 것과 확률, 10개·최대 버튼)
+export function sieveRowHTML(id) { const n = availCount(id), max = Math.min(SIEVE_MAX, n), outs = SIEVE[id].filter(([o]) => o);
+  const qs = max > 10 ? [10, max] : [max];
+  return `<div class="rc ok"><div class="ri"><img class="px" src="${iconURL(id)}" alt=""></div><div class="rn">${ITEMS[id].n}<small>${n}개</small><div class="ings">${outs.map(([o, p]) => `<span class="ing"><img class="px" src="${iconURL(o)}" alt="">${ITEMS[o].n} ${p}%</span>`).join('')}</div></div>`
+    + `<div class="btns" style="grid-column:auto;flex-direction:column">${qs.map(q => `<button type="button" class="btn mk" data-a="svPut" data-i="${id}" data-q="${q}">${q}개 넣기</button>`).join('')}</div></div>`; }
+export function sieveHTML(o) { resetPool(); if (o.job) return `<div class="list">${jobHTML(o)}</div>`;
+  const have = Object.keys(SIEVE).filter(id => availCount(id) > 0);
+  return have.length ? `<div class="list">${have.map(sieveRowHTML).join('')}</div>` : `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">넣을 재료가 없어요<br>${Object.keys(SIEVE).map(id => ITEMS[id].n).join('·')}</p>`; }
 export function catchLoop() { if (!panel || panel.kind !== 'catch') return; const cv2 = $('#catchCv'); if (cv2) { const g = cv2.getContext('2d'), c = panel, R = 86, cx = 110, cy = 110, a = catchAng(c);
     g.clearRect(0, 0, 220, 220); g.lineWidth = 14; g.strokeStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.arc(cx, cy, R, 0, 6.283); g.stroke();
     g.strokeStyle = '#7fe0b5'; g.beginPath(); g.arc(cx, cy, R, c.za - c.zw / 2, c.za + c.zw / 2); g.stroke();

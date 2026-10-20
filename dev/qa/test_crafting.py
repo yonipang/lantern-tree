@@ -259,6 +259,72 @@ def test_timed_jobs():
     return main
 
 
+def test_ore_net_v115():
+    import asyncio, sys
+    # v115 자동 생산 3 (dev/design/자동생산.md 4장): 광석 그물 레시피(구리 작업대), 넣는 재료 10가지와 나오는 것·확률, 재료 하나에 8초 · 30개까지,
+    # 넣어 두고 꺼내기(용광로 방식) · 꺼낼 때 하나마다 굴림, 취소·회수하면 시작 안 한 재료를 돌려받음, 앞에서 [열기]·[꺼내기], 창, 저장
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,jobDone,takeJob,cancelJob,returnObj,perform,get panel(){return panel},renderPanel,runCmd,sieveRoll,SIEVE,sieveOre,SIEVE_T,SIEVE_MAX}")
+    SET="""window.__net=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+14;y++)for(let x=T.CX+2;x<T.CX+14;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i)}
+  G.enemies.length=0;G.drops.length=0;G.inv.fill(null);G.sel=3;G.p.x=T.CX+5.5;G.p.y=T.CY+5.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;G.fish=null;
+  const i=T.idx(T.CX+6,T.CY+5);G.objs.set(i,{t:'oreNet'});G.actCd=0;return i};"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{"+SET+"}")
+            r=await ev(pg,"()=>{const T=__T,q=T.RECIPES.find(r=>r.out==='oreNet');return [q.at,q.tier,q.cat,JSON.stringify(q.req),T.SIEVE_T,T.SIEVE_MAX,Object.keys(T.SIEVE).sort().join(','),!!T.OBJ.oreNet.sieve,T.OBJ.oreNet.dev||null]}")
+            rec('레시피','광석 그물: 구리 작업대 · 나무 8·이끼 끈 4·구리괴 2 (편의 → 채굴기), 빛 없이 일함 · 8초 · 30개', r[:6]==['bench',1,'mine','[["wood",8],["rope",4],["copperBar",2]]',8,30] and r[6]=='basalt,dirt,gAsh,gCrystal,gMoss,gShroom,gSnow,granite,iceBlock,stone' and r[7] is True and r[8] is None, str(r))
+            r=await ev(pg,"()=>{const S=__T.SIEVE,f=id=>S[id].map(([o,p])=>(o||'-')+p).join(' ');return [f('dirt'),f('gMoss'),f('stone'),f('gShroom'),f('granite'),f('gCrystal'),f('basalt'),f('gAsh'),f('iceBlock'),f('gSnow'),Object.values(S).every(t=>t.reduce((a,[,p])=>a+p,0)===100),['dirt','stone','gShroom','granite','basalt','gSnow'].map(__T.sieveOre).join(',')]}")
+            rec('표','이끼(흙·이끼 흙): 꽝 55·돌 25·구리 18·철 2 / 돌: 꽝 55·구리 22·철 20·석영 3 / 버섯흙: 꽝 50·흙 20·철 25·빛버섯 5', r[0]==r[1]=='-55 stone25 copperOre18 ironOre2' and r[2]=='-55 copperOre22 ironOre20 crystal3' and r[3]=='-50 dirt20 ironOre25 glowcap5', str(r))
+            rec('표','수정: 꽝 55·돌 15·석영 25·수정결정 5 / 용암: 꽝 55·돌 15·금광석 25·흑요석 5 / 얼음: 꽝 70·서리 결정 25·금광석 5 (합 100)', r[4]==r[5]=='-55 stone15 crystal25 cryGem5' and r[6]==r[7]=='-55 stone15 goldOre25 obsidian5' and r[8]==r[9]=='-70 frostShard25 goldOre5' and r[10], str(r))
+            rec('표','지역 광석 아이콘: 구리·구리·철·석영·금·서리', r[11]=='copperOre,copperOre,ironOre,crystal,goldOre,frostShard', r[11])
+            # 굴림: 표에 있는 것만, 확률은 표와 비슷 (4만 번, ±2%p — 6시그마 넘게 여유)
+            r=await ev(pg,"()=>{const T=__T,N=40000,out={};for(const id of ['dirt','iceBlock']){const c={};for(let k=0;k<N;k++){const x=T.sieveRoll(id)||'-';c[x]=(c[x]||0)+1}out[id]=c}return out}")
+            ok=set(r['dirt'])<= {'-','stone','copperOre','ironOre'} and set(r['iceBlock'])<={'-','frostShard','goldOre'}
+            exp={'dirt':{'-':55,'stone':25,'copperOre':18,'ironOre':2},'iceBlock':{'-':70,'frostShard':25,'goldOre':5}}
+            ok=ok and all(abs(r[m].get(k,0)/400-v)<2 for m in exp for k,v in exp[m].items())
+            rec('굴림','하나마다 표대로 하나 (흙·얼음 덩이 4만 번이 표와 2%p 안)', ok, str(r))
+            # 넣기: 30개까지, 가방 재료가 빠지고, 거르는 동안 다른 것은 못 넣음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=__net();G.inv[12]={id:'dirt',c:40};G.inv[13]={id:'stone',c:5};const a=T.runCmd({k:'sievePut',o:i,id:'dirt',q:99});const o=G.objs.get(i),j=o.job;
+              const b2=T.runCmd({k:'sievePut',o:i,id:'stone',q:5}),c=T.runCmd({k:'sievePut',o:i,id:'wood',q:1});return [a,j&&j.q,j&&j.per,j&&j.out,!!(j&&j.sv),T.countItem('dirt'),b2,c,T.countItem('stone'),T.jobDone(j)]}""")
+            rec('넣기','흙 40개 중 30개를 넣음 (8초씩), 거르는 동안 돌은 못 넣음', r[1:6]==[30,8,'dirt',True,10] and r[6] is False and r[8]==5 and r[9]==0, str(r))
+            # 10개 끝난 뒤 꺼내기: 표에 있는 것만 나오고 나머지 20개는 계속
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=T.idx(T.CX+6,T.CY+5),o=G.objs.get(i);o.job.t0-=8*10+.5;const s0=G.stats.sieved||0;const n=T.takeJob(o,G.p.x,G.p.y);
+              const got=['stone','copperOre','ironOre'].reduce((a,id)=>a+T.countItem(id),0)-5;return [n,got,o.job&&o.job.q,T.jobDone(o.job),(G.stats.sieved||0)-s0,T.countItem('dirt'),(G.stats.made||{}).dirt||0]}""")
+            rec('꺼내기','10개 다 된 뒤 꺼내면 10번 굴려 나온 것만 가방에, 남은 20개는 계속 (흙은 「만든 것」으로 안 셈)', r[0]==r[1] and 0<=r[0]<=10 and r[2:5]==[20,0,10] and r[5]==10 and r[6]==0, str(r))
+            # 앞에서: 다 된 게 있으면 [꺼내기], 늘 [열기]
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=T.idx(T.CX+6,T.CY+5),o=G.objs.get(i);const a=T.decide().lbl;o.job.t0-=8*3;G.actCd=0;const d=T.decide();const s0=G.stats.sieved||0;T.perform(d);return [a,d.lbl,(G.stats.sieved||0)-s0,o.job&&o.job.q]}""")
+            rec('세상','그물 앞: 거르는 중이면 [열기], 다 된 게 있으면 큰 버튼이 [꺼내기]', r==['열기','꺼내기',3,17], str(r))
+            # 저장되고, 취소하면 다 된 것은 꺼내고 시작 안 한 재료는 돌려받음
+            r=await ev(pg,"""()=>{const T=__T;T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const G=T.G,i=T.idx(T.CX+6,T.CY+5),o=G.objs.get(i);const a=[o.job&&o.job.q,o.job&&o.job.out,!!(o.job&&o.job.sv)];
+              o.job.t0-=8*2;const d0=T.countItem('dirt'),s0=G.stats.sieved||0;T.cancelJob(o,G.p.x,G.p.y);return a.concat([T.countItem('dirt')-d0,(G.stats.sieved||0)-s0,!!o.job])}""")
+            rec('저장·취소','넣어 둔 것은 저장되고, 취소하면 다 된 2개는 꺼내고 15개는 흙으로 돌려받음', r==[17,'dirt',True,15,2,False], str(r))
+            # 거르는 중에 회수하면 그물과 남은 재료가 가방으로
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,i=T.idx(T.CX+6,T.CY+5),o=G.objs.get(i);G.inv[14]={id:'granite',c:12};T.runCmd({k:'sievePut',o:i,id:'granite',q:30});const q=o.job.q;G.objs.delete(i);T.returnObj(o,G.p.x,G.p.y);return [q,T.countItem('granite'),T.countItem('oreNet'),!!o.job]}""")
+            rec('회수','화강암 12개(있는 만큼)를 넣고 바로 회수하면 그물·화강암 12개가 돌아옴', r==[12,12,1,False], str(r))
+            # 창: 넣을 재료 목록(가방·가까운 상자) → 10개 넣기 → 거르는 중 카드 → 꺼내기
+            await ev(pg,"()=>{const T=__T,G=T.G,i=__net();G.inv[12]={id:'gAsh',c:25};G.inv[13]={id:'iceBlock',c:4};G.inv[14]={id:'wood',c:9};G.actCd=0;T.perform(T.decide())}"); await pg.wait_for_timeout(500)
+            r=await ev(pg,"()=>{const P=__T.panel,t=document.querySelector('#sheet').innerText,bs=[...document.querySelectorAll('#sheet [data-a=svPut]')].map(b=>b.dataset.i+':'+b.dataset.q);return [P&&P.kind,t.includes('광석 그물'),t.includes('금광석 25%'),t.includes('흑요석 5%'),bs.join(',')]}")
+            rec('창','앞에서 [열기] → 광석 그물 창: 가진 재료만, 나오는 것·확률, 10개·최대 버튼 (나무는 안 나옴)', r==['sieve',True,True,True,'gAsh:10,gAsh:25,iceBlock:4'], str(r))
+            await pg.screenshot(path=SP+'ore_net.png')
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=svPut][data-i=gAsh][data-q=\"10\"]').click()"); await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>{const T=__T,o=T.G.objs.get(T.panel.i),t=document.querySelector('#sheet').innerText;return [o.job&&o.job.q,T.countItem('gAsh'),!!document.querySelector('#sheet .jobcard'),t.includes('거르는 중')]}")
+            rec('창','「10개 넣기」 → 재 10개가 들어가고 거르는 중 카드', r==[10,15,True,True], str(r))
+            await ev(pg,"()=>{const o=__T.G.objs.get(__T.panel.i);o.job.t0-=8*4+.5}"); await pg.wait_for_timeout(700)
+            r=await ev(pg,"()=>{const b=document.querySelector('#sheet [data-a=jobTake]');return [b&&b.textContent.trim(),b&&b.disabled,document.querySelector('#jobTxt').textContent]}")
+            rec('창','창을 열어 둔 채로 진행 (4개 다 됨 → 꺼내기)', r[0]=='꺼내기' and r[1] is False and r[2].startswith('4/10'), str(r))
+            await pg.screenshot(path=SP+'ore_net_job.png')
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=jobTake]').click()"); await pg.wait_for_timeout(300)
+            r=await ev(pg,"()=>{const T=__T,o=T.G.objs.get(T.panel.i);return [o.job&&o.job.q,T.jobDone(o.job)]}")
+            rec('창','꺼내기 → 남은 6개 계속', r==[6,0], str(r))
+            await ev(pg,"()=>{__T.closePanel();const T=__T,G=T.G;G.p.x=T.CX+6.5;G.p.y=T.CY+7}"); await pg.wait_for_timeout(500)
+            await pg.screenshot(path=SP+'ore_net_world.png')
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_equipment_weapons():
     import asyncio, sys
     # 장비 메뉴·무기 (v42): 장비 칸, 주먹·도끼, 광물 화살 + 돌 채굴기 (v48: 무기 칸 없음 · 장비는 가방 안)

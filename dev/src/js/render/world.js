@@ -22,6 +22,7 @@ import { cropStage, curAlt, inReach } from '../sim/actions.js';
 import { naruWaits } from '../sim/npc.js';
 import { ranchReady } from '../sim/animals.js';
 import { beaverPose } from '../sim/beaver.js';
+import { SIEVE_CHUNK, SIEVE_DUST, sieveOre } from '../data/sieve.js';
 import { nearestBag } from '../sim/survival.js';
 import { canRotObj, isGround, placeFp, pRot, rotN, rotOf, slideStep, twMask } from '../sim/building.js';
 import { CIRC, wirePowered } from '../sim/circuits.js';
@@ -293,6 +294,10 @@ export function renderOverlay(cw, ch) {
   for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); pxText(tx.txt, tx.x * T - camX, tx.y * T - camY, tx.col, INK); } // v78: 도트 글꼴 + 도트 테두리
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 }
+// v115 광석 그물: 돌·화강암·현무암·얼음 덩이는 재료 하나마다 처음 0.35에 조각이 톡톡 튀고, 흙·모래 같은 것은 그물 아래로 가루가 떨어져요 (그림만)
+export function sieveFx(j, cx, ny, px) { const f = ((nowS() - j.t0) / j.per) % 1, ck = SIEVE_CHUNK[j.out], sz = Math.max(1, Math.round(px));
+  if (ck && f < .35) { const g = f / .35; ctx.fillStyle = ck; for (const [dx, up] of [[-3, 2.5], [0, 3.5], [3, 2]]) ctx.fillRect(Math.round(cx + dx * px * (.5 + g)), Math.round(ny - up * Math.sin(g * Math.PI) * px), sz, sz); }
+  ctx.fillStyle = SIEVE_DUST[j.out] || ck || '#9a6a44'; for (const k of [0, .5]) { const g = (f * 2 + k) % 1; ctx.fillRect(Math.round(cx + (k ? 2 : -1) * px), Math.round(ny + (2.5 + g * 4.5) * px), sz, sz); } }
 export function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
@@ -309,6 +314,7 @@ export function drawEntity(it, t) {
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
     if (d.feeder && (o.feed || []).some(Boolean)) img = SPR.obj.feederF || img; // v114 먹이가 든 먹이통
+    const sieving = d.sieve && o.job && jobDone(o.job) < o.job.q; if (sieving && ((t * 4) | 0) % 2) img = SPR.obj.oreNetB || img; // v115 거르는 동안 그물이 살랑살랑
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
@@ -317,12 +323,13 @@ export function drawEntity(it, t) {
     if (TIERED[o.t] && o.lv) { const px = Math.round(wx * T - camX), py = Math.round((wy - effH(img) / 16) * T - camY) + 2; ctx.fillStyle = INK; ctx.fillRect(px - 4, py, 8, 5); ctx.fillStyle = BENCH_COL[o.lv]; ctx.fillRect(px - 3, py + 1, 6, 3); } // v60 tier plate
     if (o.job) { const j = o.job, prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1), top = wy - effH(img) / 16 - .2, bx = Math.round(wx * T - camX) - 10, by = Math.round(top * T - camY);
       ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = prog >= 1 ? '#ffd25c' : '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * prog), 2);
-      if (jobDone(j) > 0) drawImg(iconCanvas(j.out), wx, top - .1 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 }); }
+      if (jobDone(j) > 0) drawImg(iconCanvas(j.sv ? sieveOre(j.out) : j.out), wx, top - .1 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 }); }
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
     let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
     const glowL = d.light && !o.off; if (glowL) drawKind('up', 'lamp'); // v79: lit light objects' flames glow in the new light
     drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
     if (glowL) drawKind('up');
+    if (sieving) sieveFx(o.job, wx * T - camX, (wy - 1 + 8 / 16) * T - camY, T / 16); // v115
     if (d.dev === 'farm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / growOf(o), 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
     if (d.dev === 'farm' && ((o.store || []).length || farmStage(o) >= 3)) { ctx.fillStyle = (o.store || []).length ? '#ffd25c' : `rgba(255,241,214,${.5 + Math.sin(t * 5) * .3})`; ctx.fillRect(Math.round((it.x + 1.8) * T - camX), Math.round((it.y - .3) * T - camY), 3, 3); }
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }

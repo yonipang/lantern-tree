@@ -89,6 +89,7 @@ export function onSheetClick(e) {
     if (res === 'reorder') UIS.craftOrder = null; renderPanel(); return;
   }
   if (a === 'retrieve') { runCmd({ k: 'retrieve', o: panel.i }); closePanel(); return; }
+  if (a === 'svPut') { if (!(panel && panel.kind === 'sieve') || runCmd({ k: 'sievePut', o: panel.i, id: i, q: +b.dataset.q }) === false) return; UIS.jobAsk = false; renderPanel(); return; } // v115 광석 그물
   if (a === 'fdIn' || a === 'fdOut' || a === 'fdAll') { if (!(panel && panel.kind === 'feeder') || runCmd({ k: a === 'fdIn' ? 'feedIn' : a === 'fdOut' ? 'feedOut' : 'feedAll', o: panel.i, i }) === false) return; renderPanel(); return; } // v114 먹이통
   if (a === 'cout' || a === 'cin') { if (runCmd({ k: 'chest', o: panel.i, i, out: a === 'cout' }) === false) return; renderPanel(); return; }
   if (a === 'qTab') { UIS.qTab = i; renderPanel(); return; }

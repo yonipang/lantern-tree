@@ -415,6 +415,14 @@ OSPR.beaverNest = [16, 16, A => { A.e(8, 11.5, 7.4, 4.2, '#5a3a28'); A.e(8, 10.4
 const feederBase = A => { A.r(3, 13, 2, 2, '#7a5034'); A.r(11, 13, 2, 2, '#7a5034'); A.r(1, 8, 14, 6, '#9a6a44'); A.r(1, 8, 14, 1, '#c9965e'); A.r(2, 9, 12, 3, '#4a3020'); A.r(1, 13, 14, 1, '#6a4a30'); A.p(1, 8, '#e0b880'); A.p(14, 8, '#e0b880'); A.r(7, 10, 2, 3, '#7a5034'); };
 OSPR.feeder = [16, 16, feederBase];
 OSPR.feederF = [16, 16, A => { feederBase(A); for (const [x, y, c] of [[4, 9, '#7a6aff'], [6, 9.5, '#9a8aff'], [10, 9, '#e8c890'], [12, 9.4, '#7a6aff'], [8, 8.6, '#ffb070']]) A.e(x, y, 1.4, 1.1, c); A.p(4, 8, '#ffffff'); A.p(10, 8, '#ffffff'); }];
+// v115 광석 그물 — Claude가 임시로 (나무틀에 매단 그물, 거르는 동안 oreNet ↔ oreNetB로 살랑살랑 · 손그림은 dev/art/obj/oreNet.png로 바꿀 수 있어요)
+const oreNetDraw = s => A => { A.r(1, 3, 2, 12, '#7a5034'); A.r(13, 3, 2, 12, '#7a5034'); A.r(1, 3, 1, 12, '#9a6a44'); A.r(13, 3, 1, 12, '#9a6a44'); A.r(0, 14, 4, 1, '#5a3a28'); A.r(12, 14, 4, 1, '#5a3a28');
+  A.r(1, 2, 14, 2, '#9a6a44'); A.r(1, 2, 14, 1, '#c9965e'); A.p(0, 2, '#7a5034'); A.p(15, 2, '#7a5034');
+  A.p(4, 4, '#d9c8a0'); A.p(11, 4, '#d9c8a0'); A.r(3 + s, 5, 10, 1, '#d9c8a0');
+  for (let y = 6; y <= 9; y++) { const x0 = y < 8 ? 3 : 4, x1 = y < 8 ? 12 : 11, dy = y >= 8 ? s : 0; for (let x = x0; x <= x1; x++) if ((x + y) % 2 === 0) A.p(x + s, y + dy, '#e8dcc4'); else if (x === x0 || x === x1) A.p(x + s, y + dy, '#b8a888'); }
+  A.r(5 + s, 10 + s, 6, 1, '#b8a888'); A.p(7 + s, 7, '#ffb070'); A.p(9 + s, 8 + s, '#9fe8ff'); };
+OSPR.oreNet = [16, 16, oreNetDraw(0)];
+OSPR.oreNetB = [16, 16, oreNetDraw(1)];
 OSPR.woolRug = [16, 16, A => { A.r(1, 2, 14, 12, '#e8dcc4'); A.r(2, 3, 12, 10, '#fff4e0'); for (let y = 4; y < 12; y += 3) for (let x = 3 + (y % 2); x < 13; x += 3) A.p(x, y, '#e8dcc4'); A.r(1, 13, 14, 1, '#c9b89a'); for (const x of [1, 4, 7, 10, 13]) A.p(x, 14, '#c9b89a'); }];
 Object.assign(ICON, {
   milk: A => { A.r(5, 4, 6, 10, '#f4f0f8'); A.r(5, 4, 6, 1, '#ffffff'); A.r(6, 2, 4, 2, '#c8d0dc'); A.r(5, 8, 6, 3, '#7fb8ff'); A.r(6, 9, 4, 1, '#bfe0ff'); A.r(10, 4, 1, 10, '#d9d2e6'); },

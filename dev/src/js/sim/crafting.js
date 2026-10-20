@@ -15,6 +15,7 @@ import { emit } from './events.js';
 import { lvOf, upgCost, upgOk, upgSpent, upgText } from './gear.js';
 import { addItem, availCount, clearSlot, durMax, durOf, invSize, itemAt, linkedChests, resetPool, takeAvail } from './inventory.js';
 import { gainXp } from './player.js';
+import { sieveTake } from './sieve.js';
 import { checkGuide } from './quests.js';
 import { idx, inB, W } from '../world/map.js';
 export const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat', 'fert'].includes(ITEMS[r.out].kind);
@@ -66,7 +67,7 @@ export const jobDone = j => j ? clamp(Math.floor((nowS() - j.t0) / j.per), 0, j.
 export const jobLeft = j => j ? Math.max(0, j.t0 + j.q * j.per - nowS()) : 0;
 export const fmtT = sec => { sec = Math.ceil(sec); return sec >= 60 ? `${Math.floor(sec / 60)}분${sec % 60 ? ` ${sec % 60}초` : ''}` : `${sec}초`; };
 export function stockMap() { const m = {}, add = s => { if (s && s.id) m[s.id] = (m[s.id] || 0) + s.c; }; G.inv.forEach(add); for (const o of linkedChests()) (o.items || []).forEach(add); return m; }
-export function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; const d = jobDone(j); if (!d) return 0; const total = d * j.n;
+export function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; if (j.sv) return sieveTake(o, x, y, quiet); /* v115 광석 그물 */ const d = jobDone(j); if (!d) return 0; const total = d * j.n;
   const left = addItem(j.out, total); if (left) spawnDrop(j.out, left, x, y);
   G.stats.made = G.stats.made || {}; G.stats.made[j.out] = (G.stats.made[j.out] || 0) + d; gainXp(Math.min(8, d));
   if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - Math.floor(c * d / j.q)]); j.q -= d; j.t0 += d * j.per; }
