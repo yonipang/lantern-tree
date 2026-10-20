@@ -3876,6 +3876,38 @@ OBJ.feeder = { n: '먹이통', solid: 1, item: 'feeder', feeder: 1 };
 RECIPES.push(Object.assign(Rc('beaverNest', 1, [['wood', 12], ['dirt', 10], ['rope', 2]], 'bench', 'farm'), { tier: 0 }),
   Object.assign(Rc('feeder', 1, [['wood', 6], ['rope', 1]], 'bench', 'farm'), { tier: 0 }));
 TIPS.push('이끼 동굴 물가에서 비버를 올가미로 데려와 비버 둥지에 넣으면, 먹이통의 먹이를 먹으며 둘레의 나무를 베어 와요.');
+// ================= v115 자동 생산 3: 광석 그물 =================
+// 기획: dev/design/자동생산.md 4장 (2026-10-20 확정 — 수치는 사용자가 고른 추천표대로). 동작은 sim/sieve.js.
+// 흔한 지형 재료를 넣어 두면 재료 하나마다 SIEVE_T초가 지나 아래 표대로 하나가 나와요(꽝이면 아무것도 없음).
+// 용광로처럼 넣어 두고 나중에 꺼내요(v59 방식, 게임을 꺼 둔 동안에도 진행). 힘(빛)은 필요 없어요.
+
+const SIEVE_T = 8;     // 재료 하나에 걸리는 초 (모두 같음)
+const SIEVE_MAX = 30;  // 한 번에 넣는 최대 개수 (용광로와 같음)
+// 넣는 것 → [[나오는 것(null = 꽝), 확률 %], …] — 합은 100. 드문 것은 「다음 지역 재료 맛보기」
+const T_MOSS = [[null, 55], ['stone', 25], ['copperOre', 18], ['ironOre', 2]];
+const T_CRY = [[null, 55], ['stone', 15], ['crystal', 25], ['cryGem', 5]];
+const T_LAVA = [[null, 55], ['stone', 15], ['goldOre', 25], ['obsidian', 5]];
+const T_ICE = [[null, 70], ['frostShard', 25], ['goldOre', 5]];
+const SIEVE = {
+  dirt: T_MOSS, gMoss: T_MOSS,                                                   // 이끼 동굴
+  stone: [[null, 55], ['copperOre', 22], ['ironOre', 20], ['crystal', 3]],     // 이끼·버섯숲
+  gShroom: [[null, 50], ['dirt', 20], ['ironOre', 25], ['glowcap', 5]],        // 버섯숲
+  granite: T_CRY, gCrystal: T_CRY,                                               // 수정 동굴
+  basalt: T_LAVA, gAsh: T_LAVA,                                                  // 용암 동굴
+  iceBlock: T_ICE, gSnow: T_ICE,                                                 // 얼음 동굴
+};
+// 그 재료의 「지역 광석」(돌·흙을 뺀 가장 흔한 것) — 다 된 그물 위에 떠오르는 아이콘·창의 대표 그림
+const sieveOre = id => { let b = null; for (const [o, p] of SIEVE[id] || []) if (o && o !== 'stone' && o !== 'dirt' && (!b || p > b[1])) b = [o, p]; return b ? b[0] : 'stone'; };
+// 덩어리 재료: 그물 위에서 톡톡 부서지는 효과 (그림만, render/world.js)
+const SIEVE_CHUNK = { stone: '#9a93a8', granite: '#c9a9a0', basalt: '#4a4058', iceBlock: '#bfe8ff' };
+// 거르는 재료의 가루 색 (그물 아래로 떨어지는 효과)
+const SIEVE_DUST = { dirt: '#9a6a44', gMoss: '#7fb86a', gShroom: '#8a6a9a', gCrystal: '#c9b8ff', gAsh: '#6a6070', gSnow: '#f0f8ff' };
+
+ITEMS.oreNet = { n: '광석 그물', kind: 'place', obj: 'oreNet', d: `흙·돌·화강암·현무암·얼음 덩이와 이끼 흙·버섯흙·수정 모래·재·눈을 넣어 두면 하나에 ${SIEVE_T}초씩 걸러서, 가끔 그 지역의 광석이나 보석이 나와요. 빛이 없어도 일해요.` };
+OBJ.oreNet = { n: '광석 그물', solid: 1, item: 'oreNet', sieve: 1 };
+// 구리 작업대 · 편의 → 채굴기 탭 (2026-10-20 사용자 선택: 추천대로)
+RECIPES.push(Object.assign(Rc('oreNet', 1, [['wood', 8], ['rope', 4], ['copperBar', 2]], 'bench', 'mine'), { tier: 1 }));
+TIPS.push('바닥을 파거나 벽을 캐서 남은 흙·돌은 광석 그물에 넣어 두면, 가끔 그 지역의 광석이나 보석이 걸려 나와요.');
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -4175,7 +4207,7 @@ const jobDone = j => j ? clamp(Math.floor((nowS() - j.t0) / j.per), 0, j.q) : 0;
 const jobLeft = j => j ? Math.max(0, j.t0 + j.q * j.per - nowS()) : 0;
 const fmtT = sec => { sec = Math.ceil(sec); return sec >= 60 ? `${Math.floor(sec / 60)}분${sec % 60 ? ` ${sec % 60}초` : ''}` : `${sec}초`; };
 function stockMap() { const m = {}, add = s => { if (s && s.id) m[s.id] = (m[s.id] || 0) + s.c; }; G.inv.forEach(add); for (const o of linkedChests()) (o.items || []).forEach(add); return m; }
-function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; const d = jobDone(j); if (!d) return 0; const total = d * j.n;
+function takeJob(o, x, y, quiet) { const j = o && o.job; if (!j) return 0; if (j.sv) return sieveTake(o, x, y, quiet); /* v115 광석 그물 */ const d = jobDone(j); if (!d) return 0; const total = d * j.n;
   const left = addItem(j.out, total); if (left) spawnDrop(j.out, left, x, y);
   G.stats.made = G.stats.made || {}; G.stats.made[j.out] = (G.stats.made[j.out] || 0) + d; gainXp(Math.min(8, d));
   if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - Math.floor(c * d / j.q)]); j.q -= d; j.t0 += d * j.per; }
@@ -4713,6 +4745,7 @@ function autoOptions(t, i, o) {
     if (d.shrine) { const gk = guardOf(t.x, t.y); if (o.has && gk && !G.bossDead[gk]) A({ k: 'info', lbl: '봉인됨', icon: 'dots', msg: `${BOSSES[gk].n}을 물리치면 봉인이 풀려요`, t });
       else A(o.has ? { k: 'take', lbl: '빛씨앗', icon: 'lightSeed', t, o } : { k: 'info', lbl: '빈 제단', icon: 'dots', msg: '빈 제단이에요', t }); return L; }
     if (d.warp) { A(warpDecide(t, o)); if (d.item) A({ k: 'pickup', lbl: '회수', icon: 'hand', t, o }); return L; } // v89 워프포인트·포탈
+    if (d.sieve) { for (const a of sieveOptions(t, o)) A(a); return L; } // v115 광석 그물
     if (d.nest || d.feeder) { for (const a of nestOptions(t, o)) A(a); return L; } // v114 비버 둥지·먹이통
     if (d.nat) { A(natAct(d, o, t)); return L; }
     if (d.item) { const u = USE[o.t]; if (u) A({ k: 'use', u, lbl: u === 'lamp' ? (o.off ? '켜기' : '끄기') : u === 'door' ? (OBJ[o.t].dev === 'slide' && o.pw ? '자동문' : o.open ? '닫기' : '열기') : u === 'farm' ? farmLbl(o) : USE_LBL[u], icon: u === 'farm' ? farmT(o)[4] : 'hand', t, o });
@@ -4820,6 +4853,7 @@ function useObj(a) {
     case 'talk': faceTo(x - p.x, t.y + .5 - p.y); emit('sfx', 'click'); talkTo(o.npc); break; // v104 · v110 나루 첫 장면
     case 'read2': faceTo(x - p.x, t.y + .5 - p.y); if (o.t === 'diaryLast') readLast(); else readDiary({ ...o, x, y: t.y + .5 }); break; // v106 일기 · v108 마지막 장
     case 'brazier': lightBrazier(o, x, t.y + .3); break; // v108 횃대
+    case 'sieve': case 'sieveTake': sieveUse(a); break; // v115
     case 'feeder': case 'nestIn': case 'nestTake': case 'nestInfo': nestUse(a); break; // v114
     case 'feed': emit('puff', x, t.y + .4, '#d4f1ff', 8, 1.2, .5); emit('hearts', x, t.y, 3); emit('sfx', 'plop'); emit('toast', '물고기들이 반가워해요', null, 'feed'); break;
     case 'read': G.tipN = ((G.tipN || 0) + 1) % TIPS.length; emit('toast', TIPS[G.tipN]); emit('sfx', 'page'); break;
@@ -6439,6 +6473,34 @@ function beaverPose(i, o) { const hx = i % W + .5, hy = ((i / W) | 0) + 1.55, ho
   if (p < 8 || !tg) return home;
   if (p < 12) { const q = lerp(home, tg, (p - 8) / 4); return { ...q, img: 'beaver', flip: tg.x < home.x, moving: true }; }
   return { x: tg.x, y: tg.y, img: Math.floor(p * 4) % 2 ? 'beaverG' : 'beaver', flip: tg.fx < tg.x, moving: false }; }
+// ================= v115 자동 생산 3: 광석 그물 (규칙) =================
+// 기획: dev/design/자동생산.md 4장. 수치·표는 data/sieve.js.
+// 그물 o.job = { out: 넣은 재료, sv: 1, n: 1, q: 개수, per: SIEVE_T, t0, used: [[재료, 개수]] } — 용광로·요리솥의 시간 작업(v59)과 같은 모양이라
+// 진행 막대(render/world.js)·회수하면 돌려받기(cancelJob)·옮기기(건축 모드)·저장은 그대로 써요. 다른 점은 꺼낼 때 하나마다 표대로 굴리는 것.
+
+// 재료 하나를 거르면 나오는 것 (null = 꽝)
+function sieveRoll(id) { const tb = SIEVE[id]; if (!tb) return null; let r = rand() * 100; for (const [o, p] of tb) { if (r < p) return o; r -= p; } return null; }
+// 그물 앞에서 할 일: 다 된 게 있으면 [꺼내기], 늘 [열기], 회수는 작은 버튼
+function sieveOptions(t, o) { const L = [], d = o.job ? jobDone(o.job) : 0;
+  if (d > 0) L.push({ k: 'use', u: 'sieveTake', lbl: '꺼내기', icon: 'oreNet', t, o });
+  L.push({ k: 'use', u: 'sieve', lbl: '열기', icon: 'hand', t, o });
+  L.push({ k: 'pickup', lbl: '회수', icon: 'hand', t, o, onlyAlt: 1 }); return L; }
+function sieveUse(a) { const t = a.t; if (a.u === 'sieveTake') { sieveTake(a.o, t.x + .5, t.y + .5); return; } emit('open', 'sieve', { i: idx(t.x, t.y) }); }
+// 넣기 { o: 그물 칸, id: 재료, q: 개수 } — 가방과 가까운 상자의 재료를 써요(용광로와 같음)
+defineCmd('sievePut', c => { const o = G.objs.get(c.o); if (!o || o.t !== 'oreNet' || !SIEVE[c.id]) return false;
+  if (o.job) { emit('toast', '거르는 게 끝나면 넣을 수 있어요', null, 'jobbusy'); return false; }
+  resetPool(); const q = clamp(Math.floor(c.q || 1), 1, Math.min(SIEVE_MAX, availCount(c.id))); if (!(q >= 1) || availCount(c.id) < 1) return false;
+  takeAvail(c.id, q); o.job = { out: c.id, sv: 1, n: 1, q, per: SIEVE_T, t0: nowS(), used: [[c.id, q]] };
+  emit('sfx', 'place'); emit('toast', `광석 그물에 ${ITEMS[c.id].n} ${q}개를 넣었어요 · ${fmtT(q * SIEVE_T)} 뒤에 다 돼요`, 'good', 'jobput'); emit('inv'); });
+// 꺼내기: 다 거른 것만큼 하나씩 굴려서 가방으로 (넘치면 발밑). sim/crafting.js takeJob이 그물이면 여기로 와요.
+function sieveTake(o, x, y, quiet) { const j = o && o.job; if (!j || !j.sv) return 0; const d = jobDone(j); if (!d) return 0;
+  const got = {}; for (let k = 0; k < d; k++) { const r = sieveRoll(j.out); if (r) got[r] = (got[r] || 0) + 1; }
+  let total = 0; for (const id in got) { total += got[id]; const left = addItem(id, got[id]); if (left) spawnDrop(id, left, x, y); }
+  G.stats.sieved = (G.stats.sieved || 0) + d; gainXp(Math.min(8, d));
+  if (d >= j.q) delete o.job; else { j.used = j.used.map(([id, c]) => [id, c - d]); j.q -= d; j.t0 += d * j.per; }
+  if (!quiet) { const list = Object.keys(got).sort((a, b) => got[b] - got[a]).map(id => `${ITEMS[id].n} ${got[id]}`);
+    emit('sfx', total ? 'craft' : 'pick'); emit('toast', total ? `${ITEMS[j.out] ? josa(ITEMS[j.out].n, '을', '를') : '재료를'} ${d}개 걸렀어요 · ${list.join(' · ')}` : `${d}개를 걸렀는데 아무것도 걸리지 않았어요`, total ? 'good' : null, 'sieve'); }
+  emit('inv'); checkGuide(); return total; }
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -6842,6 +6904,14 @@ OSPR.beaverNest = [16, 16, A => { A.e(8, 11.5, 7.4, 4.2, '#5a3a28'); A.e(8, 10.4
 const feederBase = A => { A.r(3, 13, 2, 2, '#7a5034'); A.r(11, 13, 2, 2, '#7a5034'); A.r(1, 8, 14, 6, '#9a6a44'); A.r(1, 8, 14, 1, '#c9965e'); A.r(2, 9, 12, 3, '#4a3020'); A.r(1, 13, 14, 1, '#6a4a30'); A.p(1, 8, '#e0b880'); A.p(14, 8, '#e0b880'); A.r(7, 10, 2, 3, '#7a5034'); };
 OSPR.feeder = [16, 16, feederBase];
 OSPR.feederF = [16, 16, A => { feederBase(A); for (const [x, y, c] of [[4, 9, '#7a6aff'], [6, 9.5, '#9a8aff'], [10, 9, '#e8c890'], [12, 9.4, '#7a6aff'], [8, 8.6, '#ffb070']]) A.e(x, y, 1.4, 1.1, c); A.p(4, 8, '#ffffff'); A.p(10, 8, '#ffffff'); }];
+// v115 광석 그물 — Claude가 임시로 (나무틀에 매단 그물, 거르는 동안 oreNet ↔ oreNetB로 살랑살랑 · 손그림은 dev/art/obj/oreNet.png로 바꿀 수 있어요)
+const oreNetDraw = s => A => { A.r(1, 3, 2, 12, '#7a5034'); A.r(13, 3, 2, 12, '#7a5034'); A.r(1, 3, 1, 12, '#9a6a44'); A.r(13, 3, 1, 12, '#9a6a44'); A.r(0, 14, 4, 1, '#5a3a28'); A.r(12, 14, 4, 1, '#5a3a28');
+  A.r(1, 2, 14, 2, '#9a6a44'); A.r(1, 2, 14, 1, '#c9965e'); A.p(0, 2, '#7a5034'); A.p(15, 2, '#7a5034');
+  A.p(4, 4, '#d9c8a0'); A.p(11, 4, '#d9c8a0'); A.r(3 + s, 5, 10, 1, '#d9c8a0');
+  for (let y = 6; y <= 9; y++) { const x0 = y < 8 ? 3 : 4, x1 = y < 8 ? 12 : 11, dy = y >= 8 ? s : 0; for (let x = x0; x <= x1; x++) if ((x + y) % 2 === 0) A.p(x + s, y + dy, '#e8dcc4'); else if (x === x0 || x === x1) A.p(x + s, y + dy, '#b8a888'); }
+  A.r(5 + s, 10 + s, 6, 1, '#b8a888'); A.p(7 + s, 7, '#ffb070'); A.p(9 + s, 8 + s, '#9fe8ff'); };
+OSPR.oreNet = [16, 16, oreNetDraw(0)];
+OSPR.oreNetB = [16, 16, oreNetDraw(1)];
 OSPR.woolRug = [16, 16, A => { A.r(1, 2, 14, 12, '#e8dcc4'); A.r(2, 3, 12, 10, '#fff4e0'); for (let y = 4; y < 12; y += 3) for (let x = 3 + (y % 2); x < 13; x += 3) A.p(x, y, '#e8dcc4'); A.r(1, 13, 14, 1, '#c9b89a'); for (const x of [1, 4, 7, 10, 13]) A.p(x, 14, '#c9b89a'); }];
 Object.assign(ICON, {
   milk: A => { A.r(5, 4, 6, 10, '#f4f0f8'); A.r(5, 4, 6, 1, '#ffffff'); A.r(6, 2, 4, 2, '#c8d0dc'); A.r(5, 8, 6, 3, '#7fb8ff'); A.r(6, 9, 4, 1, '#bfe0ff'); A.r(10, 4, 1, 10, '#d9d2e6'); },
@@ -8255,6 +8325,10 @@ function renderOverlay(cw, ch) {
   for (const tx of G.texts) { ctx.globalAlpha = Math.min(1, tx.life * 2); pxText(tx.txt, tx.x * T - camX, tx.y * T - camY, tx.col, INK); } // v78: 도트 글꼴 + 도트 테두리
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 }
+// v115 광석 그물: 돌·화강암·현무암·얼음 덩이는 재료 하나마다 처음 0.35에 조각이 톡톡 튀고, 흙·모래 같은 것은 그물 아래로 가루가 떨어져요 (그림만)
+function sieveFx(j, cx, ny, px) { const f = ((nowS() - j.t0) / j.per) % 1, ck = SIEVE_CHUNK[j.out], sz = Math.max(1, Math.round(px));
+  if (ck && f < .35) { const g = f / .35; ctx.fillStyle = ck; for (const [dx, up] of [[-3, 2.5], [0, 3.5], [3, 2]]) ctx.fillRect(Math.round(cx + dx * px * (.5 + g)), Math.round(ny - up * Math.sin(g * Math.PI) * px), sz, sz); }
+  ctx.fillStyle = SIEVE_DUST[j.out] || ck || '#9a6a44'; for (const k of [0, .5]) { const g = (f * 2 + k) % 1; ctx.fillRect(Math.round(cx + (k ? 2 : -1) * px), Math.round(ny + (2.5 + g * 4.5) * px), sz, sz); } }
 function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
@@ -8271,6 +8345,7 @@ function drawEntity(it, t) {
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
     if (d.feeder && (o.feed || []).some(Boolean)) img = SPR.obj.feederF || img; // v114 먹이가 든 먹이통
+    const sieving = d.sieve && o.job && jobDone(o.job) < o.job.q; if (sieving && ((t * 4) | 0) % 2) img = SPR.obj.oreNetB || img; // v115 거르는 동안 그물이 살랑살랑
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
@@ -8279,12 +8354,13 @@ function drawEntity(it, t) {
     if (TIERED[o.t] && o.lv) { const px = Math.round(wx * T - camX), py = Math.round((wy - effH(img) / 16) * T - camY) + 2; ctx.fillStyle = INK; ctx.fillRect(px - 4, py, 8, 5); ctx.fillStyle = BENCH_COL[o.lv]; ctx.fillRect(px - 3, py + 1, 6, 3); } // v60 tier plate
     if (o.job) { const j = o.job, prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1), top = wy - effH(img) / 16 - .2, bx = Math.round(wx * T - camX) - 10, by = Math.round(top * T - camY);
       ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = prog >= 1 ? '#ffd25c' : '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * prog), 2);
-      if (jobDone(j) > 0) drawImg(iconCanvas(j.out), wx, top - .1 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 }); }
+      if (jobDone(j) > 0) drawImg(iconCanvas(j.sv ? sieveOre(j.out) : j.out), wx, top - .1 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 }); }
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
     let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
     const glowL = d.light && !o.off; if (glowL) drawKind('up', 'lamp'); // v79: lit light objects' flames glow in the new light
     drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
     if (glowL) drawKind('up');
+    if (sieving) sieveFx(o.job, wx * T - camX, (wy - 1 + 8 / 16) * T - camY, T / 16); // v115
     if (d.dev === 'farm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / growOf(o), 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
     if (d.dev === 'farm' && ((o.store || []).length || farmStage(o) >= 3)) { ctx.fillStyle = (o.store || []).length ? '#ffd25c' : `rgba(255,241,214,${.5 + Math.sin(t * 5) * .3})`; ctx.fillRect(Math.round((it.x + 1.8) * T - camX), Math.round((it.y - .3) * T - camY), 3, 3); }
     if (o.t === 'battery') { const f = clamp((o.e || 0) / BATT_MAX, 0, 1); ctx.fillStyle = INK; ctx.fillRect(Math.round(wx * T - camX) - 5, Math.round((it.y + .05) * T - camY), 10, 3); ctx.fillStyle = f > .5 ? '#7fe0b5' : f > .2 ? '#ffc861' : '#ff6b7a'; ctx.fillRect(Math.round(wx * T - camX) - 4, Math.round((it.y + .05) * T - camY) + 1, Math.round(8 * f), 1); }
@@ -8699,6 +8775,9 @@ function renderPanel() {
     const o = G.objs.get(panel.i); if (!o || o.t !== 'feeder') { closePanel(); return; } const feed = o.feed || Array(FEED_SLOTS).fill(null), mine = G.inv.map((s, i) => [s, i]).filter(([s]) => s && FEED[s.id]), min = Math.floor(feedSec(o) / 60);
     h += head('먹이통', 'feeder') + `<div class="sh-body"><button class="btn" data-a="fdAll" type="button" style="width:100%">가방의 먹이 모두 넣기</button><div class="lbl">먹이통 <span style="color:var(--muted);font-size:16px">약 ${min}분</span></div><div class="grid">${feed.map((s, i) => slotHTML(s, 'fdOut', i)).join('')}</div>`
       + `<div class="lbl">가방의 먹이</div>${mine.length ? `<div class="grid">${mine.map(([s, i]) => slotHTML(s, 'fdIn', i)).join('')}</div>` : `<p class="prose" style="color:var(--muted)">통통베리·버섯 1분 · 수정 콩·불꽃 열매·서리 무 2분</p>`}</div>`;
+  } else if (k === 'sieve') { // v115 광석 그물: 거르는 중이면 진행 카드, 아니면 넣을 재료 목록
+    const o = G.objs.get(panel.i); if (!o || o.t !== 'oreNet') { closePanel(); return; }
+    h += head('광석 그물', 'oreNet', `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>`) + `<div class="sh-body">${sieveHTML(o)}</div>`;
   } else if (k === 'chest') {
     const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
     const empty = o.items.every(x => !x), rf = o.t === 'refundBox'; // v69 (BF-05): the refund box — take-only
@@ -8816,7 +8895,7 @@ function canCraft(r, near) { return craftable(r, near, craftPanel()); } // 규�
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // the job card updates itself while the panel is open
 let jobUiT = 0;
-function jobPanelTick(dt) { if (!panel || panel.kind !== 'craft' || !TIMED[panel.st]) return; jobUiT -= dt; if (jobUiT > 0) return; jobUiT = .25;
+function jobPanelTick(dt) { if (!panel || !(panel.kind === 'craft' && TIMED[panel.st] || panel.kind === 'sieve')) return; /* v115 광석 그물도 */ jobUiT -= dt; if (jobUiT > 0) return; jobUiT = .25;
   const o = panel.i != null && G.objs.get(panel.i), j = o && o.job, card = document.querySelector('#sheet .jobcard');
   if (!j) { if (card) renderPanel(); return; } if (!card || +card.dataset.done !== jobDone(j)) { renderPanel(); return; }
   const bar = document.getElementById('jobBar'), tx = document.getElementById('jobTxt'), d = jobDone(j);
@@ -8928,8 +9007,16 @@ function upgListHTML(ok) {
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
   return h + `</div></div>`; }
 function jobHTML(o) { const j = o.job; if (!j) return ''; const d = jobDone(j), it = ITEMS[j.out], prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1);
-  return `<div class="rc ok jobcard" data-done="${d}"><div class="ri"><img class="px" src="${iconURL(j.out)}" alt=""></div><div class="rn">${it.n} ${j.q * j.n}개 ${d >= j.q ? '· 다 됐어요!' : TIMED && o.t === 'furnace' ? '녹이는 중' : '만드는 중'}<div class="fixbar" style="max-width:none"><i id="jobBar" style="width:${Math.round(prog * 100)}%"></i></div><div class="ings"><span class="ing" id="jobTxt">${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}</span></div></div>
-    <div class="btns" style="grid-column:auto;flex-direction:column"><button type="button" class="btn mk" data-a="jobTake" ${d ? '' : 'disabled'}>꺼내기${d ? ` ${d * j.n}` : ''}</button><button type="button" class="btn ghost mk ${UIS.jobAsk ? 'warn' : ''}" data-a="jobCancel">${UIS.jobAsk ? '정말?' : '취소'}</button></div></div>`; }
+  return `<div class="rc ok jobcard" data-done="${d}"><div class="ri"><img class="px" src="${iconURL(j.out)}" alt=""></div><div class="rn">${it.n} ${j.q * j.n}개 ${d >= j.q ? '· 다 됐어요!' : TIMED && o.t === 'furnace' ? '녹이는 중' : j.sv ? '거르는 중' : '만드는 중'}<div class="fixbar" style="max-width:none"><i id="jobBar" style="width:${Math.round(prog * 100)}%"></i></div><div class="ings"><span class="ing" id="jobTxt">${d}/${j.q} 완료${d < j.q ? ` · 남은 시간 ${fmtT(jobLeft(j))}` : ''}</span></div></div>
+    <div class="btns" style="grid-column:auto;flex-direction:column"><button type="button" class="btn mk" data-a="jobTake" ${d ? '' : 'disabled'}>꺼내기${d && !j.sv ? ` ${d * j.n}` : ''}</button><button type="button" class="btn ghost mk ${UIS.jobAsk ? 'warn' : ''}" data-a="jobCancel">${UIS.jobAsk ? '정말?' : '취소'}</button></div></div>`; }
+// v115 광석 그물 창: 가방·가까운 상자에 있는 넣을 재료 한 줄씩 (나오는 것과 확률, 10개·최대 버튼)
+function sieveRowHTML(id) { const n = availCount(id), max = Math.min(SIEVE_MAX, n), outs = SIEVE[id].filter(([o]) => o);
+  const qs = max > 10 ? [10, max] : [max];
+  return `<div class="rc ok"><div class="ri"><img class="px" src="${iconURL(id)}" alt=""></div><div class="rn">${ITEMS[id].n}<small>${n}개</small><div class="ings">${outs.map(([o, p]) => `<span class="ing"><img class="px" src="${iconURL(o)}" alt="">${ITEMS[o].n} ${p}%</span>`).join('')}</div></div>`
+    + `<div class="btns" style="grid-column:auto;flex-direction:column">${qs.map(q => `<button type="button" class="btn mk" data-a="svPut" data-i="${id}" data-q="${q}">${q}개 넣기</button>`).join('')}</div></div>`; }
+function sieveHTML(o) { resetPool(); if (o.job) return `<div class="list">${jobHTML(o)}</div>`;
+  const have = Object.keys(SIEVE).filter(id => availCount(id) > 0);
+  return have.length ? `<div class="list">${have.map(sieveRowHTML).join('')}</div>` : `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">넣을 재료가 없어요<br>${Object.keys(SIEVE).map(id => ITEMS[id].n).join('·')}</p>`; }
 function catchLoop() { if (!panel || panel.kind !== 'catch') return; const cv2 = $('#catchCv'); if (cv2) { const g = cv2.getContext('2d'), c = panel, R = 86, cx = 110, cy = 110, a = catchAng(c);
     g.clearRect(0, 0, 220, 220); g.lineWidth = 14; g.strokeStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.arc(cx, cy, R, 0, 6.283); g.stroke();
     g.strokeStyle = '#7fe0b5'; g.beginPath(); g.arc(cx, cy, R, c.za - c.zw / 2, c.za + c.zw / 2); g.stroke();
@@ -8985,6 +9072,7 @@ const HELP_TABS = [
     ['손 제작', '가방 창 「제작」 탭에는 손으로 만들 수 있는 것만 보여요. 작업대·용광로·요리솥·장비제작대를 바라보고 [열기]를 누르면 그곳에서 만드는 것들이 나와요'],
     ['연결된 상자', '작업대·용광로 같은 제작 장소에 붙은 상자(이어 붙인 상자 포함)의 재료도 함께 써요. 가방에 있는 것부터 써요'],
     ['용광로·요리솥', `재료를 넣어 두면 시간이 지나 완성돼요 (한 번에 한 가지, ${JOB_MAX}개까지). 창을 닫거나 게임을 꺼도 계속 만들어요. 다 되면 그 앞에서 [꺼내기]`],
+    ['광석 그물', `흙·돌·화강암·현무암·얼음 덩이와 이끼 흙·버섯흙·수정 모래·재·눈을 넣어 두면 하나에 ${SIEVE_T}초씩 걸러요 (${SIEVE_MAX}개까지). 대부분은 꽝이지만 가끔 그 지역의 광석이나 보석이 나와요. 빛이 없어도 일해요 (구리 작업대)`],
   ]],
   ['gear', '장비', () => [
     ['장비 칸', '캐릭터 창 장비 탭에서 칸을 누르면 지금 장비의 능력과, 가방 속 그 칸에 맞는 물건이 나와요. 반지는 장비제작대에서 만들어요'],
@@ -9482,6 +9570,7 @@ function onSheetClick(e) {
     if (res === 'reorder') UIS.craftOrder = null; renderPanel(); return;
   }
   if (a === 'retrieve') { runCmd({ k: 'retrieve', o: panel.i }); closePanel(); return; }
+  if (a === 'svPut') { if (!(panel && panel.kind === 'sieve') || runCmd({ k: 'sievePut', o: panel.i, id: i, q: +b.dataset.q }) === false) return; UIS.jobAsk = false; renderPanel(); return; } // v115 광석 그물
   if (a === 'fdIn' || a === 'fdOut' || a === 'fdAll') { if (!(panel && panel.kind === 'feeder') || runCmd({ k: a === 'fdIn' ? 'feedIn' : a === 'fdOut' ? 'feedOut' : 'feedAll', o: panel.i, i }) === false) return; renderPanel(); return; } // v114 먹이통
   if (a === 'cout' || a === 'cin') { if (runCmd({ k: 'chest', o: panel.i, i, out: a === 'cout' }) === false) return; renderPanel(); return; }
   if (a === 'qTab') { UIS.qTab = i; renderPanel(); return; }
