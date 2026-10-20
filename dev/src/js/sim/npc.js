@@ -56,7 +56,7 @@ export const naruWaits = () => !G.stats.naruMet; // 머리 위 느낌표 (render
 export function talkTo(id) {
   if (id !== 'guide') { emit('talk', id, 'talk'); return; }
   if (!G.stats.naruMet) { G.stats.naruMet = 1; G.stats.bell = 1; const l = addItem('torch', 1); if (l) spawnDrop('torch', l, G.p.x, G.p.y); naruGive(['naru'], true); emit('talk', id, 'intro'); return; }
-  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
+  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
   const owed = naruOwed(); if (owed.length) { naruGive(owed, false); G.stats.naruRw = (G.stats.naruRw | 0) + 1; emit('talk', id, 'reward'); return; }
   emit('talk', id, 'talk'); }
 // ---- v117 나루에게 받는 보상: 끝냈지만 아직 안 받은 1부 이야기 퀘스트 (나루가 마을에 있을 때만 — 없으면 예전처럼 퀘스트 창에서) ----

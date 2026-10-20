@@ -214,7 +214,7 @@ def test_bosses_regions():
             rec('장비','전설·영웅 장비와 금괴 레시피', r==['smelter:4','smelter:4','smelter:3','smelter:3','smelter:3','furnace:2'], str(r))
             # story act 2
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.bossDead.queen=G.bossDead.slime=G.bossDead.golem=true;G.stats.seedsFound=3;G.treeSeeds=3;G.won=true;G.stats.naruMet=1;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;
-          for(let i=0;i<G.inv.length;i++)G.inv[i]=null;T.addItem('pickCopper',1,false);G.guide=0;T.checkGuide();const a=T.GUIDE[G.guide].id;T.addItem('pickCrystal',1,false);T.checkGuide();const b2=T.GUIDE[G.guide].id;return [a,b2,G.bossDead.turtle,G.bossDead.spirit]}""")
+          G.stats.callSeen={bar:1,pick:1};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;T.addItem('pickCopper',1,false);G.guide=0;T.checkGuide();const a=T.GUIDE[G.guide].id;T.addItem('pickCrystal',1,false);T.checkGuide();const b2=T.GUIDE[G.guide].id;return [a,b2,G.bossDead.turtle,G.bossDead.spirit]}""")
             rec('이야기','3개 심은 뒤 2막 (두 보스를 이미 잡았으면 씨앗 모으기로 건너뜀)', r[0]=='seeds2' and r[1]=='seeds2', str(r))
             r=await ev(pg,"()=>{const T=__T,G=T.G;T.addItem('lightSeed',2);T.checkGuide();const g=T.GUIDE[G.guide].id;T.insertSeeds();return [g,G.treeSeeds,G.won2]}")
             await pg.wait_for_timeout(2000)
@@ -316,7 +316,7 @@ def test_boss_rematch():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);const first=G.drops.map(d=>d.id);G.drops.length=0;
           for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'queenIdol',c:1};G.sel=0;const h=T.BOSSES.queen.home();G.p.x=h.x+20;G.p.y=h.y;const far=T.decide();G.p.x=h.x;G.p.y=h.y+5;const a=T.decide();T.perform(a);return [first.some(id=>['swordQueen','daggerQueen','spearQueen','hammerQueen','bowQueen','staffQueen'].includes(id)),far.k,a.k,G.bossDead.queen,T.countItem('queenIdol')]}""")
             rec('재도전','보스를 잡은 뒤 보스방에서 소환 조각상 사용 → 다시 나타남 (멀면 소환 안 함, v65: 앞에 다른 할 일이 있으면 그걸 추천)', r[0] is True and r[1]!='summon' and r[2:]==['summon',False,0], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=0;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;T.addItem('pickCopper',1,false);T.checkGuide();return T.GUIDE[G.guide].id}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.callSeen={bar:1,pick:1};G.guide=0;G.stats.wood=9;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=9;G.stats.copperBar=9;G.stats.forge=1;T.addItem('pickCopper',1,false);T.checkGuide();return T.GUIDE[G.guide].id}""")
             rec('재도전','보스가 다시 살아나도 이야기 진행이 되돌아가지 않음', r!='queen', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G;return [G2.bossDead.queen,G2.stats.beaten.queen]}""")
             rec('재도전','다시 불러낸 상태로 저장·불러오기 유지', r==[False,1], str(r))
@@ -636,7 +636,7 @@ def test_skills_v102():
 
 def test_npc_v104():
     # v104 이야기 2: 그림자 고치(지역별 자리·옛 세계에도), 그림자 조각(빛 안 2배, 고치 둘레), 3번 치면 구출 → 마을 자리, 말 걸기 대화
-    H2=HOOK.replace("computeLight}","computeLight,npcObjs,villageSpot,NPC_IDS,NPCS,cocoonTarget,hitCocoon,curWeapon,mkEnemy,hitEnemy,placeCocoons,decide,perform,runFrame,newGame,get SPR(){return SPR}}")
+    H2=HOOK.replace("computeLight}","computeLight,typeFinish,npcObjs,villageSpot,NPC_IDS,NPCS,cocoonTarget,hitCocoon,curWeapon,mkEnemy,hitEnemy,placeCocoons,decide,perform,runFrame,newGame,get SPR(){return SPR}}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -662,7 +662,7 @@ def test_npc_v104():
             await pg.wait_for_timeout(1500)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet');return [!!t&&t.innerText.includes('도라 할머니'),!!document.querySelector('#sheet [data-a=talkNext]')]}")
             rec('대화','구하면 잠시 뒤 인사 대화 창(다음 버튼)', r==[True,True], str(r))
-            await pg.wait_for_timeout(600); await ev(pg,"()=>{document.querySelector('#sheet [data-a=talkNext]').click()}"); await pg.wait_for_timeout(200)
+            await pg.wait_for_timeout(600); await ev(pg,"()=>{__T.typeFinish();document.querySelector('#sheet [data-a=talkNext]').click()}"); await pg.wait_for_timeout(200)  # v117: 타이핑 중 [다음]은 줄을 다 보이기만 해요
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;return [t.includes('등불나무 곁에서 지낼게'),!!document.querySelector('#sheet [data-a=close]')]}")
             rec('대화','다음 → 두 번째 줄, 마지막엔 잘 가요', r==[True,True], str(r))
             await ev(pg,"()=>__T.closePanel()")
