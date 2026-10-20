@@ -5638,6 +5638,8 @@ function portalWhy(x, y) { if (noDigZone(x, y) === 'boss') return '보스방 가
 
 // ---- 워프포인트 놓기 (새 세계: 만들 때 · 옛 세계: 불러올 때 한 번) ----
 const freeTile = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && !G.objs.get(i);
+// v112: 넓은 자리(기록관·가장 깊은 곳)는 차지하는 칸 전체가 숨은 방(둘레 벽 포함)과 겹치지 않아야 해요 (가운데 한 점만 보면 숨은 방 벽을 덮어 둘레가 뚫렸어요)
+function roomInRect(x0, y0, x1, y1) { for (const r of G.rooms || []) if (x0 <= r.x + 4 && x1 >= r.x - 1 && y0 <= r.y + 3 && y1 >= r.y - 1) return true; return false; }
 function roomNear(x, y) { for (const r of G.rooms || []) if (x >= r.x - 3 && x <= r.x + 6 && y >= r.y - 3 && y <= r.y + 5) return true; return false; }
 // 걸어서(캐지 않고) 등불나무에서 닿는 칸
 let WK = null, WKG = null; // v108: 한 번 불러올 때 워프·고치·기록관·가장 깊은 곳이 같이 써요 (그 사이 벽을 조금 파도 「닿는 곳」 판단은 그대로 써요)
@@ -6145,9 +6147,10 @@ function placeArchives() {
       if (!ok || walls < (ARCH_W + 2) * (ARCH_H + 2) * .7) continue; // 거의 다 벽인 곳에만 파요 (플레이어가 판 굴을 망치지 않게)
       const ex = x + ARCH_PLAN[ARCH_H - 1].indexOf('E'), ey = y + ARCH_H - 1; let open = false, rock = false; for (let k = 1; k <= 4; k++) { if (!inB(ex, ey + k)) break; const wk = G.wall[idx(ex, ey + k)]; if (k <= 3 && wk === 8) rock = true; if (!wk) open = true; } if (rock) continue; // 입구 아래 3칸은 암반이 아니어야(길을 낼 수 있게), 4칸 안에 트인 곳이 있으면 좋아요
       cand.push({ x, y, r: reach[idx(ex, Math.min(H - 1, ey + 4))] ? 1 : 0, open: open ? 1 : 0 }); }
-    const clear = c => { for (let yy = c.y - 1; yy <= c.y + ARCH_H; yy++) for (let xx = c.x - 1; xx <= c.x + ARCH_W; xx++) if (!freeFor(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (v108: 빠르게)
+    const near = [], clear = (c, any) => { if (!any && roomInRect(c.x, c.y, c.x + ARCH_W - 1, c.y + ARCH_H + 2)) { near.push(c); return false; } /* v112: 숨은 방과 겹치면 다른 자리를 먼저 (입구 아래 길 3칸까지, 고른 뒤에 봐서 안 겹치는 세계는 자리 그대로) */ for (let yy = c.y - 1; yy <= c.y + ARCH_H; yy++) for (let xx = c.x - 1; xx <= c.x + ARCH_W; xx++) if (!freeFor(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (v108: 빠르게)
     while (cand.length) { const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
-      if (clear(c)) { carveArch(A, c.x, c.y); n++; break; } cand.splice(cand.indexOf(c), 1); } }
+      if (clear(c)) { carveArch(A, c.x, c.y); n++; break; } cand.splice(cand.indexOf(c), 1); }
+    if (!cand.length && near.length) { const ok = near.find(c => clear(c, true)); if (ok) { carveArch(A, ok.x, ok.y); n++; } } } // v112: 다른 자리가 하나도 없으면 예전처럼 (기록관이 아예 안 생기지 않게)
   return n; }
 function carveArch(A, x0, y0) { const wires = [], sleepers = [], PLAN = planOf(A.id); let door = null, diary = null, scholar = null, chest = null, lever = null, batt = null, ent = null;
   for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) { const ch = PLAN[r][c], x = x0 + c, y = y0 + r, i = idx(x, y); G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);
@@ -6218,9 +6221,10 @@ function placeDeep() {
     if (!ok || walls < (DEEP_W + 2) * (DEEP_H + 2) * (W >= 600 ? .6 : .35)) continue;
     const ex = x + DEEP_PLAN[DEEP_H - 1].indexOf('E'), ey = y + DEEP_H - 1; let open = false; for (let k = 1; k <= 8; k++) { if (!inB(ex, ey + k)) break; if (!G.wall[idx(ex, ey + k)]) { open = true; break; } } if (!inB(ex, ey + 3)) continue; // 입구 아래 8칸 안에 트인 곳이 있으면 좋아요 (길은 암반도 뚫어 내요)
     cand.push({ x, y, d, r: reach[idx(ex, Math.min(H - 1, ey + 4))] ? 1 : 0, open: open ? 1 : 0 }); }
-  const clear = c => { for (let yy = c.y - 1; yy <= c.y + DEEP_H; yy++) for (let xx = c.x - 1; xx <= c.x + DEEP_W; xx++) if (!freeForDeep(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (빠르게)
+  const near = [], clear = (c, any) => { if (!any && roomInRect(c.x, c.y, c.x + DEEP_W - 1, c.y + DEEP_H + 7)) { near.push(c); return false; } /* v112: 숨은 방과 겹치면 다른 자리를 먼저 (입구 아래 길 8칸까지) */ for (let yy = c.y - 1; yy <= c.y + DEEP_H; yy++) for (let xx = c.x - 1; xx <= c.x + DEEP_W; xx++) if (!freeForDeep(idx(xx, yy))) return false; return true; }; // 물건·전선·바닥 확인은 고른 곳만 (빠르게)
   while (cand.length) { const best = cand.filter(c => c.open && c.r), P = best.length ? best : cand.filter(c => c.open).length ? cand.filter(c => c.open) : cand, c = P[Math.floor(R() * P.length)];
     if (clear(c)) { carveDeep(c.x, c.y); return 1; } cand.splice(cand.indexOf(c), 1); }
+  { const ok = near.find(c => clear(c, true)); if (ok) { carveDeep(ok.x, ok.y); return 1; } } // v112: 다른 자리가 하나도 없으면 예전처럼
   return 0; }
 function carveDeep(x0, y0) { const bz = []; let gate = null, diary = null, ent = null, bx = 0, by = 0;
   for (let r = 0; r < DEEP_H; r++) for (let c = 0; c < DEEP_W; c++) { const ch = DEEP_PLAN[r][c], x = x0 + c, y = y0 + r, i = idx(x, y); G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);
