@@ -7,8 +7,10 @@
 //   → 누가 LEAD_ARRIVE칸 안에 오면 한마디(back) → 5초 뒤 집으로(done). 멀리 있으면 걷는 모습 없이 바로 광맥 옆에.
 // - 나루의 부탁(G.stats.askOpen·askEnd): 이야기 퀘스트 after를 끝내면 방울로 부탁 → 끝내면 경험치는 바로, 방울 「마을로 와 줄래요?」 → 마을에서 끝 장면 + 물건.
 // - 상황 한마디(G.stats.nTip): 1부(구리 곡괭이 장면)를 마친 뒤 그 상황이 처음 올 때 방울로 한 줄.
-import { LEAD_ARRIVE, LEAD_SEE, LEAD_SPD, LEAD_STEPS, LEAD_WAIT, LIFE_NEAR, LIFE_R, LIFE_SPD, NARU_ASK, NARU_ASK_CALL, NARU_ASK_OPEN, NARU_LEAD_HERE, NARU_LIFE, NARU_TIP, TIP_GAP } from '../data/npc.js';
-import { GUIDE, QSIDE } from '../data/quests.js';
+import { LEAD_ARRIVE, LEAD_SEE, LEAD_SPD, LEAD_STEPS, LEAD_WAIT, LIFE_NEAR, LIFE_R, LIFE_SPD, NARU_ASK, NARU_ASK_CALL, NARU_ASK_OPEN, NARU_LEAD_HERE, NARU_LIFE, NARU_TIP, TIP_GAP, NARU2_DEEP_HERE, NARU2_Q, NARU_BOSS, NARU2_BACK, NARU2_GO, NARU2_SC } from '../data/npc.js';
+import { BOSSES } from '../data/rpg-nature.js';
+import { DEEP_H, DEEP_PLAN } from './deep.js';
+import { GUIDE, Q_GO, QSIDE } from '../data/quests.js';
 import { HOT, ITEMS, OBJ } from '../data/items.js';
 import { rand } from '../engine/random.js';
 import { alivePlayers, G, playerList, started } from '../save/state.js';
@@ -17,8 +19,8 @@ import { emit } from './events.js';
 import { gainXp, maxHp } from './player.js';
 import { onFrame } from './systems.js';
 import { freeTile } from './warp.js';
-import { naruSpot, villageSpot } from './npc.js';
-import { CX, CY, idx, inB, W } from '../world/map.js';
+import { naruSpot, talkTo, villageSpot } from './npc.js';
+import { CX, CY, dirKo, idx, inB, W } from '../world/map.js';
 
 const TREE = { x: CX + .5, y: CY }; // 등불나무 가운데 (3×2칸)
 const nGIdx = id => GUIDE.findIndex(q => q.id === id);
@@ -75,10 +77,14 @@ export const leadWalking = () => !!G && !!G.stats && !!nLead() && nLead().s === 
 export const leadThere = () => !!G && !!G.stats && !!nLead() && nLead().s === 'there';
 // 4번이 끝날 때 (sim/quests.js checkGuide): 첫 구리 광맥 옆 빈 칸 — 나루 자리에서 걸어서 닿는 가장 가까운 곳. 찾으면 true
 // 광맥 자리 = 나루에게서 가장 가까운, 구리 광맥(벽 4)에 붙은 빈 칸 (걸어서 닿지 않아도 — 주인공은 캐서 가요). 찾으면 true
-export function leadPrep() { const n = naruAt(); if (!n || !naruSpot()) return false; const x0 = nX(n.i), y0 = nY(n.i); let best = -1, bd = 1e9;
+export function leadPrep(q = 'ore') { const n = naruAt(); if (!n || !naruSpot()) return false; if (q !== 'ore') { const j = deepDoor(); if (j < 0) return false; G.stats.nLead = { s: 'wait', i: j, t: G.time, q }; return true; } const x0 = nX(n.i), y0 = nY(n.i); let best = -1, bd = 1e9;
   for (let y = y0 - 70; y <= y0 + 70; y++) for (let x = x0 - 70; x <= x0 + 70; x++) { if (!inB(x, y)) continue; const d = (x - x0) * (x - x0) + (y - y0) * (y - y0); if (d >= bd || d > 4900) continue; const j = idx(x, y); if (!freeTile(j)) continue;
     for (const [dx, dy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) if (inB(x + dx, y + dy) && G.wall[idx(x + dx, y + dy)] === 4) { best = j; bd = d; break; } }
-  if (best < 0) return false; G.stats.nLead = { s: 'wait', i: best, t: G.time }; return true; }
+  if (best < 0) return false; G.stats.nLead = { s: 'wait', i: best, t: G.time, q: 'ore' }; return true; }
+// v119 가장 깊은 곳 입구 곁: 입구 아래 길(입구 바로 밑 세로 줄)을 막지 않는, 입구에서 가장 가까운 빈 칸. 없으면 -1
+export function deepDoor() { const d = G.stats.deep; if (!d) return -1; const ex = d.x + DEEP_PLAN[DEEP_H - 1].indexOf('E'), ey = d.y + DEEP_H - 1; let best = -1, bd = 1e9;
+  for (let y = ey + 1; y <= ey + 10; y++) for (let x = ex - 8; x <= ex + 8; x++) { if (!inB(x, y) || x === ex) continue; const j = idx(x, y); if (!freeTile(j)) continue; const dd = (x - ex) * (x - ex) + (y - ey - 2) * (y - ey - 2); if (dd < bd) { bd = dd; best = j; } }
+  return best; }
 // 걷는 모습: 열린 칸을 따라 광맥 쪽으로 가장 가까워지는 곳까지의 길 (그중 처음 LEAD_STEPS칸만 걸어요). 다가갈 수 없으면 null
 function leadPath(st0, to) { const tx0 = nX(to) + .5, ty0 = nY(to) + .5, dist = j => Math.hypot(nX(j) + .5 - tx0, nY(j) + .5 - ty0), prev = new Map([[st0, -1]]), q = [st0]; let best = st0, bd = dist(st0);
   for (let k = 0; k < q.length && q.length < 2500; k++) { const i = q[k], x = nX(i), y = nY(i);
@@ -100,18 +106,20 @@ function leadHome() { const L = nLead(), n = naruAt(); if (L) L.s = 'done'; if (
   if (!freeTile(h) && h !== n.i) { G.objs.delete(n.i); const s = villageSpot('guide'); G.objs.set(n.i, n.o); h = s ? idx(s.x, s.y) : n.i; }
   if (nPut(h)) { emit('puff', p0.x, p0.y - .3, '#ffe9a8', 14, 2.2, .5); emit('puff', nX(h) + .5, nY(h) + .2, '#ffe9a8', 14, 2.2, .5); } n.wait = G.time + 3; NW.face = { x: 0, y: 1 }; }
 // 광맥 옆의 나루에게 닿거나 말을 걸면: 한마디 → 5초 뒤 마을로
-export function leadHere() { const L = nLead(); if (!L || L.s !== 'there') return false; L.s = 'back'; L.t = G.time + 5; emit('bell', NARU_LEAD_HERE.slice()); naruHold(5); return true; }
+export function leadHere() { const L = nLead(); if (!L || L.s !== 'there') return false; L.s = 'back'; L.t = G.time + 5;
+  if (L.q === 'dark') { L.t = G.time + 8; G.stats.n2ember = 1; for (const pl of alivePlayers()) emit('puff', pl.p.x, pl.p.y - .4, '#ffc861', 22, 2.6, .9); emit('sfx', 'win'); emit('talk', 'guide', 'sc:dark0'); } // v119 20 출발 전 · 마지막 불씨 (연출만)
+  else emit('bell', (L.q === 'deep' ? NARU2_DEEP_HERE : NARU_LEAD_HERE).slice()); naruHold(L.q === 'dark' ? 8 : 5); return true; }
 function leadTick(dt) { const L = nLead(), n = NW; if (!L || L.s === 'done') return false;
   if (L.s === 'wait') { if (G.time < L.t) L.t = G.time; if (G.time - L.t > LEAD_WAIT) leadGo(); return L.s !== 'wait' && L.s !== 'done'; }
   if (L.s === 'walk') { nMove(dt); if (!n.from) { if (n.path.length && G.time < L.end + 1) { const j = n.path.shift(); if (!nStep(j)) n.path = []; } else leadPlace(); } return true; }
-  if (gPassed('ore')) { leadHome(); return false; } // 광석을 다 모으면 마을로
+  if (gPassed(L.q || 'ore')) { leadHome(); return false; } // 광석을 다 모으면(마지막 장을 읽으면·큰 어둠을 물리치면) 마을로
   if (L.s === 'there') { const pos = naruPos(); if (alivePlayers().some(pl => Math.hypot(pl.p.x - pos.x, pl.p.y - .3 - pos.y) < LEAD_ARRIVE)) leadHere(); return true; }
   if (L.s === 'back') { if (G.time >= L.t || G.time < L.t - 6) leadHome(); return L.s === 'back'; }
   return false; }
 defineCmd('naruLead', () => { leadGo(); }); // 방울 대화(4번 끝)가 끝나면 화면 쪽이 보내요 (ui/talk.js)
 defineCmd('leadSkip', () => { if (leadWalking()) leadPlace(true); }); // 걷는 모습 건너뛰기 (화면 누르기·스페이스)
 // 퀘스트 화살표 (sim/quests.js questGo): 5번은 나루가 광맥 옆에 있으면 나루 자리 (밝히지 않은 곳이어도)
-export function leadTarget() { const L = nLead(); if (!L || (L.s !== 'there' && L.s !== 'wait' && L.s !== 'walk')) return null; if (L.s === 'there') return naruPos(); return { x: nX(L.i) + .5, y: nY(L.i) + .5 }; }
+export function leadTarget(q = 'ore') { const L = nLead(); if (!L || (L.q || 'ore') !== q || (L.s !== 'there' && L.s !== 'wait' && L.s !== 'walk')) return null; if (L.s === 'there') return naruPos(); return { x: nX(L.i) + .5, y: nY(L.i) + .5 }; }
 // ---- 나루의 부탁 ----
 export const ASK_IDS = NARU_ASK.map(a => a.id);
 export const isAsk = q => !!q && ASK_IDS.includes(q.id) && !!naruSpot(); // 나루가 없으면(마을 자리를 못 찾은 세계) 예전 도전 퀘스트처럼
@@ -144,3 +152,53 @@ onFrame('naruLife', dt => { if (!started || !G.stats.naruMet) return; const n = 
   if (G.stats.nLead && G.stats.nLead.s === 'walk' && !NW.path.length && !NW.from && NW.mt === 0) leadPlace(); // 걷는 중에 저장한 세이브: 광맥 옆에
   if (!leadTick(dt)) lifeTick(dt);
   askT += dt; if (askT < .5) return; askT = 0; askTick(); if (part1Done() && naruSpot()) tipTick(); });
+
+// ================= v119 나루 2부 「나루의 기다림」 (dev/design/세계관-NPC.md, 2026-10-21 사용자 선택) =================
+// - 보스(여왕~서리 정령): 물리치면 경험치는 바로, 방울로 부르고 G.stats.nPend에 「돌아와서」를 쌓아요(안 들러도 다음 이야기는 진행). 마을에서 말 걸면 「돌아와서」 + 물건 보상
+//   + 바로 다음 보스의 「출발 전」(G.stats.nGo). 지금 이야기가 보스인데 「출발 전」을 아직 안 봤으면 나루 머리 위 !.
+// - 빛씨앗 셋을 심으면(기억 장면 3 다음) 13번 장면, 기억 장면을 닫으면 바로 열려요.
+// - 「나루에게 가기」(다섯 번째 기억 뒤, 18번) → 나루가 가장 깊은 곳 입구까지 먼저 가 있음 → 마지막 장 → 「나루에게 돌아가기」(19번, 반말)
+//   → 나루가 입구까지 한 번 더 → 닿으면 20번 「출발 전」·마지막 불씨(연출) → 큰 어둠 → 엔딩 창 전에 나루의 마지막 말.
+// - 도라 할머니를 구하면 나루와 할머니가 다시 만나는 장면(마지막 장을 읽은 뒤면 「돌아왔구나」).
+const naruOK = () => !!naruSpot();
+export const NQ2 = {
+  naruGo: { id: 'naruGo', t: () => '마을의 나루에게 가기', h: '나무가 다섯 번째 기억을 보여 줬어요. 할머니가 남긴 말 이야기를 하고 싶어요. 마을로 와서 머리 위에 느낌표가 뜬 저한테 말을 걸어 줘요.',
+    done: () => !!G.stats.n2go || !!(G.stats.deep && G.stats.deep.read) || !!G.bossDead.dark || !naruOK(), target: () => naruSpot() },
+  naruBack: { id: 'naruBack', t: () => '마을의 나루에게 돌아가기', h: '마지막 장… 읽었어요? 마을로 돌아와 줘요. 머리 위에 느낌표가 뜬 저한테 말을 걸어 줘요.',
+    done: () => !!G.stats.n2back || !!G.bossDead.dark || !naruOK(), target: () => naruSpot() },
+};
+for (const id in NQ2) Object.assign(NQ2[id], NARU2_Q[id]);
+{ const k = GUIDE.findIndex(q => q.id === 'deep'); if (k >= 0) { GUIDE.splice(k, 0, NQ2.naruGo); GUIDE.splice(k + 2, 0, NQ2.naruBack); } }
+Q_GO.naruGo = ['near']; Q_GO.naruBack = ['near'];
+// 지금 이야기 퀘스트
+const curQ = () => GUIDE[G.guide] || null;
+// 그 보스방이 있는 쪽 ({dir:보스})
+export const bossDir = k => { const B = BOSSES[k]; if (!B || !B.home) return ''; const h = B.home(); return dirKo(h.x, h.y); };
+// 「출발 전」을 볼 수 있는 보스: 지금 이야기가 그 보스이고 아직 안 봤고 살아 있으면
+export function departDue() { const q = curQ(); if (!q || !NARU_BOSS.includes(q.id) || G.bossDead[q.id] || G.stats.naruCall) return null; return (G.stats.nGo || {})[q.id] ? null : q.id; }
+// 나루 머리 위 ! (render/world.js naruWaits): 「출발 전」·「나루에게 가기」·「나루에게 돌아가기」
+export const naruBang = () => !!G.stats.naruMet && naruOK() && !leadThere() && (!!departDue() || ['naruGo', 'naruBack'].includes((curQ() || {}).id));
+// 보스 이야기를 끝냈을 때 (sim/quests.js checkGuide, 놀이 중에만)
+export function bossPassed(id) { const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('back:' + id)) P.push('back:' + id); }
+// 이야기 퀘스트를 끝냈을 때 다른 장면 쌓기: 빛씨앗 셋을 심음(tree) → 13번
+export function scenePassed(id) { if (id !== 'tree') return; const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('tree')) P.push('tree'); }
+// 말 걸면 보여 줄 2부 장면 (sim/npc.js talkTo): [장면 이름, 그때 줄 보상 퀘스트 id들] 또는 null — 고른 장면은 본 것으로 표시해요
+export function naru2Scene() { const S = G.stats, P = S.nPend = S.nPend || [], go = S.nGo = S.nGo || {}, q = curQ();
+  if (P.length) { const k = P.shift(); if (k.startsWith('back:')) { const id = k.slice(5), parts = [k], nx = departDue(); if (nx) { go[nx] = 1; parts.push('go:' + nx); } return ['sc:' + parts.join(','), [id]]; } return ['sc:' + k, []]; }
+  if (q && q.id === 'naruGo' && !S.n2go) { S.n2go = 1; const lead = leadPrep('deep'); return ['sc:' + (lead ? 'n2go' : 'n2go0'), ['naruGo']]; }
+  if (q && q.id === 'naruBack' && !S.n2back) { S.n2back = 1; const lead = leadPrep('dark'); return ['sc:' + (lead ? 'n2back' : 'n2back,dark0'), ['naruBack']]; }
+  const d = departDue(); if (d) { go[d] = 1; return ['sc:go:' + d, []]; }
+  return null; }
+// 장면 줄 (sim/npc.js talkLines): 'sc:back:queen,go:slime' → 줄들
+const dirFill = l => { const f = s => String(s).replace(/\{dir:(\w+)\}/g, (_, k) => bossDir(k)); return l && typeof l === 'object' ? (l.ask ? l : { ...l, s: f(l.s) }) : f(l); };
+export function sceneLines(kind) { const out = [];
+  for (const part of kind.slice(3).split(',')) { const [a, b] = part.split(':'); const L = a === 'go' ? NARU2_GO[b] : a === 'back' ? NARU2_BACK[b] : NARU2_SC[a]; if (L) out.push(...L); }
+  return (out.length ? out : ['…']).map(dirFill); }
+// 창을 닫았을 때 (ui/panels.js closePanel → 명령): 나루 장면이 끝나면 나루가 먼저 걸어 나가요 · 큰 어둠 뒤 장면이 끝나면 엔딩 창 · 기억 장면을 닫으면 쌓인 장면을 바로
+defineCmd('talkEnd', c => { const m = String(c.m || ''); if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
+defineCmd('memEnd', () => { if (!G.stats.naruMet || !naruOK() || leadThere() || leadWalking() || G.stats.naruCall) return; const q = curQ(), P = G.stats.nPend || [];
+  if (P.includes('tree') || (q && q.id === 'naruGo' && !G.stats.n2go)) { talkTo('guide'); } });
+// 큰 어둠을 물리치면 (sim/deep.js darkDown): 나루가 있으면 마지막 말 → 엔딩 창
+export const naruEnding = () => { if (!naruOK()) return false; emit('talk', 'guide', 'sc:end'); return true; };
+// 할머니를 구하면 (sim/npc.js rescue)
+export const grandmaScene = () => naruOK() ? 'sc:' + (G.stats.deep && G.stats.deep.read ? 'grandma2' : 'grandma') : null;

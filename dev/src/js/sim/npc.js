@@ -2,7 +2,7 @@
 // 고치 놓기(새 세계·옛 세계 모두 불러올 때 한 번, 워프포인트처럼) → 고치 둘레 그림자 조각 → 공격 버튼으로 3번 치면 풀려나 등불나무 곁 마을 자리에 서요 → 말 걸기(대화 창).
 import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_ASK_END, NARU_CALL, NARU_LIFE, NARU_DOING, NARU_INTRO, NARU_Q, NARU_RW, NPC_IDS, NPCS } from '../data/npc.js';
 import { GUIDE, QSIDE } from '../data/quests.js';
-import { ASK_IDS, askOwed, leadHere, leadThere, lifeLine, naruHold } from './naru.js';
+import { ASK_IDS, askOwed, grandmaScene, leadHere, leadThere, lifeLine, naru2Scene, naruBang, naruHold, sceneLines } from './naru.js';
 import { gainXp } from './player.js';
 import { ITEMS } from '../data/items.js';
 import { defineCmd } from './commands.js';
@@ -51,22 +51,23 @@ export function settleStarters() { for (const id of NPC_IDS) { if (!NPCS[id].sta
   G.stats.rescued = G.stats.rescued || {}; G.stats.rescued[id] = 1; } }
 const NS = { g: null, t: -1, v: null }; // 한 프레임 안에서는 다시 찾지 않아요 (퀘스트 창·HUD가 여러 번 물어요)
 export const naruSpot = () => { if (NS.g === G && NS.t === G.time) return NS.v; NS.g = G; NS.t = G.time; NS.v = null; for (const [i, o] of G.objs) if (o.t === 'npc' && o.npc === 'guide') { NS.v = { x: i % W + .5, y: ((i / W) | 0) + .5 }; break; } return NS.v; };
-export const naruWaits = () => !G.stats.naruMet; // 머리 위 느낌표 (render/world.js)
+export const naruWaits = () => !G.stats.naruMet || naruBang(); // 머리 위 느낌표 (render/world.js) · v119 2부: 출발 전·나루에게 가기·돌아가기
 // 말 걸기 (sim/actions.js use 'talk'): 처음 한 번은 첫 장면
 // v117 나루: 첫 장면(방울·횃불을 건넴, 첫 퀘스트 보상은 그 자리에서) → 마을로 부른 장면(6·8번) → 쌓인 보상 → 보통 이야기
 export function talkTo(id) {
   if (id !== 'guide') { emit('talk', id, 'talk'); return; }
   naruHold(); // v118: 말을 걸면 멈추고 바라봐요
   if (!G.stats.naruMet) { G.stats.naruMet = 1; G.stats.bell = 1; const l = addItem('torch', 1); if (l) spawnDrop('torch', l, G.p.x, G.p.y); naruGive(['naru'], true); emit('talk', id, 'intro'); return; }
-  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
+  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; if (c === 'pick' && !G.bossDead.queen) (G.stats.nGo = G.stats.nGo || {}).queen = 1; /* v119: 1부 끝 장면에 버섯 여왕 「출발 전」 */ naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
   if (leadThere() && leadHere()) return; // v118: 광맥 옆에 먼저 가 있던 나루
   const ask = askOwed()[0]; if (ask) { naruGive([ask, ...naruOwed()], false); /* 쌓인 1부 보상도 같이 */ emit('talk', id, 'ask:' + ask); return; } // v118 나루의 부탁 끝 장면 + 보상
+  const sc = naru2Scene(); if (sc) { naruGive([...sc[1], ...naruOwed()], false); emit('talk', id, sc[0]); return; } // v119 2부 장면 (돌아와서·출발 전·나루에게 가기·돌아가기·13번)
   const owed = naruOwed(); if (owed.length) { naruGive(owed, false); G.stats.naruRw = (G.stats.naruRw | 0) + 1; emit('talk', id, 'reward'); return; }
   emit('talk', id, 'talk'); }
 // ---- v117 나루에게 받는 보상: 끝냈지만 아직 안 받은 1부 이야기 퀘스트 (나루가 마을에 있을 때만 — 없으면 예전처럼 퀘스트 창에서) ----
 export const naruHolds = q => !!q && (NARU_Q.includes(q.id) || ASK_IDS.includes(q.id)) && !!naruSpot(); // v118: 나루의 부탁도
 export const naruOwed = () => GUIDE.filter((q, k) => NARU_Q.includes(q.id) && k < G.guide && !(G.qclaim || {})[q.id]).map(q => q.id);
-export const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0); // 머리 위 ? (render/world.js)
+export const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0 || (G.stats.nPend || []).length > 0); // v119: 쌓인 「돌아와서」 장면도 // 머리 위 ? (render/world.js)
 // 보상 주기: 물건 + 아직 안 받은 경험치(옛 세이브에서 이미 지나간 퀘스트) · quiet = 알림 없이(장면 안에서)
 export function naruGive(ids, quiet) { G.qclaim = G.qclaim || {}; G.stats.qxp = G.stats.qxp || {}; const got = {};
   for (const id of ids) { const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q || G.qclaim[id]) continue; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'main';
@@ -99,7 +100,7 @@ export function rescue(i, o) { const id = o.npc, N = NPCS[id]; if (!N) { G.objs.
   G.objs.delete(i); spawnDrop('cocoonBit', 2, x + .5, y + .5); emit('puff', x + .5, y + .2, '#3a2a5a', 30, 4, .6); emit('puff', x + .5, y + .2, '#ffe9a8', 16, 3, .9); emit('sfx', 'win'); emit('shake', .3);
   const s = villageSpot(id); if (s) G.objs.set(idx(s.x, s.y), { t: 'npc', npc: id, met: 0 });
   G.stats.rescued = G.stats.rescued || {}; G.stats.rescued[id] = 1;
-  emit('toast', `${N.n}(${N.job})을(를) 그림자 고치에서 구했어요! 등불나무 곁 마을로 갔어요`, 'good', 'rescue'); emit('talk', id, 'hello'); }
+  emit('toast', `${N.n}(${N.job})을(를) 그림자 고치에서 구했어요! 등불나무 곁 마을로 갔어요`, 'good', 'rescue'); const gm = id === 'farmer' && G.stats.naruMet && grandmaScene(); emit('talk', gm ? 'guide' : id, gm || 'hello'); } // v119: 할머니를 구하면 나루와 다시 만나는 장면
 // ---- 고치 둘레 그림자 조각: 플레이어가 9칸 안에 오면 3마리까지, 60초마다 ----
 onFrame('cocoons', dt => {
   for (const [i, o] of G.objs) { if (o.t !== 'cocoon') continue; const x = i % W + .5, y = (i / W) | 0 + .5; const pl = nearestPlayer(x, y); if (!pl || Math.hypot(pl.p.x - x, pl.p.y - y) > COCOON_WAKE) continue;
@@ -114,6 +115,8 @@ const NARU_LIFE_OTHER = NARU_LIFE.other;
 export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
   if (kind === 'intro') return NARU_INTRO.slice(); // v110 · v117 (이름 짓기 · 주인공 대답)
+  if (kind.startsWith('sc:')) return sceneLines(kind); // v119 2부 장면
+  if (kind === 'call:pick' && (G.stats.nGo || {}).queen && !G.bossDead.queen) { const L = NARU_CALL.pick; return [...L.slice(0, -1), ...sceneLines('sc:go:queen'), L[L.length - 1]]; } // v119: 1부 끝 장면 안에 버섯 여왕 출발 전
   if (kind.startsWith('call:')) return (NARU_CALL[kind.slice(5)] || ['…']).slice(); // v117 마을로 부른 장면
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상

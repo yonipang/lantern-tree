@@ -836,6 +836,83 @@ def test_naru_part1b_v118():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+def test_naru_part2_v119():
+    # v119 나루 2부: 새 이야기 퀘스트 2개, 보스 돌아와서·출발 전(마을에서 한 번에), 13번 장면(기억 장면 뒤), 입구까지 먼저 가기·마지막 불씨, 엔딩 전 마지막 말, 할머니 재회, 옛 세이브
+    H2=HOOK.replace("computeLight}","computeLight,naruSpot,naruAsk,naruWaits,naruPos,GUIDE,checkGuide,questGo,activeQuest,perform,decide,closePanel,bellState,bellClear,get panel(){return panel},runCmd,canClaim,update,leadWalking,talkTo,readLast,hitBoss,rescue,migrateNaru119,DEEP_H,DEEP_PLAN,lightBrazier}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            LN="(P=>P.lines.map(l=>typeof l==='string'?l:l.s).join(' '))"
+            r=await ev(pg,"()=>{const T=__T;const ids=T.GUIDE.map(g=>g.id);return [ids.slice(-6).join(','),T.GUIDE[ids.indexOf('free')].h.includes('진짜 마을을 다시'),!!T.G.stats.deep,!!T.naruSpot()]}")
+            rec('퀘스트','다섯 번째 심기 뒤 「나루에게 가기」 → 마지막 장 → 「나루에게 돌아가기」 → 큰 어둠, 마지막 힌트 첫 줄', r==['tree2,naruGo,deep,naruBack,dark,free',True,True,True], str(r))
+            # 보스: 물리치면 방울로 부름 · 경험치는 바로 · 물건은 나루에게 · 다음 이야기는 진행
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.closePanel();T.bellClear();G.enemies.length=0;G.stats.naruMet=1;G.stats.bell=1;G.stats.naruCall=null;G.stats.callSeen={bar:1,pick:1};G.stats.nLead={s:'done'};G.stats.askV=1;G.stats.nTip={hunger:1,hurt:1,faint:1,full:1,cocoon:1,region:1,warp:1,level:1,seed:1};
+              G.stats.nPend=[];G.stats.nGo={queen:1};G.qclaim=G.qclaim||{};delete G.qclaim.queen;G.stats.qxp={};G.guide=T.GUIDE.findIndex(q=>q.id==='queen');G.qAct='main';G.p.x=T.CX+.5+60;G.p.y=T.CY+1.7;
+              const xp=G.rpg.xp,lv=G.rpg.lv;G.bossDead.queen=1;T.checkGuide();const bl=T.bellState();return [T.GUIDE[G.guide].id,G.stats.nPend.join(),!!bl&&bl.lines[0].includes('마을로 와 줄래요'),G.rpg.xp>xp||G.rpg.lv>lv,!!G.qclaim.queen,T.naruAsk(),T.canClaim()]}""")
+            rec('보스','버섯 여왕을 물리치면 다음 이야기(말랑대왕)로 · 방울 「마을로 와 줄래요?」 · 경험치는 바로 · 물건은 나루 머리 위 ?', r==['slime','back:queen',True,True,False,True,False], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();window.__c0=T.countItem('copperBar');T.talkTo('guide');return 1}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);return [P.mode,s.includes('여왕은 잠들었어요'),s.includes('말랑대왕'),/\\{dir/.test(s),/(동|서|남|북)/.test(s),!!G.qclaim.queen,T.countItem('copperBar')-window.__c0,!!G.stats.nGo.slime,T.naruAsk()]})")
+            rec('보스','마을의 나루에게 말 걸면 「돌아와서」 + 바로 다음 보스 「출발 전」(방향은 이 지도에 맞춤) + 물건 보상(구리괴 5), ? 사라짐', r[:2]==['sc:back:queen,go:slime',True] and r[2] is True and r[3] is False and r[4] is True and r[5] is True and r[6]>=5 and r[7:]==[True,False], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.nGo={};G.guide=T.GUIDE.findIndex(q=>q.id==='turtle');G.bossDead.turtle=0;const w=T.naruWaits();T.talkTo('guide');return [w,T.naruWaits(),G.stats.nGo.turtle]}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r2=await ev(pg,"(()=>{const P=__T.panel;return [P.mode,"+LN+"(P).includes('용암 동굴은')]})")
+            rec('출발 전','지금 이야기가 보스이고 「출발 전」을 안 봤으면 나루 머리 위 !, 말 걸면 출발 전 장면(한 번)', r==[True,False,1] and r2==['sc:go:turtle',True], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            # 13번: 빛씨앗 셋을 심으면 → 기억 장면을 닫으면 바로
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();G.stats.nGo={golem:1};G.guide=T.GUIDE.findIndex(q=>q.id==='tree');G.treeSeeds=3;T.checkGuide();const a=[T.GUIDE[G.guide].id,(G.stats.nPend||[]).join()];T.runCmd({k:'memEnd'});return a}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r2=await ev(pg,"(()=>{const P=__T.panel;return [P.mode,"+LN+"(P).includes('남은 씨앗 둘'),__T.G.stats.nPend.length]})")
+            rec('13번','빛씨앗 셋을 심으면 장면을 쌓아 두고, 기억 장면을 닫으면 바로 나루 장면', r==['cpick','tree'] and r2==['sc:tree',True,0], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            # 18번 · 나루에게 가기 → 입구까지 먼저
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();for(const k of ['turtle','spirit'])G.bossDead[k]=1;G.stats.nGo={turtle:1,spirit:1};G.stats.nPend=[];G.stats.n2go=0;G.stats.n2back=0;G.stats.deep.read=0;G.bossDead.dark=0;delete G.qclaim.naruGo;delete G.qclaim.naruBack;
+              G.guide=T.GUIDE.findIndex(q=>q.id==='tree2');G.treeSeeds=5;G.stats.seedsFound=5;T.checkGuide();const a=[T.GUIDE[G.guide].id,T.naruWaits()];const n=T.naruSpot();G.p.x=n.x+1.6;G.p.y=n.y+.6;window.__t0=T.countItem('torch');T.runCmd({k:'memEnd'});return a}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r2=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel;return [P.mode,"+LN+"(P).includes('마지막 문 앞까지'),G.stats.nLead.q,G.stats.nLead.s,T.countItem('torch')-window.__t0,!!G.stats.qxp.naruGo]})")
+            rec('18번','다섯 번째 기억 뒤 「나루에게 가기」(나루 머리 위 !), 기억 장면을 닫으면 바로 장면 · 횃불 6 · 경험치, 입구까지 먼저 갈 준비', r==['naruGo',True] and r2[:4]==['sc:n2go',True,'deep','wait'] and r2[4]>=6 and r2[5] is True, str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=[G.stats.nLead.s];for(let k=0;k<200&&G.stats.nLead.s==='walk';k++)T.update(1/30);T.checkGuide();const L=G.stats.nLead,WW=Math.round(Math.sqrt(G.wall.length)),n=T.naruPos(),d=G.stats.deep;
+              const ex=d.x+T.DEEP_PLAN[T.DEEP_H-1].indexOf('E'),ey=d.y+T.DEEP_H-1;const g=T.questGo(T.activeQuest());a.push(T.GUIDE[G.guide].id,L.s,Math.hypot(n.x-ex,n.y-ey)<12,Math.floor(n.x)!==ex,!!g&&Math.hypot(g.x-n.x,g.y-n.y)<.01);
+              T.bellClear();G.p.x=n.x+1.2;G.p.y=n.y+.4;for(let k=0;k<20;k++)T.update(1/30);a.push(G.stats.nLead.s,((T.bellState()||{lines:['']}).lines[0]).includes('입구'));return a}""")
+            rec('입구','장면을 닫으면 걸어 나가 가장 깊은 곳 입구 곁에(입구 길은 막지 않음), 화살표 = 나루, 닿으면 「여기가 가장 깊은 곳 입구예요」', r[0] in ('walk','there') and r[1:]==['deep','there',True,True,True,'back',True], str(r))
+            # 19번 · 나루에게 돌아가기 → 한 번 더 입구까지 → 20번 마지막 불씨
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();T.readLast();T.closePanel();for(let k=0;k<10;k++)T.update(1/30);T.checkGuide();const a=[T.GUIDE[G.guide].id,G.stats.nLead.s,T.naruWaits()];T.talkTo('guide');return a}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode==='sc:n2back'")
+            r2=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);return [s.includes('마지막 등불지기가'),s.includes('나 때문이야'),G.stats.nLead.q]})")
+            rec('19번','마지막 장을 읽으면 나루는 마을로, 「나루에게 돌아가기」(!) → 알아차리는 장면(반말) · 입구까지 한 번 더 준비', r==['naruBack','done',True] and r2==[True,True,'dark'], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let k=0;k<200&&G.stats.nLead.s==='walk';k++)T.update(1/30);T.checkGuide();const n=T.naruPos();G.p.x=n.x+1.2;G.p.y=n.y+.4;const a=[T.GUIDE[G.guide].id,G.stats.nLead.s];for(let k=0;k<20;k++)T.update(1/30);return a}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode==='sc:dark0'")
+            r2=await ev(pg,"(()=>{const T=__T,G=T.G;return ["+LN+"(T.panel).includes('마지막 불씨'),G.stats.n2ember]})")
+            rec('20번','입구 곁 나루에게 닿으면 큰 어둠 「출발 전」 장면 · 마지막 불씨(연출)', r[0]=='dark' and r[1] in ('there','back') and r2==[True,1], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            # 엔딩 전 마지막 말 → 닫으면 엔딩 창
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const b=G.bosses.dark;b.st='fight';b.hp=1;G.p.hp=500;const WW=Math.round(Math.sqrt(G.wall.length));const brz=[...G.objs].filter(([i,o])=>o.t==='brazier');for(const [i,o] of brz){o.off=1;T.lightBrazier(o,i%WW+.5,((i/WW)|0)+.5)}T.computeLight();G.p.x=b.x;G.p.y=b.y+2;T.hitBoss(b,5,false);return [G.bossDead.dark,G.stats.ending]}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode==='sc:end'")
+            r2=await ev(pg,"(()=>__T.panel?"+LN+"(__T.panel).includes('땅 위까지'):'none')")
+            await ev(pg,"()=>__T.closePanel()")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='ending'")
+            rec('엔딩','큰 어둠을 물리치면 나루의 마지막 말 → 닫으면 엔딩 창', r==[True,1] and r2 is True, str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            # 할머니 재회
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;let i=-1,o=null;for(const [k,v] of G.objs)if(v.t==='cocoon'&&v.npc==='farmer'){i=k;o=v;break}if(!o){for(const [k,v] of [...G.objs])if(v.t==='npc'&&v.npc==='farmer')G.objs.delete(k);i=T.idx(T.CX+40,T.CY+40);o={t:'cocoon',npc:'farmer',hits:0};G.objs.set(i,o)}T.rescue(i,o);return 1}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode.startsWith('sc:grandma')")
+            r=await ev(pg,"""(()=>{const T=__T,P=T.panel;const s="""+LN+"""(P);P.at=1;T.renderPanel&&0;return [P.mode,s.includes('돌아왔구나'),typeof P.lines[1]==='object'&&P.lines[1].by]})""")
+            await ev(pg,"()=>{__T.panel.at=1;__T.closePanel&&0}")
+            rec('할머니','도라 할머니를 구하면 나루와 할머니가 다시 만나는 장면(마지막 장을 읽은 뒤면 「돌아왔구나」, 할머니가 말하는 줄)', r==['sc:grandma2',True,'farmer'], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            # 옛 세이브: 이미 지난 새 퀘스트는 받은 것으로
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;delete G.stats.naru119;G.stats.n2go=0;G.stats.n2back=0;G.qclaim={};G.stats.qxp={};G.stats.deep.read=1;G.bossDead.dark=0;T.migrateNaru119();const a=[G.stats.n2go,!!G.qclaim.naruGo,G.stats.n2back,!!G.qclaim.naruBack];
+              delete G.stats.naru119;G.stats.n2go=0;G.qclaim={};G.stats.deep.read=0;T.migrateNaru119();a.push(G.stats.n2go,!!G.qclaim.naruGo);return a}""")
+            rec('옛 세이브','마지막 장을 이미 읽은 세이브는 「나루에게 가기」를 받은 것으로(장면 없이), 아직이면 그대로', r==[1,True,0,False,0,False], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_barter_v105():
     # v105 물물교환: NPC 대화 창 「물물교환」 → 줄마다 주는 것 → 받는 것, 가방 재료만, 하루 3번, 쪽지는 한 번만
     H2=HOOK.replace("computeLight}","computeLight,npcObjs,rescue,runCmd,barterLeft,barterWhy,BARTER,countItem,knows}")
@@ -928,7 +1005,7 @@ def test_deep_ending_v108():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep;if(!d)return ['none'];const C=300;let objs={};for(let r=0;r<T.DEEP_H;r++)for(let c=0;c<T.DEEP_W;c++){const o=G.objs.get(T.idx(d.x+c,d.y+r));if(o)objs[o.t]=(objs[o.t]||0)+1}
               const ex=d.x+T.DEEP_PLAN[T.DEEP_H-1].indexOf('E');let path=0;for(let k=0;k<3;k++)if(!G.wall[T.idx(ex,d.y+T.DEEP_H+k)])path++;const bo=G.bosses.dark;
               return [[3,4].includes(G.biome[T.idx(d.x+10,d.y+15)]),Math.hypot(d.x+10-C,d.y+15-C)>=110,objs,path,G.wall[d.gate],bo.st,Math.floor(bo.x)===d.bx,!!T.SPR.dark&&!!T.SPR.obj.brazier&&!!T.SPR.objOff.brazier,T.GUIDE.map(g=>g.id).slice(-3).join(',')]}""")
-            rec('가장 깊은 곳','용암·얼음 깊은 곳(110칸 밖)에 21×15 유적: 횃대 6·마지막 장, 입구 길, 보스 문은 암반, 큰 어둠은 보스 자리에서 잠듦, 이야기 퀘스트 deep·dark', r==[True,True,{'brazier':6,'diaryLast':1},3,8,'sleep',True,True,'deep,dark,free'], str(r))
+            rec('가장 깊은 곳','용암·얼음 깊은 곳(110칸 밖)에 21×15 유적: 횃대 6·마지막 장, 입구 길, 보스 문은 암반, 큰 어둠은 보스 자리에서 잠듦, 이야기 퀘스트 deep·dark', r==[True,True,{'brazier':6,'diaryLast':1},3,8,'sleep',True,True,'naruBack,dark,free'], str(r)) # v119: 마지막 장 뒤 「나루에게 돌아가기」
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep;G.treeSeeds=4;G.p.x=d.x+10.5;G.p.y=d.y+13.5;T.deepGateTick();const out=[G.p.y>d.y+T.DEEP_H];G.treeSeeds=5;G.p.x=d.x+10.5;G.p.y=d.y+13.5;T.deepGateTick();out.push(Math.abs(G.p.y-(d.y+13.5))<.01);
               T.readLast();out.push(G.wall[d.gate],d.read);return out}""")
             rec('문','빛씨앗 4개면 어둠이 밀어내고, 5개면 들어감 · 마지막 장을 읽으면 보스 문(암반)이 열림', r==[True,True,0,1], str(r))
@@ -940,8 +1017,12 @@ def test_deep_ending_v108():
             rec('큰 어둠','어둠 속(횃대 꺼짐)에선 안 맞고, 횃대를 켜 밝힌 곳에선 맞음, 보스는 20초 안에 횃대를 꺼뜨림', r[0] is True and r[1] is True and r[2]==100 and r[3] is True, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep,b=G.bosses.dark;const brz=[...G.objs].filter(([i,o])=>o.t==='brazier');for(const [i,o] of brz)o.off=0;T.markLight&&0;T.computeLight();b.hp=1;T.hitBoss(b,5,false);return [G.bossDead.dark,d.done,G.stats.ending,G.explored[T.idx(d.x+3,d.y+3)]]}""")
             rec('엔딩','큰 어둠이 쓰러지면 가장 깊은 곳 지도가 보이고 엔딩 기록', r==[True,1,1,1], str(r))
-            await pg.wait_for_timeout(2600); r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return s&&s.innerText.includes('등불나무 아래')&&s.innerText.includes('계속 살아가기')}")
-            rec('엔딩','2초 뒤 엔딩 창(등불나무 아래 · 계속 살아가기)', r is True, r)
+            await wait_until(pg,"()=>__T.G&&document.querySelector('#sheet')&&!document.querySelector('#sheetWrap').hidden");await pg.wait_for_timeout(300)
+            tk=await ev(pg,"()=>{const s=document.querySelector('#sheet');return !!s&&s.innerText.includes('땅 위까지')}")
+            if tk: await ev(pg,"()=>__T.closePanel()")  # v119: 나루가 마을에 있으면 마지막 말 → 닫으면 엔딩 창
+            await wait_until(pg,"()=>{const s=document.querySelector('#sheet');return !!s&&s.innerText.includes('계속 살아가기')}")
+            r=await ev(pg,"()=>{const s=document.querySelector('#sheet');return s&&s.innerText.includes('등불나무 아래')&&s.innerText.includes('계속 살아가기')}")
+            rec('엔딩','엔딩 창(등불나무 아래 · 계속 살아가기) — 나루가 있으면 마지막 말 다음', r is True, r)
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
