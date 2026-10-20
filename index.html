@@ -2599,7 +2599,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; /* v119 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2730,7 +2730,7 @@ function deserialize(s) {
   if (!G.stats.nm65) migrateTools65(); // v65 tool pouch
   migrateForges60(oldFp); // v60
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); /* v104·v106·v108 · v119 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
@@ -2922,6 +2922,9 @@ function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.id]) s.i
   for (const o of G.objs.values()) { if (Array.isArray(o.items)) o.items.forEach(fix); if (Array.isArray(o.store)) o.store.forEach(fix);
     if (o.job && Array.isArray(o.job.used)) o.job.used = o.job.used.map(([id, c]) => [SHOVELFUL93[id] || id, c]); } }
 // v110 시작 길잡이 나루: 옛 세이브는 첫 장면 없이 「나루에게 말 걸기」를 끝낸 것으로 (보상도 받은 것으로). 나루를 고치에서 마을로 옮기는 건 sim/npc.js settleStarters
+// v119 나루 2부: 옛 세이브에서 이미 지난 새 이야기 퀘스트(「나루에게 가기」·「나루에게 돌아가기」)는 장면 없이 받은 것으로 (마지막 장을 읽었으면 · 큰 어둠을 물리쳤으면)
+function migrateNaru119() { if (G.stats.naru119) return; G.stats.naru119 = 1; const read = !!(G.stats.deep && G.stats.deep.read), dark = !!(G.bossDead && G.bossDead.dark); if (!read && !dark) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {};
+  { G.stats.n2go = 1; G.qclaim.naruGo = 1; qx.naruGo = 1; } if (dark) { G.stats.n2back = 1; G.qclaim.naruBack = 1; qx.naruBack = 1; } }
 function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }
 let saveFailWarned = false;
 function saveLocal(silent) {
@@ -3150,7 +3153,7 @@ const GUIDE = [
   { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.min(5, G.stats.seedsFound)}/5)`, h: '용암 거북과 서리 정령이 쓰러지면 빛씨앗을 떨어뜨려요. 보스방 가운데 제단에 놓여 있을 때도 있어요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
     target: () => { const p = G.p; const c = [SL, SI].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
   { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요. 다섯 개가 모두 밝아지면 나무가 다섯 번째 기억을 보여 줄 거예요.', done: () => G.treeSeeds >= 5, target: () => ({ x: CX + .5, y: CY + .5 }) },
-  { t: () => '등불나무 곁에서 살아가기', h: '큰 어둠은 흩어지고 등불지기들이 깨어났어요. 물가에서 낚시도 하고, 이끼·버섯·수정 세트 가구로 우리 마을을 꾸며 봐요. 보스 재도전과 남은 도전 퀘스트도 기다리고 있어요.', done: () => false },
+  { t: () => '등불나무 곁에서 살아가기', h: '큰 어둠은 흩어지고 등불지기들이 깨어났어요. 할머니 말로는 이제 진짜 마을을 다시 만들 차례래요. 물가에서 낚시도 하고, 이끼·버섯·수정 세트 가구로 우리 마을을 꾸며 봐요. 보스 재도전과 남은 도전 퀘스트도 기다리고 있어요.', done: () => false },
 ];
 // quest ids, rewards and xp (main story, in order)
 const Q_META = [['naru', [['berry', 3]], 5], ['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch', 4]], 10], ['torch', [['berrySeed', 3], ['rope', 2]], 10], ['ore', [['copperOre', 3], ['resin', 1]], 15], ['bar', [['resin', 2], ['gel', 2]], 15],
@@ -3954,6 +3957,58 @@ const BARTER = {
   ],
 };
 // 쪽지(rn_…)는 받은 적이 있으면 다시 안 줘요 (sim/npc.js barterCan)
+// ---- v119 나루 2부 「나루의 기다림」 (dev/design/세계관-NPC.md 「나루 퀘스트라인」 2부 흐름 · 대사 초안 9~21번 · 할머니 재회, 2026-10-21 사용자 선택: 흐름 제안대로 · 보스 장면은 마을에서 한 번에 · 새 퀘스트 보상 작게 · 대사는 초안 그대로) ----
+// 대사 한 줄에 BY_(npc, 글) = 다른 사람(할머니)이 말하는 줄. {dir:보스} = 그 보스방이 있는 쪽(지도마다 달라요, sim/naru.js에서 바꿔요)
+const BY_ = (npc, s) => ({ by: npc, s });
+// 보스 이야기 퀘스트: 경험치는 물리칠 때 바로, 물건은 마을의 나루에게 · 물리치면 방울로 부르고(안 들러도 다음 퀘스트는 진행) 마을에서 「돌아와서」 장면 + 바로 다음 보스의 「출발 전」 장면
+const NARU_BOSS = ['queen', 'slime', 'golem', 'turtle', 'spirit'];
+const NARU_BOSS_CALL = ['다녀왔어요? 마을로 와 줄래요? 할 얘기가 있어요.'];
+const NARU2_GO = { // 출발 전 (마을)
+  queen: ['{dir:queen} 숲에서 포자 냄새가 나요. 할머니 이야기에 나오던 창고 지킴이일지도요.', ME_('우리를 막으려는 걸까요?'), '주인을 잃으면 동물도 길을 잃는대요. 그래서 커졌나 봐요. 포자 사이 빈틈으로 피해요!'],
+  slime: ['{dir:slime} 동굴엔 말랑대왕이 있대요. 말랑말랑한데 하나도 안 귀엽대요.', ME_('…조금 귀여울 것 같은데요.'), '진짜요?! 아무튼 뛰어오르면 그림자가 먼저 생겨요. 그걸 보고 피해요!'],
+  golem: ['수정 동굴은 등불지기들이 빛을 수정에 담아 두던 곳이래요. 골렘은 그 빛을 지키는 거고요.', ME_('우리가 도둑처럼 보이겠네요.'), '빨간 점선이 보이면 옆으로! 벽에 부딪혀 어지러울 때가 기회예요.'],
+  turtle: ['용암 동굴은 등불지기들의 대장간이었대요. 거북은 화로를 지키던 수호자고요.', ME_('아직도 누군가를 기다리는 걸까요?'), '…저처럼요? 등껍질이 멈출 때를 노려요. 바닥이 주황색이면 곧 용암이에요!'],
+  spirit: ['얼음 동굴엔 등불지기들이 잠들어 있대요. 정령은 그 잠을 지키고요.', ME_('깨워야 해요?'), '아직은요. 정령이 사라지면 곁에 다시 나타나요. 점선 원 밖으로 피해요!'],
+};
+const NARU2_BACK = { // 돌아와서 (마을)
+  queen: ['다녀왔어요? 다친 데는요?', ME_('괜찮아요. 여왕은 잠들었어요.'), '이제 아무것도 안 지켜도 되겠네요. …조금 쓸쓸하네요.'],
+  slime: [ME_('대왕이 이걸 떨어뜨렸어요.'), '빛이 나요… 빛씨앗이에요! 진짜 있었구나.'],
+  golem: [ME_('수정 속 빛이 따뜻했어요. …어디서 본 것 같았어요.'), '골렘 빛이 {이름}님한테 흘러갔다고요? 꼭 「가져가도 돼」 하는 것 같네요.'],
+  turtle: [ME_('거북이 마지막에 제 등불을 한참 봤어요.'), '아는 사람을 만난 것처럼요?', ME_('저도 저 거북을 아는 것 같았어요. 기억은 안 나는데.')],
+  spirit: [ME_('정령이 사라지면서 「늦었구나」 했어요.'), '누구한테 한 말일까요?', ME_('모르겠어요. 그런데… 왠지 미안한 마음이 들어요.')],
+};
+// 끝 한마디 (방울): 12 빛씨앗 셋 · 14 수정 곡괭이 · 17 깊은 동굴 빛씨앗 (NARU_BELL에 더해요 — 보상은 예전처럼 퀘스트 창)
+Object.assign(NARU_BELL, {
+  seeds: ['셋 다 모았어요! 손에 쥐니까 따뜻해요. 얼른 나무한테 가요.'],
+  cpick: ['이 곡괭이면 그 단단한 벽도 뚫어요. 할머니가 늘 그랬어요, 먼 길엔 따끈한 국물 챙기라고!'],
+  seeds2: ['다섯 개 다 모였어요! 이제 나무가 완전히 깨어날 거예요.'],
+});
+// 장면 (마을의 나루에게 말 걸면, 또는 기억 장면을 닫으면 바로)
+const NARU2_SC = {
+  tree: ['나무가 보여 준 기억 봤어요? 등불지기들이 다 같이 웃고 있었어요.', ME_('네. …이상하게 그리웠어요.'), '남은 씨앗 둘은 더 깊은 곳에 있대요. {dir:turtle}은 뜨겁고 {dir:spirit}은 춥대요.', ME_('나루가 길을 알려 주면, 제가 벽을 뚫을게요.')], // 13 빛씨앗 셋을 심은 뒤
+  // 18 「나루에게 가기」 — 다섯 번째 기억 뒤 · 집안에 내려온 말 → 나루가 가장 깊은 곳 입구까지 먼저 가요
+  n2go: ['나무가… {이름}님 쪽으로 빛을 기울였어요. 처음 봐요, 이런 거.', ME_('나무가 저를 아는 것 같아요.'), '할머니가 남긴 말, 기억나요? 돌아올 사람을 기다리라던 거. 저 그 말이 이제 조금 무서워요. 왜인지는 모르겠지만.', ME_('가장 깊은 곳에 가 보면 알 수 있을 거예요.'),
+    '집안에 내려오는 말이 하나 더 있어요. 「길잡이는 마지막 문 앞까지 길을 밝힌다.」', '그러니까 입구까지는 제가 같이 갈게요. 먼저 가 있을게요, 화살표를 따라와요!'],
+  n2go0: ['나무가… {이름}님 쪽으로 빛을 기울였어요. 처음 봐요, 이런 거.', ME_('나무가 저를 아는 것 같아요.'), '할머니가 남긴 말, 기억나요? 돌아올 사람을 기다리라던 거. 저 그 말이 이제 조금 무서워요. 왜인지는 모르겠지만.', ME_('가장 깊은 곳에 가 보면 알 수 있을 거예요.'),
+    '용암·얼음 동굴 깊은 곳 어딘가래요. 조심해서 다녀와요. 마을에서 기다릴게요.'], // 가장 깊은 곳이 없는 세계
+  // 19 「나루에게 돌아가기」 — 마지막 장을 읽고 (반말 시작) → 나루가 입구까지 한 번 더 먼저 가요
+  n2back: ['…마지막 등불지기가, {이름}님이었어요?', ME_('기억났어. 전부는 아니지만. 모두를 잠재우고, 나무도 잠재우고… 큰 어둠을 가둔 다음 기억을 지웠어.'), '그래서 나무가 알아본 거구나. 그래서 불 켜는 게 그렇게 익숙했구나.',
+    '그럼 할머니가 기다리라던 사람이… {이름}님이었네요.', ME_('미안해, 나루. 마을 불이 꺼진 건 나 때문이야.'), '아니에요! 기억이 없어도 {이름}님은 {이름}님이에요. 이번엔 혼자가 아니에요.', ME_('…고마워. 이번엔 끝까지 지킬게.'),
+    '그럼 입구까지 한 번 더 같이 가요. 이번엔 드릴 게 있어요. 먼저 가 있을게요!'],
+  // 20 큰 어둠 출발 전 (입구에서) — 마지막 불씨는 연출만 (손에 반짝임)
+  dark0: ['할머니가 그랬어요. 어둠은 미워서 오는 게 아니라, 잊혀서 온대요.', ME_('그럼 이번엔 잊지 않을게.'), '이거 가져가요, 마지막 불씨예요. 처음 드린 횃불이랑 같은 불이에요. 횃대가 꺼지면 다시 붙여요!', '저는 마을에서 불을 지키고 있을게요. 꼭 돌아와요!'],
+  end: ['해냈어요… 빛이 올라가요. 땅 위까지요!', ME_('나루, 할머니한테 가자. 다 같이 보자.')], // 큰 어둠을 물리친 뒤 (엔딩 창 전, 방울 너머로)
+  // 도라 할머니를 구할 때 (퀘스트와 따로)
+  grandma: ['할머니! …진짜 할머니다!', BY_('farmer', '나루야? 이 어둠 속에서 여태 기다린 거니.'), '할머니가 기다리라고 했잖아요! 그리고 {이름}님이 같이 불도 켜고 나무도 깨웠어요.', ME_('나루가 길을 찾아 줬어요. 저는 따라왔을 뿐이에요.'),
+    BY_('farmer', '고맙구려. 그 등불… 어디서 본 것 같은데. 늙으니 기억이 흐려지네.'), ME_('저도… 잘 모르겠어요.')],
+  grandma2: ['할머니! …진짜 할머니다!', BY_('farmer', '나루야? 이 어둠 속에서 여태 기다린 거니.'), '할머니가 기다리라고 했잖아요! 그리고 {이름}님이 같이 불도 켜고 나무도 깨웠어요.', ME_('나루가 길을 찾아 줬어요. 저는 따라왔을 뿐이에요.'),
+    BY_('farmer', '그래, 그 등불이었구나… 돌아왔구나.'), ME_('늦어서 죄송해요.')], // 마지막 장을 읽은 뒤에 구하면
+};
+// 가장 깊은 곳 입구에 먼저 가 있던 나루에게 닿으면 (18 뒤, 방울)
+const NARU2_DEEP_HERE = ['여기가 가장 깊은 곳 입구예요. 안은 나무 빛이 닿지 않아서 까매요.', '길잡이는 여기까지예요. 마을에서 기다릴게요. 꼭 돌아와요!'];
+// 2부 새 이야기 퀘스트 (sim/naru.js가 「가장 깊은 곳의 마지막 장 찾기」 앞뒤에 넣어요) — 보상 작게 (사용자 선택)
+const NARU2_Q = { naruGo: { rw: [['torch', 6]], xp: 50 }, naruBack: { rw: [['stew', 3]], xp: 100 } };
+NARU_Q.push(...NARU_BOSS, 'naruGo', 'naruBack'); // 나루에게 받는 이야기: 경험치는 끝날 때 바로, 물건은 마을의 나루에게
 // ================= v114 자동 생산 2: 비버 둥지 · 먹이통 =================
 // 기획: dev/design/자동생산.md 3장 (2026-10-20 확정 — 수치는 사용자가 고른 추천표 + 먹이통). 동작은 sim/beaver.js.
 // 비버는 이끼 동굴 물가에 살고(올가미로 잡아 「비버」 아이템), 둥지에 넣으면 둥지 둘레 NEST_R칸 안의 다 자란 나무를
@@ -5697,7 +5752,7 @@ function nearestTile(test, R) { const p = G.p, px = Math.floor(p.x), py = Math.f
 function nearestOf(list) { const p = G.p; let best = null, bd = 1e9; for (const t of list) { if (!t || !qSeen(t.x, t.y)) continue; const d = Math.hypot(t.x - p.x, t.y - p.y); if (d < bd) { bd = d; best = { x: t.x, y: t.y }; } } return best; }
 function questGo(q) {
   if (q && isAsk(q) && q.done() && !(G.qclaim || {})[q.id]) return naruSpot(); // v118: 끝낸 부탁 = 마을의 나루에게
-  if (q && q.id === 'ore') { const t = leadTarget(); if (t) return t; } // v118: 나루가 먼저 가 있는 광맥
+  if (q && ['ore', 'deep', 'dark'].includes(q.id)) { const t = leadTarget(q.id); if (t) return t; } // v118: 나루가 먼저 가 있는 광맥 · v119 가장 깊은 곳 입구
   const g = q && Q_GO[q.id]; if (!g) return undefined; const [k, ...a] = g;
   if (k === 'obj') { const list = []; for (const [i, o] of G.objs) if (o && a.includes(o.t)) list.push({ x: i % W + .5, y: ((i / W) | 0) + .5 }); return nearestOf(list); }
   if (k === 'stn') { const list = []; for (const [i, o] of G.objs) if (o && OBJ[o.t] && (o.t === a[0] || OBJ[o.t].station === a[0])) list.push({ x: i % W + .5, y: ((i / W) | 0) + .5 }); return nearestOf(list); }
@@ -5724,13 +5779,15 @@ function activeLine() { const a = G.qAct || 'main', q = activeQuest(); if (!q) r
   const side = isSide(q), st = side ? questState(q) : null, ask = side && isAsk(q); if (side && st.done && !st.claimed && st.has) return [ask ? '부탁' : '도전', `${st.nh ? '나루에게 가기' : '보상 받기'} · ${qText(q)}`]; return [ask ? '부탁' : side ? '도전' : '이야기', qText(q)]; }
 function checkGuide() {
   if (G.stats.naruCall && !naruSpot()) G.stats.naruCall = null; // 나루가 마을에 없으면 부르지 않아요
-  let n = 0, last = null; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
+  let n = 0, last = null, boss = 0; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
     // v117 1부(나루에게 받는 이야기): 경험치는 끝날 때 바로, 물건은 마을의 나루에게 · 6·8번은 마을로 부름
     if (NARU_Q.includes(q.id) && naruSpot()) { const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[q.id] && !(G.qclaim || {})[q.id]) { qx[q.id] = 1; gainXp(q.xp, G.p.x, G.p.y); } if (started && NARU_CALL[q.id] && !(G.stats.callSeen || {})[q.id]) G.stats.naruCall = q.id; } // 한 장면은 한 번 (stats.callSeen)
+    if (started && naruSpot() && G.stats.naruMet) { if (NARU_BOSS.includes(q.id)) { bossPassed(q.id); boss++; } scenePassed(q.id); } // v119 2부: 보스 「돌아와서」·13번 장면을 쌓아요
     last = q; G.guide++; n++; }
-  if (n && started && last) { const bell = NARU_Q.includes(last.id) && naruSpot() && NARU_BELL[last.id];
-    if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
-    else if (n === 1 && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
+  if (n && started && boss) { emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v119: 보스를 물리치면 방울로 부름 (안 들러도 다음 이야기는 진행)
+  if (n && started && last) { const bell = naruSpot() && G.stats.naruMet && NARU_BELL[last.id]; /* v119: 12·14·17번 끝 한마디도 */
+    if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (NARU_Q.includes(last.id) && last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
+    else if (n === 1 && !boss && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
   // v84: 화살표는 활성 퀘스트 하나 — 가장 가까운 할 곳을 1초에 한 번 찾아요 (밝힌 곳만)
   const q = activeQuest(); if (q !== QTGT.q || G.time - QTGT.t >= 1 || G.time < QTGT.t) { QTGT.q = q; QTGT.t = G.time; const v = q && !(isSide(q) && q.done() && !(isAsk(q) && !(G.qclaim || {})[q.id])) ? questGo(q) : null; QTGT.v = v || null; }
@@ -6282,22 +6339,23 @@ function settleStarters() { for (const id of NPC_IDS) { if (!NPCS[id].start || n
   G.stats.rescued = G.stats.rescued || {}; G.stats.rescued[id] = 1; } }
 const NS = { g: null, t: -1, v: null }; // 한 프레임 안에서는 다시 찾지 않아요 (퀘스트 창·HUD가 여러 번 물어요)
 const naruSpot = () => { if (NS.g === G && NS.t === G.time) return NS.v; NS.g = G; NS.t = G.time; NS.v = null; for (const [i, o] of G.objs) if (o.t === 'npc' && o.npc === 'guide') { NS.v = { x: i % W + .5, y: ((i / W) | 0) + .5 }; break; } return NS.v; };
-const naruWaits = () => !G.stats.naruMet; // 머리 위 느낌표 (render/world.js)
+const naruWaits = () => !G.stats.naruMet || naruBang(); // 머리 위 느낌표 (render/world.js) · v119 2부: 출발 전·나루에게 가기·돌아가기
 // 말 걸기 (sim/actions.js use 'talk'): 처음 한 번은 첫 장면
 // v117 나루: 첫 장면(방울·횃불을 건넴, 첫 퀘스트 보상은 그 자리에서) → 마을로 부른 장면(6·8번) → 쌓인 보상 → 보통 이야기
 function talkTo(id) {
   if (id !== 'guide') { emit('talk', id, 'talk'); return; }
   naruHold(); // v118: 말을 걸면 멈추고 바라봐요
   if (!G.stats.naruMet) { G.stats.naruMet = 1; G.stats.bell = 1; const l = addItem('torch', 1); if (l) spawnDrop('torch', l, G.p.x, G.p.y); naruGive(['naru'], true); emit('talk', id, 'intro'); return; }
-  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
+  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; if (c === 'pick' && !G.bossDead.queen) (G.stats.nGo = G.stats.nGo || {}).queen = 1; /* v119: 1부 끝 장면에 버섯 여왕 「출발 전」 */ naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
   if (leadThere() && leadHere()) return; // v118: 광맥 옆에 먼저 가 있던 나루
   const ask = askOwed()[0]; if (ask) { naruGive([ask, ...naruOwed()], false); /* 쌓인 1부 보상도 같이 */ emit('talk', id, 'ask:' + ask); return; } // v118 나루의 부탁 끝 장면 + 보상
+  const sc = naru2Scene(); if (sc) { naruGive([...sc[1], ...naruOwed()], false); emit('talk', id, sc[0]); return; } // v119 2부 장면 (돌아와서·출발 전·나루에게 가기·돌아가기·13번)
   const owed = naruOwed(); if (owed.length) { naruGive(owed, false); G.stats.naruRw = (G.stats.naruRw | 0) + 1; emit('talk', id, 'reward'); return; }
   emit('talk', id, 'talk'); }
 // ---- v117 나루에게 받는 보상: 끝냈지만 아직 안 받은 1부 이야기 퀘스트 (나루가 마을에 있을 때만 — 없으면 예전처럼 퀘스트 창에서) ----
 const naruHolds = q => !!q && (NARU_Q.includes(q.id) || ASK_IDS.includes(q.id)) && !!naruSpot(); // v118: 나루의 부탁도
 const naruOwed = () => GUIDE.filter((q, k) => NARU_Q.includes(q.id) && k < G.guide && !(G.qclaim || {})[q.id]).map(q => q.id);
-const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0); // 머리 위 ? (render/world.js)
+const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0 || (G.stats.nPend || []).length > 0); // v119: 쌓인 「돌아와서」 장면도 // 머리 위 ? (render/world.js)
 // 보상 주기: 물건 + 아직 안 받은 경험치(옛 세이브에서 이미 지나간 퀘스트) · quiet = 알림 없이(장면 안에서)
 function naruGive(ids, quiet) { G.qclaim = G.qclaim || {}; G.stats.qxp = G.stats.qxp || {}; const got = {};
   for (const id of ids) { const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q || G.qclaim[id]) continue; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'main';
@@ -6330,7 +6388,7 @@ function rescue(i, o) { const id = o.npc, N = NPCS[id]; if (!N) { G.objs.delete(
   G.objs.delete(i); spawnDrop('cocoonBit', 2, x + .5, y + .5); emit('puff', x + .5, y + .2, '#3a2a5a', 30, 4, .6); emit('puff', x + .5, y + .2, '#ffe9a8', 16, 3, .9); emit('sfx', 'win'); emit('shake', .3);
   const s = villageSpot(id); if (s) G.objs.set(idx(s.x, s.y), { t: 'npc', npc: id, met: 0 });
   G.stats.rescued = G.stats.rescued || {}; G.stats.rescued[id] = 1;
-  emit('toast', `${N.n}(${N.job})을(를) 그림자 고치에서 구했어요! 등불나무 곁 마을로 갔어요`, 'good', 'rescue'); emit('talk', id, 'hello'); }
+  emit('toast', `${N.n}(${N.job})을(를) 그림자 고치에서 구했어요! 등불나무 곁 마을로 갔어요`, 'good', 'rescue'); const gm = id === 'farmer' && G.stats.naruMet && grandmaScene(); emit('talk', gm ? 'guide' : id, gm || 'hello'); } // v119: 할머니를 구하면 나루와 다시 만나는 장면
 // ---- 고치 둘레 그림자 조각: 플레이어가 9칸 안에 오면 3마리까지, 60초마다 ----
 onFrame('cocoons', dt => {
   for (const [i, o] of G.objs) { if (o.t !== 'cocoon') continue; const x = i % W + .5, y = (i / W) | 0 + .5; const pl = nearestPlayer(x, y); if (!pl || Math.hypot(pl.p.x - x, pl.p.y - y) > COCOON_WAKE) continue;
@@ -6345,6 +6403,8 @@ const NARU_LIFE_OTHER = NARU_LIFE.other;
 function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
   if (kind === 'intro') return NARU_INTRO.slice(); // v110 · v117 (이름 짓기 · 주인공 대답)
+  if (kind.startsWith('sc:')) return sceneLines(kind); // v119 2부 장면
+  if (kind === 'call:pick' && (G.stats.nGo || {}).queen && !G.bossDead.queen) { const L = NARU_CALL.pick; return [...L.slice(0, -1), ...sceneLines('sc:go:queen'), L[L.length - 1]]; } // v119: 1부 끝 장면 안에 버섯 여왕 출발 전
   if (kind.startsWith('call:')) return (NARU_CALL[kind.slice(5)] || ['…']).slice(); // v117 마을로 부른 장면
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
@@ -6533,7 +6593,7 @@ const darkCanHit = b => b.k !== 'dark' || isLit(b.x, b.y);
 function darkContact(dt) { const b = G.bosses.dark; if (!b || G.bossDead.dark || b.st !== 'fight') return; for (const pl of alivePlayers()) if (Math.hypot(pl.p.x - b.x, pl.p.y - b.y) < 1.5) withPlayer(pl, () => hurtPlayer(DARK_DMG, b.x, b.y)); }
 onFrame('darkContact', darkContact);
 // 쓰러지면 엔딩
-function darkDown(b) { const d = G.stats.deep; if (d) d.done = 1; G.stats.ending = (G.stats.ending || 0) + 1; if (d) for (let r = 0; r < DEEP_H; r++) for (let c = 0; c < DEEP_W; c++) G.explored[idx(d.x + c, d.y + r)] = 1; emit('remap'); emit('ending'); }
+function darkDown(b) { const d = G.stats.deep; if (d) d.done = 1; G.stats.ending = (G.stats.ending || 0) + 1; if (d) for (let r = 0; r < DEEP_H; r++) for (let c = 0; c < DEEP_W; c++) G.explored[idx(d.x + c, d.y + r)] = 1; emit('remap'); if (!naruEnding()) emit('ending'); } // v119: 나루가 있으면 마지막 말 → 창을 닫으면 엔딩
 // 이야기 퀘스트: 다섯 등불 뒤 → 가장 깊은 곳
 GUIDE.splice(GUIDE.length - 1, 0,
   { id: 'deep', t: () => '가장 깊은 곳의 마지막 장 찾기', h: '나무가 당신한테 반응했어요! 용암·얼음 동굴 깊은 곳 어딘가에 등불지기들의 마지막 유적이 있대요. 어둠이 길을 막으면 등불 다섯을 먼저 밝혀요.', done: () => !!(G.stats.deep && G.stats.deep.read), rw: [['torch', 12], ['stew', 3]], xp: 300, target: () => { const d = G.stats.deep; return d ? { x: d.x + DEEP_PLAN[DEEP_H - 1].indexOf('E') + .5, y: d.y + DEEP_H + .5 } : null; } },
@@ -6720,10 +6780,14 @@ const leadWalking = () => !!G && !!G.stats && !!nLead() && nLead().s === 'walk';
 const leadThere = () => !!G && !!G.stats && !!nLead() && nLead().s === 'there';
 // 4번이 끝날 때 (sim/quests.js checkGuide): 첫 구리 광맥 옆 빈 칸 — 나루 자리에서 걸어서 닿는 가장 가까운 곳. 찾으면 true
 // 광맥 자리 = 나루에게서 가장 가까운, 구리 광맥(벽 4)에 붙은 빈 칸 (걸어서 닿지 않아도 — 주인공은 캐서 가요). 찾으면 true
-function leadPrep() { const n = naruAt(); if (!n || !naruSpot()) return false; const x0 = nX(n.i), y0 = nY(n.i); let best = -1, bd = 1e9;
+function leadPrep(q = 'ore') { const n = naruAt(); if (!n || !naruSpot()) return false; if (q !== 'ore') { const j = deepDoor(); if (j < 0) return false; G.stats.nLead = { s: 'wait', i: j, t: G.time, q }; return true; } const x0 = nX(n.i), y0 = nY(n.i); let best = -1, bd = 1e9;
   for (let y = y0 - 70; y <= y0 + 70; y++) for (let x = x0 - 70; x <= x0 + 70; x++) { if (!inB(x, y)) continue; const d = (x - x0) * (x - x0) + (y - y0) * (y - y0); if (d >= bd || d > 4900) continue; const j = idx(x, y); if (!freeTile(j)) continue;
     for (const [dx, dy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) if (inB(x + dx, y + dy) && G.wall[idx(x + dx, y + dy)] === 4) { best = j; bd = d; break; } }
-  if (best < 0) return false; G.stats.nLead = { s: 'wait', i: best, t: G.time }; return true; }
+  if (best < 0) return false; G.stats.nLead = { s: 'wait', i: best, t: G.time, q: 'ore' }; return true; }
+// v119 가장 깊은 곳 입구 곁: 입구 아래 길(입구 바로 밑 세로 줄)을 막지 않는, 입구에서 가장 가까운 빈 칸. 없으면 -1
+function deepDoor() { const d = G.stats.deep; if (!d) return -1; const ex = d.x + DEEP_PLAN[DEEP_H - 1].indexOf('E'), ey = d.y + DEEP_H - 1; let best = -1, bd = 1e9;
+  for (let y = ey + 1; y <= ey + 10; y++) for (let x = ex - 8; x <= ex + 8; x++) { if (!inB(x, y) || x === ex) continue; const j = idx(x, y); if (!freeTile(j)) continue; const dd = (x - ex) * (x - ex) + (y - ey - 2) * (y - ey - 2); if (dd < bd) { bd = dd; best = j; } }
+  return best; }
 // 걷는 모습: 열린 칸을 따라 광맥 쪽으로 가장 가까워지는 곳까지의 길 (그중 처음 LEAD_STEPS칸만 걸어요). 다가갈 수 없으면 null
 function leadPath(st0, to) { const tx0 = nX(to) + .5, ty0 = nY(to) + .5, dist = j => Math.hypot(nX(j) + .5 - tx0, nY(j) + .5 - ty0), prev = new Map([[st0, -1]]), q = [st0]; let best = st0, bd = dist(st0);
   for (let k = 0; k < q.length && q.length < 2500; k++) { const i = q[k], x = nX(i), y = nY(i);
@@ -6745,18 +6809,20 @@ function leadHome() { const L = nLead(), n = naruAt(); if (L) L.s = 'done'; if (
   if (!freeTile(h) && h !== n.i) { G.objs.delete(n.i); const s = villageSpot('guide'); G.objs.set(n.i, n.o); h = s ? idx(s.x, s.y) : n.i; }
   if (nPut(h)) { emit('puff', p0.x, p0.y - .3, '#ffe9a8', 14, 2.2, .5); emit('puff', nX(h) + .5, nY(h) + .2, '#ffe9a8', 14, 2.2, .5); } n.wait = G.time + 3; NW.face = { x: 0, y: 1 }; }
 // 광맥 옆의 나루에게 닿거나 말을 걸면: 한마디 → 5초 뒤 마을로
-function leadHere() { const L = nLead(); if (!L || L.s !== 'there') return false; L.s = 'back'; L.t = G.time + 5; emit('bell', NARU_LEAD_HERE.slice()); naruHold(5); return true; }
+function leadHere() { const L = nLead(); if (!L || L.s !== 'there') return false; L.s = 'back'; L.t = G.time + 5;
+  if (L.q === 'dark') { L.t = G.time + 8; G.stats.n2ember = 1; for (const pl of alivePlayers()) emit('puff', pl.p.x, pl.p.y - .4, '#ffc861', 22, 2.6, .9); emit('sfx', 'win'); emit('talk', 'guide', 'sc:dark0'); } // v119 20 출발 전 · 마지막 불씨 (연출만)
+  else emit('bell', (L.q === 'deep' ? NARU2_DEEP_HERE : NARU_LEAD_HERE).slice()); naruHold(L.q === 'dark' ? 8 : 5); return true; }
 function leadTick(dt) { const L = nLead(), n = NW; if (!L || L.s === 'done') return false;
   if (L.s === 'wait') { if (G.time < L.t) L.t = G.time; if (G.time - L.t > LEAD_WAIT) leadGo(); return L.s !== 'wait' && L.s !== 'done'; }
   if (L.s === 'walk') { nMove(dt); if (!n.from) { if (n.path.length && G.time < L.end + 1) { const j = n.path.shift(); if (!nStep(j)) n.path = []; } else leadPlace(); } return true; }
-  if (gPassed('ore')) { leadHome(); return false; } // 광석을 다 모으면 마을로
+  if (gPassed(L.q || 'ore')) { leadHome(); return false; } // 광석을 다 모으면(마지막 장을 읽으면·큰 어둠을 물리치면) 마을로
   if (L.s === 'there') { const pos = naruPos(); if (alivePlayers().some(pl => Math.hypot(pl.p.x - pos.x, pl.p.y - .3 - pos.y) < LEAD_ARRIVE)) leadHere(); return true; }
   if (L.s === 'back') { if (G.time >= L.t || G.time < L.t - 6) leadHome(); return L.s === 'back'; }
   return false; }
 defineCmd('naruLead', () => { leadGo(); }); // 방울 대화(4번 끝)가 끝나면 화면 쪽이 보내요 (ui/talk.js)
 defineCmd('leadSkip', () => { if (leadWalking()) leadPlace(true); }); // 걷는 모습 건너뛰기 (화면 누르기·스페이스)
 // 퀘스트 화살표 (sim/quests.js questGo): 5번은 나루가 광맥 옆에 있으면 나루 자리 (밝히지 않은 곳이어도)
-function leadTarget() { const L = nLead(); if (!L || (L.s !== 'there' && L.s !== 'wait' && L.s !== 'walk')) return null; if (L.s === 'there') return naruPos(); return { x: nX(L.i) + .5, y: nY(L.i) + .5 }; }
+function leadTarget(q = 'ore') { const L = nLead(); if (!L || (L.q || 'ore') !== q || (L.s !== 'there' && L.s !== 'wait' && L.s !== 'walk')) return null; if (L.s === 'there') return naruPos(); return { x: nX(L.i) + .5, y: nY(L.i) + .5 }; }
 // ---- 나루의 부탁 ----
 const ASK_IDS = NARU_ASK.map(a => a.id);
 const isAsk = q => !!q && ASK_IDS.includes(q.id) && !!naruSpot(); // 나루가 없으면(마을 자리를 못 찾은 세계) 예전 도전 퀘스트처럼
@@ -6789,6 +6855,56 @@ onFrame('naruLife', dt => { if (!started || !G.stats.naruMet) return; const n = 
   if (G.stats.nLead && G.stats.nLead.s === 'walk' && !NW.path.length && !NW.from && NW.mt === 0) leadPlace(); // 걷는 중에 저장한 세이브: 광맥 옆에
   if (!leadTick(dt)) lifeTick(dt);
   askT += dt; if (askT < .5) return; askT = 0; askTick(); if (part1Done() && naruSpot()) tipTick(); });
+
+// ================= v119 나루 2부 「나루의 기다림」 (dev/design/세계관-NPC.md, 2026-10-21 사용자 선택) =================
+// - 보스(여왕~서리 정령): 물리치면 경험치는 바로, 방울로 부르고 G.stats.nPend에 「돌아와서」를 쌓아요(안 들러도 다음 이야기는 진행). 마을에서 말 걸면 「돌아와서」 + 물건 보상
+//   + 바로 다음 보스의 「출발 전」(G.stats.nGo). 지금 이야기가 보스인데 「출발 전」을 아직 안 봤으면 나루 머리 위 !.
+// - 빛씨앗 셋을 심으면(기억 장면 3 다음) 13번 장면, 기억 장면을 닫으면 바로 열려요.
+// - 「나루에게 가기」(다섯 번째 기억 뒤, 18번) → 나루가 가장 깊은 곳 입구까지 먼저 가 있음 → 마지막 장 → 「나루에게 돌아가기」(19번, 반말)
+//   → 나루가 입구까지 한 번 더 → 닿으면 20번 「출발 전」·마지막 불씨(연출) → 큰 어둠 → 엔딩 창 전에 나루의 마지막 말.
+// - 도라 할머니를 구하면 나루와 할머니가 다시 만나는 장면(마지막 장을 읽은 뒤면 「돌아왔구나」).
+const naruOK = () => !!naruSpot();
+const NQ2 = {
+  naruGo: { id: 'naruGo', t: () => '마을의 나루에게 가기', h: '나무가 다섯 번째 기억을 보여 줬어요. 할머니가 남긴 말 이야기를 하고 싶어요. 마을로 와서 머리 위에 느낌표가 뜬 저한테 말을 걸어 줘요.',
+    done: () => !!G.stats.n2go || !!(G.stats.deep && G.stats.deep.read) || !!G.bossDead.dark || !naruOK(), target: () => naruSpot() },
+  naruBack: { id: 'naruBack', t: () => '마을의 나루에게 돌아가기', h: '마지막 장… 읽었어요? 마을로 돌아와 줘요. 머리 위에 느낌표가 뜬 저한테 말을 걸어 줘요.',
+    done: () => !!G.stats.n2back || !!G.bossDead.dark || !naruOK(), target: () => naruSpot() },
+};
+for (const id in NQ2) Object.assign(NQ2[id], NARU2_Q[id]);
+{ const k = GUIDE.findIndex(q => q.id === 'deep'); if (k >= 0) { GUIDE.splice(k, 0, NQ2.naruGo); GUIDE.splice(k + 2, 0, NQ2.naruBack); } }
+Q_GO.naruGo = ['near']; Q_GO.naruBack = ['near'];
+// 지금 이야기 퀘스트
+const curQ = () => GUIDE[G.guide] || null;
+// 그 보스방이 있는 쪽 ({dir:보스})
+const bossDir = k => { const B = BOSSES[k]; if (!B || !B.home) return ''; const h = B.home(); return dirKo(h.x, h.y); };
+// 「출발 전」을 볼 수 있는 보스: 지금 이야기가 그 보스이고 아직 안 봤고 살아 있으면
+function departDue() { const q = curQ(); if (!q || !NARU_BOSS.includes(q.id) || G.bossDead[q.id] || G.stats.naruCall) return null; return (G.stats.nGo || {})[q.id] ? null : q.id; }
+// 나루 머리 위 ! (render/world.js naruWaits): 「출발 전」·「나루에게 가기」·「나루에게 돌아가기」
+const naruBang = () => !!G.stats.naruMet && naruOK() && !leadThere() && (!!departDue() || ['naruGo', 'naruBack'].includes((curQ() || {}).id));
+// 보스 이야기를 끝냈을 때 (sim/quests.js checkGuide, 놀이 중에만)
+function bossPassed(id) { const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('back:' + id)) P.push('back:' + id); }
+// 이야기 퀘스트를 끝냈을 때 다른 장면 쌓기: 빛씨앗 셋을 심음(tree) → 13번
+function scenePassed(id) { if (id !== 'tree') return; const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('tree')) P.push('tree'); }
+// 말 걸면 보여 줄 2부 장면 (sim/npc.js talkTo): [장면 이름, 그때 줄 보상 퀘스트 id들] 또는 null — 고른 장면은 본 것으로 표시해요
+function naru2Scene() { const S = G.stats, P = S.nPend = S.nPend || [], go = S.nGo = S.nGo || {}, q = curQ();
+  if (P.length) { const k = P.shift(); if (k.startsWith('back:')) { const id = k.slice(5), parts = [k], nx = departDue(); if (nx) { go[nx] = 1; parts.push('go:' + nx); } return ['sc:' + parts.join(','), [id]]; } return ['sc:' + k, []]; }
+  if (q && q.id === 'naruGo' && !S.n2go) { S.n2go = 1; const lead = leadPrep('deep'); return ['sc:' + (lead ? 'n2go' : 'n2go0'), ['naruGo']]; }
+  if (q && q.id === 'naruBack' && !S.n2back) { S.n2back = 1; const lead = leadPrep('dark'); return ['sc:' + (lead ? 'n2back' : 'n2back,dark0'), ['naruBack']]; }
+  const d = departDue(); if (d) { go[d] = 1; return ['sc:go:' + d, []]; }
+  return null; }
+// 장면 줄 (sim/npc.js talkLines): 'sc:back:queen,go:slime' → 줄들
+const dirFill = l => { const f = s => String(s).replace(/\{dir:(\w+)\}/g, (_, k) => bossDir(k)); return l && typeof l === 'object' ? (l.ask ? l : { ...l, s: f(l.s) }) : f(l); };
+function sceneLines(kind) { const out = [];
+  for (const part of kind.slice(3).split(',')) { const [a, b] = part.split(':'); const L = a === 'go' ? NARU2_GO[b] : a === 'back' ? NARU2_BACK[b] : NARU2_SC[a]; if (L) out.push(...L); }
+  return (out.length ? out : ['…']).map(dirFill); }
+// 창을 닫았을 때 (ui/panels.js closePanel → 명령): 나루 장면이 끝나면 나루가 먼저 걸어 나가요 · 큰 어둠 뒤 장면이 끝나면 엔딩 창 · 기억 장면을 닫으면 쌓인 장면을 바로
+defineCmd('talkEnd', c => { const m = String(c.m || ''); if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
+defineCmd('memEnd', () => { if (!G.stats.naruMet || !naruOK() || leadThere() || leadWalking() || G.stats.naruCall) return; const q = curQ(), P = G.stats.nPend || [];
+  if (P.includes('tree') || (q && q.id === 'naruGo' && !G.stats.n2go)) { talkTo('guide'); } });
+// 큰 어둠을 물리치면 (sim/deep.js darkDown): 나루가 있으면 마지막 말 → 엔딩 창
+const naruEnding = () => { if (!naruOK()) return false; emit('talk', 'guide', 'sc:end'); return true; };
+// 할머니를 구하면 (sim/npc.js rescue)
+const grandmaScene = () => naruOK() ? 'sc:' + (G.stats.deep && G.stats.deep.read ? 'grandma2' : 'grandma') : null;
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -8945,9 +9061,9 @@ onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtE
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창 (v103부터는 안 씀)
 onEvent('remap', () => rebuildMap());
 onEvent('diaryLast', onlyMe(() => openPanel('diaryLast'))); // v108
-onEvent('ending', onlyMe(() => setTimeout(() => { SFX.win(); openPanel('ending'); }, 2200))); // v106 기록관을 깨면 지도 다시
+onEvent('ending', onlyMe(fast => setTimeout(() => { SFX.win(); openPanel('ending'); }, fast ? 300 : 2200))); // v119 fast: 나루의 마지막 말 다음 // v106 기록관을 깨면 지도 다시
 onEvent('diary', onlyMe(id => openPanel('diary', { arch: id }))); // v106 일기 창
-onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' ? 1200 : 0))); // v104 NPC 대화
+onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' || kind.startsWith('sc:grandma') ? 1200 : kind === 'sc:end' ? 2200 : 0))); // v119 할머니 재회·마지막 말 // v104 NPC 대화
 onEvent('bell', onlyMe((lines, short, done) => bellPush(lines, short, done))); // v118 done: 다 말하면 보낼 명령 // v117 길잡이 방울: 멀리서도 나루 목소리 (ui/talk.js)
 onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면
 
@@ -8973,7 +9089,8 @@ let panel = null, panelAt = 0;
 function openPanel(kind, data = {}) { bmClose(); /* v91: 창을 열면 건축 끝 */ if (kind === 'equip') { kind = 'stat'; data = { ...data, tab: 'eq' }; } /* v83: 장비는 캐릭터 창 */ if (kind === 'craft' && data.st === 'forge') data = { ...data, st: 'bench', tier: 1 }; /* v60 */ /* v48: the equipment lives in the bag again */ if (kind === 'inv' && G) { runCmd({ k: 'seenBag' }); } if (kind === 'map') { UIS.mapFocus = data.focus || null; UIS.mapWarp = data.warp != null ? data.warp : null; UIS.warpSel = null; UIS.mapV = null; UIS.mapPin = null; } /* v89: 워프포인트·포탈에서 열면 목적지 고르기 */ /* v84: 퀘스트 「지도에서 보기」 */ if (kind === 'profile') UIS.nameEdit = false; /* v117 */ if (kind === 'stat') { UIS.chTab = data.sk ? 'sk' : data.tab || 'eq'; UIS.chSlot = null; } /* v83 */ /* v77: 가방을 열면 가방 버튼의 빨간 점이 꺼져요 */ if (importFrom === 'menu') clearImport(); $('#sheet').dataset.key = ''; UIS.craftOrder = null; UIS.qty = {}; UIS.salvAsk = null; UIS.statAsk = false; UIS.skAsk = false; if (kind === 'look') { UIS.look = cleanLook(G.look); UIS.lookTab = data.tab || UIS.lookTab || 'hair'; } panel = { kind, ...data }; if (!data.nav) panelAt = performance.now(); /* v77: 가방 ↔ 제작 탭은 바로 누를 수 있게 */ UIS.invSel = null; UIS.toolSel = null; UIS.trash = false; UIS.confirmNew = false; UIS.confirmEsc = false; if (kind === 'craft') { UIS.tab = 'all'; UIS.tab2 = 'all'; } /* 'here' was never a tab: the first re-render changed the panel key and jumped the list back to the top */ $('#sheetWrap').hidden = false; setPaused(!started); /* v76: the world keeps going while a window is open */ releaseHeld(); runCmd({ k: 'tap', b: 'act', t: 0 }); mouse.down = false; keys.clear(); joyEnd(); renderPanel(); }
 // v76: 창을 열어도 세계가 계속 가니까, 창 맨 위에 체력 막대를 늘 보여요 (값은 ui/hud.js updateHud가 고쳐요)
 function sheetHpHTML() { if (!G || !started || !panel || panel.kind !== 'stat') return ''; /* v111: 창 맨 위 체력 막대는 캐릭터 창에만 */ const p = G.p, m = maxHp(); return `<div class="bar hp sh-hp" title="체력"><img class="px" src="${iconURL('heart')}" alt="체력"><div class="track"><div class="fill" id="shHpFill" style="width:${Math.max(0, p.hp / m * 100)}%"></div></div><span id="shHpTxt">${Math.round(p.hp)}</span></div>`; }
-function closePanel() { panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame(); }
+function closePanel() { const was = panel; panel = null; $('#sheetWrap').hidden = true; $('#sheet').classList.remove('hit'); setPaused(!started); keys.clear(); releaseHeld(); mouse.down = false; runCmd({ k: 'tap', b: 'act', t: 0 }); refocusGame();
+  if (was && G && started) { if (was.kind === 'talk' && was.npc === 'guide') runCmd({ k: 'talkEnd', m: was.mode }); else if (was.kind === 'memory') runCmd({ k: 'memEnd' }); } } // v119 나루 장면이 끝나면 먼저 걸어 나가기·엔딩 창, 기억 장면 뒤 쌓인 장면
 // hand keyboard focus back to the game (a focused button/field inside a closed panel, or focus that slipped out of the page frame, would swallow WASD)
 function refocusGame() { const ae = document.activeElement; if (ae && ae !== document.body && ae.blur) ae.blur(); try { window.focus(); } catch (_) { } }
 // v77: 가방 창 위 탭 「가방 | 제작」 — 손제작은 가방 안에서 (제작대 창은 그대로)
@@ -9143,7 +9260,7 @@ function renderPanel() {
     h += `</div>`;
     }
   } else if (k === 'talk') {
-    const N = NPCS[panel.npc]; if (!panel.lines) { panel.lines = talkLines(panel.npc, panel.mode); panel.at = 0; } const line = panel.lines[panel.at] || '', last = panel.at >= panel.lines.length - 1, img = npcImg(panel.npc);
+    if (!panel.lines) { panel.lines = talkLines(panel.npc, panel.mode); panel.at = 0; } const line = panel.lines[panel.at] || '', last = panel.at >= panel.lines.length - 1, sp = lineOf(line).npc || panel.npc, N = NPCS[sp], img = npcImg(sp); /* v119: 줄마다 말하는 사람(할머니) */
     const shop = BARTER[panel.npc] || [];
     if (panel.mode === 'shop') { // v105 물물교환
       h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">물물교환 · 한 줄에 하루 ${BARTER_PER}번</small><p class="prose" style="margin:6px 0 0">가방에 있는 것으로 바꿔요.</p></div></div><div class="menu-list">${shop.map(([give, get, d], k) => { const why = barterWhy(panel.npc, k), left = barterLeft(panel.npc, k);
@@ -9575,7 +9692,7 @@ const TY_MS = 30; // 한 글자에 0.03초
 const pName = () => (G && G.pname) || CHARS[curChar()].n;
 const fillName = s => String(s).replace(/\{이름\}/g, pName());
 // 대사 한 줄 → { who: 'npc'|'me', s: 글, ask: 이름 짓기 }
-const lineOf = l => l && typeof l === 'object' ? (l.ask ? { ask: 1, s: '' } : { who: l.me ? 'me' : 'npc', s: fillName(l.s) }) : { who: 'npc', s: fillName(l == null ? '' : l) };
+const lineOf = l => l && typeof l === 'object' ? (l.ask ? { ask: 1, s: '' } : { who: l.me ? 'me' : 'npc', s: fillName(l.s), npc: l.by || null }) /* v119 by: 다른 사람(할머니) */ : { who: 'npc', s: fillName(l == null ? '' : l) };
 // ---- 얼굴 그림 ----
 const faceCache = {};
 function faceURL(who, npc) { if (who === 'me') { const f = $('#faceImg'); return f && f.src ? f.src : ''; }
