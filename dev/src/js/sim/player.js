@@ -101,6 +101,7 @@ onFrame('player', dt => {
   let mag = Math.hypot(mx, my); if (mag > 1) { mx /= mag; my /= mag; mag = 1; }
   if (p.dead > 0) { p.dead -= dt; mag = 0; if (p.dead <= 0) respawn(); }
   if (p.sleep) { p.sleep.t -= dt; mag = 0; if (p.sleep.t <= 0) wakeUp(); }
+  if (p.still && p.still > G.time && p.still - G.time < 5) mag = 0; else if (p.still) p.still = 0; // v118: 나루가 먼저 걸어 나가는 동안 보는 사람은 서 있어요 (sim/naru.js)
   if (p.sit) { if (mag > 0.3) standUp(); else { mag = 0; p.sitT = (p.sitT || 0) + dt; if (p.sitT > 0.8) { p.sitT = 0; if (p.hp < maxHp()) p.hp = Math.min(maxHp(), p.hp + 1); } } }
   p.moving = mag > 0.12;
   p.slowT = Math.max(0, (p.slowT || 0) - dt);
