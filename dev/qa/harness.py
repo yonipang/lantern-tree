@@ -50,17 +50,24 @@ async def new_ctx(b, w, h, touch):
     await pg.click("#btnNew"); await pg.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg.wait_for_timeout(500)
     return ctx,pg,errs
 
+# 짧게 누르기: 누르기와 떼기를 브라우저 안에서 한 번에 보내요. 게임은 누를 때 「한 번 하기」를 받아 두었다가(tap 명령) 다음 프레임에 한 번 해요.
+# (예전에는 실제 0.06초 뒤에 뗐는데, 컴퓨터가 바쁘면 그사이 게임 시간이 더 흘러 「누르고 있음」으로 한 번 더 하는 일이 있었어요 — 삽 내구도가 2 닳음)
+_TAP_JS = "([s,id])=>{const b=document.querySelector(s),o={pointerId:id,pointerType:'touch',isPrimary:true,bubbles:true,cancelable:true};b.dispatchEvent(new PointerEvent('pointerdown',o));b.dispatchEvent(new PointerEvent('pointerup',o))}"
 async def tap(pg, n=1, gap=330):
     for _ in range(n):
-        await pg.dispatch_event('#actBtn','pointerdown',{'pointerId':1,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(60)
-        await pg.dispatch_event('#actBtn','pointerup',{'pointerId':1,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(gap)
+        await pg.evaluate(_TAP_JS, ['#actBtn', 1]); await pg.wait_for_timeout(gap)
 async def atk(pg, n=1, gap=330):  # v65: the attack button
     for _ in range(n):
-        await pg.dispatch_event('#atkBtn','pointerdown',{'pointerId':2,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(60)
-        await pg.dispatch_event('#atkBtn','pointerup',{'pointerId':2,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(gap)
+        await pg.evaluate(_TAP_JS, ['#atkBtn', 2]); await pg.wait_for_timeout(gap)
 async def hold(pg, ms):
     await pg.dispatch_event('#actBtn','pointerdown',{'pointerId':1,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(ms)
     await pg.dispatch_event('#actBtn','pointerup',{'pointerId':1,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(150)
+async def hold_until(pg, js, ms=6000):
+    """상호작용 버튼을 누른 채, 브라우저 안의 조건(js)이 참이 되면 뗘요 (최대 ms). 실제 시간으로 누르면 바쁠 때 게임 시간이 덜 흘러 덜 캐요"""
+    await pg.dispatch_event('#actBtn','pointerdown',{'pointerId':1,'pointerType':'touch','isPrimary':True})
+    ok = await wait_until(pg, js, ms)
+    await pg.dispatch_event('#actBtn','pointerup',{'pointerId':1,'pointerType':'touch','isPrimary':True}); await pg.wait_for_timeout(150)
+    return ok
 async def ev(pg, js, arg=None): return await pg.evaluate(js, arg) if arg is not None else await pg.evaluate(js)
 async def stand(pg, x, y, fx, fy, sel=None):
     await ev(pg, f"()=>{{const G=__T.G;G.p.sit=null;G.fish=null;G.enemies.length=0;G.p.x={x};G.p.y={y};G.p.face={{x:{fx},y:{fy}}};G.p.hp=100;G.p.hunger=100;{'G.sel='+str(sel)+';' if sel is not None else ''}}}")
@@ -78,3 +85,9 @@ async def wait_until(pg, js, timeout=10000):
     """브라우저 안의 조건(js: '()=>…')이 참이 될 때까지 기다려요. 시간 안에 안 되면 False (오류로 멈추지 않고, 뒤의 rec가 실패로 기록해요)"""
     try: await pg.wait_for_function(js, timeout=timeout, polling=50); return True
     except Exception: return False
+
+async def cloud_ready(pg, timeout=8000):
+    """가짜 클라우드(test_save.py의 MOCK)로 연 페이지에서, 클라우드 연결·확인이 끝날 때까지 기다려요.
+    게임은 글꼴·그림을 다 불러온 뒤 클라우드를 켜요. 느린 컴퓨터(CPU 2개)에서는 열고 0.9초가 지나도 아직이라
+    고정 시간으로 기다리던 cloud_sync·play_time_cloud가 작업 환경에서만 실패했어요 (MOCK가 확인 뒤 window.__cloudReady를 켜요)"""
+    return await wait_until(pg, "()=>window.__cloudReady===1", timeout)

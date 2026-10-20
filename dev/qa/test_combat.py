@@ -638,11 +638,13 @@ def test_skills_v102():
 
 def test_npc_v104():
     # v104 이야기 2: 그림자 고치(지역별 자리·옛 세계에도), 그림자 조각(빛 안 2배, 고치 둘레), 3번 치면 구출 → 마을 자리, 말 걸기 대화
-    H2=HOOK.replace("computeLight}","computeLight,npcObjs,villageSpot,NPC_IDS,NPCS,cocoonTarget,hitCocoon,curWeapon,mkEnemy,hitEnemy,placeCocoons,decide,perform,runFrame,get SPR(){return SPR}}")
+    H2=HOOK.replace("computeLight}","computeLight,npcObjs,villageSpot,NPC_IDS,NPCS,cocoonTarget,hitCocoon,curWeapon,mkEnemy,hitEnemy,placeCocoons,decide,perform,runFrame,newGame,get SPR(){return SPR}}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # 정해진 세계로 해요: 「새 모험」은 세계를 무작위로 만들어서, 옛 작은 지도(테스트 지도)에서는 약 1%의 세계에 고치 하나(학자·대장장이)를 놓을 자리가 없어 가끔 실패했어요 (자리가 없으면 안 생기는 건 정한 규칙)
+            await ev(pg,"()=>{__T.newGame(20261008);__T.newGame(20261008);/* 두 번: 첫 세계는 바로 앞 세계 상태에 따라 조금 달라져요 */__T.G.enemies.length=0}")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const L=T.npcObjs();const bad=L.filter(e=>{const N=T.NPCS[e.o.npc],d=Math.hypot(e.x-T.CX,e.y-T.CY);return !N.archive&&!N.start&&(G.biome[e.i]!==N.b||d<N.minD||d>N.maxD||T.G.wall[e.i])});
               const nr=L.find(e=>e.o.npc==='guide');return [L.length,L.map(e=>e.o.npc).sort().join(','),bad.length,!!T.SPR.obj.cocoon,T.NPC_IDS.every(id=>T.SPR['npc_'+id]),G.stats.npcV,nr&&nr.o.t,nr&&Math.round(Math.hypot(nr.x-T.CX,nr.y-T.CY))]}""")
             rec('고치','새 세계에 고치 5개(학자는 v106 기록관 안)가 각자 지역·거리 안에 + 나루는 처음부터 마을(v110), 그림 있음, 놓았다는 표시(npcV)', r[0]==6 and r[1]=='cook,farmer,guide,scholar,shepherd,smith' and r[2]==0 and r[3] and r[4] and r[5]==1 and r[6]=='npc' and 9<=r[7]<=17, str(r))

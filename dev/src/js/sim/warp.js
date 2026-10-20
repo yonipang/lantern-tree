@@ -47,6 +47,8 @@ export function portalWhy(x, y) { if (noDigZone(x, y) === 'boss') return '보스
 
 // ---- 워프포인트 놓기 (새 세계: 만들 때 · 옛 세계: 불러올 때 한 번) ----
 export const freeTile = i => !G.wall[i] && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && !G.objs.get(i);
+// v112: 넓은 자리(기록관·가장 깊은 곳)는 차지하는 칸 전체가 숨은 방(둘레 벽 포함)과 겹치지 않아야 해요 (가운데 한 점만 보면 숨은 방 벽을 덮어 둘레가 뚫렸어요)
+export function roomInRect(x0, y0, x1, y1) { for (const r of G.rooms || []) if (x0 <= r.x + 4 && x1 >= r.x - 1 && y0 <= r.y + 3 && y1 >= r.y - 1) return true; return false; }
 export function roomNear(x, y) { for (const r of G.rooms || []) if (x >= r.x - 3 && x <= r.x + 6 && y >= r.y - 3 && y <= r.y + 5) return true; return false; }
 // 걸어서(캐지 않고) 등불나무에서 닿는 칸
 let WK = null, WKG = null; // v108: 한 번 불러올 때 워프·고치·기록관·가장 깊은 곳이 같이 써요 (그 사이 벽을 조금 파도 「닿는 곳」 판단은 그대로 써요)
