@@ -22,16 +22,16 @@ for (const id in SUMMON) { const [n, k, req] = SUMMON[id];
   RECIPES.push(Rc(id, 1, req, 'forge', 'tool')); }
 
 // v110: 시작 길잡이 나루 (dev/design/세계관-NPC.md 「시작 장면 · 길잡이 나루」) — 첫 이야기는 나루에게 말 걸기, 이야기 힌트는 모두 나루의 말,
-// 처음 일곱 퀘스트(뿌리기둥 ~ 구리 곡괭이)는 끝날 때 나루가 한마디(say). 빛씨앗 숫자는 처음부터 /5 (순서·조건·보상은 그대로). 문구는 Claude 임시(【검토 중】).
+// v117: 1~8번(나루에게 받는 1부)은 끝날 때 방울로 나루가 칭찬·다음 할 일을 이어서 말해요(data/npc.js NARU_BELL, 예전 한마디 say는 없앰). 빛씨앗 숫자는 처음부터 /5 (순서·조건·보상은 그대로). 문구는 Claude 임시(【검토 중】).
 export const GUIDE = [
   { t: () => '나루에게 말 걸기', h: '여기예요, 여기! 머리 위에 느낌표가 뜬 아이가 저예요. 가까이 와서 상호작용 버튼(PC는 E)을 눌러 말을 걸어 줘요.', done: () => !!G.stats.naruMet, target: () => naruSpot() },
-  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '나무부터 모아요. 초록 이끼가 덮인 뿌리기둥 앞에서 상호작용 버튼(PC는 E)을 누르면 베어져요. 여섯 개면 작업대를 만들 수 있어요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14), say: '나무 냄새 좋다! 이제 작업대를 만들어 봐요.' },
-  { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [가방] → [제작] 탭에 작업대가 있어요. 만든 다음 단축칸에서 고르고, 빈 땅을 바라보며 누르면 놓여요. 할머니가 그러는데 등불지기 마을엔 작업대가 꼭 있었대요.', done: () => G.stats.bench, say: '와, 진짜 마을 같아졌어요!' },
-  { t: () => '횃불을 만들어 어두운 곳에 놓기', h: '그림자는 빛이 꺼진 어둠에서 생겨요. 횃불은 어디서나 만들 수 있고, 밝은 곳엔 그림자가 못 들어와요. 어두운 곳에 하나 놓아 봐요.', done: () => G.stats.torch > 0, say: '따뜻하다… 이제 조금 덜 무서워요.' },
-  { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽이 보이면 캐 봐요. 그게 구리광석이에요. 흙도 버리지 말아요, 용광로 재료가 되거든요.', done: () => G.stats.copperOre >= 6, say: '반짝반짝! 이걸 녹이면 구리괴가 돼요.' },
-  { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만들어 놓고, 용광로를 열어 구리괴를 만들어요. 조금 기다리면 돼요.', done: () => G.stats.copperBar >= 1, say: '첫 구리괴예요! 이제 작업대를 올릴 수 있어요.' },
-  { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron'), say: '구리 작업대! 할머니 이야기 속 마을이랑 점점 닮아 가요.' },
-  { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·흙으로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron'), say: '이제 더 멀리 갈 수 있겠어요. 길은 제가 같이 찾아볼게요!' },
+  { t: () => `뿌리기둥을 베어 나무 모으기 (${Math.min(6, G.stats.wood)}/6)`, h: '나무부터 모아요. 초록 이끼가 덮인 뿌리기둥 앞에서 상호작용 버튼(PC는 E)을 누르면 베어져요. 여섯 개면 작업대를 만들 수 있어요.', done: () => G.stats.wood >= 6, target: () => nearestObjOf('root', 14) },
+  { t: () => '제작에서 작업대 만들고 설치하기', h: '오른쪽 위 [가방] → [제작] 탭에 작업대가 있어요. 만든 다음 단축칸에서 고르고, 빈 땅을 바라보며 누르면 놓여요. 할머니가 그러는데 등불지기 마을엔 작업대가 꼭 있었대요.', done: () => G.stats.bench },
+  { t: () => '받은 횃불을 어두운 곳에 놓기', h: '아까 준 횃불을 단축칸에서 골라 어두운 곳을 보고 누르면 놓여요. 그림자는 빛이 꺼진 어둠에서 생기고, 밝은 곳엔 못 들어와요. 횃불은 작업대 없이도 더 만들 수 있어요.', done: () => G.stats.torch > 0 },
+  { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽이 보이면 캐 봐요. 그게 구리광석이에요. 흙도 버리지 말아요, 용광로 재료가 되거든요.', done: () => G.stats.copperOre >= 6 },
+  { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만들어 놓고, 용광로를 열어 구리괴를 만들어요. 조금 기다리면 돼요.', done: () => G.stats.copperBar >= 1 },
+  { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
+  { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·흙으로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '마을 창고를 지키던 동물이 주인을 잃고 커진 거래요. 화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비부터 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
   { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '말랑대왕도 창고를 지키던 녀석이에요. 화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼하니까 음식을 넉넉히 챙겨요. 점프했다 내려올 때는 멀리 떨어져 있어요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
   { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '수정 동굴은 등불지기들이 빛을 수정에 담아 두던 곳이래요. 빨간 점선이 보이면 옆으로 피해요! 골렘이 벽에 부딪혀 어지러울 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
@@ -104,7 +104,7 @@ export const Q_PROG = {
   s_crop2: () => [qn(G.stats.wetH), 5], s_crop3: () => [qn(G.stats.fert), 10], s_crop4: () => [qn(G.stats.starH), 5], s_rooms: () => [qn(G.stats.chests), 3], s_ranch: () => [Object.keys(G.stats.ranchK || {}).length, 3], s_auto: () => [qn(G.stats.autoH), 20],
 };
 export const Q_GO = {
-  naru: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
+  naru: ['near'], naruCall: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
   queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
   s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],

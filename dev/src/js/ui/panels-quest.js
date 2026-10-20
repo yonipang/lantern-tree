@@ -6,7 +6,7 @@ import { GUIDE, QSIDE } from '../data/quests.js';
 import { iconURL } from '../render/icons.js';
 import { G } from '../save/state.js';
 import { escHTML } from '../save/storage.js';
-import { qProg, qText, questGo, questGoMsg, questState } from '../sim/quests.js';
+import { CALL_Q, mainQuest, qProg, qText, questGo, questGoMsg, questState } from '../sim/quests.js';
 import { UIS } from './panels.js';
 const rwHTML = q => `<div class="qrw">${q.rw.map(([id, c]) => `<span><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${c}</span>`).join('')}${q.xp ? `<span>경험치 ${q.xp}</span>` : ''}</div>`;
 // 진행 막대 (숫자가 있는 퀘스트만)
@@ -19,18 +19,22 @@ function qCardHTML(q, st, side, big) {
   if (lock) return `<div class="qrow lock"><span class="st lock">잠김</span><div><h4>???</h4><p>앞의 이야기를 끝내면 열려요</p></div></div>`;
   const live = !st.done || (side && !st.claimed), go = live ? questGo(q) : undefined;
   let btn = '';
-  if (st.done && !st.claimed && st.has) btn += `<button type="button" class="btn" data-a="qClaim" data-i="${q.id}">보상 받기</button>`;
+  if (st.done && !st.claimed && st.has && !st.nh) btn += `<button type="button" class="btn" data-a="qClaim" data-i="${q.id}">보상 받기</button>`;
   if (live && !(st.done && !side)) btn += act ? `<button type="button" class="btn ghost" data-a="qAct" data-i="none">활성화 해제</button>` : `<button type="button" class="btn ghost" data-a="qAct" data-i="${q.id}">활성화</button>`;
   if (go) btn += `<button type="button" class="btn ghost" data-a="qMap" data-i="${q.id}">지도에서 보기</button>`;
-  return `<div class="qcard ${big ? 'big' : ''} ${act ? 'act' : ''}"><div class="qc-top">${chip}${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(q))}</h4></div>${!st.done && q.h ? `<p>${GUIDE.includes(q) ? '<b style="color:var(--amber)">나루</b> 「' : ''}${escHTML(typeof q.h === 'function' ? q.h() : q.h)}${GUIDE.includes(q) ? '」' : ''}</p>` : ''}${!st.claimed ? qBarHTML(q) : ''}${st.has && !st.claimed ? rwHTML(q) : ''}${live && go === null ? `<p class="qmsg">화살표: ${questGoMsg(q)}</p>` : ''}${btn ? `<div class="qbtns">${btn}</div>` : ''}</div>`;
+  return `<div class="qcard ${big ? 'big' : ''} ${act ? 'act' : ''}"><div class="qc-top">${chip}${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(q))}</h4></div>${!st.done && q.h ? `<p>${GUIDE.includes(q) ? '<b style="color:var(--amber)">나루</b> 「' : ''}${escHTML(typeof q.h === 'function' ? q.h() : q.h)}${GUIDE.includes(q) ? '」' : ''}</p>` : ''}${!st.claimed ? qBarHTML(q) : ''}${st.has && !st.claimed ? rwHTML(q) : ''}${live && go === null ? `<p class="qmsg">화살표: ${questGoMsg(q)}</p>` : ''}${st.done && !st.claimed && st.nh && st.has ? '<p class="qmsg">보상은 마을의 나루에게 받아요 (머리 위 ?)</p>' : ''}${btn ? `<div class="qbtns">${btn}</div>` : ''}</div>`;
 }
 const qFold = (a, open, n, label) => `<button type="button" class="lbl fold" data-a="${a}" aria-expanded="${open}">${open ? '▾' : '▸'} ${label} · ${n}개</button>`;
 export function questMainHTML() {
   let h = ''; const L = GUIDE.map((q, k) => ({ q, k, st: questState(q, k) }));
   const ready = L.filter(x => x.st.done && !x.st.claimed && x.st.has), cur = L.find(x => x.st.cur), next = L.find(x => x.k === G.guide + 1), done = L.filter(x => x.st.done && !(x.st.has && !x.st.claimed));
   if (ready.length) h += `<div class="lbl">받을 보상</div>` + ready.map(x => qCardHTML(x.q, x.st, false, false)).join('');
-  if (cur) h += `<div class="lbl">진행 중인 이야기</div>` + qCardHTML(cur.q, cur.st, false, true);
-  if (next && !next.st.done) h += qCardHTML(next.q, next.st, false, false);
+  if (mainQuest() === CALL_Q) { // v117 나루가 마을로 부름: 나루와 이야기한 뒤에 다음 이야기가 이어져요
+    const go = questGo(CALL_Q), act = (G.qAct || 'main') === 'main';
+    h += `<div class="lbl">진행 중인 이야기</div><div class="qcard big ${act ? 'act' : ''}"><div class="qc-top"><span class="st cur">진행 중</span>${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(CALL_Q))}</h4></div><p><b style="color:var(--amber)">나루</b> 「${escHTML(CALL_Q.h)}」</p><div class="qbtns">${act ? '<button type="button" class="btn ghost" data-a="qAct" data-i="none">활성화 해제</button>' : '<button type="button" class="btn ghost" data-a="qAct" data-i="main">활성화</button>'}${go ? '<button type="button" class="btn ghost" data-a="qMap" data-i="naruCall">지도에서 보기</button>' : ''}</div></div>`;
+    if (cur) h += `<div class="qrow lock"><span class="st lock">다음</span><div><h4>${escHTML(qText(cur.q))}</h4><p>나루와 이야기하면 이어져요</p></div></div>`;
+  } else if (cur) h += `<div class="lbl">진행 중인 이야기</div>` + qCardHTML(cur.q, cur.st, false, true);
+  if (next && !next.st.done && mainQuest() !== CALL_Q) h += qCardHTML(next.q, next.st, false, false);
   if (done.length) { h += qFold('qDoneFold', !!UIS.qDoneOpen, done.length, '끝난 이야기'); if (UIS.qDoneOpen) h += done.map(x => qCardHTML(x.q, x.st, false, false)).join(''); }
   return h;
 }

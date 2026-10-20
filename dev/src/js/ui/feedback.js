@@ -15,6 +15,7 @@ import { CHARS, buildPlayer, lookDef } from '../art/characters.js';
 import { mapPixel, rebuildMap } from '../render/map.js';
 import { BM } from './build.js';
 import { closePanel, craftNote, openPanel, panel, renderPanel, UIS } from './panels.js';
+import { bellClear, bellPush } from './talk.js';
 
 // 개인 사건(소리·알림·흔들림·창·기절 화면·보스 막대 …)은 내 플레이어가 남긴 것만 보여요 — 반짝이·떠오르는 글자는 세계에 그려져서 누구 것이든 (8단계)
 export const onlyMe = fn => (...a) => { if (eventWho == null || eventWho === ME) return fn(...a); };
@@ -47,7 +48,7 @@ onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 �
 onEvent('craftNote', onlyMe((id, n, msg) => craftNote(id, n, msg))); // 제작 알림 (아이콘 + 글)
 onEvent('look', onlyMe(() => { CHARS.custom = lookDef(G.look); buildPlayer(G.outfit || 0); })); // 옷·생김새가 바뀜 → 내 캐릭터 그림 다시 만들기
 onEvent('reorder', onlyMe(() => { UIS.craftOrder = null; })); // 새 요리를 배움 → 제작 목록 순서를 새로
-onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; }); // 새 게임·불러오기 끝
+onEvent('loaded', () => { rebuildMap(); cam.x = G.p.x; cam.y = G.p.y; bellClear(); }); // 새 게임·불러오기 끝 (v117 방울 대화창도 비워요)
 onEvent('tile', (x, y) => mapPixel(x, y)); // 칸이 바뀜 → 지도 그림 한 점 다시
 onEvent('open', onlyMe((kind, data) => openPanel(kind, data)));
 onEvent('close', onlyMe(() => closePanel()));
@@ -61,6 +62,7 @@ onEvent('diaryLast', onlyMe(() => openPanel('diaryLast'))); // v108
 onEvent('ending', onlyMe(() => setTimeout(() => { SFX.win(); openPanel('ending'); }, 2200))); // v106 기록관을 깨면 지도 다시
 onEvent('diary', onlyMe(id => openPanel('diary', { arch: id }))); // v106 일기 창
 onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' ? 1200 : 0))); // v104 NPC 대화
+onEvent('bell', onlyMe((lines, short) => bellPush(lines, short))); // v117 길잡이 방울: 멀리서도 나루 목소리 (ui/talk.js)
 onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----

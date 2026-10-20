@@ -424,6 +424,13 @@ def test_circuits():
             rec('퀘스트','퀘스트 한 줄을 누르면 퀘스트 창 · 진행 중인 이야기 큰 카드 / 다음은 잠김(???) (v84)', '퀘스트' in r[0] and r[1].startswith('진행 중') and r[2]=='???', str(r))
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"()=>{const G=__T.G;G.stats.naruMet=1;G.qclaim.naru=1;G.stats.wood=6;__T.checkGuide();return document.querySelector('#goal').classList.contains('dot')}")
+            await pg.wait_for_timeout(700); r=await ev(pg,"()=>document.querySelector('#goal').classList.contains('dot')"); rec('퀘스트','v117: 1부 보상은 마을의 나루에게 — 이야기 한 줄에 점 없음', r is False, r)
+            await pg.keyboard.press('KeyL'); await pg.wait_for_timeout(600)
+            r=await ev(pg,"()=>{const row=document.querySelector('.qcard');return [!!row.querySelector('[data-a=qClaim]'),row.innerText.includes('나루에게 받아요')]}")
+            rec('퀘스트','v117: 1부 퀘스트 카드는 「나루에게 받아요」, 보상 받기 버튼 없음', r==[False,True], str(r))
+            await ev(pg,"()=>{const G=__T.G;__T.closePanel();for(const [i,o] of [...G.objs])if(o.t==='npc'&&o.npc==='guide')G.objs.delete(i)}")  # 나루가 마을에 없으면 예전처럼 퀘스트 창에서
+            await wait_game(pg,.3)
+            r=await ev(pg,"()=>{__T.checkGuide();return document.querySelector('#goal').classList.contains('dot')||true}")
             await pg.wait_for_timeout(700); r=await ev(pg,"()=>document.querySelector('#goal').classList.contains('dot')"); rec('퀘스트','받을 보상이 있으면 이야기 한 줄에 점', r, r)
             await pg.keyboard.press('KeyL'); await pg.wait_for_timeout(600)  # v77: L = 퀘스트 (퀘스트 버튼은 없어짐)
             r=await ev(pg,"()=>{const row=document.querySelector('.qcard');return [row.querySelector('.st').textContent,!!row.querySelector('[data-a=qClaim]'),row.querySelector('.qrw').textContent]}")

@@ -19,7 +19,7 @@ import { drawKind, emCtxFor } from './glight.js';
 import { G, guardOf, paused } from '../save/state.js';
 import { canDev } from '../save/storage.js';
 import { cropStage, curAlt, inReach } from '../sim/actions.js';
-import { naruWaits } from '../sim/npc.js';
+import { naruAsk, naruWaits } from '../sim/npc.js';
 import { ranchReady } from '../sim/animals.js';
 import { beaverPose } from '../sim/beaver.js';
 import { SIEVE_CHUNK, SIEVE_DUST, sieveOre } from '../data/sieve.js';
@@ -309,7 +309,7 @@ export function drawEntity(it, t) {
     if (d.bush) img = SPR.bush[(o.r || 0) <= G.time ? 1 : 0];
     if (o.t === 'tchest' && o.open) img = SPR.obj.tchestOpen;
     if (o.t === 'npc') { img = SPR['npc_' + o.npc] || img; const bob = Math.sin(t * 2 + it.x) > .7 ? 1 / 16 : 0; if (img) { shadow(it.x + .5, it.y + 1.1, .3); drawImg(img, it.x + .5, it.y + 1.15 - bob, {}); }
-      if (o.npc === 'guide' && naruWaits()) { const hop = Math.abs(Math.sin(t * 3)) * 3 / 16; ctx.font = pxFont(10); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText('!', Math.round((it.x + .5) * T - camX), Math.round((it.y - .55 - hop) * T - camY), '#ffd25c', INK); } // v110: 첫 이야기 — 나루 머리 위 느낌표
+      if (o.npc === 'guide' && (naruWaits() || naruAsk())) { const mk2 = naruWaits() ? '!' : '?'; const hop = Math.abs(Math.sin(t * 3)) * 3 / 16; ctx.font = pxFont(10); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(mk2, Math.round((it.x + .5) * T - camX), Math.round((it.y - .55 - hop) * T - camY), '#ffd25c', INK); } // v110: 첫 이야기 — 나루 머리 위 느낌표 · v117: 받을 보상·마을로 부름 = 물음표
       return; } // v104 NPC: 캐릭터 그림, 가끔 살짝 들썩
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;

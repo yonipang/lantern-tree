@@ -7,7 +7,7 @@ import { HOT, RECIPES } from '../data/items.js';
 import { ensureAudio, SFX } from '../engine/audio.js';
 import { toast } from '../engine/effects.js';
 import { rand } from '../engine/random.js';
-import { clamp, roJosa } from '../engine/util.js';
+import { $, clamp, roJosa } from '../engine/util.js';
 import { iconURL } from '../render/icons.js';
 import { resize, setZoomPref } from '../render/view.js';
 import { G, newGame, setSound, setStarted, soundOn, started } from '../save/state.js';
@@ -26,10 +26,11 @@ import { H, W } from '../world/map.js';
 import { closePanel, craftCtx, openPanel, panel, panelAt, renderPanel, UIS } from './panels.js';
 import { bmOpen } from './build.js';
 import { isNewCell, pouchOpen, setPouchOpen } from './panels-char.js';
+import { typeTap } from './talk.js';
 export function onSheetClick(e) {
   if (performance.now() - DRAG.block < 400) return;
   if (performance.now() - panelAt < 450) return;
-  const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, i = b.dataset.i != null ? (isNaN(+b.dataset.i) ? b.dataset.i : +b.dataset.i) : null;
+  const b = e.target.closest('[data-a]'); if (typeTap(e, b)) return; /* v117 말하는 창: 빨리감기·다음 */ if (!b) return; const a = b.dataset.a, i = b.dataset.i != null ? (isNaN(+b.dataset.i) ? b.dataset.i : +b.dataset.i) : null;
   ensureAudio();
   if (a === 'close') { closePanel(); return; }
   if (a === 'bagNav') { if (panel && panel.kind !== i) openPanel(i, { nav: 1 }); return; } // v77: 가방 | 제작 탭
@@ -107,6 +108,9 @@ export function onSheetClick(e) {
   if (a === 'save') { if (CLOUD.user && !CLOUD.pending) { saveLocal(true); cloudUpload(true).then(ok => toast(ok ? '저장했어요 · 클라우드에도 올렸어요' : '저장했어요 (클라우드에는 올리지 못했어요)', ok ? 'good' : 'warn')); } else saveLocal(); return; } // v111: 「지금 올리기」 대신 — 로그인했으면 클라우드에도
   if (a === 'escape') { if (!UIS.confirmEsc) { UIS.confirmEsc = true; renderPanel(); return; } UIS.confirmEsc = false; closePanel(); if (runCmd({ k: 'escape' })) saveLocal(true); return; }
   if (a === 'qtShow') { UIS.qtShow = !UIS.qtShow; renderPanel(); return; }
+  if (a === 'nameOk') { const inp = $('#nameIn'); runCmd({ k: 'setName', n: inp ? inp.value : '' }); panel.nameDraft = null; panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v117 첫 장면 이름 짓기
+  if (a === 'profName') { const inp = $('#profName'); runCmd({ k: 'setName', n: inp ? inp.value : '' }); UIS.nameEdit = false; renderPanel(); return; } // v117 프로필에서 이름 바꾸기
+  if (a === 'profEdit') { UIS.nameEdit = !UIS.nameEdit; renderPanel(); if (UIS.nameEdit) { const inp = $('#profName'); if (inp && !document.body.classList.contains('touch')) inp.focus(); } return; }
   if (a === 'talkNext') { panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v104
   if (a === 'talkShop') { panel.mode = 'shop'; renderPanel(); return; } // v105
   if (a === 'talkBack') { panel.mode = 'talk'; renderPanel(); return; }

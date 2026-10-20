@@ -19,6 +19,7 @@ import { setupMapGestures } from './map.js';
 import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
 import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
 import { idx, inB } from '../world/map.js';
+import { talkKey } from './talk.js';
 import { BM, bmClose, bmDown, bmEsc, bmMove, bmPick, bmRotate, bmToggle, bmTool, bmUndo, bmUp, inJoyZone, joyZone, setupBuild } from './build.js';
 export const keys = new Set();
 export const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
@@ -94,6 +95,7 @@ export function setupInput() {
     if (e.code === 'Escape') { if (panel) closePanel(); else if (BM.on) bmEsc(); else if (started) openPanel('menu'); return; }
     if (!started) return;
     if (panel && panel.kind === 'catch' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ')) { e.preventDefault(); catchThrow(); return; }
+    if (panel && talkKey(e)) return; // v117 말하는 창: 스페이스·엔터 = 빨리감기·다음
     if (panel) { const bag = panel.kind === 'inv' || (panel.kind === 'craft' && !panel.st); // v77: 손제작은 가방 안 제작 탭
       if (['KeyI', 'KeyB'].includes(e.code) && bag) { e.preventDefault(); closePanel(); } else if ((e.code === 'KeyC' || e.code === 'KeyK' || e.code === 'KeyU') && panel.kind === 'stat') closePanel(); else if (e.code === 'KeyM' && panel.kind === 'map') closePanel(); else if (e.code === 'KeyL' && panel.kind === 'quest') closePanel(); return; }
     if (e.code === 'KeyZ' && BM.on && (e.ctrlKey || e.metaKey)) { e.preventDefault(); bmUndo(); return; } // v92: Ctrl·⌘+Z = 되돌리기
