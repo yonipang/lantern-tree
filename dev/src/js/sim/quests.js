@@ -17,8 +17,10 @@ import { gainXp } from './player.js';
 import { suggestWear } from '../ui/hud.js';
 import { BX, BY, dirKo, H, idx, inB, LAY, SA, SB, SI, SL, W } from '../world/map.js';
 import { checkUnlocks } from '../world/tiles.js';
+import { NARU_BELL, NARU_CALL, NARU_Q } from '../data/npc.js';
+import { naruHolds, naruSpot } from './npc.js';
 defineCmd('claim', c => claimQuest(c.id));
-defineCmd('claimAll', () => { for (const q of [...GUIDE, ...QSIDE]) claimQuest(q.id); emit('toast', '보상을 모두 받았어요', 'good'); });
+defineCmd('claimAll', () => { for (const q of [...GUIDE, ...QSIDE]) if (!naruHolds(q)) claimQuest(q.id); emit('toast', '보상을 모두 받았어요', 'good'); });
 // ================= guide =================
 export function nearestObjOf(t, rad = 24) { const p = G.p; let best = null, bd = 1e9; for (let y = Math.floor(p.y - rad); y <= p.y + rad; y++) for (let x = Math.floor(p.x - rad); x <= p.x + rad; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === t) { const d = Math.hypot(x - p.x, y - p.y); if (d < bd) { bd = d; best = { x: x + .5, y: y + .5 }; } } } return best; }
 export const hasItem = id => countItem(id) > 0 || wearing(id) || inOtherSet(id); // v83: 다른 장비 세트에 넣어 둔 것도
@@ -33,18 +35,21 @@ export function layoutTexts() { if (typeof GUIDE === 'undefined') return; for (c
   q.t = typeof q._t0 === 'function' ? (() => dirText(q._t0())) : dirText(q._t0); q.h = typeof q._h0 === 'function' ? (() => dirText(q._h0())) : dirText(q._h0); } }
 export const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 export const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
-export function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: (q.rw && q.rw.length) || q.xp }; }
-export const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has; });
+export function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = !side && naruHolds(q); return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
+export const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has; });
 export function claimQuest(id) {
-  const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q) return; const k = GUIDE.indexOf(q), st = questState(q, k < 0 ? null : k); if (!st.done || st.claimed) return;
-  G.qclaim = G.qclaim || {}; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'none'; /* v84: 활성화한 도전은 보상을 받으면 활성이 비어요 */ for (const [it, c] of q.rw) { const l = addItem(it, c, false); if (l) spawnDrop(it, l, G.p.x, G.p.y); } if (q.xp) gainXp(q.xp, G.p.x, G.p.y);
+  const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q) return; const k = GUIDE.indexOf(q), st = questState(q, k < 0 ? null : k); if (!st.done || st.claimed || st.nh) return; /* v117: 1부 보상은 나루에게 */
+  G.qclaim = G.qclaim || {}; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'none'; /* v84: 활성화한 도전은 보상을 받으면 활성이 비어요 */ for (const [it, c] of q.rw) { const l = addItem(it, c, false); if (l) spawnDrop(it, l, G.p.x, G.p.y); } const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[id]) { qx[id] = 1; gainXp(q.xp, G.p.x, G.p.y); }
   emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 16, 2.6, .6);
 }
 export let goalTarget = null;
 // ---- v84 활성 퀘스트: 이야기·도전 통틀어 하나 (사람마다 따로, G.qAct: 'main' 진행 중인 이야기 · 'none' 없음 · 도전 퀘스트 id) ----
-export const questById = id => GUIDE.find(q => q.id === id) || QSIDE.find(q => q.id === id) || null;
+export const questById = id => GUIDE.find(q => q.id === id) || QSIDE.find(q => q.id === id) || (id === 'naruCall' ? CALL_Q : null);
 export const isSide = q => !!q && QSIDE.includes(q);
-export function activeQuest() { const a = G.qAct || 'main'; if (a === 'none') return null; if (a === 'main') return GUIDE[G.guide]; const q = QSIDE.find(x => x.id === a); return q || GUIDE[G.guide]; }
+// v117 나루가 마을로 부름(6·8번 뒤): 이야기는 마을에서 나루와 이야기한 뒤에 이어져요 — 그동안 이야기 자리에 「나루에게 가기」
+export const CALL_Q = { id: 'naruCall', t: () => '마을에서 나루와 이야기하기', h: '마을로 와 줄래요? 할 얘기가 있어요. 머리 위에 물음표가 뜬 저한테 말을 걸어 줘요.', done: () => !G.stats.naruCall, target: () => naruSpot(), rw: [], xp: 0 };
+export const mainQuest = () => G.stats.naruCall && naruSpot() ? CALL_Q : GUIDE[G.guide];
+export function activeQuest() { const a = G.qAct || 'main'; if (a === 'none') return null; if (a === 'main') return mainQuest(); const q = QSIDE.find(x => x.id === a); return q || mainQuest(); }
 export const qProg = q => { const f = q && Q_PROG[q.id]; if (!f) return null; const [a, b] = f(); return [Math.max(0, Math.min(b, a | 0)), b]; };
 defineCmd('qAct', c => { if (c.id === 'none') { G.qAct = 'none'; } else if (c.id === 'main' || GUIDE.some(q => q.id === c.id)) { const k = GUIDE.findIndex(q => q.id === c.id); if (k > G.guide) return false; G.qAct = 'main'; }
   else { const q = QSIDE.find(x => x.id === c.id); if (!q) return false; G.qAct = q.id; } QTGT.t = -9; checkGuide(); emit('sfx', 'pick'); });
@@ -80,8 +85,14 @@ const QTGT = { t: -9, q: null, v: null };
 export function activeLine() { const a = G.qAct || 'main', q = activeQuest(); if (!q) return ['', '퀘스트 고르기'];
   const side = isSide(q), st = side ? questState(q) : null; if (side && st.done && !st.claimed && st.has) return ['도전', `보상 받기 · ${qText(q)}`]; return [side ? '도전' : '이야기', qText(q)]; }
 export function checkGuide() {
-  let n = 0, say = null; while (G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { if (started && !G.qt[GUIDE[G.guide].id]) G.qt[GUIDE[G.guide].id] = Math.max(1, Math.round(G.playT || 0)); say = GUIDE[G.guide].say || null; G.guide++; n++; }
-  if (n === 1 && started) { emit('toast', say ? `나루 「${say}」` : '목표 달성!', 'good'); emit('sfx', 'craft'); } // v110: 처음 일곱 이야기는 끝날 때 나루가 한마디
+  if (G.stats.naruCall && !naruSpot()) G.stats.naruCall = null; // 나루가 마을에 없으면 부르지 않아요
+  let n = 0, last = null; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
+    // v117 1부(나루에게 받는 이야기): 경험치는 끝날 때 바로, 물건은 마을의 나루에게 · 6·8번은 마을로 부름
+    if (NARU_Q.includes(q.id) && naruSpot()) { const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[q.id] && !(G.qclaim || {})[q.id]) { qx[q.id] = 1; gainXp(q.xp, G.p.x, G.p.y); } if (started && NARU_CALL[q.id]) G.stats.naruCall = q.id; }
+    last = q; G.guide++; n++; }
+  if (n && started && last) { const bell = NARU_Q.includes(last.id) && naruSpot() && NARU_BELL[last.id];
+    if (bell) { emit('bell', bell.slice()); emit('sfx', 'craft'); if (last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
+    else if (n === 1 && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
   // v84: 화살표는 활성 퀘스트 하나 — 가장 가까운 할 곳을 1초에 한 번 찾아요 (밝힌 곳만)
   const q = activeQuest(); if (q !== QTGT.q || G.time - QTGT.t >= 1 || G.time < QTGT.t) { QTGT.q = q; QTGT.t = G.time; const v = q && !(isSide(q) && q.done()) ? questGo(q) : null; QTGT.v = v || null; }

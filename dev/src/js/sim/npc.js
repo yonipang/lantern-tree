@@ -1,12 +1,14 @@
 // ================= v104 그림자 고치 · NPC · 마을 · 대화 (데이터는 data/npc.js) =================
 // 고치 놓기(새 세계·옛 세계 모두 불러올 때 한 번, 워프포인트처럼) → 고치 둘레 그림자 조각 → 공격 버튼으로 3번 치면 풀려나 등불나무 곁 마을 자리에 서요 → 말 걸기(대화 창).
-import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_INTRO, NPC_IDS, NPCS } from '../data/npc.js';
+import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_CALL, NARU_DOING, NARU_INTRO, NARU_Q, NARU_RW, NPC_IDS, NPCS } from '../data/npc.js';
+import { GUIDE } from '../data/quests.js';
+import { gainXp } from './player.js';
 import { ITEMS } from '../data/items.js';
 import { defineCmd } from './commands.js';
 import { addItem, countItem, removeItem } from './inventory.js';
 import { RECOVER_GAP } from '../data/controls.js';
 import { rand, rng } from '../engine/random.js';
-import { G, nearestPlayer, playerList } from '../save/state.js';
+import { G, nearestPlayer, playerList, started } from '../save/state.js';
 import { faceTo } from './actions.js';
 import { mkEnemy, regionEnemy } from './enemies.js';
 import { emit } from './events.js';
@@ -46,10 +48,40 @@ export function settleStarters() { for (const id of NPC_IDS) { if (!NPCS[id].sta
   for (const [i, o] of [...G.objs]) if (o.t === 'cocoon' && o.npc === id) { G.objs.delete(i); COC.delete(i); G.enemies = G.enemies.filter(e => !(e.k === 'shadowBit' && e.home && Math.hypot(e.home.x - (i % W + .5), e.home.y - (((i / W) | 0) + .5)) < 1)); }
   const s = villageSpot(id); if (s) G.objs.set(idx(s.x, s.y), { t: 'npc', npc: id, met: 0 }); else if (id === 'guide') G.stats.naruMet = 1;
   G.stats.rescued = G.stats.rescued || {}; G.stats.rescued[id] = 1; } }
-export const naruSpot = () => { for (const [i, o] of G.objs) if (o.t === 'npc' && o.npc === 'guide') return { x: i % W + .5, y: ((i / W) | 0) + .5 }; return null; };
+const NS = { g: null, t: -1, v: null }; // 한 프레임 안에서는 다시 찾지 않아요 (퀘스트 창·HUD가 여러 번 물어요)
+export const naruSpot = () => { if (NS.g === G && NS.t === G.time) return NS.v; NS.g = G; NS.t = G.time; NS.v = null; for (const [i, o] of G.objs) if (o.t === 'npc' && o.npc === 'guide') { NS.v = { x: i % W + .5, y: ((i / W) | 0) + .5 }; break; } return NS.v; };
 export const naruWaits = () => !G.stats.naruMet; // 머리 위 느낌표 (render/world.js)
 // 말 걸기 (sim/actions.js use 'talk'): 처음 한 번은 첫 장면
-export function talkTo(id) { if (id === 'guide' && !G.stats.naruMet) { G.stats.naruMet = 1; emit('talk', id, 'intro'); return; } emit('talk', id, 'talk'); }
+// v117 나루: 첫 장면(방울·횃불을 건넴, 첫 퀘스트 보상은 그 자리에서) → 마을로 부른 장면(6·8번) → 쌓인 보상 → 보통 이야기
+export function talkTo(id) {
+  if (id !== 'guide') { emit('talk', id, 'talk'); return; }
+  if (!G.stats.naruMet) { G.stats.naruMet = 1; G.stats.bell = 1; const l = addItem('torch', 1); if (l) spawnDrop('torch', l, G.p.x, G.p.y); naruGive(['naru'], true); emit('talk', id, 'intro'); return; }
+  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
+  const owed = naruOwed(); if (owed.length) { naruGive(owed, false); G.stats.naruRw = (G.stats.naruRw | 0) + 1; emit('talk', id, 'reward'); return; }
+  emit('talk', id, 'talk'); }
+// ---- v117 나루에게 받는 보상: 끝냈지만 아직 안 받은 1부 이야기 퀘스트 (나루가 마을에 있을 때만 — 없으면 예전처럼 퀘스트 창에서) ----
+export const naruHolds = q => !!q && NARU_Q.includes(q.id) && !!naruSpot();
+export const naruOwed = () => GUIDE.filter((q, k) => NARU_Q.includes(q.id) && k < G.guide && !(G.qclaim || {})[q.id]).map(q => q.id);
+export const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0); // 머리 위 ? (render/world.js)
+// 보상 주기: 물건 + 아직 안 받은 경험치(옛 세이브에서 이미 지나간 퀘스트) · quiet = 알림 없이(장면 안에서)
+export function naruGive(ids, quiet) { G.qclaim = G.qclaim || {}; G.stats.qxp = G.stats.qxp || {}; const got = {};
+  for (const id of ids) { const q = GUIDE.find(x => x.id === id); if (!q || G.qclaim[id]) continue; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'main';
+    for (const [it, c] of q.rw) { const l = addItem(it, c, false); if (l) spawnDrop(it, l, G.p.x, G.p.y); got[it] = (got[it] || 0) + c; }
+    if (q.xp && !G.stats.qxp[id]) { G.stats.qxp[id] = 1; gainXp(q.xp, G.p.x, G.p.y); } }
+  const names = Object.keys(got).map(it => `${ITEMS[it].n} ${got[it]}개`); if (!names.length) return;
+  emit('inv'); if (quiet) return; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 16, 2.6, .6); emit('toast', `나루에게 ${names.join(', ')}를 받았어요`, 'good', 'naruRw'); }
+// ---- v117 이름 짓기 (첫 장면 · 프로필): 1~8자, 빈칸이면 고른 캐릭터 이름 ----
+export const NAME_MAX = 8;
+export function cleanName(n) { const t = String(n == null ? '' : n).replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim(); return Array.from(t).slice(0, NAME_MAX).join(''); }
+defineCmd('setName', c => { const n = cleanName(c.n); G.pname = n || null; emit('look'); return true; });
+// ---- v117 하는 중 한마디 (data/npc.js NARU_DOING): 지금 이야기 퀘스트를 하는 동안 처음 그 일을 할 때 방울로 한 번 ----
+const DOING = { wood1: () => (G.stats.wood | 0) >= 1, bench1: () => countItem('bench') > 0, ore1: () => (G.stats.copperOre | 0) >= 1,
+  dirt1: () => countItem('dirt') > (G.stats.nDirt0 == null ? 1e9 : G.stats.nDirt0), furn1: () => { const p = G.p; for (let y = Math.floor(p.y) - 6; y <= p.y + 6; y++) for (let x = Math.floor(p.x) - 6; x <= p.x + 6; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === 'furnace') return true; } return false; } };
+let naruT = 0;
+onFrame('naru', dt => { naruT += dt; if (naruT < .5) return; naruT = 0; if (!started || !G.stats.naruMet || G.stats.naruCall) return;
+  const q = GUIDE[G.guide]; if (!q || !NARU_Q.includes(q.id)) return; const said = G.stats.nSaid = G.stats.nSaid || {};
+  if (q.id === 'ore' && G.stats.nDirt0 == null) G.stats.nDirt0 = countItem('dirt'); // 흙 개수는 구리 퀘스트를 시작할 때 기준
+  for (const d of NARU_DOING) { if (d.q !== q.id || said[d.k] || !DOING[d.k] || !DOING[d.k]()) continue; said[d.k] = 1; emit('bell', [d.s], 1); break; } });
 // ---- 치기 (sim/combat.js doAttack: 가까운 적이 없을 때 앞 칸 고치) ----
 export const COC = new Map();
 export function cocoonTarget(t) { if (!inB(t.x, t.y)) return null; const i = idx(t.x, t.y), o = cocoonAt(i); return o ? { t, i, o } : null; }
@@ -76,7 +108,9 @@ export function shadowLeash(e) { if (e.k !== 'shadowBit' || !e.home) return; con
 // ---- 대화: 안녕 → 할 일 힌트 → 직책 이야기(번갈아) ----
 export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
-  if (kind === 'intro') return NARU_INTRO.slice(); // v110
+  if (kind === 'intro') return NARU_INTRO.slice(); // v110 · v117 (이름 짓기 · 주인공 대답)
+  if (kind.startsWith('call:')) return (NARU_CALL[kind.slice(5)] || ['…']).slice(); // v117 마을로 부른 장면
+  if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1; return [N.talk[(o.met - 1) % N.talk.length]]; }
   return [N.talk[0]]; }
 export const villagers = () => NPC_IDS.filter(id => npcState(id) === 'npc');

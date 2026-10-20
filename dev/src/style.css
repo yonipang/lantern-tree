@@ -523,6 +523,29 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 /* v104 NPC 대화 */
 .talkbox{display:flex;gap:10px;align-items:flex-start;background:#2a2139;border:2px solid #4d3e66;padding:10px}
 .talkface{width:64px;height:76px;image-rendering:pixelated;flex:none;background:#3a2f52}
+/* v117 말하는 창: 타이핑(아직 안 나온 글자는 투명하게 자리만) · 빨리감기 · 주인공 줄 · 이름 짓기 */
+.tyh{color:transparent!important;text-shadow:none!important}
+.talkbox{position:relative}.talkbox.me{border-color:#3f6a5a;background:#1f2a2c}.talkbox .prose{word-break:keep-all}
+.skipty{position:absolute;right:4px;top:4px;min-width:40px;min-height:32px;padding:0 6px;background:rgba(255,255,255,.06);border:2px solid #4d3e66;color:var(--muted);font:inherit;font-size:16px;line-height:1;cursor:pointer;z-index:1}
+.skipty[hidden]{display:none}
+.sh-body.memory{position:relative}.sh-body.memory:has(.skipty){padding-top:42px!important}
+.namerow{display:flex;gap:6px;margin-top:8px;align-items:center}
+.namein{flex:1;min-width:0;min-height:40px;padding:0 8px;background:var(--ink);border:2px solid var(--line);color:var(--text);font:inherit;font-size:16px;border-radius:0;-webkit-user-select:text;user-select:text}
+.namein:focus{outline:none;border-color:var(--amber)}
+/* v117 길잡이 방울 대화창: 화면 아래쪽(단축칸 위), 왼쪽에 얼굴 · 폰은 오른쪽 공격·상호작용 버튼을 가리지 않게 */
+#bell{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + var(--slotS,48px) + 34px);width:min(calc(100vw - 24px),420px);display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:rgba(36,27,47,.95);border:2px solid #b89a5a;box-shadow:0 4px 14px rgba(0,0,0,.4);z-index:6;cursor:pointer;animation:bellin .2s ease-out;box-sizing:border-box}
+#bell[hidden]{display:none}
+#bell.me{border-color:#3f6a5a}
+#bell .bellface{width:40px;height:38px;image-rendering:pixelated;flex:none;background:#3a2f52}
+#bell .bellt{flex:1;min-width:0;font-size:16px;line-height:1.35}
+#bell .bellname{display:block;font-weight:400;color:var(--amber)}#bell.me .bellname{color:var(--mint)}
+#bell .belltx{margin:2px 0 0;color:#f3ead8;word-break:keep-all}
+#bell .bellnx{position:absolute;right:6px;bottom:4px;color:var(--amber);font-size:16px;animation:blink 1s steps(2) infinite}
+#bell .bellnx[hidden]{display:none}
+body.touch #bell{left:8px;transform:none;width:auto;right:calc(env(safe-area-inset-right,0px) + 100px)}
+body.intro #bell{display:none}
+@keyframes blink{50%{opacity:0}}
+@keyframes bellin{from{opacity:0}}
 /* v105 물물교환 줄 */
 .btn.barter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;text-align:left;min-height:48px}.btn.barter.off{opacity:.55}.btn.barter small{flex-basis:100%;color:var(--muted);font-size:16px}.barrow{color:var(--amber)}
 /* v106 일기 */
