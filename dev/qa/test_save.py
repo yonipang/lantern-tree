@@ -167,7 +167,7 @@ def test_backups():
 def test_cloud_sync():
     import asyncio, sys, json
     MOCK="""window.__cloudMock=(()=>{const ls=()=>JSON.parse(localStorage.getItem('mockcloud')||'{}'),sv=o=>localStorage.setItem('mockcloud',JSON.stringify(o));let cb=null;const user=()=>{const u=localStorage.getItem('mockauth');return u?JSON.parse(u):null};
-return{onAuth(f){cb=f;setTimeout(()=>f(user()),10)},async google(){const u={uid:'g1',displayName:'구글유저'};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},
+return{onAuth(f){cb=f;setTimeout(()=>{f(user());setTimeout(()=>{window.__cloudReady=1},30)},10)},async google(){const u={uid:'g1',displayName:'구글유저'};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},
 async emailIn(e,p){if(p!=='secret1'){const er=new Error('x');er.code='auth/invalid-credential';throw er}const u={uid:'u_'+e,email:e};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},async emailUp(e,p){return this.emailIn(e,p)},
 async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return ls()[uid]||null},async put(uid,d){const o=ls();o[uid]=d;sv(o)}}})();"""
     async def main():
@@ -202,7 +202,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             ctx=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
             await ctx.add_init_script(MOCK); await ctx.add_init_script("if(!localStorage.getItem('mockcloud')){localStorage.setItem('mockcloud',"+json.dumps(cloud)+");localStorage.setItem('mockauth',JSON.stringify({uid:'u_juyeon@test.kr',email:'juyeon@test.kr'}))}")
             pg=await ctx.new_page(); pg.on('pageerror',lambda e: errs.append(str(e)))
-            await pg.goto(URL+'qa.html?dev=1'); await pg.wait_for_timeout(900)
+            await pg.goto(URL+'qa.html?dev=1'); await cloud_ready(pg)
             r=await ev(pg,"()=>[!document.querySelector('#cloudAsk').hidden, document.querySelector('#cloudAsk').innerText.slice(0,30)]")
             rec('다른 기기','새 기기 첫 화면에 클라우드 세이브 불러오기 안내', r[0], str(r))
             await pg.screenshot(path=SP+'title.png')
@@ -212,7 +212,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             # same adventure (same run id), local newer than cloud → auto upload, no prompt (v32: different adventures always ask, see play_time_cloud)
             await ev(pg,"()=>{__T.addItem('crystal',7);__T.openPanel('menu');window.dispatchEvent(new Event('pagehide'))}"); await pg.wait_for_timeout(300)
             # 다시 연 뒤 클라우드 확인·업로드는 뒤에서 끝나요. 바쁘면 0.9초 안에 안 끝나서, 클라우드가 바뀔 때까지 (최대 5초) 기다려요
-            await pg.reload(); await pg.wait_for_timeout(900)
+            await pg.reload(); await cloud_ready(pg)
             await wait_until(pg,"()=>{const c=JSON.parse(localStorage.getItem('mockcloud')||'{}')['u_juyeon@test.kr'];return !!c&&JSON.parse(c.data).inv.find(s=>s&&s.id==='crystal').c===50}",5000)
             r=await ev(pg,"()=>[document.querySelector('#cloudAsk').hidden, JSON.parse(JSON.parse(localStorage.getItem('mockcloud'))['u_juyeon@test.kr'].data).inv.find(s=>s&&s.id==='crystal').c]")
             rec('충돌','같은 모험이고 이 기기가 더 최근이면 묻지 않고 자동 업로드', r==[True,50], str(r))
@@ -240,7 +240,7 @@ def test_play_time_cloud():
     # v32: 플레이 시간·구간 기록, 판 번호(run), 다른 모험이면 항상 묻기, 클라우드 백업, 타이틀에서 클라우드 이어하기, 옛 세이브
     H2=HOOK.replace("computeLight}","computeLight,fmtPlay,checkGuide,GUIDE,get lastInputAt(){return lastInputAt},set lastInputAt(v){lastInputAt=v},get CLOUD(){return CLOUD}}")
     MOCK="""window.__cloudMock=(()=>{const ls=()=>JSON.parse(localStorage.getItem('mockcloud')||'{}'),sv=o=>localStorage.setItem('mockcloud',JSON.stringify(o));let cb=null;const user=()=>{const u=localStorage.getItem('mockauth');return u?JSON.parse(u):null};
-return{onAuth(f){cb=f;setTimeout(()=>f(user()),10)},async google(){const u={uid:'g1',displayName:'구글유저'};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},
+return{onAuth(f){cb=f;setTimeout(()=>{f(user());setTimeout(()=>{window.__cloudReady=1},30)},10)},async google(){const u={uid:'g1',displayName:'구글유저'};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},
 async emailIn(e,p){if(p!=='secret1'){const er=new Error('x');er.code='auth/invalid-credential';throw er}const u={uid:'u_'+e,email:e};localStorage.setItem('mockauth',JSON.stringify(u));cb(u)},async emailUp(e,p){return this.emailIn(e,p)},
 async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return ls()[uid]||null},async put(uid,d){const o=ls();o[uid]=d;sv(o)}}})();"""
     UID='u_juyeon@test.kr'
@@ -257,7 +257,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
         init+="}"
         await ctx.add_init_script(init)
         pg=await ctx.new_page(); errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
-        await pg.goto(URL+'qa.html?dev=1'); await pg.wait_for_timeout(900)
+        await pg.goto(URL+'qa.html?dev=1'); await cloud_ready(pg)
         return ctx,pg,errs
     async def start_new(pg):
         await pg.tap('#btnNew'); await pg.wait_for_timeout(200)
@@ -391,7 +391,7 @@ async out(){localStorage.removeItem('mockauth');cb(null)},async get(uid){return 
             # 게임이 실제로 시작돼야(타이틀이 닫혀야) 페이지를 닫을 때 저장해요. 바쁠 때는 0.5초 안에 안 열려서 기다려요 (최대 5초)
             await pg.wait_for_function("()=>document.querySelector('#title').hidden", timeout=5000)
             await ev(pg,"()=>{__T.addItem('crystal',2);window.dispatchEvent(new Event('pagehide'))}"); await pg.wait_for_timeout(200)
-            await pg.reload(); await pg.wait_for_timeout(900)
+            await pg.reload(); await cloud_ready(pg)
             # 클라우드 저장은 뒤에서 비동기로 끝나요. 컴퓨터가 바쁘면 0.9초 안에 안 끝나서, 판 번호가 생길 때까지 (최대 5초) 기다려요
             for _ in range(25):
                 c=await ev(pg,cloud_of)
@@ -456,6 +456,8 @@ def test_save_split():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[3]={id:'wood',c:7};G.pets={dog:1};G.petOn='dog';G.qclaim.wood=1;
               const w=T.serializeWorld(),c=T.serializeChar(),before=T.serialize();delete w.at; // 저장 시각을 빼요: 컴퓨터가 바빠 1초 넘게 걸리면 「꺼 둔 동안 흐른 시간」만큼 게임 시간이 앞당겨져 가끔 달랐어요
               T.deserializeParts(w,c);const after=T.serialize();delete before.at;delete after.at;
+              // 꽃망울 구역의 next(다음 꽃망울까지 1.5초 간격)는 저장하지 않는 잠깐 값이에요. 방금 꽃망울이 생긴 구역이 있으면 before에만 남아 가끔 달랐어요
+              for(const o of [before,after])o.fzones=JSON.parse(JSON.stringify(o.fzones)).map(z=>{delete z.next;return z});
               const diff=Object.keys(before).filter(k=>JSON.stringify(before[k])!==JSON.stringify(after[k])).map(k=>k+':'+JSON.stringify(before[k]).slice(0,80)+'→'+JSON.stringify(after[k]).slice(0,80));
               return [JSON.stringify(before)===JSON.stringify(after),T.G.inv[3]&&T.G.inv[3].c,T.G.petOn,!!T.G.qclaim.wood,'pets' in w,'qclaim' in c,diff]}""")
             rec('세이브 나누기','세계·캐릭터 두 덩어리로 불러와도 그대로 (가방·펫은 캐릭터, 퀘스트 보상은 세계)', r[:6]==[True,7,'dog',True,False,False], str(r))  # 마지막 칸: 달라진 칸 (가끔 실패하던 원인 찾기)
