@@ -222,8 +222,8 @@ def test_multi_tile_rotation():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));s.objs.push([T.idx(118,116),{t:'_part',a:T.idx(1,1)}]);T.deserialize(s);const G2=T.G;let farm=0,parts=0,orph=G2.objs.get(T.idx(118,116));for(const[i,o]of G2.objs){if(o.t==='bedDouble')farm++;if(o.t==='_part')parts++}return [farm,parts>=3,orph||null]}""")
             rec('저장','저장 → 불러오기 후에도 여러 칸 가구 유지 · 떨어진 부속 칸 정리', r[0]==1 and r[1] and r[2] is None, str(r))
             # recipes
-            r=await ev(pg,"()=>['bedDouble','longTable','sofa2','bookcase2','kitchenSet','fountainBig','rugBig','rugLong','rugRound','bigTree','bigRock','flowerField','pondBig','treeFarm'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
-            rec('레시피','새 가구·러그·자연물 14종 레시피', 'none' not in r, r)
+            r=await ev(pg,"()=>['bedDouble','longTable','sofa2','bookcase2','kitchenSet','fountainBig','rugBig','rugLong','rugRound','bigTree','bigRock','flowerField','pondBig'].map(id=>{const R=__T.RECIPES.find(r=>r.out===id);return R?R.at:'none'}).join(',')")
+            rec('레시피','새 가구·러그·자연물 13종 레시피 (v113: 나무 작업장 없어짐)', 'none' not in r, r)
             # touch rotate button visibility
             await ev(pg,ARENA)
             await ev(pg,"()=>{GIVE('sofa2')}"); await pg.wait_for_timeout(400)
