@@ -26,7 +26,7 @@ import { onlyMe } from './feedback.js';
 import { navTick } from './map.js';
 import { panel, renderPanel } from './panels.js';
 export let jobUiT = 0;
-export function jobPanelTick(dt) { if (!panel || panel.kind !== 'craft' || !TIMED[panel.st]) return; jobUiT -= dt; if (jobUiT > 0) return; jobUiT = .25;
+export function jobPanelTick(dt) { if (!panel || !(panel.kind === 'craft' && TIMED[panel.st] || panel.kind === 'sieve')) return; /* v115 광석 그물도 */ jobUiT -= dt; if (jobUiT > 0) return; jobUiT = .25;
   const o = panel.i != null && G.objs.get(panel.i), j = o && o.job, card = document.querySelector('#sheet .jobcard');
   if (!j) { if (card) renderPanel(); return; } if (!card || +card.dataset.done !== jobDone(j)) { renderPanel(); return; }
   const bar = document.getElementById('jobBar'), tx = document.getElementById('jobTxt'), d = jobDone(j);
