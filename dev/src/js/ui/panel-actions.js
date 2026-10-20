@@ -99,6 +99,7 @@ export function onSheetClick(e) {
   if (a === 'qMap') { const t = questGo(questById(i)); if (t) openPanel('map', { focus: t }); return; } // v84: 지도에서 보기
   if (a === 'qDoneFold') { UIS.qDoneOpen = !UIS.qDoneOpen; renderPanel(); return; }
   if (a === 'qGotFold') { UIS.qGotOpen = !UIS.qGotOpen; renderPanel(); return; }
+  if (a === 'qAskFold') { UIS.qAskOpen = !UIS.qAskOpen; renderPanel(); return; } // v118 들어준 부탁
   if (a === 'qClaimAll') { runCmd({ k: 'claimAll' }); renderPanel(); return; }
   if (a === 'statUp') { runCmd({ k: 'statUp', s: i }); UIS.statAsk = false; renderPanel(); return; }
   if (a === 'statReset') { if (!UIS.statAsk) { UIS.statAsk = true; renderPanel(); return; } runCmd({ k: 'statReset' }); UIS.statAsk = false; renderPanel(); return; }

@@ -195,7 +195,7 @@ export function renderPanel() {
     h += `</div></div><div class="menu-two" style="margin-top:8px"><button class="btn ghost" data-a="close" type="button">취소</button><button class="btn" data-a="lookOk" type="button">이 모습으로 하기</button></div>`;
   } else if (k === 'quest') { // v84: 이야기 큰 카드 · 도전 세 묶음 · 활성화 · 지도에서 보기 (ui/panels-quest.js)
     const tab = UIS.qTab || 'main';
-    const n1 = GUIDE.filter((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }).length, n2 = QSIDE.filter(q => { const st = questState(q); return st.done && !st.claimed && st.has; }).length;
+    const n1 = GUIDE.filter((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }).length, n2 = QSIDE.filter(q => { const st = questState(q); return st.done && !st.claimed && st.has && !st.nh; }).length;
     h += head('퀘스트', 'quest', (n1 + n2) ? `<button type="button" class="btn" data-a="qClaimAll" style="min-height:36px;padding:0 10px;font-size:16px">모두 받기 (${n1 + n2})</button>` : '');
     h += `<div class="tabs"><button type="button" class="tab ${tab === 'main' ? 'on' : ''}" data-a="qTab" data-i="main">이야기${n1 ? ` · ${n1}` : ''}</button><button type="button" class="tab ${tab === 'side' ? 'on' : ''}" data-a="qTab" data-i="side">도전${n2 ? ` · ${n2}` : ''}</button></div><div class="sh-body">`;
     h += (tab === 'main' ? questMainHTML() : questSideHTML()) + `</div>`;

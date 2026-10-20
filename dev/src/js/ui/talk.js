@@ -11,6 +11,8 @@ import { NPCS } from '../data/npc.js';
 import { npcImg } from '../art/content.js';
 import { G } from '../save/state.js';
 import { panel, renderPanel } from './panels.js';
+import { runCmd } from '../sim/commands.js';
+import { leadWalking } from '../sim/naru.js';
 
 const TY_MS = 30; // 한 글자에 0.03초
 // ---- 주인공 이름 ({이름}) ----
@@ -71,9 +73,9 @@ function bellEl() { let el = $('#bell'); if (el) return el;
   el.innerHTML = '<img class="px bellface" alt=""><div class="bellt"><b class="bellname"></b><p class="belltx"></p></div><span class="bellnx" aria-hidden="true">▶</span>';
   el.addEventListener('pointerdown', e => { e.stopPropagation(); }); el.addEventListener('click', e => { e.stopPropagation(); bellTap(); });
   document.body.appendChild(el); return el; }
-export function bellPush(lines, short) { if (!lines || !lines.length) return; BQ.push({ lines: lines.slice(), short: !!short }); if (!BC) bellNext(); }
+export function bellPush(lines, short, done) { if (!lines || !lines.length) return; BQ.push({ lines: lines.slice(), short: !!short, done: done || null }); if (!BC) bellNext(); } // v118 done: 이 묶음을 다 말하면 보낼 명령 (예: 나루가 먼저 걸어 나가기)
 const sheetOpen = () => { const w = $('#sheetWrap'); return !!w && !w.hidden; };
-function bellNext() { BC = BQ.shift() || null; if (!BC) { bellHide(); return; } BC.at = 0; SFX.bell(); bellShow(); }
+function bellNext() { const prev = BC; BC = BQ.shift() || null; if (prev && prev.done) runCmd(prev.done); if (!BC) { bellHide(); return; } BC.at = 0; SFX.bell(); bellShow(); }
 function bellShow() { const el = bellEl(), L = lineOf(BC.lines[BC.at]); const who = L.who === 'me' ? 'me' : 'npc';
   el.querySelector('.bellface').src = faceURL(who, 'guide'); el.querySelector('.bellname').textContent = who === 'me' ? pName() : NPCS.guide.n;
   el.classList.toggle('me', who === 'me'); el.classList.toggle('short', BC.short); const p = el.querySelector('.belltx'); p.textContent = L.s; tyBind(BT, p, 0); BC.wait = 0;
@@ -90,3 +92,7 @@ function bellAdvance() { if (!BC) return; if (BC.at < BC.lines.length - 1) { BC.
 export function bellTap() { if (!BC) return; if (BT.n < BT.total) { BT.n = BT.total; tyApply(BT); BC.wait = performance.now() + holdMs(BT.recs.map(r => r.full).join('')); bellEl().querySelector('.bellnx').hidden = BC.at >= BC.lines.length - 1; return; } bellAdvance(); }
 export const bellState = () => BC ? { lines: BC.lines.map(l => lineOf(l).s), at: BC.at, short: BC.short, queued: BQ.length } : null; // 테스트용
 export function bellClear() { BQ.length = 0; BC = null; bellHide(); } // 새 게임·불러오기
+
+// ---- v118 나루가 먼저 걸어 나가는 모습: 화면 아무 데나 누르거나 스페이스·엔터·E = 건너뛰기 (sim/naru.js) ----
+document.addEventListener('pointerdown', () => { if (leadWalking()) runCmd({ k: 'leadSkip' }); }, true);
+document.addEventListener('keydown', e => { if (leadWalking() && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE')) runCmd({ k: 'leadSkip' }); }, true);

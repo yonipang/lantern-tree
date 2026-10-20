@@ -8,6 +8,7 @@ import { G } from '../save/state.js';
 import { escHTML } from '../save/storage.js';
 import { CALL_Q, mainQuest, qProg, qText, questGo, questGoMsg, questState } from '../sim/quests.js';
 import { UIS } from './panels.js';
+import { askList, isAsk } from '../sim/naru.js';
 const rwHTML = q => `<div class="qrw">${q.rw.map(([id, c]) => `<span><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${c}</span>`).join('')}${q.xp ? `<span>경험치 ${q.xp}</span>` : ''}</div>`;
 // 진행 막대 (숫자가 있는 퀘스트만)
 export function qBarHTML(q) { const pr = qProg(q); if (!pr) return ''; const [a, b] = pr; return `<div class="qbar" role="progressbar" aria-valuenow="${a}" aria-valuemax="${b}"><i style="width:${Math.round(a / b * 100)}%"></i><span>${a} / ${b}</span></div>`; }
@@ -22,7 +23,7 @@ function qCardHTML(q, st, side, big) {
   if (st.done && !st.claimed && st.has && !st.nh) btn += `<button type="button" class="btn" data-a="qClaim" data-i="${q.id}">보상 받기</button>`;
   if (live && !(st.done && !side)) btn += act ? `<button type="button" class="btn ghost" data-a="qAct" data-i="none">활성화 해제</button>` : `<button type="button" class="btn ghost" data-a="qAct" data-i="${q.id}">활성화</button>`;
   if (go) btn += `<button type="button" class="btn ghost" data-a="qMap" data-i="${q.id}">지도에서 보기</button>`;
-  return `<div class="qcard ${big ? 'big' : ''} ${act ? 'act' : ''}"><div class="qc-top">${chip}${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(q))}</h4></div>${!st.done && q.h ? `<p>${GUIDE.includes(q) ? '<b style="color:var(--amber)">나루</b> 「' : ''}${escHTML(typeof q.h === 'function' ? q.h() : q.h)}${GUIDE.includes(q) ? '」' : ''}</p>` : ''}${!st.claimed ? qBarHTML(q) : ''}${st.has && !st.claimed ? rwHTML(q) : ''}${live && go === null ? `<p class="qmsg">화살표: ${questGoMsg(q)}</p>` : ''}${st.done && !st.claimed && st.nh && st.has ? '<p class="qmsg">보상은 마을의 나루에게 받아요 (머리 위 ?)</p>' : ''}${btn ? `<div class="qbtns">${btn}</div>` : ''}</div>`;
+  return `<div class="qcard ${big ? 'big' : ''} ${act ? 'act' : ''}"><div class="qc-top">${chip}${act ? '<span class="st act">활성</span>' : ''}<h4>${escHTML(qText(q))}</h4></div>${!st.done && q.h ? `<p>${GUIDE.includes(q) || isAsk(q) ? '<b style="color:var(--amber)">나루</b> 「' : ''}${escHTML(typeof q.h === 'function' ? q.h() : q.h)}${GUIDE.includes(q) || isAsk(q) ? '」' : ''}</p>` : ''}${!st.claimed ? qBarHTML(q) : ''}${st.has && !st.claimed ? rwHTML(q) : ''}${live && go === null ? `<p class="qmsg">화살표: ${questGoMsg(q)}</p>` : ''}${st.done && !st.claimed && st.nh && st.has ? '<p class="qmsg">보상은 마을의 나루에게 받아요 (머리 위 ?)</p>' : ''}${btn ? `<div class="qbtns">${btn}</div>` : ''}</div>`;
 }
 const qFold = (a, open, n, label) => `<button type="button" class="lbl fold" data-a="${a}" aria-expanded="${open}">${open ? '▾' : '▸'} ${label} · ${n}개</button>`;
 export function questMainHTML() {
@@ -36,10 +37,14 @@ export function questMainHTML() {
   } else if (cur) h += `<div class="lbl">진행 중인 이야기</div>` + qCardHTML(cur.q, cur.st, false, true);
   if (next && !next.st.done && mainQuest() !== CALL_Q) h += qCardHTML(next.q, next.st, false, false);
   if (done.length) { h += qFold('qDoneFold', !!UIS.qDoneOpen, done.length, '끝난 이야기'); if (UIS.qDoneOpen) h += done.map(x => qCardHTML(x.q, x.st, false, false)).join(''); }
+  // v118 나루의 부탁: 방울로 받은 것만, 끝냈으면 마을의 나루에게 (받은 것은 접힘)
+  const A = askList().filter(isAsk).map(q => ({ q, st: questState(q) })), aGo = A.filter(x => !x.st.claimed), aGot = A.filter(x => x.st.claimed);
+  if (A.length) { h += `<div class="lbl">나루의 부탁</div>` + aGo.map(x => qCardHTML(x.q, x.st, true, false)).join('');
+    if (aGot.length) { h += qFold('qAskFold', !!UIS.qAskOpen, aGot.length, '들어준 부탁'); if (UIS.qAskOpen) h += aGot.map(x => qCardHTML(x.q, x.st, true, false)).join(''); } }
   return h;
 }
 export function questSideHTML() {
-  let h = ''; const L = QSIDE.map(q => ({ q, st: questState(q) }));
+  let h = ''; const L = QSIDE.filter(q => !isAsk(q)).map(q => ({ q, st: questState(q) })); // v118: 나루의 부탁은 이야기 탭에
   const ready = L.filter(x => x.st.done && !x.st.claimed && x.st.has), going = L.filter(x => !x.st.done), got = L.filter(x => x.st.done && !(x.st.has && !x.st.claimed));
   if (ready.length) h += `<div class="lbl">받을 수 있는 것</div>` + ready.map(x => qCardHTML(x.q, x.st, true, false)).join('');
   if (going.length) h += `<div class="lbl">진행 중</div>` + going.map(x => qCardHTML(x.q, x.st, true, false)).join('');
