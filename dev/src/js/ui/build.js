@@ -64,7 +64,7 @@ export function frontTile() { const p = G.p, f = p.face || { x: 0, y: 1 }, px = 
   return Math.abs(f.x) >= Math.abs(f.y) ? { x: px + Math.sign(f.x || 1), y: py } : { x: px, y: py + Math.sign(f.y) }; }
 function lineTo(path, b) { const a = path[path.length - 1]; if (!a) { path.push(b); return; } let x = a.x, y = a.y;
   while ((x !== b.x || y !== b.y) && path.length < BM_MAX) { const dx = b.x - x, dy = b.y - y; if (Math.abs(dx) >= Math.abs(dy)) x += Math.sign(dx); else y += Math.sign(dy); path.push({ x, y }); } }
-// 끌기 모양: 바닥은 네모, 벽·울타리·전선은 지나간 길, 그 밖은 마지막 칸
+// 끌기 모양: 바닥은 네모, 벽·울타리·빛뿌리는 지나간 길, 그 밖은 마지막 칸
 export function dragCells() { const d = BM.drag; if (!d || (BM.tool === 'place' && !BM.id)) return []; const m = BM.tool === 'take' ? 'rect' : BM.tool === 'move' ? 'one' : bmDrag(BM.id);
   if (m === 'one') return [d.b]; if (m === 'line') return d.path.slice(0, BM_MAX);
   const out = [], x0 = Math.min(d.a.x, d.b.x), x1 = Math.max(d.a.x, d.b.x), y0 = Math.min(d.a.y, d.b.y), y1 = Math.max(d.a.y, d.b.y);

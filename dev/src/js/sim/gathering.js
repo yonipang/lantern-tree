@@ -1,5 +1,6 @@
 // ================= 모으기: 벽 캐기·나무 베기·수확, 쳐서 회수(공격 버튼으로 가구 떼기) =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+import { OLD_AUTO } from '../data/automation.js';
 import { WPAL } from '../art/world.js';
 import { TIER_IT } from '../data/automation-tiers.js';
 import { DUR } from '../data/circuits-regions.js';
@@ -67,6 +68,7 @@ export function hitRecover(tg, w) { const p = G.p, t = tg.t; faceTo(t.x + .5 - p
 export function dropObj(t, o) { const i = idx(t.x, t.y), d = OBJ[o.t], fp = d.sz ? fpOf(o) : [1, 1], x = t.x + fp[0] / 2, y = t.y + fp[1] / 2 + .3;
   delObj(i); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
   if (o.job) cancelJob(o, x, y); if (o.store) for (const s2 of o.store) spawnDrop(s2.id, s2.c, x, y);
+  if (OLD_AUTO[o.t]) { for (const [m, c] of OLD_AUTO[o.t]) spawnDrop(m, c, x, y); emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); markLight(); emit('tile', t.x, t.y); emit('inv'); return; } // v113: 옛 돌 채굴기는 재료로
   const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; spawnDrop(it, 1, x, y);
   if (DUR[d.item]) G.drops[G.drops.length - 1].dur = Math.round(o.e != null ? o.e : DUR[d.item][0]);
   emit('sfx', 'brk'); emit('puff', x, y, '#e8d8c0', 10, 2.4); markLight(); emit('tile', t.x, t.y); emit('inv'); }

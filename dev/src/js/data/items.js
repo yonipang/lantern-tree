@@ -102,7 +102,7 @@ export const OBJ = {
   cropBerry: { n: '베리', crop: 'berry', grow: 110, yield: [['berry', 2, 3, 1], ['berrySeed', 1, 2, 1]] },
   cropShroom: { n: '버섯', crop: 'shroom', grow: 130, yield: [['mushroom', 2, 3, 1], ['spore', 1, 1, 0.8], ['glowcap', 1, 1, 0.3]] },
   shrine: { n: '고대 제단', solid: 1, shrine: 1 },
-  treeP: { n: '등불나무', solid: 1, tree: 1 },
+  treeP: { n: '등불나무', solid: 1, tree: 1, src: 'tree' }, // v113: 빛뿌리를 이으면 끝없는 빛의 샘 (sim/circuits.js)
 };
 Object.assign(ITEMS, {
   shroomCap: { n: '버섯 갓', d: '큰버섯과 버섯 여왕에게서 얻는 탱글한 갓. 버섯 세트 재료예요.' },
@@ -231,7 +231,7 @@ export function addBuildPieces() {
   }
   // auto sliding door: opens by itself while powered and someone walks up; without power it is an ordinary door
   OBJ.slideDoor = { n: '자동 미닫이문', solid: 1, item: 'slideDoor', tw: { type: 'slide', mat: 'metal' }, door: 1, dev: 'slide', idle: .01 };
-  ITEMS.slideDoor = { n: '자동 미닫이문', kind: 'place', obj: 'slideDoor', d: '전선으로 전기를 이어 주면 다가갈 때 옆으로 스르륵 열리고, 멀어지면 닫혀요. 몬스터는 못 열어요. 전기가 없으면 손으로 여닫아요.' };
+  ITEMS.slideDoor = { n: '자동 미닫이문', kind: 'place', obj: 'slideDoor', d: '빛뿌리로 빛을 이어 주면 다가갈 때 옆으로 스르륵 열리고, 멀어지면 닫혀요. 몬스터는 못 열어요. 빛이 없으면 손으로 여닫아요.' };
   USE.slideDoor = 'door';
   RECIPES.push(Rc('slideDoor', 1, [['copperBar', 3], ['ironBar', 2], ['crystal', 1]], 'forge', 'build'));
 }

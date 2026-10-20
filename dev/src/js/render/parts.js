@@ -149,7 +149,7 @@ export function drawTreeGlow(t, T, camX, camY, cw, ch) {
 onFrame('fx', updateFx);
 onFrame('tree', updateTree);
 export function updateFx(dt) {
-  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= 9 * dt; q.z = Math.max(0, q.z + q.vz * dt); q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); }
+  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= 9 * dt; q.z = Math.max(0, q.z + q.vz * dt); if (!q.fly) { q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); } } // v113: fly = 상자로 날아가는 광석 조각 (느려지지 않음)
   for (let i = G.texts.length - 1; i >= 0; i--) { const t = G.texts[i]; t.life -= dt; t.y += t.vy * dt; t.vy *= Math.pow(.15, dt); if (t.life <= 0) G.texts.splice(i, 1); }
   for (const o of visibleShakers) { o.shake = Math.max(0, (o.shake || 0) - dt); }
 }

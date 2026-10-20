@@ -124,7 +124,7 @@ export function heldDecide(md, s, it, t, i, o) {
           if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t, alt2: gA && { ...gA, onlyAlt: 1 } };
           if (gA) return gA; } }
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
-      if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '전선 걷기', icon: s.id, t };
+      if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '빛뿌리 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
       if (it.kind === 'ground' && it.ground === WATER) return no('부을 수 없음', '물 한 동이는 구덩이에만 부을 수 있어요 · 삽으로 바닥을 파서 구덩이를 만들어요');
       if ((it.kind === 'wall' || (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].tw)) && nearWarpPt(t.x, t.y)) return no('놓을 수 없음', '워프포인트 둘레에는 벽·문·울타리를 세울 수 없어요'); // v89
@@ -284,21 +284,21 @@ export function useObj(a) {
     case 'farm': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
       if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `${OBJ[o.t].n}에서 ${n}개를 꺼냈어요`, 'good', 'farm'); emit('inv'); break; }
       if (farmStage(o) >= 3) { farmHarvest(idx(t.x, t.y), o, false); emit('toast', farmT(o)[1], null, 'farm'); break; }
-      emit('toast', `${farmT(o)[2]} (${Math.round(Math.min(1, (G.time - (o.p || 0)) / growOf(o)) * 100)}%) · 건전지·발전기와 전선으로 이으면 다 될 때마다 저절로 ${farmT(o)[0] === '캐기' ? '캐서' : '베어'} 옆 상자에 담아요`, null, 'farm'); break; }
+      emit('toast', `${farmT(o)[2]} (${Math.round(Math.min(1, (G.time - (o.p || 0)) / growOf(o)) * 100)}%) · 빛 항아리·불씨 등잔과 빛뿌리로 이으면 다 될 때마다 저절로 ${farmT(o)[0] === '캐기' ? '캐서' : '베어'} 옆 상자에 담아요`, null, 'farm'); break; }
     case 'lever': o.on = !o.on; emit('sfx', 'click'); emit('toast', o.on ? '레버를 켰어요' : '레버를 껐어요', null, 'lever'); break;
     case 'timer': { const L = [1, 2, 4, 8], k = (L.indexOf(o.per || 2) + 1) % L.length; o.per = L[k]; emit('sfx', 'click'); emit('toast', `타이머 간격: ${o.per}초마다 켜고 꺼요`, null, 'timer'); break; }
-    case 'batt': emit('toast', `건전지 ${Math.round((o.e || 0) / BATT_MAX * 100)}% 남았어요${(o.e || 0) <= 0 ? ' · 회수해서 작업대 [수리]로 충전해요' : ''}`, null, 'batt'); break;
+    case 'batt': emit('toast', `빛 항아리 ${Math.round((o.e || 0) / BATT_MAX * 100)}% 남았어요${(o.e || 0) <= 0 ? ' · 회수해서 작업대 [수리]로 충전해요' : ''}`, null, 'batt'); break;
     case 'fuel': { let added = 0; for (const f of ['resin', 'gel', 'wood']) { while ((o.fuel || 0) + FUEL[f] <= FUEL_MAX && countItem(f) > 0) { removeItem(f, 1); o.fuel = (o.fuel || 0) + FUEL[f]; added++; } }
       emit('toast', added ? `연료를 넣었어요 · 약 ${Math.round((o.fuel || 0) / 60)}분 동안 일할 수 있어요` : (o.fuel || 0) >= FUEL_MAX - 30 ? '연료가 가득 찼어요' : `연료가 없어요 (나무·젤·송진) · 남은 연료 약 ${Math.round((o.fuel || 0) / 60)}분`, added ? 'good' : null, 'fuel'); if (added) emit('sfx', 'place'); break; }
-    case 'sprk': emit('toast', o.work ? '물을 주는 중이에요 · 둘레 5×5 칸의 자라는 작물에 2초마다 물을 줘요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'sprk'); break;
+    case 'sprk': emit('toast', o.work ? '물을 주는 중이에요 · 둘레 5×5 칸의 자라는 작물에 2초마다 물을 줘요' : '빛이 들어오지 않아요. 수정 빛샘·빛 항아리와 빛뿌리로 이어 주세요', null, 'sprk'); break;
     case 'harv': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
       if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `자동 수확기에서 ${n}개를 꺼냈어요`, 'good', 'harv'); emit('inv'); break; }
-      emit('toast', o.work ? '둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요' : '전기가 들어오지 않아요. 수정 발전기·건전지와 전선으로 이어 주세요', null, 'harv'); break; }
+      emit('toast', o.work ? '둘레 3×3 칸의 다 자란 작물을 거둬서 옆 상자에 담아요' : '빛이 들어오지 않아요. 수정 빛샘·빛 항아리와 빛뿌리로 이어 주세요', null, 'harv'); break; }
     case 'drill': { const n = (o.store || []).reduce((a2, s2) => a2 + s2.c, 0);
       if (n) { for (const s2 of o.store) { const l = moveInto(G.inv, s2); s2.c = l; } o.store = o.store.filter(s2 => s2.c > 0); emit('sfx', 'pick'); emit('toast', o.store.length ? '가방이 가득 차서 일부만 꺼냈어요' : `채굴기에서 ${n}개를 꺼냈어요`, 'good', 'drill'); emit('inv'); break; }
-      const d2 = OBJ[o.t]; emit('toast', o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '전기가 들어오지 않아요. 건전지·발전기와 전선으로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? (d2.only ? '돌 채굴기는 흙벽·돌벽·화강암 벽(지형)만 캘 수 있어요. 광맥은 구리·철·황금 채굴기로 캐요' : '이 채굴기로는 못 캐는 벽이에요') : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
-    case 'cinfo': { const d2 = OBJ[o.t]; emit('toast', d2.src === 'cgen' ? '수정 발전기 · 연료 없이 계속 전기를 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 전선을 이어 줘요' : d2.dev === 'door' ? (o.open ? '전기 문 · 전기가 들어와 열려 있어요' : '전기 문 · 전기가 들어오면 열려요') : (o.off === false ? '전기 램프 · 켜져 있어요' : '전기 램프 · 전기가 들어오면 켜져요'), null, 'cinfo'); break; }
-    case 'door': { if (OBJ[o.t].dev === 'slide' && o.pw) { emit('toast', '자동 미닫이문 · 전기가 들어와 있어서 다가가면 저절로 열려요', null, 'cinfo'); break; }
+      const d2 = OBJ[o.t]; emit('toast', o.work ? `캐는 중이에요 · 다음 광물까지 ${Math.ceil(d2.every - (o.prog || 0))}초` : o.why === 'power' || !o.why ? '빛이 들어오지 않아요. 빛 항아리·불씨 등잔과 빛뿌리로 이어 주세요' : o.why === 'wall' ? '앞에 캘 벽이 없어요. 광맥을 바라보게 다시 놓아 주세요' : o.why === 'tier' ? (d2.only ? '돌 채굴기는 흙벽·돌벽·화강암 벽(지형)만 캘 수 있어요. 광맥은 구리·철·황금 채굴기로 캐요' : '이 채굴기로는 못 캐는 벽이에요') : '안이 가득 찼어요. 꺼내거나 옆에 상자를 두세요', null, 'drill'); break; }
+    case 'cinfo': { const d2 = OBJ[o.t]; emit('toast', d2.src === 'cgen' ? '수정 빛샘 · 연료 없이 계속 빛을 만들어요' : d2.sw === 'plate' ? '압력판 · 올라서 있는 동안 양쪽 빛뿌리를 이어 줘요' : d2.dev === 'door' ? (o.open ? '빛 문 · 빛이 들어와 열려 있어요' : '빛 문 · 빛이 들어오면 열려요') : (o.off === false ? '빛뿌리 램프 · 켜져 있어요' : '빛뿌리 램프 · 빛이 들어오면 켜져요'), null, 'cinfo'); break; }
+    case 'door': { if (OBJ[o.t].dev === 'slide' && o.pw) { emit('toast', '자동 미닫이문 · 빛이 들어와 있어서 다가가면 저절로 열려요', null, 'cinfo'); break; }
       const grp = doorGroup(t.x, t.y), nv = !o.open; // a double door opens and closes together
       if (!nv && grp.some(([j]) => occupied(j % W, (j / W) | 0))) { emit('toast', '문 사이에 누가 있어서 닫을 수 없어요', null, 'doorblk'); break; }
       for (const [, g] of grp) g.open = nv; emit('sfx', 'place'); emit('puff', x, t.y + .6, '#e8d8c0', 3, 1.2); break; }

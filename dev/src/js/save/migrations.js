@@ -15,7 +15,8 @@ import { HOT, ITEMS, OBJ, OLD_PIECES, UNIQ_OF } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
 import { BX, BY, CX, CY, H, LAVA, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
 import { addPond, addWater, genWorld } from '../world/gen.js';
-import { fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
+import { delObj, fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
+import { OLD_AUTO } from '../data/automation.js';
 import { josa } from '../engine/util.js';
 import { emit } from '../sim/events.js';
 import { WATER } from '../sim/nature.js';
@@ -68,8 +69,7 @@ export function refundRoofTiles(arr, back) { const cnt = { wood: 0, stone: 0 };
   if (Array.isArray(arr)) for (const e of arr) if (Array.isArray(e) && cnt[e[1]] != null) cnt[e[1]]++;
   for (const m in cnt) if (cnt[m]) { const n = Math.ceil(cnt[m] / 2), l = addItem(m, n, false); if (l) spawnDrop(m, l, G.p.x, G.p.y + .6); back.n += cnt[m]; }
   if (back.n) { G.stats.roofBack = (G.stats.roofBack || 0) + back.n; setTimeout(() => { try { emit('toast', '지붕이 없어져서, 가지고 있던 지붕을 나무·돌로 돌려받았어요', 'good', 'roofback'); } catch (e) { } }, 1200); } }
-// v46: old stone drills become stone pits
-export function convertDrills() { const DRILL_TO = { drillStone: 'quarry', drillCu: 'pitCu', drillFe: 'pitFe', drillGold: 'pitGold' }, conv = x => { if (x && DRILL_TO[x.id]) x.id = DRILL_TO[x.id]; }; G.inv.forEach(conv); for (const o of G.objs.values()) if (o.items) o.items.forEach(conv); }
+// v46 convertDrills (옛 채굴기 → 채굴장)는 v113에서 멈췄어요: 채굴기가 다시 생겼고 채굴장은 없어졌어요
 // v48: the weapon from an old save's weapon slot goes into an empty hotbar slot (or the bag, or onto the ground)
 export function unslotWeapon(w) { const to = G.inv.slice(0, HOT).findIndex(x => !x); if (to >= 0) { G.inv[to] = w; return '단축칸'; }
   if (!moveInto(G.inv, w)) return '가방'; spawnDrop(w.id, 1, G.p.x, G.p.y); const d = G.drops[G.drops.length - 1]; d.dur = w.dur; d.lv = w.lv; return '발밑'; }
@@ -157,6 +157,30 @@ export function refundPieces() {
   const mats = Object.entries(total).map(([m, c]) => `${ITEMS[m].n} ${c}`).join(' · ');
   setTimeout(() => { try { emit('toast', `반벽·기둥·얇은 벽·창문이 없어져서, 가지고 있던 ${n}개를 재료(${mats})로 돌려받았어요${boxes ? ' · 가방에 다 안 들어간 건 등불나무 옆 환급 상자에 있어요' : ''}${placed ? ' · 세워 둔 벽이 없어진 곳은 다시 쌓아 주세요' : ''}`, 'good', 'bf05'); } catch (e) { } }, 1600);
   return G.stats.bf05;
+}
+// v113 (자동 생산 1, dev/design/자동생산.md 1장): 돌·구리·철·황금 채굴장과 나무 작업장이 없어졌어요. 세이브에 남은 것 — 놓인 것(안에 모인 광석·나무도),
+// 가방·상자·꾸러미 속 아이템 — 은 만들 때 든 재료(OLD_AUTO)로 돌려줘요. 방법은 v69 refundPieces와 같아요: 상자·꾸러미 속 것은 그 안으로,
+// 나머지는 가방 먼저, 넘치면 등불나무 옆 환급 상자(주인만, 꺼내기만). 남는 것이 없어서 같은 세이브를 다시 불러도 두 번 주지 않아요.
+// 놓여 있는 옛 돌 채굴기(drillStone)는 그대로 일해요 (회수할 때 sim/gathering.js·sim/buildmode.js가 재료로 줘요).
+export function refundAuto113() {
+  const add = (m, k, v) => { m[k] = (m[k] || 0) + v; }, own = {}, total = {}; let n = 0, placed = 0;
+  const take = (s, into) => { if (!s || !OLD_AUTO[s.id] || s.id === 'drillStone') return false; const c = s.c || 1; for (const [m, v] of OLD_AUTO[s.id]) add(into, m, v * c); n += c; return true; };
+  for (const o of G.objs.values()) if (Array.isArray(o.items)) { const back = {}; let hit = false;
+    o.items = o.items.map(s => take(s, back) ? (hit = true, null) : s);
+    if (hit) for (const m in back) { add(total, m, back[m]); const left = moveInto(o.items, { id: m, c: back[m] }); if (left) add(own, m, left); } }
+  G.inv = G.inv.map(s => take(s, own) ? null : s);
+  for (const [i, o] of [...G.objs]) if (OLD_AUTO[o.t] && o.t !== 'drillStone') { for (const [m, v] of OLD_AUTO[o.t]) add(own, m, v);
+    for (const s2 of o.store || []) if (s2 && ITEMS[s2.id] && s2.c > 0) add(own, s2.id, s2.c);
+    delObj(i); placed++; n++; }
+  if (!n) return null;
+  const over = []; for (const m in own) { add(total, m, own[m]); const left = moveInto(G.inv, { id: m, c: own[m] }); if (left) over.push({ id: m, c: left }); }
+  let boxes = 0, rest = over;
+  while (rest.length) { const at = freeTileNear(CX, CY + 7); if (at < 0) break; const items = Array(18).fill(null), next = [];
+    for (const s of rest) { const left = moveInto(items, s); if (left) next.push({ id: s.id, c: left }); }
+    G.objs.set(at, { t: 'refundBox', items, own: ME }); boxes++; rest = next; }
+  G.stats.auto113 = { n: (G.stats.auto113 ? G.stats.auto113.n : 0) + n, placed, back: total, boxes };
+  setTimeout(() => { try { emit('toast', `채굴장·나무 작업장이 없어져서, 가지고 있던 ${n}개를 재료로 돌려받았어요${boxes ? ' · 가방에 다 안 들어간 건 등불나무 옆 환급 상자에 있어요' : ''} · 이제 광석은 채굴기, 나무는 비버 둥지로 모아요`, 'good', 'auto113'); } catch (e) { } }, 2000);
+  return G.stats.auto113;
 }
 // the free tile nearest to (x, y) — no wall, no object, not water or lava, not on the lantern tree or the starter deck
 function freeTileNear(x0, y0) {

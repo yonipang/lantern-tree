@@ -1,5 +1,6 @@
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
+import { OLD_AUTO } from '../data/automation.js';
 import { TIER_IT } from '../data/automation-tiers.js';
 import { DUR } from '../data/circuits-regions.js';
 import { TOOL_KINDS } from '../data/controls.js';
@@ -37,6 +38,7 @@ export function returnObj(o, x, y) {
   if (o.job) cancelJob(o, x, y); // v59: a furnace / pot picked up mid-job gives back the finished items and the unused materials
   const d = OBJ[o.t]; if (o.store) for (const s2 of o.store) { const l = moveInto(G.inv, s2); if (l) spawnDrop(s2.id, l, x, y); }
   if (DUR[d.item]) { const it = { id: d.item, c: 1, dur: Math.round(o.e != null ? o.e : DUR[d.item][0]) }; if (moveInto(G.inv, it)) { spawnDrop(d.item, 1, x, y); G.drops[G.drops.length - 1].dur = it.dur; } }
+  else if (OLD_AUTO[o.t]) { for (const [m, c] of OLD_AUTO[o.t]) { const l = addItem(m, c, false); if (l) spawnDrop(m, l, x, y); } } // v113: 옛 돌 채굴기는 재료로
   else { const it = TIER_IT[o.t] && o.lv ? TIER_IT[o.t][o.lv] : d.item; const l = addItem(it, 1, false); if (l) spawnDrop(it, 1, x, y); } // v60: an upgraded workbench comes back as its tier item
   emit('inv');
 }

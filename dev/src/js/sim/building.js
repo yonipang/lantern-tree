@@ -65,7 +65,7 @@ export const BUILD_KINDS = ['place', 'wall', 'floor', 'ground', 'seed', 'wire'];
 const GR = {};
 export const groundOf = it => it && it.kind === 'wall' && it.ground ? (GR[it.ground] || (GR[it.ground] = { n: it.n, kind: 'ground', ground: it.ground, of: it })) : null;
 export const groundFill = f => f === PIT || f === WATER || f === LAVA; // 메우기 (바꾸기가 아니라)
-export const placeLbl = it => it.kind === 'wire' ? '전선 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
+export const placeLbl = it => it.kind === 'wire' ? '빛뿌리 깔기' : it.kind === 'seed' ? '심기' : it.kind === 'wall' ? '쌓기' : it.kind === 'floor' ? '깔기' : it.kind === 'ground' ? (it.ground === WATER ? '붓기' : '덮기') : '놓기';
 export function pickupObj(t, o) {
   const d = OBJ[o.t]; if (!d.item || (d.chest && o.items && o.items.some(x => x))) return;
   delObj(idx(t.x, t.y)); if (d.bed && G.spawnPt && G.spawnPt.x === t.x && G.spawnPt.y === t.y) G.spawnPt = null;
