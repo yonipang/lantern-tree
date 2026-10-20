@@ -30,6 +30,8 @@ import { atkSpd, magicMul, maxHp, maxMp, meleeMul, moveMul, rangeMul } from '../
 import { dirText, qText, questState } from '../sim/quests.js';
 import { treeStage } from '../sim/tree.js';
 import { slotHTML } from './hud.js';
+import { FEED, FEED_SLOTS } from '../data/beaver.js';
+import { feedSec } from '../sim/beaver.js';
 import { joyEnd, keys, mouse, releaseHeld } from './input.js';
 import { drawMap, mapIsAll, mapLegendHTML, navBarHTML } from './map.js';
 import { benchUpHTML, catchHTML, jobHTML, otherSetSlots, rarName, regionMatHTML, upgListHTML } from './panels-extra.js';
@@ -138,6 +140,10 @@ export function renderPanel() {
     }
     h += `</div></div>`;
     }
+  } else if (k === 'feeder') { // v114 먹이통: 위 4칸은 눌러서 꺼내기, 아래는 가방의 먹이만 (눌러서 넣기)
+    const o = G.objs.get(panel.i); if (!o || o.t !== 'feeder') { closePanel(); return; } const feed = o.feed || Array(FEED_SLOTS).fill(null), mine = G.inv.map((s, i) => [s, i]).filter(([s]) => s && FEED[s.id]), min = Math.floor(feedSec(o) / 60);
+    h += head('먹이통', 'feeder') + `<div class="sh-body"><button class="btn" data-a="fdAll" type="button" style="width:100%">가방의 먹이 모두 넣기</button><div class="lbl">먹이통 <span style="color:var(--muted);font-size:16px">약 ${min}분</span></div><div class="grid">${feed.map((s, i) => slotHTML(s, 'fdOut', i)).join('')}</div>`
+      + `<div class="lbl">가방의 먹이</div>${mine.length ? `<div class="grid">${mine.map(([s, i]) => slotHTML(s, 'fdIn', i)).join('')}</div>` : `<p class="prose" style="color:var(--muted)">통통베리·버섯 1분 · 수정 콩·불꽃 열매·서리 무 2분</p>`}</div>`;
   } else if (k === 'chest') {
     const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
     const empty = o.items.every(x => !x), rf = o.t === 'refundBox'; // v69 (BF-05): the refund box — take-only

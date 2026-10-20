@@ -21,6 +21,7 @@ import { canDev } from '../save/storage.js';
 import { cropStage, curAlt, inReach } from '../sim/actions.js';
 import { naruWaits } from '../sim/npc.js';
 import { ranchReady } from '../sim/animals.js';
+import { beaverPose } from '../sim/beaver.js';
 import { nearestBag } from '../sim/survival.js';
 import { canRotObj, isGround, placeFp, pRot, rotN, rotOf, slideStep, twMask } from '../sim/building.js';
 import { CIRC, wirePowered } from '../sim/circuits.js';
@@ -102,7 +103,8 @@ export function renderWorld(cw, ch, glOn = false) {
   const seenA = new Set();
   for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; let ii = idx(x, y), o = G.objs.get(ii); if (o && o.t === '_part') { ii = o.a; o = G.objs.get(ii); if (!o || o.t === '_part') continue; }
     if (o && OBJ[o.t] && OBJ[o.t].sz) { if (seenA.has(ii)) continue; seenA.add(ii); if (OBJ[o.t].flat) continue; const ax = ii % W, ay = (ii / W) | 0, by = ay + fpOf(o)[1] - 1; push(Math.min(by, y1), { k: 'o', x: ax, y: ay, o, s: OBJ[o.t].solid ? by + 1 : by + .01 }); if (o.shake) visibleShakers.add(o); continue; }
-    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); } }
+    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); }
+    if (o && o.t === 'beaverNest' && o.bv) { const b = beaverPose(ii, o); push(Math.min(Math.max(b.y, y0), y1), { k: 'bv', b, s: b.y }); } } // v114 둥지의 비버
   if (CY >= y0 && CY <= y1 + 5) push(Math.min(CY, y1), { k: 'tree', s: CY + 1 });
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
@@ -306,6 +308,7 @@ export function drawEntity(it, t) {
       return; } // v104 NPC: 캐릭터 그림, 가끔 살짝 들썩
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
+    if (d.feeder && (o.feed || []).some(Boolean)) img = SPR.obj.feederF || img; // v114 먹이가 든 먹이통
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
@@ -327,6 +330,7 @@ export function drawEntity(it, t) {
     if ((o.t === 'timer' || o.t === 'crystalGen') && o.lit) { ctx.fillStyle = '#7fe0b5'; ctx.fillRect(Math.round(wx * T - camX) - 1, Math.round((it.y + 1) * T - camY) - (o.t === 'timer' ? 14 : 6), 2, 2); }
     if (o.cake) drawImg(SPR.item.festCake, wx, wy - effH(img) / 16 * .55, { sx: .85, sy: .85 });
     if (d.dev === 'harv' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
+    if (d.nest && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 18, 3, 3); } // v114
     if (d.dev === 'drill' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
@@ -349,6 +353,8 @@ export function drawEntity(it, t) {
   }
   if (it.k === 'w') { const w = it.w, img = animalImg(it.pk || w.k); shadow(w.x, w.y + .1, .28, .3); const mv = it.pk ? w.moving : (w.vx || w.vy), bob = mv && Math.floor((w.anim || 0) * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, w.x, w.y + .12 - bob, { flip: w.flip });
     if (it.pk && Math.sin(t * 1.3 + w.x) > .97) { ctx.fillStyle = '#ff8fa3'; ctx.fillRect(Math.round(w.x * T - camX), Math.round((w.y - 1.05) * T - camY), Z, Z); } return; }
+  if (it.k === 'bv') { const b = it.b, img = animalImg(b.img); shadow(b.x, b.y + .1, .26, .3); const bob = b.moving && Math.floor(t * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, b.x, b.y + .12 - bob, { flip: b.flip }); // v114 비버: 걷기·갉기·잠
+    if (b.img === 'beaverZ') { ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .3 + zz * .3) * T - camX, (b.y - .7 - zz * .5) * T - camY); ctx.globalAlpha = 1; } return; }
   if (it.k === 'e') {
     const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }

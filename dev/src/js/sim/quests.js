@@ -67,7 +67,11 @@ export function questGo(q) {
   if (k === 'enemy') return nearestOf(G.enemies.map(e => ({ x: e.x, y: e.y })));
   if (k === 'zone') return nearestOf((G.fzones || []).map(z => ({ x: z.x + .5, y: z.y + .5 })));
   if (k === 'room') return nearestOf((G.rooms || []).filter(r => r.found && !r.open).map(r => ({ x: r.cx + .5, y: r.cy + .5 })));
-  if (k === 'wild') return nearestOf((G.wild || []).filter(w => ANIMALS[w.k]).map(w => ({ x: w.x, y: w.y })));
+  if (k === 'wild') return nearestOf((G.wild || []).filter(w => ANIMALS[w.k] && !ANIMALS[w.k].worker).map(w => ({ x: w.x, y: w.y })));
+  if (k === 'beaver') { // v114: 비버가 든 둥지(또는 비버를 가졌으면 빈 둥지), 아니면 비버, 없으면 가장 가까운 이끼 동굴 물가
+    const nests = [], hasB = countItem('beaver') > 0; for (const [i, o] of G.objs) if (o && o.t === 'beaverNest' && (o.bv || hasB)) nests.push({ x: i % W + .5, y: ((i / W) | 0) + .5 }); if (nests.length) return nearestOf(nests);
+    const bw = (G.wild || []).filter(w => w.k === 'beaver'); if (bw.length && !countItem('beaver')) return nearestOf(bw.map(w => ({ x: w.x, y: w.y })));
+    return nearestTile(i => G.floor[i] === WATER && !G.wall[i] && G.biome[i] === 0, 80); }
   return undefined; }
 // 장소가 있는데 화살표가 없을 때 안내
 export function questGoMsg(q) { const g = q && Q_GO[q.id]; if (!g) return ''; if (g[0] === 'stn') return `${STN[g[1]] || g[1]}를 먼저 놓아요`; return '아직 찾지 못했어요'; }
