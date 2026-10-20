@@ -56,8 +56,6 @@ export function typeTap(e, b) { if (!panel) return false; const a = b ? b.datase
   if (a === 'skipType') { talkNext(); return true; }
   if (!b && panel.kind === 'talk' && e.target.closest && e.target.closest('.talk') && !e.target.closest('input')) return talkNext();
   return false; }
-// v120 이야기 장면(나루 첫 장면·마을 장면 …)에서 아직 남은 줄이 있나요 — 창 바깥을 잘못 눌러 장면이 닫히지 않게 (ui/input.js)
-export const storyMid = () => !!panel && panel.kind === 'talk' && !['talk', 'hello', 'shop'].includes(panel.mode) && !!panel.lines && (panel.at || 0) < panel.lines.length - 1;
 // PC: 스페이스·엔터·E = 빨리감기·다음 (ui/input.js, 창이 열려 있을 때)
 export function talkKey(e) { if (!panel || !['talk', 'memory', 'diary', 'diaryLast', 'ending'].includes(panel.kind)) return false; if (e.code !== 'Space' && e.code !== 'Enter' && e.code !== 'KeyE') return false;
   e.preventDefault(); if (typing()) { typeFinish(); return true; } talkNext(); return true; }

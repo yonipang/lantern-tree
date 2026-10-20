@@ -678,7 +678,7 @@ def test_npc_v104():
 
 def test_naru_start_v110():
     # v110 시작 길잡이 나루: 새 세계는 나루가 처음부터 마을에, 첫 이야기 「나루에게 말 걸기」(느낌표) → 첫 장면, 끝날 때 한마디, 빛씨앗 /5, 옛 세이브는 고치 → 마을
-    H2=HOOK.replace("computeLight}","computeLight,npcObjs,naruSpot,naruWaits,npcState,GUIDE,checkGuide,questGo,perform,runFrame,closePanel,bellState,get panel(){return panel}}")
+    H2=HOOK.replace("computeLight}","computeLight,npcObjs,naruSpot,naruWaits,npcState,GUIDE,checkGuide,questGo,perform,runFrame,closePanel,bellState,renderPanel,get panel(){return panel}}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -693,15 +693,18 @@ def test_naru_start_v110():
             await pg.wait_for_timeout(400)
             await ev(pg,"()=>document.querySelector('#backdrop').click()")
             r=await ev(pg,"()=>{const P=__T.panel;return P&&[P.kind,P.mode]}")
-            rec('첫 장면','v120: 남은 줄이 있으면 창 바깥을 눌러도 첫 장면이 안 닫힘', r==['talk','intro'], str(r))
+            rec('첫 장면','v120: 창 바깥을 눌러도 창이 안 닫힘', r==['talk','intro'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.panel.at=3;T.closePanel();const k=G.stats.introAt;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return [k,a.u]}""")
             await pg.wait_for_timeout(300)
             r2=await ev(pg,"()=>{const T=__T,P=T.panel;return P&&[P.mode,P.lines.length,typeof P.lines[0]==='string'&&P.lines[0].startsWith('할머니가 그랬어요')]}")
             rec('첫 장면','v120: 첫 장면을 중간에 닫으면 다시 말 걸 때 그 줄부터 이어서', r==[3,'talk'] and r2==['intro',13,True], str(r)+str(r2))
-            await ev(pg,"()=>{const P=__T.panel;P.at=P.lines.length-1}")
+            await ev(pg,"()=>{const P=__T.panel;P.at=P.lines.length-1;__T.renderPanel()}")
             await ev(pg,"()=>document.querySelector('#backdrop').click()")
-            r=await ev(pg,"()=>[!__T.panel,__T.G.stats.introAt]")
-            rec('첫 장면','v120: 마지막 줄에서는 바깥을 누르면 닫히고, 다 본 것으로', r==[True,None], str(r))
+            r=await ev(pg,"()=>!!__T.panel")
+            await pg.wait_for_timeout(500)  # 창을 연 뒤 0.45초 안의 누르기는 무시돼요
+            await ev(pg,"()=>{document.querySelector('#sheet [data-a=close]').click()}")
+            r2=await ev(pg,"()=>[!__T.panel,__T.G.stats.introAt]")
+            rec('첫 장면','v120: 마지막 줄에서도 바깥으로는 안 닫히고 [알았어요]로 닫으면 다 본 것으로', r and r2==[True,None], str(r)+str(r2))
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return a.u}""")
             await pg.wait_for_timeout(300)

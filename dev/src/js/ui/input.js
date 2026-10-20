@@ -16,10 +16,10 @@ import { wearItem } from '../sim/gear.js';
 import { flipHotbar, toggleToolRow, toolSlotClick } from './hud.js';
 import { DRAG, hotClick, onSheetClick, setupDrag } from './panel-actions.js';
 import { setupMapGestures } from './map.js';
-import { closePanel, openPanel, panel, panelAt, refocusGame, UIS } from './panels.js';
+import { closePanel, openPanel, panel, refocusGame, UIS } from './panels.js';
 import { beginPlay, hidePicker, pickSel, renderPicker, setPickSel, showPicker } from './picker.js';
 import { idx, inB } from '../world/map.js';
-import { talkKey, storyMid } from './talk.js';
+import { talkKey } from './talk.js';
 import { BM, bmClose, bmDown, bmEsc, bmMove, bmPick, bmRotate, bmToggle, bmTool, bmUndo, bmUp, inJoyZone, joyZone, setupBuild } from './build.js';
 export const keys = new Set();
 export const joy = { active: false, id: null, ox: 0, oy: 0, vx: 0, vy: 0 };
@@ -142,7 +142,7 @@ export function setupInput() {
   $('#subBtn').addEventListener('click', () => subAction());
   $('#sheet').addEventListener('click', onSheetClick);
   setupBuild(); // v91 건축 모드 목록·버튼
-  $('#backdrop').addEventListener('click', () => { if (performance.now() - panelAt < 450 || performance.now() - DRAG.block < 400) return; if (panel && panel.kind !== 'win' && !storyMid()) closePanel(); }); // v120: 이야기 장면은 남은 줄이 있으면 바깥을 눌러도 안 닫혀요
+  // v120: 창 바깥(어두운 곳)을 눌러도 창은 닫히지 않아요 — 닫기는 X(또는 창 안 닫기 버튼)·PC Esc로만 (사용자 요청)
   $('#bInv').addEventListener('click', () => started && openPanel('inv'));
   $('#bStat').addEventListener('click', () => started && openPanel('stat'));
   $('#face').addEventListener('click', () => started && openPanel('profile')); // v111: 얼굴 → 프로필 (v77: 캐릭터 화면)
