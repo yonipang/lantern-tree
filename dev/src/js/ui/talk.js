@@ -19,7 +19,7 @@ const TY_MS = 30; // 한 글자에 0.03초
 export const pName = () => (G && G.pname) || CHARS[curChar()].n;
 export const fillName = s => String(s).replace(/\{이름\}/g, pName());
 // 대사 한 줄 → { who: 'npc'|'me', s: 글, ask: 이름 짓기 }
-export const lineOf = l => l && typeof l === 'object' ? (l.ask ? { ask: 1, s: '' } : { who: l.me ? 'me' : 'npc', s: fillName(l.s) }) : { who: 'npc', s: fillName(l == null ? '' : l) };
+export const lineOf = l => l && typeof l === 'object' ? (l.ask ? { ask: 1, s: '' } : { who: l.me ? 'me' : 'npc', s: fillName(l.s), npc: l.by || null }) /* v119 by: 다른 사람(할머니) */ : { who: 'npc', s: fillName(l == null ? '' : l) };
 // ---- 얼굴 그림 ----
 const faceCache = {};
 export function faceURL(who, npc) { if (who === 'me') { const f = $('#faceImg'); return f && f.src ? f.src : ''; }

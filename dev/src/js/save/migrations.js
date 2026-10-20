@@ -198,4 +198,7 @@ export function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.i
   for (const o of G.objs.values()) { if (Array.isArray(o.items)) o.items.forEach(fix); if (Array.isArray(o.store)) o.store.forEach(fix);
     if (o.job && Array.isArray(o.job.used)) o.job.used = o.job.used.map(([id, c]) => [SHOVELFUL93[id] || id, c]); } }
 // v110 시작 길잡이 나루: 옛 세이브는 첫 장면 없이 「나루에게 말 걸기」를 끝낸 것으로 (보상도 받은 것으로). 나루를 고치에서 마을로 옮기는 건 sim/npc.js settleStarters
+// v119 나루 2부: 옛 세이브에서 이미 지난 새 이야기 퀘스트(「나루에게 가기」·「나루에게 돌아가기」)는 장면 없이 받은 것으로 (마지막 장을 읽었으면 · 큰 어둠을 물리쳤으면)
+export function migrateNaru119() { if (G.stats.naru119) return; G.stats.naru119 = 1; const read = !!(G.stats.deep && G.stats.deep.read), dark = !!(G.bossDead && G.bossDead.dark); if (!read && !dark) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {};
+  { G.stats.n2go = 1; G.qclaim.naruGo = 1; qx.naruGo = 1; } if (dark) { G.stats.n2back = 1; G.qclaim.naruBack = 1; qx.naruBack = 1; } }
 export function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }

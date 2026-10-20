@@ -17,6 +17,7 @@ import { WATER } from './nature.js';
 import { markLight } from './loop.js';
 import { BOSS_AI } from './bosses.js';
 import { DEEP_DIARY, ENDING } from '../data/story.js';
+import { naruEnding } from './naru.js';
 OBJ.brazier = { n: '횃대', solid: 1, brazier: 1, item: 'brazier', light: [5.5, '#ffc861'] };
 ITEMS.brazier = { n: '횃대', d: '등불지기들이 세운 큰 횃대. 불을 붙이면 둘레가 환해져요.' };
 USE.brazier = 'brazier'; USE_LBL.brazier = '불 붙이기';
@@ -97,7 +98,7 @@ export const darkCanHit = b => b.k !== 'dark' || isLit(b.x, b.y);
 export function darkContact(dt) { const b = G.bosses.dark; if (!b || G.bossDead.dark || b.st !== 'fight') return; for (const pl of alivePlayers()) if (Math.hypot(pl.p.x - b.x, pl.p.y - b.y) < 1.5) withPlayer(pl, () => hurtPlayer(DARK_DMG, b.x, b.y)); }
 onFrame('darkContact', darkContact);
 // 쓰러지면 엔딩
-export function darkDown(b) { const d = G.stats.deep; if (d) d.done = 1; G.stats.ending = (G.stats.ending || 0) + 1; if (d) for (let r = 0; r < DEEP_H; r++) for (let c = 0; c < DEEP_W; c++) G.explored[idx(d.x + c, d.y + r)] = 1; emit('remap'); emit('ending'); }
+export function darkDown(b) { const d = G.stats.deep; if (d) d.done = 1; G.stats.ending = (G.stats.ending || 0) + 1; if (d) for (let r = 0; r < DEEP_H; r++) for (let c = 0; c < DEEP_W; c++) G.explored[idx(d.x + c, d.y + r)] = 1; emit('remap'); if (!naruEnding()) emit('ending'); } // v119: 나루가 있으면 마지막 말 → 창을 닫으면 엔딩
 // 이야기 퀘스트: 다섯 등불 뒤 → 가장 깊은 곳
 GUIDE.splice(GUIDE.length - 1, 0,
   { id: 'deep', t: () => '가장 깊은 곳의 마지막 장 찾기', h: '나무가 당신한테 반응했어요! 용암·얼음 동굴 깊은 곳 어딘가에 등불지기들의 마지막 유적이 있대요. 어둠이 길을 막으면 등불 다섯을 먼저 밝혀요.', done: () => !!(G.stats.deep && G.stats.deep.read), rw: [['torch', 12], ['stew', 3]], xp: 300, target: () => { const d = G.stats.deep; return d ? { x: d.x + DEEP_PLAN[DEEP_H - 1].indexOf('E') + .5, y: d.y + DEEP_H + .5 } : null; } },

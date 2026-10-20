@@ -19,7 +19,8 @@ import { BX, BY, dirKo, H, idx, inB, LAY, SA, SB, SI, SL, W } from '../world/map
 import { checkUnlocks } from '../world/tiles.js';
 import { NARU_BELL, NARU_CALL, NARU_Q } from '../data/npc.js';
 import { naruHolds, naruSpot } from './npc.js';
-import { askOpen, isAsk, leadPrep, leadTarget } from './naru.js';
+import { askOpen, bossPassed, isAsk, leadPrep, leadTarget, scenePassed } from './naru.js';
+import { NARU_BOSS, NARU_BOSS_CALL } from '../data/npc.js';
 import { NARU_LEAD_GO } from '../data/npc.js';
 defineCmd('claim', c => claimQuest(c.id));
 defineCmd('claimAll', () => { for (const q of [...GUIDE, ...QSIDE]) if (!naruHolds(q)) claimQuest(q.id); emit('toast', '보상을 모두 받았어요', 'good'); });
@@ -63,7 +64,7 @@ function nearestTile(test, R) { const p = G.p, px = Math.floor(p.x), py = Math.f
 function nearestOf(list) { const p = G.p; let best = null, bd = 1e9; for (const t of list) { if (!t || !qSeen(t.x, t.y)) continue; const d = Math.hypot(t.x - p.x, t.y - p.y); if (d < bd) { bd = d; best = { x: t.x, y: t.y }; } } return best; }
 export function questGo(q) {
   if (q && isAsk(q) && q.done() && !(G.qclaim || {})[q.id]) return naruSpot(); // v118: 끝낸 부탁 = 마을의 나루에게
-  if (q && q.id === 'ore') { const t = leadTarget(); if (t) return t; } // v118: 나루가 먼저 가 있는 광맥
+  if (q && ['ore', 'deep', 'dark'].includes(q.id)) { const t = leadTarget(q.id); if (t) return t; } // v118: 나루가 먼저 가 있는 광맥 · v119 가장 깊은 곳 입구
   const g = q && Q_GO[q.id]; if (!g) return undefined; const [k, ...a] = g;
   if (k === 'obj') { const list = []; for (const [i, o] of G.objs) if (o && a.includes(o.t)) list.push({ x: i % W + .5, y: ((i / W) | 0) + .5 }); return nearestOf(list); }
   if (k === 'stn') { const list = []; for (const [i, o] of G.objs) if (o && OBJ[o.t] && (o.t === a[0] || OBJ[o.t].station === a[0])) list.push({ x: i % W + .5, y: ((i / W) | 0) + .5 }); return nearestOf(list); }
@@ -90,13 +91,15 @@ export function activeLine() { const a = G.qAct || 'main', q = activeQuest(); if
   const side = isSide(q), st = side ? questState(q) : null, ask = side && isAsk(q); if (side && st.done && !st.claimed && st.has) return [ask ? '부탁' : '도전', `${st.nh ? '나루에게 가기' : '보상 받기'} · ${qText(q)}`]; return [ask ? '부탁' : side ? '도전' : '이야기', qText(q)]; }
 export function checkGuide() {
   if (G.stats.naruCall && !naruSpot()) G.stats.naruCall = null; // 나루가 마을에 없으면 부르지 않아요
-  let n = 0, last = null; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
+  let n = 0, last = null, boss = 0; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
     // v117 1부(나루에게 받는 이야기): 경험치는 끝날 때 바로, 물건은 마을의 나루에게 · 6·8번은 마을로 부름
     if (NARU_Q.includes(q.id) && naruSpot()) { const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[q.id] && !(G.qclaim || {})[q.id]) { qx[q.id] = 1; gainXp(q.xp, G.p.x, G.p.y); } if (started && NARU_CALL[q.id] && !(G.stats.callSeen || {})[q.id]) G.stats.naruCall = q.id; } // 한 장면은 한 번 (stats.callSeen)
+    if (started && naruSpot() && G.stats.naruMet) { if (NARU_BOSS.includes(q.id)) { bossPassed(q.id); boss++; } scenePassed(q.id); } // v119 2부: 보스 「돌아와서」·13번 장면을 쌓아요
     last = q; G.guide++; n++; }
-  if (n && started && last) { const bell = NARU_Q.includes(last.id) && naruSpot() && NARU_BELL[last.id];
-    if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
-    else if (n === 1 && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
+  if (n && started && boss) { emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v119: 보스를 물리치면 방울로 부름 (안 들러도 다음 이야기는 진행)
+  if (n && started && last) { const bell = naruSpot() && G.stats.naruMet && NARU_BELL[last.id]; /* v119: 12·14·17번 끝 한마디도 */
+    if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (NARU_Q.includes(last.id) && last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
+    else if (n === 1 && !boss && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
   // v84: 화살표는 활성 퀘스트 하나 — 가장 가까운 할 곳을 1초에 한 번 찾아요 (밝힌 곳만)
   const q = activeQuest(); if (q !== QTGT.q || G.time - QTGT.t >= 1 || G.time < QTGT.t) { QTGT.q = q; QTGT.t = G.time; const v = q && !(isSide(q) && q.done() && !(isAsk(q) && !(G.qclaim || {})[q.id])) ? questGo(q) : null; QTGT.v = v || null; }

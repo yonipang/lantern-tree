@@ -59,9 +59,9 @@ onEvent('hurt', onlyMe(() => { if (!panel && !BM.on) return; const e = $('#hurtE
 onEvent('win', onlyMe(kind => setTimeout(() => { SFX.win(); openPanel(kind); }, 1700))); // 등불나무를 다 키움 → 조금 뒤 축하 창 (v103부터는 안 씀)
 onEvent('remap', () => rebuildMap());
 onEvent('diaryLast', onlyMe(() => openPanel('diaryLast'))); // v108
-onEvent('ending', onlyMe(() => setTimeout(() => { SFX.win(); openPanel('ending'); }, 2200))); // v106 기록관을 깨면 지도 다시
+onEvent('ending', onlyMe(fast => setTimeout(() => { SFX.win(); openPanel('ending'); }, fast ? 300 : 2200))); // v119 fast: 나루의 마지막 말 다음 // v106 기록관을 깨면 지도 다시
 onEvent('diary', onlyMe(id => openPanel('diary', { arch: id }))); // v106 일기 창
-onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' ? 1200 : 0))); // v104 NPC 대화
+onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' || kind.startsWith('sc:grandma') ? 1200 : kind === 'sc:end' ? 2200 : 0))); // v119 할머니 재회·마지막 말 // v104 NPC 대화
 onEvent('bell', onlyMe((lines, short, done) => bellPush(lines, short, done))); // v118 done: 다 말하면 보낼 명령 // v117 길잡이 방울: 멀리서도 나루 목소리 (ui/talk.js)
 onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면
 

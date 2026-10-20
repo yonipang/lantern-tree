@@ -44,7 +44,7 @@ export const GUIDE = [
   { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.min(5, G.stats.seedsFound)}/5)`, h: '용암 거북과 서리 정령이 쓰러지면 빛씨앗을 떨어뜨려요. 보스방 가운데 제단에 놓여 있을 때도 있어요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
     target: () => { const p = G.p; const c = [SL, SI].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
   { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요. 다섯 개가 모두 밝아지면 나무가 다섯 번째 기억을 보여 줄 거예요.', done: () => G.treeSeeds >= 5, target: () => ({ x: CX + .5, y: CY + .5 }) },
-  { t: () => '등불나무 곁에서 살아가기', h: '큰 어둠은 흩어지고 등불지기들이 깨어났어요. 물가에서 낚시도 하고, 이끼·버섯·수정 세트 가구로 우리 마을을 꾸며 봐요. 보스 재도전과 남은 도전 퀘스트도 기다리고 있어요.', done: () => false },
+  { t: () => '등불나무 곁에서 살아가기', h: '큰 어둠은 흩어지고 등불지기들이 깨어났어요. 할머니 말로는 이제 진짜 마을을 다시 만들 차례래요. 물가에서 낚시도 하고, 이끼·버섯·수정 세트 가구로 우리 마을을 꾸며 봐요. 보스 재도전과 남은 도전 퀘스트도 기다리고 있어요.', done: () => false },
 ];
 // quest ids, rewards and xp (main story, in order)
 export const Q_META = [['naru', [['berry', 3]], 5], ['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch', 4]], 10], ['torch', [['berrySeed', 3], ['rope', 2]], 10], ['ore', [['copperOre', 3], ['resin', 1]], 15], ['bar', [['resin', 2], ['gel', 2]], 15],
