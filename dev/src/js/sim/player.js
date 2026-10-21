@@ -75,6 +75,7 @@ export function eat(slot) {
 // v66 (BF-03): hit by something in the last REGEN_WAIT seconds (only the time of the last hit, not saved — after loading, healing goes on)
 export const hitRecently = p => p.hitAt != null && G.time - p.hitAt < REGEN_WAIT;
 export function hurtPlayer(dmg, sx, sy, kind) {
+  if (G.p.cine) return; // v127: 연출 장면을 보는 동안은 맞지 않아요 (sim/cutscene.js)
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
   dmg *= armorMul(); // v100 방어력
@@ -116,5 +117,5 @@ onFrame('player', dt => {
 onFrame('hunger', dt => {
   const p = G.p;
   G.hungerT += dt; if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
-  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0) { p.hp -= 2; emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2 && !hitRecently(p)) p.hp = Math.min(maxHp(), p.hp + 1); }
+  G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0 && !p.cine) { /* v127: 연출 장면 동안 배고픔 피해 없음 */ p.hp -= 2; emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2 && !hitRecently(p)) p.hp = Math.min(maxHp(), p.hp + 1); }
 });

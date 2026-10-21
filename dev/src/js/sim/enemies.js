@@ -32,7 +32,7 @@ export function enemyStep(e, dt) {
   // v85: 알아채는 거리 aggro(기본 5칸) 안에서 벽·닫힌 문에 가리지 않아야 알아채요. 한번 쫓으면(또는 맞으면 4초 동안) 3칸 더 멀리까지 쫓고, 안 보여도 1초는 계속 쫓아요
   const alerted = e.alertAt != null && G.time - e.alertAt < 4;
   let chase = false;
-  if (d < (def.aggro || 5) + (e.chasing || alerted ? 3 : 0) && p.dead <= 0 && (!def.calm || e.angry > 0)) {
+  if (d < (def.aggro || 5) + (e.chasing || alerted ? 3 : 0) && p.dead <= 0 && !p.cine /* v127: 연출 장면을 보는 사람은 쫓지 않아요 */ && (!def.calm || e.angry > 0)) {
     e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = canSee(e.x, e.y, p.x, p.y); }
     if (e.sees) e.seenAt = G.time;
     chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);

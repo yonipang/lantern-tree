@@ -63,7 +63,7 @@ onEvent('ending', onlyMe(fast => setTimeout(() => { SFX.win(); openPanel('ending
 onEvent('diary', onlyMe(id => openPanel('diary', { arch: id }))); // v106 일기 창
 onEvent('talk', onlyMe((id, kind) => setTimeout(() => openPanel('talk', { npc: id, mode: kind }), kind === 'hello' || kind.startsWith('sc:grandma') ? 1200 : kind === 'sc:end' ? 2200 : 0))); // v119 할머니 재회·마지막 말 // v104 NPC 대화
 onEvent('bell', onlyMe((lines, short, done) => bellPush(lines, short, done))); // v118 done: 다 말하면 보낼 명령 // v117 길잡이 방울: 멀리서도 나루 목소리 (ui/talk.js)
-onEvent('memory', onlyMe(st => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, 1700))); // v103: 나무가 깨어나면 기억 장면
+onEvent('memory', onlyMe((st, cine) => setTimeout(() => { SFX.win(); openPanel('memory', { stage: st }); }, cine ? 250 : 1700))); // v127: 연출 장면 뒤에는 바로 // v103: 나무가 깨어나면 기억 장면
 
 // ---- HUD: 기절·잠 화면, 보스 체력 막대, 목표 글 ----
 onEvent('fade', onlyMe(mode => { // 'faint' 기절 · 'show' 보이기만 · 'hide' 숨기기 · 'sleep' 잠들기 · 'wake' 깨기

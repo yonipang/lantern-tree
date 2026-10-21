@@ -21,6 +21,7 @@ import { canDev } from '../save/storage.js';
 import { cropStage, curAlt, inReach } from '../sim/actions.js';
 import { naruAsk, naruWaits } from '../sim/npc.js';
 import { naruPose } from '../sim/naru.js';
+import { cineGest, cineMine } from '../sim/cutscene.js';
 import { npcFrame } from '../art/content.js';
 import { ranchReady } from '../sim/animals.js';
 import { beaverPose } from '../sim/beaver.js';
@@ -221,7 +222,7 @@ export function renderWorldPost(cw, ch) {
       ctx.fillStyle = '#fff'; const n = Math.floor(k / 2) + 1; if (n < 10) { ctx.font = '6px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#2a1830'; ctx.fillText(String(n), X + 8.5, Y + 5); } });
   }
   // reach area (mouse aiming)
-  if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit) {
+  if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit && !cineMine()) {
     const tt = G.act.t, s0 = selItem(), it0 = s0 && ITEMS[s0.id], placing = it0 && ['place', 'wall', 'floor', 'seed'].includes(it0.kind);
     if ((tt && tt.far) || placing) {
       const ptx = Math.floor(p.x), pty = Math.floor(p.y);
@@ -232,7 +233,7 @@ export function renderWorldPost(cw, ch) {
       ctx.setLineDash([3, 2]); ctx.strokeStyle = 'rgba(255,143,163,0.75)'; ctx.lineWidth = 1; ctx.strokeRect(X + 1.5, Y + 1.5, T - 3, T - 3); ctx.setLineDash([]); }
   }
   // target highlight
-  if (G.act && G.act.t && p.dead <= 0 && !paused) {
+  if (G.act && G.act.t && p.dead <= 0 && !paused && !cineMine()) { // v127: 연출 장면 동안은 대상 표시 없음
     const tt = G.act.t, k = G.act.k; let hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0), hw = T, hh = T;
     // v77: 여러 칸 가구(작업대 2×1·부엌 세트 3×1 …)는 놓은 뒤에도 차지한 칸 전체를 표시해요 (놓기 전 테두리와 같은 크기)
     if (k !== 'place' && inB(tt.x, tt.y)) { const ai = anchorAt(idx(tt.x, tt.y)), o = ai >= 0 ? G.objs.get(ai) : null; if (o && OBJ[o.t] && OBJ[o.t].sz) { const fp = fpOf(o); hx = (ai % W) * T - camX; hy = ((ai / W) | 0) * T - camY; hw = fp[0] * T; hh = fp[1] * T; } }
@@ -266,29 +267,29 @@ function drawHeadBars(T, camX, camY) { const p = G.p; if (!headBarsOn(p)) return
 // 알림 자리: 머리 위 막대 살짝 위 (화면 CSS 픽셀, 화면 흔들림은 무시)
 export function headNoteY() { if (!G || !SPR.player) return null; const { hh, mh, gap } = HB(); return (headTop(G.p) * TP - VIEW.baseY - gap - hh - mh - Math.round(Z * 2)) / DPR - 4; }
 export function renderOverlay(cw, ch) {
-  const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT * Z; ctx.imageSmoothingEnabled = true;
+  const T = TP, camX = VIEW.camX, camY = VIEW.camY, p = G.p, L = LIFT * Z; ctx.imageSmoothingEnabled = true; const cin = !!cineMine(); // v127: 연출 장면 동안은 화살표·안내 글·머리 위 막대를 숨겨요
   // soft vignette
-  if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit) { const tt = G.act.t;
+  if (G.act && aimMouse() && p.dead <= 0 && !paused && !p.sit && !cin) { const tt = G.act.t;
     if (tt && tt.far) { const X = tt.far.x * T - camX, Y = tt.far.y * T - camY - (inB(tt.far.x, tt.far.y) && G.wall[idx(tt.far.x, tt.far.y)] ? L : 0);
       ctx.font = pxFont(4.6); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const tw2 = ctx.measureText('닿지 않아요').width / 2 + 3 * Z, LX = clamp(X + T / 2, tw2, cw - tw2), LY = clamp(Y - 3.5 * Z, 4 * Z, ch - 4 * Z); pxText('닿지 않아요', LX, LY, '#ffb4c0', INK); } }
-  if (G.act && G.act.t && p.dead <= 0 && !paused && !document.body.classList.contains('touch') && G.act.lbl) {
+  if (G.act && G.act.t && p.dead <= 0 && !paused && !cin && !document.body.classList.contains('touch') && G.act.lbl) {
     const tt = G.act.t, k = G.act.k, hx = tt.x * T - camX, hy = tt.y * T - camY - (G.wall[idx(tt.x, tt.y)] ? L : 0);
     const col = k === 'mine' || k === 'chop' ? '255,241,214' : k === 'place' ? '127,224,181' : k === 'info' ? '191,174,211' : '255,200,97';
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = pxFont(5.4); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const fh = parseFloat(ctx.font), tw = Math.round(ctx.measureText(lb).width + 6 * Z), lx = Math.round(hx + T / 2), ly = Math.round(hy - 5 * Z), bh = Math.round(Math.max(9 * Z, fh + 2 * Z)); ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.fillRect(lx - Math.round(tw / 2), ly - Math.round(bh / 2), tw, bh); pxText(lb, lx, ly, `rgb(${col})`); /* v78: 도트 글꼴, 네모 상자 */
   }
   drawBuild(T, camX, camY); // v91: 건축 모드 미리보기
   drawHitBars(T, camX, camY); // v65: hit to recover
-  drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
+  if (!cin) drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)
-  if (goalTarget && p.dead <= 0) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
+  if (goalTarget && p.dead <= 0 && !cin) { const dx = goalTarget.x - p.x, dy = goalTarget.y - p.y, d = Math.hypot(dx, dy); if (d > 5) { const a = Math.atan2(dy, dx), r = 1.35, ax = Math.round((p.x + Math.cos(a) * r) * T - camX), ay = Math.round((p.y - .4 + Math.sin(a) * r) * T - camY); ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 200)) * Z; ctx.fillStyle = '#ffc861'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(4 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } }
   // v68 (BF-08): my nearest lost bundle — an orange arrow with the bundle's own picture, a little further out than the quest arrow so both
   // can show at once; hidden when the bundle is close (it is in sight then)
-  { const bag = p.dead <= 0 ? nearestBag(p.x, p.y) : null; if (bag && bag.d > 3) { const a = Math.atan2(bag.y - p.y, bag.x - p.x), r = 2.05, cx = (p.x + Math.cos(a) * r) * T - camX, cy = (p.y - .4 + Math.sin(a) * r) * T - camY;
+  { const bag = p.dead <= 0 && !cin ? nearestBag(p.x, p.y) : null; if (bag && bag.d > 3) { const a = Math.atan2(bag.y - p.y, bag.x - p.x), r = 2.05, cx = (p.x + Math.cos(a) * r) * T - camX, cy = (p.y - .4 + Math.sin(a) * r) * T - camY;
     ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 230)) * Z; ctx.fillStyle = '#ff9b4a'; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(7 * Z + bob, 0); ctx.lineTo(3 * Z + bob, -3 * Z); ctx.lineTo(3 * Z + bob, 3 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
     const im = SPR.obj.lostBag; if (im) { const sz = 9 * Z; ctx.imageSmoothingEnabled = false; ctx.drawImage(im, Math.round(cx - sz / 2), Math.round(cy - sz / 2), sz, sz); } } }
   // v95: 지도에서 고른 곳 길 안내 — 하늘색 화살표 + 남은 칸, 퀘스트·꾸러미 화살표보다 조금 더 바깥
-  { const n = p.dead <= 0 ? navPt() : null, d = n ? Math.hypot(n.x - p.x, n.y - p.y) : 0; if (n && d > NAV_ARRIVE) { const a = Math.atan2(n.y - p.y, n.x - p.x), r = 2.75, cx = (p.x + Math.cos(a) * r) * T - camX, cy = (p.y - .4 + Math.sin(a) * r) * T - camY;
+  { const n = p.dead <= 0 && !cin ? navPt() : null, d = n ? Math.hypot(n.x - p.x, n.y - p.y) : 0; if (n && d > NAV_ARRIVE) { const a = Math.atan2(n.y - p.y, n.x - p.x), r = 2.75, cx = (p.x + Math.cos(a) * r) * T - camX, cy = (p.y - .4 + Math.sin(a) * r) * T - camY;
     ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(a); const bob = Math.round(Math.sin(performance.now() / 260)) * Z; ctx.fillStyle = NAV_COL; ctx.strokeStyle = INK; ctx.lineWidth = Z; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(5 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, -4.5 * Z); ctx.lineTo(-1 * Z + bob, 0); ctx.lineTo(-3 * Z + bob, 4.5 * Z); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
     ctx.font = pxFont(4.6); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const ty = Math.round(cy + (Math.sin(a) > .3 ? -7 : 7) * Z); pxText(`${Math.round(d)}칸`, Math.round(cx), ty, NAV_COL, INK); } }
@@ -300,6 +301,22 @@ export function renderOverlay(cw, ch) {
 export function sieveFx(j, cx, ny, px) { const f = ((nowS() - j.t0) / j.per) % 1, ck = SIEVE_CHUNK[j.out], sz = Math.max(1, Math.round(px));
   if (ck && f < .35) { const g = f / .35; ctx.fillStyle = ck; for (const [dx, up] of [[-3, 2.5], [0, 3.5], [3, 2]]) ctx.fillRect(Math.round(cx + dx * px * (.5 + g)), Math.round(ny - up * Math.sin(g * Math.PI) * px), sz, sz); }
   ctx.fillStyle = SIEVE_DUST[j.out] || ck || '#9a6a44'; for (const k of [0, .5]) { const g = (f * 2 + k) % 1; ctx.fillRect(Math.round(cx + (k ? 2 : -1) * px), Math.round(ny + (2.5 + g * 4.5) * px), sz, sz); } }
+// ---- v127 연출 장면 몸짓 (Claude 임시 그림 — 지금 캐릭터 그림을 그대로 움직이고 머리 위 표시·손만 더해요, 연출장면.md 15번) ----
+// 놀라기: 살짝 뛰며 머리 위 ! · 끄덕이기: 고개를 두 번 꾸벅(아래로 눌림) · 갸웃: 옆으로 기울며 머리 위 ? · 손 흔들기: 머리 옆에서 손이 좌우로
+function gestPose(gs) { if (!gs) return null; const u = clamp(gs.u, 0, 1), r = { g: gs.g, u, dy: 0, sy: 1, rot: 0, mark: null };
+  if (gs.g === 'nod') { const w = Math.max(0, Math.sin(clamp(u / .75, 0, 1) * Math.PI * 4)); r.dy = w * 2 / 16; r.sy = 1 - w * .09; }
+  else if (gs.g === 'surprise') { r.dy = u < .25 ? -Math.sin(u / .25 * Math.PI) * 3 / 16 : 0; r.mark = '!'; }
+  else if (gs.g === 'tilt') { r.rot = .22 * Math.sin(clamp(u * 4, 0, 1) * Math.PI / 2) * (u > .85 ? (1 - u) / .15 : 1); r.mark = '?'; }
+  return r; }
+// 그림 그리기 (기울기는 발밑을 축으로)
+function drawGestImg(img, x, foot, gp, o) { if (!gp || !gp.rot) { drawImg(img, x, foot + (gp ? gp.dy : 0), { ...o, sy: gp ? gp.sy : 1 }); return; }
+  const fx = x * TP - VIEW.camX, fy = foot * TP - VIEW.camY; ctx.save(); ctx.translate(fx, fy); ctx.rotate(gp.flip ? -gp.rot : gp.rot); ctx.translate(-fx, -fy); drawImg(img, x, foot + gp.dy, o); ctx.restore(); }
+// 머리 위 ! ? · 흔드는 손
+function drawGestMark(gp, x, hTop, flip) { if (!gp) return; const T = TP, camX = VIEW.camX, camY = VIEW.camY;
+  if (gp.mark) { const pop = gp.u < .12 ? gp.u / .12 : 1; ctx.font = pxFont(10); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = pop; pxText(gp.mark, Math.round(x * T - camX), Math.round((hTop - .3 - pop * .12 + gp.dy) * T - camY), gp.mark === '!' ? '#ffd25c' : '#bfe6ff', INK); ctx.globalAlpha = 1; }
+  if (gp.g === 'wave') { const s = flip ? -1 : 1, sw = Math.sin(gp.u * Math.PI * 8) > 0 ? 1 : -1, hx = Math.round((x + s * 6 / 16) * T - camX) + sw * Z, hy = Math.round((hTop + 3 / 16) * T - camY) - Z;
+    ctx.fillStyle = INK; ctx.fillRect(hx - 2 * Z, hy - 3 * Z, 5 * Z, 5 * Z); ctx.fillStyle = '#f6d2ae'; ctx.fillRect(hx - Z, hy - 2 * Z, 3 * Z, 3 * Z); ctx.fillStyle = '#ffe9cf'; ctx.fillRect(hx - Z, hy - 2 * Z, Z, Z); // 손 (임시)
+    ctx.fillStyle = '#fff1d6'; for (const k of [0, 2]) ctx.fillRect(hx + s * (4 + k / 2) * Z, hy - (4 - k) * Z + (sw > 0 ? 0 : Z), Z, Z); } } // 흔드는 표시
 export function drawEntity(it, t) {
   const T = TP, camX = VIEW.camX, camY = VIEW.camY;
   if (it.k === 'o') {
@@ -312,8 +329,9 @@ export function drawEntity(it, t) {
     if (o.t === 'tchest' && o.open) img = SPR.obj.tchestOpen;
     if (o.t === 'npc') { img = SPR['npc_' + o.npc] || img; const ps = naruPose(o), nx = it.x + (ps ? ps.dx : 0), ny = it.y + (ps ? ps.dy : 0); // v118: 걷는 나루는 칸 사이에, 방향·걸음대로
       if (ps && (ps.step >= 0 || ps.dir !== 'down' || ps.flip)) img = npcFrame(o.npc, ps.dir, Math.max(0, ps.step)) || img;
-      const bob = ps && ps.step >= 0 ? 0 : Math.sin(t * 2 + it.x) > .7 ? 1 / 16 : 0; if (img) { shadow(nx + .5, ny + 1.1, .3); drawImg(img, nx + .5, ny + 1.15 - bob, { flip: !!(ps && ps.flip) }); }
-      if (o.npc === 'guide' && (naruWaits() || naruAsk())) { const mk2 = naruWaits() ? '!' : '?'; const hop = Math.abs(Math.sin(t * 3)) * 3 / 16; ctx.font = pxFont(10); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(mk2, Math.round((nx + .5) * T - camX), Math.round((ny - .55 - hop) * T - camY), '#ffd25c', INK); } // v110: 첫 이야기 — 나루 머리 위 느낌표 · v117: 받을 보상·마을로 부름 = 물음표
+      const gp = o.npc === 'guide' ? gestPose(cineGest('naru')) : null; if (gp) gp.flip = !!(ps && ps.flip); // v127 연출 장면 몸짓
+      const bob = gp || (ps && ps.step >= 0) ? 0 : Math.sin(t * 2 + it.x) > .7 ? 1 / 16 : 0; if (img) { shadow(nx + .5, ny + 1.1, .3); drawGestImg(img, nx + .5, ny + 1.15 - bob, gp, { flip: !!(ps && ps.flip) }); drawGestMark(gp, nx + .5, ny + 1.15 - effH(img) / 16, !!(ps && ps.flip)); }
+      if (o.npc === 'guide' && !gp && !cineMine() && (naruWaits() || naruAsk())) { const mk2 = naruWaits() ? '!' : '?'; const hop = Math.abs(Math.sin(t * 3)) * 3 / 16; ctx.font = pxFont(10); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(mk2, Math.round((nx + .5) * T - camX), Math.round((ny - .55 - hop) * T - camY), '#ffd25c', INK); } // v110: 첫 이야기 — 나루 머리 위 느낌표 · v117: 받을 보상·마을로 부름 = 물음표
       return; } // v104 NPC: 캐릭터 그림, 가끔 살짝 들썩
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
     if (o.t === 'brazier' && !o.off && SPR.brazierFire && SPR.brazierFire[0]) img = SPR.brazierFire[((t * 8) | 0) % 4] || img; // v122 화로 불 4장
@@ -361,7 +379,8 @@ export function drawEntity(it, t) {
     if (p.sit) { const sd = p.sit.dir || 0; if (sd) { drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[sd === 2 ? 'up' : 'side'][0], p.x, p.y + .15, { flip: sd === 3 }); if (sd === 2) { const so = G.objs.get(idx(p.sit.x, p.sit.y)); if (so && SPR.obj[so.t + 'Ub']) drawImg(SPR.obj[so.t + 'Ub'], p.sit.x + .5, p.sit.y + 1 - 1 / 16); } return; } drawImg(p.hurt > 0 ? whiten(SPR.playerSit) : SPR.playerSit, p.x, p.sit.y + .78); return; }
     if (p.inv > 0 && p.inv < 0.7 && Math.floor(performance.now() / 70) % 2) return;
     shadow(p.x, p.y + .1, .3); const fr = p.moving ? Math.floor(p.anim * 7) % 2 : 0; const bob = p.moving ? (fr ? 1 / 16 : 0) : Math.sin(t * 2) > .7 ? 1 / 16 : 0;
-    drawImg((p.hurt > 0 ? SPR.playerW : SPR.player)[p.dir][fr], p.x, p.y + .15 - bob, { flip: p.flip });
+    const pim = (p.hurt > 0 ? SPR.playerW : SPR.player)[p.dir][fr], gp = gestPose(cineGest({ p })); if (gp) gp.flip = p.flip; // v127 연출 장면 몸짓
+    drawGestImg(pim, p.x, p.y + .15 - bob, gp, { flip: p.flip }); drawGestMark(gp, p.x, p.y + .15 - effH(pim) / 16, p.flip);
     return;
   }
   if (it.k === 'w') { const w = it.w, img = animalImg(it.pk || w.k); shadow(w.x, w.y + .1, .28, .3); const mv = it.pk ? w.moving : (w.vx || w.vy), bob = mv && Math.floor((w.anim || 0) * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, w.x, w.y + .12 - bob, { flip: w.flip });

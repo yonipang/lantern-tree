@@ -378,12 +378,14 @@ def test_lantern_tree_growth():
             rec('세이브','옛 세이브도 불러오면 바로 맞는 모습 (저장 구조 변화 없음)', r==[4,'treeSeeds'], str(r))
             # growth show
             await ev(pg,"()=>{const G=__T.G;G.treeSeeds=2;G.won=false;G.won2=false;G.p.x=__T.CX+.5;G.p.y=__T.CY+3.2;G.enemies.length=0;__T.TREEFX.leaves.length=0}")
-            r=await ev(pg,"()=>{const T=__T,G=T.G;T.addItem('lightSeed',1);T.insertSeeds();const g=T.TREEFX.grow;return [g&&g.from,g&&g.to,G.treeSeeds]}")
-            rec('연출','심으면 성장 연출 시작 (이전 모습 → 새 모습)', r==[2,3,3], str(r))
+            r=await ev(pg,"()=>{const T=__T,G=T.G;T.addItem('lightSeed',1);T.insertSeeds();return G.treeSeeds}")
+            await wait_until(pg,"()=>!!__T.TREEFX.grow",8000)  # v127: 곁에서 심으면 연출 장면 — 카메라가 나무에 닿은 뒤(1.5초) 빛이 퍼져요
+            r=[*(await ev(pg,"()=>{const g=__T.TREEFX.grow;return [g&&g.from,g&&g.to]}")),r]
+            rec('연출','심으면 성장 연출 시작 (이전 모습 → 새 모습, v127 연출 장면 안에서)', r==[2,3,3], str(r))
             await pg.wait_for_timeout(700); await pg.screenshot(path=SP+'grow.png')
             r=await ev(pg,"()=>{const T=__T;for(let k=0;k<60;k++)T.updateTree(1/30);return [!!T.TREEFX.grow,T.TREEFX.leaves.length]}")
             rec('연출','약 1.5초 뒤 연출이 끝나고 잎·꽃잎이 흩날림', (r[0] is False) and r[1]>=10, str(r))
-            await pg.wait_for_timeout(1300); r=await ev(pg,"()=>!!document.querySelector('[data-a=close]')")
+            r=await wait_until(pg,"()=>!!document.querySelector('[data-a=close]')",15000)  # v127: 연출 장면이 끝난 뒤
             rec('연출','기억 장면 창(v103, 예전 첫 엔딩 창)은 성장 연출이 끝난 뒤에 열림', r is True, r)
             await ev(pg,"()=>{document.querySelectorAll('[data-a=close]').forEach(b=>b.click())}")
             # blessing

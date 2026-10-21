@@ -6,7 +6,7 @@ from harness import *
 def test_balance():
     import asyncio, sys
     H2=HOOK.replace("computeLight}","computeLight,updateBosses,hitBoss,freshBoss,swingAttack,updatePShots,mkEnemy,refreshHotbar}")
-    FIGHT="""(k,secs)=>{const T=__T,G=T.G;G.enemies.length=0;G.shots.length=0;G.hz=[];const b=G.bosses[k];Object.assign(b,T.freshBoss(k));const h=T.BOSSES[k].home();if(k==='golem'){for(let y=Math.floor(h.y)-14;y<=h.y+14;y++)for(let x=Math.floor(h.x)-14;x<=h.x+14;x++){const j=T.idx(x,y);G.wall[j]=0;G.objs.delete(j);G.floor[j]=4}}G.p.x=h.x;G.p.y=h.y+4;b.st='sleep';
+    FIGHT="""(k,secs)=>{const T=__T,G=T.G;G.enemies.length=0;G.shots.length=0;G.hz=[];const b=G.bosses[k];Object.assign(b,T.freshBoss(k));const h=T.BOSSES[k].home();if(k==='golem'){for(let y=Math.floor(h.y)-14;y<=h.y+14;y++)for(let x=Math.floor(h.x)-14;x<=h.x+14;x++){const j=T.idx(x,y);G.wall[j]=0;G.objs.delete(j);G.floor[j]=4}}G.p.x=h.x;G.p.y=h.y+4;b.st='sleep';G.stats.bIntro=Object.assign(G.stats.bIntro||{},{[k]:1});/* v127: 처음 등장 연출은 본 것으로 (패턴만 확인) */
   const seen=new Set();let dmg=0,maxShots=0,adds=0,chain=0,dbl=0;const hp0=999;
   for(let i=0;i<secs*60;i++){G.p.hp=hp0;G.p.dead=0;const before=G.p.hp;T.updateBosses(1/60);if(G.p.hp<before)dmg+=before-G.p.hp;G.p.inv=0;seen.add(b.ph);maxShots=Math.max(maxShots,G.shots.length);adds=Math.max(adds,G.enemies.length);if(b.chain)chain++;if(b.dbl)dbl++;if(i===secs*30)b.hp=Math.floor(b.max*.4)}
   return {ph:[...seen].sort().join(','),dmg,maxShots,adds,chain,dbl,fin:Number.isFinite(b.x)&&Number.isFinite(b.y),st:b.st}}"""
@@ -187,7 +187,7 @@ def test_bosses_regions():
             rec('적','용암 동굴에는 용암 말랑이·불씨 도깨비 + v101 용암 도롱뇽·화산탄 말랑이·작은 흑요석 골렘', len(r)>0 and any(k.endswith('@3') for k in r) and all(k.split('@')[0] in ('magmaSlime','cinder','lavaSala','bombSlime','obsGolem') for k in r if k.endswith('@3')), str(r))
             await pg.wait_for_timeout(700); await pg.screenshot(path=SP+'lava.png')
             # turtle fight
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const b=G.bosses.turtle;const h=T.BOSSES.turtle.home();G.p.x=h.x;G.p.y=h.y+4;const ph=new Set();let hz=0,shots=0,shellHit=null;
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const b=G.bosses.turtle;const h=T.BOSSES.turtle.home();G.stats.bIntro=Object.assign(G.stats.bIntro||{},{turtle:1,spirit:1});/* v127: 등장 연출은 본 것으로 */G.p.x=h.x;G.p.y=h.y+4;const ph=new Set();let hz=0,shots=0,shellHit=null;
           for(let k=0;k<1800;k++){G.p.hp=999;G.p.inv=.5;T.updateBosses(1/60);ph.add(b.ph);hz=Math.max(hz,(G.hz||[]).length);shots=Math.max(shots,G.shots.length);if(b.ph==='shell'&&shellHit===null){const h0=b.hp;T.hitBoss(b,100,false);shellHit=h0-b.hp}}
           return [b.st,[...ph].sort().join(','),hz,shots,shellHit,Number.isFinite(b.x)&&Number.isFinite(b.y)]}""")
             rec('보스','용암 거북: 깨어나서 걷기·불덩이·숨기·껍질 굴리기 모두 사용', r[0]=='fight' and all(x in r[1] for x in ['walk','spit','hide','shell']), str(r))
@@ -312,6 +312,7 @@ def test_boss_rematch():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"()=>{__T.G.stats.bIntro={slime:1,queen:1,golem:1,turtle:1,spirit:1,dark:1}}")  # v127: 보스방 곁을 오가는 시험 — 처음 등장 장면은 본 것으로
             # ---- boss rematch ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.drops.length=0;const b=G.bosses.queen;b.st='fight';b.hp=1;T.hitBoss(b,5,false);const first=G.drops.map(d=>d.id);G.drops.length=0;
           for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.inv[0]={id:'queenIdol',c:1};G.sel=0;const h=T.BOSSES.queen.home();G.p.x=h.x+20;G.p.y=h.y;const far=T.decide();G.p.x=h.x;G.p.y=h.y+5;const a=T.decide();T.perform(a);return [first.some(id=>['swordQueen','daggerQueen','spearQueen','hammerQueen','bowQueen','staffQueen'].includes(id)),far.k,a.k,G.bossDead.queen,T.countItem('queenIdol')]}""")
@@ -859,18 +860,19 @@ def test_naru_part1b_v118():
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             # 나루를 만난 세계, 4번(횃불)까지 — 나루 곁에 서서 4번을 끝냄
-            SET="""(near)=>{const T=__T,G=T.G;T.closePanel();T.bellClear();G.enemies.length=0;G.stats.naruMet=1;G.stats.bell=1;G.stats.nLead=null;G.stats.nSaid={wood1:1,bench1:1,ore1:1,dirt1:1,furn1:1};G.stats.askV=1;G.stats.askOpen={};G.stats.askEnd={};
+            SET="""(near)=>{const T=__T,G=T.G;T.closePanel();T.bellClear();G.enemies.length=0;G.stats.naruMet=1;G.stats.bIntro={slime:1,queen:1,golem:1,turtle:1,spirit:1,dark:1};/* v127: 시험 중 순간이동으로 보스방 곁에 가도 보스 등장 장면이 끼어들지 않게 */G.stats.bell=1;G.stats.nLead=null;G.stats.nSaid={wood1:1,bench1:1,ore1:1,dirt1:1,furn1:1};G.stats.askV=1;G.stats.askOpen={};G.stats.askEnd={};
               G.stats.wood=6;G.stats.bench=1;G.stats.torch=0;G.stats.copperOre=0;G.guide=T.GUIDE.findIndex(q=>q.id==='torch');G.qAct='main';G.p.ctl=null;G.p.still=0;const hh=[...G.objs].find(([i,o])=>o.t==='npc'&&o.npc==='guide');if(hh[1].home!=null&&hh[0]!==hh[1].home&&!G.objs.get(hh[1].home)){G.objs.delete(hh[0]);G.objs.set(hh[1].home,hh[1]);}
               const n=T.naruSpot();G.p.dead=0;G.p.x=near?n.x+1.6:T.CX+.5+120;G.p.y=near?n.y+.6:T.CY+1.7;G.stats.torch=1;T.checkGuide();const L=G.stats.nLead;const b=T.bellState();
               const WW=Math.round(Math.sqrt(G.wall.length));const cu=L?[[0,1],[1,0],[-1,0],[0,-1]].some(([dx,dy])=>G.wall[L.i+dx+dy*WW]===4):false;
               return [T.GUIDE[G.guide].id,L&&L.s,cu,!!b&&b.lines[b.lines.length-1].includes('먼저 가 있을게요')]}"""
             r=await ev(pg,SET,True)
             rec('먼저 가기','4번(횃불)이 끝나면 첫 구리 광맥 옆 빈 칸을 찾아 둠(기다림), 방울 끝 줄 「제가 먼저 가 있을게요」', r==['ore','wait',True,True], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const n0=T.naruPos(),x0=G.p.x;T.runCmd({k:'naruLead'});const a=[G.stats.nLead.s,T.leadWalking(),G.p.still>G.time];
-              G.p.ctl={mx:1,my:0,stick:null,act:false,atk:false,aim:null};for(let k=0;k<15;k++)T.update(1/30);const n1=T.naruPos();a.push(Math.abs(G.p.x-x0)<.3||G.p.x-x0,Math.hypot(n1.x-n0.x,n1.y-n0.y)>.4);
-              for(let k=0;k<150&&G.stats.nLead.s==='walk';k++)T.update(1/30);G.p.ctl=null;const L=G.stats.nLead,WW=Math.round(Math.sqrt(G.wall.length)),n2=T.naruPos();
-              a.push(L.s,Math.hypot(n2.x-(L.i%WW+.5),n2.y-(((L.i/WW)|0)+.5))<.01,!G.p.still||G.p.still-G.time<.7);const g=T.questGo(T.activeQuest());a.push(!!g&&Math.hypot(g.x-n2.x,g.y-n2.y)<.01);G.p.x+=40;return a}""")
-            rec('먼저 가기','방울이 끝나면(naruLead) 곁에 선 사람 앞에서 걸어 나감 — 그동안 주인공은 서 있음, 나루는 움직임 → 다 걸으면 광맥 옆에, 화살표 = 나루 (나루 둘레가 막혀 걸을 곳이 없는 세계는 바로 광맥 옆)', (r[:5]==['walk',True,True,True,True] or r[0]=='there') and (r[5:]==['there',True,True,True] or r[5:8]==['back',True,True]), str(r))
+            # v127: 걷는 모습은 연출 장면 — 카메라가 나루에게 → 손 흔들기·대사 뒤에 걸어요, 보는 동안 주인공은 서 있음(G.p.cine)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const n0=T.naruPos(),x0=G.p.x;T.runCmd({k:'naruLead'});const a=[G.stats.nLead.s,T.leadWalking(),!!G.p.cine];
+              G.p.ctl={mx:1,my:0,stick:null,act:false,atk:false,aim:null};let k=0;for(;k<300;k++){T.update(1/30);const n1=T.naruPos();if(Math.hypot(n1.x-n0.x,n1.y-n0.y)>.4)break}a.push(Math.abs(G.p.x-x0)<.3||G.p.x-x0,k<300);
+              for(let k=0;k<600&&G.stats.nLead.s==='walk';k++)T.update(1/30);const L=G.stats.nLead,WW=Math.round(Math.sqrt(G.wall.length)),n2=T.naruPos();
+              a.push(L.s,Math.hypot(n2.x-(L.i%WW+.5),n2.y-(((L.i/WW)|0)+.5))<.01);for(let k=0;k<120&&G.p.cine;k++)T.update(1/30);G.p.ctl=null;a.push(!G.p.cine);const n3=T.naruPos(),g=T.questGo(T.activeQuest());a.push(G.stats.nLead.s==='back'||!!g&&Math.hypot(g.x-n3.x,g.y-n3.y)<.01||JSON.stringify([g,n3,G.stats.nLead.s]));/* 장면 끝을 기다리는 동안 곁에 닿아 한마디(back)를 했으면 화살표는 다음 할 곳 */G.p.x+=40;return a}""")
+            rec('먼저 가기','방울이 끝나면(naruLead) 곁에 선 사람 앞에서 연출 장면으로 걸어 나감 — 그동안 주인공은 서 있음, 나루는 움직임 → 다 걸으면 광맥 옆에, 장면이 끝나면 다시 움직임, 화살표 = 나루 (나루 둘레가 막혀 걸을 곳이 없는 세계는 바로 광맥 옆)', (r[:5]==['walk',True,True,True,True] or r[0]=='there') and (r[5:]==['there',True,True,True] or r[5:8]==['back',True,True]), str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();G.stats.nLead.s='there';const n=T.naruPos();G.p.x=n.x+1.2;G.p.y=n.y+.4;for(let k=0;k<20;k++)T.update(1/30);const a=[G.stats.nLead.s,(T.bellState()||{lines:['']}).lines.join('|')];
               G.stats.nLead.t=G.time-.1;G.p.x+=30;for(let k=0;k<20;k++)T.update(1/30);const m=T.naruPos(),h=[...G.objs].find(([i,o])=>o.t==='npc'&&o.npc==='guide');a.push(G.stats.nLead.s,h[0]===h[1].home);return a}""")
             rec('먼저 가기','광맥 옆 나루에게 오면 「여기예요!」 한마디 → 조금 뒤 마을(집 자리)로 돌아감', r[0]=='back' and '여기예요' in r[1] and r[2:]==['done',True], str(r))
@@ -878,8 +880,8 @@ def test_naru_part1b_v118():
             r2=await ev(pg,"()=>{const T=__T,G=T.G;T.runCmd({k:'naruLead'});return [G.stats.nLead.s,G.p.still|0]}")
             rec('멀리','멀리 있으면 걷는 모습 없이 바로 광맥 옆에', r[1]=='wait' and r2==['there',0], str(r)+str(r2))
             r=await ev(pg,SET,True)
-            r2=await ev(pg,"()=>{const T=__T,G=T.G;T.runCmd({k:'naruLead'});const a=[G.stats.nLead.s];document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));a.push(G.stats.nLead.s,G.p.still);return a}")
-            rec('건너뛰기','걷는 동안 화면을 누르면 바로 광맥 옆에 (서 있기도 풀림)', r2==['walk','there',0] or r2==['there','there',0], str(r2))
+            r2=await ev(pg,"()=>{const T=__T,G=T.G;T.runCmd({k:'naruLead'});const a=[G.stats.nLead.s];const sb=document.querySelector('#cineSkip');if(sb&&document.body.classList.contains('cine'))sb.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));a.push(G.stats.nLead.s,G.p.cine?1:0,document.body.classList.contains('cine'));return a}")
+            rec('건너뛰기','v127: 연출 장면의 [건너뛰기]를 누르면 바로 광맥 옆에 (서 있기·띠도 풀림)', r2==['walk','there',0,False] or r2==['there','there',0,False], str(r2))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.copperOre=6;T.checkGuide();for(let k=0;k<5;k++)T.update(1/30);const h=[...G.objs].find(([i,o])=>o.t==='npc'&&o.npc==='guide');return [T.GUIDE[G.guide].id,G.stats.nLead.s,h[0]===h[1].home]}""")
             rec('먼저 가기','광맥에 오지 않고 구리광석을 다 모아도 나루는 마을로 돌아감', r==['bar','done',True], str(r))
             # 나루의 부탁
@@ -972,7 +974,7 @@ def test_naru_part2_v119():
             r2=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel;return [P.mode,"+LN+"(P).includes('마지막 문 앞까지'),G.stats.nLead.q,G.stats.nLead.s,T.countItem('torch')-window.__t0,!!G.stats.qxp.naruGo]})")
             rec('18번','다섯 번째 기억 뒤 「나루에게 가기」(나루 머리 위 !), v126: 기억 장면을 닫으면 방울 한 줄 → 말 걸면 장면 · 횃불 6 · 경험치, 입구까지 먼저 갈 준비', r==['naruGo',True,True,True] and r2[:4]==['sc:n2go',True,'deep','wait'] and r2[4]>=6 and r2[5] is True, str(r)+str(r2))
             await ev(pg,"()=>__T.closePanel()")
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=[G.stats.nLead.s];for(let k=0;k<200&&G.stats.nLead.s==='walk';k++)T.update(1/30);T.checkGuide();const L=G.stats.nLead,WW=Math.round(Math.sqrt(G.wall.length)),n=T.naruPos(),d=G.stats.deep;
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=[G.stats.nLead.s];for(let k=0;k<600&&(G.stats.nLead.s==='walk'||G.p.cine);k++)T.update(1/30);T.checkGuide();const L=G.stats.nLead,WW=Math.round(Math.sqrt(G.wall.length)),n=T.naruPos(),d=G.stats.deep;
               const ex=d.x+T.DEEP_PLAN[T.DEEP_H-1].indexOf('E'),ey=d.y+T.DEEP_H-1;const g=T.questGo(T.activeQuest());a.push(T.GUIDE[G.guide].id,L.s,Math.hypot(n.x-ex,n.y-ey)<12,Math.floor(n.x)!==ex,!!g&&Math.hypot(g.x-n.x,g.y-n.y)<.01);
               T.bellClear();G.p.x=n.x+1.2;G.p.y=n.y+.4;for(let k=0;k<20;k++)T.update(1/30);a.push(G.stats.nLead.s,((T.bellState()||{lines:['']}).lines[0]).includes('입구'));return a}""")
             rec('입구','장면을 닫으면 걸어 나가 가장 깊은 곳 입구 곁에(입구 길은 막지 않음), 화살표 = 나루, 닿으면 「여기가 가장 깊은 곳 입구예요」', r[0] in ('walk','there') and r[1:]==['deep','there',True,True,True,'back',True], str(r))
@@ -982,7 +984,7 @@ def test_naru_part2_v119():
             r2=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);return [s.includes('마지막 등불지기가'),s.includes('나 때문이야'),G.stats.nLead.q]})")
             rec('19번','마지막 장을 읽으면 나루는 마을로, 「나루에게 돌아가기」(!) → 알아차리는 장면(반말) · 입구까지 한 번 더 준비', r==['naruBack','done',True] and r2==[True,True,'dark'], str(r)+str(r2))
             await ev(pg,"()=>__T.closePanel()")
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let k=0;k<200&&G.stats.nLead.s==='walk';k++)T.update(1/30);T.checkGuide();const n=T.naruPos();G.p.x=n.x+1.2;G.p.y=n.y+.4;const a=[T.GUIDE[G.guide].id,G.stats.nLead.s];for(let k=0;k<20;k++)T.update(1/30);return a}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let k=0;k<600&&(G.stats.nLead.s==='walk'||G.p.cine);k++)T.update(1/30);T.checkGuide();const n=T.naruPos();G.p.x=n.x+1.2;G.p.y=n.y+.4;const a=[T.GUIDE[G.guide].id,G.stats.nLead.s];for(let k=0;k<20;k++)T.update(1/30);return a}""")
             await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode==='sc:dark0'")
             r2=await ev(pg,"(()=>{const T=__T,G=T.G;return ["+LN+"(T.panel).includes('마지막 불씨'),G.stats.n2ember]})")
             rec('20번','입구 곁 나루에게 닿으면 큰 어둠 「출발 전」 장면 · 마지막 불씨(연출)', r[0]=='dark' and r[1] in ('there','back') and r2==[True,1], str(r)+str(r2))
@@ -1078,6 +1080,68 @@ def test_story_pacing_v126():
               G.guide=T.GUIDE.findIndex(q=>q.id==='wood');o.met=0;const early=T.talkLines('guide','')[0];
               return [out[0]===S[0],out[2]===S[1],!S.includes(out[1])&&!S0.includes(out[1]),!T.NARU_STAGE.some(x=>x[1].includes(early))]}""")
             rec('E','v126: 여왕을 물리친 뒤 말 걸면 그 단계 한마디(두 줄 번갈아)와 예전 한마디가 번갈아, 1부 끝 전에는 예전 그대로', r==[True,True,True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+def test_cutscene_v127():
+    # v127 연출 장면(레터박스): 띠·HUD 숨김·자막·건너뛰기, 보는 동안 안 맞음·안 쫓김·안 움직임·창 닫힘, 시험 장면 3개(나루 먼저 걷기·빛씨앗 심기·보스 등장 처음 한 번)
+    H2=HOOK.replace("computeLight}","computeLight,naruPos,naruSpot,cineMine,cineUI,runCmd,update,bossIntroSeen,bellState,bellClear,checkGuide,GUIDE,insertSeeds,mkEnemy,freshBoss,maxHp,TREEFX,get panel(){return panel}}")
+    SET="""()=>{const T=__T,G=T.G;T.closePanel();T.bellClear();G.enemies.length=0;G.stats.naruMet=1;G.stats.bIntro={slime:1,queen:1,golem:1,turtle:1,spirit:1,dark:1};G.stats.bell=1;G.stats.nLead=null;G.stats.nSaid={wood1:1,bench1:1,ore1:1,dirt1:1,furn1:1};G.stats.askV=1;G.stats.askOpen={s_farm:1,s_lamp:1,s_drill:1};G.stats.askEnd={};
+      G.stats.wood=6;G.stats.bench=1;G.stats.torch=0;G.stats.copperOre=0;G.guide=T.GUIDE.findIndex(q=>q.id==='torch');G.qAct='main';G.p.ctl=null;G.p.dead=0;G.p.hp=T.maxHp();
+      const hh=[...G.objs].find(([i,o])=>o.t==='npc'&&o.npc==='guide');if(hh[1].home!=null&&hh[0]!==hh[1].home&&!G.objs.get(hh[1].home)){G.objs.delete(hh[0]);G.objs.set(hh[1].home,hh[1]);}
+      const n=T.naruPos();G.p.x=n.x+.2;G.p.y=n.y+7;G.stats.torch=1;T.checkGuide();T.bellClear();return G.stats.nLead&&G.stats.nLead.s}"""  # 곁(12칸 안)이지만 나루 길을 막지 않는 자리
+    HIDDEN="(s=>{const e=document.querySelector(s);return !e||getComputedStyle(e).display==='none'})"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,402,874,True)
+            # ① 나루 먼저 걷기
+            r=await ev(pg,SET)
+            await ev(pg,"()=>__T.openPanel('inv')")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const H="""+HIDDEN+""";T.runCmd({k:'naruLead'});const S=T.cineMine(),bd=document.body;
+              return [G.stats.nLead.s,!!S&&S.id,!!G.p.cine,bd.classList.contains('cine'),!T.panel,H('#hotbar'),H('#actBtn'),H('#atkBtn'),H('#hud'),getComputedStyle(document.querySelector('#cineTop')).display!=='none',!!document.querySelector('#cineSkip')]}""")
+            rec('장치','v127: 곁에서 나루가 먼저 걸어 나가면 연출 장면 — 위아래 띠·[건너뛰기], 열린 창은 닫히고 단축칸·버튼·HUD가 사라짐', r==['walk','lead',True,True,True,True,True,True,True,True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const p=G.p,x0=p.x,y0=p.y,hp=p.hp;p.hunger=0;G.regenT=2.4;const e=T.mkEnemy('slimeG',p.x+.2,p.y);G.enemies.push(e);p.ctl={mx:1,my:0,stick:null,act:true,atk:true,aim:null};
+              for(let k=0;k<45;k++)T.update(1/30);const a=[Math.hypot(p.x-x0,p.y-y0)<.05,p.hp===hp,!e.chasing];G.enemies.length=0;p.ctl=null;p.hunger=100;
+              const S=T.cineMine();a.push(!!S&&S.steps[S.i].say===1,S&&S.line&&S.line.s,S&&S.band,!!(S&&S.gest.naru&&S.gest.naru.g==='wave'));return a}""")
+            rec('지킴','연출 동안: 움직이기·공격 안 됨, 몬스터가 붙어도·배고픔 0이어도 체력 그대로, 몬스터가 쫓지 않음', r[:3]==[True,True,True], str(r))
+            rec('대본','카메라가 나루에게 → 손 흔들기 + 아래 띠 자막 「따라와요, 구리는 이쪽이에요!」', r[3:]==[True,'따라와요, 구리는 이쪽이에요!',None,True], str(r))
+            await pg.wait_for_timeout(150)
+            r=await ev(pg,"""()=>{const T=__T;const f=document.querySelector('#cineBot .cface'),n=document.querySelector('#cineBot .cname');return [!!f&&f.src.length>20,n&&n.textContent,T.cineUI().line]}""")
+            rec('자막','아래 띠 안에 말하는 사람 얼굴·이름·자막', r==[True,'나루','따라와요, 구리는 이쪽이에요!'], str(r))
+            # 누르기: 글이 다 나왔으면 다음 칸(걷기)
+            await pg.wait_for_timeout(700)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));const a=[T.cineUI().typed];document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));const S=T.cineMine();a.push(!!S&&!!S.steps[S.i].walk);return a}""")
+            rec('누르기','화면을 누르면 자막을 다 보이고, 한 번 더 누르면 다음(나루가 걷기 시작)', r[0]>=16 and r[1] is True, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;let k=0;for(;k<900&&G.p.cine;k++)T.update(1/30);return [k<900,document.body.classList.contains('cine'),['there','back'].includes(G.stats.nLead.s)]}""")
+            rec('끝','걷기가 끝나면 카메라가 돌아오고 띠가 빠짐 — 나루는 광맥 옆', r==[True,False,True], str(r))
+            # 건너뛰기 (Esc) → 끝 상태 + 안 나온 대사 한 줄은 방울로
+            r=await ev(pg,SET)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.runCmd({k:'naruLead'});const a=[!!G.p.cine];window.dispatchEvent(new KeyboardEvent('keydown',{code:'Escape',key:'Escape',bubbles:true}));
+              const b=T.bellState();a.push(!!G.p.cine,document.body.classList.contains('cine'),G.stats.nLead.s,!!T.panel,!!b&&[b.lines[0],...Array(b.queued)].some(l=>l==='따라와요, 구리는 이쪽이에요!')||JSON.stringify(b));return a}""")
+            rec('건너뛰기','Esc(또는 [건너뛰기]) = 장면 끝 상태로(나루는 광맥 옆), 띠가 빠지고 설정 창은 안 열림, 못 본 대사는 방울로', r[:5]==[True,False,False,'there',False], str(r))
+            # ② 빛씨앗 심기
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();G.stats.nLead={s:'done'};const hh=[...G.objs].find(([i,o])=>o.t==='npc'&&o.npc==='guide');if(hh[1].home!=null&&hh[0]!==hh[1].home&&!G.objs.get(hh[1].home)){G.objs.delete(hh[0]);G.objs.set(hh[1].home,hh[1]);}G.stats.mem={};G.treeSeeds=0;G.won=false;G.won2=false;G.p.x=T.CX+.5;G.p.y=T.CY+3.2;G.enemies.length=0;T.TREEFX.grow=null;
+              {const hh=[...G.objs].find(([i,o])=>o.t==='npc'&&o.npc==='guide');let j=-1;for(let r=1;r<4&&j<0;r++)for(let dy=-r;dy<=r&&j<0;dy++)for(let dx=-r;dx<=r;dx++){const k=T.idx(T.CX+dx,T.CY+3+dy);if(!G.wall[k]&&!G.objs.get(k)&&Math.hypot(dx-.5,dy-.2)>.9){j=k;break}}if(j>=0){G.objs.delete(hh[0]);G.objs.set(j,hh[1]);}} /* 나루를 나무·주인공 곁에 (곁에 있으면 멈춰 바라봐요) */
+              const n=T.naruPos();const near=Math.hypot(n.x-T.CX-.5,n.y-T.CY)<12;T.addItem('lightSeed',1);T.insertSeeds();const S=T.cineMine();const a=[!!S&&S.id,G.treeSeeds,!!T.TREEFX.grow,near];
+              for(let k=0;k<60;k++)T.update(1/30);a.push(Math.abs(T.cineMine().cam.y-(T.CY-1.2))<.05,!!T.TREEFX.grow);let line=null,gest=null;
+              for(let k=0;k<300&&G.p.cine;k++){T.update(1/30);const s=T.cineMine();if(s&&s.line)line=s.line.s;if(s&&s.gest.naru)gest=s.gest.naru.g}a.push(line,gest,!!G.p.cine);return a}""")
+            rec('빛씨앗','심으면 바로 장면(씨앗 수는 바로 반영), 카메라가 나무로 간 뒤 빛이 퍼짐, 나루가 곁이면 놀라기 + 「봐요, 나무가 깨어나요!」', r[:3]==['seed',1,False] and r[4:6]==[True,True] and r[6:]==['봐요, 나무가 깨어나요!','surprise',False], str(r))
+            ok=await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='memory'",5000)
+            rec('빛씨앗','장면이 끝나면 기억 장면 창', ok, '')
+            await ev(pg,"()=>__T.closePanel()")
+            # ③ 보스 등장 — 처음 한 번만
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();G.stats.bIntro={};G.stats.beaten={};G.bossDead.queen=false;const b=G.bosses.queen;Object.assign(b,T.freshBoss('queen'));b.intro=0;G.enemies.length=0;G.p.x=b.x;G.p.y=b.y+5;
+              const a=[T.bossIntroSeen('queen')];T.update(1/30);const S=T.cineMine();a.push(!!S&&S.id,b.st);let band=null;for(let k=0;k<45;k++){T.update(1/30);const s=T.cineMine();if(s&&s.band)band=s.band.s}
+              a.push(band,b.st);window.__bandWait=1;return a}""")
+            await pg.wait_for_timeout(150)
+            r=[*r,*(await ev(pg,"""()=>{const T=__T,G=T.G,b=G.bosses.queen;const a=[document.querySelector('#cineName').hidden===false&&document.querySelector('#cineName').textContent];for(let k=0;k<300&&G.p.cine;k++)T.update(1/30);a.push(!!G.p.cine,b.st,!document.querySelector('#bossbar').hidden,!!G.stats.bIntro.queen);return a}"""))]
+            rec('보스','처음 보스방에 오면 장면 — 카메라가 보스로·이름 띠 「버섯 여왕」, 그동안 보스는 잠든 채 → 끝나면 깨어나 싸움(보스 막대)', r==[False,'boss','sleep','버섯 여왕','sleep','버섯 여왕',False,'fight',True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const b=G.bosses.queen;Object.assign(b,T.freshBoss('queen'));G.p.x=b.x;G.p.y=b.y+5;T.update(1/30);const a=[!!T.cineMine(),b.st];
+              G.stats.bIntro={};G.stats.beaten={slime:1};a.push(T.bossIntroSeen('slime'),T.bossIntroSeen('golem'));G.p.x=T.CX+.5;G.p.y=T.CY+1.7;return a}""")
+            rec('보스','다시 깨어날 때(소환·다시 도전)는 연출 없이 바로 싸움 · 옛 세이브에서 이미 물리친 보스는 본 것으로', r==[False,'fight',True,False], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

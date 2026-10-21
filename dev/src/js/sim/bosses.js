@@ -23,6 +23,7 @@ import { onFrame } from './systems.js';
 import { idx, inB, SI, SL } from '../world/map.js';
 import { boxHits, isSolid, moveEnt } from '../world/tiles.js';
 import { markLight } from './loop.js';
+import { bossScene } from './cutscene.js';
 export function updateHazards(dt) {
   G.hz = G.hz || [];
   for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } const live = alivePlayers(); if (h.t < h.warn || !live.length) continue;
@@ -73,10 +74,12 @@ export function updateBosses(dt) {
 }
 export function bossCommon(b, dt) {
   const def = BOSSES[b.k], p = G.p, d = Math.hypot(p.x - b.x, p.y - b.y); b.hurt = Math.max(0, b.hurt - dt); b.d = d;
-  if (b.st === 'sleep') { if (d < def.wake && p.dead <= 0) { b.st = 'fight'; b.t = 1.2; emit('sfx', 'boss'); emit('shake', 0.4, true); emit('toast', `${def.n}이 깨어났어요!`); emit('bossbar', true); } return false; }
+  if (b.st === 'sleep') { if (!b.intro && d < def.wake && p.dead <= 0 && !bossScene(b, bossWake)) bossWake(b); return false; } // v127: 처음 깨어날 때는 연출 장면 뒤에 (sim/cutscene.js bossScene)
   if (p.dead > 0 || d > 24) { bossCleanup(b); Object.assign(b, freshBoss(b.k)); emit('bossbar', false); G.shots.length = 0; G.hz = []; return false; }
   return true;
 }
+// 보스가 깨어나 싸움 시작 (v127 연출 장면 뒤에는 흔들림·소리를 장면에서 이미 했어요)
+export function bossWake(b, cine) { const def = BOSSES[b.k]; b.st = 'fight'; b.t = 1.2; if (!cine) { emit('sfx', 'boss'); emit('shake', 0.4, true); } emit('toast', `${def.n}이 깨어났어요!`); emit('bossbar', true); }
 export const BOSS_AI = {
   turtle(b, dt) {
     const p = G.p, d = b.d, st = b.stage || 1, half = st >= 2; b.t -= dt;

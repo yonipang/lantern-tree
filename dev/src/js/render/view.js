@@ -10,8 +10,11 @@ import { onFrame } from '../sim/systems.js';
 import { shake } from '../ui/feedback.js';
 import { markLight } from '../sim/loop.js';
 import { WALL_LIFT } from '../art/tilemap.js';
+import { cineMine } from '../sim/cutscene.js';
 onFrame('camera', dt => { const p = G.p; // 카메라가 플레이어를 부드럽게 따라가요
-  const k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
+  const S = cineMine(), k = 1 - Math.pow(0.0005, dt); // v127: 연출 장면을 보는 동안은 대본이 정한 곳 (sim/cutscene.js — 옮기는 모양은 그쪽에서)
+  if (S && S.cam) { cam.x += (S.cam.x - cam.x) * k; cam.y += (S.cam.y - cam.y) * k; return; }
+  cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k;
 });
 // ================= render =================
 export const cv = $('#cv'), mainCtx = cv.getContext('2d');

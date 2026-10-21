@@ -72,7 +72,7 @@ export function updatePShots(dt) {
   }
 }
 // ---- active skills ----
-defineCmd('skill', c => useSkill(c.n));
+defineCmd('skill', c => { if (!G.p.cine) useSkill(c.n); }); // v127: 연출 장면 동안은 스킬 없음
 export function useSkill(n) {
   if (!G || paused || !started) return; const p = G.p; if (p.dead > 0 || p.sleep) return;
   const k = G.rpg.slot[n]; if (!k) { emit('open', 'stat'); return; }

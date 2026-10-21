@@ -432,7 +432,7 @@ def test_recall_faint():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
-            await ev(pg,"()=>{__T.G.enemies.length=0}")
+            await ev(pg,"()=>{__T.G.enemies.length=0;__T.G.stats.bIntro={slime:1,queen:1,golem:1,turtle:1,spirit:1,dark:1}}")  # v127: 수정골렘 방 곁에서 귀환석을 써요 — 보스 등장 장면이 끼어들지 않게
             r=await ev(pg,"()=>{const T=__T;const rc=T.RECIPES.find(r=>r.out==='homeStone');const g=T.GUIDE.find(q=>q.id==='cpick');return [rc.at,JSON.stringify(rc.req),g.rw.some(([id])=>id==='homeStone'),T.ITEMS.homeStone.stack]}")
             rec('귀환석','석영 장비제작대에서 만들고, 「수정 곡괭이」 퀘스트 보상으로도 하나', r==['smelter','[["crystal",6],["glowcap",3],["copperBar",2]]',True,1], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.spawnPt=null;G.backPt=null;G.recallCd=0;G.recall=null;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[0]={id:'homeStone',c:1};G.sel=0;

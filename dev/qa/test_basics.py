@@ -151,6 +151,7 @@ def test_core_play():
             for bk in ['slime','queen','golem']:
                 await ev(pg,f"()=>{{const T=__T,G=T.G;T.addItem('swordIron',1);const k=G.inv.findIndex(s=>s&&s.id==='swordIron'),t0=G.inv[0];G.inv[0]=G.inv[k];G.inv[k]=t0;G.sel=0;/* v48: hold the weapon */const h=T.BOSSES.{bk}.home();G.p.x=h.x;G.p.y=h.y+5;G.p.hp=100;G.p.sit=null}}")
                 await pg.wait_for_timeout(1800)
+                await wait_until(pg,f"()=>__T.G.bosses.{bk}.st==='fight'",8000)  # v127: 처음 깨어날 때는 등장 연출(약 3초) 뒤에 싸움
                 st=await ev(pg,f"()=>__T.G.bosses.{bk}.st")
                 for _ in range(8):
                     await ev(pg,f"()=>{{const G=__T.G,b=G.bosses.{bk};b.hp=Math.min(b.hp,3);b.z=0;b.air=0;G.p.hp=100;G.p.x=b.x;G.p.y=b.y+1.3;G.p.face={{x:0,y:-1}}}}")
