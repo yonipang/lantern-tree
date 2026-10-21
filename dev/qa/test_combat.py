@@ -810,7 +810,7 @@ def test_naru_part1_v117():
             rec('마을로 부름','첫 구리괴 → 방울 「마을로 가져와 줄래요?」, 다음 이야기는 나루와 이야기할 때까지 기다림(화살표 = 나루, ?)', r[:6]==['bar','forge','naruCall','forge',True,True] and '마을로 가져와 줄래요' in r[6], str(r))
             await ev(pg,"()=>__T.bellClear()"); await ev(pg,TALK); await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const m=T.panel.mode;T.closePanel();T.checkGuide();return [m,G.stats.naruCall,!!G.qclaim.bar,T.GUIDE[G.guide].id,(T.bellState()||{lines:['']}).lines.join(' ')]}""")
-            rec('마을로 부름','마을 장면(구리괴 이야기) → 보상, 이어서 다음 이야기(구리 작업대 끝 → 곡괭이 방울)', r[0]=='call:bar' and r[1] is None and r[2] and r[3]=='pick' and '구리 작업대다' in r[4], str(r))
+            rec('마을로 부름','마을 장면(구리괴 이야기) → 보상, 이어서 다음 이야기(구리 작업대 끝 → 장비제작대 방울)', r[0]=='call:bar' and r[1] is None and r[2] and r[3]=='gbench' and '구리 작업대다' in r[4] and '먼저 작업대에서 장비제작대를' in r[4], str(r))  # v124: 다음은 「장비제작대 만들고 놓기」
             r=await ev(pg,"""()=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));const a=[s.pname];T.deserialize(s);a.push(T.G.pname);delete s.pname;T.deserialize(s);a.push(T.G.pname,T.pName()===T.CHARS[T.curChar()].n);return a}""")
             rec('이름 저장','지은 이름은 세이브에(캐릭터 칸), 옛 세이브는 이름 없음 = 고른 캐릭터 이름', r[0]=='별빛b루나루나루' and r[1]==r[0] and r[2] is None and r[3], str(r))
             await ev(pg,"()=>__T.openPanel('profile')")

@@ -183,8 +183,8 @@ def test_gear_bench_tiers():
           G.objs.delete(si);const s2=JSON.parse(JSON.stringify(T.serialize()));delete s2.stats.nm61;s2.objs=s2.objs.filter(([i,o])=>o.t!=='smelter');s2.objs.push([T.idx(T.CX+11,T.CY+11),{t:'forge'}]);s2.objs=s2.objs.filter(([i,o])=>!(o.t==='bench'));T.deserialize(s2);
           return [a,T.countItem('smelterCu')]}""")
             rec('옛 세이브','v61 전 세이브: 장비제작대는 가진 작업대 단계까지 올라가 있고, 장비제작대가 없으면 그 단계 장비제작대를 받음', r==[2,1], str(r))
-            r=await ev(pg,"()=>{const g=__T.GUIDE.map(q=>(typeof q.h==='function'?q.h():q.h)||'').join('|');return g.includes('장비제작대(작업대에서 나무·흙으로')}")
-            rec('퀘스트','구리 곡괭이 안내: 장비제작대를 놓고 구리 단계로', r is True, str(r))
+            r=await ev(pg,"()=>{const g=__T.GUIDE.map(q=>(typeof q.h==='function'?q.h():q.h)||'').join('|');return g.includes('장비제작대를 만들고(나무·흙·송진)')&&g.includes('[올리기]로 구리 단계')}")  # v124: 장비제작대 놓기는 따로 퀘스트
+            rec('퀘스트','안내: 장비제작대 만들고 놓기(나무·흙·송진) → 구리 곡괭이는 [올리기]로 구리 단계', r is True, str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
