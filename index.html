@@ -567,6 +567,17 @@ body.intro #bell{display:none}
 .lgbtn{min-height:28px;padding:2px 6px 2px 2px} /* v111: 범례를 작게 (아이콘 16px) */
 .lgbtn img{width:16px;height:16px}
 .lgbtn i{width:10px;height:10px;margin:0 2px 0 4px;box-shadow:0 0 0 2px #1b1426}
+/* v124 「퀘스트 완료!」 띠 (dev/design/퀘스트설계.md 4장): 화면 위 가운데, 약 2초, 누르면 퀘스트 창 — 그림은 임시 CSS (UIUX-재설계.md 「도트 GUI 그림 목록」 F13) */
+#qdone{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 144px);right:calc(env(safe-area-inset-right,0px) + 16px + 48px + 8px);max-width:308px;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:0;padding:4px 8px 6px;background:rgba(36,27,47,.96);border:2px solid var(--amber);border-radius:0;box-shadow:0 0 0 2px #120f1c,0 4px 14px rgba(0,0,0,.45);color:var(--text);font:inherit;font-size:16px;line-height:22px;text-align:center;z-index:22;cursor:pointer;animation:qdin .25s ease-out} /* 맨 위 가운데 = 보스 체력 막대 자리 (얼굴·배고픔과 오른쪽 위 버튼 사이), 보스와 싸우는 중이면 막대 바로 아래 (ui/feedback.js) */
+#qdone[hidden]{display:none}
+#qdone b{color:var(--amber);font-weight:normal;letter-spacing:1px}
+#qdone b::before,#qdone b::after{content:'✦';margin:0 4px;color:#fff1d0}
+#qdone .qn{max-width:100%;overflow-wrap:anywhere}
+#qdone .qs{color:var(--mint);font-size:16px}
+#qdone .qs:empty{display:none}
+#qdone.out{animation:qdout .3s ease-in forwards}
+@keyframes qdin{from{opacity:0;transform:translateY(-10px)}}
+@keyframes qdout{to{opacity:0;transform:translateY(-10px)}}
 </style>
 
 <script>if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script></head><body><div id="game">
@@ -590,6 +601,7 @@ body.intro #bell{display:none}
     </div>
   </div>
   <div id="toasts" aria-live="polite"></div>
+  <button id="qdone" type="button" hidden aria-live="polite"><b>퀘스트 완료!</b><span class="qn"></span><small class="qs"></small></button>
   <div class="joy" id="joy"><i id="joyKnob"></i></div>
   <div id="dpad" aria-hidden="true"><i class="u"></i><i class="r"></i><i class="d"></i><i class="l"></i><b></b></div>
   <button id="actBtn" type="button" aria-label="상호작용"><img class="px" id="actIcon" alt=""><span id="actLbl">캐기</span></button>
@@ -742,6 +754,7 @@ const SFX = {
   cast: () => { nz(.12, .04, 1800); tone(420, .12, 'sine', .03, 300); }, plop: () => tone(320, .09, 'sine', .05, -170), bite: () => { tone(880, .06, 'square', .04); setTimeout(() => tone(1175, .08, 'square', .04), 70); },
   catch: () => [660, 880, 1046].forEach((f, i) => setTimeout(() => tone(f, .12, 'triangle', .05), i * 70)), cast2: () => { tone(500, .25, 'sine', .04, -250); nz(.2, .03, 1200); },
   bell: () => [1568, 2093].forEach((f, i) => setTimeout(() => tone(f, .45, 'sine', .035), i * 110)), blip: () => tone(700 + fxRand() * 160, .025, 'triangle', .012), // v117 길잡이 방울 · 타이핑
+  qdone: () => [1175, 1568].forEach((f, i) => setTimeout(() => tone(f, i ? .4 : .14, 'triangle', .055), i * 100)), // v124 「퀘스트 완료!」 띵
   win: () => [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .06), i * 130)), seed: () => [784, 988, 1175].forEach((f, i) => setTimeout(() => tone(f, .2, 'triangle', .05), i * 90)),
 };
 // ================= 효과: 반짝이(puff)·떠오르는 글자(ftext)·알림(toast) — 보이기만 하고 게임 결과는 안 바꿔요 =================
@@ -2623,7 +2636,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; /* v119 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; /* v119 · v124 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2755,7 +2768,7 @@ function deserialize(s) {
   migrateForges60(oldFp); // v60
   grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); /* v104·v106·v108 · v119 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
@@ -2977,6 +2990,9 @@ function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.id]) s.i
 // v119 나루 2부: 옛 세이브에서 이미 지난 새 이야기 퀘스트(「나루에게 가기」·「나루에게 돌아가기」)는 장면 없이 받은 것으로 (마지막 장을 읽었으면 · 큰 어둠을 물리쳤으면)
 function migrateNaru119() { if (G.stats.naru119) return; G.stats.naru119 = 1; const read = !!(G.stats.deep && G.stats.deep.read), dark = !!(G.bossDead && G.bossDead.dark); if (!read && !dark) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {};
   { G.stats.n2go = 1; G.qclaim.naruGo = 1; qx.naruGo = 1; } if (dark) { G.stats.n2back = 1; G.qclaim.naruBack = 1; qx.naruBack = 1; } }
+// v124 새 이야기 퀘스트 「장비제작대 만들고 놓기」: 옛 세이브에 놓인 장비제작대가 있으면 놓은 것으로 셈, 구리 작업대 퀘스트를 이미 지났고 이 퀘스트도 다 됐으면 받은 것으로 (장면·방울·보상 없이)
+function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 1; for (const o of G.objs.values()) if (o && o.t === 'smelter') { G.stats.gbench = 1; break; }
+  const f = GUIDE.find(q => q.id === 'forge'), g = GUIDE.find(q => q.id === 'gbench'); if (!f || !g || !f.done() || !g.done()) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {}; G.qclaim.gbench = 1; qx.gbench = 1; }
 function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }
 let saveFailWarned = false;
 function saveLocal(silent) {
@@ -3192,7 +3208,9 @@ const GUIDE = [
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽이 보이면 캐 봐요. 그게 구리광석이에요. 흙도 버리지 말아요, 용광로 재료가 되거든요.', done: () => G.stats.copperOre >= 6 },
   { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만들어 놓고, 용광로를 열어 구리괴를 만들어요. 조금 기다리면 돼요.', done: () => G.stats.copperBar >= 1 },
   { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
-  { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·흙으로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
+  // v124 「장비제작대 만들고 놓기」 (dev/design/퀘스트설계.md 5장): 7번 구리 작업대 다음 · 구리 곡괭이 앞 — 장비제작대를 한 번 놓았거나(G.stats.gbench) 이미 올렸거나·구리 곡괭이 이상이 있으면 끝
+  { t: () => '장비제작대 만들고 놓기', h: '작업대를 열어 장비제작대를 만들고(나무·흙·송진), 빈 땅에 놓아 줘요. 칼이랑 곡괭이 같은 장비는 작업대가 아니라 장비제작대에서 만들어요.', done: () => !!G.stats.gbench || (G.stats.gearLv || 0) >= 1 || hasItem('pickCopper') || hasItem('pickIron') },
+  { t: () => '구리 곡괭이 만들기', h: '장비제작대를 열어 맨 위 [올리기]로 구리 단계까지 올린 뒤 만들어요 (구리괴 8·흙 20). 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '마을 창고를 지키던 동물이 주인을 잃고 커진 거래요. 화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비부터 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
   { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '말랑대왕도 창고를 지키던 녀석이에요. 화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼하니까 음식을 넉넉히 챙겨요. 점프했다 내려올 때는 멀리 떨어져 있어요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
   { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '수정 동굴은 등불지기들이 빛을 수정에 담아 두던 곳이래요. 빨간 점선이 보이면 옆으로 피해요! 골렘이 벽에 부딪혀 어지러울 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
@@ -3209,7 +3227,7 @@ const GUIDE = [
 ];
 // quest ids, rewards and xp (main story, in order)
 const Q_META = [['naru', [['berry', 3]], 5], ['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch', 4]], 10], ['torch', [['berrySeed', 3], ['rope', 2]], 10], ['ore', [['copperOre', 3], ['resin', 1]], 15], ['bar', [['resin', 2], ['gel', 2]], 15],
-  ['forge', [['rope', 4]], 20], ['pick', [['grilled', 3], ['torch', 6]], 25], ['queen', [['copperBar', 5], ['glowcap', 3]], 80], ['slime', [['ironBar', 4], ['gel', 6]], 100], ['golem', [['crystal', 8], ['ironBar', 4]], 140],
+  ['forge', [['rope', 4]], 20], ['gbench', [['copperOre', 6], ['rope', 2]], 15], /* v124 보상 임시 (보상 다시 맞추기 때 다시 계산) */ ['pick', [['grilled', 3], ['torch', 6]], 25], ['queen', [['copperBar', 5], ['glowcap', 3]], 80], ['slime', [['ironBar', 4], ['gel', 6]], 100], ['golem', [['crystal', 8], ['ironBar', 4]], 140],
   ['seeds', [['stew', 3]], 40], ['tree', [['crystal', 10], ['stew', 2]], 100], ['cpick', [['torch', 10], ['stew', 3]], 60], ['turtle', [['goldBar', 4], ['frostShard', 3]], 200], ['spirit', [['frostShard', 6], ['goldBar', 2]], 220], ['seeds2', [['fireBerry', 4]], 60], ['tree2', [['crystal', 12], ['goldBar', 4]], 200], ['free', [], 0]];
 GUIDE.forEach((g, k) => { const m = Q_META[k]; g.id = m[0]; g.rw = m[1]; g.xp = m[2]; });
 // side quests: any time, in any order
@@ -3265,7 +3283,7 @@ const Q_PROG = {
   s_crop2: () => [qn(G.stats.wetH), 5], s_crop3: () => [qn(G.stats.fert), 10], s_crop4: () => [qn(G.stats.starH), 5], s_rooms: () => [qn(G.stats.chests), 3], s_ranch: () => [Object.keys(G.stats.ranchK || {}).length, 3], s_auto: () => [qn(G.stats.autoH), 20],
 };
 const Q_GO = {
-  naru: ['near'], naruCall: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
+  naru: ['near'], naruCall: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], gbench: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
   queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
   s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],
@@ -3895,7 +3913,7 @@ const NARU_INTRO = ['아, 눈 떴어요? 나무 아래 쓰러져 있어서 얼�
   '그럼 이거요. 길잡이 방울이에요. 달고 있으면 멀리서도 제 목소리가 들려요.', '이건 마을에 하나 남아 있던 횃불이에요. 어두운 데서는 이게 제일 든든해요.', ME_('잘 쓸게요.'),
   '우선 불을 지킬 작업대부터 만들어요. 저기 초록 뿌리기둥 나무, 여섯 개만 베어 올래요?'];
 // 1부 이야기 퀘스트(나루에게 받는 것): 경험치는 끝날 때 바로, 물건 보상은 마을의 나루에게 (머리 위 ?)
-const NARU_Q = ['naru', 'wood', 'bench', 'torch', 'ore', 'bar', 'forge', 'pick'];
+const NARU_Q = ['naru', 'wood', 'bench', 'torch', 'ore', 'bar', 'forge', 'gbench', 'pick']; // v124 gbench 「장비제작대 만들고 놓기」
 // 퀘스트가 끝나면 방울로: 칭찬 → 다음 할 일 → 하는 방법 (돌려주기와 다음 받기를 한 대화로)
 // 4번 끝의 「제가 먼저 가 있을게요」는 나루가 광맥까지 먼저 걸어가는 v118부터 — v117은 화살표만
 const NARU_BELL = {
@@ -3904,7 +3922,8 @@ const NARU_BELL = {
   torch: ['따뜻하다… 마을에서도 그 불빛이 보여요.', '이상하죠. {이름}님이 불 켜는 모습이 왠지 익숙했어요.', ME_('…저도요. 손이 먼저 알고 있었던 것 같아요.'), '다음은 구리예요. 주황색 돌이 박힌 벽을 봤거든요. 화살표를 따라가 봐요.'],
   ore: ['여섯 개 다 캤어요? 반짝반짝하죠. 이제 녹이기만 하면 돼요.', '용광로는 조금 기다려야 해요. 그동안 마음대로 돌아다녀도 괜찮아요.'],
   bar: ['첫 구리괴! …그거, 마을로 가져와 줄래요? 꼭 보고 싶어요.'],
-  forge: ['구리 작업대다! 꺼진 마을이 조금씩 돌아오는 것 같아요.', '이제 곡괭이도 바꿀 때예요. 나무 곡괭이로는 단단한 돌벽이 꿈쩍도 안 하거든요.', '곡괭이 같은 도구는 장비제작대에서 만들어요. 그것도 구리로 올려야 해요.'],
+  forge: ['구리 작업대다! 꺼진 마을이 조금씩 돌아오는 것 같아요.', '이제 곡괭이도 바꿀 때예요. 나무 곡괭이로는 단단한 돌벽이 꿈쩍도 안 하거든요.', '먼저 작업대에서 장비제작대를 만들어 놓아요. 무기랑 도구는 거기서 만들어요.'], // v124: 셋째 줄 바뀜 (퀘스트설계.md 5장)
+  gbench: ['장비제작대도 생겼네요! 칼이랑 곡괭이는 이제 여기서 만들어요.', '구리 곡괭이는 장비제작대를 구리로 올려야 만들 수 있어요.', '장비제작대를 열면 맨 위에 [올리기]가 있어요.'], // v124 새 퀘스트 끝
   pick: ['해냈어요! 그 곡괭이면 어디든 가겠네요. …잠깐 마을로 와 줄래요?'],
 };
 // 중요한 때는 마을로 부름: 그 퀘스트가 끝나면 다음 이야기는 마을에서 나루와 이야기한 뒤에 이어져요 · pick 장면 끝에는 [다음 이야기 듣기] → 버섯 여왕 「출발 전」 (v121)
@@ -4679,7 +4698,7 @@ function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give ||
     const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
-    if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
+    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'smelter') G.stats.gbench = 1; /* v124 퀘스트 「장비제작대 만들고 놓기」 */ if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   markLight(); emit('tile', t.x, t.y); return t;
 }
@@ -6009,17 +6028,27 @@ const QTGT = { t: -9, q: null, v: null };
 // HUD 퀘스트 한 줄: [작은 글자, 글]
 function activeLine() { const a = G.qAct || 'main', q = activeQuest(); if (!q) return ['', '퀘스트 고르기'];
   const side = isSide(q), st = side ? questState(q) : null, ask = side && isAsk(q); if (side && st.done && !st.claimed && st.has) return [ask ? '부탁' : '도전', `${st.nh ? '나루에게 가기' : '보상 받기'} · ${qText(q)}`]; return [ask ? '부탁' : side ? '도전' : '이야기', qText(q)]; }
+// ---- v124 「퀘스트 완료!」 띠 (dev/design/퀘스트설계.md 4장): 이야기·나루의 부탁·도전 모두 — 화면 위 가운데 띠(퀘스트 이름 + 둘째 줄 보상 안내), 누르면 퀘스트 창 (ui/feedback.js)
+// 퀘스트 진행은 세계 공동이라 같은 세계 모두에게 보여요. 한꺼번에 여러 개면 차례로 (화면 쪽), 한 번에 QDONE_MAX개까지
+const QDONE_MAX = 5;
+function qDoneEmit(q, side) { const st = questState(q, side ? null : GUIDE.indexOf(q)); const sub = st.claimed || !st.has ? '' : st.nh ? '나루에게 받아요' : '보상 받기';
+  emit('qdone', qText(q), sub, side && !isAsk(q) ? 'side' : 'main'); }
+// 나루의 부탁·도전: 끝난 걸 G.stats.qdone에 적어 한 번만 (옛 세이브·처음은 지금 끝난 것을 조용히 적어 둠). 아직 받지 않은 부탁은 받은 뒤에
+const sideLive = q => !isAsk(q) || askOpen(q.id);
+function sideDoneTick() { const S = G.stats; if (!S.qdone) { S.qdone = {}; for (const q of QSIDE) if (sideLive(q) && q.done()) S.qdone[q.id] = 1; return; } if (!started) return; let k = 0;
+  for (const q of QSIDE) { if (S.qdone[q.id] || !sideLive(q) || !q.done()) continue; S.qdone[q.id] = 1; if (!(G.qclaim || {})[q.id] && k++ < QDONE_MAX) qDoneEmit(q, true); } }
 function checkGuide() {
   if (G.stats.naruCall && !naruSpot()) G.stats.naruCall = null; // 나루가 마을에 없으면 부르지 않아요
-  let n = 0, last = null, boss = 0; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
+  let n = 0, last = null, boss = 0; const fin = []; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
     // v117 1부(나루에게 받는 이야기): 경험치는 끝날 때 바로, 물건은 마을의 나루에게 · 6·8번은 마을로 부름
     if (NARU_Q.includes(q.id) && naruSpot()) { const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[q.id] && !(G.qclaim || {})[q.id]) { qx[q.id] = 1; gainXp(q.xp, G.p.x, G.p.y); } if (started && NARU_CALL[q.id] && !(G.stats.callSeen || {})[q.id]) G.stats.naruCall = q.id; } // 한 장면은 한 번 (stats.callSeen)
     if (started && naruSpot() && G.stats.naruMet) { if (NARU_BOSS.includes(q.id)) { bossPassed(q.id); boss++; } scenePassed(q.id); } // v119 2부: 보스 「돌아와서」·13번 장면을 쌓아요
-    last = q; G.guide++; n++; }
+    last = q; G.guide++; n++; if (started && q.id !== 'naru') fin.push(q); } // v124: 끝난 이야기마다 「퀘스트 완료!」 띠 (첫 퀘스트는 첫 장면이 대신)
   if (n && started && boss) { emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v119: 보스를 물리치면 방울로 부름 (안 들러도 다음 이야기는 진행)
   if (n && started && last) { const bell = naruSpot() && G.stats.naruMet && NARU_BELL[last.id]; /* v119: 12·14·17번 끝 한마디도 */
     if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (NARU_Q.includes(last.id) && last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
-    else if (n === 1 && !boss && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
+  } // v124: 예전 「목표 달성!」 작은 알림은 「퀘스트 완료!」 띠로 바뀜
+  for (const q of fin.slice(-QDONE_MAX)) qDoneEmit(q, false); sideDoneTick();
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
   // v84: 화살표는 활성 퀘스트 하나 — 가장 가까운 할 곳을 1초에 한 번 찾아요 (밝힌 곳만)
   const q = activeQuest(); if (q !== QTGT.q || G.time - QTGT.t >= 1 || G.time < QTGT.t) { QTGT.q = q; QTGT.t = G.time; const v = q && !(isSide(q) && q.done() && !(isAsk(q) && !(G.qclaim || {})[q.id])) ? questGo(q) : null; QTGT.v = v || null; }
@@ -9322,6 +9351,14 @@ onEvent('bossHp', onlyMe((k, hp, max) => { $('#bossFill').style.width = Math.max
 let lastGoalTxt = '';
 function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', (txt, tag) => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } const t = $('#goalTag'), tg = tag || '퀘스트'; if (t && t.textContent !== tg) t.textContent = tg; }); // v84: 활성 퀘스트 한 줄 + 앞의 작은 글자(이야기·도전)
+// v124 「퀘스트 완료!」 띠 (퀘스트설계.md 4장): 화면 위 가운데 약 2초 + 띵, 여러 개면 차례로, 누르면 그 퀘스트가 있는 탭으로 퀘스트 창 — 퀘스트는 세계 공동이라 누가 끝내도 모두에게
+const QD = { list: [], t: 0, cur: null }, QDONE_SHOW = 2000;
+function qdNext() { const e = $('#qdone'); clearTimeout(QD.t); const x = QD.list.shift(); QD.cur = x || null; if (!x) { e.hidden = true; e.classList.remove('out'); return; }
+  e.querySelector('.qn').textContent = x.name; e.querySelector('.qs').textContent = x.sub ? x.sub + ' ›' : ''; e.classList.remove('out'); const bb = $('#bossbar'); e.style.top = bb.hidden ? '' : Math.round(bb.getBoundingClientRect().bottom + 6) + 'px'; e.hidden = false; void e.offsetWidth; SFX.qdone();
+  QD.t = setTimeout(() => { e.classList.add('out'); QD.t = setTimeout(qdNext, 300); }, QDONE_SHOW); }
+onEvent('loaded', () => { QD.list.length = 0; QD.cur = null; qdNext(); }); // 새 게임·불러오기: 남은 띠는 비워요
+onEvent('qdone', (name, sub, tab) => { QD.list.push({ name, sub, tab }); if (!QD.cur) qdNext(); });
+$('#qdone').addEventListener('click', () => { const x = QD.cur; QD.list.length = 0; QD.cur = null; qdNext(); if (x && G) { UIS.qTab = x.tab === 'side' ? 'side' : 'main'; openPanel('quest'); } });
 // ================= UI =================
 const UIS = { invSel: null, tab: 'all', trash: false, confirmNew: false, qty: {}, craftOrder: null };
 let panel = null, panelAt = 0;
