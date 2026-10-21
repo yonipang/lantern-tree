@@ -341,8 +341,9 @@ export function buildSprites() {
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
   applyArt();
-  // v122: 뿌리기둥 크기 여러 가지 — 같은 그림을 칸마다 정해진 배율로 (어린 나무 그림처럼 픽셀 그대로 줄이고 늘려요)
-  SPR.rootS = ROOT_SIZES.map(f => f === 1 ? SPR.obj.root : scaledOf(SPR.obj.root, f)); SPR.rootSY = SPR.rootS.map(youngOf);
+  // v122: 뿌리기둥 크기 여러 가지 — 같은 나무가 자라는 단계 그림 4장(etc/rootS, Plants.png 31~34번, 그림자 지움)
+  if (SPR.rootS && !Array.isArray(SPR.rootS)) SPR.rootS = Object.keys(SPR.rootS).sort((p, q) => p - q).map(k => SPR.rootS[k]);
+  SPR.rootSY = (SPR.rootS || []).map(youngOf);
   warpSprites(); // v89
   SPR.fp = {}; for (const id in GREW) if (SPR.obj[id] && OSPR[id]) { const [w, h, f, o] = OSPR[id]; SPR.fp[id] = { big: SPR.obj[id], bigV: SPR.obj[id + 'V'] || (GREW[id][2] ? rot90(SPR.obj[id]) : null), small: ARTC['obj/' + id] ? SPR.obj[id] : mk(w, h, f, o) }; }
   setFootprints(FPV);
@@ -370,8 +371,7 @@ export function applyArt() { // shallow paths first so crop/berry/3 wins over cr
     if (seg[0] === 'crop' && (seg.length === 2 || seg.length === 3) && SPR.crop[seg[1]]) { const C0 = SPR.crop[seg[1]]; for (const st of seg.length === 3 ? [+seg[2]] : [0, 1, 2, 3]) if (C0[st]) C0[st] = cropArt(path, olOf(C0[st])); continue; }
     let o = SPR; for (let i = 0; i < seg.length - 1; i++) { if (o[seg[i]] == null || o[seg[i]] instanceof HTMLCanvasElement) o[seg[i]] = {}; o = o[seg[i]]; }
     const last = seg[seg.length - 1]; let ol = olOf(o[last]); if (ol === undefined) ol = ART_SEL.has(seg[0]) ? 'sel' : INK; setArt(o, last, artPaint(path, ol)); } }
-export const ROOT_SIZES = [0.8, 0.9, 1, 1, 1.15, 1.3];
-export function scaledOf(src, f) { const w2 = Math.max(1, Math.round(src.width * f)), h2 = Math.max(1, Math.round(src.height * f)), c = document.createElement('canvas'); c.width = w2; c.height = h2; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(src, 0, 0, w2, h2); c.hd = src.hd; return c; }
+export const ROOT_PICK = [0, 1, 1, 2, 2, 3]; // 뿌리기둥 크기 고르기: 가장 작은 것·가장 큰 것은 덜 나와요
 export function youngOf(src) { const w2 = Math.max(1, Math.round(src.width * .78)), h2 = Math.max(1, Math.round(src.height * .78)), c = document.createElement('canvas'); c.width = w2; c.height = h2; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(src, 0, 0, w2, h2); c.hd = src.hd; return c; }
 export function glowSprite(col) {
   if (SPR.glow[col]) return SPR.glow[col];
