@@ -258,6 +258,7 @@ null
 "spirit": 1
 },
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -768,6 +769,7 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -1248,6 +1250,7 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -1818,6 +1821,7 @@ null
 "boxes": 0
 },
 "beaten": {},
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -2293,6 +2297,7 @@ null
 "nm65": 1,
 "qv": 1,
 "beaten": {},
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -2763,6 +2768,7 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -3299,6 +3305,7 @@ null
 },
 "qv": 1,
 "beaten": {},
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 3,
@@ -3717,6 +3724,7 @@ null
 "nm65": 1,
 "qv": 1,
 "beaten": {},
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -4274,6 +4282,7 @@ null
 "boxes": 0
 },
 "beaten": {},
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -4713,6 +4722,7 @@ null
 "roofBack": 7,
 "beaten": {},
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -4984,7 +4994,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28244자 61497feb7edd]",
+"objs": "[큰 값 28251자 3eac98a8680d]",
 "inv": [
 {
 "id": "berry",
@@ -5209,6 +5219,10 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"tier128": 1,
+"forge": 1,
+"benchLv": 1,
+"gearLv": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -5721,6 +5735,7 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -6295,6 +6310,7 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -6861,6 +6877,7 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -7427,6 +7444,7 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -7911,6 +7929,7 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,
@@ -8405,6 +8424,7 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"tier128": 1,
 "grow122": {
 "moved": 1,
 "back": 0,

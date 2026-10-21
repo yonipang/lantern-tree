@@ -18,6 +18,7 @@ import { flowNear } from './digging.js';
 import { markLight } from './loop.js';
 import { meId } from './survival.js';
 import { portalWhy, warpsChanged } from './warp.js';
+import { stationTierNow, syncStations } from './crafting.js';
 export const bmat = m => BMAT[m] || BMAT_X[m];
 export const twH = type => (BTYPE[type] || {}).h || TW_H[type];
 export const twType = o => o && OBJ[o.t] && OBJ[o.t].tw ? OBJ[o.t].tw.type : null;
@@ -82,11 +83,11 @@ export function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
-  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
+  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bench' || it.obj === 'smelter') { const sl = Math.max(it.blv || 0, stationTierNow()); if (sl) o.lv = sl; } /* v128: 놓으면 지금 제작대 등급으로 */ if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
     const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
-    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'smelter') G.stats.gbench = 1; /* v124 퀘스트 「장비제작대 만들고 놓기」 */ if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
+    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'smelter') G.stats.gbench = 1; /* v124 퀘스트 「장비제작대 만들고 놓기」 */ if (it.obj === 'bench' || it.obj === 'smelter') syncStations(o.lv || 0); /* v128: 더 높은 단계를 놓으면 다른 제작대도 같이 */ if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   markLight(); emit('tile', t.x, t.y); return t;
 }

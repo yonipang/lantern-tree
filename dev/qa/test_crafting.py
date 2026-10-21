@@ -37,9 +37,9 @@ def test_workbench_tiers():
             # pick up and place again keeps the tier
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const bi=T.idx(T.CX+6,T.CY+5),o=G.objs.get(bi);o.lv=3;G.objs.delete(bi);G.objs.delete(bi+1);G.inv.fill(null);T.returnObj(o,G.p.x,G.p.y);const k=G.inv.findIndex(x=>x&&x.id==='benchQ');
           G.inv[0]=G.inv[k];if(k)G.inv[k]=null;G.sel=0;G.p.face={x:1,y:0};const a=T.decide();T.perform(a);const n=[...G.objs.values()].find(q=>q.t==='bench');return [k>=0,T.ITEMS.benchQ.n,a.k,n&&n.lv]}""")
-            rec('회수','올린 작업대를 회수하면 「석영 작업대」 아이템, 다시 놓아도 석영 단계', r==[True,'석영 작업대','place',3], str(r))
+            rec('회수','올린 작업대를 회수하면 「석영 작업대」 아이템, 다시 놓으면 세계의 제작대 등급(여기선 서리 5단계)으로 놓임 (v128)', r==[True,'석영 작업대','place',5], str(r))
             # old saves: the copper workbench becomes a tier-1 workbench (2 tiles)
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;__set();const fi=T.idx(T.CX+9,T.CY+9);G.objs.set(fi,{t:'forge'});G.inv[12]={id:'forge',c:1};const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G,o=G2.objs.get(fi);
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;__set();G.stats.benchLv=0;G.stats.gearLv=0;/* v128: 앞에서 올린 세계 등급을 비우고 옛 세이브만 봄 */const fi=T.idx(T.CX+9,T.CY+9);G.objs.set(fi,{t:'forge'});G.inv[12]={id:'forge',c:1};const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G,o=G2.objs.get(fi);
           return [o&&o.t,o&&o.lv,T.fpTiles(fi,o).length,G2.objs.get(fi+1)&&G2.objs.get(fi+1).t,G2.inv[12]&&G2.inv[12].id,T.ITEMS.forge.n,T.STN.forge]}""")
             await pg.wait_for_timeout(3400)
             t=await ev(pg,"()=>document.querySelector('#toasts').innerText")
@@ -54,6 +54,37 @@ def test_workbench_tiers():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+
+
+def test_bench_gear_linked_tiers():
+    import asyncio, sys
+    # v128: 작업대와 장비제작대는 등급 하나 — 어느 쪽을 올려도 둘 다(재료는 한 번), 새로 놓으면 지금 등급, 옛 세이브는 불러올 때 높은 쪽으로
+    H2=HOOK.replace("computeLight}","computeLight,runCmd,GUIDE,perform}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,"""()=>{const T=__T,G=T.G;window.__L={};for(let y=T.CY+2;y<T.CY+14;y++)for(let x=T.CX+2;x<T.CX+14;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i)}
+              G.enemies.length=0;G.inv.fill(null);G.p.x=T.CX+5.5;G.p.y=T.CY+5.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;
+              Object.assign(G.stats,{benchLv:0,gearLv:0,forge:0,gbench:0});const bi=T.idx(T.CX+3,T.CY+3),si=T.idx(T.CX+3,T.CY+8),s2=T.idx(T.CX+10,T.CY+8);
+              G.objs.set(bi,{t:'bench'});G.objs.set(bi+1,{t:'_part',a:bi});G.objs.set(si,{t:'smelter'});G.objs.set(s2,{t:'smelter'});__L={bi,si,s2};return 1}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=__L;G.inv[12]={id:'copperBar',c:8};G.inv[13]={id:'dirt',c:25};T.runCmd({k:'benchUp',o:L.bi});
+              const g=T.GUIDE.find(q=>q.id==='gbench');return [G.objs.get(L.bi).lv,G.objs.get(L.si).lv,G.objs.get(L.s2).lv,T.countItem('copperBar'),T.countItem('dirt'),G.stats.benchLv,G.stats.gearLv,G.stats.forge,!!g.done()]}""")
+            rec('같이 올리기','작업대를 구리로 올리면 놓인 장비제작대 2개도 구리, 재료는 한 번(구리괴 8·흙 20), 등급만으로는 「장비제작대 놓기」가 안 끝남', r==[1,1,1,0,5,1,1,1,False], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=__L;G.inv[12]={id:'ironBar',c:8};G.inv[13]={id:'stone',c:30};T.runCmd({k:'benchUp',o:L.si});
+              return [G.objs.get(L.bi).lv,G.objs.get(L.si).lv,G.objs.get(L.s2).lv,T.countItem('ironBar'),T.countItem('stone'),G.stats.benchLv,G.stats.gearLv]}""")
+            rec('같이 올리기','장비제작대를 철로 올려도 작업대·다른 장비제작대가 같이 철, 재료는 한 번(철괴 8·돌 30)', r==[2,2,2,0,0,2,2], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'smelter',c:1};G.sel=0;G.p.face={x:1,y:0};const a=T.decide();T.perform(a);
+              const t=T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),o=G.objs.get(t),g=T.GUIDE.find(q=>q.id==='gbench');return [a.k,o&&o.t,o&&o.lv,!!G.stats.gbench,!!g.done()]}""")
+            rec('새로 놓기','기본 장비제작대를 새로 놓으면 지금 등급(철)으로 놓이고, 「장비제작대 놓기」가 끝남', r==['place','smelter',2,True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=__L;for(const o of G.objs.values())if(o.t==='smelter'||o.t==='bench')o.lv=0;G.objs.get(L.bi).lv=3;Object.assign(G.stats,{benchLv:3,gearLv:1,gbench:0});delete G.stats.tier128;
+              const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G,lv=[...G2.objs.values()].filter(o=>o.t==='smelter'||o.t==='bench').map(o=>o.lv);
+              return [lv.length,lv.every(v=>v===3),G2.stats.benchLv,G2.stats.gearLv,!!G2.stats.gbench,G2.stats.tier128]}""")
+            rec('옛 세이브','불러오면 놓인 작업대·장비제작대가 모두 높은 쪽(석영)으로 맞춰지고, 예전에 장비제작대를 올린 적이 있으면 「놓기」를 한 것으로', r==[4,True,3,3,True,1], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
 
 
 def test_bench_up_dirt():

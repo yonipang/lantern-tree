@@ -1,7 +1,7 @@
 // ================= 제작: 가까운 제작대·제작 자리, 만들 수 있는지, 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // recipes people usually make many of at once get a quantity picker
-import { BENCH_COL, BENCH_MAX, BENCH_N, BENCH_UP, TIERED } from '../data/automation-tiers.js';
+import { BENCH_COL, BENCH_MAX, BENCH_N, BENCH_UP, GEAR_N, TIERED } from '../data/automation-tiers.js';
 import { DUR, SALVAGE_BASE, SALVAGE_RATE } from '../data/circuits-regions.js';
 import { COOK_T, DISH, JOB_MAX, OFF_MAX, SMELT_T, TIMED } from '../data/farming-cooking.js';
 import { UPG_MAX } from '../data/gear-animals.js';
@@ -40,9 +40,8 @@ defineCmd('salv', c => { const s = itemAt(c.i), got = s && (DUR[s.id] || upgOk(s
 defineCmd('fix', c => { const s = itemAt(c.i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return false; const cost = repairCost(s); resetPool(); if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
   for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); emit('inv'); });
 defineCmd('benchUp', c => { const o = c.o != null ? G.objs.get(c.o) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return false; resetPool(); const cost = BENCH_UP[lv + 1]; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1;
-  if (o.t === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, o.lv); else { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, o.lv); }
-  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${tierNames(o.t)[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
+  for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1; syncStations(o.lv); /* v128: 작업대·장비제작대가 같이 올라가요 */
+  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${BENCH_N[o.lv]}·${GEAR_N[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
 // ---- 제작 { r: 레시피 번호, q: 몇 번, st·i·tier: 제작 자리 } → false 못 만듦 · 'reorder' 목록 순서를 새로 · 그 밖은 다시 그리기 ----
 defineCmd('craft', c => {
   const r = RECIPES[c.r], near = nearStations(); resetPool(); if (!craftable(r, near, c)) return false;
@@ -78,4 +77,9 @@ export function cancelJob(o, x, y) { if (!o || !o.job) return; takeJob(o, x, y, 
   delete o.job; emit('inv'); }
 export function advanceOffline(sec) { if (!G || !(sec > 1)) return 0; sec = Math.min(sec, OFF_MAX); G.time += sec; for (const b of G.buffs || []) b.end += sec; return sec; } // food buffs wait for you
 export const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
+// v128: 작업대와 장비제작대는 「제작대 등급」 하나를 같이 써요 — 어느 쪽을 올려도, 새로 놓아도, 세계의 모든 작업대·장비제작대가 같은 단계
+export function stationTierNow() { return Math.min(BENCH_MAX, Math.max((G.stats && G.stats.benchLv) || 0, (G.stats && G.stats.gearLv) || 0)); }
+export function syncStations(lv) { const L = Math.min(BENCH_MAX, Math.max(lv || 0, stationTierNow())); let n = 0;
+  for (const o of G.objs.values()) { const b = benchLv(o); if (b < 0 || b >= L) continue; if (o.t === 'forge') o.t = 'bench'; o.lv = L; n++; }
+  if (L > 0) { G.stats.forge = 1; G.stats.benchLv = L; G.stats.gearLv = L; } return n; }
 export const tierNames = st => TIERED[st] || BENCH_N;
