@@ -517,7 +517,7 @@ def test_circuits():
             rec('퀘스트','보상 받으면 아이템 지급 + 끝난 이야기(접힌 목록)로', r[0]==f0+5 and r[1] and r[2], str(r))
             await pg.screenshot(path=SP+'quest.png')
             await pg.tap('[data-a=qTab][data-i=side]'); await pg.wait_for_timeout(200)
-            r=await ev(pg,"()=>document.querySelectorAll('.qcard').length"); rec('퀘스트','도전 탭에 부가 퀘스트 목록', r>=8, r)
+            r=await ev(pg,"()=>document.querySelectorAll('.qcard').length"); rec('퀘스트','도전 탭에 부가 퀘스트 목록 (v125: 1장 도전 3개부터)', r>=3, r)
             await ev(pg,"()=>{__T.G.stats.made={gMoss:1};__T.closePanel();__T.openPanel('quest');}"); await pg.wait_for_timeout(500); await pg.tap('[data-a=qTab][data-i=side]'); await pg.wait_for_timeout(200)
             r=await ev(pg,"()=>{const row=document.querySelector('.qcard');return [row.querySelector('h4').textContent,!!row.querySelector('[data-a=qClaim]')]}")
             rec('퀘스트','완료한 도전이 맨 위에 + 보상 받기', '이끼 흙' in r[0] and r[1], str(r))
@@ -611,7 +611,7 @@ def test_light_miner_v113():
             rec('채굴기','구리 광맥 앞 채굴기가 12초마다 옆 상자에 광석 · 광석 조각이 날아가는 효과', r[0]=='copperOre:1' and r[1]==1 and r[2], str(r))
             rec('퀘스트','「채굴기로 광물 20개 얻기」(조건·보상 그대로)', r[3].startswith('채굴기로 광물 20개 얻기'), r[3])
             r=await ev(pg,"()=>{const q=__T.QSIDE.find(q=>q.id==='s_farm');return [q.t(),JSON.stringify(q.rw),q.xp]}")
-            rec('퀘스트','「비버 둥지로 나무 30개 얻기」(조건·보상 그대로)', r[0].startswith('비버 둥지로 나무 30개') and r[1]=='[["rope",4],["battery",1]]' and r[2]==50, str(r))
+            rec('퀘스트','「비버 둥지로 나무 30개 얻기」(조건 그대로, v125 보상 구리광석 3·빛 항아리 1)', r[0].startswith('비버 둥지로 나무 30개') and r[1]=='[["copperOre",3],["battery",1]]' and r[2]==50, str(r))
             # 옛 돌 채굴기: 그대로 일하고, 회수하면 돌 채굴장 재료
             r=await ev(pg,"""()=>{const T=__T,G=T.G,X=T.CX-6,Y=T.CY+12;for(let y=Y-2;y<=Y+3;y++)for(let x=X-2;x<=X+3;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}
               G.objs.set(T.idx(X,Y),{t:'drillStone',dir:{x:0,y:-1}});G.drops.length=0;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.p.x=X+.5;G.p.y=Y+1.5;G.p.face={x:0,y:-1};
@@ -672,7 +672,7 @@ def test_place_pushes_player():
 def test_quest_active_v84():
     import asyncio, sys
     # v84: 퀘스트 활성화(이야기·도전 통틀어 하나, 해제, 도전은 보상을 받으면 빔), 화살표는 활성 퀘스트의 가장 가까운 할 곳(밝힌 곳만), HUD 한 줄 앞 글자, 진행 막대, 지도에서 보기, 저장
-    H2=HOOK.replace("computeLight}","computeLight,checkGuide,activeQuest,questGo,claimQuest,splitSave,get goalTarget(){return goalTarget},get panel(){return panel},get UIS(){return UIS}}")
+    H2=HOOK.replace("computeLight}","computeLight,GUIDE,checkGuide,activeQuest,questGo,claimQuest,splitSave,get goalTarget(){return goalTarget},get panel(){return panel},get UIS(){return UIS}}")
     async def main():
         mkpage(SRC,'qa.html',H2)
         async with async_playwright() as p:
@@ -681,7 +681,7 @@ def test_quest_active_v84():
             rec('활성','새 게임은 첫 이야기(v110 나루에게 말 걸기)가 활성, HUD 한 줄 앞에 「이야기」', r==['main','naru','이야기',True], str(r))
             # 화살표: 밝힌 곳만 — 물가를 가리키는 도전 (낚시)
             r=await ev(pg,"""()=>{const T=__T,G=T.G,px=Math.floor(G.p.x),py=Math.floor(G.p.y);G.explored.fill(0);for(let y=py-30;y<=py+30;y++)for(let x=px-30;x<=px+30;x++){const j=T.idx(x,y);if(G.floor[j]===T.WATER)G.floor[j]=1}
-              const wi=T.idx(px+12,py);G.floor[wi]=T.WATER;G.wall[wi]=0;return 0}""")
+              const wi=T.idx(px+12,py);G.floor[wi]=T.WATER;G.wall[wi]=0;G.guide=T.GUIDE.findIndex(q=>q.id==='gbench');return 0}""")  # v125: 낚시 도전은 2장 — 구리 작업대까지 끝낸 것으로
             await ev(pg,"()=>document.querySelector('#goal').click()"); await pg.wait_for_timeout(600)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=qTab][data-i=side]').click()"); await pg.wait_for_timeout(250)
             await ev(pg,"()=>document.querySelector('#sheet [data-a=qAct][data-i=s_fish]').click()"); await pg.wait_for_timeout(250)
@@ -704,7 +704,7 @@ def test_quest_active_v84():
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.stats.fishCaught=10;T.checkGuide();const a=document.querySelector('#goalTxt').textContent;T.claimQuest('s_fish');T.checkGuide();return [a.startsWith('보상 받기'),G.qAct,T.goalTarget,document.querySelector('#goalTxt').textContent,document.querySelector('#goalTag').textContent]}")
             rec('활성','다 하면 HUD에 「보상 받기」, 받으면 활성이 비고 화살표 없음 · 「퀘스트 고르기」', r==[True,'none',None,'퀘스트 고르기','퀘스트'], str(r))
             # 이야기 활성화 → 다음 이야기로 이어짐 · 잠긴 이야기는 활성화 못 함 · 해제
-            await ev(pg,"()=>{__T.G.qAct='none';__T.G.stats.naruMet=1;__T.checkGuide()}")  # v110: 첫 이야기(나루에게 말 걸기)를 끝내 두고 뿌리기둥부터
+            await ev(pg,"()=>{__T.G.qAct='none';__T.G.guide=0;__T.G.stats.naruMet=1;__T.checkGuide()}")  # v110: 첫 이야기(나루에게 말 걸기)를 끝내 두고 뿌리기둥부터
             await ev(pg,"()=>{__T.UIS.qTab='main';__T.openPanel('quest')}"); await pg.wait_for_timeout(600)
             r1=await ev(pg,"()=>[!!document.querySelector('#sheet .qcard.big [data-a=qAct][data-i=wood]'),!!document.querySelector('#sheet .qrow.lock [data-a=qAct]')]")
             await ev(pg,"()=>document.querySelector('#sheet .qcard.big [data-a=qAct][data-i=wood]').click()"); await pg.wait_for_timeout(250)

@@ -891,10 +891,10 @@ def test_naru_part1b_v118():
               G.stats.farmed=30;for(let k=0;k<20;k++)T.update(1/30);const b=T.bellState();T.runCmd({k:'claim',id:'s_farm'});T.checkGuide();const g=T.questGo(T.activeQuest()),n=T.naruSpot();
               a.push(!!G.stats.askEnd.s_farm,G.rpg.xp>xp||G.rpg.lv>lv,!!b&&b.lines[0].includes('마을로 와 줄래요'),!!G.qclaim.s_farm,T.countItem('rope')-r0,T.naruAsk(),T.canClaim(),!!g&&g.x===n.x&&g.y===n.y,T.activeLine().join(' '));return a}""")
             rec('부탁','안 받은 부탁은 못 고름, 받은 부탁은 활성(「부탁」), 끝내면 경험치는 바로·방울 「마을로 와 줄래요?」, 퀘스트 창에선 못 받고 나루 머리 위 ?, 화살표 = 나루', r[:3]==['main','s_farm','부탁'] and r[3:11]==[True,True,True,False,0,True,False,True] and '나루에게 가기' in r[11], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.closePanel();const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};G.sel=-1;window.__r0=T.countItem('rope');const a=T.decide();if(a.k==='use')T.perform(a);return a.u}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.closePanel();const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};G.sel=-1;window.__r0=T.countItem('copperOre');const a=T.decide();if(a.k==='use')T.perform(a);return a.u}""")
             await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
-            r2=await ev(pg,"""()=>{const T=__T,G=T.G;const P=T.panel;return [P.mode,P.lines.map(l=>typeof l==='string'?l:l.s).join(' ').includes('볼이 볼록'),!!G.qclaim.s_farm,T.countItem('rope')-window.__r0,T.naruAsk(),G.qAct]}""")
-            rec('부탁','마을의 나루에게 말 걸면 부탁 끝 장면(비버 이야기) + 물건 보상(이끼 끈 4·건전지 1), ? 사라짐', r=='talk' and r2[:3]==['ask:s_farm',True,True] and r2[3]>=4 and r2[4:]==[False,'main'], str(r)+str(r2))
+            r2=await ev(pg,"""()=>{const T=__T,G=T.G;const P=T.panel;return [P.mode,P.lines.map(l=>typeof l==='string'?l:l.s).join(' ').includes('볼이 볼록'),!!G.qclaim.s_farm,T.countItem('copperOre')-window.__r0,T.naruAsk(),G.qAct]}""")
+            rec('부탁','마을의 나루에게 말 걸면 부탁 끝 장면(비버 이야기) + 물건 보상(v125 구리광석 3·빛 항아리 1), ? 사라짐', r=='talk' and r2[:3]==['ask:s_farm',True,True] and r2[3]>=3 and r2[4:]==[False,'main'], str(r)+str(r2))
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();delete G.stats.askV;G.stats.askOpen={};G.stats.askEnd={};delete G.qclaim.s_lamp;G.stats.litLamp=1;G.stats.nTip={hunger:1,hurt:1,faint:1,full:1,cocoon:1,region:1,warp:1,level:1,seed:1};G.guide=T.GUIDE.findIndex(q=>q.id==='queen');G.stats.naruCall=null;
               for(let k=0;k<20;k++)T.update(1/30);return [Object.keys(G.stats.askOpen).sort().join(),T.bellState(),T.askOwed().join(),T.naruAsk()]}""")
