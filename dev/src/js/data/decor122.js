@@ -101,7 +101,19 @@ return {
   cropSign: ['작물 팻말', '밭 앞에 세우는 나무 팻말.', [[cW, 2]], 'furn', null, SOLID, null, 'deco'],
   bigChest: ['큰 보물상자', '쇠테를 두른 커다란 보물상자 (2×1). 장식이에요.', [[cW, 10], ['copperBar', 2]], 'furn', [2, 1], SOLID, null, 'store'],
 }; })();
-for (const id in DECO122) { const [n, d, req, cat, sz, ex, use] = DECO122[id];
+// v123 가구 단계 (사용자 확정 2026-10-21, 추천표대로): 그 단계 금속을 1~2개 더해 레시피 단계를 옮겨요(단계는 재료로 정해져요 — recipeTier).
+// 기본 작업대는 그대로. 구리 = 침대·소파·서랍·카펫·러그·우물·조명·물 위 소품·벽돌 바닥 … / 철 = 옷장·선반·큰 화분·쪽매·타일 바닥 / 석영 = 유리 가구·빛 덩굴 나무
+const CU = n => [['copperBar', n]], FE = n => [['ironBar', n]], QZ = n => [['quartzR', n]];
+export const TIER123 = {
+  bedRed: CU(2), bedGreen: CU(2), bedPurple: CU(2), sofaYellow: CU(1), sofaBlue: CU(1), sofaPurple: CU(1), sofaRed: CU(1),
+  desk: CU(1), dresserLong: CU(2), chairCafe: CU(1), carpetPurple: CU(1), carpetGreen: CU(1), carpetRed: CU(1), rugRetro: CU(1), rugRetroTall: CU(1), rugPattern: CU(1),
+  well: CU(2), flowerBoxFv: CU(1), lilyPad: CU(1), lotus: CU(1), lotus2: CU(1), waterRock: CU(1), waterRockS: CU(1), waterReed: CU(1), waterReedS: CU(1), pondRock: CU(1), pondRockS: CU(1),
+  floorBrickRed: CU(1), floorCheck: CU(1), wallRedWood: CU(1),
+  wardrobeOak: FE(2), wardrobeBig: FE(2), shelfGoods: FE(1), plantBig: FE(1), palmBig: FE(1), floorHerring: FE(1), floorTileRed: FE(1),
+  wardrobeGlass: QZ(2), drawers: QZ(1), glowVineTree: QZ(2),
+};
+const withTier = (id, req) => req.concat(TIER123[id] || []);
+for (const id in DECO122) { const [n, d, req0, cat, sz, ex, use] = DECO122[id]; const req = withTier(id, req0);
   ITEMS[id] = { n, kind: 'place', obj: id, d }; OBJ[id] = Object.assign({ n, item: id }, sz ? { sz } : {}, ex); if (use) USE[id] = use;
   const r = Rc(id, 1, req, 'bench', cat); r.tier = recipeTier(r); RECIPES.push(r); }
 
@@ -109,6 +121,6 @@ for (const id in DECO122) { const [n, d, req, cat, sz, ex, use] = DECO122[id];
 export const FLOOR122 = { floorPlank: [30, '판자 바닥', '밝은 나무판을 깔아요.', [['wood', 2]]], floorBrickRed: [31, '붉은 벽돌 바닥', '붉은 벽돌을 깔아요.', [['stone', 2], ['dirt', 1]]],
   floorCheck: [32, '황토 체크 바닥', '황토색 체크무늬 타일을 깔아요.', [['stone', 2], ['dirt', 2]]], floorHerring: [33, '쪽매 바닥', '나무를 엇갈려 짠 쪽매 바닥을 깔아요.', [['wood', 3]]],
   floorTileRed: [34, '붉은 타일 바닥', '네모난 붉은 타일을 깔아요.', [['stone', 3]]] };
-for (const id in FLOOR122) { const [f, n, d, req] = FLOOR122[id]; ITEMS[id] = { n, kind: 'floor', floor: f, d }; FLOOR_ITEM[f] = id; const r = Rc(id, 4, req, 'bench', 'build'); r.tier = recipeTier(r); RECIPES.push(r); }
+for (const id in FLOOR122) { const [f, n, d, req0] = FLOOR122[id]; const req = withTier(id, req0); ITEMS[id] = { n, kind: 'floor', floor: f, d }; FLOOR_ITEM[f] = id; const r = Rc(id, 4, req, 'bench', 'build'); r.tier = recipeTier(r); RECIPES.push(r); }
 export const WALL122 = { wallPlank: [14, '판자 벽', '밝은 나무판을 세운 벽.', [['wood', 2]]], wallRedWood: [15, '붉은 나무 벽', '붉게 칠한 나무 벽.', [['wood', 2], ['resin', 1]]] };
-for (const id in WALL122) { const [w, n, d, req] = WALL122[id]; WALLS[w] = { n, tier: 0, hp: 3, drop: [[id, 1, 1, 1]] }; ITEMS[id] = { n, kind: 'wall', wall: w, d }; BUILT_WALLS.add(w); const r = Rc(id, 2, req, 'bench', 'build'); r.tier = recipeTier(r); RECIPES.push(r); }
+for (const id in WALL122) { const [w, n, d, req0] = WALL122[id]; const req = withTier(id, req0); WALLS[w] = { n, tier: 0, hp: 3, drop: [[id, 1, 1, 1]] }; ITEMS[id] = { n, kind: 'wall', wall: w, d }; BUILT_WALLS.add(w); const r = Rc(id, 2, req, 'bench', 'build'); r.tier = recipeTier(r); RECIPES.push(r); }

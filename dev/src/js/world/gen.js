@@ -1,8 +1,10 @@
 // ================= 지도 만들기 (구조 변경 5단계: world.js에서 옮김) =================
 // 시드로 세계 만들기(genWorld) — 지역·벽·물·연못·석영 광맥, 숨은 방(놓기·찾기·보물상자)
-import { ANCH, ANCH2, BX, BY, CX, CY, H, L2, LAVA, LAY, MAPV, SA, SB, SI, SL, W, idx, inB, setLayout } from './map.js';
+import { ANCH, ANCH2, BX, BY, CX, CY, H, L2, LAVA, LAY, MAPV, PIT, SA, SB, SI, SL, W, idx, inB, setLayout } from './map.js';
 import { G } from '../save/state.js';
 import { ROOM_DECO, ROOM_LOOT, ROOM_N } from '../data/farming-cooking.js';
+import { NAT_GEN, NAT_SHORE } from '../data/nature123.js';
+import { OBJ } from '../data/items.js';
 import { fbm, hash2, rng, vn } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
 import { emit } from '../sim/events.js';
@@ -114,6 +116,7 @@ export function genWorld(seed) {
     else t = r < 0.024 ? 'cluster' : r < 0.036 ? 'glow' : null;
     if (t) objs.set(i, t === 'bush' ? { t, r: 0 } : { t });
   }
+  addNature123({ wall, floor, biome, objs }, seed, nearSafe); // v123: 지역마다 나무·덤불·그루터기·선인장·야자 (data/nature123.js)
   for (let y = CY - 1; y <= CY; y++) for (let x = CX - 1; x <= CX + 1; x++) objs.set(idx(x, y), { t: 'treeP' });
   for (let y = CY + 2; y <= CY + 4; y++) for (let x = CX - 4; x <= CX + 4; x++) floor[idx(x, y)] = 5;
   const put = (dx, dy, o) => objs.set(idx(CX + dx, CY + dy), o);
@@ -131,6 +134,17 @@ export function genWorld(seed) {
   addPond({ wall, floor, objs }, null);
   return { wall, floor, biome, objs };
 }
+// v123 (data/nature123.js NAT_GEN·NAT_SHORE): 새 세계에 지역 자연물을 드문드문. 둘레 3×3에 벽이 없는 열린 바닥에만(좁은 굴을 막지 않게),
+// 여러 칸(큰 고목 2×2·쓰러진 통나무 4×2)은 모든 칸과 그 둘레가 비어야 해요. 등불나무 둘레·보스방 곁(nearSafe)은 빼요. 무작위는 칸 좌표 hash2라 같은 시드면 같은 자리.
+export function addNature123(w, seed, nearSafe) { const { wall, floor, biome, objs } = w, bad = f => f === WATER || f === LAVA || f === 20 || f === PIT;
+  const open = (x, y, fw, fh) => { for (let yy = y - 1; yy <= y + fh; yy++) for (let xx = x - 1; xx <= x + fw; xx++) { if (!inB(xx, yy)) return false; const j = idx(xx, yy); if (wall[j]) return false; if (xx >= x && xx < x + fw && yy >= y && yy < y + fh && (bad(floor[j]) || objs.has(j) || nearSafe(xx, yy) || Math.hypot(xx - CX, yy - CY) < 9.5)) return false; } return true; };
+  const nearWater = (x, y) => { for (let yy = y - 2; yy <= y + 2; yy++) for (let xx = x - 2; xx <= x + 2; xx++) if (inB(xx, yy) && floor[idx(xx, yy)] === WATER) return true; return false; };
+  for (let y = 3; y < H - 6; y++) for (let x = 3; x < W - 6; x++) { const i = idx(x, y); if (wall[i] || objs.has(i) || bad(floor[i])) continue;
+    const b = biome[i], r = hash2(x, y, seed + 123) * 100; let t = null;
+    if (b <= 2 && nearWater(x, y)) { let c = 0; for (const [k, p] of NAT_SHORE) { c += p; if (r < c) { t = k; break; } } }
+    else { let c = 0; for (const [k, p] of NAT_GEN[b] || []) { c += p; if (r < c) { t = k; break; } } }
+    if (!t) continue; const fp = OBJ[t].sz || [1, 1]; if (!open(x, y, fp[0], fp[1])) continue;
+    objs.set(i, { t }); for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) if (dx || dy) objs.set(idx(x + dx, y + dy), { t: '_part', a: i }); } }
 export function addWater(w, seed, nearSafe, ok) {
   for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) {
     const i = idx(x, y); if (w.wall[i] || nearSafe(x, y) || vn(x * .09, y * .09, seed + 77) < (LAY === 2 ? 0.76 : 0.715)) continue;
