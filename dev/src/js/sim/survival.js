@@ -4,7 +4,7 @@ import { ENV_TXT, LOST_MAX, LOST_SHARE, RECALL_CD, RECALL_T } from '../data/deep
 import { EFF } from '../data/farming-cooking.js';
 import { guardMul } from '../data/gear-animals.js';
 import { GUIDE } from '../data/quests.js';
-import { ITEMS, OBJ } from '../data/items.js';
+import { BUILT_WALLS, ITEMS, OBJ } from '../data/items.js';
 import { fxRand } from '../engine/random.js';
 import { $, clamp } from '../engine/util.js';
 import { cam, curPl, G, ME, started } from '../save/state.js';
@@ -49,7 +49,7 @@ export function envTick(dt) {
 export let NATW = null, NATW_K = '';
 export function naturalWalls() { const k = G.seed + '|' + W + 'x' + H + '|' + MAPV + (ANCH ? JSON.stringify(ANCH) : ''); if (NATW_K !== k) { NATW = genWorld(G.seed).wall; NATW_K = k; } return NATW; }
 export function shutsIn(x, y, j, nat) { if (!isSolid(x, y)) return false; const o = G.objs.get(j), a = o && (o.t === '_part' ? G.objs.get(o.a) : o); if (a && OBJ[a.t] && OBJ[a.t].door) return false;
-  return !(nat && nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && G.wall[j] !== 6 && G.wall[j] !== 7); } // nat null: every solid tile shuts you in
+  return !(nat && nat[j] && nat[j] !== 8 && G.wall[j] && G.wall[j] !== 8 && !BUILT_WALLS.has(G.wall[j])); } // nat null: every solid tile shuts you in
 // bug fix: a home point (the lantern tree or a bed) fenced in on every side left you stuck after fainting or recalling;
 // if the spot is closed in (no way out within 16 tiles, doors count as a way out), you wake up just outside instead
 // (it looks at natural rock only when the spot reads as closed without it, so loading and waking up seldom rebuild the first world)

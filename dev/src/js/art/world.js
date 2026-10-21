@@ -176,10 +176,10 @@ export function spreadSprs() {
 }
 
 // tiles
-export const FPAL = { 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
+export const FPAL = { 30: ['#c8894a', '#e0a560', '#9c6534'], 31: ['#b0473c', '#c85a4c', '#7e3028'], 32: ['#d9a868', '#ecc590', '#b08048'], 33: ['#a5482c', '#c0613a', '#7a3420'], 34: ['#b85a52', '#cf7268', '#8a3c36'], /* v122 새 바닥(그림은 dev/art/floor/30~34 — 22는 구덩이 PIT) */ 7: ['#5f9e5c', '#6fb36a', '#4a7f48'], 8: ['#6a4f7a', '#7f6191', '#55406a'], 9: ['#7c74b8', '#958ccf', '#625a9c'], 1: ['#4f8f57', '#5ea366', '#447d4c'], 2: ['#6e4a3a', '#7d5743', '#5e3d30'], 3: ['#5a4560', '#6a5272', '#4a3850'], 4: ['#3d4566', '#4a5378', '#323a58'], 5: ['#b07a4a', '#c48d5a', '#7d5233'], 6: ['#7f7a92', '#948fa6', '#5d5872'] };
 export function floorTex(t, v) {
-  if (t >= 17) return regFloorTex(t, v);
-  if (t >= 11) return natFloorTex(t, v);
+  if (t >= 17 && t <= 21) return regFloorTex(t, v);
+  if (t >= 11 && t <= 16) return natFloorTex(t, v);
   const R = rng(t * 977 + v * 131 + 7), pal = FPAL[t];
   const P = (A, x, y, col) => A.p(((x % 16) + 16) % 16, ((y % 16) + 16) % 16, col);
   return mk(16, 16, A => {
@@ -223,8 +223,8 @@ export function floorTex(t, v) {
     if (t === 4) { for (let k = 0; k < 2; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#a99cf0'); A.r(0, 0, 16, 1, '#454e72'); A.r(0, 0, 1, 16, '#454e72'); }
   }, null);
 }
-export const WPAL = { 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
-export const WFRONT_COL = { 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
+export const WPAL = { 14: ['#c8894a', '#e0a560', '#9c6534'], 15: ['#a04a32', '#c0613a', '#7a3420'], /* v122 판자 벽·붉은 나무 벽(그림은 dev/art/wtop·wfront/14·15) */ 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
+export const WFRONT_COL = { 14: '#8a5a30', 15: '#6e2e1e', 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
 export function wallTop(t, v) {
   const R = rng(t * 733 + v * 97 + 3), pal = WPAL[t];
   return mk(16, 16, A => {
@@ -294,9 +294,9 @@ export const DECO_DEF = {
 export const SPR = {};
 export function buildTerrain() {
   SPR.fringe = {}; SPR.fringeW = {}; SPR.corner = {}; SPR.cornerW = {}; SPR.fringeL = {}; SPR.fringeX = {}; SPR.fringeWL = {}; SPR.fringeWX = {};
-  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
+  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 30, 31, 32, 33, 34]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
   SPR.deco = {}; for (const t in DECO_DEF) SPR.deco[t] = DECO_DEF[t].map(f => mk(7, 7, f, 'soft'));
-  SPR.lily = [mk(9, 7, A => { A.e(4.5, 3.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 2.8, 1.6, 1, '#6cbb76'); A.poly([[4.5, 3.5], [8.5, 1.8], [8.5, 3.4]], '#00000000'); A.g.globalCompositeOperation = 'destination-out'; A.poly([[4.5, 3.5], [8.6, 1.6], [8.6, 3.6]], '#000'); A.g.globalCompositeOperation = 'source-over'; }, 'sel'),
+  SPR.lily = ARTC['lily/0'] ? [artPaint('lily/0', 'sel'), artPaint(ARTC['lily/1'] ? 'lily/1' : 'lily/0', 'sel')] : [mk(9, 7, /* v122 손그림 연잎(16px)이 있으면 그것 */ A => { A.e(4.5, 3.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 2.8, 1.6, 1, '#6cbb76'); A.poly([[4.5, 3.5], [8.5, 1.8], [8.5, 3.4]], '#00000000'); A.g.globalCompositeOperation = 'destination-out'; A.poly([[4.5, 3.5], [8.6, 1.6], [8.6, 3.6]], '#000'); A.g.globalCompositeOperation = 'source-over'; }, 'sel'),
     mk(9, 8, A => { A.e(4.5, 4.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 3.8, 1.6, 1, '#6cbb76'); A.e(5, 2.6, 1.5, 1.3, '#ffb3c6'); A.p(5, 2, '#ffe0ea'); A.p(5, 3, C.amber); }, 'sel')];
 }
 export function buildSprites() {
@@ -336,11 +336,14 @@ export function buildSprites() {
       const y = (i / 4 / w) | 0; if (y >= h - 3) { a[i] = 74; a[i + 1] = 44; a[i + 2] = 40; } else { a[i + 3] = 0; cx += (i / 4) % w; n++; } }
     const sx = n ? Math.round(cx / n) : w >> 1; for (const [dx, dy, al] of [[0, 5, 150], [1, 7, 120], [0, 9, 90], [-1, 11, 60]]) { const x = sx + dx, y = h - 3 - dy; if (x < 0 || y < 0 || x >= w) continue; const i = (y * w + x) * 4; a[i] = 150; a[i + 1] = 144; a[i + 2] = 160; a[i + 3] = al; }
     g.putImageData(d, 0, 0); return k; };
-  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp')]) SPR.objOff[k] = k === 'torch' ? snuffed(SPR.obj[k]) : dimmed(SPR.obj[k]);
+  SPR.objOff = {}; for (const k of ['torch', 'lampShroom', 'lampCrystal', 'sproutLamp', 'sporeLamp', ...Object.keys(DECOR).filter(k => DECOR[k].use === 'lamp'), ...Object.keys(OBJ).filter(k => OBJ[k].offDim && SPR.obj[k])]) SPR.objOff[k] = k === 'torch' ? snuffed(SPR.obj[k]) : dimmed(SPR.obj[k]);
   SPR.giant = {}; for (const k in SPR.crop) SPR.giant[k] = giantSpr(k);
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
   applyArt();
+  // v122: 뿌리기둥 크기 여러 가지 — 같은 나무가 자라는 단계 그림 4장(etc/rootS, Plants.png 31~34번, 그림자 지움)
+  if (SPR.rootS && !Array.isArray(SPR.rootS)) SPR.rootS = Object.keys(SPR.rootS).sort((p, q) => p - q).map(k => SPR.rootS[k]);
+  SPR.rootSY = (SPR.rootS || []).map(youngOf);
   warpSprites(); // v89
   SPR.fp = {}; for (const id in GREW) if (SPR.obj[id] && OSPR[id]) { const [w, h, f, o] = OSPR[id]; SPR.fp[id] = { big: SPR.obj[id], bigV: SPR.obj[id + 'V'] || (GREW[id][2] ? rot90(SPR.obj[id]) : null), small: ARTC['obj/' + id] ? SPR.obj[id] : mk(w, h, f, o) }; }
   setFootprints(FPV);
@@ -368,6 +371,7 @@ export function applyArt() { // shallow paths first so crop/berry/3 wins over cr
     if (seg[0] === 'crop' && (seg.length === 2 || seg.length === 3) && SPR.crop[seg[1]]) { const C0 = SPR.crop[seg[1]]; for (const st of seg.length === 3 ? [+seg[2]] : [0, 1, 2, 3]) if (C0[st]) C0[st] = cropArt(path, olOf(C0[st])); continue; }
     let o = SPR; for (let i = 0; i < seg.length - 1; i++) { if (o[seg[i]] == null || o[seg[i]] instanceof HTMLCanvasElement) o[seg[i]] = {}; o = o[seg[i]]; }
     const last = seg[seg.length - 1]; let ol = olOf(o[last]); if (ol === undefined) ol = ART_SEL.has(seg[0]) ? 'sel' : INK; setArt(o, last, artPaint(path, ol)); } }
+export const ROOT_PICK = [0, 1, 1, 2, 2, 3]; // 뿌리기둥 크기 고르기: 가장 작은 것·가장 큰 것은 덜 나와요
 export function youngOf(src) { const w2 = Math.max(1, Math.round(src.width * .78)), h2 = Math.max(1, Math.round(src.height * .78)), c = document.createElement('canvas'); c.width = w2; c.height = h2; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(src, 0, 0, w2, h2); c.hd = src.hd; return c; }
 export function glowSprite(col) {
   if (SPR.glow[col]) return SPR.glow[col];

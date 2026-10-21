@@ -85,13 +85,14 @@ export function digGround(t) {
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
 export function canPlace(tx, ty, it, skip) {
-  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return fpFree(a.x, a.y, fp, !!d.solid, null, skip); }
+  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].sz) { const d = OBJ[it.obj], fp = placeFp(d), a = placeAnchor({ x: tx, y: ty }, fp); return d.water ? fpWater(a.x, a.y, fp) : fpFree(a.x, a.y, fp, !!d.solid, null, skip); }
   if (!inB(tx, ty)) return false; const i = idx(tx, ty); if (G.wall[i]) return false; const o = G.objs.get(i);
   if (it.kind === 'wire') return !G.wire.has(i) && G.floor[i] !== WATER && G.floor[i] !== LAVA && G.floor[i] !== PIT && (!o || !OBJ[o.t].tree);
   if (it.kind === 'floor') return G.floor[i] !== it.floor && (!o || !OBJ[o.t].tree); // 구덩이 위에도 깔 수 있어요 (걷으면 구덩이가 다시 드러나요)
   if (it.kind === 'ground') { const f = G.floor[i]; if (o) return false; // v87: 물 한 동이는 구덩이에만 · 다른 바닥 재료는 구덩이를 메우거나, 물·용암을 메우거나, 다른 자연 바닥을 바꿔요
     if (it.ground === WATER) return f === PIT; return f === PIT || f === WATER || f === LAVA || (!!DIG_YIELD[f] && f !== it.ground); }
   if (o) return false;
+  if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].water) return G.floor[i] === WATER; // v122 물 위 소품(연잎·물속 바위 …)은 물 칸에만
   if (G.floor[i] === PIT) return false; // v87: 구덩이에는 벽·가구·씨앗을 놓지 못해요 (먼저 메워요)
   if ((G.floor[i] === WATER || G.floor[i] === LAVA) && it.kind !== 'wall') return false;
   if (it.kind === 'seed') return it.crop === 'cropMoss' ? G.floor[i] === 21 : [1, 2, 3, 4, 21].includes(G.floor[i]);
@@ -124,4 +125,6 @@ export function clearParts(i, o) { for (const j of fpTiles(i, o)) { if (j === i)
 export function delObj(i) { const o = G.objs.get(i); if (o && OBJ[o.t] && OBJ[o.t].sz) clearParts(i, o); G.objs.delete(i); }
 export function anchorAt(i) { const o = G.objs.get(i); if (o && o.t === '_part') { const a = G.objs.get(o.a); return a && a.t !== '_part' ? o.a : -1; } return o ? i : -1; }
 export function fpFree(x, y, fp, solid, own, skip) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] === WATER || G.floor[j] === LAVA) return false; const q = G.objs.get(j); if (q && !(own != null && (j === own || (q.t === '_part' && q.a === own)))) return false; if (solid && occupied(tx, ty, skip)) return false; } return true; }
+// v122 물 위 소품의 여러 칸 자리: 모두 물이고 벽·물건이 없어야 해요
+export function fpWater(x, y, fp) { for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) { const tx = x + dx, ty = y + dy; if (!inB(tx, ty)) return false; const j = idx(tx, ty); if (G.wall[j] || G.floor[j] !== WATER || G.objs.get(j)) return false; } return true; }
 export function placeAnchor(t, fp) { const f = G.p.face; let x = t.x, y = t.y; if (Math.abs(f.x) >= Math.abs(f.y)) { if (f.x < 0) x -= fp[0] - 1; y -= Math.floor((fp[1] - 1) / 2); } else { if (f.y < 0) y -= fp[1] - 1; x -= Math.floor((fp[0] - 1) / 2); } return { x, y }; }

@@ -9,7 +9,7 @@
 0,
 40000
 ],
-"objs": "[큰 값 28094자 764766a6b4b3]",
+"objs": "[큰 값 28190자 b0e33d278cfd]",
 "inv": [
 {
 "id": "berry",
@@ -258,6 +258,11 @@ null
 "spirit": 1
 },
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {
 "queen": 1,
 "slime": 1,
@@ -543,7 +548,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28094자 764766a6b4b3]",
+"objs": "[큰 값 28190자 b0e33d278cfd]",
 "inv": [
 {
 "id": "berry",
@@ -762,6 +767,11 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -1021,7 +1031,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28094자 764766a6b4b3]",
+"objs": "[큰 값 28190자 b0e33d278cfd]",
 "inv": [
 {
 "id": "berry",
@@ -1236,6 +1246,11 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -1494,7 +1509,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 27988자 b28c08b89734]",
+"objs": "[큰 값 28084자 25e35dd5f515]",
 "inv": [
 {
 "id": "berry",
@@ -1800,6 +1815,11 @@ null
 "boxes": 0
 },
 "beaten": {},
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -2050,7 +2070,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 21303자 9c639257c4a8]",
+"objs": "[큰 값 21399자 799dce0ac382]",
 "inv": [
 {
 "id": "berry",
@@ -2269,6 +2289,11 @@ null
 "nm65": 1,
 "qv": 1,
 "beaten": {},
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -2526,7 +2551,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28038자 712de6082660]",
+"objs": "[큰 값 28134자 db134c18aef2]",
 "inv": [
 {
 "id": "berry",
@@ -2733,6 +2758,11 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -2974,6 +3004,483 @@ null
 "qAct": "main",
 "natDay": null
 },
+"old_furniture_v121": {
+"v": 3,
+"seed": 20261012,
+"wall": "[큰 값 20806자 a4927bb2b18a]",
+"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"biome": "[큰 값 3481자 bea050e13029]",
+"explored": [
+0,
+40000
+],
+"objs": "[큰 값 21553자 3c350ed37a78]",
+"inv": [
+{
+"id": "berry",
+"c": 4
+},
+{
+"id": "berrySeed",
+"c": 2
+},
+{
+"id": "swordWood",
+"c": 1,
+"dur": 120
+},
+null,
+null,
+null,
+null,
+null,
+null,
+{
+"id": "bed",
+"c": 1
+},
+{
+"id": "table",
+"c": 1
+},
+{
+"id": "longTable",
+"c": 1
+},
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null
+],
+"invV": 2,
+"tools": [
+{
+"id": "pickWood",
+"c": 1,
+"dur": 200
+}
+],
+"tsel": 0,
+"tHand": false,
+"lastW": "swordWood",
+"bagLv": 0,
+"sel": -1,
+"outfit": 0,
+"char": "sprout",
+"look": {
+"hair": "bob",
+"hc": 0,
+"eye": 0,
+"outfit": "tunic",
+"oc": 0,
+"hat": "none"
+},
+"p": {
+"x": 100.5,
+"y": 101.7,
+"hp": 100,
+"hunger": 100,
+"mp": 40
+},
+"rpg": {
+"lv": 1,
+"xp": 0,
+"pts": 0,
+"sp": 0,
+"str": 0,
+"dex": 0,
+"vit": 0,
+"int": 0,
+"sk": {},
+"slot": [
+null,
+null
+]
+},
+"qclaim": {},
+"wire": [
+[
+12720,
+1
+],
+[
+12721,
+1
+],
+[
+12919,
+1
+],
+[
+5460,
+1
+],
+[
+5461,
+1
+],
+[
+5659,
+1
+],
+[
+33162,
+1
+],
+[
+33163,
+1
+],
+[
+33361,
+1
+],
+[
+23810,
+1
+],
+[
+23811,
+1
+],
+[
+24009,
+1
+]
+],
+"fzones": [
+{
+"x": 128,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 119,
+"y": 118,
+"c": "B",
+"dead": []
+},
+{
+"x": 86,
+"y": 114,
+"c": "Y",
+"dead": []
+},
+{
+"x": 74,
+"y": 82,
+"c": "W",
+"dead": []
+},
+{
+"x": 139,
+"y": 78,
+"c": "K",
+"dead": []
+},
+{
+"x": 79,
+"y": 99,
+"c": "R",
+"dead": []
+},
+{
+"x": 136,
+"y": 113,
+"c": "B",
+"dead": []
+},
+{
+"x": 116,
+"y": 70,
+"c": "Y",
+"dead": []
+},
+{
+"x": 121,
+"y": 49,
+"c": "W",
+"dead": []
+},
+{
+"x": 153,
+"y": 78,
+"c": "K",
+"dead": []
+}
+],
+"regen": [],
+"stats": {
+"wood": 0,
+"bench": 0,
+"torch": 0,
+"copperOre": 0,
+"copperBar": 0,
+"seedsFound": 0,
+"nm58": 1,
+"nm61": 1,
+"nm65": 1,
+"naru110": 1,
+"naru119": 1,
+"warpV": 1,
+"archV": 1,
+"arch": [
+{
+"id": "arch0",
+"b": 0,
+"x": 116,
+"y": 60,
+"done": 0,
+"gT": -999
+},
+{
+"id": "arch2",
+"b": 2,
+"x": 56,
+"y": 24,
+"done": 0,
+"gT": -999
+},
+{
+"id": "arch3",
+"b": 3,
+"x": 158,
+"y": 162,
+"done": 0,
+"gT": -999
+},
+{
+"id": "arch4",
+"b": 4,
+"x": 6,
+"y": 116,
+"done": 0,
+"gT": -999
+}
+],
+"rescued": {
+"guide": 1
+},
+"npcV": 1,
+"deepV": 1,
+"deep": {
+"x": 130,
+"y": 169,
+"gate": 35539,
+"bx": 140,
+"by": 173,
+"done": 0,
+"read": 0,
+"gT": -999
+},
+"qv": 1,
+"beaten": {},
+"grow122": {
+"moved": 1,
+"back": 3,
+"boxes": 0
+},
+"uniq": {},
+"deepSeed": {},
+"accGot": {}
+},
+"time": 0,
+"spawnPt": null,
+"treeSeeds": 0,
+"won": false,
+"won2": false,
+"bossDead": {
+"slime": false,
+"queen": false,
+"golem": false,
+"turtle": false,
+"spirit": false,
+"dark": false
+},
+"guide": 0,
+"at": 1760000000000,
+"marks": [],
+"under": [],
+"terrain": {},
+"run": "mgj6k3cwln13h9",
+"playT": 0,
+"playTEst": false,
+"qt": {},
+"rooms": [
+{
+"id": "r00",
+"b": 0,
+"k": 0,
+"x": 112,
+"y": 74,
+"dx": 114,
+"dy": 73,
+"cx": 113,
+"cy": 76,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r01",
+"b": 0,
+"k": 1,
+"x": 142,
+"y": 54,
+"dx": 143,
+"dy": 53,
+"cx": 144,
+"cy": 56,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r10",
+"b": 1,
+"k": 0,
+"x": 96,
+"y": 42,
+"dx": 97,
+"dy": 41,
+"cx": 98,
+"cy": 44,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r11",
+"b": 1,
+"k": 1,
+"x": 118,
+"y": 154,
+"dx": 120,
+"dy": 157,
+"cx": 119,
+"cy": 154,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r20",
+"b": 2,
+"k": 0,
+"x": 178,
+"y": 134,
+"dx": 177,
+"dy": 135,
+"cx": 180,
+"cy": 134,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r21",
+"b": 2,
+"k": 1,
+"x": 44,
+"y": 58,
+"dx": 43,
+"dy": 59,
+"cx": 46,
+"cy": 58,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r30",
+"b": 3,
+"k": 0,
+"x": 44,
+"y": 156,
+"dx": 43,
+"dy": 157,
+"cx": 46,
+"cy": 156,
+"found": 0,
+"open": 0,
+"hint": 0
+},
+{
+"id": "r40",
+"b": 4,
+"k": 0,
+"x": 16,
+"y": 126,
+"dx": 20,
+"dy": 127,
+"cx": 17,
+"cy": 126,
+"found": 0,
+"open": 0,
+"hint": 0
+}
+],
+"recipes": {},
+"buffs": [],
+"mapV": 1,
+"fpV": 2,
+"equip": {
+"body": null,
+"head": null,
+"neck": null,
+"ring": null,
+"legs": null
+},
+"pets": {},
+"petOn": null,
+"backPt": null,
+"recallCd": 0,
+"env": {
+"k": null,
+"v": 0
+},
+"seen": {
+"berry": 1,
+"berrySeed": 1,
+"swordWood": 1,
+"pickWood": 1
+},
+"eqSets": [
+{
+"e": null,
+"pet": null
+},
+{
+"e": null,
+"pet": null
+},
+{
+"e": null,
+"pet": null
+}
+],
+"eqSet": 0,
+"qAct": "main",
+"natDay": null
+},
 "old_no_quest_active": {
 "v": 3,
 "seed": 20261012,
@@ -2984,7 +3491,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 21303자 9c639257c4a8]",
+"objs": "[큰 값 21399자 799dce0ac382]",
 "inv": [
 {
 "id": "berry",
@@ -3203,6 +3710,11 @@ null
 "nm65": 1,
 "qv": 1,
 "beaten": {},
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -3450,7 +3962,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 21303자 9c639257c4a8]",
+"objs": "[큰 값 21399자 683fdddef7ff]",
 "inv": [
 {
 "id": "berry",
@@ -3754,6 +4266,11 @@ null
 "boxes": 0
 },
 "beaten": {},
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru119": 1,
@@ -3948,7 +4465,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28094자 764766a6b4b3]",
+"objs": "[큰 값 28190자 b0e33d278cfd]",
 "inv": [
 {
 "id": "berry",
@@ -4187,6 +4704,11 @@ null
 "roofBack": 7,
 "beaten": {},
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -4452,7 +4974,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28148자 66dd93032ec0]",
+"objs": "[큰 값 28244자 61497feb7edd]",
 "inv": [
 {
 "id": "berry",
@@ -4677,6 +5199,11 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -4938,7 +5465,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28094자 764766a6b4b3]",
+"objs": "[큰 값 28190자 b0e33d278cfd]",
 "inv": [
 {
 "id": "berry",
@@ -5182,6 +5709,11 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -5530,7 +6062,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 19376자 b9f98d7331a0]",
+"objs": "[큰 값 19472자 18a28a72e3ae]",
 "inv": [
 {
 "id": "berry",
@@ -5747,6 +6279,11 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -6090,7 +6627,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 18236자 f954a42dc437]",
+"objs": "[큰 값 18332자 9a4f03e1c6f0]",
 "inv": [
 {
 "id": "berry",
@@ -6307,6 +6844,11 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -6650,7 +7192,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 18236자 f954a42dc437]",
+"objs": "[큰 값 18332자 9a4f03e1c6f0]",
 "inv": [
 {
 "id": "berry",
@@ -6867,6 +7409,11 @@ null
 "beaten": {},
 "nm61": 1,
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -7126,7 +7673,7 @@ null
 0,
 40000
 ],
-"objs": "[큰 값 28094자 764766a6b4b3]",
+"objs": "[큰 값 28190자 b0e33d278cfd]",
 "inv": [
 {
 "id": "berry",
@@ -7345,6 +7892,11 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -7614,7 +8166,7 @@ null
 0,
 32325
 ],
-"objs": "[큰 값 79639자 ac9b167343c5]",
+"objs": "[큰 값 79741자 04058fd2ee13]",
 "inv": [
 {
 "id": "berry",
@@ -7833,6 +8385,11 @@ null
 "qv": 1,
 "beaten": {},
 "nm65": 1,
+"grow122": {
+"moved": 1,
+"back": 0,
+"boxes": 0
+},
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,

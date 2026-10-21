@@ -70,6 +70,8 @@ LEGACY = {
     'no_mapV': "delete s.mapV",
     # v113 전 세이브: 채굴장·나무 작업장이 놓여 있고(안에 돌) 가방에도 있음 → 만들 때 든 재료로 돌려받음
     'old_pits_v111': "s.inv[3]={id:'pitCu',c:1};s.inv[4]={id:'treeFarm',c:2};s.objs=s.objs.filter(([i])=>![I(2,4),I(3,4),I(2,5),I(3,5)].includes(i));s.objs.push([I(2,4),{t:'quarry',p:0,store:[{id:'stone',c:7}]}],[I(3,4),{t:'_part',a:I(2,4)}],[I(2,5),{t:'_part',a:I(2,4)}],[I(3,5),{t:'_part',a:I(2,4)}])",
+    # v122 전 세이브: 1칸 침대(깨어나는 자리)·1칸 탁자·2×1 긴 식탁(가로·세로)·1칸 나무 옷장(그대로 1칸)이 놓여 있음 → 새 크기로 자리를 찾아 커지거나, 자리가 없으면 가방으로
+    'old_furniture_v121': "const ks=[[6,2],[6,6],[-6,2],[-6,3],[-6,6],[-5,6],[0,9],[1,9]].map(([x,y])=>I(x,y));s.objs=s.objs.filter(([i])=>!ks.includes(i));s.objs.push([I(6,2),{t:'bed'}],[I(6,6),{t:'table'}],[I(-6,2),{t:'longTable',rot:1}],[I(-6,3),{t:'_part',a:I(-6,2)}],[I(-6,6),{t:'longTable'}],[I(-5,6),{t:'_part',a:I(-6,6)}],[I(0,9),{t:'woodWardrobe'}]);s.spawnPt={x:a[1]+6,y:a[2]+2}",
     # v84 전 세이브: 활성 퀘스트가 없음 → 진행 중인 이야기가 활성
     'old_no_quest_active': "delete s.qAct;s.guide=3",
     # v83 전 세이브: 장비 세트가 없음 → 입은 장비(강화 단계 포함)와 펫이 세트 I

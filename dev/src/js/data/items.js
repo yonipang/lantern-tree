@@ -22,6 +22,7 @@ export const WALLS = {
   12: { n: '서리 광맥', tier: 3, hp: 8, drop: [['frostShard', 1, 2, 1]] },
   13: { n: '석영 광맥', tier: 2, hp: 7, drop: [['crystal', 1, 2, 1], ['granite', 1, 1, 0.3]] },
 };
+export const BUILT_WALLS = new Set([6, 7]); // 직접 짓는 벽 (나무 벽·돌벽돌 벽, v122 판자 벽·붉은 나무 벽은 data/decor122.js가 더해요): 곡괭이 없이 회수 · 채굴기·갇힘 판정에서 빼요
 export const TIERNAME = ['나무 곡괭이', '구리 곡괭이', '철 곡괭이', '수정 곡괭이'];
 export const BIOME = ['이끼 동굴', '버섯숲', '수정 동굴', '용암 동굴', '얼음 동굴'];
 export const FURN_D = '집을 꾸미는 예쁜 가구예요.';

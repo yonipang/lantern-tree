@@ -1,7 +1,7 @@
 // ================= 세계 그리기: 반딧불이 같은 주변 효과, 물체·몬스터·플레이어·보스 그리기(renderWorld·drawEntity), 겹쳐 그리기 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ---- ambient particles: fireflies, spores, sparkles ----
-import { glowSprite, SPR, TREE_SPREAD } from '../art/world.js';
+import { glowSprite, ROOT_PICK, SPR, TREE_SPREAD } from '../art/world.js';
 import { BENCH_COL, TIERED } from '../data/automation-tiers.js';
 import { BATT_MAX } from '../data/circuits-regions.js';
 import { ITEMS, OBJ, WALLS, WTYPE } from '../data/items.js';
@@ -84,7 +84,7 @@ export function renderWorld(cw, ch, glOn = false) {
       wl.forEach((b, q) => { if (b > 0) ctx.drawImage(SPR.fringeWX[b][q], sx, sy); }); wl.forEach((b, q) => { if (b > 0) ctx.drawImage(SPR.fringeWL[b][q], sx, sy); });
       [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]].forEach(([dx, dy, q]) => { const b = land(dx, dy); if (b > 0 && land(dx, 0) === 0 && land(0, dy) === 0) ctx.drawImage(SPR.cornerW[b][q], sx, sy); });
       }
-      const hl = hash2(x, y, 43); if (hl < .12 && land(0, -1) === 0 && land(0, 1) === 0) { const lp = SPR.lily[hl < .04 ? 1 : 0]; ctx.drawImage(lp, sx + 3 + ((hash2(x, y, 44) * 4) | 0), sy + 4 + Math.round(Math.sin(t * 1.3 + hl * 50) * .6)); }
+      const hl = hash2(x, y, 43); if (hl < .12 && land(0, -1) === 0 && land(0, 1) === 0) { const lp = SPR.lily[hl < .04 ? 1 : 0], big = lp.width > 9; ctx.drawImage(lp, sx + (big ? (16 - lp.width) >> 1 : 3 + ((hash2(x, y, 44) * 4) | 0)), sy + (big ? 15 - lp.height : 4) + Math.round(Math.sin(t * 1.3 + hl * 50) * .6)); } // v122 손그림 연잎(16px)은 칸 가운데
     }
     if (G.floor[i] === LAVA) { const ph = (t * .7 + hash2(x, y, 6)) % 1; if (hash2(x, y, 8) < .5) { ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = '#ffe0a0'; const bx = sx + 3 + ((hash2(x, y, 7) * 9) | 0), by = sy + 3 + ((hash2(x, y, 9) * 9) | 0); ctx.fillRect(bx, by, 2 + Math.round(ph * 2), 2); ctx.globalAlpha = 1; } }
     if (WFLOOR.has(G.floor[i])) { const ph = (t * .5 + hash2(x, y, 6)) % 1; ctx.globalAlpha = Math.sin(ph * Math.PI) * .55; ctx.fillStyle = '#e8f8ff'; ctx.fillRect(sx + 3 + ((hash2(x, y, 7) * 8) | 0), sy + 3 + Math.floor(ph * 9), 3, 1); ctx.globalAlpha = 1; }
@@ -316,12 +316,14 @@ export function drawEntity(it, t) {
       if (o.npc === 'guide' && (naruWaits() || naruAsk())) { const mk2 = naruWaits() ? '!' : '?'; const hop = Math.abs(Math.sin(t * 3)) * 3 / 16; ctx.font = pxFont(10); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; pxText(mk2, Math.round((nx + .5) * T - camX), Math.round((ny - .55 - hop) * T - camY), '#ffd25c', INK); } // v110: 첫 이야기 — 나루 머리 위 느낌표 · v117: 받을 보상·마을로 부름 = 물음표
       return; } // v104 NPC: 캐릭터 그림, 가끔 살짝 들썩
     if (o.t === 'wildF') img = SPR.wild[o.c] || SPR.wild.R;
+    if (o.t === 'brazier' && !o.off && SPR.brazierFire && SPR.brazierFire[0]) img = SPR.brazierFire[((t * 8) | 0) % 4] || img; // v122 화로 불 4장
     if (o.t === 'lever' && o.on) img = SPR.obj.leverOn; if (o.t === 'eDoor' && o.open) img = SPR.obj.eDoorOpen;
     if (d.feeder && (o.feed || []).some(Boolean)) img = SPR.obj.feederF || img; // v114 먹이가 든 먹이통
     const sieving = d.sieve && o.job && jobDone(o.job) < o.job.q; if (sieving && ((t * 4) | 0) % 2) img = SPR.obj.oreNetB || img; // v115 거르는 동안 그물이 살랑살랑
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
+    if (o.t === 'root' && SPR.rootS && SPR.rootS.length === 4 && Math.hypot(it.x - CX, it.y - CY) > 9.5) { const k = ROOT_PICK[Math.floor(hash2(it.x, it.y, 122) * ROOT_PICK.length)]; img = (o.yg && isYoung(o) ? SPR.rootSY : SPR.rootS)[k] || img; } // v122: 뿌리기둥 크기 여러 가지(같은 나무가 자라는 단계 그림, 칸마다 정해져요, 그림만), 등불나무 둘레 처음 것은 기본 크기
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && effH(img) > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
     if (TIERED[o.t] && o.lv) { const px = Math.round(wx * T - camX), py = Math.round((wy - effH(img) / 16) * T - camY) + 2; ctx.fillStyle = INK; ctx.fillRect(px - 4, py, 8, 5); ctx.fillStyle = BENCH_COL[o.lv]; ctx.fillRect(px - 3, py + 1, 6, 3); } // v60 tier plate
@@ -345,7 +347,7 @@ export function drawEntity(it, t) {
     if (d.dev === 'drill' && (o.store || []).length) { ctx.fillStyle = '#ffd25c'; ctx.fillRect(Math.round(wx * T - camX) + 4, Math.round((it.y + 1) * T - camY) - 20, 3, 3); }
     if (o.t === 'cherryTree') { for (let k = 0; k < 3; k++) { const ph = (t * .3 + k / 3 + hash2(it.x, it.y, k)) % 1, px = it.x + .5 + (k - 1) * .7 + Math.sin(ph * 9 + k) * .35, py = it.y - 1.6 + ph * 2.3; ctx.globalAlpha = Math.min(1, (1 - ph) * 3); ctx.fillStyle = k % 2 ? '#ffffff' : '#f7b8cf'; ctx.fillRect(Math.round(px * T - camX), Math.round(py * T - camY), Z, Z); } ctx.globalAlpha = 1; }
     if (o.t === 'torch' || o.t === 'furnace') { /* flame flicker handled by light */ }
-    if (d.bed && G.p.sleep && G.p.sleep.x === it.x && G.p.sleep.y === it.y) { drawImg(SPR.sleepHead, wx, it.y - .2); ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (wx + .5 + zz * .3) * T - camX, (it.y - 1.2 - zz * .5) * T - camY); ctx.globalAlpha = 1; }
+    if (d.bed && G.p.sleep && G.p.sleep.x === it.x && G.p.sleep.y === it.y) { const hy = d.sz && fpOf(o)[1] >= 3 ? it.y + .95 : it.y - .2; drawImg(SPR.sleepHead, wx, hy); /* v122: 2×3 침대는 베개가 한 칸 아래 */ ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (wx + .5 + zz * .3) * T - camX, (hy - 1 - zz * .5) * T - camY); ctx.globalAlpha = 1; }
     if (d.shrine && o.has) { const gk = guardOf(it.x, it.y), sealed = gk && !G.bossDead[gk]; const bob = Math.sin(t * 2.5) * 0.08; drawImg(SPR.item.lightSeed, wx, it.y + .25 + bob, { sx: .9, sy: .9, alpha: sealed ? .55 : 1 });
       if (sealed) { ctx.strokeStyle = `rgba(190,140,255,${.45 + Math.sin(t * 3) * .2})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.arc(wx * T - camX, (it.y - .3) * T - camY, .55 * T, 0, 6.283); ctx.stroke(); } }
     if (d.crop && cropStage(o) >= 3) { ctx.fillStyle = `rgba(255,241,214,${0.5 + Math.sin(t * 5) * 0.3})`; ctx.fillRect(Math.round((it.x + .78) * T - camX), Math.round((it.y + .1) * T - camY), Z, Z);
