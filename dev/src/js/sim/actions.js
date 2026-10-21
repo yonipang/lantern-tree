@@ -329,7 +329,7 @@ export let altI = 0, altKey = '';
 export function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
 // 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
-defineCmd('tap', c => { const t = c.t == null ? .3 : c.t; if (c.b === 'atk') G.atkQ = t; else G.actQ = t; });
-defineCmd('alt', () => doAlt());
+defineCmd('tap', c => { const t = G.p.cine ? 0 : c.t == null ? .3 : c.t; /* v127: 연출 장면 동안은 누르기 없음 */ if (c.b === 'atk') G.atkQ = t; else G.actQ = t; });
+defineCmd('alt', () => { if (!G.p.cine) doAlt(); });
 export function doAlt() { const a = curAlt(); if (!a || G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
 export function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }

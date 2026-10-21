@@ -20,14 +20,15 @@ import { gainXp, maxHp } from './player.js';
 import { onFrame } from './systems.js';
 import { freeTile } from './warp.js';
 import { naruSpot, villageSpot } from './npc.js';
+import { cineBusy, leadScene } from './cutscene.js';
 import { CX, CY, dirKo, idx, inB, W } from '../world/map.js';
 
 const TREE = { x: CX + .5, y: CY }; // 등불나무 가운데 (3×2칸)
 const nGIdx = id => GUIDE.findIndex(q => q.id === id);
 const gPassed = id => { const k = nGIdx(id); return k >= 0 && k < G.guide; };
 // ---- 나루 물체 찾기 (한 번 찾으면 그 칸을 기억해요) ----
-const NW = { g: null, i: -1, o: null, from: null, mt: 0, spd: LIFE_SPD, path: [], wait: 0, hold: 0, face: { x: 0, y: 1 }, anim: 0 };
-function naruAt() { if (NW.g !== G) { Object.assign(NW, { g: G, i: -1, o: null, from: null, mt: 0, path: [], wait: 0, hold: 0, face: { x: 0, y: 1 } }); }
+const NW = { g: null, i: -1, o: null, from: null, mt: 0, spd: LIFE_SPD, path: [], wait: 0, hold: 0, face: { x: 0, y: 1 }, anim: 0, pre: null }; // v127 pre: 연출 장면에서 대사가 끝나면 걸을 길
+function naruAt() { if (NW.g !== G) { Object.assign(NW, { g: G, i: -1, o: null, from: null, mt: 0, path: [], wait: 0, hold: 0, face: { x: 0, y: 1 }, pre: null }); }
   if (NW.o && G.objs.get(NW.i) === NW.o) return NW;
   NW.o = null; NW.from = null; NW.path = []; for (const [i, o] of G.objs) if (o.t === 'npc' && o.npc === 'guide') { NW.i = i; NW.o = o; break; }
   return NW.o ? NW : null; }
@@ -97,10 +98,11 @@ function leadGo() { const L = nLead(), n = naruAt(); if (!L || L.s !== 'wait') r
   const pos = naruPos(), see = alivePlayers().filter(pl => Math.hypot(pl.p.x - pos.x, pl.p.y - pos.y) < LEAD_SEE);
   const path = see.length ? leadPath(n.i, L.i) : null;
   if (!path) { leadPlace(); return; }
-  n.path = path.slice(0, LEAD_STEPS); n.spd = LEAD_SPD; n.hold = 0; n.wait = 0; L.s = 'walk'; L.end = G.time + n.path.length / LEAD_SPD + .4;
-  for (const pl of see) pl.p.still = L.end + .2; // 보는 사람은 나루가 떠날 때까지 서 있어요
-  emit('sfx', 'bell'); }
-function leadPlace(skip) { const L = nLead(), n = naruAt(); if (skip) for (const pl of playerList()) if (pl.p.still) pl.p.still = 0; if (!L) return; // 다 걸으면 서 있기는 나루가 사라지고 조금 뒤까지 (건너뛰면 바로 풀려요) if (!n) { L.s = 'done'; return; }
+  // v127: 보는 사람이 있으면 연출 장면(띠·카메라·손 흔들기·대사)으로 — 걷기는 대사가 끝난 뒤 (sim/cutscene.js leadScene → leadWalkStart)
+  n.path = []; n.from = null; n.hold = 0; n.wait = 0; NW.pre = path.slice(0, LEAD_STEPS); L.s = 'walk'; L.end = G.time + 60; emit('sfx', 'bell');
+  if (!leadScene(L.q || 'ore', see)) leadWalkStart(); }
+export function leadWalkStart() { const L = nLead(), n = naruAt(); if (!L || L.s !== 'walk' || !n || !NW.pre) return; n.path = NW.pre; NW.pre = null; n.spd = LEAD_SPD; L.end = G.time + n.path.length / LEAD_SPD + .4; }
+export function leadPlace(skip) { const L = nLead(), n = naruAt(); NW.pre = null; if (skip) for (const pl of playerList()) if (pl.p.still) pl.p.still = 0; if (!L) return; // 다 걸으면 서 있기는 나루가 사라지고 조금 뒤까지 (건너뛰면 바로 풀려요) if (!n) { L.s = 'done'; return; }
   const p0 = naruPos(); n.from = null; n.path = [];
   let j = L.i; if (!freeTile(j) && j !== n.i) { j = -1; const x = nX(L.i), y = nY(L.i); for (let r = 1; r <= 2 && j < 0; r++) for (let dy = -r; dy <= r && j < 0; dy++) for (let dx = -r; dx <= r; dx++) if (inB(x + dx, y + dy) && freeTile(idx(x + dx, y + dy))) { j = idx(x + dx, y + dy); break; } }
   if (j < 0 || !nPut(j)) { L.s = 'done'; return; }
@@ -114,7 +116,7 @@ export function leadHere() { const L = nLead(); if (!L || L.s !== 'there') retur
   else emit('bell', (L.q === 'deep' ? NARU2_DEEP_HERE : NARU_LEAD_HERE).slice()); naruHold(L.q === 'dark' ? 8 : 5); return true; }
 function leadTick(dt) { const L = nLead(), n = NW; if (!L || L.s === 'done') return false;
   if (L.s === 'wait') { if (G.time < L.t) L.t = G.time; if (G.time - L.t > LEAD_WAIT) leadGo(); return L.s !== 'wait' && L.s !== 'done'; }
-  if (L.s === 'walk') { nMove(dt); if (!n.from) { if (n.path.length && G.time < L.end + 1) { const j = n.path.shift(); if (!nStep(j)) n.path = []; } else leadPlace(); } return true; }
+  if (L.s === 'walk') { if (NW.pre) { if (!cineBusy()) leadWalkStart(); return true; } /* v127 연출 장면의 대사가 끝나기를 기다려요 (장면이 없으면 바로 걸어요) */ nMove(dt); if (!n.from) { if (n.path.length && G.time < L.end + 1) { const j = n.path.shift(); if (!nStep(j)) n.path = []; } else leadPlace(); } return true; }
   if (gPassed(L.q || 'ore')) { leadHome(); return false; } // 광석을 다 모으면(마지막 장을 읽으면·큰 어둠을 물리치면) 마을로
   if (L.s === 'there') { const pos = naruPos(); if (alivePlayers().some(pl => Math.hypot(pl.p.x - pos.x, pl.p.y - .3 - pos.y) < LEAD_ARRIVE)) leadHere(); return true; }
   if (L.s === 'back') { if (G.time >= L.t || G.time < L.t - 6) leadHome(); return L.s === 'back'; }
@@ -152,7 +154,7 @@ function tipTick() { if (NT.g !== G) Object.assign(NT, { g: G, last: -99, dead: 
 // ---- 매 프레임 ----
 let askT = 0;
 onFrame('naruLife', dt => { if (!started || !G.stats.naruMet) return; const n = naruAt(); if (!n) return;
-  if (G.stats.nLead && G.stats.nLead.s === 'walk' && !NW.path.length && !NW.from && NW.mt === 0) leadPlace(); // 걷는 중에 저장한 세이브: 광맥 옆에
+  if (G.stats.nLead && G.stats.nLead.s === 'walk' && !NW.pre && !NW.path.length && !NW.from && NW.mt === 0) leadPlace(); // 걷는 중에 저장한 세이브: 광맥 옆에
   if (!leadTick(dt)) lifeTick(dt);
   askT += dt; if (askT < .5) return; askT = 0; askTick(); if (part1Done() && naruSpot()) tipTick(); });
 

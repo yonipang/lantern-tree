@@ -56,6 +56,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/data/automation-tiers.js` | 스프링클러·자동 수확기, 거대 작물, 축제 케이크, **「지형 재료 2배」**, 작업대·장비제작대 단계와 레시피 단계 나누기 |
 | `js/data/controls.js` | 도구 종류, 도끼 → 나무 베기 도구, 쳐서 회수(몇 번·몇 초) |
 | `js/data/warp.js` | v89 워프포인트·포탈 수치(지역마다 2개, 1초, 둘레 6칸, 포탈 5개), 포탈 아이템·레시피(석영 작업대) — `data/digging.js` 다음 |
+| `js/data/cutscene.js` | v127 연출 장면(레터박스) **대본** `CINE_SCRIPTS`(장면마다 순서만: 카메라·몸짓·대사·걷기·효과·이름 띠·기다리기), 근처 12칸 `CINE_NEAR`, 대사 읽을 시간 `cineSayT`, 시험 장면 대사 — `data/npc.js` 다음 |
 | `js/data/beaver.js` | v114 비버 둥지·먹이통 수치(둘레 3칸·30초·안에 60·먹이통 4칸·물 6칸), 먹이 표 `FEED`(먹이 하나로 몇 초), 비버(`ANIMALS.beaver`)·아이템·레시피(작업대) — `data/npc.js` 다음 |
 | `js/data/sieve.js` | v115 광석 그물 수치(재료 하나에 8초·30개까지), 나오는 것 표 `SIEVE`(넣는 재료 → [나오는 것, %], null = 꽝)·지역 광석 `sieveOre`·부서지는/가루 효과 색, 아이템·레시피(구리 작업대) — `data/beaver.js` 다음 |
 | `js/sim/inventory.js` | 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도(`addItem`·`removeItem`·`countItem`·`moveInto`), 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가방·상자·도구 명령 |
@@ -83,6 +84,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/beaver.js` | v114 비버 둥지 규칙: 둘레의 다 자란 나무 찾기(`treesNear`)·먹이통에서 먹기·베기(어린나무로 되돌림)·옆 상자로(`nestStep`, `onFrame('beaver')`), 둥지 앞 할 일(`nestOptions`·`nestUse`), 먹이통 명령(`feedIn`·`feedOut`·`feedAll`), 비버 사는 곳(`beaverHome`), 그림용 비버 자리(`beaverPose`) — `sim/deep.js` 다음 |
 | `js/sim/sieve.js` | v115 광석 그물 규칙: 굴리기(`sieveRoll`), 그물 앞 할 일(`sieveOptions`·`sieveUse`), 넣기 명령 `sievePut`, 꺼내기(`sieveTake` — `sim/crafting.js` `takeJob`이 그물이면 여기로). 넣어 둔 일은 용광로와 같은 `o.job`(`sv: 1`) — `sim/beaver.js` 다음 |
 | `js/sim/naru.js` | v118 나루 1부 ②: 나루가 걸어 다님(`naruPos`·`naruPose` 그림용·`lifeLine` 곁 한마디·`naruHold`), 먼저 걸어 나가기(`stats.nLead`, `leadPrep`·명령 `naruLead`·`leadSkip`·`leadTarget`), 나루의 부탁(`ASK_IDS`·`isAsk`·`askList`·`askOwed`), 1부 뒤 상황 한마디(`stats.nTip`) — `onFrame('naruLife')`, 수치·대사는 `data/npc.js` |
+| `js/sim/cutscene.js` | v127 연출 장면 진행(규칙 쪽): 시작 `startCine`(보는 사람 = 12칸 안 `cineViewers`, 돌고 있으면 기다림)·칸 진행·카메라 자리·끝(`onFrame('cine')`), 명령 `cineNext`·`cineSkip`, 보는 사람 표시 `pl.p.cine`(맞지 않음·안 쫓김·제자리), 몸짓 `cineGest`, 시험 장면 `leadScene`·`seedScene`·`bossScene`(처음 한 번 `stats.bIntro`) — `sim/naru.js` 다음 |
 | `js/sim/quest-balance.js` | v125 보상 다시 맞추기: 모든 퀘스트가 생긴 뒤(naru.js 다음) `data/quests.js` `Q_RW`의 새 물건 보상을 끼움(레시피 쪽지·귀환석은 그대로). 장마다 열림은 `sim/quests.js` `questChapter`·`sideOpen`(장 번호 `Q_CH`, 관문 `Q_CH_GATE`) |
 | `js/art/content.js` | **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
@@ -103,6 +105,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/ui/panels-extra.js` | 창 HTML 조각: 희귀도 이름, 강화 목록, 시간 작업 카드, 포획·펫·장비·지역 재료·작업대 올리기·도구 주머니 |
 | `js/ui/help.js` | v96 가이드 창(설정 → 가이드): 주제 탭 `HELP_TABS`(조작·제작·장비·요리·지도·펫·상자·그 밖에)와 `helpHTML`. 창 안 설명 글은 여기로 모아요 |
 | `js/ui/talk.js` | v117 말하는 창: 타이핑·빨리감기(`typeSetup`·`typeTap`·`talkKey`, 대화·기억·일기·엔딩 창), 주인공 이름(`pName`·`fillName`)·대사 한 줄(`lineOf`)·얼굴(`faceURL`), 길잡이 방울 대화창(`bellPush`, 사건 `bell`) |
+| `js/ui/cutscene.js` | v127 연출 장면 화면 쪽: 위아래 검은 띠·[건너뛰기]·아래 띠 얼굴·자막(타이핑)·가운데 이름 띠, `body.cine`(HUD 숨김, `style.css`), 창·건축 모드 닫기·장면 동안 열려던 창은 끝난 뒤(`cineDefer`), 누르기·키(스페이스·엔터·E = 다음, Esc = 건너뛰기) — `ui/talk.js` 다음 |
 | `js/ui/map.js` | 지도 창: 상자 표시 설정, 지도 그리기(`drawMap`) |
 | `js/ui/build.js` | v91 건축 모드 화면: 켜고 끄기(`bmOpen`·`bmClose`, 가방 창 「건축」·Z), 아래 목록(`bmRender`), 화면 누르기·끌기(`bmDown`·`bmMove`·`bmUp`, 바닥 네모·벽 한 줄), 「놓기」(앞 칸 `frontTile`), 조이스틱 자리(`joyZone`), 미리보기(`drawBuild`) |
 | `js/ui/panel-actions.js` | 창 안 버튼(`onSheetClick`) → 명령 보내기, 창 안 고르기·확인 묻기(`UIS`), 칸 끌어 옮기기 |

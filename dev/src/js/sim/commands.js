@@ -19,4 +19,4 @@ export function runCmd(c) {
   return pl ? withPlayer(pl, () => fn(c)) : fn(c); // 보낸 플레이어가 「지금 플레이어」 (save/state.js)
 }
 export const IDLE = Object.freeze({ mx: 0, my: 0, stick: null, act: false, atk: false, aim: null });
-export const ctlOf = p => p.ctl || IDLE;
+export const ctlOf = p => (!p.cine && p.ctl) || IDLE; // v127: 연출 장면을 보는 동안은 제자리 (sim/cutscene.js)

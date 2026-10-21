@@ -17,6 +17,7 @@ export const FRAME_ORDER = [
   'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'naru', // v117 나루 하는 중 한마디 (sim/npc.js)
   'naruLife', // v118 나루가 걸어 다님·먼저 걸어 나가기·나루의 부탁·상황 한마디 (sim/naru.js)
+  'cine', // v127 연출 장면(레터박스) 대본 진행 (sim/cutscene.js)
   'skills102', // v102 빛 구슬 친구·빛 방패·각성·질주 시간
   'fish',     // 낚시 (game/combat.js)
   'drops', 'fx', // 떨어진 물건 줍기 · 반짝이·떠오르는 글자 (game/update.js)
