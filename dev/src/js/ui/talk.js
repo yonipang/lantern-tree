@@ -2,8 +2,8 @@
 // 타이핑: 창 안 [data-type] 글이 한 글자씩 나타나요. 아직 안 나온 글자는 투명하게 그 자리에 있어서 창 크기가 바뀌지 않아요.
 //   빨리감기(▶▶)나 창 아무 데나 누르기 = 지금 줄을 바로 다 보이기, 한 번 더 = 다음 줄. PC는 스페이스·엔터도 같아요.
 //   대화(나루·NPC)·첫 장면·기억 장면·일기·마지막 장·엔딩 창에 써요. 창이 다시 그려져도 어디까지 나왔는지(panel.ty) 이어 가요.
-// 방울 대화창: 화면 아래쪽, 왼쪽에 얼굴, 방울 소리와 함께 타이핑. 누르면 다음 줄, 가만히 두어도 읽을 시간이 지나면 다음 줄로 넘어가요.
-//   한 줄짜리(하는 중 한마디)는 약 3초 뒤 저절로 사라져요. 창(가방·대화 …)이 열려 있는 동안은 숨었다가 닫으면 이어져요.
+// 방울 대화창: 중요한 연속 대사는 직접 눌러 다음 줄(마지막 줄에서 닫기), 상황 안내 한 줄(short)만 자동으로 사라져요.
+//   한 줄짜리(하는 중 한마디)는 타이핑 완료 약 3초 뒤 사라져요. 창(가방·대화 …)이 열려 있는 동안은 숨었다가 닫으면 이어져요.
 import { $, clamp } from '../engine/util.js';
 import { SFX } from '../engine/audio.js';
 import { CHARS, curChar } from '../art/characters.js';
@@ -82,14 +82,14 @@ function bellShow() { const el = bellEl(), L = lineOf(BC.lines[BC.at]); const wh
   el.querySelector('.bellnx').hidden = true; el.hidden = sheetOpen() || document.body.classList.contains('intro');
   if (!bellTimer) { let k = 0; bellTimer = setInterval(() => bellTick(++k), TY_MS); } }
 function bellHide() { const el = $('#bell'); if (el) el.hidden = true; if (bellTimer) { clearInterval(bellTimer); bellTimer = 0; } }
-// 읽을 시간: 한 줄짜리는 약 3초, 이어지는 대화는 글 길이에 맞춰 (2.2초 + 한 글자 0.06초)
-const holdMs = s => BC.short ? 3000 : 2200 + s.length * 60;
+// 한 줄짜리 상황 안내만 자동으로 사라져요. 중요한 연속 방울 대화는 수동으로 넘겨요.
+const holdMs = s => 3000;
 function bellTick(k) { if (!BC) { bellHide(); return; } const el = bellEl(), hide = sheetOpen() || document.body.classList.contains('intro'); if (el.hidden !== hide) el.hidden = hide; if (hide) return; // 창이 열려 있으면 기다려요
-  if (BT.n < BT.total) { BT.n++; tyApply(BT); if (k % 3 === 0) SFX.blip(); if (BT.n >= BT.total) { BC.wait = performance.now() + holdMs(BT.recs.map(r => r.full).join('')); el.querySelector('.bellnx').hidden = BC.at >= BC.lines.length - 1; } return; }
-  if (BC.wait && performance.now() >= BC.wait) bellAdvance(); }
+  if (BT.n < BT.total) { BT.n++; tyApply(BT); if (k % 3 === 0) SFX.blip(); if (BT.n >= BT.total) { BC.wait = BC.short ? performance.now() + holdMs(BT.recs.map(r => r.full).join('')) : 0; const nx = el.querySelector('.bellnx'); nx.hidden = BC.short; nx.textContent = BC.at >= BC.lines.length - 1 ? '✓' : '▶'; } return; }
+  if (BC.short && BC.wait && performance.now() >= BC.wait) bellAdvance(); }
 function bellAdvance() { if (!BC) return; if (BC.at < BC.lines.length - 1) { BC.at++; bellShow(); } else bellNext(); }
 // 누르기: 타이핑 중이면 바로 다 보이기, 다 나왔으면 다음 줄
-export function bellTap() { if (!BC) return; if (BT.n < BT.total) { BT.n = BT.total; tyApply(BT); BC.wait = performance.now() + holdMs(BT.recs.map(r => r.full).join('')); bellEl().querySelector('.bellnx').hidden = BC.at >= BC.lines.length - 1; return; } bellAdvance(); }
+export function bellTap() { if (!BC) return; if (BT.n < BT.total) { BT.n = BT.total; tyApply(BT); BC.wait = BC.short ? performance.now() + holdMs(BT.recs.map(r => r.full).join('')) : 0; const nx = bellEl().querySelector('.bellnx'); nx.hidden = BC.short; nx.textContent = BC.at >= BC.lines.length - 1 ? '✓' : '▶'; return; } bellAdvance(); }
 export const bellState = () => BC ? { lines: BC.lines.map(l => lineOf(l).s), at: BC.at, short: BC.short, queued: BQ.length } : null; // 테스트용
 export function bellClear() { BQ.length = 0; BC = null; bellHide(); } // 새 게임·불러오기
 
