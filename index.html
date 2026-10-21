@@ -2657,7 +2657,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; /* v119 · v124 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; /* v119 · v124 · v128 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2787,6 +2787,7 @@ function deserialize(s) {
   if (!G.stats.nm61) migrateGear61();
   if (!G.stats.nm65) migrateTools65(); // v65 tool pouch
   migrateForges60(oldFp); // v60
+  syncTiers128(); // v128: 작업대·장비제작대 같은 단계
   grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
@@ -3012,6 +3013,10 @@ function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.id]) s.i
 function migrateNaru119() { if (G.stats.naru119) return; G.stats.naru119 = 1; const read = !!(G.stats.deep && G.stats.deep.read), dark = !!(G.bossDead && G.bossDead.dark); if (!read && !dark) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {};
   { G.stats.n2go = 1; G.qclaim.naruGo = 1; qx.naruGo = 1; } if (dark) { G.stats.n2back = 1; G.qclaim.naruBack = 1; qx.naruBack = 1; } }
 // v124 새 이야기 퀘스트 「장비제작대 만들고 놓기」: 옛 세이브에 놓인 장비제작대가 있으면 놓은 것으로 셈, 구리 작업대 퀘스트를 이미 지났고 이 퀘스트도 다 됐으면 받은 것으로 (장면·방울·보상 없이)
+// v128: 작업대·장비제작대가 한 등급 — 불러올 때마다 놓인 것·기록 중 가장 높은 단계로 맞춰요(재료 없이).
+// 처음 한 번은, 예전에 장비제작대를 올린 적이 있으면(gearLv ≥ 1) 「장비제작대 놓기」를 한 것으로 (이제 등급만으로는 그 퀘스트가 안 끝나요)
+function syncTiers128() { if (!G.stats.tier128) { G.stats.tier128 = 1; if ((G.stats.gearLv || 0) >= 1) G.stats.gbench = 1; }
+  let m = 0; for (const o of G.objs.values()) m = Math.max(m, benchLv(o)); syncStations(m); }
 function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 1; for (const o of G.objs.values()) if (o && o.t === 'smelter') { G.stats.gbench = 1; break; }
   const f = GUIDE.find(q => q.id === 'forge'), g = GUIDE.find(q => q.id === 'gbench'); if (!f || !g || !f.done() || !g.done()) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {}; G.qclaim.gbench = 1; qx.gbench = 1; }
 function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }
@@ -3228,17 +3233,17 @@ const GUIDE = [
   { t: () => '받은 횃불을 어두운 곳에 놓기', h: '아까 준 횃불을 단축칸에서 골라 어두운 곳을 보고 누르면 놓여요. 그림자는 빛이 꺼진 어둠에서 생기고, 밝은 곳엔 못 들어와요. 횃불은 작업대 없이도 더 만들 수 있어요.', done: () => G.stats.torch > 0 },
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽이 보이면 캐 봐요. 그게 구리광석이에요. 흙도 버리지 말아요, 용광로 재료가 되거든요.', done: () => G.stats.copperOre >= 6 },
   { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만들어 놓고, 용광로를 열어 구리괴를 만들어요. 조금 기다리면 돼요.', done: () => G.stats.copperBar >= 1 },
-  { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
+  { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 작업대를 올리면 장비제작대도 같은 단계가 돼요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
   // v124 「장비제작대 만들고 놓기」 (dev/design/퀘스트설계.md 5장): 7번 구리 작업대 다음 · 구리 곡괭이 앞 — 장비제작대를 한 번 놓았거나(G.stats.gbench) 이미 올렸거나·구리 곡괭이 이상이 있으면 끝
-  { t: () => '장비제작대 만들고 놓기', h: '작업대를 열어 장비제작대를 만들고(나무·흙·송진), 빈 땅에 놓아 줘요. 칼이랑 곡괭이 같은 장비는 작업대가 아니라 장비제작대에서 만들어요.', done: () => !!G.stats.gbench || (G.stats.gearLv || 0) >= 1 || hasItem('pickCopper') || hasItem('pickIron') },
-  { t: () => '구리 곡괭이 만들기', h: '장비제작대를 열어 맨 위 [올리기]로 구리 단계까지 올린 뒤 만들어요 (구리괴 8·흙 20). 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
+  { t: () => '장비제작대 만들고 놓기', h: '작업대를 열어 장비제작대를 만들고(나무·흙·송진), 빈 땅에 놓아 줘요. 칼이랑 곡괭이 같은 장비는 작업대가 아니라 장비제작대에서 만들어요.', done: () => !!G.stats.gbench || hasItem('pickCopper') || hasItem('pickIron') }, // v128: 등급은 작업대와 같이 올라가서 「놓기」만 셈
+  { t: () => '구리 곡괭이 만들기', h: '장비제작대에서 만들어요. 작업대를 올리면 장비제작대도 같이 올라가요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '마을 창고를 지키던 동물이 주인을 잃고 커진 거래요. 화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비부터 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
   { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '말랑대왕도 창고를 지키던 녀석이에요. 화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼하니까 음식을 넉넉히 챙겨요. 점프했다 내려올 때는 멀리 떨어져 있어요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
   { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '수정 동굴은 등불지기들이 빛을 수정에 담아 두던 곳이래요. 빨간 점선이 보이면 옆으로 피해요! 골렘이 벽에 부딪혀 어지러울 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
   { t: () => `빛씨앗 모으기 (${Math.min(5, G.stats.seedsFound)}/5)`, h: '빛씨앗은 등불지기들이 나무에 맡겨 둔 빛이에요. 다섯 개 중에 먼저 셋 — 봉인이 풀린 두 제단의 씨앗과, 말랑대왕이 남긴 씨앗을 모아요.', done: () => G.stats.seedsFound >= 3,
     target: () => { const p = G.p; const c = [SA, SB].filter(s => G.objs.get(idx(s.x, s.y))?.has && G.bossDead[guardOf(s.x, s.y)]).map(s => ({ x: s.x + .5, y: s.y + .5 })); c.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)); return c[0] || null; } },
   { t: () => `등불나무에 빛씨앗 심기 (${G.treeSeeds}/5)`, h: '빛씨앗을 들고 등불나무 앞에서 눌러요. 나무가 한 단계 깨어날 때마다 옛 기억을 하나씩 보여 준대요. 모은 셋부터 심어요.', done: () => G.treeSeeds >= 3, target: () => ({ x: CX + .5, y: CY + .5 }) },
-  { t: () => '수정 핵으로 수정 곡괭이 만들기', h: '수정골렘이 남긴 수정 핵으로 석영 장비제작대(장비제작대를 석영 단계까지 올려요)에서 만들어요. 남은 빛씨앗 둘은 더 깊은 곳에 있대요. 남쪽 용암 동굴과 서쪽 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.', done: () => ['pickCrystal', 'pickGold', 'pickStar'].some(hasItem) || beat('turtle') || beat('spirit') },
+  { t: () => '수정 핵으로 수정 곡괭이 만들기', h: '수정골렘이 남긴 수정 핵으로 석영 장비제작대(작업대나 장비제작대를 석영 단계까지 올려요)에서 만들어요. 남은 빛씨앗 둘은 더 깊은 곳에 있대요. 남쪽 용암 동굴과 서쪽 얼음 동굴은 아주 단단한 벽에 막혀 있어서 수정 곡괭이가 있어야 들어갈 수 있어요.', done: () => ['pickCrystal', 'pickGold', 'pickStar'].some(hasItem) || beat('turtle') || beat('spirit') },
   { t: () => '남쪽 용암 동굴의 용암 거북 물리치기', h: '용암 동굴은 등불지기들의 대장간이었대요. 거북은 화로를 지키던 수호자인데, 누구를 위해 지키는지 잊어버렸어요. 등껍질에 숨어 굴러올 때는 거의 안 다쳐요. 벽에 튕기다 멈추면 그때 공격해요! 바닥이 주황색으로 반짝이면 곧 용암이 고여요.', done: () => beat('turtle'), target: () => BOSSES.turtle.home() },
   { t: () => '서쪽 얼음 동굴의 서리 정령 물리치기', h: '얼음 동굴에는 등불지기들이 시간을 얼려 잠들어 있고, 정령이 그 잠을 지킨대요. 얼음 고리는 빈틈 쪽으로 빠져나가요. 정령이 사라지면 곁에 다시 나타나 얼음을 터뜨려요. 점선 원 밖으로 피해요!', done: () => beat('spirit'), target: () => BOSSES.spirit.home() },
   { t: () => `깊은 동굴의 빛씨앗 모으기 (${Math.min(5, G.stats.seedsFound)}/5)`, h: '용암 거북과 서리 정령이 쓰러지면 빛씨앗을 떨어뜨려요. 보스방 가운데 제단에 놓여 있을 때도 있어요.', done: () => G.stats.seedsFound >= 5 || G.treeSeeds >= 5,
@@ -3964,7 +3969,7 @@ const NARU_BELL = {
   ore: ['여섯 개 다 캤어요? 반짝반짝하죠. 이제 녹이기만 하면 돼요.', '용광로는 조금 기다려야 해요. 그동안 마음대로 돌아다녀도 괜찮아요.'],
   bar: ['첫 구리괴! …그거, 마을로 가져와 줄래요? 꼭 보고 싶어요.'],
   forge: ['구리 작업대다! 꺼진 마을이 조금씩 돌아오는 것 같아요.', '이제 곡괭이도 바꿀 때예요. 나무 곡괭이로는 단단한 돌벽이 꿈쩍도 안 하거든요.', '먼저 작업대에서 장비제작대를 만들어 놓아요. 무기랑 도구는 거기서 만들어요.'], // v124: 셋째 줄 바뀜 (퀘스트설계.md 5장)
-  gbench: ['장비제작대도 생겼네요! 칼이랑 곡괭이는 이제 여기서 만들어요.', '구리 곡괭이는 장비제작대를 구리로 올려야 만들 수 있어요.', '장비제작대를 열면 맨 위에 [올리기]가 있어요.'], // v124 새 퀘스트 끝
+  gbench: ['장비제작대도 생겼네요! 칼이랑 곡괭이는 이제 여기서 만들어요.', '작업대가 구리라서, 장비제작대도 처음부터 구리예요.', '바로 구리 곡괭이를 만들 수 있어요!'], // v124 새 퀘스트 끝
   pick: ['해냈어요! 그 곡괭이면 어디든 가겠네요. …잠깐 마을로 와 줄래요?'],
 };
 // v126 A: 여러 이야기가 한꺼번에 끝나 앞에 오는 퀘스트는 앞에서 이만큼 줄만 (칭찬·마음 줄, 기본 1줄 — 「다음 할 일」 줄은 빼요)
@@ -4546,7 +4551,8 @@ defineCmd('sortBag', () => { sortBag(); emit('sfx', 'place'); emit('toast', '가
 defineCmd('wear', c => { if (G.inv[c.i]) wearItem(c.i); });
 defineCmd('unwear', c => { if (G.equip[c.sl]) unwear(c.sl); });
 defineCmd('eat', c => eat(c.i));
-defineCmd('toHot', c => { const from = c.i; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; emit('inv'); emit('sfx', 'place'); });
+// 「단축칸으로」: 빈 단축칸 → 든 단축칸 → 1번 칸과 자리 바꿈. 도구를 들면 G.sel = -1이라, 꽉 찼을 때 -1번 자리로 옮겨 물건이 사라지던 버그를 막음
+defineCmd('toHot', c => { const from = c.i; if (!(from >= HOT && from < G.inv.length) || !G.inv[from]) return; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel >= 0 && G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; emit('inv'); emit('sfx', 'place'); });
 defineCmd('trash', c => { G.inv[c.i] = null; emit('inv'); });
 defineCmd('trashTool', c => clearSlot('t:' + c.i));
 // ---- 상자 ----
@@ -4694,9 +4700,8 @@ defineCmd('salv', c => { const s = itemAt(c.i), got = s && (DUR[s.id] || upgOk(s
 defineCmd('fix', c => { const s = itemAt(c.i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return false; const cost = repairCost(s); resetPool(); if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
   for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); emit('inv'); });
 defineCmd('benchUp', c => { const o = c.o != null ? G.objs.get(c.o) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return false; resetPool(); const cost = BENCH_UP[lv + 1]; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1;
-  if (o.t === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, o.lv); else { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, o.lv); }
-  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${tierNames(o.t)[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
+  for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1; syncStations(o.lv); /* v128: 작업대·장비제작대가 같이 올라가요 */
+  const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${BENCH_N[o.lv]}·${GEAR_N[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
 // ---- 제작 { r: 레시피 번호, q: 몇 번, st·i·tier: 제작 자리 } → false 못 만듦 · 'reorder' 목록 순서를 새로 · 그 밖은 다시 그리기 ----
 defineCmd('craft', c => {
   const r = RECIPES[c.r], near = nearStations(); resetPool(); if (!craftable(r, near, c)) return false;
@@ -4732,6 +4737,11 @@ function cancelJob(o, x, y) { if (!o || !o.job) return; takeJob(o, x, y, true); 
   delete o.job; emit('inv'); }
 function advanceOffline(sec) { if (!G || !(sec > 1)) return 0; sec = Math.min(sec, OFF_MAX); G.time += sec; for (const b of G.buffs || []) b.end += sec; return sec; } // food buffs wait for you
 const benchLv = o => !o ? -1 : o.t === 'bench' || o.t === 'smelter' ? (o.lv || 0) : o.t === 'forge' ? 1 : -1;
+// v128: 작업대와 장비제작대는 「제작대 등급」 하나를 같이 써요 — 어느 쪽을 올려도, 새로 놓아도, 세계의 모든 작업대·장비제작대가 같은 단계
+function stationTierNow() { return Math.min(BENCH_MAX, Math.max((G.stats && G.stats.benchLv) || 0, (G.stats && G.stats.gearLv) || 0)); }
+function syncStations(lv) { const L = Math.min(BENCH_MAX, Math.max(lv || 0, stationTierNow())); let n = 0;
+  for (const o of G.objs.values()) { const b = benchLv(o); if (b < 0 || b >= L) continue; if (o.t === 'forge') o.t = 'bench'; o.lv = L; n++; }
+  if (L > 0) { G.stats.forge = 1; G.stats.benchLv = L; G.stats.gearLv = L; } return n; }
 const tierNames = st => TIERED[st] || BENCH_N;
 // ================= 건축: 얇은 벽·문·자동문 잇기, 가구 돌리기·발자리 크기, 놓기·줍기 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
@@ -4799,11 +4809,11 @@ function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.give ||
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
-  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
+  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bench' || it.obj === 'smelter') { const sl = Math.max(it.blv || 0, stationTierNow()); if (sl) o.lv = sl; } /* v128: 놓으면 지금 제작대 등급으로 */ if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
     const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
-    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'smelter') G.stats.gbench = 1; /* v124 퀘스트 「장비제작대 만들고 놓기」 */ if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
+    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'smelter') G.stats.gbench = 1; /* v124 퀘스트 「장비제작대 만들고 놓기」 */ if (it.obj === 'bench' || it.obj === 'smelter') syncStations(o.lv || 0); /* v128: 더 높은 단계를 놓으면 다른 제작대도 같이 */ if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   markLight(); emit('tile', t.x, t.y); return t;
 }
@@ -9971,7 +9981,7 @@ function eqRowHTML() {
 function benchUpHTML(o) { const lv = benchLv(o); if (lv < 0) return ''; const st = o.t === 'smelter' ? 'smelter' : 'bench', NM = tierNames(st), IT = TIER_IT[st];
   if (lv >= BENCH_MAX) return `<p class="hint">가장 높은 단계 ${st === 'smelter' ? '장비제작대' : '작업대'}예요 · 모든 ${st === 'smelter' ? '장비' : '작업대 물건'}를 만들 수 있어요</p>`;
   const cost = BENCH_UP[lv + 1], ok = cost.every(([id, c]) => availCount(id) >= c);
-  return `<div class="rc ${ok ? 'ok' : 'no'} benchup" style="margin-bottom:8px"><div class="ri"><img class="px" src="${iconURL(IT[lv + 1])}" alt=""></div><div class="rn">${NM[lv + 1]}로 올리기<small>새 ${st === 'smelter' ? '장비가' : '물건이'} 더 생겨요</small><div class="ings">${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="benchUp" ${ok ? '' : 'disabled'}>올리기</button></div>`; }
+  return `<div class="rc ${ok ? 'ok' : 'no'} benchup" style="margin-bottom:8px"><div class="ri"><img class="px" src="${iconURL(IT[lv + 1])}" alt=""></div><div class="rn">${NM[lv + 1]}로 올리기<small>작업대·장비제작대가 같이 올라가요</small><div class="ings">${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="benchUp" ${ok ? '' : 'disabled'}>올리기</button></div>`; }
 // ---- the tool pouch in the bag window ----
 function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요 · 단축칸 맨 앞 도구 칸에서 골라 들어요)</span></div><div class="grid">`;
   T.forEach((s, k) => { h += slotHTML(s, 'pouch', k, (UIS.toolSel === k ? 'pick' : '') + (s === heldTool() ? ' sel' : '') + ((G.seen || {})[s.id] > 1 ? ' new' : '')); }); // v77: 처음 얻은 도구
