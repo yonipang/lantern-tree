@@ -736,7 +736,7 @@ def test_quest_done_v124():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,402,874,True)
             BANNER="()=>{const e=document.querySelector('#qdone');return e.hidden?null:[e.querySelector('.qn').textContent,e.querySelector('.qs').textContent]}"
             r=await ev(pg,"()=>{const T=__T,G=T.G;const ids=T.GUIDE.map(q=>q.id);const k=ids.indexOf('gbench');return [ids[k-1],ids[k],ids[k+1],T.GUIDE[k].xp,JSON.stringify(T.GUIDE[k].rw)]}")
-            rec('장비제작대 퀘스트','구리 작업대 다음·구리 곡괭이 앞, 보상 구리광석 6·이끼 끈 2·경험치 15', r==['forge','gbench','pick',15,'[["copperOre",6],["rope",2]]'], str(r))
+            rec('장비제작대 퀘스트','구리 작업대 다음·구리 곡괭이 앞, 보상 구리괴 2·이끼 끈 2·경험치 15 (v125 보상 다시 맞추기)', r==['forge','gbench','pick',15,'[["copperBar",2],["rope",2]]'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();Object.assign(G.stats,{naruMet:1,wood:6,bench:1,torch:1,copperOre:6,copperBar:1,callSeen:{bar:1,pick:1}});G.qclaim.naru=1;G.guide=T.GUIDE.findIndex(q=>q.id==='forge');T.checkGuide();
               const a=[T.GUIDE[G.guide].id];G.stats.forge=1;T.checkGuide();const bl=T.bellState();a.push(T.GUIDE[G.guide].id,!!bl&&bl.lines[bl.lines.length-1].includes('먼저 작업대에서 장비제작대를'));return a}""")
             ok=await wait_until(pg,"()=>{const e=document.querySelector('#qdone');return !e.hidden&&e.querySelector('.qn').textContent.includes('구리 작업대로 올리기')}",4000)
@@ -764,6 +764,33 @@ def test_quest_done_v124():
             rec('옛 세이브','놓인 장비제작대 → 놓은 것으로·받은 것으로(보상·방울·띠 없이), 끝난 도전은 띠 없이', r==[True,True,True,True,'pick',True,True,True], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));for(const k of ['gb124','gbench','qdone','qxp'])delete s.stats[k];s.qclaim={naru:1};s.stats.forge=0;s.objs=s.objs.filter(([i,o])=>o.t!=='smelter');T.deserialize(s);const H=T.G;return [!!H.stats.gbench,!!H.qclaim.gbench]}""")
             rec('옛 세이브','장비제작대가 없고 구리 작업대 전이면 그대로 (새 퀘스트를 하게 됨)', r==[False,False], str(r))
+            rec('콘솔','오류 없음', not errs, str(errs[:3]))
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+def test_quest_chapters_v125():
+    # v125 퀘스트설계.md 3-7: 도전은 그 장(관문 이야기 퀘스트를 끝낸 수 + 1)이 되어야 열림 · 새 보상(레시피 쪽지·귀환석은 그대로) · 이미 받은 도전은 늘 보임 · 안 열린 도전은 활성으로 못 고름
+    H2=HOOK.replace("computeLight}","computeLight,GUIDE,QSIDE,Q_CH,checkGuide,questState,questChapter,sideOpen,activeQuest,runCmd,questSideHTML}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,402,874,True)
+            r=await ev(pg,"""()=>{const T=__T,f=id=>JSON.stringify((T.GUIDE.find(q=>q.id===id)||T.QSIDE.find(q=>q.id===id)).rw);const cp=T.GUIDE.find(q=>q.id==='cpick').rw.map(x=>x[0]);
+              return [f('gbench'),f('s_lv5'),f('s_kill'),f('s_giant'),f('dark'),cp.slice(0,3).join(),cp.filter(id=>id.startsWith('rn_')).length,cp.includes('homeStone'),f('s_fish').includes('rn_crucianBraise'),Object.keys(T.Q_CH).length,T.QSIDE.every(q=>T.Q_CH[q.id]>=1)]}""")
+            rec('보상','새 보상 표대로, 레시피 쪽지 4장·귀환석·쪽지는 그대로, 도전 28개 모두 장 번호',
+                r==['[["copperBar",2],["rope",2]]','[["copperBar",3],["stew",2]]','[["ironBar",6]]','[["frostShard",10],["stew",6]]','[["goldBar",8],["cryGem",4]]','crystal,ironBar,stew',4,True,True,28,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.qclaim={naru:1};G.qAct='main';G.guide=T.GUIDE.findIndex(q=>q.id==='forge');const lv=T.QSIDE.find(q=>q.id==='s_lv5');G.rpg.lv=Math.max(5,G.rpg.lv);T.checkGuide();
+              const h=T.questSideHTML();const a=[T.questChapter(),T.sideOpen(lv),T.questState(lv).done,!!(G.stats.qdone||{}).s_lv5,h.includes('이끼 섬유로 이끼 흙'),h.includes('레벨 5'),h.includes('몬스터 50마리')];
+              T.runCmd({k:'qAct',id:'s_lv5'});a.push(G.qAct,T.activeQuest().id);return a}""")
+            rec('장','1장: 1장 도전만 보이고, 2장 도전(레벨 5)은 다 해도 안 끝남·활성으로 못 고름', r==[1,False,False,False,True,False,False,'main','forge'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.forge=1;T.checkGuide();const lv=T.QSIDE.find(q=>q.id==='s_lv5');const a=[T.GUIDE[G.guide].id,T.questChapter(),T.sideOpen(lv),T.questState(lv).done,!!G.stats.qdone.s_lv5,T.questSideHTML().includes('레벨 5')];
+              const c0=T.countItem('copperBar'),s0=T.countItem('stew');T.runCmd({k:'claim',id:'s_lv5'});a.push(!!G.qclaim.s_lv5,T.countItem('copperBar')-c0,T.countItem('stew')-s0);return a}""")
+            rec('장','구리 작업대를 끝내면 2장 — 레벨 5가 열리며 바로 끝남, 보상 구리괴 3·버섯 스튜 2', r==['gbench',2,True,True,True,True,True,3,2], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const out=[];for(const id of ['pick','queen','slime','golem','cpick','turtle','spirit','deep','dark']){G.guide=T.GUIDE.findIndex(q=>q.id===id)+1;out.push(T.questChapter())}
+              G.guide=T.GUIDE.findIndex(q=>q.id==='forge');G.qclaim.s_legend=1;G.qAct='s_giant';const gi=T.QSIDE.find(q=>q.id==='s_giant'),lg=T.QSIDE.find(q=>q.id==='s_legend');
+              return [out.join(),T.sideOpen(lg),T.questState(lg).claimed,T.sideOpen(gi),T.activeQuest().id]}""")
+            rec('장','관문마다 장이 하나씩(3~11장), 이미 받은 도전은 늘 보임, 안 열린 도전이 활성이면 이야기로', r==['3,4,5,6,7,8,9,10,11',True,True,False,'forge'], str(r))
             rec('콘솔','오류 없음', not errs, str(errs[:3]))
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

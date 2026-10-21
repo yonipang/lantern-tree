@@ -83,6 +83,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/beaver.js` | v114 비버 둥지 규칙: 둘레의 다 자란 나무 찾기(`treesNear`)·먹이통에서 먹기·베기(어린나무로 되돌림)·옆 상자로(`nestStep`, `onFrame('beaver')`), 둥지 앞 할 일(`nestOptions`·`nestUse`), 먹이통 명령(`feedIn`·`feedOut`·`feedAll`), 비버 사는 곳(`beaverHome`), 그림용 비버 자리(`beaverPose`) — `sim/deep.js` 다음 |
 | `js/sim/sieve.js` | v115 광석 그물 규칙: 굴리기(`sieveRoll`), 그물 앞 할 일(`sieveOptions`·`sieveUse`), 넣기 명령 `sievePut`, 꺼내기(`sieveTake` — `sim/crafting.js` `takeJob`이 그물이면 여기로). 넣어 둔 일은 용광로와 같은 `o.job`(`sv: 1`) — `sim/beaver.js` 다음 |
 | `js/sim/naru.js` | v118 나루 1부 ②: 나루가 걸어 다님(`naruPos`·`naruPose` 그림용·`lifeLine` 곁 한마디·`naruHold`), 먼저 걸어 나가기(`stats.nLead`, `leadPrep`·명령 `naruLead`·`leadSkip`·`leadTarget`), 나루의 부탁(`ASK_IDS`·`isAsk`·`askList`·`askOwed`), 1부 뒤 상황 한마디(`stats.nTip`) — `onFrame('naruLife')`, 수치·대사는 `data/npc.js` |
+| `js/sim/quest-balance.js` | v125 보상 다시 맞추기: 모든 퀘스트가 생긴 뒤(naru.js 다음) `data/quests.js` `Q_RW`의 새 물건 보상을 끼움(레시피 쪽지·귀환석은 그대로). 장마다 열림은 `sim/quests.js` `questChapter`·`sideOpen`(장 번호 `Q_CH`, 관문 `Q_CH_GATE`) |
 | `js/art/content.js` | **기능별 아이콘·물체 그림·몬스터 그림**: 예전 규칙 파일 순서대로 모음 (무기·장식·자연 꾸미기 표의 그림 `WEAPON_ICON`·`DECOR_SPR`·`NATURE_SPR` … 포함) |
 | `js/render/light.js` | 빛: 등불·횃불 빛 계산(`computeLight`)과 밝기(`lightAt`), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 |
 | `js/render/icecave.js` | 기울어진 벽 가장자리(v79 얼음벽, v80 흙·돌·화강암·현무암·광맥, v82 오토타일 `autoShape`·그림자용 4px 칸 `wallOcc4`): 칸 모양(`wallSolidPx`·`wallMask`)·윗면/앞면 그림(`slantWallArt`), 벽 옆 청록빛·그림자(`wallEdgeChunk`), 얼음 조각 바닥(`drawIceShard`)·얼어붙은 물(`iceFrozenPx`) — 그림은 코드로 만들어 칸마다 기억 |

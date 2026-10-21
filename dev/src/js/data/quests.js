@@ -111,3 +111,23 @@ export const Q_GO = {
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
   s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],
 };
+// ---- v125 보상 다시 맞추기 (dev/design/퀘스트설계.md 3-7): 장(관문 사이 구간)마다 도전이 열리고, 보상은 다음 관문 준비물로 이어져요 ----
+// 장 k+1은 Q_CH_GATE[k-1] 이야기 퀘스트를 끝내면 열려요 (1장은 처음부터). 도전·부탁의 장 번호는 Q_CH (나루의 부탁은 나루가 방울로 줄 때 열려요).
+export const Q_CH_GATE = ['forge', 'pick', 'queen', 'slime', 'golem', 'cpick', 'turtle', 'spirit', 'deep', 'dark'];
+export const Q_CH = { s_moss: 1, s_crop1: 1, s_bag: 1, s_farm: 1, s_lamp: 2, s_lv5: 2, s_fish: 2, s_drill: 3, s_crop2: 3, s_pet: 3, s_petal: 4, s_ranch: 4, s_crop3: 4,
+  s_kill: 5, s_arch0: 5, s_rooms: 5, s_epic: 5, s_crop4: 6, s_arch2: 6, s_gen: 6, s_deep: 7, s_rematch: 7, s_gold: 8, s_arch3: 8, s_arch4: 9, s_auto: 9, s_giant: 10, s_legend: 11 };
+// 새 물건 보상 (경험치는 그대로). 레시피 쪽지(rn_…)와 귀환석은 그대로 남아요 — sim/quest-balance.js가 모든 퀘스트가 생긴 뒤 바꿔 끼워요
+export const Q_RW = {
+  bar: [['copperOre', 3]], forge: [['copperBar', 2], ['resin', 2]], gbench: [['copperBar', 2], ['rope', 2]], pick: [['copperBar', 4], ['grilled', 2]],
+  queen: [['ironBar', 3]], slime: [['rope', 5], ['resin', 1]], golem: [['cbeanSeed', 3]], seeds: [['glowcap', 3]], tree: [['cryGem', 1]],
+  cpick: [['crystal', 6], ['ironBar', 2], ['stew', 3]], turtle: [['hotSoup', 2], ['stew', 2], ['ironBar', 2]], spirit: [['stew', 3]], tree2: [['ironBar', 2]], deep: [['goldBar', 2], ['stew', 1]],
+  s_moss: [['copperOre', 2]], s_crop1: [['copperOre', 3], ['berrySeed', 3]], s_bag: [['copperOre', 4]], s_farm: [['copperOre', 3], ['battery', 1]],
+  s_lamp: [['copperBar', 3], ['wire', 10]], s_lv5: [['copperBar', 3], ['stew', 2]], s_fish: [['copperBar', 3], ['grilledFish', 3]],
+  s_drill: [['copperBar', 5], ['grilled', 3]], s_crop2: [['copperBar', 3], ['fiber', 6]], s_pet: [['copperBar', 3], ['stew', 2], ['gel', 2]],
+  s_petal: [['ironBar', 3], ['glowcap', 2]], s_crop3: [['stew', 3]],
+  s_kill: [['ironBar', 6]], s_arch0: [['ironBar', 4], ['torch', 6]], s_rooms: [['ironBar', 4], ['cbeanSeed', 2]],
+  s_crop4: [['crystal', 6]], s_arch2: [['crystal', 6], ['cryGem', 1]], s_gen: [['crystal', 4], ['ironBar', 2]], s_epic: [['crystal', 2], ['stew', 3]],
+  s_deep: [['crystal', 6], ['coolPunch', 3], ['stew', 2]], s_rematch: [['crystal', 8], ['ironBar', 4], ['stew', 3]],
+  s_gold: [['goldBar', 7], ['obsidian', 2], ['stew', 2]], s_arch3: [['goldBar', 7], ['stew', 5], ['hotSoup', 1]],
+  s_arch4: [['torch', 10], ['frostShard', 6]], s_auto: [['stew', 5], ['frostShard', 4]], s_giant: [['frostShard', 10], ['stew', 6]],
+};
