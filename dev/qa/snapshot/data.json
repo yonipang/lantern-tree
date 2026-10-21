@@ -4156,22 +4156,22 @@
 "obj": "mapleBush",
 "d": "붉게 물든 버섯숲 덤불. 베면 나무를 줘요."
 },
-"stumpBig": {
+"treeStumpL": {
 "n": "큰 그루터기",
 "kind": "place",
-"obj": "stumpBig",
+"obj": "treeStumpL",
 "d": "나이테가 보이는 큰 그루터기. 베면 나무를 줘요."
 },
-"stump": {
+"treeStump": {
 "n": "그루터기",
 "kind": "place",
-"obj": "stump",
+"obj": "treeStump",
 "d": "버섯숲의 그루터기. 베면 나무를 줘요."
 },
-"stumpS": {
+"treeStumpS": {
 "n": "작은 그루터기",
 "kind": "place",
-"obj": "stumpS",
+"obj": "treeStumpS",
 "d": "버섯숲의 작은 그루터기. 베면 나무를 줘요."
 },
 "deadTree": {
@@ -4820,18 +4820,9 @@
 },
 "stump": {
 "n": "그루터기",
-"item": "stump",
-"solid": 1,
-"nat": "chop",
-"hp": 3,
-"drops": [
-[
-"wood",
-2,
-3,
-1
-]
-]
+"growTo": "g",
+"stump": 1,
+"into": "뿌리기둥"
 },
 "capStump": {
 "n": "버섯 밑동",
@@ -6308,9 +6299,9 @@
 ]
 ]
 },
-"stumpBig": {
+"treeStumpL": {
 "n": "큰 그루터기",
-"item": "stumpBig",
+"item": "treeStumpL",
 "solid": 1,
 "nat": "chop",
 "hp": 3,
@@ -6323,9 +6314,24 @@
 ]
 ]
 },
-"stumpS": {
+"treeStump": {
+"n": "그루터기",
+"item": "treeStump",
+"solid": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+2,
+3,
+1
+]
+]
+},
+"treeStumpS": {
 "n": "작은 그루터기",
-"item": "stumpS",
+"item": "treeStumpS",
 "solid": 1,
 "nat": "chop",
 "hp": 3,
@@ -13990,7 +13996,7 @@
 "tier": 0
 },
 {
-"out": "stumpBig",
+"out": "treeStumpL",
 "n": 1,
 "req": [
 [
@@ -14007,7 +14013,7 @@
 "tier": 0
 },
 {
-"out": "stump",
+"out": "treeStump",
 "n": 1,
 "req": [
 [
@@ -14024,7 +14030,7 @@
 "tier": 0
 },
 {
-"out": "stumpS",
+"out": "treeStumpS",
 "n": 1,
 "req": [
 [
@@ -23293,7 +23299,7 @@ null,
 "saplingB": "[그림 16x18 94dad2b9]",
 "capSapling": "[그림 16x16 d6ca8cad]",
 "capSaplingB": "[그림 16x17 a509f6fd]",
-"stump": "[그림 22x22 57a783ef]",
+"stump": "[그림 16x15 9ad35864]",
 "capStump": "[그림 16x16 1199f397]",
 "cherryTree": "[그림 45x56 2313b6a5]",
 "roundTree": "[그림 32x48 1de89e2]",
@@ -23505,8 +23511,9 @@ null,
 "sofaYellowV": "[그림 14x38 203102c6]",
 "stalagmite": "[그림 14x28 9d03bf31]",
 "streetLamp": "[그림 26x40 eb340d45]",
-"stumpBig": "[그림 32x26 5563f149]",
-"stumpS": "[그림 24x18 7b72e5cd]",
+"treeStump": "[그림 22x22 57a783ef]",
+"treeStumpL": "[그림 32x26 5563f149]",
+"treeStumpS": "[그림 24x18 7b72e5cd]",
 "vineTree": "[그림 38x40 a22b6882]",
 "wardrobeBig": "[그림 28x40 11b1d330]",
 "wardrobeGlass": "[그림 28x38 3d3c3ecb]",
@@ -25908,9 +25915,9 @@ null
 "mapleTree": "5284e39c",
 "mapleTreeS": "23458735",
 "mapleBush": "d6361c85",
-"stumpBig": "ad64f241",
-"stump": "57a783ef",
-"stumpS": "865ad2ca",
+"treeStumpL": "ad64f241",
+"treeStump": "57a783ef",
+"treeStumpS": "865ad2ca",
 "deadTree": "7fab7d83",
 "fallenLog": "a89b833d",
 "cactus": "ab94f96c",

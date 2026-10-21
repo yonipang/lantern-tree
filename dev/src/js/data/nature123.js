@@ -24,9 +24,9 @@ export const NAT123 = {
   mapleTree: ['단풍나무', '버섯숲에서 자라는 붉은 단풍나무.', 'tree', [['dirt', 4], ['gShroom', 4], ['wood', 4]]],
   mapleTreeS: ['작은 단풍나무', '버섯숲의 작은 단풍나무.', 'tree', [['dirt', 2], ['gShroom', 2], ['wood', 2]]],
   mapleBush: ['단풍 덤불', '붉게 물든 버섯숲 덤불.', 'bush', [['dirt', 2], ['gShroom', 2]]],
-  stumpBig: ['큰 그루터기', '나이테가 보이는 큰 그루터기.', 'stump', [['wood', 4], ['gShroom', 1]]],
-  stump: ['그루터기', '버섯숲의 그루터기.', 'stump', [['wood', 3], ['gShroom', 1]]],
-  stumpS: ['작은 그루터기', '버섯숲의 작은 그루터기.', 'stump', [['wood', 2], ['gShroom', 1]]],
+  treeStumpL: ['큰 그루터기', '나이테가 보이는 큰 그루터기.', 'stump', [['wood', 4], ['gShroom', 1]]],
+  treeStump: ['그루터기', '버섯숲의 그루터기.', 'stump', [['wood', 3], ['gShroom', 1]]],
+  treeStumpS: ['작은 그루터기', '버섯숲의 작은 그루터기.', 'stump', [['wood', 2], ['gShroom', 1]]],
   deadTree: ['마른 나무', '용암 동굴의 잎 없는 마른 나무.', 'tree', [['wood', 6], ['gAsh', 2]]],
   fallenLog: ['쓰러진 통나무', '용암 동굴에 쓰러져 있는 긴 통나무 (4×2).', 'log', [['wood', 10], ['gAsh', 2]]],
   cactus: ['선인장', '용암 동굴 가장자리의 선인장.', 'cactus', [['gAsh', 2], ['fiber', 2]]],
@@ -47,7 +47,7 @@ for (const id in NAT123) { const [n, d, kind, req] = NAT123[id]; const k = KIND[
 // 지역(biome): 0 이끼 동굴 · 1 버섯숲 · 2 수정 동굴(없음) · 3 용암 동굴 · 4 얼음 동굴. 큰 고목(v122 그림)도 이끼 동굴에 나요.
 export const NAT_GEN = {
   0: [['greenTree', 0.2], ['vineTree', 0.15], ['bigTree', 0.15]],
-  1: [['pinkTree', 0.12], ['pinkTreeS', 0.13], ['mapleTree', 0.12], ['mapleTreeS', 0.13], ['mapleBush', 0.2], ['stumpBig', 0.1], ['stump', 0.1], ['stumpS', 0.1]],
+  1: [['pinkTree', 0.12], ['pinkTreeS', 0.13], ['mapleTree', 0.12], ['mapleTreeS', 0.13], ['mapleBush', 0.2], ['treeStumpL', 0.1], ['treeStump', 0.1], ['treeStumpS', 0.1]],
   3: [['deadTree', 0.35], ['fallenLog', 0.15], ['cactus', 0.25], ['cactusS', 0.25]],
   4: [['snowTree', 0.2], ['blossomTree', 0.15], ['blossomTreeS', 0.15], ['snowBush', 0.5]],
 };
@@ -55,6 +55,6 @@ export const NAT_GEN = {
 export const NAT_SHORE = [['palmTree', 1.5], ['palmTreeS', 1.5]];
 // 하루 하나 자연 재생에도 더해요(옛 세계에 조금씩) — 여러 칸인 큰 고목·통나무와 물가 야자는 빼요. 비율은 그 지역 다른 자연물과 같은 눈금(덤불 0.85 ≈ 1.4%)
 NAT_DAY_KINDS[0].push(['greenTree', 0.12], ['vineTree', 0.1]);
-NAT_DAY_KINDS[1].push(['pinkTree', 0.08], ['pinkTreeS', 0.08], ['mapleTree', 0.08], ['mapleTreeS', 0.08], ['mapleBush', 0.12], ['stumpBig', 0.06], ['stump', 0.06], ['stumpS', 0.06]);
+NAT_DAY_KINDS[1].push(['pinkTree', 0.08], ['pinkTreeS', 0.08], ['mapleTree', 0.08], ['mapleTreeS', 0.08], ['mapleBush', 0.12], ['treeStumpL', 0.06], ['treeStump', 0.06], ['treeStumpS', 0.06]);
 NAT_DAY_KINDS[3].push(['deadTree', 0.16], ['cactus', 0.11], ['cactusS', 0.11]);
 NAT_DAY_KINDS[4].push(['snowTree', 0.1], ['blossomTree', 0.07], ['blossomTreeS', 0.07], ['snowBush', 0.25]);
