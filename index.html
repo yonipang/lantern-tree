@@ -3946,6 +3946,8 @@ const NARU_BELL = {
   gbench: ['장비제작대도 생겼네요! 칼이랑 곡괭이는 이제 여기서 만들어요.', '구리 곡괭이는 장비제작대를 구리로 올려야 만들 수 있어요.', '장비제작대를 열면 맨 위에 [올리기]가 있어요.'], // v124 새 퀘스트 끝
   pick: ['해냈어요! 그 곡괭이면 어디든 가겠네요. …잠깐 마을로 와 줄래요?'],
 };
+// v126 A: 여러 이야기가 한꺼번에 끝나 앞에 오는 퀘스트는 앞에서 이만큼 줄만 (칭찬·마음 줄, 기본 1줄 — 「다음 할 일」 줄은 빼요)
+const NARU_BELL_KEEP = { torch: 3 };
 // 중요한 때는 마을로 부름: 그 퀘스트가 끝나면 다음 이야기는 마을에서 나루와 이야기한 뒤에 이어져요 · pick 장면 끝에는 [다음 이야기 듣기] → 버섯 여왕 「출발 전」 (v121)
 const NARU_CALL = {
   bar: ['와, 진짜 구리괴다. 아직 따끈해요.', '할머니가 구리 반지를 끼고 있었거든요. 불 옆에 앉으면 이렇게 반짝였어요.', ME_('할머니가 많이 보고 싶겠어요.'),
@@ -3990,6 +3992,20 @@ const NARU_LIFE = {
   tree: '나무한테 말 걸고 있었어요. 대답은 안 해도 듣는 것 같아요.',
   other: '오늘은 어디까지 갔다 왔어요?',
 };
+// v126 E (세계관-NPC.md 「이야기 호흡」): 말 걸 때 한마디가 이야기 단계마다 바뀌어요 — [이 이야기 퀘스트를 지나면, 줄들] (뒤에 있는 것일수록 나중 단계) 【Claude 임시 · 사용자 확인 대기】
+const NARU_STAGE = [
+  ['pick', ['마을에 불이 하나 늘 때마다 할머니 집이 더 잘 보여요.', '서쪽 숲은 밤마다 시끄러워요. 아직 누가 지키고 있나 봐요.']],
+  ['queen', ['숲이 조용해졌대요. 새 우는 소리가 다시 들려요.', '여왕이 지키던 창고, 할머니도 어릴 때 가 봤대요.']],
+  ['slime', ['빛씨앗을 처음 봤을 때, 손이 막 떨렸어요.', '동굴 말랑이들이 요즘은 덜 뛰어다녀요.']],
+  ['golem', ['수정 동굴 빛이 마을까지 비쳐요. 밤에도 덜 무서워요.']],
+  ['tree', ['나무가 조금 따뜻해진 것 같아요. 손을 대 보면 알아요.', '나무가 보여 준 사람들, 꿈에도 나왔어요.']],
+  ['cpick', ['깊은 동굴은 덥고 춥대요. 따끈한 거 꼭 챙겨요.']],
+  ['turtle', ['남쪽에서 불던 뜨거운 바람이 잠잠해졌어요.']],
+  ['spirit', ['얼음 동굴 쪽에서 물 떨어지는 소리가 나요. 얼음이 녹나 봐요.']],
+  ['tree2', ['나뭇잎이 바람도 없는데 흔들려요. {이름}님이 오면 더 그래요.', '…가끔 {이름}님이 하나도 낯설지 않아서 이상해요.']],
+  ['deep', ['기억이 돌아와도, 저한테는 그냥 {이름}님이에요.']],
+  ['dark', ['빛이 땅 위까지 갔대요! 할머니가 그러는데 하늘이 보인대요.', '이제 무서운 건 없어요. 그래도 불은 계속 지킬래요.']],
+];
 // 1부 뒤 상황 한마디: 그 상황이 처음 올 때 방울로 한 줄 (한 번씩)
 const NARU_TIP = [
   { k: 'hunger', s: '꼬르륵 소리 났죠? 통통베리라도 먹어요. 요리하면 더 오래 든든해요.' },
@@ -4075,7 +4091,9 @@ Object.assign(NARU_BELL, {
   cpick: ['그 곡괭이면 깊은 동굴 벽도 뚫리겠어요.', '할머니가 늘 그랬어요. 먼 길엔 따끈한 국물부터 챙기라고!'],
   seeds2: ['다섯 개 다 모였어요! 이제 나무가 완전히 깨어날 거예요.', '…나무가 깨어나면, 우리가 기다리던 답도 알 수 있을까요?'],
 });
-// 장면 (마을의 나루에게 말 걸면, 또는 기억 장면을 닫으면 바로)
+// v126 C (세계관-NPC.md 「이야기 호흡」): 기억 장면을 닫으면 장면을 바로 열지 않고 방울 한 줄 + 나루 머리 위 ! 【Claude 임시 · 사용자 확인 대기】
+const NARU_MEM_BELL = { tree: '나무가 보여 준 거, 봤어요? 마을에서 얘기해요.', naruGo: '나무가 이상하게 빛났어요… 마을로 와 줄래요? 할 얘기가 있어요.' };
+// 장면 (마을의 나루에게 말 걸면 — v126부터 기억 장면을 닫아도 바로 열지 않아요)
 const NARU2_SC = {
   tree: ['나무가 보여 준 기억, 봤어요? 사람들이 다 같이 웃고 있었어요.', ME_('네. 처음 보는 사람들인데… 이상하게 그리웠어요.'), '남은 씨앗 둘은 더 깊은 곳에 있대요. {dir:turtle}은 뜨겁고, {dir:spirit}은 춥대요.', ME_('나루가 길을 알려 주면, 제가 벽을 뚫을게요.'), '좋아요. 그 벽은 수정 곡괭이라야 뚫려요. 골렘이 남긴 수정 핵, 잘 챙겼죠?'], // 13 빛씨앗 셋을 심은 뒤
   // 18 「나루에게 가기」 — 다섯 번째 기억 뒤 · 집안에 내려온 말 → 나루가 가장 깊은 곳 입구까지 먼저 가요
@@ -6063,14 +6081,18 @@ function sideDoneTick() { const S = G.stats; if (!S.qdone) { S.qdone = {}; for (
   for (const q of QSIDE) { if (S.qdone[q.id] || !sideLive(q) || !q.done()) continue; S.qdone[q.id] = 1; if (!(G.qclaim || {})[q.id] && k++ < QDONE_MAX) qDoneEmit(q, true); } }
 function checkGuide() {
   if (G.stats.naruCall && !naruSpot()) G.stats.naruCall = null; // 나루가 마을에 없으면 부르지 않아요
-  let n = 0, last = null, boss = 0; const fin = []; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
+  let n = 0, last = null, boss = 0; const fin = [], said = []; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
     // v117 1부(나루에게 받는 이야기): 경험치는 끝날 때 바로, 물건은 마을의 나루에게 · 6·8번은 마을로 부름
     if (NARU_Q.includes(q.id) && naruSpot()) { const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[q.id] && !(G.qclaim || {})[q.id]) { qx[q.id] = 1; gainXp(q.xp, G.p.x, G.p.y); } if (started && NARU_CALL[q.id] && !(G.stats.callSeen || {})[q.id]) G.stats.naruCall = q.id; } // 한 장면은 한 번 (stats.callSeen)
     if (started && naruSpot() && G.stats.naruMet) { if (NARU_BOSS.includes(q.id)) { bossPassed(q.id); boss++; } scenePassed(q.id); } // v119 2부: 보스 「돌아와서」·13번 장면을 쌓아요
-    last = q; G.guide++; n++; if (started && q.id !== 'naru') fin.push(q); } // v124: 끝난 이야기마다 「퀘스트 완료!」 띠 (첫 퀘스트는 첫 장면이 대신)
-  if (n && started && boss) { emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v119: 보스를 물리치면 방울로 부름 (안 들러도 다음 이야기는 진행)
-  if (n && started && last) { const bell = naruSpot() && G.stats.naruMet && NARU_BELL[last.id]; /* v119: 12·14·17번 끝 한마디도 */
-    if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (NARU_Q.includes(last.id) && last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
+    last = q; G.guide++; n++; if (started && q.id !== 'naru') fin.push(q); if (NARU_BELL[q.id]) said.push(q); } // v124: 끝난 이야기마다 「퀘스트 완료!」 띠 (첫 퀘스트는 첫 장면이 대신)
+  if (n && started && boss) G.stats.bossBell = 1; // v119: 보스를 물리치면 방울로 부름 (안 들러도 다음 이야기는 진행) · v126 D: 방울은 보스방을 벗어날 때(또는 떨어진 물건을 다 주웠을 때) — sim/npc.js onFrame('naru')
+  if (n && started && said.length && naruSpot() && G.stats.naruMet) { /* v119: 12·14·17번 끝 한마디도 */
+    // v126 A: 한꺼번에 여럿 끝나도 끝난 순서대로 한 묶음으로 — 앞 퀘스트는 칭찬·마음 줄만(이미 한 「다음 할 일」은 빼요), 맨 마지막에 끝난 퀘스트만 다음 할 일까지
+    const L = []; let lead = false; for (const q of said) { const B = NARU_BELL[q.id]; if (q !== last) { L.push(...B.slice(0, NARU_BELL_KEEP[q.id] || 1)); continue; }
+      const b = B.slice(); if (q.id === 'torch' && leadPrep()) { b[b.length - 1] = NARU_LEAD_GO; lead = true; } L.push(...b); } /* v118: 4번 끝 → 나루가 광맥까지 먼저 */
+    if (lead) emit('bell', L, 0, { k: 'naruLead' }); else emit('bell', L); emit('sfx', 'craft');
+    if (!G.stats.naruRwTip && said.some(q => NARU_Q.includes(q.id) && q.rw.length && !(G.qclaim || {})[q.id])) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); }
   } // v124: 예전 「목표 달성!」 작은 알림은 「퀘스트 완료!」 띠로 바뀜
   for (const q of fin.slice(-QDONE_MAX)) qDoneEmit(q, false); sideDoneTick();
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
@@ -6656,8 +6678,12 @@ defineCmd('setName', c => { const n = cleanName(c.n); G.pname = n || null; emit(
 // ---- v117 하는 중 한마디 (data/npc.js NARU_DOING): 지금 이야기 퀘스트를 하는 동안 처음 그 일을 할 때 방울로 한 번 ----
 const DOING = { wood1: () => (G.stats.wood | 0) >= 1, bench1: () => countItem('bench') > 0, ore1: () => (G.stats.copperOre | 0) >= 1,
   dirt1: () => countItem('dirt') > (G.stats.nDirt0 == null ? 1e9 : G.stats.nDirt0), furn1: () => { const p = G.p; for (let y = Math.floor(p.y) - 6; y <= p.y + 6; y++) for (let x = Math.floor(p.x) - 6; x <= p.x + 6; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === 'furnace') return true; } return false; } };
+// v126 D: 보스방(보스 자리 둘레 파기 금지 칸)을 벗어났거나, 곁(BOSS_BELL_R칸 안)에 떨어진 물건이 하나도 없으면
+const BOSS_BELL_R = 12;
+const bossBellReady = () => { const p = G.p; if (noDigZone(Math.floor(p.x), Math.floor(p.y)) !== 'boss') return true; return !G.drops.some(d => Math.hypot(d.x - p.x, d.y - p.y) < BOSS_BELL_R); };
 let naruT = 0;
 onFrame('naru', dt => { naruT += dt; if (naruT < .5) return; naruT = 0; if (!started || !G.stats.naruMet || G.stats.naruCall) return;
+  if (G.stats.bossBell && bossBellReady()) { delete G.stats.bossBell; emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v126 D: 보스를 물리친 뒤 부르는 방울은 보스방을 벗어나거나 떨어진 물건을 다 주웠을 때
   const q = GUIDE[G.guide]; if (!q || !NARU_Q.includes(q.id)) return; const said = G.stats.nSaid = G.stats.nSaid || {};
   if (q.id === 'ore' && G.stats.nDirt0 == null) G.stats.nDirt0 = countItem('dirt'); // 흙 개수는 구리 퀘스트를 시작할 때 기준
   for (const d of NARU_DOING) { if (d.q !== q.id || said[d.k] || !DOING[d.k] || !DOING[d.k]()) continue; said[d.k] = 1; emit('bell', [d.s], 1); break; } });
@@ -6694,7 +6720,8 @@ function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1;
-    if (id === 'guide') { const l = lifeLine(); return [o.met % 2 || l !== NARU_LIFE_OTHER ? l : N.talk[((o.met >> 1) - 1 + N.talk.length) % N.talk.length]]; } // v118: 곁에 따라 한마디 (그 밖에서는 예전 이야기와 번갈아)
+    if (id === 'guide') { const st = stageLine(o.met); if (st && o.met % 2) return [st]; /* v126 E: 이야기 단계마다 바뀌는 한마디가 있으면 번갈아 (홀수 번째) */
+      const l = lifeLine(); return [(!st && o.met % 2) || l !== NARU_LIFE_OTHER ? l : N.talk[((o.met >> 1) - 1 + N.talk.length) % N.talk.length]]; } // v118: 곁에 따라 한마디 (그 밖에서는 예전 이야기와 번갈아)
     return [N.talk[(o.met - 1) % N.talk.length]]; }
   return [N.talk[0]]; }
 const villagers = () => NPC_IDS.filter(id => npcState(id) === 'npc');
@@ -7059,6 +7086,9 @@ function lifeLine() { const n = naruAt(); if (!n) return NARU_LIFE.other; const 
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!inB(x + dx, y + dy)) continue; const o = G.objs.get(idx(x + dx, y + dy)); if (o && OBJ[o.t] && OBJ[o.t].station === 'bench') return NARU_LIFE.bench; }
   if (Math.hypot(x + .5 - TREE.x, y + .5 - TREE.y) <= LIFE_R + .5) return NARU_LIFE.tree;
   return NARU_LIFE.other; }
+// v126 E: 이야기 단계마다 바뀌는 한마디 (data/npc.js NARU_STAGE) — 지나간 이야기 퀘스트 가운데 가장 뒤의 것, 한 단계에 줄이 여럿이면 번갈아 (k = 말 건 횟수)
+function stageLine(k) { let L = null; for (const [id, lines] of NARU_STAGE) { const j = GUIDE.findIndex(q => q.id === id); if (j >= 0 && j < G.guide) L = lines; }
+  return L && L.length ? L[(Math.max(0, k | 0) >> 1) % L.length] : null; }
 // ---- 먼저 걸어 나가기 ----
 const nLead = () => G.stats.nLead || null;
 const leadWalking = () => !!G && !!G.stats && !!nLead() && nLead().s === 'walk';
@@ -7165,7 +7195,7 @@ const bossDir = k => { const B = BOSSES[k]; if (!B || !B.home) return ''; const 
 // 「출발 전」을 볼 수 있는 보스: 지금 이야기가 그 보스이고 아직 안 봤고 살아 있으면
 function departDue() { const q = curQ(); if (!q || !NARU_BOSS.includes(q.id) || G.bossDead[q.id] || G.stats.naruCall) return null; return (G.stats.nGo || {})[q.id] ? null : q.id; }
 // 나루 머리 위 ! (render/world.js naruWaits): 「출발 전」·「나루에게 가기」·「나루에게 돌아가기」
-const naruBang = () => !!G.stats.naruMet && naruOK() && !leadThere() && (!!departDue() || ['naruGo', 'naruBack'].includes((curQ() || {}).id));
+const naruBang = () => !!G.stats.naruMet && naruOK() && !leadThere() && (!!departDue() || ['naruGo', 'naruBack'].includes((curQ() || {}).id) || (G.stats.nPend || []).includes('tree')); // v126 C: 기억 장면 뒤 13번 장면도 !
 // 보스 이야기를 끝냈을 때 (sim/quests.js checkGuide, 놀이 중에만)
 function bossPassed(id) { const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('back:' + id)) P.push('back:' + id); }
 // 이야기 퀘스트를 끝냈을 때 다른 장면 쌓기: 빛씨앗 셋을 심음(tree) → 13번
@@ -7190,7 +7220,9 @@ function sceneLines(kind) { const out = [];
 // 창을 닫았을 때 (ui/panels.js closePanel → 명령): 나루 장면이 끝나면 나루가 먼저 걸어 나가요 · 큰 어둠 뒤 장면이 끝나면 엔딩 창 · 기억 장면을 닫으면 쌓인 장면을 바로
 defineCmd('talkEnd', c => { const m = String(c.m || ''); if (m === 'intro') { const at = (G.stats.introAt | 0) + Math.max(0, c.at | 0); if (at < NARU_INTRO.length - 1) G.stats.introAt = at; else delete G.stats.introAt; } /* v120: 첫 장면을 다 못 봤으면 다음에 말 걸 때 그 줄부터 */ if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
 defineCmd('memEnd', () => { if (!G.stats.naruMet || !naruOK() || leadThere() || leadWalking() || G.stats.naruCall) return; const q = curQ(), P = G.stats.nPend || [];
-  if (P.includes('tree') || (q && q.id === 'naruGo' && !G.stats.n2go)) { talkTo('guide'); } });
+  // v126 C: 기억 장면을 닫자마자 나루 장면을 열지 않아요 — 방울 한 줄(저절로 사라짐) + 나루 머리 위 ! → 원할 때 말 걸기 (같은 장면은 이번 접속에 한 번만 불러요)
+  const k = P.includes('tree') ? 'tree' : q && q.id === 'naruGo' && !G.stats.n2go ? 'naruGo' : null; if (!k || memBellSaid.has(k)) return; memBellSaid.add(k); emit('bell', [NARU_MEM_BELL[k]]); });
+const memBellSaid = new Set();
 // 큰 어둠을 물리치면 (sim/deep.js darkDown): 나루가 있으면 마지막 말 → 엔딩 창
 const naruEnding = () => { if (!naruOK()) return false; emit('talk', 'guide', 'sc:end'); return true; };
 // 할머니를 구하면 (sim/npc.js rescue)
@@ -9571,14 +9603,14 @@ function renderPanel() {
     if (panel.mode === 'shop') { // v105 물물교환
       h += `<div class="sh-body talk"><div class="talkbox"><img class="px talkface" src="${img ? img.toDataURL() : ''}" alt=""><div><b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">물물교환 · 한 줄에 하루 ${BARTER_PER}번</small><p class="prose" style="margin:6px 0 0">가방에 있는 것으로 바꿔요.</p></div></div><div class="menu-list">${shop.map(([give, get, d], k) => { const why = barterWhy(panel.npc, k), left = barterLeft(panel.npc, k);
         const row = L => L.map(([id, n]) => `<img class="px" src="${iconURL(id)}" alt="" style="width:16px;height:16px;vertical-align:middle"> ${ITEMS[id].n} ${n}`).join(' + ');
-        return `<button type="button" class="btn ghost barter ${why ? 'off' : ''}" data-a="barter" data-i="${k}" title="${why || d}"><span class="bgive">${row(give)}</span><span class="barrow">→</span><span class="bget">${row(get)}</span><small>${why ? why : `${left}번 남음`}</small></button>`; }).join('')}</div><div class="menu-list"><button class="btn ghost" data-a="talkBack" type="button">이야기로</button><button class="btn" data-a="close" type="button">잘 가요</button></div></div>`;
+        return `<button type="button" class="btn ghost barter ${why ? 'off' : ''}" data-a="barter" data-i="${k}" title="${why || d}"><span class="bgive">${row(give)}</span><span class="barrow">→</span><span class="bget">${row(get)}</span><small>${why ? why : `${left}번 남음`}</small></button>`; }).join('')}</div><div class="menu-list"><button class="btn ghost" data-a="talkBack" type="button">이야기로</button><button class="btn" data-a="close" type="button">이만 갈게요</button></div></div>`;
     } else { // v117: 줄마다 말하는 사람(나루·주인공), 타이핑 + 빨리감기, 첫 장면 이름 짓기
       const L = lineOf(line), me = L.who === 'me', story = panel.mode !== 'talk' && panel.mode !== 'hello';
       const face = me ? faceURL('me') : (img ? img.toDataURL() : ''), who = me ? `<b style="color:var(--mint,#7fe0b5)">${escHTML(pName())}</b>` : `<b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small>`;
       const body = L.ask ? `<p class="prose" style="margin:6px 0 0">뭐라고 불러 달라고 할까요?</p><div class="namerow"><input id="nameIn" class="namein" type="text" maxlength="8" autocomplete="off" enterkeyhint="done" value="${escHTML(panel.nameDraft != null ? panel.nameDraft : pName())}" aria-label="이름"><button class="btn" data-a="nameOk" type="button">정했어요</button></div><small class="hint" style="margin:4px 0 0">1~8자 · 비워 두면 「${escHTML(CHARS[curChar()].n)}」 · 프로필에서 언제든 바꿀 수 있어요</small>`
         : `<p class="prose" style="margin:6px 0 0" data-type="${panel.mode}:${panel.at}">${escHTML(L.s)}</p>`;
       const hear = last && !L.ask && panel.npc === 'guide' ? nextStory(panel.mode) : null; /* v121 중요한 전환점: [다음 이야기 듣기] / [대화 마치기] */
-      const btns = L.ask ? '' : hear ? `<button class="btn" data-a="talkHear" data-i="${hear}" type="button">다음 이야기 듣기</button><button class="btn ghost" data-a="close" type="button">대화 마치기</button>` : `${last ? `<button class="btn" data-a="close" type="button">${story ? '알았어요' : '잘 가요'}</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' && !story ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}`;
+      const btns = L.ask ? '' : hear ? `<button class="btn" data-a="talkHear" data-i="${hear}" type="button">다음 이야기 듣기</button><button class="btn ghost" data-a="close" type="button">대화 마치기</button>` : `${last ? `<button class="btn" data-a="close" type="button">${story ? '알았어요' : '이만 갈게요'}</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' && !story ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}`;
       h += `<div class="sh-body talk"><div class="talkbox ${me ? 'me' : ''}"><img class="px talkface" src="${face}" alt=""><div style="flex:1;min-width:0">${who}${body}</div>${L.ask ? '' : '<button class="skipty" data-a="skipType" type="button" aria-label="빨리감기">▶▶</button>'}</div><div class="menu-list">${btns}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`; }
   } else if (k === 'diaryLast' || k === 'ending') { // v108 찢긴 마지막 장 · 엔딩
     const d = k === 'ending' ? ENDING : DEEP_DIARY;
