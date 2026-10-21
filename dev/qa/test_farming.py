@@ -103,10 +103,10 @@ window.__crop=(x,y,t,age)=>{const G=T.G;const i=T.idx(x,y);G.wall[i]=0;G.floor[i
           const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const n=T.G.objs.get(T.idx(x,y));const s1=T.G.tools.find(z=>z.id==='wcan'&&z.w===4);return [n.w,n.f,n.p0!=null,!!s1]}""")
             rec('세이브','물·비료 표시와 물뿌리개의 물이 저장·불러오기 뒤에도 그대로', r==[1,2,True,True], str(r))
             # ---- quests ----
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=id=>T.QSIDE.find(x=>x.id===id);G.stats.berryH=0;G.stats.wetH=0;G.stats.fert=0;const a=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);
-          G.stats.berryH=1;G.stats.wetH=5;G.stats.fert=10;const b2=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);return [a,b2,['s_crop1','s_crop2','s_crop3'].map(id=>JSON.stringify(q(id).rw)+q(id).xp)]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=id=>T.QSIDE.find(x=>x.id===id);const g0=G.guide;G.guide=99;/* v125: 장 모두 열기 */G.stats.berryH=0;G.stats.wetH=0;G.stats.fert=0;const a=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);
+          G.stats.berryH=1;G.stats.wetH=5;G.stats.fert=10;const b2=['s_crop1','s_crop2','s_crop3'].map(id=>T.questState(q(id)).done);G.guide=g0;return [a,b2,['s_crop1','s_crop2','s_crop3'].map(id=>JSON.stringify(q(id).rw)+q(id).xp)]}""")
             rec('도전','농사 도전 퀘스트 1~3 (베리 거두기 · 물 준 작물 5개 · 비료 10번)', r[0]==[False,False,False] and r[1]==[True,True,True], str(r))
-            rec('도전','보상: 베리 씨앗 3·포자 3·경험치 15 / 구리괴 3·25 (+v36 레시피 쪽지) / 젤 6·40', r[2]==['[["berrySeed",3],["spore",3]]15','[["copperBar",3],["rn_glowPancake",1]]25','[["gel",6]]40'], str(r))
+            rec('도전','보상(v125): 구리광석 3·베리 씨앗 3·경험치 15 / 구리괴 3·이끼 섬유 6·25 (+v36 레시피 쪽지) / 버섯 스튜 3·40', r[2]==['[["copperOre",3],["berrySeed",3]]15','[["copperBar",3],["fiber",6],["rn_glowPancake",1]]25','[["stew",3]]40'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.berryH=0;const x=Math.floor(G.p.x)+8,y=Math.floor(G.p.y)+10;const o=__crop(x,y,'cropBerry',200);o.w=1;const w0=G.stats.wetH;T.harvest({x,y},o);G.drops.length=0;return [G.stats.berryH,G.stats.wetH-w0]}""")
             rec('도전','베리를 거두면 개수가 쌓이고, 물 준 작물도 따로 셈', r==[1,1], str(r))
             # craft panel tab
@@ -173,8 +173,8 @@ window.__spot=(dx,dy)=>{const G=T.G;return [Math.floor(G.p.x)+dx,Math.floor(G.p.
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv[0]=null;G.p.face={x:0,y:1};const tt=T.targetTile();__crop(tt.x,tt.y,'cropBerry',10,2);const a=T.decide().msg;__crop(tt.x,tt.y,'cropBerry',10,1);const b2=T.decide().msg;G.bossDead.golem=false;(G.stats.beaten||{}).golem=0;const c=T.decide().msg;G.bossDead.golem=true;G.objs.delete(T.idx(tt.x,tt.y));return [a,b2,c]}""")
             rec('흙','바라보면 맞는 흙인지 안내 (수정골렘 뒤)', '이끼에 심으면 별 작물' in r[0] and '맞는 흙' in r[1] and '흙' not in r[2].split('·')[-1], str(r))
             # ---- quest ----
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_crop4');G.stats.starH=4;const a=T.questState(q).done;G.stats.starH=5;return [a,T.questState(q).done,JSON.stringify(q.rw),q.xp]}""")
-            rec('도전','별 작물 5개 거두기 (수정 조각 8, 경험치 60, +v36 레시피 쪽지)', r==[False,True,'[["crystal",8],["rn_beanSteam",1]]',60], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_crop4');const g0=G.guide;G.guide=99;G.stats.starH=4;const a=T.questState(q).done;G.stats.starH=5;const b2=T.questState(q).done;G.guide=g0;return [a,b2,JSON.stringify(q.rw),q.xp]}""")
+            rec('도전','별 작물 5개 거두기 (v125 석영 6, 경험치 60, +v36 레시피 쪽지)', r==[False,True,'[["crystal",6],["rn_beanSteam",1]]',60], str(r))
             # ---- save ----
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__spot(7,3);const o=__crop(x,y,'cropBean',999,4);o.star=1;T.addItem('cbeanS',2);const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const n=T.G.objs.get(T.idx(x,y));return [n.t,n.star,T.countItem('cbeanS')>=2]}""")
             rec('세이브','별 작물 표시와 별 아이템이 저장·불러오기 뒤에도 그대로', r==['cropBean',1,True], str(r))
@@ -254,7 +254,7 @@ def test_cooking():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const out={};for(const k of ['slime','golem','queen'])out[k]=T.bossNoteIds(k);const q=T.QSIDE.filter(q=>q.rw.some(([id])=>id.startsWith('rn_'))).map(q=>q.id+':'+q.rw.find(([id])=>id.startsWith('rn_'))[0]);return [out,q]}""")
             rec('쪽지','보스: 말랑대왕 → 메기 매운탕, 수정골렘 → 반짝 새우 경단', r[0]['slime'][0]=='catfishSoup' and r[0]['golem'][0]=='shrimpDango', str(r[0]))
             rec('쪽지','도전 퀘스트 보상에 쪽지 (물 준 작물·별 작물·보물상자·물고기)', sorted(r[1])==sorted(['s_crop2:rn_glowPancake','s_crop4:rn_beanSteam','s_rooms:rn_petalRiceCake','s_fish:rn_crucianBraise']), str(r[1]))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.qclaim={};G.stats.fishCaught=10;const before=T.knows('crucianBraise');T.claimQuest('s_fish');return [before,T.knows('crucianBraise')]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.qclaim={};G.stats.fishCaught=10;const g0=G.guide;G.guide=99;/* v125: 낚시는 2장 */const before=T.knows('crucianBraise');T.claimQuest('s_fish');G.guide=g0;return [before,T.knows('crucianBraise')]}""")
             rec('쪽지','퀘스트 보상을 받으면 바로 해금', r==[False,True], str(r))
             # fishing luck & bottle
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.buffs=[];G.luck=0;const t0=T.catchTable(0);const p0=t0.find(x=>x[0]==='bottle')[1]/t0.reduce((a,x)=>a+x[1],0);G.luck=G.time+120;const L=T.luckTier();const t2=T.catchTable(0);const k=t2.find(x=>x[0]==='koi')[1]/t0.find(x=>x[0]==='koi')[1],bo=t2.find(x=>x[0]==='boot')[1]/t0.find(x=>x[0]==='boot')[1],p2=t2.find(x=>x[0]==='bottle')[1]/t2.reduce((a,x)=>a+x[1],0);
@@ -347,7 +347,7 @@ window.__crop=(x,y,t,age,fl)=>{const T=__T,G=T.G;const i=T.idx(x,y);G.wall[i]=0;
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=__T.CX+44,y=__T.CY+20;G.p.x=x+.5;G.p.y=y+1.6;G.p.face={x:0,y:-1};const a=T.decide();return a}""")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=__T.CX+44,y=__T.CY+20;return [G.objs.get(T.idx(x,y)).cake,G.inv.some(s=>s&&s.id==='festCake')]}""")
             rec('케이크','"가져오기"로 다시 가방에', r[0] is None and r[1] is True, str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=id=>T.QSIDE.find(x=>x.id===id);G.stats.autoH=20;G.stats.giantH=1;return [T.questState(q('s_auto')).done,T.questState(q('s_giant')).done]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const q=id=>T.QSIDE.find(x=>x.id===id);G.stats.autoH=20;G.stats.giantH=1;const g0=G.guide;G.guide=99;/* v125: 9·10장 */const a=[T.questState(q('s_auto')).done,T.questState(q('s_giant')).done];G.guide=g0;return a}""")
             rec('도전','자동 수확기로 20개 · 거대 작물 거두기 퀘스트', r==[True,True], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()

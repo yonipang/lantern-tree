@@ -6,7 +6,7 @@ import { GUIDE, QSIDE } from '../data/quests.js';
 import { iconURL } from '../render/icons.js';
 import { G } from '../save/state.js';
 import { escHTML } from '../save/storage.js';
-import { CALL_Q, mainQuest, qProg, qText, questGo, questGoMsg, questState } from '../sim/quests.js';
+import { CALL_Q, mainQuest, qProg, qText, questGo, questGoMsg, questState, sideOpen } from '../sim/quests.js';
 import { UIS } from './panels.js';
 import { askList, isAsk } from '../sim/naru.js';
 const rwHTML = q => `<div class="qrw">${q.rw.map(([id, c]) => `<span><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${c}</span>`).join('')}${q.xp ? `<span>경험치 ${q.xp}</span>` : ''}</div>`;
@@ -44,7 +44,7 @@ export function questMainHTML() {
   return h;
 }
 export function questSideHTML() {
-  let h = ''; const L = QSIDE.filter(q => !isAsk(q)).map(q => ({ q, st: questState(q) })); // v118: 나루의 부탁은 이야기 탭에
+  let h = ''; const L = QSIDE.filter(q => !isAsk(q) && sideOpen(q)).map(q => ({ q, st: questState(q) })); // v118: 나루의 부탁은 이야기 탭에 · v125: 열린 장의 도전만
   const ready = L.filter(x => x.st.done && !x.st.claimed && x.st.has), going = L.filter(x => !x.st.done), got = L.filter(x => x.st.done && !(x.st.has && !x.st.claimed));
   if (ready.length) h += `<div class="lbl">받을 수 있는 것</div>` + ready.map(x => qCardHTML(x.q, x.st, true, false)).join('');
   if (going.length) h += `<div class="lbl">진행 중</div>` + going.map(x => qCardHTML(x.q, x.st, true, false)).join('');

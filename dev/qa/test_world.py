@@ -395,7 +395,7 @@ def test_hidden_rooms():
             r=await ev(pg,"()=>{const T=__T,G=T.G;const ok=['mossLantern','sporeChime','cryVase','emberBowl','iceSwan'].every(id=>T.ITEMS[id]&&T.ITEMS[id].kind==='place'&&T.OBJ[id].light&&T.SPR?true:T.ITEMS[id]&&T.OBJ[id].light);return ok}")
             rec('장식','장식 5종 모두 놓을 수 있고 빛이 남', r is True, r)
             # quest
-            r=await ev(pg,"()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_rooms');G.stats.chests=2;const a=T.questState(q).done;G.stats.chests=3;return [a,T.questState(q).done,JSON.stringify(q.rw),q.xp]}")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const q=T.QSIDE.find(x=>x.id==='s_rooms');const g0=G.guide;G.guide=99;/* v125: 5장 */G.stats.chests=2;const a=T.questState(q).done;G.stats.chests=3;const b2=T.questState(q).done;G.guide=g0;return [a,b2,JSON.stringify(q.rw),q.xp]}")
             rec('도전','숨은 방 보물상자 3개 열기', r[0] is False and r[1] is True, str(r))
             # map
             r=await ev(pg,"()=>{const T=__T,G=T.G;const rm=G.rooms[G.rooms.length-1];rm.found=1;rm.open=0;return T.mapMarks().some(m=>m.k==='chest')}")

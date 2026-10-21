@@ -15108,12 +15108,8 @@
 "id": "bar",
 "rw": [
 [
-"resin",
-2
-],
-[
-"gel",
-2
+"copperOre",
+3
 ]
 ],
 "xp": 15,
@@ -15127,8 +15123,12 @@
 "id": "forge",
 "rw": [
 [
-"rope",
-4
+"copperBar",
+2
+],
+[
+"resin",
+2
 ]
 ],
 "xp": 20,
@@ -15142,8 +15142,8 @@
 "id": "gbench",
 "rw": [
 [
-"copperOre",
-6
+"copperBar",
+2
 ],
 [
 "rope",
@@ -15161,12 +15161,12 @@
 "id": "pick",
 "rw": [
 [
-"grilled",
-3
+"copperBar",
+4
 ],
 [
-"torch",
-6
+"grilled",
+2
 ]
 ],
 "xp": 25,
@@ -15181,11 +15181,7 @@
 "id": "queen",
 "rw": [
 [
-"copperBar",
-5
-],
-[
-"glowcap",
+"ironBar",
 3
 ]
 ],
@@ -15201,12 +15197,12 @@
 "id": "slime",
 "rw": [
 [
-"ironBar",
-4
+"rope",
+5
 ],
 [
-"gel",
-6
+"resin",
+1
 ]
 ],
 "xp": 100,
@@ -15221,12 +15217,8 @@
 "id": "golem",
 "rw": [
 [
-"crystal",
-8
-],
-[
-"ironBar",
-4
+"cbeanSeed",
+3
 ]
 ],
 "xp": 140,
@@ -15241,7 +15233,7 @@
 "id": "seeds",
 "rw": [
 [
-"stew",
+"glowcap",
 3
 ]
 ],
@@ -15257,12 +15249,8 @@
 "id": "tree",
 "rw": [
 [
-"crystal",
-10
-],
-[
-"stew",
-2
+"cryGem",
+1
 ]
 ],
 "xp": 100,
@@ -15276,8 +15264,12 @@
 "id": "cpick",
 "rw": [
 [
-"torch",
-10
+"crystal",
+6
+],
+[
+"ironBar",
+2
 ],
 [
 "stew",
@@ -15316,12 +15308,16 @@
 "id": "turtle",
 "rw": [
 [
-"goldBar",
-4
+"hotSoup",
+2
 ],
 [
-"frostShard",
-3
+"stew",
+2
+],
+[
+"ironBar",
+2
 ]
 ],
 "xp": 200,
@@ -15336,12 +15332,8 @@
 "id": "spirit",
 "rw": [
 [
-"frostShard",
-6
-],
-[
-"goldBar",
-2
+"stew",
+3
 ]
 ],
 "xp": 220,
@@ -15372,12 +15364,8 @@
 "id": "tree2",
 "rw": [
 [
-"crystal",
-12
-],
-[
-"goldBar",
-4
+"ironBar",
+2
 ]
 ],
 "xp": 200,
@@ -15407,12 +15395,12 @@
 "done": "[함수]",
 "rw": [
 [
-"torch",
-12
+"goldBar",
+2
 ],
 [
 "stew",
-3
+1
 ]
 ],
 "xp": 300,
@@ -15475,8 +15463,8 @@
 "done": "[함수]",
 "rw": [
 [
-"fiber",
-6
+"copperOre",
+2
 ]
 ],
 "xp": 10,
@@ -15490,12 +15478,12 @@
 "done": "[함수]",
 "rw": [
 [
-"stew",
-2
+"copperBar",
+3
 ],
 [
-"rope",
-4
+"stew",
+2
 ]
 ],
 "xp": 0,
@@ -15509,11 +15497,11 @@
 "done": "[함수]",
 "rw": [
 [
-"grilledFish",
+"copperBar",
 3
 ],
 [
-"gel",
+"grilledFish",
 3
 ],
 [
@@ -15532,12 +15520,8 @@
 "done": "[함수]",
 "rw": [
 [
-"rope",
-6
-],
-[
-"resin",
-2
+"copperOre",
+4
 ]
 ],
 "xp": 30,
@@ -15552,11 +15536,7 @@
 "rw": [
 [
 "ironBar",
-3
-],
-[
-"stew",
-2
+6
 ]
 ],
 "xp": 60,
@@ -15570,12 +15550,12 @@
 "done": "[함수]",
 "rw": [
 [
-"glowcap",
-4
+"ironBar",
+3
 ],
 [
-"rope",
-4
+"glowcap",
+2
 ]
 ],
 "xp": 50,
@@ -15589,12 +15569,12 @@
 "done": "[함수]",
 "rw": [
 [
-"wire",
-10
+"copperBar",
+3
 ],
 [
-"battery",
-1
+"wire",
+10
 ]
 ],
 "xp": 40,
@@ -15608,12 +15588,12 @@
 "done": "[함수]",
 "rw": [
 [
-"battery",
-2
+"copperBar",
+5
 ],
 [
-"copperBar",
-6
+"grilled",
+3
 ]
 ],
 "xp": 60,
@@ -15627,12 +15607,16 @@
 "done": "[함수]",
 "rw": [
 [
-"fireBerry",
-4
+"crystal",
+6
 ],
 [
-"torch",
-6
+"coolPunch",
+3
+],
+[
+"stew",
+2
 ]
 ],
 "xp": 60,
@@ -15646,12 +15630,16 @@
 "done": "[함수]",
 "rw": [
 [
-"obsidian",
-3
+"goldBar",
+7
 ],
 [
-"fireBerry",
-3
+"obsidian",
+2
+],
+[
+"stew",
+2
 ]
 ],
 "xp": 80,
@@ -15665,8 +15653,8 @@
 "done": "[함수]",
 "rw": [
 [
-"goldBar",
-4
+"crystal",
+2
 ],
 [
 "stew",
@@ -15703,12 +15691,16 @@
 "done": "[함수]",
 "rw": [
 [
-"stew",
-3
+"crystal",
+8
 ],
 [
-"goldBar",
-2
+"ironBar",
+4
+],
+[
+"stew",
+3
 ]
 ],
 "xp": 120,
@@ -15722,12 +15714,12 @@
 "done": "[함수]",
 "rw": [
 [
-"ironBar",
+"crystal",
 4
 ],
 [
-"resin",
-4
+"ironBar",
+2
 ]
 ],
 "xp": 60,
@@ -15741,8 +15733,8 @@
 "done": "[함수]",
 "rw": [
 [
-"rope",
-4
+"copperOre",
+3
 ],
 [
 "battery",
@@ -15760,11 +15752,11 @@
 "done": "[함수]",
 "rw": [
 [
-"berrySeed",
+"copperOre",
 3
 ],
 [
-"spore",
+"berrySeed",
 3
 ]
 ],
@@ -15783,6 +15775,10 @@
 3
 ],
 [
+"fiber",
+6
+],
+[
 "rn_glowPancake",
 1
 ]
@@ -15798,8 +15794,8 @@
 "done": "[함수]",
 "rw": [
 [
-"gel",
-6
+"stew",
+3
 ]
 ],
 "xp": 40,
@@ -15814,7 +15810,7 @@
 "rw": [
 [
 "crystal",
-8
+6
 ],
 [
 "rn_beanSteam",
@@ -15832,8 +15828,8 @@
 "done": "[함수]",
 "rw": [
 [
-"glowSpore",
-3
+"ironBar",
+4
 ],
 [
 "cbeanSeed",
@@ -15855,12 +15851,16 @@
 "done": "[함수]",
 "rw": [
 [
+"copperBar",
+3
+],
+[
 "stew",
 2
 ],
 [
 "gel",
-4
+2
 ]
 ],
 "xp": 40,
@@ -15893,12 +15893,12 @@
 "done": "[함수]",
 "rw": [
 [
-"crystal",
-10
+"stew",
+5
 ],
 [
-"goldBar",
-2
+"frostShard",
+4
 ]
 ],
 "xp": 80,
@@ -15912,12 +15912,12 @@
 "done": "[함수]",
 "rw": [
 [
-"fertCry",
-6
+"frostShard",
+10
 ],
 [
-"cbeanSeed",
-4
+"stew",
+6
 ]
 ],
 "xp": 100,
@@ -15931,12 +15931,12 @@
 "done": "[함수]",
 "rw": [
 [
-"torch",
-10
+"crystal",
+6
 ],
 [
 "cryGem",
-4
+1
 ]
 ],
 "xp": 160,
@@ -15951,12 +15951,16 @@
 "done": "[함수]",
 "rw": [
 [
-"torch",
-10
+"goldBar",
+7
 ],
 [
-"obsidian",
-4
+"stew",
+5
+],
+[
+"hotSoup",
+1
 ]
 ],
 "xp": 180,
@@ -15976,7 +15980,7 @@
 ],
 [
 "frostShard",
-4
+6
 ]
 ],
 "xp": 200,
@@ -15991,11 +15995,11 @@
 "done": "[함수]",
 "rw": [
 [
-"torch",
-10
+"ironBar",
+4
 ],
 [
-"glowcap",
+"torch",
 6
 ]
 ],

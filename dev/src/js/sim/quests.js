@@ -2,7 +2,7 @@
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- 퀘스트 보상·능력치·스킬 ----
 import { BIOME, ITEMS } from '../data/items.js';
-import { GUIDE, Q_GO, Q_PROG, QSIDE } from '../data/quests.js';
+import { GUIDE, Q_CH, Q_CH_GATE, Q_GO, Q_PROG, QSIDE } from '../data/quests.js';
 import { BOSSES } from '../data/rpg-nature.js';
 import { ANIMALS } from '../data/gear-animals.js';
 import { OBJ, STN } from '../data/items.js';
@@ -38,7 +38,11 @@ export function layoutTexts() { if (typeof GUIDE === 'undefined') return; for (c
   q.t = typeof q._t0 === 'function' ? (() => dirText(q._t0())) : dirText(q._t0); q.h = typeof q._h0 === 'function' ? (() => dirText(q._h0())) : dirText(q._h0); } }
 export const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 export const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
-export function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = naruHolds(q); /* v118: 나루의 부탁도 */ return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
+// v125 장(dev/design/퀘스트설계.md 3-7): 관문 이야기 퀘스트(Q_CH_GATE)를 끝낼 때마다 다음 장 — 도전은 그 장이 되어야 열려요
+// (나루의 부탁은 나루가 방울로 줄 때 열려서 그대로, 이미 받은 도전은 늘 보여요)
+export const questChapter = () => { let c = 1; for (const id of Q_CH_GATE) { const k = GUIDE.findIndex(q => q.id === id); if (k >= 0 && k < G.guide) c++; } return c; };
+export const sideOpen = q => !Q_CH[q.id] || isAsk(q) || !!(G.qclaim || {})[q.id] || questChapter() >= Q_CH[q.id];
+export function questState(q, k) { const side = k == null; const done = side ? sideOpen(q) && q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = naruHolds(q); /* v118: 나루의 부탁도 */ return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
 export const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has && !st.nh; });
 export function claimQuest(id) {
   const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q) return; const k = GUIDE.indexOf(q), st = questState(q, k < 0 ? null : k); if (!st.done || st.claimed || st.nh) return; /* v117: 1부 보상은 나루에게 */
@@ -52,10 +56,10 @@ export const isSide = q => !!q && QSIDE.includes(q);
 // v117 나루가 마을로 부름(6·8번 뒤): 이야기는 마을에서 나루와 이야기한 뒤에 이어져요 — 그동안 이야기 자리에 「나루에게 가기」
 export const CALL_Q = { id: 'naruCall', t: () => '마을에서 나루와 이야기하기', h: '마을로 와 줄래요? 할 얘기가 있어요. 머리 위에 물음표가 뜬 저한테 말을 걸어 줘요.', done: () => !G.stats.naruCall, target: () => naruSpot(), rw: [], xp: 0 };
 export const mainQuest = () => G.stats.naruCall && naruSpot() ? CALL_Q : GUIDE[G.guide];
-export function activeQuest() { const a = G.qAct || 'main'; if (a === 'none') return null; if (a === 'main') return mainQuest(); const q = QSIDE.find(x => x.id === a); return q && (!isAsk(q) || askOpen(q.id)) ? q : mainQuest(); }
+export function activeQuest() { const a = G.qAct || 'main'; if (a === 'none') return null; if (a === 'main') return mainQuest(); const q = QSIDE.find(x => x.id === a); return q && (!isAsk(q) || askOpen(q.id)) && sideOpen(q) ? q : mainQuest(); }
 export const qProg = q => { const f = q && Q_PROG[q.id]; if (!f) return null; const [a, b] = f(); return [Math.max(0, Math.min(b, a | 0)), b]; };
 defineCmd('qAct', c => { if (c.id === 'none') { G.qAct = 'none'; } else if (c.id === 'main' || GUIDE.some(q => q.id === c.id)) { const k = GUIDE.findIndex(q => q.id === c.id); if (k > G.guide) return false; G.qAct = 'main'; }
-  else { const q = QSIDE.find(x => x.id === c.id); if (!q || (isAsk(q) && !askOpen(q.id))) return false; G.qAct = q.id; } /* v118: 아직 안 받은 부탁은 못 골라요 */ QTGT.t = -9; checkGuide(); emit('sfx', 'pick'); });
+  else { const q = QSIDE.find(x => x.id === c.id); if (!q || (isAsk(q) && !askOpen(q.id)) || !sideOpen(q)) return false; G.qAct = q.id; } /* v118: 아직 안 받은 부탁은 못 골라요 */ QTGT.t = -9; checkGuide(); emit('sfx', 'pick'); });
 // 「가장 가까운 할 곳」 — 지도에서 밝힌 곳만 (Q_GO 종류별). 찾으면 {x, y}, 장소가 있는 퀘스트인데 못 찾으면 null, 장소가 없는 퀘스트면 undefined
 const qSeen = (x, y) => inB(x | 0, y | 0) && !!G.explored[idx(x | 0, y | 0)];
 function nearestTile(test, R) { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let best = null, bd = 1e9;
@@ -95,7 +99,7 @@ const QDONE_MAX = 5;
 function qDoneEmit(q, side) { const st = questState(q, side ? null : GUIDE.indexOf(q)); const sub = st.claimed || !st.has ? '' : st.nh ? '나루에게 받아요' : '보상 받기';
   emit('qdone', qText(q), sub, side && !isAsk(q) ? 'side' : 'main'); }
 // 나루의 부탁·도전: 끝난 걸 G.stats.qdone에 적어 한 번만 (옛 세이브·처음은 지금 끝난 것을 조용히 적어 둠). 아직 받지 않은 부탁은 받은 뒤에
-const sideLive = q => !isAsk(q) || askOpen(q.id);
+const sideLive = q => (!isAsk(q) || askOpen(q.id)) && sideOpen(q); // v125: 아직 안 열린 장의 도전은 열린 뒤에
 function sideDoneTick() { const S = G.stats; if (!S.qdone) { S.qdone = {}; for (const q of QSIDE) if (sideLive(q) && q.done()) S.qdone[q.id] = 1; return; } if (!started) return; let k = 0;
   for (const q of QSIDE) { if (S.qdone[q.id] || !sideLive(q) || !q.done()) continue; S.qdone[q.id] = 1; if (!(G.qclaim || {})[q.id] && k++ < QDONE_MAX) qDoneEmit(q, true); } }
 export function checkGuide() {
