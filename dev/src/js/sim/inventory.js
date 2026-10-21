@@ -143,7 +143,8 @@ defineCmd('sortBag', () => { sortBag(); emit('sfx', 'place'); emit('toast', '가
 defineCmd('wear', c => { if (G.inv[c.i]) wearItem(c.i); });
 defineCmd('unwear', c => { if (G.equip[c.sl]) unwear(c.sl); });
 defineCmd('eat', c => eat(c.i));
-defineCmd('toHot', c => { const from = c.i; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; emit('inv'); emit('sfx', 'place'); });
+// 「단축칸으로」: 빈 단축칸 → 든 단축칸 → 1번 칸과 자리 바꿈. 도구를 들면 G.sel = -1이라, 꽉 찼을 때 -1번 자리로 옮겨 물건이 사라지던 버그를 막음
+defineCmd('toHot', c => { const from = c.i; if (!(from >= HOT && from < G.inv.length) || !G.inv[from]) return; let to = G.inv.slice(0, HOT).findIndex(x => !x); if (to < 0) to = G.sel >= 0 && G.sel < HOT ? G.sel : 0; const tmp = G.inv[to]; G.inv[to] = G.inv[from]; G.inv[from] = tmp; G.sel = to; emit('inv'); emit('sfx', 'place'); });
 defineCmd('trash', c => { G.inv[c.i] = null; emit('inv'); });
 defineCmd('trashTool', c => clearSlot('t:' + c.i));
 // ---- 상자 ----

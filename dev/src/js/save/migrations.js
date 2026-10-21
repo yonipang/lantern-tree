@@ -26,6 +26,7 @@ import { GREW } from '../sim/building.js';
 import { bossNoteIds, learnRecipe, roomNotes } from '../sim/cooking.js';
 import { eqCopy, freshEquip, freshSets } from '../sim/gear.js';
 import { addItem, isTool, moveInto, returnObj, seenAll } from '../sim/inventory.js';
+import { benchLv, syncStations } from '../sim/crafting.js';
 
 // ---- save layout (inventory, equipment) ----
 // saves from before the 6-slot hotbar (invV 1): 30 slots, three empty slots put in after the hotbar
@@ -231,6 +232,10 @@ export function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.i
 export function migrateNaru119() { if (G.stats.naru119) return; G.stats.naru119 = 1; const read = !!(G.stats.deep && G.stats.deep.read), dark = !!(G.bossDead && G.bossDead.dark); if (!read && !dark) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {};
   { G.stats.n2go = 1; G.qclaim.naruGo = 1; qx.naruGo = 1; } if (dark) { G.stats.n2back = 1; G.qclaim.naruBack = 1; qx.naruBack = 1; } }
 // v124 새 이야기 퀘스트 「장비제작대 만들고 놓기」: 옛 세이브에 놓인 장비제작대가 있으면 놓은 것으로 셈, 구리 작업대 퀘스트를 이미 지났고 이 퀘스트도 다 됐으면 받은 것으로 (장면·방울·보상 없이)
+// v128: 작업대·장비제작대가 한 등급 — 불러올 때마다 놓인 것·기록 중 가장 높은 단계로 맞춰요(재료 없이).
+// 처음 한 번은, 예전에 장비제작대를 올린 적이 있으면(gearLv ≥ 1) 「장비제작대 놓기」를 한 것으로 (이제 등급만으로는 그 퀘스트가 안 끝나요)
+export function syncTiers128() { if (!G.stats.tier128) { G.stats.tier128 = 1; if ((G.stats.gearLv || 0) >= 1) G.stats.gbench = 1; }
+  let m = 0; for (const o of G.objs.values()) m = Math.max(m, benchLv(o)); syncStations(m); }
 export function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 1; for (const o of G.objs.values()) if (o && o.t === 'smelter') { G.stats.gbench = 1; break; }
   const f = GUIDE.find(q => q.id === 'forge'), g = GUIDE.find(q => q.id === 'gbench'); if (!f || !g || !f.done() || !g.done()) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {}; G.qclaim.gbench = 1; qx.gbench = 1; }
 export function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }

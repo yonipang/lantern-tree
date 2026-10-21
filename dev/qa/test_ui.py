@@ -964,6 +964,31 @@ def test_bag_character_v83():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+def test_tohot_full_hotbar():
+    import asyncio, sys
+    # 버그 수정: 도구를 들고 있을 때(G.sel = -1) 단축칸이 꽉 찬 상태에서 「단축칸으로」를 누르면 물건이 사라지던 것
+    H2=HOOK.replace("computeLight}","computeLight,HOT,runCmd}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,H=T.HOT;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;
+              for(let i=0;i<H;i++)G.inv[i]={id:'stone',c:i+1};G.inv[H+2]={id:'berry',c:7};
+              const tool=G.tools&&G.tools[0];G.sel=-1;G.tsel=0;
+              const cnt=()=>G.inv.filter(Boolean).reduce((a,s)=>a+s.c,0),before=cnt();
+              T.runCmd({k:'toHot',i:H+2});
+              const where=G.inv.findIndex(s=>s&&s.id==='berry');
+              return [before,cnt(),where>=0&&where<H,G.inv[-1]===undefined,G.inv.filter(Boolean).length,where===G.sel,!!tool&&G.tools.includes(tool)]}""")
+            rec('가방','도구를 든 채 단축칸이 꽉 찼을 때 「단축칸으로」: 물건이 사라지지 않고 단축칸으로 옮겨지고, 단축칸 물건은 그 가방 칸으로 자리 바꿈', r==[52,52,True,True,10,True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,H=T.HOT;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;
+              for(let i=0;i<H;i++)G.inv[i]={id:'stone',c:1};G.inv[H]={id:'berry',c:3};G.sel=4;
+              T.runCmd({k:'toHot',i:H});return [G.inv[4]&&G.inv[4].id,G.inv[H]&&G.inv[H].id,G.sel]}""")
+            rec('가방','단축칸 물건을 들고 있으면 그 칸과 자리 바꿈(예전 그대로)', r==['berry','stone',4], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_help_guide():
     # v96: 창마다 붙어 있던 설명 글을 빼고, 설정 → 가이드(주제 탭)에서 봐요
     async def main():
