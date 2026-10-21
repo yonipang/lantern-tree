@@ -258,7 +258,7 @@ def test_furniture_size():
           return [await sz(T.iconURL('logBench')),await sz(T.iconURL('smelter')),await sz(T.iconURL('plant')),await sz(T.iconURL('chair')),f.logBench.small.width,f.logBench.big.width]}""")
             rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','22x22','20x20','16x16',16,32], str(r))
             r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
-            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배, v122 침대 2×3 그림)', r==['32x27','16x20','32x16','32x48',False,'32x48','22x38',25], str(r))
+            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림)', r==['32x27','16x20','32x16','32x48',False,'32x48','24x28',25], str(r))
             # v56: saves from before v50 get the 2×1 workbench too — it grows into the free tile next to it, or comes back to the bag
             r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const fpNew=JSON.parse(JSON.stringify(T.serialize())).fpV;
           const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y;yy<=y+2;yy+=2)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
@@ -318,7 +318,7 @@ def test_decor_v122():
           return [ids.length,bad,Object.keys(T.FLOOR122).map(k=>T.ITEMS[k].floor).join(','),Object.keys(T.WALL122).map(k=>T.ITEMS[k].wall).join(','),T.BUILT_WALLS.has(14)&&T.BUILT_WALLS.has(15)&&T.BUILT_WALLS.has(6)]}""")
             rec('새 아이템','새 꾸미기·바닥·벽 모두 작업대 레시피·단계·그림이 있음, 바닥 30~34, 벽 14·15는 「지은 벽」', r[0]>=80 and r[1]==[] and r[2]=='30,31,32,33,34' and r[3]=='14,15' and r[4], str(r))
             r=await ev(pg,"()=>{const T=__T,O=T.OBJ;return ['bed','bedDouble','table','longTable','woodWardrobe','bedRed','sofaRed','carpetRed','rugPattern','glowVineTree','well'].map(k=>k+':'+(O[k].sz?O[k].sz.join('x'):'1'))}")
-            rec('칸 크기','침대·2인 침대 2×3, 둥근 탁자 2×2, 긴 식탁 3×2 (새 그림 크기), 나무 옷장은 그대로 1칸', r==['bed:2x3','bedDouble:2x3','table:2x2','longTable:3x2','woodWardrobe:1','bedRed:2x3','sofaRed:2x1','carpetRed:2x2','rugPattern:3x5','glowVineTree:2x2','well:2x2'], str(r))
+            rec('칸 크기','침대·2인 침대 2×3, 둥근 탁자 2×2, 긴 식탁 3×2 (새 그림 크기), 나무 옷장은 그대로 1칸', r==['bed:2x3','bedDouble:2x3','table:2x2','longTable:3x2','woodWardrobe:1','bedRed:2x3','sofaRed:2x1','carpetRed:2x2','rugPattern:3x2','glowVineTree:2x2','well:2x2'], str(r))
             # 물 위 소품: 땅에는 못 놓고 물 칸에만
             await ev(pg,ARENA)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('lilyPad');const a=T.decide();G.floor[T.idx(105,108)]=T.WATER;const b2=T.decide();T.perform(b2);const o=G.objs.get(T.idx(105,108));

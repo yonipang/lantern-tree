@@ -121,7 +121,7 @@ export function genWorld(seed) {
   [[-3, -6], [6, -3]].forEach(([a, b]) => put(a, b, { t: 'bush', r: 0 }));
   [[-2, -7], [4, 6]].forEach(([a, b]) => put(a, b, { t: 'glow' }));
   [[-7, -2], [-5, 3], [-1, 6], [-4, -4], [-6, -5], [2, 7], [6, 5]].forEach(([a, b]) => put(a, b, { t: 'grass' }));
-  put(-4, 2, { t: 'plant' }); put(-3, 3, { t: 'chair' }); put(-2, 3, { t: 'table' }); [[-1, 3], [-2, 4], [-1, 4]].forEach(([a, b]) => put(a, b, { t: '_part', a: idx(CX - 2, CY + 3) })); // v122: 둥근 탁자 2×2 put(0, 3, { t: 'rug' }); put(4, 2, { t: 'lampShroom' }); put(-4, 4, { t: 'torch' });
+  put(-4, 2, { t: 'plant' }); put(-3, 3, { t: 'chair' }); put(-2, 3, { t: 'table' }); [[-1, 3], [-2, 4], [-1, 4]].forEach(([a, b]) => put(a, b, { t: '_part', a: idx(CX - 2, CY + 3) })); /* v122: 둥근 탁자 2×2 */ put(0, 3, { t: 'rug' }); put(4, 2, { t: 'lampShroom' }); put(-4, 4, { t: 'torch' });
   const starter = [['bed', 1], ['chair', 1], ['table', 1], ['plant', 1], ['rug', 2], ['cushion', 1], ['vase', 1], ['shelf', 1], ['lampShroom', 1], ['torch', 4], ['wallWood', 10], ['floorWood', 12]];
   put(2, 3, { t: 'chest', items: starter.map(([id, c]) => ({ id, c })).concat(Array(18 - starter.length).fill(null)) });
   objs.set(idx(SA.x, SA.y), { t: 'shrine', has: 1 }); objs.set(idx(SB.x, SB.y), { t: 'shrine', has: 1 }); objs.set(idx(SL.x, SL.y), { t: 'shrine', has: 1 }); objs.set(idx(SI.x, SI.y), { t: 'shrine', has: 1 });
