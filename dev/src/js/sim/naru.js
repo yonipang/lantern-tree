@@ -7,7 +7,7 @@
 //   → 누가 LEAD_ARRIVE칸 안에 오면 한마디(back) → 5초 뒤 집으로(done). 멀리 있으면 걷는 모습 없이 바로 광맥 옆에.
 // - 나루의 부탁(G.stats.askOpen·askEnd): 이야기 퀘스트 after를 끝내면 방울로 부탁 → 끝내면 경험치는 바로, 방울 「마을로 와 줄래요?」 → 마을에서 끝 장면 + 물건.
 // - 상황 한마디(G.stats.nTip): 1부(구리 곡괭이 장면)를 마친 뒤 그 상황이 처음 올 때 방울로 한 줄.
-import { LEAD_ARRIVE, LEAD_SEE, LEAD_SPD, LEAD_STEPS, LEAD_WAIT, LIFE_NEAR, LIFE_R, LIFE_SPD, NARU_ASK, NARU_ASK_CALL, NARU_ASK_OPEN, NARU_LEAD_HERE, NARU_LIFE, NARU_TIP, TIP_GAP, NARU2_DEEP_HERE, NARU2_Q, NARU_BOSS, NARU2_BACK, NARU2_GO, NARU2_SC, NARU_INTRO } from '../data/npc.js';
+import { LEAD_ARRIVE, LEAD_SEE, LEAD_SPD, LEAD_STEPS, LEAD_WAIT, LIFE_NEAR, LIFE_R, LIFE_SPD, NARU_ASK, NARU_ASK_CALL, NARU_ASK_OPEN, NARU_LEAD_HERE, NARU_LIFE, NARU_TIP, TIP_GAP, NARU2_DEEP_HERE, NARU2_Q, NARU_BOSS, NARU2_BACK, NARU2_GO, NARU2_SC, NARU_INTRO, NARU_MEM_BELL, NARU_STAGE } from '../data/npc.js';
 import { BOSSES } from '../data/rpg-nature.js';
 import { DEEP_H, DEEP_PLAN } from './deep.js';
 import { GUIDE, Q_GO, QSIDE } from '../data/quests.js';
@@ -19,7 +19,7 @@ import { emit } from './events.js';
 import { gainXp, maxHp } from './player.js';
 import { onFrame } from './systems.js';
 import { freeTile } from './warp.js';
-import { naruSpot, talkTo, villageSpot } from './npc.js';
+import { naruSpot, villageSpot } from './npc.js';
 import { CX, CY, dirKo, idx, inB, W } from '../world/map.js';
 
 const TREE = { x: CX + .5, y: CY }; // 등불나무 가운데 (3×2칸)
@@ -71,6 +71,9 @@ export function lifeLine() { const n = naruAt(); if (!n) return NARU_LIFE.other;
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!inB(x + dx, y + dy)) continue; const o = G.objs.get(idx(x + dx, y + dy)); if (o && OBJ[o.t] && OBJ[o.t].station === 'bench') return NARU_LIFE.bench; }
   if (Math.hypot(x + .5 - TREE.x, y + .5 - TREE.y) <= LIFE_R + .5) return NARU_LIFE.tree;
   return NARU_LIFE.other; }
+// v126 E: 이야기 단계마다 바뀌는 한마디 (data/npc.js NARU_STAGE) — 지나간 이야기 퀘스트 가운데 가장 뒤의 것, 한 단계에 줄이 여럿이면 번갈아 (k = 말 건 횟수)
+export function stageLine(k) { let L = null; for (const [id, lines] of NARU_STAGE) { const j = GUIDE.findIndex(q => q.id === id); if (j >= 0 && j < G.guide) L = lines; }
+  return L && L.length ? L[(Math.max(0, k | 0) >> 1) % L.length] : null; }
 // ---- 먼저 걸어 나가기 ----
 const nLead = () => G.stats.nLead || null;
 export const leadWalking = () => !!G && !!G.stats && !!nLead() && nLead().s === 'walk';
@@ -177,7 +180,7 @@ export const bossDir = k => { const B = BOSSES[k]; if (!B || !B.home) return '';
 // 「출발 전」을 볼 수 있는 보스: 지금 이야기가 그 보스이고 아직 안 봤고 살아 있으면
 export function departDue() { const q = curQ(); if (!q || !NARU_BOSS.includes(q.id) || G.bossDead[q.id] || G.stats.naruCall) return null; return (G.stats.nGo || {})[q.id] ? null : q.id; }
 // 나루 머리 위 ! (render/world.js naruWaits): 「출발 전」·「나루에게 가기」·「나루에게 돌아가기」
-export const naruBang = () => !!G.stats.naruMet && naruOK() && !leadThere() && (!!departDue() || ['naruGo', 'naruBack'].includes((curQ() || {}).id));
+export const naruBang = () => !!G.stats.naruMet && naruOK() && !leadThere() && (!!departDue() || ['naruGo', 'naruBack'].includes((curQ() || {}).id) || (G.stats.nPend || []).includes('tree')); // v126 C: 기억 장면 뒤 13번 장면도 !
 // 보스 이야기를 끝냈을 때 (sim/quests.js checkGuide, 놀이 중에만)
 export function bossPassed(id) { const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('back:' + id)) P.push('back:' + id); }
 // 이야기 퀘스트를 끝냈을 때 다른 장면 쌓기: 빛씨앗 셋을 심음(tree) → 13번
@@ -202,7 +205,9 @@ export function sceneLines(kind) { const out = [];
 // 창을 닫았을 때 (ui/panels.js closePanel → 명령): 나루 장면이 끝나면 나루가 먼저 걸어 나가요 · 큰 어둠 뒤 장면이 끝나면 엔딩 창 · 기억 장면을 닫으면 쌓인 장면을 바로
 defineCmd('talkEnd', c => { const m = String(c.m || ''); if (m === 'intro') { const at = (G.stats.introAt | 0) + Math.max(0, c.at | 0); if (at < NARU_INTRO.length - 1) G.stats.introAt = at; else delete G.stats.introAt; } /* v120: 첫 장면을 다 못 봤으면 다음에 말 걸 때 그 줄부터 */ if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
 defineCmd('memEnd', () => { if (!G.stats.naruMet || !naruOK() || leadThere() || leadWalking() || G.stats.naruCall) return; const q = curQ(), P = G.stats.nPend || [];
-  if (P.includes('tree') || (q && q.id === 'naruGo' && !G.stats.n2go)) { talkTo('guide'); } });
+  // v126 C: 기억 장면을 닫자마자 나루 장면을 열지 않아요 — 방울 한 줄(저절로 사라짐) + 나루 머리 위 ! → 원할 때 말 걸기 (같은 장면은 이번 접속에 한 번만 불러요)
+  const k = P.includes('tree') ? 'tree' : q && q.id === 'naruGo' && !G.stats.n2go ? 'naruGo' : null; if (!k || memBellSaid.has(k)) return; memBellSaid.add(k); emit('bell', [NARU_MEM_BELL[k]]); });
+const memBellSaid = new Set();
 // 큰 어둠을 물리치면 (sim/deep.js darkDown): 나루가 있으면 마지막 말 → 엔딩 창
 export const naruEnding = () => { if (!naruOK()) return false; emit('talk', 'guide', 'sc:end'); return true; };
 // 할머니를 구하면 (sim/npc.js rescue)
