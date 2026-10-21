@@ -542,6 +542,8 @@ body.building #dpad{bottom:calc(var(--bmH,184px) + 16px);z-index:7} /* v91: 방�
 #bell .belltx{margin:2px 0 0;color:#f3ead8;word-break:keep-all}
 #bell .bellnx{position:absolute;right:6px;bottom:4px;color:var(--amber);font-size:16px;animation:blink 1s steps(2) infinite}
 #bell .bellnx[hidden]{display:none}
+#bell .bellx{position:absolute;top:-14px;right:-6px;width:28px;height:28px;padding:0;border:2px solid #b89a5a;background:#241b2f;color:#f3ead8;font:inherit;font-size:14px;line-height:1;cursor:pointer} /* v121 대화 닫기 */
+#bell.auto .bellx{display:none}
 body.touch #bell{left:8px;transform:none;width:auto;right:calc(env(safe-area-inset-right,0px) + 100px)}
 body.intro #bell{display:none}
 @keyframes blink{50%{opacity:0}}

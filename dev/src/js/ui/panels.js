@@ -21,6 +21,7 @@ import { G, setPaused, soundOn, started } from '../save/state.js';
 import { canDev, clearImport, cloudMenuHTML, cloudPendingHTML, escHTML, importFrom, pendingImp, playRecordHTML } from '../save/storage.js';
 import { bestArrow } from '../sim/combat.js';
 import { runCmd } from '../sim/commands.js';
+import { nextStory } from '../sim/naru.js';
 import { buffText, knows, noteHint } from '../sim/cooking.js';
 import { atHere, canSalv, craftable, fmtT, isMulti, jobTime, maxCraft, nearStations, repairCost, salvGet2, stationTier } from '../sim/crafting.js';
 import { recipeOn } from '../sim/farming.js';
@@ -231,7 +232,8 @@ export function renderPanel() {
       const face = me ? faceURL('me') : (img ? img.toDataURL() : ''), who = me ? `<b style="color:var(--mint,#7fe0b5)">${escHTML(pName())}</b>` : `<b style="color:var(--amber)">${N ? N.n : '?'}</b> <small style="color:var(--muted)">${N ? N.job : ''}</small>`;
       const body = L.ask ? `<p class="prose" style="margin:6px 0 0">뭐라고 불러 달라고 할까요?</p><div class="namerow"><input id="nameIn" class="namein" type="text" maxlength="8" autocomplete="off" enterkeyhint="done" value="${escHTML(panel.nameDraft != null ? panel.nameDraft : pName())}" aria-label="이름"><button class="btn" data-a="nameOk" type="button">정했어요</button></div><small class="hint" style="margin:4px 0 0">1~8자 · 비워 두면 「${escHTML(CHARS[curChar()].n)}」 · 프로필에서 언제든 바꿀 수 있어요</small>`
         : `<p class="prose" style="margin:6px 0 0" data-type="${panel.mode}:${panel.at}">${escHTML(L.s)}</p>`;
-      const btns = L.ask ? '' : `${last ? `<button class="btn" data-a="close" type="button">${story ? '알았어요' : '잘 가요'}</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' && !story ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}`;
+      const hear = last && !L.ask && panel.npc === 'guide' ? nextStory(panel.mode) : null; /* v121 중요한 전환점: [다음 이야기 듣기] / [대화 마치기] */
+      const btns = L.ask ? '' : hear ? `<button class="btn" data-a="talkHear" data-i="${hear}" type="button">다음 이야기 듣기</button><button class="btn ghost" data-a="close" type="button">대화 마치기</button>` : `${last ? `<button class="btn" data-a="close" type="button">${story ? '알았어요' : '잘 가요'}</button>` : `<button class="btn" data-a="talkNext" type="button">다음</button>`}${last && shop.length && panel.mode !== 'hello' && !story ? `<button class="btn ghost" data-a="talkShop" type="button">물물교환</button>` : ''}`;
       h += `<div class="sh-body talk"><div class="talkbox ${me ? 'me' : ''}"><img class="px talkface" src="${face}" alt=""><div style="flex:1;min-width:0">${who}${body}</div>${L.ask ? '' : '<button class="skipty" data-a="skipType" type="button" aria-label="빨리감기">▶▶</button>'}</div><div class="menu-list">${btns}</div>${villagers().length ? `<p class="prose" style="color:var(--muted);text-align:center">마을 사람 ${villagers().length}/6</p>` : ''}</div>`; }
   } else if (k === 'diaryLast' || k === 'ending') { // v108 찢긴 마지막 장 · 엔딩
     const d = k === 'ending' ? ENDING : DEEP_DIARY;

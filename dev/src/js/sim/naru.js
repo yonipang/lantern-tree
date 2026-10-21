@@ -184,11 +184,16 @@ export function bossPassed(id) { const P = G.stats.nPend = G.stats.nPend || []; 
 export function scenePassed(id) { if (id !== 'tree') return; const P = G.stats.nPend = G.stats.nPend || []; if (!P.includes('tree')) P.push('tree'); }
 // 말 걸면 보여 줄 2부 장면 (sim/npc.js talkTo): [장면 이름, 그때 줄 보상 퀘스트 id들] 또는 null — 고른 장면은 본 것으로 표시해요
 export function naru2Scene() { const S = G.stats, P = S.nPend = S.nPend || [], go = S.nGo = S.nGo || {}, q = curQ();
-  if (P.length) { const k = P.shift(); if (k.startsWith('back:')) { const id = k.slice(5), parts = [k], nx = departDue(); if (nx) { go[nx] = 1; parts.push('go:' + nx); } return ['sc:' + parts.join(','), [id]]; } return ['sc:' + k, []]; }
+  if (P.length) { const k = P.shift(); if (k.startsWith('back:')) return ['sc:' + k, [k.slice(5)]]; return ['sc:' + k, []]; } // v121: 「돌아와서」만 — 다음 보스 「출발 전」은 장면 끝 [다음 이야기 듣기]로 (nextStory)
   if (q && q.id === 'naruGo' && !S.n2go) { S.n2go = 1; const lead = leadPrep('deep'); return ['sc:' + (lead ? 'n2go' : 'n2go0'), ['naruGo']]; }
   if (q && q.id === 'naruBack' && !S.n2back) { S.n2back = 1; const lead = leadPrep('dark'); return ['sc:' + (lead ? 'n2back' : 'n2back,dark0'), ['naruBack']]; }
   const d = departDue(); if (d) { go[d] = 1; return ['sc:go:' + d, []]; }
   return null; }
+// v121 (2026-10-21 사용자 확정): 중요한 전환점(보스 「돌아와서」 뒤 · 1부 끝 구리 곡괭이 장면 뒤)에서만 [다음 이야기 듣기] / [대화 마치기].
+//   들을 이야기 = 다음 보스의 「출발 전」(departDue). 아직 「돌아와서」가 더 쌓여 있으면(보스를 여럿 잡고 왔으면) 마지막 「돌아와서」 뒤에만 — 말 걸 때마다 하나씩.
+//   [대화 마치기]를 고르면 본 것으로 치지 않아요 → 나루 머리 위 !, 다음에 말 걸면 바로 그 이야기 (새 저장 칸 없이 G.stats.nGo 그대로). 다음 보스 퀘스트는 안 들어도 진행돼요.
+export function nextStory(mode) { const m = String(mode || ''); if (!(m.startsWith('sc:back:') || m === 'call:pick')) return null; if ((G.stats.nPend || []).some(k => String(k).startsWith('back:'))) return null; return departDue(); }
+defineCmd('hearGo', c => { const id = departDue(); if (!id || id !== c.id) return false; (G.stats.nGo = G.stats.nGo || {})[id] = 1; return true; }); // [다음 이야기 듣기] (ui/panel-actions.js)
 // 장면 줄 (sim/npc.js talkLines): 'sc:back:queen,go:slime' → 줄들
 const dirFill = l => { const f = s => String(s).replace(/\{dir:(\w+)\}/g, (_, k) => bossDir(k)); return l && typeof l === 'object' ? (l.ask ? l : { ...l, s: f(l.s) }) : f(l); };
 export function sceneLines(kind) { const out = [];

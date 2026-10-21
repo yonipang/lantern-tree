@@ -688,16 +688,16 @@ def test_naru_start_v110():
             rec('나루','새 세계: 첫 이야기는 나루에게 말 걸기, 나루는 처음부터 마을(나무에서 10~16칸), 느낌표, 화살표가 나루를 가리킴, 고치는 5개(학자 포함)', r[0]=='naru' and r[1]=='npc' and 9<=r[2]<=17 and r[3] and r[4] and r[5]==1 and r[6]==5, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const n=T.naruSpot();G.enemies.length=0;G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};G.p.dead=0;G.sel=-1;const a=T.decide();if(a.k==='use')T.perform(a);return [a.k,a.u,G.stats.naruMet]}""")
             await pg.wait_for_timeout(300)
-            r2=await ev(pg,"()=>{const T=__T,G=T.G;const t=document.querySelector('#sheet');const tx=t?t.innerText:'';T.checkGuide();return [tx.includes('아, 깼어요?'),T.GUIDE[G.guide].id,T.naruWaits()]}")
+            r2=await ev(pg,"()=>{const T=__T,G=T.G;const t=document.querySelector('#sheet');const tx=t?t.innerText:'';T.checkGuide();return [tx.includes('아, 눈 떴어요?'),T.GUIDE[G.guide].id,T.naruWaits()]}")
             rec('첫 장면','나루 앞에서 상호작용 = 말 걸기 → 첫 장면 대화, 퀘스트가 뿌리기둥으로 넘어가고 느낌표 사라짐', r[:2]==['use','talk'] and r[2]==1 and r2==[True,'wood',False], str(r)+str(r2))
             await pg.wait_for_timeout(400)
             await ev(pg,"()=>document.querySelector('#backdrop').click()")
             r=await ev(pg,"()=>{const P=__T.panel;return P&&[P.kind,P.mode]}")
             rec('첫 장면','v120: 창 바깥을 눌러도 창이 안 닫힘', r==['talk','intro'], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.panel.at=3;T.closePanel();const k=G.stats.introAt;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return [k,a.u]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.panel.at=5;T.closePanel();const k=G.stats.introAt;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return [k,a.u]}""")
             await pg.wait_for_timeout(300)
             r2=await ev(pg,"()=>{const T=__T,P=T.panel;return P&&[P.mode,P.lines.length,typeof P.lines[0]==='string'&&P.lines[0].startsWith('할머니가 그랬어요')]}")
-            rec('첫 장면','v120: 첫 장면을 중간에 닫으면 다시 말 걸 때 그 줄부터 이어서', r==[3,'talk'] and r2==['intro',13,True], str(r)+str(r2))
+            rec('첫 장면','v120: 첫 장면을 중간에 닫으면 다시 말 걸 때 그 줄부터 이어서', r==[5,'talk'] and r2==['intro',14,True], str(r)+str(r2))
             await ev(pg,"()=>{const P=__T.panel;P.at=P.lines.length-1;__T.renderPanel()}")
             await ev(pg,"()=>document.querySelector('#backdrop').click()")
             r=await ev(pg,"()=>!!__T.panel")
@@ -708,12 +708,12 @@ def test_naru_start_v110():
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const n=T.naruSpot();G.p.x=n.x;G.p.y=n.y+1.1;G.p.face={x:0,y:-1};const a=T.decide();if(a.k==='use')T.perform(a);return a.u}""")
             await pg.wait_for_timeout(300)
-            r2=await ev(pg,"()=>{const t=document.querySelector('#sheet');return t?[t.innerText.includes('아, 깼어요?'),!!document.querySelector('#sheet [data-a=talkShop]')]:null}")
+            r2=await ev(pg,"()=>{const t=document.querySelector('#sheet');return t?[t.innerText.includes('아, 눈 떴어요?'),!!document.querySelector('#sheet [data-a=talkShop]')]:null}")
             rec('두 번째','다시 말 걸면 첫 장면이 아니라 보통 이야기, 물물교환 버튼', r=='talk' and r2==[False,True], str(r)+str(r2))
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.wood=6;T.checkGuide();return [T.GUIDE[G.guide].id]}""")
             await pg.wait_for_timeout(200)
-            r2=await ev(pg,"()=>{const b=__T.bellState();return !!b&&b.lines[0].includes('나무 냄새 좋다')}")
+            r2=await ev(pg,"()=>{const b=__T.bellState();return !!b&&b.lines[0].includes('나무 냄새!')}")
             rec('한마디','뿌리기둥 퀘스트가 끝나면 나루의 한마디 (v117부터 방울 대화창)', r==['bench'] and r2, str(r)+str(r2))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.seedsFound=2;G.treeSeeds=1;const t=id=>T.GUIDE.find(q=>q.id===id).t();return [t('seeds'),t('tree'),t('seeds2'),t('tree2')]}""")
             rec('빛씨앗 /5','빛씨앗 퀘스트 숫자는 모두 /5', all('/5)' in x for x in r) and '(2/5)' in r[0], str(r))
@@ -739,7 +739,7 @@ def test_naru_part1_v117():
             u=await ev(pg,TALK); await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
             r=await ev(pg,"""()=>{const T=__T,G=T.G,P=T.panel;return [P.mode,P.lines.some(l=>l&&l.ask),P.lines.some(l=>l&&l.me),!!G.stats.bell,T.countItem('torch')-window.__t0,T.countItem('berry')-window.__b0,!!G.qclaim.naru,T.typing(),!!document.querySelector('#sheet .skipty')]}""")
             rec('첫 장면','말 걸기 → 첫 장면(주인공 대답·이름 짓기 줄), 방울·횃불 1개·첫 퀘스트 보상(통통베리 3)을 그 자리에서, 타이핑 중·빨리감기 버튼', u=='talk' and r[:7]==['intro',True,True,True,1,3,True] and r[7] and r[8], str(u)+str(r))
-            r=await ev(pg,"()=>{const T=__T;T.typeFinish();const t=document.querySelector('#sheet [data-type]');return [T.typing(),t.innerText.includes('아, 깼어요?'),!document.querySelector('#sheet .tyh')||[...document.querySelectorAll('#sheet .tyh')].every(e=>!e.textContent)]}")
+            r=await ev(pg,"()=>{const T=__T;T.typeFinish();const t=document.querySelector('#sheet [data-type]');return [T.typing(),t.innerText.includes('아, 눈 떴어요?'),!document.querySelector('#sheet .tyh')||[...document.querySelectorAll('#sheet .tyh')].every(e=>!e.textContent)]}")
             rec('빨리감기','빨리감기 = 지금 줄이 바로 다 보임 (투명한 남은 글자 없음)', r==[False,True,True], str(r))
             r=await ev(pg,"()=>{const T=__T,P=T.panel;P.at=P.lines.findIndex(l=>l&&l.ask);T.renderPanel();const i=document.querySelector('#nameIn');return [!!i,i&&i.value,!document.querySelector('#sheet [data-a=talkNext]')]}")
             rec('이름 짓기','이름 짓기 창: 처음 칸에 고른 캐릭터 이름, 다음 버튼 대신 「정했어요」', r[0] and r[1]==await ev(pg,"()=>__T.CHARS[__T.curChar()].n") and r[2], str(r))
@@ -747,12 +747,12 @@ def test_naru_part1_v117():
             await ev(pg,"()=>{const i=document.querySelector('#nameIn');i.value='  별빛<b>루나루나루나 ';i.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#sheet [data-a=nameOk]').click()}")
             r=await ev(pg,"()=>{const T=__T,G=T.G;T.typeFinish();return [G.pname,T.pName(),document.querySelector('#sheet [data-type]').innerText]}")
             rec('이름 짓기','정했어요 → 이름 저장(꺾쇠 빼고 8자까지), 다음 줄에 「{이름}님」', r[0]=='별빛b루나루나루' and r[1]==r[0] and ('별빛b루나루나루님' in r[2]), str(r))
-            r=await ev(pg,"()=>{const T=__T,P=T.panel;P.at=P.lines.findIndex(l=>l&&l.me&&l.s.includes('좋아요'));T.renderPanel();T.typeFinish();const box=document.querySelector('#sheet .talkbox');return [box.classList.contains('me'),box.innerText.includes(T.G.pname)]}")
+            r=await ev(pg,"()=>{const T=__T,P=T.panel;P.at=P.lines.findIndex(l=>l&&l.me&&l.s.includes('고마워요'));T.renderPanel();T.typeFinish();const box=document.querySelector('#sheet .talkbox');return [box.classList.contains('me'),box.innerText.includes(T.G.pname)]}")
             rec('주인공 줄','주인공이 말하는 줄은 주인공 이름·얼굴', r==[True,True], str(r))
             await ev(pg,"()=>{const P=__T.panel;P.at=P.lines.length-1;__T.closePanel()}")  # v120: 첫 장면은 끝까지 본 것으로
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();T.checkGuide();const q=T.GUIDE[G.guide].id;G.stats.wood=6;const lv=G.rpg.lv,xp=G.rpg.xp;T.checkGuide();const b=T.bellState();
-              const st=T.questState(T.GUIDE[1],1);T.runCmd({k:'claim',id:'wood'});return [q,T.GUIDE[G.guide].id,G.rpg.lv>lv||G.rpg.xp-xp===10,!!G.qclaim.wood,T.naruAsk(),T.naruOwed().join(),!!b&&b.lines.length===3&&b.lines[0].includes('나무 냄새'),st.nh,T.canClaim()]}""")
-            rec('보상','뿌리기둥 끝: 경험치 10은 바로, 물건은 안 받음(퀘스트 창에서도 못 받음), 나루 머리 위 ?, 방울 대화 3줄', r==['wood','bench',True,False,True,'wood',True,True,False], str(r))
+              const st=T.questState(T.GUIDE[1],1);T.runCmd({k:'claim',id:'wood'});return [q,T.GUIDE[G.guide].id,G.rpg.lv>lv||G.rpg.xp-xp===10,!!G.qclaim.wood,T.naruAsk(),T.naruOwed().join(),!!b&&b.lines.length===2&&b.lines[0].includes('나무 냄새'),st.nh,T.canClaim()]}""")
+            rec('보상','뿌리기둥 끝: 경험치 10은 바로, 물건은 안 받음(퀘스트 창에서도 못 받음), 나루 머리 위 ?, 방울 대화 2줄', r==['wood','bench',True,False,True,'wood',True,True,False], str(r))
             await ev(pg,TALK); await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;return [T.panel.mode,!!G.qclaim.wood,T.naruAsk(),T.countItem('fiber')>=5]}""")
             rec('보상','마을의 나루에게 말 걸면 쌓인 보상(이끼 섬유 5·통통베리 3)과 한마디, ? 사라짐', r==['reward',True,False,True], str(r))
@@ -765,7 +765,7 @@ def test_naru_part1_v117():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();G.stats.wood=6;G.stats.bench=1;G.stats.torch=1;G.stats.copperOre=6;G.stats.copperBar=0;G.guide=T.GUIDE.findIndex(q=>q.id==='bar');T.checkGuide();
               G.stats.copperBar=1;T.checkGuide();const a=[G.stats.naruCall,T.GUIDE[G.guide].id,T.activeQuest().id];G.stats.forge=1;T.checkGuide();const g=T.questGo(T.activeQuest()),n=T.naruSpot();
               a.push(T.GUIDE[G.guide].id,!!g&&g.x===n.x&&g.y===n.y,T.naruAsk(),(T.bellState()||{lines:['']}).lines[0]);return a}""")
-            rec('마을로 부름','첫 구리괴 → 방울 「마을로 와 줄래요?」, 다음 이야기는 나루와 이야기할 때까지 기다림(화살표 = 나루, ?)', r[:6]==['bar','forge','naruCall','forge',True,True] and '마을로 와 줄래요' in r[6], str(r))
+            rec('마을로 부름','첫 구리괴 → 방울 「마을로 가져와 줄래요?」, 다음 이야기는 나루와 이야기할 때까지 기다림(화살표 = 나루, ?)', r[:6]==['bar','forge','naruCall','forge',True,True] and '마을로 가져와 줄래요' in r[6], str(r))
             await ev(pg,"()=>__T.bellClear()"); await ev(pg,TALK); await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const m=T.panel.mode;T.closePanel();T.checkGuide();return [m,G.stats.naruCall,!!G.qclaim.bar,T.GUIDE[G.guide].id,(T.bellState()||{lines:['']}).lines.join(' ')]}""")
             rec('마을로 부름','마을 장면(구리괴 이야기) → 보상, 이어서 다음 이야기(구리 작업대 끝 → 곡괭이 방울)', r[0]=='call:bar' and r[1] is None and r[2] and r[3]=='pick' and '구리 작업대다' in r[4], str(r))
@@ -853,7 +853,7 @@ def test_naru_part1b_v118():
 
 def test_naru_part2_v119():
     # v119 나루 2부: 새 이야기 퀘스트 2개, 보스 돌아와서·출발 전(마을에서 한 번에), 13번 장면(기억 장면 뒤), 입구까지 먼저 가기·마지막 불씨, 엔딩 전 마지막 말, 할머니 재회, 옛 세이브
-    H2=HOOK.replace("computeLight}","computeLight,naruSpot,naruAsk,naruWaits,naruPos,GUIDE,checkGuide,questGo,activeQuest,perform,decide,closePanel,bellState,bellClear,get panel(){return panel},runCmd,canClaim,update,leadWalking,talkTo,readLast,hitBoss,rescue,migrateNaru119,DEEP_H,DEEP_PLAN,lightBrazier}")
+    H2=HOOK.replace("computeLight}","computeLight,naruSpot,naruAsk,naruWaits,naruPos,GUIDE,checkGuide,questGo,activeQuest,perform,decide,closePanel,renderPanel,bellState,bellClear,get panel(){return panel},runCmd,canClaim,update,leadWalking,talkTo,readLast,hitBoss,rescue,migrateNaru119,DEEP_H,DEEP_PLAN,lightBrazier}")
     async def main():
         mkpage(SRC,'qa.html',H2,layout=2)
         async with async_playwright() as p:
@@ -864,16 +864,27 @@ def test_naru_part2_v119():
             # 보스: 물리치면 방울로 부름 · 경험치는 바로 · 물건은 나루에게 · 다음 이야기는 진행
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.closePanel();T.bellClear();G.enemies.length=0;G.stats.naruMet=1;G.stats.bell=1;G.stats.naruCall=null;G.stats.callSeen={bar:1,pick:1};G.stats.nLead={s:'done'};G.stats.askV=1;G.stats.nTip={hunger:1,hurt:1,faint:1,full:1,cocoon:1,region:1,warp:1,level:1,seed:1};
               G.stats.nPend=[];G.stats.nGo={queen:1};G.qclaim=G.qclaim||{};delete G.qclaim.queen;G.stats.qxp={};G.guide=T.GUIDE.findIndex(q=>q.id==='queen');G.qAct='main';G.p.x=T.CX+.5+60;G.p.y=T.CY+1.7;
-              const xp=G.rpg.xp,lv=G.rpg.lv;G.bossDead.queen=1;T.checkGuide();const bl=T.bellState();return [T.GUIDE[G.guide].id,G.stats.nPend.join(),!!bl&&bl.lines[0].includes('마을로 와 줄래요'),G.rpg.xp>xp||G.rpg.lv>lv,!!G.qclaim.queen,T.naruAsk(),T.canClaim()]}""")
-            rec('보스','버섯 여왕을 물리치면 다음 이야기(말랑대왕)로 · 방울 「마을로 와 줄래요?」 · 경험치는 바로 · 물건은 나루 머리 위 ?', r==['slime','back:queen',True,True,False,True,False], str(r))
+              const xp=G.rpg.xp,lv=G.rpg.lv;G.bossDead.queen=1;T.checkGuide();const bl=T.bellState();return [T.GUIDE[G.guide].id,G.stats.nPend.join(),!!bl&&bl.lines[0].includes('마을에서 기다릴'),G.rpg.xp>xp||G.rpg.lv>lv,!!G.qclaim.queen,T.naruAsk(),T.canClaim()]}""")
+            rec('보스','버섯 여왕을 물리치면 다음 이야기(말랑대왕)로 · 방울 「마을에서 기다릴게요」 · 경험치는 바로 · 물건은 나루 머리 위 ?', r==['slime','back:queen',True,True,False,True,False], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();window.__c0=T.countItem('copperBar');T.talkTo('guide');return 1}""")
             await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
-            r=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);return [P.mode,s.includes('여왕은 잠들었어요'),s.includes('말랑대왕'),/\\{dir/.test(s),/(동|서|남|북)/.test(s),!!G.qclaim.queen,T.countItem('copperBar')-window.__c0,!!G.stats.nGo.slime,T.naruAsk()]})")
-            rec('보스','마을의 나루에게 말 걸면 「돌아와서」 + 바로 다음 보스 「출발 전」(방향은 이 지도에 맞춤) + 물건 보상(구리괴 5), ? 사라짐', r[:2]==['sc:back:queen,go:slime',True] and r[2] is True and r[3] is False and r[4] is True and r[5] is True and r[6]>=5 and r[7:]==[True,False], str(r))
+            r=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);P.at=P.lines.length-1;T.renderPanel();const hb=document.querySelector('#sheet [data-a=talkHear]'),cb=document.querySelector('#sheet [data-a=close]');return [P.mode,s.includes('여왕은 잠들었어요'),s.includes('말랑대왕'),!!G.qclaim.queen,T.countItem('copperBar')-window.__c0,!!G.stats.nGo.slime,T.naruAsk(),hb&&hb.dataset.i,cb&&cb.textContent]})")
+            rec('보스','v121: 마을의 나루에게 말 걸면 「돌아와서」 + 물건 보상(구리괴 5), ? 사라짐, 끝에 [다음 이야기 듣기]/[대화 마치기] (아직 출발 전은 안 봄)', r[:3]==['sc:back:queen',True,False] and r[3] is True and r[4]>=5 and r[5:]==[False,False,'slime','대화 마치기'], str(r))
+            await pg.wait_for_timeout(500)  # 창을 연 뒤 0.45초 안의 누르기는 무시돼요
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=talkHear]').click()")
+            r=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);return [P.mode,s.includes('말랑대왕'),/\\{dir/.test(s),/(동|서|남|북)/.test(s),!!G.stats.nGo.slime,T.naruWaits()]})")
+            rec('보스','v121: [다음 이야기 듣기] → 같은 창에서 다음 보스 「출발 전」(방향은 이 지도에 맞춤), 본 것으로', r==['sc:go:slime',True,False,True,True,False], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.nGo={};delete G.qclaim.slime;G.bossDead.slime=1;G.stats.nPend=[];T.checkGuide();const a=[T.GUIDE[G.guide].id,G.stats.nPend.join()];T.talkTo('guide');return a}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r2=await ev(pg,"""()=>{const T=__T,G=T.G,P=T.panel;P.at=P.lines.length-1;T.renderPanel();const h=document.querySelector('#sheet [data-a=talkHear]');const m=P.mode;T.closePanel();const w=T.naruWaits(),g0=!!G.stats.nGo.golem;T.talkTo('guide');return [m,h&&h.dataset.i,w,g0]}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode!=='sc:back:slime'")
+            r3=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel;return [P.mode,"+LN+"(P).includes('수정 동굴은'),!!G.stats.nGo.golem,T.naruWaits()]})")
+            rec('보스','v121: [대화 마치기] → 출발 전은 안 본 것으로 남아 나루 머리 위 !, 다시 말 걸면 바로 그 이야기', r==['golem','back:slime'] and r2==['sc:back:slime','golem',True,False] and r3==['sc:go:golem',True,True,False], str(r)+str(r2)+str(r3))
             await ev(pg,"()=>__T.closePanel()")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.nGo={};G.guide=T.GUIDE.findIndex(q=>q.id==='turtle');G.bossDead.turtle=0;const w=T.naruWaits();T.talkTo('guide');return [w,T.naruWaits(),G.stats.nGo.turtle]}""")
             await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
-            r2=await ev(pg,"(()=>{const P=__T.panel;return [P.mode,"+LN+"(P).includes('용암 동굴은')]})")
+            r2=await ev(pg,"(()=>{const P=__T.panel;return [P.mode,"+LN+"(P).includes('용암 동굴이에요')]})")
             rec('출발 전','지금 이야기가 보스이고 「출발 전」을 안 봤으면 나루 머리 위 !, 말 걸면 출발 전 장면(한 번)', r==[True,False,1] and r2==['sc:go:turtle',True], str(r)+str(r2))
             await ev(pg,"()=>__T.closePanel()")
             # 13번: 빛씨앗 셋을 심으면 → 기억 장면을 닫으면 바로
@@ -894,7 +905,7 @@ def test_naru_part2_v119():
               T.bellClear();G.p.x=n.x+1.2;G.p.y=n.y+.4;for(let k=0;k<20;k++)T.update(1/30);a.push(G.stats.nLead.s,((T.bellState()||{lines:['']}).lines[0]).includes('입구'));return a}""")
             rec('입구','장면을 닫으면 걸어 나가 가장 깊은 곳 입구 곁에(입구 길은 막지 않음), 화살표 = 나루, 닿으면 「여기가 가장 깊은 곳 입구예요」', r[0] in ('walk','there') and r[1:]==['deep','there',True,True,True,'back',True], str(r))
             # 19번 · 나루에게 돌아가기 → 한 번 더 입구까지 → 20번 마지막 불씨
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();T.readLast();T.closePanel();for(let k=0;k<10;k++)T.update(1/30);T.checkGuide();const a=[T.GUIDE[G.guide].id,G.stats.nLead.s,T.naruWaits()];T.talkTo('guide');return a}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();T.readLast();T.closePanel();for(let k=0;k<10;k++)T.update(1/30);T.checkGuide();T.update(1/30);const a=[T.GUIDE[G.guide].id,G.stats.nLead.s,T.naruWaits()];T.talkTo('guide');return a}""")
             await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'&&__T.panel.mode==='sc:n2back'")
             r2=await ev(pg,"(()=>{const T=__T,G=T.G,P=T.panel,s="+LN+"(P);return [s.includes('마지막 등불지기가'),s.includes('나 때문이야'),G.stats.nLead.q]})")
             rec('19번','마지막 장을 읽으면 나루는 마을로, 「나루에게 돌아가기」(!) → 알아차리는 장면(반말) · 입구까지 한 번 더 준비', r==['naruBack','done',True] and r2==[True,True,'dark'], str(r)+str(r2))
@@ -923,6 +934,55 @@ def test_naru_part2_v119():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;delete G.stats.naru119;G.stats.n2go=0;G.stats.n2back=0;G.qclaim={};G.stats.qxp={};G.stats.deep.read=1;G.bossDead.dark=0;T.migrateNaru119();const a=[G.stats.n2go,!!G.qclaim.naruGo,G.stats.n2back,!!G.qclaim.naruBack];
               delete G.stats.naru119;G.stats.n2go=0;G.qclaim={};G.stats.deep.read=0;T.migrateNaru119();a.push(G.stats.n2go,!!G.qclaim.naruGo);return a}""")
             rec('옛 세이브','마지막 장을 이미 읽은 세이브는 「나루에게 가기」를 받은 것으로(장면 없이), 아직이면 그대로', r==[1,True,0,False,0,False], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_dialogue_v121():
+    # v121 대화 진행: 두 줄 이상 방울은 직접 눌러야 넘어감(첫 누르기 = 줄 다 보이기), 한 줄 방울은 저절로 사라짐, ✕ = 대화 닫기(끝나면 할 일은 그대로),
+    # 1부 끝(구리 곡괭이) 장면 끝 [다음 이야기 듣기] → 버섯 여왕 「출발 전」, 보통 장면에는 선택지 없음
+    H2=HOOK.replace("computeLight}","computeLight,naruSpot,naruWaits,GUIDE,checkGuide,closePanel,renderPanel,bellState,bellClear,bellTap,get panel(){return panel},runCmd,update,talkTo}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            # 두 줄 방울: 6초가 지나도 첫 줄 그대로, 누르면 다음 줄, 마지막 줄 ✓ 누르면 닫힘
+            await ev(pg,"()=>{const T=__T;T.closePanel();T.bellClear()}")
+            r=await ev(pg,"()=>{const T=__T;T.G.stats.naruMet=1;T.G.stats.bell=1;T.G.stats.wood=6;T.G.guide=T.GUIDE.findIndex(q=>q.id==='wood');T.checkGuide();const b=T.bellState();return b&&[b.lines.length,b.at,b.auto]}")
+            await pg.wait_for_timeout(6000)
+            r2=await ev(pg,"()=>{const b=__T.bellState();return b&&[b.at,b.typed,document.querySelector('#bell .bellnx').hidden,document.querySelector('#bell .bellnx').textContent]}")
+            rec('방울','v121: 두 줄 이상 이어지는 방울은 6초가 지나도 다음 줄로 안 넘어감(▶ 표시)', r==[2,0,False] and r2==[0,True,False,'▶'], str(r)+str(r2))
+            r=await ev(pg,"()=>{const T=__T;T.bellTap();const b=T.bellState();return b&&[b.at,b.typed]}")
+            r2=await ev(pg,"()=>{const T=__T;T.bellTap();const b=T.bellState();return b&&[b.at,b.typed,document.querySelector('#bell .bellnx').textContent]}")
+            r3=await ev(pg,"()=>{const T=__T;T.bellTap();return T.bellState()}")
+            rec('방울','v121: 누르기 = 다음 줄, 타이핑 중 누르기 = 그 줄 다 보이기(✓ 마지막 줄), 한 번 더 = 닫힘', r==[1,False] and r2==[1,True,'✓'] and r3 is None, str(r)+str(r2)+str(r3))
+            # 한 줄 방울(부르기)은 저절로 사라짐
+            await ev(pg,"()=>{const T=__T,G=T.G;T.bellClear();G.stats.copperBar=0;G.guide=T.GUIDE.findIndex(q=>q.id==='bar');T.checkGuide();G.stats.copperBar=1;T.checkGuide()}")
+            r=await ev(pg,"()=>{const b=__T.bellState();return b&&[b.lines.length,b.auto]}")
+            ok=await wait_until(pg,"()=>!__T.bellState()",12000)
+            rec('방울','v121: 한 줄짜리 방울(마을로 부르기)은 읽을 시간 뒤 저절로 사라짐', r==[1,True] and ok, str(r)+str(ok))
+            # ✕ = 대화 닫기 (남은 줄 건너뜀, 다음 묶음이 이어짐)
+            r=await ev(pg,"()=>{const T=__T,G=T.G;T.bellClear();G.stats.callSeen={bar:1};G.stats.naruCall=null;G.stats.forge=0;G.guide=T.GUIDE.findIndex(q=>q.id==='forge');T.checkGuide();G.stats.forge=1;T.checkGuide();const b=T.bellState();return b&&[b.lines.length,b.at]}")
+            await pg.wait_for_timeout(300)
+            await ev(pg,"()=>document.querySelector('#bell .bellx').click()")
+            r2=await ev(pg,"()=>{const b=__T.bellState();return b?b.lines[0]:null}")
+            rec('방울','v121: ✕를 누르면 남은 줄을 건너뛰고 대화가 닫힘', r==[3,0] and (r2 is None or '구리 작업대다' not in r2), str(r)+str(r2))
+            # 1부 끝 장면: [다음 이야기 듣기] → 버섯 여왕 출발 전
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();T.closePanel();G.enemies.length=0;G.stats.nGo={};G.bossDead.queen=0;G.stats.naruCall='pick';G.stats.callSeen={bar:1};G.guide=T.GUIDE.findIndex(q=>q.id==='queen');T.talkTo('guide');return 1}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=T.panel;const s=P.lines.map(l=>typeof l==='string'?l:l.s).join(' ');P.at=P.lines.length-1;T.renderPanel();const h=document.querySelector('#sheet [data-a=talkHear]');return [P.mode,s.includes('포자'),h&&h.dataset.i,!!G.stats.nGo.queen]}""")
+            await pg.wait_for_timeout(500)
+            await ev(pg,"()=>document.querySelector('#sheet [data-a=talkHear]').click()")
+            r2=await ev(pg,"""()=>{const T=__T,G=T.G,P=T.panel;const s=P.lines.map(l=>typeof l==='string'?l:l.s).join(' ');return [P.mode,s.includes('포자'),!!G.stats.nGo.queen,T.naruWaits()]}""")
+            rec('1부 끝','v121: 구리 곡괭이 마을 장면 끝에 [다음 이야기 듣기] → 같은 창에서 버섯 여왕 출발 전', r==['call:pick',False,'queen',False] and r2==['sc:go:queen',True,True,False], str(r)+str(r2))
+            await ev(pg,"()=>__T.closePanel()")
+            # 보통 장면(쌓인 보상)에는 선택지 없음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.naruCall=null;delete G.qclaim.wood;G.stats.wood=6;T.talkTo('guide');return 1}""")
+            await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
+            r=await ev(pg,"()=>{const T=__T,P=T.panel;P.at=P.lines.length-1;T.renderPanel();return [P.mode,!!document.querySelector('#sheet [data-a=talkHear]')]}")
+            rec('선택지','v121: 중요한 전환점이 아닌 장면에는 선택지 없음', r[1] is False, str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

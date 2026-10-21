@@ -114,6 +114,7 @@ export function onSheetClick(e) {
   if (a === 'profEdit') { UIS.nameEdit = !UIS.nameEdit; renderPanel(); if (UIS.nameEdit) { const inp = $('#profName'); if (inp && !document.body.classList.contains('touch')) inp.focus(); } return; }
   if (a === 'talkNext') { panel.at = (panel.at || 0) + 1; renderPanel(); return; } // v104
   if (a === 'talkShop') { panel.mode = 'shop'; renderPanel(); return; } // v105
+  if (a === 'talkHear') { if (runCmd({ k: 'hearGo', id: b.dataset.i })) { panel.mode = 'sc:go:' + b.dataset.i; panel.lines = null; panel.at = 0; panel.ty = null; } renderPanel(); return; } // v121 [다음 이야기 듣기] → 다음 보스 「출발 전」
   if (a === 'talkBack') { panel.mode = 'talk'; renderPanel(); return; }
   if (a === 'barter') { if (runCmd({ k: 'barter', npc: panel.npc, n: +i })) renderPanel(); return; }
   if (a === 'diaryLast' || a === 'ending') { openPanel(a); return; } // v108

@@ -2,8 +2,9 @@
 // 타이핑: 창 안 [data-type] 글이 한 글자씩 나타나요. 아직 안 나온 글자는 투명하게 그 자리에 있어서 창 크기가 바뀌지 않아요.
 //   빨리감기(▶▶)나 창 아무 데나 누르기 = 지금 줄을 바로 다 보이기, 한 번 더 = 다음 줄. PC는 스페이스·엔터도 같아요.
 //   대화(나루·NPC)·첫 장면·기억 장면·일기·마지막 장·엔딩 창에 써요. 창이 다시 그려져도 어디까지 나왔는지(panel.ty) 이어 가요.
-// 방울 대화창: 화면 아래쪽, 왼쪽에 얼굴, 방울 소리와 함께 타이핑. 누르면 다음 줄, 가만히 두어도 읽을 시간이 지나면 다음 줄로 넘어가요.
-//   한 줄짜리(하는 중 한마디)는 약 3초 뒤 저절로 사라져요. 창(가방·대화 …)이 열려 있는 동안은 숨었다가 닫으면 이어져요.
+// 방울 대화창: 화면 아래쪽, 왼쪽에 얼굴, 방울 소리와 함께 타이핑. 창(가방·대화 …)이 열려 있는 동안은 숨었다가 닫으면 이어져요.
+//   v121(2026-10-21 사용자 확정): 두 줄 이상 이어지는 대화는 직접 눌러야 다음 줄(타이핑 중 첫 누르기 = 줄 다 보이기, 다음 누르기 = 다음 줄, 마지막 줄 ✓에서 누르면 닫힘).
+//   한 줄짜리(상황·하는 중 한마디, 「마을로 와 줄래요?」 같은 부르기)만 읽을 시간 뒤 저절로 사라져요. ✕ = 이 대화 닫기(남은 줄 건너뜀, 끝나면 할 일은 그대로).
 import { $, clamp } from '../engine/util.js';
 import { SFX } from '../engine/audio.js';
 import { CHARS, curChar } from '../art/characters.js';
@@ -70,27 +71,32 @@ const BT = { recs: [], total: 0, n: 0 };
 let bellTimer = 0;
 function bellEl() { let el = $('#bell'); if (el) return el;
   el = document.createElement('div'); el.id = 'bell'; el.hidden = true; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
-  el.innerHTML = '<img class="px bellface" alt=""><div class="bellt"><b class="bellname"></b><p class="belltx"></p></div><span class="bellnx" aria-hidden="true">▶</span>';
-  el.addEventListener('pointerdown', e => { e.stopPropagation(); }); el.addEventListener('click', e => { e.stopPropagation(); bellTap(); });
+  el.innerHTML = '<img class="px bellface" alt=""><div class="bellt"><b class="bellname"></b><p class="belltx"></p></div><span class="bellnx" aria-hidden="true">▶</span><button type="button" class="bellx" aria-label="대화 닫기">✕</button>';
+  el.addEventListener('pointerdown', e => { e.stopPropagation(); }); el.addEventListener('click', e => { e.stopPropagation(); if (e.target.closest && e.target.closest('.bellx')) bellClose(); else bellTap(); });
   document.body.appendChild(el); return el; }
 export function bellPush(lines, short, done) { if (!lines || !lines.length) return; BQ.push({ lines: lines.slice(), short: !!short, done: done || null }); if (!BC) bellNext(); } // v118 done: 이 묶음을 다 말하면 보낼 명령 (예: 나루가 먼저 걸어 나가기)
 const sheetOpen = () => { const w = $('#sheetWrap'); return !!w && !w.hidden; };
 function bellNext() { const prev = BC; BC = BQ.shift() || null; if (prev && prev.done) runCmd(prev.done); if (!BC) { bellHide(); return; } BC.at = 0; SFX.bell(); bellShow(); }
 function bellShow() { const el = bellEl(), L = lineOf(BC.lines[BC.at]); const who = L.who === 'me' ? 'me' : 'npc';
   el.querySelector('.bellface').src = faceURL(who, 'guide'); el.querySelector('.bellname').textContent = who === 'me' ? pName() : NPCS.guide.n;
-  el.classList.toggle('me', who === 'me'); el.classList.toggle('short', BC.short); const p = el.querySelector('.belltx'); p.textContent = L.s; tyBind(BT, p, 0); BC.wait = 0;
+  el.classList.toggle('me', who === 'me'); el.classList.toggle('short', BC.short); el.classList.toggle('auto', bellAuto()); const p = el.querySelector('.belltx'); p.textContent = L.s; tyBind(BT, p, 0); BC.wait = 0;
   el.querySelector('.bellnx').hidden = true; el.hidden = sheetOpen() || document.body.classList.contains('intro');
   if (!bellTimer) { let k = 0; bellTimer = setInterval(() => bellTick(++k), TY_MS); } }
 function bellHide() { const el = $('#bell'); if (el) el.hidden = true; if (bellTimer) { clearInterval(bellTimer); bellTimer = 0; } }
-// 읽을 시간: 한 줄짜리는 약 3초, 이어지는 대화는 글 길이에 맞춰 (2.2초 + 한 글자 0.06초)
-const holdMs = s => BC.short ? 3000 : 2200 + s.length * 60;
+// v121: 저절로 넘어가는 건 한 줄짜리만 — 상황·하는 중 한마디(short)는 약 3초, 그 밖의 한 줄(부르기 등)은 글 길이만큼(2.2초 + 한 글자 0.06초, 적어도 3초)
+const bellAuto = () => !!BC && (BC.short || BC.lines.length === 1);
+const holdMs = s => BC.short ? 3000 : Math.max(3000, 2200 + s.length * 60);
+// 다 나온 뒤 표시: 이어지는 대화는 ▶(다음 줄)·✓(마지막 줄 — 누르면 닫힘), 저절로 사라지는 한 줄은 표시 없이 읽을 시간 재기
+function bellReady(el) { const auto = bellAuto(); BC.wait = auto ? performance.now() + holdMs(BT.recs.map(r => r.full).join('')) : 0; const nx = el.querySelector('.bellnx'); nx.hidden = auto; nx.textContent = BC.at >= BC.lines.length - 1 ? '✓' : '▶'; }
 function bellTick(k) { if (!BC) { bellHide(); return; } const el = bellEl(), hide = sheetOpen() || document.body.classList.contains('intro'); if (el.hidden !== hide) el.hidden = hide; if (hide) return; // 창이 열려 있으면 기다려요
-  if (BT.n < BT.total) { BT.n++; tyApply(BT); if (k % 3 === 0) SFX.blip(); if (BT.n >= BT.total) { BC.wait = performance.now() + holdMs(BT.recs.map(r => r.full).join('')); el.querySelector('.bellnx').hidden = BC.at >= BC.lines.length - 1; } return; }
+  if (BT.n < BT.total) { BT.n++; tyApply(BT); if (k % 3 === 0) SFX.blip(); if (BT.n >= BT.total) bellReady(el); return; }
   if (BC.wait && performance.now() >= BC.wait) bellAdvance(); }
 function bellAdvance() { if (!BC) return; if (BC.at < BC.lines.length - 1) { BC.at++; bellShow(); } else bellNext(); }
 // 누르기: 타이핑 중이면 바로 다 보이기, 다 나왔으면 다음 줄
-export function bellTap() { if (!BC) return; if (BT.n < BT.total) { BT.n = BT.total; tyApply(BT); BC.wait = performance.now() + holdMs(BT.recs.map(r => r.full).join('')); bellEl().querySelector('.bellnx').hidden = BC.at >= BC.lines.length - 1; return; } bellAdvance(); }
-export const bellState = () => BC ? { lines: BC.lines.map(l => lineOf(l).s), at: BC.at, short: BC.short, queued: BQ.length } : null; // 테스트용
+export function bellTap() { if (!BC) return; if (BT.n < BT.total) { BT.n = BT.total; tyApply(BT); bellReady(bellEl()); return; } bellAdvance(); }
+// ✕: 이 대화를 닫아요 (남은 줄은 건너뛰고, 다 말하면 보낼 명령은 그대로 보내요 — 예: 나루가 먼저 걸어 나가기)
+export function bellClose() { if (!BC) return; BC.at = BC.lines.length - 1; bellNext(); }
+export const bellState = () => BC ? { lines: BC.lines.map(l => lineOf(l).s), at: BC.at, short: BC.short, queued: BQ.length, auto: bellAuto(), typed: BT.n >= BT.total } : null; // 테스트용
 export function bellClear() { BQ.length = 0; BC = null; bellHide(); } // 새 게임·불러오기
 
 // ---- v118 나루가 먼저 걸어 나가는 모습: 화면 아무 데나 누르거나 스페이스·엔터·E = 건너뛰기 (sim/naru.js) ----
