@@ -59,7 +59,7 @@ export function talkTo(id) {
   naruHold(); // v118: 말을 걸면 멈추고 바라봐요
   if (!G.stats.naruMet) { G.stats.naruMet = 1; G.stats.bell = 1; const l = addItem('torch', 1); if (l) spawnDrop('torch', l, G.p.x, G.p.y); naruGive(['naru'], true); emit('talk', id, 'intro'); return; }
   if (G.stats.introAt != null) { emit('talk', id, 'intro'); return; } // v120: 중간에 닫힌 첫 장면은 거기서 이어서 (방울·횃불·보상은 처음에 이미 받음)
-  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; if (c === 'pick' && !G.bossDead.queen) (G.stats.nGo = G.stats.nGo || {}).queen = 1; /* v119: 1부 끝 장면에 버섯 여왕 「출발 전」 */ naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
+  if (G.stats.naruCall) { const c = G.stats.naruCall; G.stats.naruCall = null; (G.stats.callSeen = G.stats.callSeen || {})[c] = 1; /* v121: 1부 끝 장면 뒤 버섯 여왕 「출발 전」은 [다음 이야기 듣기]로 (sim/naru.js nextStory) */ naruGive(naruOwed(), false); emit('talk', id, 'call:' + c); return; }
   if (leadThere() && leadHere()) return; // v118: 광맥 옆에 먼저 가 있던 나루
   const ask = askOwed()[0]; if (ask) { naruGive([ask, ...naruOwed()], false); /* 쌓인 1부 보상도 같이 */ emit('talk', id, 'ask:' + ask); return; } // v118 나루의 부탁 끝 장면 + 보상
   const sc = naru2Scene(); if (sc) { naruGive([...sc[1], ...naruOwed()], false); emit('talk', id, sc[0]); return; } // v119 2부 장면 (돌아와서·출발 전·나루에게 가기·돌아가기·13번)
@@ -117,7 +117,6 @@ export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind === 'hello') return [N.hello, '등불나무 곁에서 지낼게. 궁금한 게 있으면 말을 걸어 줘.'];
   if (kind === 'intro') return NARU_INTRO.slice(G.stats.introAt | 0); // v120: 중간에 닫았으면 그 줄부터 // v110 · v117 (이름 짓기 · 주인공 대답)
   if (kind.startsWith('sc:')) return sceneLines(kind); // v119 2부 장면
-  if (kind === 'call:pick' && (G.stats.nGo || {}).queen && !G.bossDead.queen) { const L = NARU_CALL.pick; return [...L.slice(0, -1), ...sceneLines('sc:go:queen'), L[L.length - 1]]; } // v119: 1부 끝 장면 안에 버섯 여왕 출발 전
   if (kind.startsWith('call:')) return (NARU_CALL[kind.slice(5)] || ['…']).slice(); // v117 마을로 부른 장면
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
