@@ -3288,6 +3288,26 @@ const Q_GO = {
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
   s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],
 };
+// ---- v125 보상 다시 맞추기 (dev/design/퀘스트설계.md 3-7): 장(관문 사이 구간)마다 도전이 열리고, 보상은 다음 관문 준비물로 이어져요 ----
+// 장 k+1은 Q_CH_GATE[k-1] 이야기 퀘스트를 끝내면 열려요 (1장은 처음부터). 도전·부탁의 장 번호는 Q_CH (나루의 부탁은 나루가 방울로 줄 때 열려요).
+const Q_CH_GATE = ['forge', 'pick', 'queen', 'slime', 'golem', 'cpick', 'turtle', 'spirit', 'deep', 'dark'];
+const Q_CH = { s_moss: 1, s_crop1: 1, s_bag: 1, s_farm: 1, s_lamp: 2, s_lv5: 2, s_fish: 2, s_drill: 3, s_crop2: 3, s_pet: 3, s_petal: 4, s_ranch: 4, s_crop3: 4,
+  s_kill: 5, s_arch0: 5, s_rooms: 5, s_epic: 5, s_crop4: 6, s_arch2: 6, s_gen: 6, s_deep: 7, s_rematch: 7, s_gold: 8, s_arch3: 8, s_arch4: 9, s_auto: 9, s_giant: 10, s_legend: 11 };
+// 새 물건 보상 (경험치는 그대로). 레시피 쪽지(rn_…)와 귀환석은 그대로 남아요 — sim/quest-balance.js가 모든 퀘스트가 생긴 뒤 바꿔 끼워요
+const Q_RW = {
+  bar: [['copperOre', 3]], forge: [['copperBar', 2], ['resin', 2]], gbench: [['copperBar', 2], ['rope', 2]], pick: [['copperBar', 4], ['grilled', 2]],
+  queen: [['ironBar', 3]], slime: [['rope', 5], ['resin', 1]], golem: [['cbeanSeed', 3]], seeds: [['glowcap', 3]], tree: [['cryGem', 1]],
+  cpick: [['crystal', 6], ['ironBar', 2], ['stew', 3]], turtle: [['hotSoup', 2], ['stew', 2], ['ironBar', 2]], spirit: [['stew', 3]], tree2: [['ironBar', 2]], deep: [['goldBar', 2], ['stew', 1]],
+  s_moss: [['copperOre', 2]], s_crop1: [['copperOre', 3], ['berrySeed', 3]], s_bag: [['copperOre', 4]], s_farm: [['copperOre', 3], ['battery', 1]],
+  s_lamp: [['copperBar', 3], ['wire', 10]], s_lv5: [['copperBar', 3], ['stew', 2]], s_fish: [['copperBar', 3], ['grilledFish', 3]],
+  s_drill: [['copperBar', 5], ['grilled', 3]], s_crop2: [['copperBar', 3], ['fiber', 6]], s_pet: [['copperBar', 3], ['stew', 2], ['gel', 2]],
+  s_petal: [['ironBar', 3], ['glowcap', 2]], s_crop3: [['stew', 3]],
+  s_kill: [['ironBar', 6]], s_arch0: [['ironBar', 4], ['torch', 6]], s_rooms: [['ironBar', 4], ['cbeanSeed', 2]],
+  s_crop4: [['crystal', 6]], s_arch2: [['crystal', 6], ['cryGem', 1]], s_gen: [['crystal', 4], ['ironBar', 2]], s_epic: [['crystal', 2], ['stew', 3]],
+  s_deep: [['crystal', 6], ['coolPunch', 3], ['stew', 2]], s_rematch: [['crystal', 8], ['ironBar', 4], ['stew', 3]],
+  s_gold: [['goldBar', 7], ['obsidian', 2], ['stew', 2]], s_arch3: [['goldBar', 7], ['stew', 5], ['hotSoup', 1]],
+  s_arch4: [['torch', 10], ['frostShard', 6]], s_auto: [['stew', 5], ['frostShard', 4]], s_giant: [['frostShard', 10], ['stew', 6]],
+};
 // ================= 농사·숨은 방·요리 데이터 (구조 변경 2단계: features/farming-cooking.js에서 데이터만 옮김) =================
 // 낫·물뿌리개·비료, 맞는 흙·별 작물, 숨은 방 장식, 버프·요리·레시피 쪽지, 용광로·요리솥 시간, 낚시 운 — 밸런스 숫자와 이름·설명은 여기서 고쳐요.
 // 이 파일은 shell.html에서 features/farming-cooking.js 바로 앞에 와요 (예전과 같은 실행 순서).
@@ -5977,7 +5997,11 @@ function layoutTexts() { if (typeof GUIDE === 'undefined') return; for (const q 
   q.t = typeof q._t0 === 'function' ? (() => dirText(q._t0())) : dirText(q._t0); q.h = typeof q._h0 === 'function' ? (() => dirText(q._h0())) : dirText(q._h0); } }
 const qText = q => typeof q.t === 'function' ? q.t() : q.t;
 const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 && rarOf(s2.id) >= 3 && (ITEMS[s2.id].kind === 'sword' || ITEMS[s2.id].kind === 'pick')) got.add(s2.id); for (const id in (G.stats.epicSeen || {})) got.add(id); return got.size; };
-function questState(q, k) { const side = k == null; const done = side ? q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = naruHolds(q); /* v118: 나루의 부탁도 */ return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
+// v125 장(dev/design/퀘스트설계.md 3-7): 관문 이야기 퀘스트(Q_CH_GATE)를 끝낼 때마다 다음 장 — 도전은 그 장이 되어야 열려요
+// (나루의 부탁은 나루가 방울로 줄 때 열려서 그대로, 이미 받은 도전은 늘 보여요)
+const questChapter = () => { let c = 1; for (const id of Q_CH_GATE) { const k = GUIDE.findIndex(q => q.id === id); if (k >= 0 && k < G.guide) c++; } return c; };
+const sideOpen = q => !Q_CH[q.id] || isAsk(q) || !!(G.qclaim || {})[q.id] || questChapter() >= Q_CH[q.id];
+function questState(q, k) { const side = k == null; const done = side ? sideOpen(q) && q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = naruHolds(q); /* v118: 나루의 부탁도 */ return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
 const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has && !st.nh; });
 function claimQuest(id) {
   const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q) return; const k = GUIDE.indexOf(q), st = questState(q, k < 0 ? null : k); if (!st.done || st.claimed || st.nh) return; /* v117: 1부 보상은 나루에게 */
@@ -5991,10 +6015,10 @@ const isSide = q => !!q && QSIDE.includes(q);
 // v117 나루가 마을로 부름(6·8번 뒤): 이야기는 마을에서 나루와 이야기한 뒤에 이어져요 — 그동안 이야기 자리에 「나루에게 가기」
 const CALL_Q = { id: 'naruCall', t: () => '마을에서 나루와 이야기하기', h: '마을로 와 줄래요? 할 얘기가 있어요. 머리 위에 물음표가 뜬 저한테 말을 걸어 줘요.', done: () => !G.stats.naruCall, target: () => naruSpot(), rw: [], xp: 0 };
 const mainQuest = () => G.stats.naruCall && naruSpot() ? CALL_Q : GUIDE[G.guide];
-function activeQuest() { const a = G.qAct || 'main'; if (a === 'none') return null; if (a === 'main') return mainQuest(); const q = QSIDE.find(x => x.id === a); return q && (!isAsk(q) || askOpen(q.id)) ? q : mainQuest(); }
+function activeQuest() { const a = G.qAct || 'main'; if (a === 'none') return null; if (a === 'main') return mainQuest(); const q = QSIDE.find(x => x.id === a); return q && (!isAsk(q) || askOpen(q.id)) && sideOpen(q) ? q : mainQuest(); }
 const qProg = q => { const f = q && Q_PROG[q.id]; if (!f) return null; const [a, b] = f(); return [Math.max(0, Math.min(b, a | 0)), b]; };
 defineCmd('qAct', c => { if (c.id === 'none') { G.qAct = 'none'; } else if (c.id === 'main' || GUIDE.some(q => q.id === c.id)) { const k = GUIDE.findIndex(q => q.id === c.id); if (k > G.guide) return false; G.qAct = 'main'; }
-  else { const q = QSIDE.find(x => x.id === c.id); if (!q || (isAsk(q) && !askOpen(q.id))) return false; G.qAct = q.id; } /* v118: 아직 안 받은 부탁은 못 골라요 */ QTGT.t = -9; checkGuide(); emit('sfx', 'pick'); });
+  else { const q = QSIDE.find(x => x.id === c.id); if (!q || (isAsk(q) && !askOpen(q.id)) || !sideOpen(q)) return false; G.qAct = q.id; } /* v118: 아직 안 받은 부탁은 못 골라요 */ QTGT.t = -9; checkGuide(); emit('sfx', 'pick'); });
 // 「가장 가까운 할 곳」 — 지도에서 밝힌 곳만 (Q_GO 종류별). 찾으면 {x, y}, 장소가 있는 퀘스트인데 못 찾으면 null, 장소가 없는 퀘스트면 undefined
 const qSeen = (x, y) => inB(x | 0, y | 0) && !!G.explored[idx(x | 0, y | 0)];
 function nearestTile(test, R) { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let best = null, bd = 1e9;
@@ -6034,7 +6058,7 @@ const QDONE_MAX = 5;
 function qDoneEmit(q, side) { const st = questState(q, side ? null : GUIDE.indexOf(q)); const sub = st.claimed || !st.has ? '' : st.nh ? '나루에게 받아요' : '보상 받기';
   emit('qdone', qText(q), sub, side && !isAsk(q) ? 'side' : 'main'); }
 // 나루의 부탁·도전: 끝난 걸 G.stats.qdone에 적어 한 번만 (옛 세이브·처음은 지금 끝난 것을 조용히 적어 둠). 아직 받지 않은 부탁은 받은 뒤에
-const sideLive = q => !isAsk(q) || askOpen(q.id);
+const sideLive = q => (!isAsk(q) || askOpen(q.id)) && sideOpen(q); // v125: 아직 안 열린 장의 도전은 열린 뒤에
 function sideDoneTick() { const S = G.stats; if (!S.qdone) { S.qdone = {}; for (const q of QSIDE) if (sideLive(q) && q.done()) S.qdone[q.id] = 1; return; } if (!started) return; let k = 0;
   for (const q of QSIDE) { if (S.qdone[q.id] || !sideLive(q) || !q.done()) continue; S.qdone[q.id] = 1; if (!(G.qclaim || {})[q.id] && k++ < QDONE_MAX) qDoneEmit(q, true); } }
 function checkGuide() {
@@ -7171,6 +7195,11 @@ defineCmd('memEnd', () => { if (!G.stats.naruMet || !naruOK() || leadThere() || 
 const naruEnding = () => { if (!naruOK()) return false; emit('talk', 'guide', 'sc:end'); return true; };
 // 할머니를 구하면 (sim/npc.js rescue)
 const grandmaScene = () => naruOK() ? 'sc:' + (G.stats.deep && G.stats.deep.read ? 'grandma2' : 'grandma') : null;
+// ================= v125 퀘스트 보상 다시 맞추기 (dev/design/퀘스트설계.md 3-7) =================
+// 모든 이야기·곁가지 퀘스트가 생긴 뒤(sim/archive.js·deep.js·naru.js 다음) 새 물건 보상(data/quests.js Q_RW)을 끼워요.
+// 레시피 쪽지(rn_…)와 귀환석은 퀘스트에 붙은 그대로 남겨요. 장마다 도전이 열리는 규칙은 sim/quests.js sideOpen.
+for (const q of [...GUIDE, ...QSIDE]) { const rw = Q_RW[q.id]; if (!rw) continue;
+  q.rw = rw.map(r => r.slice()).concat((q.rw || []).filter(([id]) => id.startsWith('rn_') || id === 'homeStone')); }
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -9951,7 +9980,7 @@ function questMainHTML() {
   return h;
 }
 function questSideHTML() {
-  let h = ''; const L = QSIDE.filter(q => !isAsk(q)).map(q => ({ q, st: questState(q) })); // v118: 나루의 부탁은 이야기 탭에
+  let h = ''; const L = QSIDE.filter(q => !isAsk(q) && sideOpen(q)).map(q => ({ q, st: questState(q) })); // v118: 나루의 부탁은 이야기 탭에 · v125: 열린 장의 도전만
   const ready = L.filter(x => x.st.done && !x.st.claimed && x.st.has), going = L.filter(x => !x.st.done), got = L.filter(x => x.st.done && !(x.st.has && !x.st.claimed));
   if (ready.length) h += `<div class="lbl">받을 수 있는 것</div>` + ready.map(x => qCardHTML(x.q, x.st, true, false)).join('');
   if (going.length) h += `<div class="lbl">진행 중</div>` + going.map(x => qCardHTML(x.q, x.st, true, false)).join('');
