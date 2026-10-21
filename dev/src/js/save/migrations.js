@@ -9,6 +9,7 @@
 import { ACC_OF, EQ_SLOTS } from '../data/gear-animals.js';
 import { BKEYS } from '../data/rpg-nature.js';
 import { DISHES } from '../data/farming-cooking.js';
+import { GUIDE } from '../data/quests.js';
 import { G, ME, beat, started } from './state.js';
 import { GEAR_IT } from '../data/automation-tiers.js';
 import { HOT, ITEMS, OBJ, OLD_PIECES, UNIQ_OF } from '../data/items.js';
@@ -229,4 +230,7 @@ export function mergeShovelful93() { const fix = s => { if (s && SHOVELFUL93[s.i
 // v119 나루 2부: 옛 세이브에서 이미 지난 새 이야기 퀘스트(「나루에게 가기」·「나루에게 돌아가기」)는 장면 없이 받은 것으로 (마지막 장을 읽었으면 · 큰 어둠을 물리쳤으면)
 export function migrateNaru119() { if (G.stats.naru119) return; G.stats.naru119 = 1; const read = !!(G.stats.deep && G.stats.deep.read), dark = !!(G.bossDead && G.bossDead.dark); if (!read && !dark) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {};
   { G.stats.n2go = 1; G.qclaim.naruGo = 1; qx.naruGo = 1; } if (dark) { G.stats.n2back = 1; G.qclaim.naruBack = 1; qx.naruBack = 1; } }
+// v124 새 이야기 퀘스트 「장비제작대 만들고 놓기」: 옛 세이브에 놓인 장비제작대가 있으면 놓은 것으로 셈, 구리 작업대 퀘스트를 이미 지났고 이 퀘스트도 다 됐으면 받은 것으로 (장면·방울·보상 없이)
+export function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 1; for (const o of G.objs.values()) if (o && o.t === 'smelter') { G.stats.gbench = 1; break; }
+  const f = GUIDE.find(q => q.id === 'forge'), g = GUIDE.find(q => q.id === 'gbench'); if (!f || !g || !f.done() || !g.done()) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {}; G.qclaim.gbench = 1; qx.gbench = 1; }
 export function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }

@@ -31,7 +31,9 @@ export const GUIDE = [
   { t: () => `흙벽에서 구리광석 캐기 (${Math.min(6, G.stats.copperOre)}/6)`, h: '주황색 돌이 박힌 벽이 보이면 캐 봐요. 그게 구리광석이에요. 흙도 버리지 말아요, 용광로 재료가 되거든요.', done: () => G.stats.copperOre >= 6 },
   { t: () => '용광로를 놓고 구리괴 만들기', h: '작업대에서 용광로를 만들어 놓고, 용광로를 열어 구리괴를 만들어요. 조금 기다리면 돼요.', done: () => G.stats.copperBar >= 1 },
   { t: () => '작업대를 구리 작업대로 올리기', h: '작업대를 열면 맨 위에 [올리기]가 있어요 (구리괴 8·흙 20). 구리 가구·요리솥은 구리 작업대부터 만들어요. 무기·도구는 장비제작대를 같은 방법으로 올려서 만들어요.', done: () => G.stats.forge || hasItem('forge') || hasItem('pickCopper') || hasItem('pickIron') },
-  { t: () => '구리 곡괭이 만들기', h: '장비제작대(작업대에서 나무·흙으로 만들어요)를 놓고 구리 단계로 올린 뒤 만들어요. 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
+  // v124 「장비제작대 만들고 놓기」 (dev/design/퀘스트설계.md 5장): 7번 구리 작업대 다음 · 구리 곡괭이 앞 — 장비제작대를 한 번 놓았거나(G.stats.gbench) 이미 올렸거나·구리 곡괭이 이상이 있으면 끝
+  { t: () => '장비제작대 만들고 놓기', h: '작업대를 열어 장비제작대를 만들고(나무·흙·송진), 빈 땅에 놓아 줘요. 칼이랑 곡괭이 같은 장비는 작업대가 아니라 장비제작대에서 만들어요.', done: () => !!G.stats.gbench || (G.stats.gearLv || 0) >= 1 || hasItem('pickCopper') || hasItem('pickIron') },
+  { t: () => '구리 곡괭이 만들기', h: '장비제작대를 열어 맨 위 [올리기]로 구리 단계까지 올린 뒤 만들어요 (구리괴 8·흙 20). 이끼 끈은 [제작 → 재료]에서 이끼 섬유로 꼬아요. 구리 곡괭이가 있으면 돌벽과 철 광맥도 캘 수 있어요.', done: () => hasItem('pickCopper') || hasItem('pickIron') },
   { t: () => '서쪽 버섯숲의 버섯 여왕 물리치기', h: '마을 창고를 지키던 동물이 주인을 잃고 커진 거래요. 화살표를 따라 서쪽으로! 여왕은 포자를 둥글게 흩뿌려요. 포자 사이 빈틈으로 피하고, 따라오는 버섯도깨비부터 정리해요.', done: () => beat('queen'), target: () => BOSSES.queen.home() },
   { t: () => '동쪽 동굴의 말랑대왕 물리치기', h: '말랑대왕도 창고를 지키던 녀석이에요. 화살표를 따라 동쪽으로! 대왕은 여왕보다 훨씬 튼튼하니까 음식을 넉넉히 챙겨요. 점프했다 내려올 때는 멀리 떨어져 있어요.', done: () => beat('slime'), target: () => BOSSES.slime.home() },
   { t: () => '북쪽 수정동굴의 수정골렘 물리치기', h: '수정 동굴은 등불지기들이 빛을 수정에 담아 두던 곳이래요. 빨간 점선이 보이면 옆으로 피해요! 골렘이 벽에 부딪혀 어지러울 때 때리면 더 아파요. 화강암 벽과 석영 광맥은 철 곡괭이로 캘 수 있어요.', done: () => beat('golem'), target: () => BOSSES.golem.home() },
@@ -48,7 +50,7 @@ export const GUIDE = [
 ];
 // quest ids, rewards and xp (main story, in order)
 export const Q_META = [['naru', [['berry', 3]], 5], ['wood', [['fiber', 5], ['berry', 3]], 10], ['bench', [['torch', 4]], 10], ['torch', [['berrySeed', 3], ['rope', 2]], 10], ['ore', [['copperOre', 3], ['resin', 1]], 15], ['bar', [['resin', 2], ['gel', 2]], 15],
-  ['forge', [['rope', 4]], 20], ['pick', [['grilled', 3], ['torch', 6]], 25], ['queen', [['copperBar', 5], ['glowcap', 3]], 80], ['slime', [['ironBar', 4], ['gel', 6]], 100], ['golem', [['crystal', 8], ['ironBar', 4]], 140],
+  ['forge', [['rope', 4]], 20], ['gbench', [['copperOre', 6], ['rope', 2]], 15], /* v124 보상 임시 (보상 다시 맞추기 때 다시 계산) */ ['pick', [['grilled', 3], ['torch', 6]], 25], ['queen', [['copperBar', 5], ['glowcap', 3]], 80], ['slime', [['ironBar', 4], ['gel', 6]], 100], ['golem', [['crystal', 8], ['ironBar', 4]], 140],
   ['seeds', [['stew', 3]], 40], ['tree', [['crystal', 10], ['stew', 2]], 100], ['cpick', [['torch', 10], ['stew', 3]], 60], ['turtle', [['goldBar', 4], ['frostShard', 3]], 200], ['spirit', [['frostShard', 6], ['goldBar', 2]], 220], ['seeds2', [['fireBerry', 4]], 60], ['tree2', [['crystal', 12], ['goldBar', 4]], 200], ['free', [], 0]];
 GUIDE.forEach((g, k) => { const m = Q_META[k]; g.id = m[0]; g.rw = m[1]; g.xp = m[2]; });
 // side quests: any time, in any order
@@ -104,7 +106,7 @@ export const Q_PROG = {
   s_crop2: () => [qn(G.stats.wetH), 5], s_crop3: () => [qn(G.stats.fert), 10], s_crop4: () => [qn(G.stats.starH), 5], s_rooms: () => [qn(G.stats.chests), 3], s_ranch: () => [Object.keys(G.stats.ranchK || {}).length, 3], s_auto: () => [qn(G.stats.autoH), 20],
 };
 export const Q_GO = {
-  naru: ['near'], naruCall: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
+  naru: ['near'], naruCall: ['near'], wood: ['obj', 'root'], ore: ['wall', 4], bar: ['stn', 'furnace'], forge: ['stn', 'bench'], gbench: ['stn', 'bench'], pick: ['stn', 'smelter'], cpick: ['stn', 'smelter'],
   queen: ['boss', 'queen'], slime: ['boss', 'slime'], golem: ['boss', 'golem'], turtle: ['boss', 'turtle'], spirit: ['boss', 'spirit'], seeds: ['tgt'], tree: ['tgt'], seeds2: ['tgt'], tree2: ['tgt'],
   s_fish: ['water'], s_bag: ['stn', 'bench'], s_kill: ['enemy'], s_petal: ['zone'], s_drill: ['wall', 4], s_deep: ['biome', 3, 4], s_gold: ['stn', 'furnace'],
   s_legend: ['stn', 'smelter'], s_rooms: ['room'], s_pet: ['wild'], s_ranch: ['wild'], s_farm: ['beaver'],

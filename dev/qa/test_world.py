@@ -450,7 +450,7 @@ def test_recall_faint():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=__T.CX+6,y=__T.CY+6;for(let yy=y-1;yy<=y+5;yy++)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.objs.set(T.idx(x,y),{t:'bed'});G.spawnPt={x,y};const h=T.homePt();G.spawnPt=null;G.objs.delete(T.idx(x,y));return [Math.floor(h.x)===x||Math.floor(h.x)===x+1,Math.abs(h.y-y)<4.5]}""")
             rec('귀환석','침대가 있으면 침대로 (v122: 2×3 침대 아래)', r==[True,True], str(r))
             # faint drop
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=7;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[0]={id:'pickCopper',c:1};G.inv[1]={id:'berry',c:8};G.inv[12]={id:'wood',c:40};G.inv[13]={id:'stone',c:9};G.inv[14]={id:'gel',c:3};G.inv[15]={id:'lightSeed',c:1};
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=8;for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[0]={id:'pickCopper',c:1};G.inv[1]={id:'berry',c:8};G.inv[12]={id:'wood',c:40};G.inv[13]={id:'stone',c:9};G.inv[14]={id:'gel',c:3};G.inv[15]={id:'lightSeed',c:1};
           const dx=__T.CX+10,dy=__T.CY;for(let yy=dy-2;yy<=dy+2;yy++)for(let xx=dx-2;xx<=dx+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i);G.floor[i]=2}G.p.x=dx+.5;G.p.y=dy+.5;G.p.dead=0.01;T.respawn();
           let bag=null,at=-1;for(const [i,o] of G.objs)if(o.t==='lostBag'){bag=o;at=i}const inv=G.inv.filter(Boolean).map(s=>s.id+':'+s.c).join(',');window.__bag=at;return [bag&&bag.items.map(s=>s.id+':'+s.c).join(','),at>=0&&Math.hypot(at%200-dx,((at/200)|0)-dy)<=2,inv]}""")
             rec('쓰러짐','재료는 4분의 1을 쓰러진 자리 꾸러미로 (도구·음식·빛씨앗은 그대로)', r[0]=='wood:10,stone:2' and r[1] is True and r[2]=='pickCopper:1,berry:8,wood:30,stone:7,gel:3,lightSeed:1', str(r))
@@ -461,7 +461,7 @@ def test_recall_faint():
             rec('쓰러짐','꾸러미를 바라보고 누르면 모두 되찾음', r[0]=='lost' and r[1]=='되찾기' and r[2] is False and r[3]==40, str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=3;G.inv[12]={id:'wood',c:40};const n0=[...G.objs.values()].filter(o=>o.t==='lostBag').length;G.p.x=__T.CX+10.5;G.p.y=__T.CY+.5;G.p.dead=.01;T.respawn();const n1=[...G.objs.values()].filter(o=>o.t==='lostBag').length;return [n0,n1,G.inv[12].c]}""")
             rec('쓰러짐','이야기 초반(구리 곡괭이 전)에는 잃지 않음', r==[0,0,40], str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=7;for(let k=0;k<7;k++){for(let j=0;j<G.inv.length;j++)G.inv[j]=null;G.inv[12]={id:'wood',c:40};G.p.x=__T.CX+12.5+k*2;G.p.y=__T.CY+.5;const i=T.idx(Math.floor(G.p.x),Math.floor(G.p.y));G.wall[i]=0;G.objs.delete(i);G.floor[i]=2;G.p.dead=.01;T.respawn()}const bags=[...G.objs.values()].filter(o=>o.t==='lostBag');return [bags.length,bags.reduce((a,o)=>a+o.items.reduce((b,s)=>b+s.c,0),0)]}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.guide=8;for(let k=0;k<7;k++){for(let j=0;j<G.inv.length;j++)G.inv[j]=null;G.inv[12]={id:'wood',c:40};G.p.x=__T.CX+12.5+k*2;G.p.y=__T.CY+.5;const i=T.idx(Math.floor(G.p.x),Math.floor(G.p.y));G.wall[i]=0;G.objs.delete(i);G.floor[i]=2;G.p.dead=.01;T.respawn()}const bags=[...G.objs.values()].filter(o=>o.t==='lostBag');return [bags.length,bags.reduce((a,o)=>a+o.items.reduce((b,s)=>b+s.c,0),0)]}""")
             rec('쓰러짐','꾸러미는 최대 5개, 넘치면 가장 오래된 것을 새 꾸러미에 합침 (재료는 사라지지 않음)', r==[5,70], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.backPt={x:50.5,y:60.5};G.recallCd=G.time+30;const sv=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(sv);const G2=T.G;return [[...G2.objs.values()].filter(o=>o.t==='lostBag').length,G2.backPt&&G2.backPt.x,Math.round(G2.recallCd-G2.time)]}""")
             rec('세이브','꾸러미·귀환 표지·귀환석 쉬는 시간이 저장·불러오기 뒤에도 그대로', r==[5,50.5,30], str(r))
@@ -550,7 +550,7 @@ def test_lost_bag_owner():
             r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:1,dy:0,own:'me',c:40}]});for(let k=0;k<G.inv.length;k++)G.inv[k]={id:'stone',c:999};G.inv[5]={id:'wood',c:990};const o=G.objs.get(T.idx(X+1,Y));T.pickLost({x:X+1,y:Y},o);const left=G.objs.get(T.idx(X+1,Y));return [wood(),left&&left.items[0].c]}")
             rec('꾸러미','가방이 차면 들어간 만큼만, 나머지는 꾸러미에 남음 (사라지지 않음)', r==[999,31], str(r))
             # dropping: the owner is written down, five bundles per player
-            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[1,2,3,4,5].map(k=>({dx:k-3,dy:-3,own:'p2'}))});G.guide=7;G.inv[12]={id:'wood',c:40};G.p.x=X+.5;G.p.y=Y+.5;G.p.dead=.01;T.respawn();const all=[...G.objs.values()].filter(o=>o.t==='lostBag');return [all.length,all.filter(o=>o.own==='me').length,all.filter(o=>o.own==='p2').length]}")
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[1,2,3,4,5].map(k=>({dx:k-3,dy:-3,own:'p2'}))});G.guide=8;G.inv[12]={id:'wood',c:40};G.p.x=X+.5;G.p.y=Y+.5;G.p.dead=.01;T.respawn();const all=[...G.objs.values()].filter(o=>o.t==='lostBag');return [all.length,all.filter(o=>o.own==='me').length,all.filter(o=>o.own==='p2').length]}")
             rec('꾸러미','쓰러지면 주인(나)이 적힌 꾸러미, 다른 사람 꾸러미 5개는 그대로 (5개는 사람마다)', r==[6,1,5], str(r))
             # BF-08: the nearest of my own bundles
             r=await ev(pg,"()=>{const T=__T,G=T.G;const [X,Y]=SET({bags:[{dx:3,dy:0,own:'p2'},{dx:8,dy:0,own:'me'},{dx:-4,dy:-4,own:'me'}]});const a=T.nearestBag(G.p.x,G.p.y);G.p.x=X+7.5;const b=T.nearestBag(G.p.x,G.p.y);return [a&&[a.x-X,a.y-Y],b&&[b.x-X,b.y-Y]]}")

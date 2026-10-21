@@ -26,5 +26,6 @@ export const SFX = {
   cast: () => { nz(.12, .04, 1800); tone(420, .12, 'sine', .03, 300); }, plop: () => tone(320, .09, 'sine', .05, -170), bite: () => { tone(880, .06, 'square', .04); setTimeout(() => tone(1175, .08, 'square', .04), 70); },
   catch: () => [660, 880, 1046].forEach((f, i) => setTimeout(() => tone(f, .12, 'triangle', .05), i * 70)), cast2: () => { tone(500, .25, 'sine', .04, -250); nz(.2, .03, 1200); },
   bell: () => [1568, 2093].forEach((f, i) => setTimeout(() => tone(f, .45, 'sine', .035), i * 110)), blip: () => tone(700 + fxRand() * 160, .025, 'triangle', .012), // v117 길잡이 방울 · 타이핑
+  qdone: () => [1175, 1568].forEach((f, i) => setTimeout(() => tone(f, i ? .4 : .14, 'triangle', .055), i * 100)), // v124 「퀘스트 완료!」 띵
   win: () => [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .06), i * 130)), seed: () => [784, 988, 1175].forEach((f, i) => setTimeout(() => tone(f, .2, 'triangle', .05), i * 90)),
 };

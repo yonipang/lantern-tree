@@ -81,3 +81,11 @@ onEvent('bossHp', onlyMe((k, hp, max) => { $('#bossFill').style.width = Math.max
 let lastGoalTxt = '';
 export function resetGoalText() { lastGoalTxt = ''; } // 새 게임: 목표 글을 다시 써요
 onEvent('goal', (txt, tag) => { if (txt !== lastGoalTxt) { $('#goalTxt').textContent = txt; lastGoalTxt = txt; } const t = $('#goalTag'), tg = tag || '퀘스트'; if (t && t.textContent !== tg) t.textContent = tg; }); // v84: 활성 퀘스트 한 줄 + 앞의 작은 글자(이야기·도전)
+// v124 「퀘스트 완료!」 띠 (퀘스트설계.md 4장): 화면 위 가운데 약 2초 + 띵, 여러 개면 차례로, 누르면 그 퀘스트가 있는 탭으로 퀘스트 창 — 퀘스트는 세계 공동이라 누가 끝내도 모두에게
+const QD = { list: [], t: 0, cur: null }, QDONE_SHOW = 2000;
+function qdNext() { const e = $('#qdone'); clearTimeout(QD.t); const x = QD.list.shift(); QD.cur = x || null; if (!x) { e.hidden = true; e.classList.remove('out'); return; }
+  e.querySelector('.qn').textContent = x.name; e.querySelector('.qs').textContent = x.sub ? x.sub + ' ›' : ''; e.classList.remove('out'); const bb = $('#bossbar'); e.style.top = bb.hidden ? '' : Math.round(bb.getBoundingClientRect().bottom + 6) + 'px'; e.hidden = false; void e.offsetWidth; SFX.qdone();
+  QD.t = setTimeout(() => { e.classList.add('out'); QD.t = setTimeout(qdNext, 300); }, QDONE_SHOW); }
+onEvent('loaded', () => { QD.list.length = 0; QD.cur = null; qdNext(); }); // 새 게임·불러오기: 남은 띠는 비워요
+onEvent('qdone', (name, sub, tab) => { QD.list.push({ name, sub, tab }); if (!QD.cur) qdNext(); });
+$('#qdone').addEventListener('click', () => { const x = QD.cur; QD.list.length = 0; QD.cur = null; qdNext(); if (x && G) { UIS.qTab = x.tab === 'side' ? 'side' : 'main'; openPanel('quest'); } });

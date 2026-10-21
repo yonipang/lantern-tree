@@ -562,3 +562,14 @@ body.intro #bell{display:none}
 .lgbtn{min-height:28px;padding:2px 6px 2px 2px} /* v111: 범례를 작게 (아이콘 16px) */
 .lgbtn img{width:16px;height:16px}
 .lgbtn i{width:10px;height:10px;margin:0 2px 0 4px;box-shadow:0 0 0 2px #1b1426}
+/* v124 「퀘스트 완료!」 띠 (dev/design/퀘스트설계.md 4장): 화면 위 가운데, 약 2초, 누르면 퀘스트 창 — 그림은 임시 CSS (UIUX-재설계.md 「도트 GUI 그림 목록」 F13) */
+#qdone{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 144px);right:calc(env(safe-area-inset-right,0px) + 16px + 48px + 8px);max-width:308px;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:0;padding:4px 8px 6px;background:rgba(36,27,47,.96);border:2px solid var(--amber);border-radius:0;box-shadow:0 0 0 2px #120f1c,0 4px 14px rgba(0,0,0,.45);color:var(--text);font:inherit;font-size:16px;line-height:22px;text-align:center;z-index:22;cursor:pointer;animation:qdin .25s ease-out} /* 맨 위 가운데 = 보스 체력 막대 자리 (얼굴·배고픔과 오른쪽 위 버튼 사이), 보스와 싸우는 중이면 막대 바로 아래 (ui/feedback.js) */
+#qdone[hidden]{display:none}
+#qdone b{color:var(--amber);font-weight:normal;letter-spacing:1px}
+#qdone b::before,#qdone b::after{content:'✦';margin:0 4px;color:#fff1d0}
+#qdone .qn{max-width:100%;overflow-wrap:anywhere}
+#qdone .qs{color:var(--mint);font-size:16px}
+#qdone .qs:empty{display:none}
+#qdone.out{animation:qdout .3s ease-in forwards}
+@keyframes qdin{from{opacity:0;transform:translateY(-10px)}}
+@keyframes qdout{to{opacity:0;transform:translateY(-10px)}}
