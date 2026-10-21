@@ -1,8 +1,8 @@
 // ================= v104 그림자 고치 · NPC · 마을 · 대화 (데이터는 data/npc.js) =================
 // 고치 놓기(새 세계·옛 세계 모두 불러올 때 한 번, 워프포인트처럼) → 고치 둘레 그림자 조각 → 공격 버튼으로 3번 치면 풀려나 등불나무 곁 마을 자리에 서요 → 말 걸기(대화 창).
-import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_ASK_END, NARU_CALL, NARU_LIFE, NARU_DOING, NARU_INTRO, NARU_Q, NARU_RW, NPC_IDS, NPCS } from '../data/npc.js';
+import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_ASK_END, NARU_BOSS_CALL, NARU_CALL, NARU_LIFE, NARU_DOING, NARU_INTRO, NARU_Q, NARU_RW, NPC_IDS, NPCS } from '../data/npc.js';
 import { GUIDE, QSIDE } from '../data/quests.js';
-import { ASK_IDS, askOwed, grandmaScene, leadHere, leadThere, lifeLine, naru2Scene, naruBang, naruHold, sceneLines } from './naru.js';
+import { ASK_IDS, askOwed, grandmaScene, leadHere, leadThere, lifeLine, naru2Scene, naruBang, naruHold, sceneLines, stageLine } from './naru.js';
 import { gainXp } from './player.js';
 import { ITEMS } from '../data/items.js';
 import { defineCmd } from './commands.js';
@@ -83,8 +83,12 @@ defineCmd('setName', c => { const n = cleanName(c.n); G.pname = n || null; emit(
 // ---- v117 하는 중 한마디 (data/npc.js NARU_DOING): 지금 이야기 퀘스트를 하는 동안 처음 그 일을 할 때 방울로 한 번 ----
 const DOING = { wood1: () => (G.stats.wood | 0) >= 1, bench1: () => countItem('bench') > 0, ore1: () => (G.stats.copperOre | 0) >= 1,
   dirt1: () => countItem('dirt') > (G.stats.nDirt0 == null ? 1e9 : G.stats.nDirt0), furn1: () => { const p = G.p; for (let y = Math.floor(p.y) - 6; y <= p.y + 6; y++) for (let x = Math.floor(p.x) - 6; x <= p.x + 6; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && o.t === 'furnace') return true; } return false; } };
+// v126 D: 보스방(보스 자리 둘레 파기 금지 칸)을 벗어났거나, 곁(BOSS_BELL_R칸 안)에 떨어진 물건이 하나도 없으면
+const BOSS_BELL_R = 12;
+const bossBellReady = () => { const p = G.p; if (noDigZone(Math.floor(p.x), Math.floor(p.y)) !== 'boss') return true; return !G.drops.some(d => Math.hypot(d.x - p.x, d.y - p.y) < BOSS_BELL_R); };
 let naruT = 0;
 onFrame('naru', dt => { naruT += dt; if (naruT < .5) return; naruT = 0; if (!started || !G.stats.naruMet || G.stats.naruCall) return;
+  if (G.stats.bossBell && bossBellReady()) { delete G.stats.bossBell; emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v126 D: 보스를 물리친 뒤 부르는 방울은 보스방을 벗어나거나 떨어진 물건을 다 주웠을 때
   const q = GUIDE[G.guide]; if (!q || !NARU_Q.includes(q.id)) return; const said = G.stats.nSaid = G.stats.nSaid || {};
   if (q.id === 'ore' && G.stats.nDirt0 == null) G.stats.nDirt0 = countItem('dirt'); // 흙 개수는 구리 퀘스트를 시작할 때 기준
   for (const d of NARU_DOING) { if (d.q !== q.id || said[d.k] || !DOING[d.k] || !DOING[d.k]()) continue; said[d.k] = 1; emit('bell', [d.s], 1); break; } });
@@ -121,7 +125,8 @@ export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1;
-    if (id === 'guide') { const l = lifeLine(); return [o.met % 2 || l !== NARU_LIFE_OTHER ? l : N.talk[((o.met >> 1) - 1 + N.talk.length) % N.talk.length]]; } // v118: 곁에 따라 한마디 (그 밖에서는 예전 이야기와 번갈아)
+    if (id === 'guide') { const st = stageLine(o.met); if (st && o.met % 2) return [st]; /* v126 E: 이야기 단계마다 바뀌는 한마디가 있으면 번갈아 (홀수 번째) */
+      const l = lifeLine(); return [(!st && o.met % 2) || l !== NARU_LIFE_OTHER ? l : N.talk[((o.met >> 1) - 1 + N.talk.length) % N.talk.length]]; } // v118: 곁에 따라 한마디 (그 밖에서는 예전 이야기와 번갈아)
     return [N.talk[(o.met - 1) % N.talk.length]]; }
   return [N.talk[0]]; }
 export const villagers = () => NPC_IDS.filter(id => npcState(id) === 'npc');
