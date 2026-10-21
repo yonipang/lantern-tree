@@ -4114,6 +4114,126 @@
 "wall": 15,
 "d": "붉게 칠한 나무 벽."
 },
+"greenTree": {
+"n": "초록 나무",
+"kind": "place",
+"obj": "greenTree",
+"d": "이끼 동굴에서 자라는 동그란 초록 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"vineTree": {
+"n": "덩굴 나무",
+"kind": "place",
+"obj": "vineTree",
+"d": "노란 덩굴이 늘어진 이끼 동굴의 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"pinkTree": {
+"n": "분홍 나무",
+"kind": "place",
+"obj": "pinkTree",
+"d": "버섯숲에서 자라는 분홍 잎 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"pinkTreeS": {
+"n": "작은 분홍 나무",
+"kind": "place",
+"obj": "pinkTreeS",
+"d": "버섯숲의 작은 분홍 잎 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"mapleTree": {
+"n": "단풍나무",
+"kind": "place",
+"obj": "mapleTree",
+"d": "버섯숲에서 자라는 붉은 단풍나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"mapleTreeS": {
+"n": "작은 단풍나무",
+"kind": "place",
+"obj": "mapleTreeS",
+"d": "버섯숲의 작은 단풍나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"mapleBush": {
+"n": "단풍 덤불",
+"kind": "place",
+"obj": "mapleBush",
+"d": "붉게 물든 버섯숲 덤불. 베면 나무를 줘요."
+},
+"treeStumpL": {
+"n": "큰 그루터기",
+"kind": "place",
+"obj": "treeStumpL",
+"d": "나이테가 보이는 큰 그루터기. 베면 나무를 줘요."
+},
+"treeStump": {
+"n": "그루터기",
+"kind": "place",
+"obj": "treeStump",
+"d": "버섯숲의 그루터기. 베면 나무를 줘요."
+},
+"treeStumpS": {
+"n": "작은 그루터기",
+"kind": "place",
+"obj": "treeStumpS",
+"d": "버섯숲의 작은 그루터기. 베면 나무를 줘요."
+},
+"deadTree": {
+"n": "마른 나무",
+"kind": "place",
+"obj": "deadTree",
+"d": "용암 동굴의 잎 없는 마른 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"fallenLog": {
+"n": "쓰러진 통나무",
+"kind": "place",
+"obj": "fallenLog",
+"d": "용암 동굴에 쓰러져 있는 긴 통나무 (4×2). 베면 나무를 줘요."
+},
+"cactus": {
+"n": "선인장",
+"kind": "place",
+"obj": "cactus",
+"d": "용암 동굴 가장자리의 선인장. 베면 이끼 섬유를 줘요."
+},
+"cactusS": {
+"n": "작은 선인장",
+"kind": "place",
+"obj": "cactusS",
+"d": "용암 동굴의 작은 선인장. 베면 이끼 섬유를 줘요."
+},
+"snowTree": {
+"n": "눈 덮인 나무",
+"kind": "place",
+"obj": "snowTree",
+"d": "얼음 동굴에서 자라는 눈 덮인 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"blossomTree": {
+"n": "눈꽃 나무",
+"kind": "place",
+"obj": "blossomTree",
+"d": "가지마다 눈꽃이 핀 얼음 동굴의 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"blossomTreeS": {
+"n": "작은 눈꽃 나무",
+"kind": "place",
+"obj": "blossomTreeS",
+"d": "얼음 동굴의 작은 눈꽃 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowBush": {
+"n": "눈 덤불",
+"kind": "place",
+"obj": "snowBush",
+"d": "눈이 소복이 쌓인 덤불. 베면 나무를 줘요."
+},
+"palmTree": {
+"n": "야자나무",
+"kind": "place",
+"obj": "palmTree",
+"d": "물가에서 자라는 커다란 야자나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"palmTreeS": {
+"n": "작은 야자나무",
+"kind": "place",
+"obj": "palmTreeS",
+"d": "물가의 작은 야자나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
 "brazier": {
 "n": "횃대",
 "d": "등불지기들이 세운 큰 횃대. 불을 붙이면 둘레가 환해져요."
@@ -6025,6 +6145,412 @@
 1
 ],
 "solid": 1
+},
+"greenTree": {
+"n": "초록 나무",
+"item": "greenTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"vineTree": {
+"n": "덩굴 나무",
+"item": "vineTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"pinkTree": {
+"n": "분홍 나무",
+"item": "pinkTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"pinkTreeS": {
+"n": "작은 분홍 나무",
+"item": "pinkTreeS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"mapleTree": {
+"n": "단풍나무",
+"item": "mapleTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"mapleTreeS": {
+"n": "작은 단풍나무",
+"item": "mapleTreeS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"mapleBush": {
+"n": "단풍 덤불",
+"item": "mapleBush",
+"solid": 1,
+"nat": "chop",
+"hp": 2,
+"drops": [
+[
+"wood",
+1,
+2,
+1
+],
+[
+"fiber",
+1,
+1,
+0.5
+]
+]
+},
+"treeStumpL": {
+"n": "큰 그루터기",
+"item": "treeStumpL",
+"solid": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+2,
+3,
+1
+]
+]
+},
+"treeStump": {
+"n": "그루터기",
+"item": "treeStump",
+"solid": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+2,
+3,
+1
+]
+]
+},
+"treeStumpS": {
+"n": "작은 그루터기",
+"item": "treeStumpS",
+"solid": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+2,
+3,
+1
+]
+]
+},
+"deadTree": {
+"n": "마른 나무",
+"item": "deadTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"fallenLog": {
+"n": "쓰러진 통나무",
+"item": "fallenLog",
+"solid": 1,
+"nat": "chop",
+"hp": 6,
+"sz": [
+4,
+2
+],
+"drops": [
+[
+"wood",
+4,
+6,
+1
+],
+[
+"resin",
+1,
+1,
+0.4
+]
+]
+},
+"cactus": {
+"n": "선인장",
+"item": "cactus",
+"solid": 1,
+"nat": "chop",
+"hp": 2,
+"drops": [
+[
+"fiber",
+1,
+2,
+1
+]
+]
+},
+"cactusS": {
+"n": "작은 선인장",
+"item": "cactusS",
+"solid": 1,
+"nat": "chop",
+"hp": 2,
+"drops": [
+[
+"fiber",
+1,
+2,
+1
+]
+]
+},
+"snowTree": {
+"n": "눈 덮인 나무",
+"item": "snowTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"blossomTree": {
+"n": "눈꽃 나무",
+"item": "blossomTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"blossomTreeS": {
+"n": "작은 눈꽃 나무",
+"item": "blossomTreeS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowBush": {
+"n": "눈 덤불",
+"item": "snowBush",
+"solid": 1,
+"nat": "chop",
+"hp": 2,
+"drops": [
+[
+"wood",
+1,
+2,
+1
+],
+[
+"fiber",
+1,
+1,
+0.5
+]
+]
+},
+"palmTree": {
+"n": "야자나무",
+"item": "palmTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"palmTreeS": {
+"n": "작은 야자나무",
+"item": "palmTreeS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
 },
 "diary": {
 "n": "등불지기의 일기",
@@ -11690,11 +12216,15 @@
 [
 "petalR",
 2
+],
+[
+"copperBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "bedGreen",
@@ -11715,11 +12245,15 @@
 [
 "gMoss",
 2
+],
+[
+"copperBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "bedPurple",
@@ -11744,11 +12278,15 @@
 [
 "petalB",
 1
+],
+[
+"copperBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "sofaYellow",
@@ -11769,11 +12307,15 @@
 [
 "petalY",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "sofaBlue",
@@ -11794,11 +12336,15 @@
 [
 "petalB",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "sofaPurple",
@@ -11823,11 +12369,15 @@
 [
 "petalB",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "sofaRed",
@@ -11848,11 +12398,15 @@
 [
 "petalR",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "chairGreen",
@@ -11980,11 +12534,15 @@
 [
 "wood",
 4
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "chairLadder",
@@ -12010,11 +12568,15 @@
 [
 "resin",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "nightstand",
@@ -12040,11 +12602,15 @@
 [
 "resin",
 1
+],
+[
+"copperBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "shelfEmpty",
@@ -12074,11 +12640,15 @@
 [
 "resin",
 1
+],
+[
+"quartzR",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 3
 },
 {
 "out": "shelfGoods",
@@ -12091,11 +12661,15 @@
 [
 "fiber",
 2
+],
+[
+"ironBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 2
 },
 {
 "out": "wardrobeOak",
@@ -12108,11 +12682,15 @@
 [
 "fiber",
 4
+],
+[
+"ironBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 2
 },
 {
 "out": "wardrobeGlass",
@@ -12129,11 +12707,15 @@
 [
 "resin",
 1
+],
+[
+"quartzR",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 3
 },
 {
 "out": "wardrobeBig",
@@ -12146,11 +12728,15 @@
 [
 "fiber",
 4
+],
+[
+"ironBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 2
 },
 {
 "out": "bannerPurple",
@@ -12285,11 +12871,15 @@
 [
 "sapling",
 1
+],
+[
+"ironBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 2
 },
 {
 "out": "palmBig",
@@ -12302,11 +12892,15 @@
 [
 "sapling",
 1
+],
+[
+"ironBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 2
 },
 {
 "out": "jarOrange",
@@ -12445,11 +13039,15 @@
 [
 "petalB",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "carpetGreen",
@@ -12462,11 +13060,15 @@
 [
 "gMoss",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "carpetRed",
@@ -12479,11 +13081,15 @@
 [
 "petalR",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "rugRetro",
@@ -12500,11 +13106,15 @@
 [
 "petalY",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "rugRetroTall",
@@ -12521,11 +13131,15 @@
 [
 "petalY",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "matBlue",
@@ -12593,11 +13207,15 @@
 [
 "petalR",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "rugOval",
@@ -12788,11 +13406,15 @@
 [
 "glowcap",
 2
+],
+[
+"quartzR",
+2
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 3
 },
 {
 "out": "lilyPad",
@@ -12801,11 +13423,15 @@
 [
 "fiber",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "lotus",
@@ -12818,11 +13444,15 @@
 [
 "petalR",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "lotus2",
@@ -12835,11 +13465,15 @@
 [
 "petalW",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "waterRock",
@@ -12852,11 +13486,15 @@
 [
 "gMoss",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "waterRockS",
@@ -12865,11 +13503,15 @@
 [
 "stone",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "waterReed",
@@ -12878,11 +13520,15 @@
 [
 "fiber",
 3
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "waterReedS",
@@ -12891,11 +13537,15 @@
 [
 "fiber",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "pondRock",
@@ -12904,11 +13554,15 @@
 [
 "stone",
 6
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "pondRockS",
@@ -12917,11 +13571,15 @@
 [
 "stone",
 3
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "nature",
-"tier": 0
+"tier": 1
 },
 {
 "out": "streetLamp",
@@ -12972,11 +13630,15 @@
 [
 "gWater",
 2
+],
+[
+"copperBar",
+2
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "flowerBoxFv",
@@ -12993,11 +13655,15 @@
 [
 "petalY",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "furn",
-"tier": 0
+"tier": 1
 },
 {
 "out": "crateFruit",
@@ -13087,11 +13753,15 @@
 [
 "dirt",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "build",
-"tier": 0
+"tier": 1
 },
 {
 "out": "floorCheck",
@@ -13104,11 +13774,15 @@
 [
 "dirt",
 2
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "build",
-"tier": 0
+"tier": 1
 },
 {
 "out": "floorHerring",
@@ -13117,11 +13791,15 @@
 [
 "wood",
 3
+],
+[
+"ironBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "build",
-"tier": 0
+"tier": 2
 },
 {
 "out": "floorTileRed",
@@ -13130,11 +13808,15 @@
 [
 "stone",
 3
+],
+[
+"ironBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "build",
-"tier": 0
+"tier": 2
 },
 {
 "out": "wallPlank",
@@ -13160,10 +13842,398 @@
 [
 "resin",
 1
+],
+[
+"copperBar",
+1
 ]
 ],
 "at": "bench",
 "cat": "build",
+"tier": 1
+},
+{
+"out": "greenTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gMoss",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "vineTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gMoss",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "pinkTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gShroom",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "pinkTreeS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gShroom",
+2
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "mapleTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gShroom",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "mapleTreeS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gShroom",
+2
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "mapleBush",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gShroom",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "treeStumpL",
+"n": 1,
+"req": [
+[
+"wood",
+4
+],
+[
+"gShroom",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "treeStump",
+"n": 1,
+"req": [
+[
+"wood",
+3
+],
+[
+"gShroom",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "treeStumpS",
+"n": 1,
+"req": [
+[
+"wood",
+2
+],
+[
+"gShroom",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "deadTree",
+"n": 1,
+"req": [
+[
+"wood",
+6
+],
+[
+"gAsh",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "fallenLog",
+"n": 1,
+"req": [
+[
+"wood",
+10
+],
+[
+"gAsh",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "cactus",
+"n": 1,
+"req": [
+[
+"gAsh",
+2
+],
+[
+"fiber",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "cactusS",
+"n": 1,
+"req": [
+[
+"gAsh",
+1
+],
+[
+"fiber",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "blossomTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "blossomTreeS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gSnow",
+2
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowBush",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gSnow",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "palmTree",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gMoss",
+2
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "palmTreeS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gMoss",
+1
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
 "tier": 0
 }
 ],
@@ -22190,7 +23260,7 @@ null,
 "vase": "[그림 9x11 da267da7]",
 "root": "[그림 24x28 f40c27ea]",
 "bigShroom": "[그림 28x46 67774e5b]",
-"grass": "[그림 14x16 93364f81]",
+"grass": "[그림 22x18 2e32d5ca]",
 "glow": "[그림 16x16 73aa69f6]",
 "cluster": "[그림 16x18 b6547e00]",
 "stumpStool": "[그림 16x16 d755d8b6]",
@@ -22356,7 +23426,11 @@ null,
 "bedRed": "[그림 32x48 ff66d443]",
 "benchLow": "[그림 30x16 4a09582d]",
 "bigChest": "[그림 30x24 da03a635]",
+"blossomTree": "[그림 54x60 4d9dc6b0]",
+"blossomTreeS": "[그림 34x38 5b557c62]",
 "bushPot": "[그림 14x26 17d8976b]",
+"cactus": "[그림 32x32 ab94f96c]",
+"cactusS": "[그림 26x26 321b5147]",
 "carpetGreen": "[그림 34x34 70a8839d]",
 "carpetPurple": "[그림 32x32 90e0fc2d]",
 "carpetRed": "[그림 34x34 110d67a4]",
@@ -22377,15 +23451,18 @@ null,
 "crateGreens": "[그림 18x26 8f8341ff]",
 "cropSign": "[그림 16x16 cead9a1b]",
 "darkBush": "[그림 34x28 fb4d1e32]",
+"deadTree": "[그림 50x60 12383ef7]",
 "desk": "[그림 30x28 30af2472]",
 "drawers": "[그림 28x34 38b25a55]",
 "dresserLong": "[그림 48x22 b75dd955]",
+"fallenLog": "[그림 78x36 2b0d0413]",
 "fern": "[그림 40x34 8020535d]",
 "flowerBasket": "[그림 14x18 1f179165]",
 "flowerBoxFv": "[그림 30x28 161d32b9]",
 "flowerPotPurple": "[그림 16x38 3712aff6]",
 "flowerPotRed": "[그림 16x34 24ba810e]",
 "glowVineTree": "[그림 48x58 7ae247e]",
+"greenTree": "[그림 40x42 35fe30dd]",
 "hangLamp": "[그림 24x42 d5176c7]",
 "jarBlue": "[그림 14x16 1b95c0e3]",
 "jarOrange": "[그림 14x16 5397d8c2]",
@@ -22393,6 +23470,9 @@ null,
 "lilyPad": "[그림 16x16 8bffdc64]",
 "lotus": "[그림 16x16 18f509ff]",
 "lotus2": "[그림 16x16 fc0a14ef]",
+"mapleBush": "[그림 32x28 dfe27e52]",
+"mapleTree": "[그림 60x62 e6ab8178]",
+"mapleTreeS": "[그림 40x42 40cd4219]",
 "matBlue": "[그림 32x16 7c261519]",
 "matBrown": "[그림 32x16 1adf1c6c]",
 "matGreen": "[그림 32x16 d7afff99]",
@@ -22401,7 +23481,11 @@ null,
 "orangeBush": "[그림 36x34 21fdd13e]",
 "palmBig": "[그림 24x30 590b83e]",
 "palmPot": "[그림 16x30 1fcb35e7]",
+"palmTree": "[그림 54x54 d08d81ff]",
+"palmTreeS": "[그림 34x32 665513b5]",
 "pinkFlower": "[그림 16x16 fffbebe7]",
+"pinkTree": "[그림 48x58 cd40530a]",
+"pinkTreeS": "[그림 28x32 44c7746a]",
 "plantBig": "[그림 18x30 aca225fd]",
 "pondRock": "[그림 32x32 d03b8e86]",
 "pondRockS": "[그림 16x30 29802bb2]",
@@ -22415,6 +23499,8 @@ null,
 "rugRetroTall": "[그림 48x64 cb22d784]",
 "shelfEmpty": "[그림 30x36 5c4e9c0e]",
 "shelfGoods": "[그림 32x32 4739d39a]",
+"snowBush": "[그림 32x30 dcabf9ca]",
+"snowTree": "[그림 50x54 6db5cbbb]",
 "sofaBlue": "[그림 32x24 80eea1b]",
 "sofaBlueV": "[그림 14x38 6e976284]",
 "sofaPurple": "[그림 32x24 b5551fc1]",
@@ -22425,6 +23511,10 @@ null,
 "sofaYellowV": "[그림 14x38 203102c6]",
 "stalagmite": "[그림 14x28 9d03bf31]",
 "streetLamp": "[그림 26x40 eb340d45]",
+"treeStump": "[그림 22x22 57a783ef]",
+"treeStumpL": "[그림 32x26 5563f149]",
+"treeStumpS": "[그림 24x18 7b72e5cd]",
+"vineTree": "[그림 38x40 a22b6882]",
 "wardrobeBig": "[그림 28x40 11b1d330]",
 "wardrobeGlass": "[그림 28x38 3d3c3ecb]",
 "wardrobeOak": "[그림 28x40 7b6569b4]",
@@ -22440,12 +23530,12 @@ null,
 "chairUb": "[그림 9x11 e16e55ac]",
 "mossSofaUb": "[그림 16x16 b2f46bd3]",
 "cryChairUb": "[그림 16x16 c9c8dc06]",
-"bush": "[그림 16x16 6e00801f]",
+"bush": "[그림 30x34 1aafb96]",
 "refundBox": "[그림 16x16 8771657f]"
 },
 "bush": [
-"[그림 16x16 ed451414]",
-"[그림 16x16 6e00801f]"
+"[그림 30x34 daeb52dc]",
+"[그림 30x34 1aafb96]"
 ],
 "crop": {
 "berry": [
@@ -24818,6 +25908,26 @@ null
 "floorTileRed": "1eebe5b9",
 "wallPlank": "1c2eb333",
 "wallRedWood": "ef18bb19",
+"greenTree": "705175a8",
+"vineTree": "471687f0",
+"pinkTree": "f2fc17dc",
+"pinkTreeS": "d52f852e",
+"mapleTree": "5284e39c",
+"mapleTreeS": "23458735",
+"mapleBush": "d6361c85",
+"treeStumpL": "ad64f241",
+"treeStump": "57a783ef",
+"treeStumpS": "865ad2ca",
+"deadTree": "7fab7d83",
+"fallenLog": "a89b833d",
+"cactus": "ab94f96c",
+"cactusS": "321b5147",
+"snowTree": "37aed6f5",
+"blossomTree": "decb704e",
+"blossomTreeS": "56fe4573",
+"snowBush": "e6fd86a6",
+"palmTree": "d08d81ff",
+"palmTreeS": "d13dfbc9",
 "brazier": "7dc590a9"
 }
 }

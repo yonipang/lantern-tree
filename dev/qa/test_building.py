@@ -348,6 +348,35 @@ def test_decor_v122():
     return main
 
 
+def test_nature_v123():
+    import asyncio, sys
+    # v123: 새 가구 단계(구리·철·석영 금속 1~2개), 지역마다 저절로 자라는 자연물(새 세계·하루 하나 재생), 베면 나무·묘목
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,decide,perform,refreshHotbar,newGame,NAT123,NAT_GEN,NAT_DAY_KINDS,fpOf,get W(){return W}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const T=__T,t=id=>{const R=T.RECIPES.find(r=>r.out===id);return R?R.tier:-1};return ['chairGreen','bedRed','sofaRed','lilyPad','floorBrickRed','wardrobeOak','floorTileRed','wardrobeGlass','glowVineTree','streetLamp'].map(id=>id+':'+t(id))}")
+            rec('가구 단계','새 가구 단계: 방석 의자 기본, 색 침대·소파·물 위 소품·벽돌 바닥 구리, 옷장·타일 바닥 철, 유리문 옷장·빛 덩굴 나무 석영', r==['chairGreen:0','bedRed:1','sofaRed:1','lilyPad:1','floorBrickRed:1','wardrobeOak:2','floorTileRed:2','wardrobeGlass:3','glowVineTree:3','streetLamp:1'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,bad=[];for(const id in T.NAT123){const R=T.RECIPES.find(r=>r.out===id),o=T.OBJ[id];if(!R||R.at!=='bench'||R.tier!==0||!o||o.nat!=='chop'||!o.solid||!o.drops||!T.ITEMS[id])bad.push(id)}
+          const kinds=[0,1,3,4].map(b=>T.NAT_DAY_KINDS[b].some(([k])=>T.NAT123[k]));return [Object.keys(T.NAT123).length,bad,T.OBJ.fallenLog.sz.join('x'),!!T.OBJ.greenTree.ntree,kinds]}""")
+            rec('자연물','새 자연물 20가지: 작업대 자연 탭(기본), 도끼로 베기, 쓰러진 통나무 4×2, 나무는 묘목도 줌, 이끼·버섯·용암·얼음 지역의 하루 하나 재생에 들어감', r==[20,[],'4x2',True,[True,True,True,True]], str(r))
+            r=await ev(pg,"""()=>{const T=__T;T.newGame(777);const G=T.G,W=T.W,cnt={},bio={},bad=[];
+          for(const [i,o] of G.objs){if(!T.NAT123[o.t]&&o.t!=='bigTree')continue;cnt[o.t]=(cnt[o.t]||0)+1;bio[G.biome[i]]=(bio[G.biome[i]]||0)+1;const x=i%W,y=(i/W)|0;
+            if(Math.hypot(x-T.CX,y-T.CY)<9.5)bad.push('near '+o.t);const fp=T.fpOf(o);for(let dy=0;dy<fp[1];dy++)for(let dx=0;dx<fp[0];dx++){if(!dx&&!dy)continue;const q=G.objs.get(T.idx(x+dx,y+dy));if(!q||q.t!=='_part'||q.a!==i)bad.push('part '+o.t)}}
+          return [Object.keys(cnt).length,[0,1,3,4].every(b=>(bio[b]||0)>0),(cnt.palmTree||0)+(cnt.palmTreeS||0)>0,(cnt.fallenLog||0)>0,bad.slice(0,3)]}""")
+            rec('새 세계','새 세계에 지역 자연물이 생김(이끼·버섯·용암·얼음·물가 야자 — 종류 10가지 넘게), 등불나무 9.5칸 안에는 없고, 여러 칸(큰 고목·통나무)은 칸이 모두 채워짐', r[0]>=10 and r[1] and r[2] and r[4]==[], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let y=100;y<112;y++)for(let x=100;x<112;x++){const i=T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.drops.length=0;
+          G.objs.set(T.idx(105,104),{t:'greenTree'});G.p.x=105.5;G.p.y=105.6;G.p.face={x:0,y:-1};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=-1;T.refreshHotbar();
+          let n=0;while(G.objs.get(T.idx(105,104))&&n<30){const a=T.decide();if(a.k!=='chop')return ['k',a.k,a.lbl];G.actCd=0;T.perform(a);n++}
+          const got=G.drops.map(d=>d.id);return [!G.objs.get(T.idx(105,104)),got.includes('wood'),got.includes('sapling')]}""")
+            rec('베기','초록 나무를 베면 사라지고 나무와 뿌리기둥 묘목이 떨어짐', r==[True,True,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
 def test_building_cleanup():
     import asyncio, sys
     # 건축 정리 (v41): 지붕 삭제, 문 높이·바닥선, 바닥 벽선 맞춤, 양문, 자동 미닫이문 + 최고 레벨 스킬 포인트 (v69: 얇은 벽·창문은 삭제되어 집 벽은 나무 벽)

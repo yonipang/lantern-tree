@@ -3,6 +3,7 @@ import { ARTC, ARTP } from './hand-art.js';
 import { C, HD, INK, mk, outline, outlineHD, outlineSel, setMkDef, softShadow, whiten } from '../engine/canvas.js';
 import { DECOR, OBJ } from '../data/items.js';
 import { FLOWERS, YOUNG_TREES } from '../data/rpg-nature.js';
+import { NAT123 } from '../data/nature123.js';
 import { ICON, UICON, bossSpr, buildPlayer, dimmed, golemSpr, queenSpr, shotSpr, shroomySpr, slimeSpr, waterTex } from './characters.js';
 import { clamp, hexRgb } from '../engine/util.js';
 import { hash2, rng } from '../engine/random.js';
@@ -341,6 +342,8 @@ export function buildSprites() {
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
   applyArt();
+  // v123: 자연물 그림(dev/art/obj)이 없을 때(그림 없이 묶은 판)는 비슷한 원래 그림으로 — 세계에 저절로 나기 때문에 빈 그림이면 멈춰요
+  { const FB = { tree: 'roundTree', bush: 'bush', stump: 'root', cactus: 'grass', log: 'bigRock' }; for (const id in NAT123) if (!SPR.obj[id]) SPR.obj[id] = SPR.obj[FB[NAT123[id][2]]] || SPR.obj.root; }
   // v122: 뿌리기둥 크기 여러 가지 — 같은 나무가 자라는 단계 그림 4장(etc/rootS, Plants.png 31~34번, 그림자 지움)
   if (SPR.rootS && !Array.isArray(SPR.rootS)) SPR.rootS = Object.keys(SPR.rootS).sort((p, q) => p - q).map(k => SPR.rootS[k]);
   SPR.rootSY = (SPR.rootS || []).map(youngOf);
