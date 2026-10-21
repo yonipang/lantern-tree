@@ -192,7 +192,13 @@ export function naru2Scene() { const S = G.stats, P = S.nPend = S.nPend || [], g
 // 장면 줄 (sim/npc.js talkLines): 'sc:back:queen,go:slime' → 줄들
 const dirFill = l => { const f = s => String(s).replace(/\{dir:(\w+)\}/g, (_, k) => bossDir(k)); return l && typeof l === 'object' ? (l.ask ? l : { ...l, s: f(l.s) }) : f(l); };
 export function sceneLines(kind) { const out = [];
-  for (const part of kind.slice(3).split(',')) { const [a, b] = part.split(':'); const L = a === 'go' ? NARU2_GO[b] : a === 'back' ? NARU2_BACK[b] : NARU2_SC[a]; if (L) out.push(...L); }
+  let lastPart = '';
+  for (const part of kind.slice(3).split(',')) { const [a, b] = part.split(':');
+    // 귀환 보고에서 다음 출발 안내로 바로 바뀌면 맥락이 끊기므로, 마을에서 숨 고르는 연결 한마디를 넣어요.
+    if (a === 'go' && lastPart.startsWith('back:')) out.push('우선 잠깐 쉬어요. 다음에 찾아볼 곳도 있는데, 준비되면 제 얘기를 들어 줘요.');
+    const L = a === 'go' ? NARU2_GO[b] : a === 'back' ? NARU2_BACK[b] : NARU2_SC[a]; if (L) out.push(...L);
+    lastPart = part;
+  }
   return (out.length ? out : ['…']).map(dirFill); }
 // 창을 닫았을 때 (ui/panels.js closePanel → 명령): 나루 장면이 끝나면 나루가 먼저 걸어 나가요 · 큰 어둠 뒤 장면이 끝나면 엔딩 창 · 기억 장면을 닫으면 쌓인 장면을 바로
 defineCmd('talkEnd', c => { const m = String(c.m || ''); if (m === 'intro') { const at = (G.stats.introAt | 0) + Math.max(0, c.at | 0); if (at < NARU_INTRO.length - 1) G.stats.introAt = at; else delete G.stats.introAt; } /* v120: 첫 장면을 다 못 봤으면 다음에 말 걸 때 그 줄부터 */ if (/\bn2go\b|\bn2back\b/.test(m)) leadGo(); if (m === 'sc:end') emit('ending', 1); });
