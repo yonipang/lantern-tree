@@ -5,7 +5,7 @@ import { BKEYS, BOSSES } from '../data/rpg-nature.js';
 import { BUFF_MAX, DISH, EFF } from '../data/farming-cooking.js';
 import { CHARS, LOOK_DEF, cleanLook } from '../art/characters.js';
 import { clamp } from '../engine/util.js';
-import { migrateNaru110, migrateNaru119, mergeShovelful93, refundPieces, refundAuto113, ensureDeepAltars, fixParts, grantAccs, grantUniques, growFootprints, loadEquip, loadSets, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, migrateSeen77, syncNotes } from './migrations.js';
+import { migrateNaru110, migrateNaru119, mergeShovelful93, refundPieces, refundAuto113, ensureDeepAltars, fixParts, grantAccs, grantUniques, grow122, growFootprints, loadEquip, loadSets, migrateBagV2, migrateForges60, migrateGear61, migrateRecipes, migrateTools65, migrateV2, migrateV3, moveOldWeapon, noticeRename58, refundRoofItems, refundRoofTiles, migrateSeen77, syncNotes } from './migrations.js';
 import { rand } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
 import { ANCH, CX, CY, H, MAPV, SA, SB, SI, SL, W, devLayout, idx, setLayout } from '../world/map.js';
@@ -178,6 +178,7 @@ export function deserialize(s) {
   if (!G.stats.nm61) migrateGear61();
   if (!G.stats.nm65) migrateTools65(); // v65 tool pouch
   migrateForges60(oldFp); // v60
+  grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
   G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); /* v104·v106·v108 · v119 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');

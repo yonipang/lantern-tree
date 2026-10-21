@@ -13,7 +13,8 @@ import { G, ME, beat, started } from './state.js';
 import { GEAR_IT } from '../data/automation-tiers.js';
 import { HOT, ITEMS, OBJ, OLD_PIECES, UNIQ_OF } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
-import { BX, BY, CX, CY, H, LAVA, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
+import { BX, BY, CX, CY, H, LAVA, PIT, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
+import { GROW122 } from '../data/decor122.js';
 import { addPond, addWater, genWorld } from '../world/gen.js';
 import { delObj, fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
 import { OLD_AUTO } from '../data/automation.js';
@@ -96,6 +97,33 @@ export function growFootprints() {
     if (!ok) { returnObj(o, x + .5, y + .5); back++; } }
   if (back) setTimeout(() => { try { emit('toast', `작업대·벤치가 2칸으로 커졌어요. 옆자리가 막힌 ${back}개는 가방으로 돌려받았어요`, 'good', 'grewback'); } catch (e) { } }, 1400);
   return back;
+}
+// v122 (dev/design/그림에셋.md): 침대·2인 침대·둥근 탁자·긴 식탁이 새 그림에 맞춰 커졌어요(GROW122). 놓여 있는 것마다 새 크기가 들어갈
+// 자리를 찾아요 — 원래 칸이 새 자리의 아래 줄(가운데부터)에 오는 자리부터, 벽·물건·물·용암·구덩이가 없는 곳. 자리가 없으면 걷어서 그 물건으로
+// 돌려줘요(가방 먼저, 넘치면 등불나무 옆 환급 상자 — v69처럼). 그 침대에서 깨어나던 자리는 새 자리를 따라가요(걷었으면 없어져요).
+// 한 번만 해요(G.stats.grow122 표시) — 이미 새 크기로 놓인 것도 건너뛰어요.
+export function grow122() {
+  if (G.stats.grow122) return null; let moved = 0, back = 0; const own = [];
+  const free = (ax, ay, fp) => { if (!fpFree(ax, ay, fp, false, null)) return false; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) if (G.floor[idx(ax + dx, ay + dy)] === PIT) return false; return true; };
+  for (const [i, o] of [...G.objs]) { if (!GROW122[o.t] || !G.objs.has(i)) continue;
+    if (fpTiles(i, o).every(j => { if (j === i) return true; const q = G.objs.get(j); return q && q.t === '_part' && q.a === i; })) continue;
+    const x = i % W, y = (i / W) | 0, fp = fpOf(o);
+    for (let dy = -1; dy <= 4; dy++) for (let dx = -1; dx <= 4; dx++) { if (!inB(x + dx, y + dy)) continue; const j = idx(x + dx, y + dy), q = G.objs.get(j); if (q && q.t === '_part' && q.a === i) G.objs.delete(j); }
+    G.objs.delete(i);
+    const xs = [Math.floor((fp[0] - 1) / 2)]; for (let k = 0; k < fp[0]; k++) if (k !== xs[0]) xs.push(k);
+    let at = -1; for (let oy = fp[1] - 1; oy >= 0 && at < 0; oy--) for (const ox of xs) { const ax = x - ox, ay = y - oy; if (inB(ax, ay) && free(ax, ay, fp)) { at = idx(ax, ay); break; } }
+    const home = OBJ[o.t].bed && G.spawnPt && G.spawnPt.x === x && G.spawnPt.y === y;
+    if (at >= 0) { G.objs.set(at, o); setParts(at, o); if (home) G.spawnPt = { x: at % W, y: (at / W) | 0 }; moved++; }
+    else { if (home) G.spawnPt = null; own.push({ id: OBJ[o.t].item || o.t, c: 1 }); back++; } }
+  if (!moved && !back) { G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; return null; }
+  const over = []; for (const s of own) { const left = moveInto(G.inv, s); if (left) over.push({ id: s.id, c: left }); }
+  let boxes = 0, rest = over;
+  while (rest.length) { const at = freeTileNear(CX, CY + 7); if (at < 0) break; const items = Array(18).fill(null), next = [];
+    for (const s of rest) { const left = moveInto(items, s); if (left) next.push({ id: s.id, c: left }); }
+    G.objs.set(at, { t: 'refundBox', items, own: ME }); boxes++; rest = next; }
+  G.stats.grow122 = { moved, back, boxes };
+  setTimeout(() => { try { emit('toast', `새 그림에 맞춰 침대·탁자·긴 식탁이 커졌어요${back ? ` · 자리가 좁은 ${back}개는 ${boxes ? '가방·등불나무 옆 환급 상자' : '가방'}로 돌려받았어요` : ''}`, 'good', 'grow122'); } catch (e) { } }, 2400);
+  return G.stats.grow122;
 }
 export function fixParts() {
   for (const [i, o] of [...G.objs]) { if (o.t !== '_part') continue; const a = G.objs.get(o.a); if (!a || a.t === '_part' || !OBJ[a.t] || !OBJ[a.t].sz || !fpTiles(o.a, a).includes(i)) G.objs.delete(i); }

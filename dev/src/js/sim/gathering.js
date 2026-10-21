@@ -6,7 +6,7 @@ import { TIER_IT } from '../data/automation-tiers.js';
 import { DUR } from '../data/circuits-regions.js';
 import { RECOVER_GAP, RECOVER_HITS } from '../data/controls.js';
 import { STAR_OF } from '../data/farming-cooking.js';
-import { ITEMS, OBJ, TIERNAME, WALLS } from '../data/items.js';
+import { BUILT_WALLS, ITEMS, OBJ, TIERNAME, WALLS } from '../data/items.js';
 import { C } from '../engine/canvas.js';
 import { G } from '../save/state.js';
 import { faceTo, natTool, targetTile } from './actions.js';
@@ -56,7 +56,7 @@ export function harvest(t, o) {
 }
 export const HITS = new Map();
 export function recoverTarget() { const t = targetTile(); if (!inB(t.x, t.y)) return null; let i = idx(t.x, t.y); const w = G.wall[i];
-  if (w === 6 || w === 7) return { t, i, wall: w }; // the wood and brick walls players build (natural walls only by pickaxe)
+  if (BUILT_WALLS.has(w)) return { t, i, wall: w }; // the wood and brick walls players build (natural walls only by pickaxe)
   let o = G.objs.get(i); if (o && o.t === '_part') { const ai = anchorAt(i); if (ai < 0) return null; i = ai; o = G.objs.get(ai); }
   const d = o && OBJ[o.t]; if (!d || !d.item || d.nat || d.crop || d.lost || d.tree || d.shrine || d.tchest || d.ranch || d.bush || d.growTo) return null;
   return { t: { x: i % W, y: (i / W) | 0 }, i, o, full: !!(d.chest && o.items && o.items.some(x => x)) }; }

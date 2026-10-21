@@ -4,7 +4,7 @@
 // 보이는 이름은 빛(v113): wire 빛뿌리 · battery 빛 항아리 · generator 불씨 등잔 · crystalGen 수정 빛샘 · 등불나무(treeP)에 이어도 끝없는 빛
 import { WPAL } from '../art/world.js';
 import { DRILL_CAP } from '../data/circuits-regions.js';
-import { OBJ, WALLS } from '../data/items.js';
+import { BUILT_WALLS, OBJ, WALLS } from '../data/items.js';
 import { fxRand, rand } from '../engine/random.js';
 import { alivePlayers, G } from '../save/state.js';
 import { doorGroup, SLIDE_NEAR, SLIDE_PW } from './building.js';
@@ -54,7 +54,7 @@ export function deviceStep(i, o, d, on, dt) {
     if (!!o.open !== near) { if (!near && occupied(x, y)) return; o.open = near ? 1 : 0; if (Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) < 8) emit('sfx', 'place'); } return; }
   if (d.dev === 'drill') { const dir = o.dir || { x: 0, y: -1 }, tx = x + dir.x, ty = y + dir.y, w = inB(tx, ty) ? G.wall[idx(tx, ty)] : 0, cnt = (o.store || []).reduce((a, s2) => a + s2.c, 0);
     const tierOk = w && WALLS[w] && (d.only ? d.only.includes(w) : WALLS[w].tier <= d.tier);
-    const can = on && w && WALLS[w] && tierOk && w !== 6 && w !== 7 && w !== 8 && cnt < DRILL_CAP; o.work = !!can; o.why = !on ? 'power' : !w || w === 6 || w === 7 || w === 8 ? 'wall' : !tierOk ? 'tier' : cnt >= DRILL_CAP ? 'full' : '';
+    const can = on && w && WALLS[w] && tierOk && !BUILT_WALLS.has(w) && w !== 8 && cnt < DRILL_CAP; o.work = !!can; o.why = !on ? 'power' : !w || BUILT_WALLS.has(w) || w === 8 ? 'wall' : !tierOk ? 'tier' : cnt >= DRILL_CAP ? 'full' : '';
     if (!can) return; o.prog = (o.prog || 0) + dt;
     if (Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) < 14 && fxRand() < dt * 3) emit('puff', tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, WPAL[w][1], 2, 1.4, .1);
     if (o.prog >= d.every) { o.prog = 0; const dr0 = WALLS[w].drop[0]; if (rand() > (dr0[3] == null ? 1 : dr0[3])) return; const id = dr0[0]; G.stats.drilled = (G.stats.drilled || 0) + 1;

@@ -3,7 +3,7 @@
 // 기획: dev/design/건축모드.md (v91 = 켜고 끄기·목록·놓기·연속 놓기·교체, v92 = 옮기기·뜯기·되돌리기)
 import { TIER_IT, TIERED } from '../data/automation-tiers.js';
 import { TIMED } from '../data/farming-cooking.js';
-import { ITEMS, OBJ, RECIPES, WALLS } from '../data/items.js';
+import { BUILT_WALLS, ITEMS, OBJ, RECIPES, WALLS } from '../data/items.js';
 import { FLOOR_ITEM, NATURE } from '../data/rpg-nature.js';
 import { rand, rint } from '../engine/random.js';
 import { G } from '../save/state.js';
@@ -114,7 +114,7 @@ defineCmd('bplace', c => {
 // 직접 놓은 것 = 가구·제작대·조명 같은 물건(회수할 수 있는 것), 직접 쌓은 벽(나무·돌벽돌 벽, v92부터 쌓은 자연 재료 벽 G.bwall), 깐 바닥, 빛뿌리.
 // 자연 벽·나무·작물·덮은 자연 바닥은 뜯지 않아요(곡괭이·도끼·낫·삽으로). 되돌리기는 사람마다 마지막 한 번(놓기·옮기기·뜯기), 저장하지 않아요.
 const BW = () => G.bwall || (G.bwall = new Set());
-export const myWall = i => { const w = G.wall[i]; return !!w && (w === 6 || w === 7 || BW().has(i)); };
+export const myWall = i => { const w = G.wall[i]; return !!w && (BUILT_WALLS.has(w) || BW().has(i)); };
 let WIT = null;
 export const wallItem = w => { if (!WIT) { WIT = {}; for (const id in ITEMS) { const it = ITEMS[id]; if (it.kind === 'wall' && !(it.wall in WIT)) WIT[it.wall] = id; } } return WIT[w] || null; };
 export function bmObjAt(x, y) { if (!inB(x, y)) return null; const ai = anchorAt(idx(x, y)); if (ai < 0) return null; const o = G.objs.get(ai); return o ? { i: ai, o, x: ai % W, y: (ai / W) | 0 } : null; }

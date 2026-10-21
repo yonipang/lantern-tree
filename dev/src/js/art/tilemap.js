@@ -11,7 +11,7 @@ import { SPR } from './world.js';
 export const WALL_H = 16; // 벽 앞면 높이 px (v71: 5 → 20, v72: 20 → 16 = 한 칸) — 앞면이 벽 칸에 딱 맞게 서요
 export const WALL_TOP = 12; // v72: 벽 윗면 높이 px (예전 16) — 앞면 바로 위에 얹혀요
 export const WALL_LIFT = WALL_H + WALL_TOP - 16; // 벽이 자기 칸 위(북쪽 칸)로 올라오는 높이: 12px — 그만큼 뒤에 선 것을 가려요
-export const BUILT_WALLS = new Set([6, 7]); // 나무 벽·돌벽돌 벽: 바닥 테두리 없이 바로 닿아요
+// 직접 짓는 벽(BUILT_WALLS, data/items.js): 바닥 테두리 없이 바로 닿아요
 export const ROCK_FILL = '#28202c';
 // 지역별 물 색 [바탕, 잔물결, 반짝임] — 이끼 동굴은 청록, 얼음 동굴은 차가운 짙은 파랑. 나머지 지역은 예전 물 그림
 export const BIOME_WATER = { 0: ['#82ebcf', '#b0f6e2', '#d8fbf1'], 4: ['#3f6fb0', '#6898d2', '#96c4ec'] };
