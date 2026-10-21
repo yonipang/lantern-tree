@@ -89,17 +89,27 @@ const QTGT = { t: -9, q: null, v: null };
 // HUD 퀘스트 한 줄: [작은 글자, 글]
 export function activeLine() { const a = G.qAct || 'main', q = activeQuest(); if (!q) return ['', '퀘스트 고르기'];
   const side = isSide(q), st = side ? questState(q) : null, ask = side && isAsk(q); if (side && st.done && !st.claimed && st.has) return [ask ? '부탁' : '도전', `${st.nh ? '나루에게 가기' : '보상 받기'} · ${qText(q)}`]; return [ask ? '부탁' : side ? '도전' : '이야기', qText(q)]; }
+// ---- v124 「퀘스트 완료!」 띠 (dev/design/퀘스트설계.md 4장): 이야기·나루의 부탁·도전 모두 — 화면 위 가운데 띠(퀘스트 이름 + 둘째 줄 보상 안내), 누르면 퀘스트 창 (ui/feedback.js)
+// 퀘스트 진행은 세계 공동이라 같은 세계 모두에게 보여요. 한꺼번에 여러 개면 차례로 (화면 쪽), 한 번에 QDONE_MAX개까지
+const QDONE_MAX = 5;
+function qDoneEmit(q, side) { const st = questState(q, side ? null : GUIDE.indexOf(q)); const sub = st.claimed || !st.has ? '' : st.nh ? '나루에게 받아요' : '보상 받기';
+  emit('qdone', qText(q), sub, side && !isAsk(q) ? 'side' : 'main'); }
+// 나루의 부탁·도전: 끝난 걸 G.stats.qdone에 적어 한 번만 (옛 세이브·처음은 지금 끝난 것을 조용히 적어 둠). 아직 받지 않은 부탁은 받은 뒤에
+const sideLive = q => !isAsk(q) || askOpen(q.id);
+function sideDoneTick() { const S = G.stats; if (!S.qdone) { S.qdone = {}; for (const q of QSIDE) if (sideLive(q) && q.done()) S.qdone[q.id] = 1; return; } if (!started) return; let k = 0;
+  for (const q of QSIDE) { if (S.qdone[q.id] || !sideLive(q) || !q.done()) continue; S.qdone[q.id] = 1; if (!(G.qclaim || {})[q.id] && k++ < QDONE_MAX) qDoneEmit(q, true); } }
 export function checkGuide() {
   if (G.stats.naruCall && !naruSpot()) G.stats.naruCall = null; // 나루가 마을에 없으면 부르지 않아요
-  let n = 0, last = null, boss = 0; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
+  let n = 0, last = null, boss = 0; const fin = []; while (!G.stats.naruCall && G.guide < GUIDE.length - 1 && GUIDE[G.guide].done() && n < 20) { const q = GUIDE[G.guide]; if (started && !G.qt[q.id]) G.qt[q.id] = Math.max(1, Math.round(G.playT || 0));
     // v117 1부(나루에게 받는 이야기): 경험치는 끝날 때 바로, 물건은 마을의 나루에게 · 6·8번은 마을로 부름
     if (NARU_Q.includes(q.id) && naruSpot()) { const qx = G.stats.qxp = G.stats.qxp || {}; if (q.xp && !qx[q.id] && !(G.qclaim || {})[q.id]) { qx[q.id] = 1; gainXp(q.xp, G.p.x, G.p.y); } if (started && NARU_CALL[q.id] && !(G.stats.callSeen || {})[q.id]) G.stats.naruCall = q.id; } // 한 장면은 한 번 (stats.callSeen)
     if (started && naruSpot() && G.stats.naruMet) { if (NARU_BOSS.includes(q.id)) { bossPassed(q.id); boss++; } scenePassed(q.id); } // v119 2부: 보스 「돌아와서」·13번 장면을 쌓아요
-    last = q; G.guide++; n++; }
+    last = q; G.guide++; n++; if (started && q.id !== 'naru') fin.push(q); } // v124: 끝난 이야기마다 「퀘스트 완료!」 띠 (첫 퀘스트는 첫 장면이 대신)
   if (n && started && boss) { emit('bell', NARU_BOSS_CALL.slice()); emit('sfx', 'craft'); } // v119: 보스를 물리치면 방울로 부름 (안 들러도 다음 이야기는 진행)
   if (n && started && last) { const bell = naruSpot() && G.stats.naruMet && NARU_BELL[last.id]; /* v119: 12·14·17번 끝 한마디도 */
     if (bell) { const L = bell.slice(); if (last.id === 'torch' && leadPrep()) { L[L.length - 1] = NARU_LEAD_GO; emit('bell', L, 0, { k: 'naruLead' }); } else emit('bell', L); emit('sfx', 'craft'); /* v118: 4번 끝 → 나루가 광맥까지 먼저 */ if (NARU_Q.includes(last.id) && last.rw.length && !G.stats.naruRwTip && !(G.qclaim || {})[last.id]) { G.stats.naruRwTip = 1; emit('toast', '보상은 마을의 나루에게 받아요 (머리 위 ?)', 'good', 'naruRwTip'); } }
-    else if (n === 1 && !boss && !(NARU_Q.includes(last.id) && naruSpot())) { emit('toast', '목표 달성!', 'good'); emit('sfx', 'craft'); } } // 첫 퀘스트(나루에게 말 걸기)는 첫 장면이 대신해요
+  } // v124: 예전 「목표 달성!」 작은 알림은 「퀘스트 완료!」 띠로 바뀜
+  for (const q of fin.slice(-QDONE_MAX)) qDoneEmit(q, false); sideDoneTick();
   const [tag, txt] = activeLine(); emit('goal', txt, tag);
   // v84: 화살표는 활성 퀘스트 하나 — 가장 가까운 할 곳을 1초에 한 번 찾아요 (밝힌 곳만)
   const q = activeQuest(); if (q !== QTGT.q || G.time - QTGT.t >= 1 || G.time < QTGT.t) { QTGT.q = q; QTGT.t = G.time; const v = q && !(isSide(q) && q.done() && !(isAsk(q) && !(G.qclaim || {})[q.id])) ? questGo(q) : null; QTGT.v = v || null; }

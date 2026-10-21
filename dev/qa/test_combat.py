@@ -727,6 +727,48 @@ def test_naru_start_v110():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+def test_quest_done_v124():
+    # v124 퀘스트설계.md 4·5장: 「퀘스트 완료!」 띠(이야기·부탁·도전, 둘째 줄 보상 안내, 누르면 퀘스트 창 그 탭) · 새 이야기 퀘스트 「장비제작대 만들고 놓기」(구리 작업대 다음·구리 곡괭이 앞) · 옛 세이브
+    H2=HOOK.replace("computeLight}","computeLight,naruSpot,naruOwed,GUIDE,checkGuide,questState,bellState,bellClear,get panel(){return panel},putItem,UIS,beginPlay}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,402,874,True)
+            BANNER="()=>{const e=document.querySelector('#qdone');return e.hidden?null:[e.querySelector('.qn').textContent,e.querySelector('.qs').textContent]}"
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const ids=T.GUIDE.map(q=>q.id);const k=ids.indexOf('gbench');return [ids[k-1],ids[k],ids[k+1],T.GUIDE[k].xp,JSON.stringify(T.GUIDE[k].rw)]}")
+            rec('장비제작대 퀘스트','구리 작업대 다음·구리 곡괭이 앞, 보상 구리광석 6·이끼 끈 2·경험치 15', r==['forge','gbench','pick',15,'[["copperOre",6],["rope",2]]'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;T.bellClear();Object.assign(G.stats,{naruMet:1,wood:6,bench:1,torch:1,copperOre:6,copperBar:1,callSeen:{bar:1,pick:1}});G.qclaim.naru=1;G.guide=T.GUIDE.findIndex(q=>q.id==='forge');T.checkGuide();
+              const a=[T.GUIDE[G.guide].id];G.stats.forge=1;T.checkGuide();const bl=T.bellState();a.push(T.GUIDE[G.guide].id,!!bl&&bl.lines[bl.lines.length-1].includes('먼저 작업대에서 장비제작대를'));return a}""")
+            ok=await wait_until(pg,"()=>{const e=document.querySelector('#qdone');return !e.hidden&&e.querySelector('.qn').textContent.includes('구리 작업대로 올리기')}",4000)
+            r2=await ev(pg,BANNER)
+            rec('완료 띠','이야기 퀘스트가 끝나면 띠(이름 + 「나루에게 받아요」), 나루 방울도 같이 (7번 끝 셋째 줄 바뀜)', r==['forge','gbench',True] and ok and r2 and r2[1].startswith('나루에게 받아요'), str(r)+str(r2))
+            r=await ev(pg,"()=>{const e=document.querySelector('#qdone').getBoundingClientRect(),s=document.querySelector('#hud .side').getBoundingClientRect(),f=document.querySelector('#hud .face')?.getBoundingClientRect();return [e.top<120,e.right<=s.left+1,!f||e.left>=f.right-1]}")
+            rec('완료 띠','화면 맨 위 가운데 (오른쪽 위 버튼·얼굴을 가리지 않음)', r==[True,True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;let x=-1,y=-1;const p=G.p;for(let d=2;d<9&&x<0;d++)for(const [dx,dy] of [[d,0],[-d,0],[0,d],[0,-d]]){const tx=Math.floor(p.x)+dx,ty=Math.floor(p.y)+dy,i=T.idx(tx,ty);if(!G.wall[i]&&!G.objs.get(i)&&G.floor[i]!==T.WATER){x=tx;y=ty;break}}
+              T.putItem(T.ITEMS.smelter,{id:'smelter',c:1},{x,y});const a=[!!G.stats.gbench];T.bellClear();T.checkGuide();const bl=T.bellState();a.push(T.GUIDE[G.guide].id,T.naruOwed().includes('gbench'),!!bl&&bl.lines.length===3&&bl.lines[0].includes('장비제작대도 생겼네요'));return a}""")
+            ok=await wait_until(pg,"()=>{const e=document.querySelector('#qdone');return !e.hidden&&e.querySelector('.qn').textContent==='장비제작대 만들고 놓기'}",9000)
+            rec('장비제작대 퀘스트','장비제작대를 놓으면 끝 → 구리 곡괭이로, 보상은 나루에게, 끝 한마디 3줄, 완료 띠', r==[True,'pick',True,True] and ok, str(r)+str(ok))
+            await pg.tap('#qdone'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[__T.panel&&__T.panel.kind,__T.UIS.qTab,document.querySelector('#qdone').hidden]")
+            rec('완료 띠','띠를 누르면 퀘스트 창(이야기 탭), 띠는 사라짐', r==['quest','main',True], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.rpg.lv=Math.max(5,G.rpg.lv);T.checkGuide();const e=document.querySelector('#qdone');const a=[!!G.stats.qdone.s_lv5,!e.hidden&&e.querySelector('.qn').textContent,e.querySelector('.qs').textContent];T.checkGuide();return a}""")
+            rec('완료 띠','도전 퀘스트도 끝나면 띠(「보상 받기」), 한 번만', r==[True,'레벨 5 달성하기','보상 받기 ›'], str(r))
+            await pg.tap('#qdone'); await pg.wait_for_timeout(200)
+            r=await ev(pg,"()=>[__T.panel&&__T.panel.kind,__T.UIS.qTab]")
+            rec('완료 띠','도전 퀘스트 띠를 누르면 도전 탭', r==['quest','side'], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            # 옛 세이브: 장비제작대를 놓았고 구리 작업대를 지났으면 받은 것으로 (장면·방울·띠 없이) · 이미 끝난 도전은 조용히
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));for(const k of ['gb124','gbench','qdone','qxp'])delete s.stats[k];s.qclaim={naru:1};T.deserialize(s);T.bellClear();const H=T.G; /* 불러오면 세계가 새로 만들어져요 */
+              const a=[!!H.stats.gbench,!!H.qclaim.gbench,!!H.stats.qxp.gbench];T.beginPlay();a.push(!!H.stats.qdone.s_lv5,T.GUIDE[H.guide].id,!T.naruOwed().includes('gbench'),T.bellState()==null,document.querySelector('#qdone').hidden);return a}""")
+            rec('옛 세이브','놓인 장비제작대 → 놓은 것으로·받은 것으로(보상·방울·띠 없이), 끝난 도전은 띠 없이', r==[True,True,True,True,'pick',True,True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=JSON.parse(JSON.stringify(T.serialize()));for(const k of ['gb124','gbench','qdone','qxp'])delete s.stats[k];s.qclaim={naru:1};s.stats.forge=0;s.objs=s.objs.filter(([i,o])=>o.t!=='smelter');T.deserialize(s);const H=T.G;return [!!H.stats.gbench,!!H.qclaim.gbench]}""")
+            rec('옛 세이브','장비제작대가 없고 구리 작업대 전이면 그대로 (새 퀘스트를 하게 됨)', r==[False,False], str(r))
+            rec('콘솔','오류 없음', not errs, str(errs[:3]))
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_naru_part1_v117():
     # v117 나루 퀘스트라인 1부: 첫 장면(주인공 대답·이름 짓기·방울·횃불), 타이핑·빨리감기, 1부 경험치는 바로·물건은 나루에게(?), 방울 대화, 하는 중 한마디, 6번 마을로 부름, 이름 저장
     H2=HOOK.replace("computeLight}","computeLight,naruSpot,naruAsk,naruOwed,GUIDE,checkGuide,questGo,activeQuest,perform,closePanel,bellState,bellClear,get panel(){return panel},renderPanel,runCmd,canClaim,questState,typing,typeFinish,pName,CHARS,curChar}")
@@ -768,7 +810,7 @@ def test_naru_part1_v117():
             rec('마을로 부름','첫 구리괴 → 방울 「마을로 가져와 줄래요?」, 다음 이야기는 나루와 이야기할 때까지 기다림(화살표 = 나루, ?)', r[:6]==['bar','forge','naruCall','forge',True,True] and '마을로 가져와 줄래요' in r[6], str(r))
             await ev(pg,"()=>__T.bellClear()"); await ev(pg,TALK); await wait_until(pg,"()=>__T.panel&&__T.panel.kind==='talk'")
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const m=T.panel.mode;T.closePanel();T.checkGuide();return [m,G.stats.naruCall,!!G.qclaim.bar,T.GUIDE[G.guide].id,(T.bellState()||{lines:['']}).lines.join(' ')]}""")
-            rec('마을로 부름','마을 장면(구리괴 이야기) → 보상, 이어서 다음 이야기(구리 작업대 끝 → 곡괭이 방울)', r[0]=='call:bar' and r[1] is None and r[2] and r[3]=='pick' and '구리 작업대다' in r[4], str(r))
+            rec('마을로 부름','마을 장면(구리괴 이야기) → 보상, 이어서 다음 이야기(구리 작업대 끝 → 장비제작대 방울)', r[0]=='call:bar' and r[1] is None and r[2] and r[3]=='gbench' and '구리 작업대다' in r[4] and '먼저 작업대에서 장비제작대를' in r[4], str(r))  # v124: 다음은 「장비제작대 만들고 놓기」
             r=await ev(pg,"""()=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));const a=[s.pname];T.deserialize(s);a.push(T.G.pname);delete s.pname;T.deserialize(s);a.push(T.G.pname,T.pName()===T.CHARS[T.curChar()].n);return a}""")
             rec('이름 저장','지은 이름은 세이브에(캐릭터 칸), 옛 세이브는 이름 없음 = 고른 캐릭터 이름', r[0]=='별빛b루나루나루' and r[1]==r[0] and r[2] is None and r[3], str(r))
             await ev(pg,"()=>__T.openPanel('profile')")

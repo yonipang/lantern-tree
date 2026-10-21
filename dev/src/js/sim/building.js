@@ -86,7 +86,7 @@ export function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.
     const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);
-    if (it.obj === 'bench') G.stats.bench = 1; if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
+    if (it.obj === 'bench') G.stats.bench = 1; if (it.obj === 'smelter') G.stats.gbench = 1; /* v124 퀘스트 「장비제작대 만들고 놓기」 */ if (it.blv && it.obj === 'bench') { G.stats.forge = 1; G.stats.benchLv = Math.max(G.stats.benchLv || 0, it.blv); } if (it.blv && it.obj === 'smelter') G.stats.gearLv = Math.max(G.stats.gearLv || 0, it.blv); if (it.obj === 'torch') G.stats.torch++; if (OBJ[it.obj].bed) { G.spawnPt = { x: t.x, y: t.y }; emit('toast', '이제 기절하면 침대에서 깨어나요', 'good', 'bed'); }
     if (OBJ[it.obj].warp) { warpsChanged(); G.stats.portals = (G.stats.portals || 0) + 1; emit('toast', '포탈을 놓았어요 · 워프 목적지가 하나 늘었어요', 'good', 'portal'); } }
   markLight(); emit('tile', t.x, t.y); return t;
 }
