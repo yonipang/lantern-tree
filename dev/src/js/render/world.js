@@ -323,6 +323,7 @@ export function drawEntity(it, t) {
     if (d.dev === 'drill' && o.dir) img = SPR.obj[o.t + (o.dir.y < 0 ? 'U' : o.dir.y > 0 ? 'D' : o.dir.x < 0 ? 'L' : 'R')] || img;
     if (d.growTo) { const st = treeStep(o); if (st >= 0) { const base = o.t === 'capSapling' || o.t === 'capStump' ? 'capSapling' : 'sapling'; img = SPR.obj[st ? base + 'B' : base]; } }
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
+    if (o.t === 'root' && SPR.rootS && Math.hypot(it.x - CX, it.y - CY) > 9.5) { const k = Math.floor(hash2(it.x, it.y, 122) * SPR.rootS.length); img = (o.yg && isYoung(o) ? SPR.rootSY : SPR.rootS)[k] || img; } // v122: 뿌리기둥 크기 여러 가지(칸마다 정해져요, 그림만), 등불나무 둘레 처음 것은 원래 크기
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
     if (d.solid && effH(img) > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
     if (TIERED[o.t] && o.lv) { const px = Math.round(wx * T - camX), py = Math.round((wy - effH(img) / 16) * T - camY) + 2; ctx.fillStyle = INK; ctx.fillRect(px - 4, py, 8, 5); ctx.fillStyle = BENCH_COL[o.lv]; ctx.fillRect(px - 3, py + 1, 6, 3); } // v60 tier plate
