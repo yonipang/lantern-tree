@@ -508,9 +508,9 @@ def test_weapon_tiers_v99():
             r=await ev(pg,"""()=>{const T=__T,bad=[];T.WT_TABLE.forEach((row,t)=>row.forEach((id,k)=>{const it=T.ITEMS[id],wt=T.WT_ORDER[k];
               if(!it||it.wt!==wt||it.dmg!==Math.round(T.WT_SW[t]*T.WT_MUL[wt])||it.rlv!==T.WT_RLV[t]||!T.ICON[id])bad.push(id)}));
               return [T.WT_TABLE.flat().length,new Set(T.WT_TABLE.flat()).size,bad.join(','),T.ITEMS.hammerCopper.dmg,T.ITEMS.spearFrost.dmg]}""")
-            rec('무기','6종 × 6단계 36개, 공격력·착용 레벨이 표대로, 아이콘 있음 (구리 망치 17·서리 창 50)', r==[36,36,'',17,50], str(r))
-            r=await ev(pg,"""()=>{const T=__T,out=[];T.WT_TABLE.forEach((row,t)=>row.forEach(id=>{if(id==='swordWood')return;const rc=T.RECIPES.find(x=>x.out===id);if(!rc||rc.at!=='smelter'||rc.tier!==t)out.push(id+':'+(rc?rc.at+rc.tier:'없음'))}));return out.join(',')}""")
-            rec('무기','나무 검 말고 모두 장비제작대 그 단계에서 만듦 (황금 활은 금 단계로)', r=='', r)
+            rec('무기','6종 × 8단계 48개(v130 7·8단계), 공격력·착용 레벨이 표대로, 아이콘 있음 (구리 망치 17·서리 창 50)', r==[48,48,'',17,50], str(r))
+            r=await ev(pg,"""()=>{const T=__T,out=[];T.WT_TABLE.forEach((row,t)=>row.forEach(id=>{if(id==='swordWood')return;const rc=T.RECIPES.find(x=>x.out===id);if(!rc||rc.at!=='smelter'||rc.tier!==Math.min(t,6))out.push(id+':'+(rc?rc.at+rc.tier:'없음'))}));return out.join(',')}""")
+            rec('무기','나무 검 말고 모두 장비제작대 그 단계에서 만듦 (황금 활은 금 단계로, v130 7·8단계는 그림자 장비제작대 = 6)', r=='', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'swordIron',c:1};G.inv[1]={id:'swordCopper',c:1};G.sel=0;G.lastW=null;
               const a=[];for(const lv of [1,5,12]){G.rpg.lv=lv;a.push(T.curWeapon().id)}const h=T.slotHTML(G.inv[0],'inv',0);G.rpg.lv=1;const h1=T.slotHTML(G.inv[0],'inv',0);return [a.join(','),h.includes('rlvb'),h1.includes('rlvb')&&h1.includes('Lv.12')]}""")
             rec('착용 레벨','레벨이 모자란 무기는 못 들고 다른 무기로(Lv.1 주먹 · Lv.5 구리 검 · Lv.12 철 검), 칸에 빨간 Lv.12', r==['hand,swordCopper,swordIron',False,True], str(r))
@@ -533,9 +533,9 @@ def test_armor_v100():
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             r=await ev(pg,"""()=>{const T=__T,bad=[],sl=['head','body','legs'];T.AR_TABLE.forEach((row,t)=>row.forEach(([id],k)=>{const it=T.ITEMS[id],rc=T.RECIPES.find(x=>x.out===id);
-              if(!it||it.slot!==sl[k]||it.def!==T.AR_DEF[sl[k]][t]||it.rlv!==T.WT_RLV[t]||!rc||rc.at!=='smelter'||rc.tier!==t||!T.ICON[id])bad.push(id)}));
+              if(!it||it.slot!==sl[k]||it.def!==T.AR_DEF[sl[k]][t]||it.rlv!==T.WT_RLV[t]||!rc||rc.at!=='smelter'||rc.tier!==Math.min(t,6)||!T.ICON[id])bad.push(id)}));
               return [T.AR_TABLE.flat().length,bad.join(','),['obsCoat','frostRobe','woolHat','snowBrooch'].map(id=>T.ITEMS[id].def+'/'+(T.ITEMS[id].rlv||1)).join(',')]}""")
-            rec('방어구','머리·상의·하의 × 6단계 18개, 방어력·착용 레벨·장비제작대 단계·아이콘 / 특수 옷 방어력 70%·착용 레벨 없음', r==[18,'','11/1,15/1,1/1,9/1'], str(r))
+            rec('방어구','머리·상의·하의 × 8단계 24개(v130 7·8단계는 그림자 장비제작대), 방어력·착용 레벨·장비제작대 단계·아이콘 / 특수 옷 방어력 70%·착용 레벨 없음', r==[24,'','11/1,15/1,1/1,9/1'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.equip={body:null,head:null,neck:null,ring:null,legs:null};G.rpg.lv=1;G.inv[0]={id:'armorIron',c:1};T.wearItem(0);const a=[G.equip.body,G.inv[0]&&G.inv[0].id];
               G.rpg.lv=12;T.wearItem(0);G.inv[1]={id:'helmIron',c:1};G.inv[2]={id:'legsIron',c:1};T.wearItem(1);T.wearItem(2);
               const d=T.armorDef();G.p.inv=0;G.p.dead=0;G.p.sleep=null;G.p.sit=null;G.p.hp=500;G.buffs=[];G.rpg.sk={};T.hurtPlayer(100,G.p.x+1,G.p.y);const lost=500-G.p.hp;
