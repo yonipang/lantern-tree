@@ -6,7 +6,7 @@ import { ACC_OF, broochMul } from '../data/gear-animals.js';
 import { ITEMS, UNIQ_OF } from '../data/items.js';
 import { BOSS_W } from '../data/growth.js';
 import { darkCanHit, darkDown } from './deep.js';
-import { BKEYS, BOSSES, REMATCH } from '../data/rpg-nature.js';
+import { BKEYS, BOSSES, REMATCH, bossAway } from '../data/rpg-nature.js';
 import { C } from '../engine/canvas.js';
 import { fxRand, rand } from '../engine/random.js';
 import { alivePlayers, beat, deepSeedDrop, freshBoss, G, nearestPlayer, withPlayer } from '../save/state.js';
@@ -25,12 +25,16 @@ import { idx, inB, SI, SL } from '../world/map.js';
 import { boxHits, isSolid, moveEnt } from '../world/tiles.js';
 import { markLight } from './loop.js';
 import { bossScene } from './cutscene.js';
+import { abDownToast, isABoss } from './archboss.js';
+import { ABOSS_OF, ABOSS_XP, INK_MUL } from '../data/archboss.js';
+import { josa } from '../engine/util.js';
 export function updateHazards(dt) {
   G.hz = G.hz || [];
   for (let i = G.hz.length - 1; i >= 0; i--) { const h = G.hz[i]; h.t += dt; if (h.t > h.life) { G.hz.splice(i, 1); continue; } const live = alivePlayers(); if (h.t < h.warn || !live.length) continue;
     const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
     if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
     else if (h.k === 'poison') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } // v101 독 구름·독 웅덩이(닿아 있는 동안 계속)
+    else if (h.k === 'ink') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => { G.p.slowT = Math.max(G.p.slowT || 0, .5); hurtPlayer(h.dmg, h.x, h.y); }); } // v131 잉크 웅덩이(닿아 있는 동안 느려지고 조금씩)
     else if (h.k === 'shade') { if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#c9a8ff', 22, 4, .4); emit('shake', .2); for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } } // v129 길 잃은 등불지기의 발밑 원
     else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
@@ -42,14 +46,16 @@ export function hitBoss(b, dmg, crit, fx) {
   if (b.k === 'turtle' && b.ph === 'open' && dmg > 0) { dmg = Math.round(dmg * 1.5); crit = true; }
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
+  if (b.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); // v131 잉크 불꽃의 무기: 받는 피해 +20%
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
     const again0 = !!(G.stats.beaten && G.stats.beaten[b.k]); // v130: 큰 어둠은 다시 물리치면 경험치 1,000 (다른 보스는 예전처럼 같은 경험치)
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */, ...ABOSS_XP /* v131 기록관 보스 */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k] || BOSS_W[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { /* v130 큰 어둠도 특별 무기 6종 (UNIQ_OF 없이) */ const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
+    if (isABoss(b.k)) { for (const [id, c] of ABOSS_OF[b.k].loot) spawnDrop(id, c, b.x, b.y); abDownToast(b.k); } // v131 기록관 보스 첫 처치 재료
     if (b.k === 'dark') { spawnDrop('dawnstone', DAWN_FIRST, b.x, b.y); G.stats.darkOwe = 0; darkDown(b); } // v130 새벽돌 6 · v108 엔딩
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -59,19 +65,19 @@ export function hitBoss(b, dmg, crit, fx) {
   }
 }
 export function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); if (b.k === 'dark') spawnDrop('dawnstone', DAWN_AGAIN[0] + Math.floor(rand() * (DAWN_AGAIN[1] - DAWN_AGAIN[0] + 1)), b.x, b.y); /* v130 새벽돌 2~4 */ const u = (UNIQ_OF[b.k] || BOSS_W[b.k]) && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
-  emit('toast', `${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
+  emit('toast', `${josa(BOSSES[b.k].n, '을', '를')} 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 export function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
-  if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
-  if (!G.bossDead[k]) return { k: 'info', lbl: '깨어 있음', icon: 'dots', msg: `${BOSSES[k].n}이 이미 보스방에 있어요`, t };
+  if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(BOSSES[k].n, '을', '를')} 한 번 물리친 뒤에 쓸 수 있어요`, t };
+  if (!G.bossDead[k]) return { k: 'info', lbl: '깨어 있음', icon: 'dots', msg: `${josa(BOSSES[k].n, '이', '가')} 이미 보스방에 있어요`, t };
   if (d > 9) return { k: 'info', lbl: '보스방에서', icon: 'dots', msg: `${BOSSES[k].n}의 보스방 안에서 써요`, t };
   return { k: 'summon', lbl: '소환', icon: s0.id, t, boss: k }; }
 export function summonBoss(k) { const s0 = selItem(); if (!s0 || ITEMS[s0.id].boss !== k || !G.bossDead[k]) return;
   s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } emit('inv');
-  G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; emit('puff', b.x, b.y, BOSSES[k].col, 30, 4, .8); emit('shake', .4, true); emit('sfx', 'boss'); emit('toast', `${BOSSES[k].n}이 다시 나타났어요!`, 'warn', 'summon'); }
+  G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; emit('puff', b.x, b.y, BOSSES[k].col, 30, 4, .8); emit('shake', .4, true); emit('sfx', 'boss'); emit('toast', `${josa(BOSSES[k].n, '이', '가')} 다시 나타났어요!`, 'warn', 'summon'); }
 onFrame('bosses', updateBosses);
 export function updateBosses(dt) {
   let active = null;
-  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; withPlayer(nearestPlayer(b.x, b.y), () => { if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }); } // 보스마다 가장 가까운 플레이어 (8단계)
+  for (const k of BKEYS) { if (G.bossDead[k] || bossAway(k)) continue; const b = G.bosses[k]; withPlayer(nearestPlayer(b.x, b.y), () => { if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }); } // 보스마다 가장 가까운 플레이어 (8단계)
   if (active) withPlayer(nearestPlayer(active.x, active.y), () => emit('bossHp', active.k, active.hp, active.max));
   updateShots(dt); updateHazards(dt);
 }
@@ -82,7 +88,7 @@ export function bossCommon(b, dt) {
   return true;
 }
 // 보스가 깨어나 싸움 시작 (v127 연출 장면 뒤에는 흔들림·소리를 장면에서 이미 했어요)
-export function bossWake(b, cine) { const def = BOSSES[b.k]; b.st = 'fight'; b.t = 1.2; if (!cine) { emit('sfx', 'boss'); emit('shake', 0.4, true); } emit('toast', `${def.n}이 깨어났어요!`); emit('bossbar', true); }
+export function bossWake(b, cine) { const def = BOSSES[b.k]; b.st = 'fight'; b.t = 1.2; if (!cine) { emit('sfx', 'boss'); emit('shake', 0.4, true); } emit('toast', `${josa(def.n, '이', '가')} 깨어났어요!`); emit('bossbar', true); }
 export const BOSS_AI = {
   turtle(b, dt) {
     const p = G.p, d = b.d, st = b.stage || 1, half = st >= 2; b.t -= dt;
@@ -158,7 +164,7 @@ export function phaseCheck(b) { if (!PHASE_BOSS[b.k] || b.hp <= 0) return; b.sta
   b.stage = s; b.ph = 'roar'; b.t = 1.5; b.inv = 1.5; G.shots.length = 0; emit('shake', .5); emit('sfx', 'boss'); emit('puff', b.x, b.y - .5, BOSSES[b.k].col, 30, 4, .6); emit('puff', b.x, b.y - .5, '#ffe9a8', 12, 3, .8); emit('ftext', b.x, b.y - 2.6, '!!', '#ffd25c');
   G.stats.phaseTip = G.stats.phaseTip || {}; const key = b.k + s; if (!G.stats.phaseTip[key]) { G.stats.phaseTip[key] = 1; emit('toast', PHASE_TIP[b.k][s - 2], 'warn', 'phase'); }
   if (b.k === 'spirit' && s >= 2 && !(b.pillars || []).length) spiritPillars(b); if (b.k === 'spirit' && s === 3) spiritClones(b, 2); }
-export function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone'); markLight(); }
+export function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone' || e.k === 'mirrorClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone' && e.k !== 'mirrorClone'); /* v131 거울 분신 */ markLight(); }
 // lava turtle: stage 2 sparks off every wall bounce, stage 3 erupts around you and then opens its shell
 export function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (rand() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
 export function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = rand() * 6.283, r = k ? 1.3 + rand() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }

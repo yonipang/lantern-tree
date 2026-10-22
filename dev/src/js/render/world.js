@@ -5,7 +5,7 @@ import { glowSprite, ROOT_PICK, SPR, TREE_SPREAD } from '../art/world.js';
 import { BENCH_COL, TIERED } from '../data/automation-tiers.js';
 import { BATT_MAX } from '../data/circuits-regions.js';
 import { ITEMS, OBJ, WALLS, WTYPE } from '../data/items.js';
-import { BKEYS, BOSSES, ENEMY } from '../data/rpg-nature.js';
+import { BKEYS, BOSSES, ENEMY, bossAway } from '../data/rpg-nature.js';
 import { effH, effW, hdCtx, INK, whiten } from '../engine/canvas.js';
 import { fxRand, hash2 } from '../engine/random.js';
 import { WARP_FRAME } from '../data/warp.js';
@@ -113,7 +113,7 @@ export function renderWorld(cw, ch, glOn = false) {
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
   for (const w of G.wild || []) push(w.y, { k: 'w', w, s: w.y }); if (G.petE && G.petOn) push(G.petE.y, { k: 'w', w: G.petE, pk: G.petOn, s: G.petE.y });
-  for (const k of BKEYS) if (!G.bossDead[k]) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
+  for (const k of BKEYS) if (!G.bossDead[k] && !bossAway(k)) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
   for (const d of G.drops) push(d.y, { k: 'd', d, s: d.y });
   const L = LIFT;
   // v81: make the slanted-wall pictures first, then send the changed atlas pages once (render/icecave.js)
@@ -392,6 +392,7 @@ export function drawEntity(it, t) {
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
     else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
     if (def.alpha) ctx.globalAlpha = def.alpha * (e.fade > 0 ? Math.max(0, e.fade) : 1);
+    if (e.stone) ctx.globalAlpha = .55; // v131 돌이 된 파수 돌인형
     if (e.under) { ctx.fillStyle = def.mound || '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
     else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
     ctx.globalAlpha = 1;
@@ -413,13 +414,13 @@ export function drawEntity(it, t) {
     else if (b.k === 'queen') { if (b.ph === 'cast') { sx = 1.05 + Math.sin(t * 30) * .03; sy = .96; } else { const k = Math.sin((b.anim || 0) * 8) * .04; sx = 1 - k; sy = 1 + k; } }
     else { if (b.ph === 'aim') { sx = 1.07; sy = .93; } else if (b.ph === 'dash') { sx = 1.1; sy = .92; } else if (b.ph === 'stun') sx = 1 + Math.sin(t * 40) * .03; }
     if (b.st === 'fight' && b.k === 'queen' && b.ph === 'cast') { const pr = 1 - Math.max(0, b.t) / .75; ctx.strokeStyle = `rgba(213,155,255,${.35 + pr * .45})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.6 + pr * 1.4) * T, (.3 + pr * .7) * T, 0, 0, 6.283); ctx.stroke(); }
-    if (b.st === 'fight' && b.k === 'golem' && b.ph === 'aim') { ctx.strokeStyle = 'rgba(255,110,130,0.7)'; ctx.lineWidth = 1.5 * Z; ctx.setLineDash([3 * Z, 2 * Z]); ctx.beginPath(); ctx.moveTo(b.x * T - camX, b.y * T - camY); ctx.lineTo((b.x + b.dx * 7) * T - camX, (b.y + b.dy * 7) * T - camY); ctx.stroke(); ctx.setLineDash([]); }
+    if (b.st === 'fight' && (b.k === 'golem' || b.k === 'bookGolem' || b.k === 'mirrorSage') && b.ph === 'aim') /* v131 책더미 골렘·거울 사서도 조준선 */ { ctx.strokeStyle = 'rgba(255,110,130,0.7)'; ctx.lineWidth = 1.5 * Z; ctx.setLineDash([3 * Z, 2 * Z]); ctx.beginPath(); ctx.moveTo(b.x * T - camX, b.y * T - camY); ctx.lineTo((b.x + b.dx * 7) * T - camX, (b.y + b.dy * 7) * T - camY); ctx.stroke(); ctx.setLineDash([]); }
     if (b.k === 'turtle' && b.ph === 'open') { const pr = .5 + Math.sin(t * 8) * .3; ctx.strokeStyle = `rgba(255,210,92,${pr})`; ctx.lineWidth = 1.5 * Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .25) * T - camY, 1.4 * T, .6 * T, 0, 0, 6.283); ctx.stroke(); }
     const sk = b.k === 'turtle' ? (b.ph === 'shell' ? 'turtleS' : 'turtle') + ((b.stage || 1) >= 2 ? 'C' : '') : def.spr, bz = b.k === 'spirit' ? .45 + Math.sin(t * 2) * .12 : (b.z || 0), ba = b.k === 'spirit' && b.ph === 'fade' ? Math.max(.1, b.t / .6) : null;
     if (b.k === 'spirit' && b.st === 'fight' && b.ph === 'ring') { const pr = 1 - Math.max(0, b.t) / .7; ctx.strokeStyle = `rgba(191,230,255,${.3 + pr * .5})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.5 + pr * 1.5) * T, (.3 + pr * .8) * T, 0, 0, 6.283); ctx.stroke(); }
     drawImg(b.hurt > 0 ? SPR[sk + 'W'] : SPR[sk], b.x, b.y + .3, { sx: sx * def.scale, sy: sy * def.scale, z: bz, alpha: ba }); ctx.globalAlpha = 1;
     if (b.st === 'sleep') { ctx.font = pxFont(7); ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
-    if (b.k === 'golem' && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
+    if ((b.k === 'golem' || b.k === 'bookGolem') && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
     return;
   }
   if (it.k === 'd') { const d = it.d; shadow(d.x, d.y + .05, .16, .3); const bob = d.z === 0 ? Math.sin(t * 4 + d.x * 3) * 0.05 + 0.05 : 0; drawImg(iconCanvas(d.id), d.x, d.y + .05, { sx: .6, sy: .6, z: d.z + bob }); }

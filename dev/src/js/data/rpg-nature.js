@@ -93,6 +93,8 @@ export const BOSSES = {
   spirit: { n: '서리 정령', hp: 2000, home: () => ({ x: SI.x + 4, y: SI.y + .5 }), wake: 8, hr: 1.0, col: '#9fd8f0', spr: 'spirit', scale: 1.15 },
 };
 export const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
+// v131: 지금 없는 보스(기록관 마지막 방이 없거나 아직 봉인) — 그리지도 움직이지도 않아요 (BOSSES[k].off, sim/archboss.js)
+export const bossAway = k => !!(BOSSES[k] && BOSSES[k].off && BOSSES[k].off());
 // ---- calling a beaten boss back for another fight ----
 export const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
 

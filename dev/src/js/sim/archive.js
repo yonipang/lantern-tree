@@ -16,6 +16,8 @@ import { roomInRect, roomNear, walkable } from './warp.js';
 import { BX, BY, CX, CY, H, idx, inB, LAVA, PIT, SA, SB, SI, SL, W } from '../world/map.js';
 import { isSolid, noDigZone } from '../world/tiles.js';
 import { ARCHIVES } from '../data/story.js';
+import { WORM_HP, WORM_N } from '../data/archboss.js';
+import { abOpen } from './archboss.js';
 OBJ.diary = { n: '등불지기의 일기', solid: 1, diary: 1, light: [2.5, '#ffe9a8'] };
 OBJ.sleeper = { n: '얼음 속 등불지기', solid: 1, sleeper: 1, light: [1.5, '#bfe6ff'] }; // v107 얼음 기록관
 USE.diary = 'read2'; USE_LBL.read2 = '일기 읽기';
@@ -80,12 +82,15 @@ function carveArch(A, x0, y0) { const wires = [], sleepers = [], PLAN = planOf(A
 onFrame('archives', dt => { for (const a of archList()) { if (a.done) continue; const pl = playerList().find(q => archAt(Math.floor(q.p.x), Math.floor(q.p.y)) === a); if (!pl) continue;
   if (G.time - a.gT < 45) continue; const inside = G.enemies.filter(e => e.k === 'shadowBit' && archAt(Math.floor(e.x), Math.floor(e.y)) === a).length; if (inside >= 2) continue; a.gT = G.time;
   for (let k = inside; k < 4; k++) for (let tr = 0; tr < 12; tr++) { const x = a.x + 1 + Math.floor(rand() * (ARCH_W - 2)), y = a.y + 1 + Math.floor(rand() * (ARCH_H - 2)); const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || Math.hypot(x + .5 - pl.p.x, y + .5 - pl.p.y) < 3) continue;
-    const e = regionEnemy(mkEnemy('shadowBit', x + .5, y + .6), a.b); e.home = { x: a.x + ARCH_W / 2, y: a.y + ARCH_H / 2, r: ARCH_W }; G.enemies.push(e); break; } } });
+    const e = regionEnemy(mkEnemy('shadowBit', x + .5, y + .6), a.b); e.home = { x: a.x + ARCH_W / 2, y: a.y + ARCH_H / 2, r: ARCH_W }; G.enemies.push(e); break; }
+  // v131 책벌레: 작은 떼가 같이 나와요 (지역마다 체력 배율)
+  for (let k = 0; k < WORM_N; k++) for (let tr = 0; tr < 12; tr++) { const x = a.x + 1 + Math.floor(rand() * (ARCH_W - 2)), y = a.y + 1 + Math.floor(rand() * (ARCH_H - 2)); const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || Math.hypot(x + .5 - pl.p.x, y + .5 - pl.p.y) < 3) continue;
+    const e = mkEnemy('bookworm', x + .5, y + .6); e.hp = e.mh = Math.round(e.hp * (WORM_HP[a.b] || 1)); G.enemies.push(e); break; } } });
 // 일기 읽기 → 기록관을 깼어요: 지도가 모두 보이고, 지역 레시피를 배우고, 기록
 export function readDiary(o) { const a = archList().find(q => q.id === o.a); if (!a) return; const A = ARCHIVES.find(q => q.id === a.id);
   if (!a.done) { a.done = 1; for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) G.explored[idx(a.x + c, a.y + r)] = 1; emit('remap'); G.stats.archDone = (G.stats.archDone || 0) + 1;
     if (A && A.recipe && learnRecipe(A.recipe)) emit('toast', `기록관을 깼어요! 지도에 기록관이 보이고, 등불지기의 레시피 「${(ITEMS['rn_' + A.recipe] || {}).n ? ITEMS['rn_' + A.recipe].n.replace('레시피 쪽지 · ', '') : A.recipe}」를 배웠어요`, 'good', 'arch');
-    else emit('toast', '기록관을 깼어요! 지도에 기록관이 보여요', 'good', 'arch'); emit('sfx', 'win'); emit('puff', o.x, o.y, '#ffe9a8', 24, 3.5, .8); }
+    else emit('toast', '기록관을 깼어요! 지도에 기록관이 보여요', 'good', 'arch'); emit('sfx', 'win'); emit('puff', o.x, o.y, '#ffe9a8', 24, 3.5, .8); abOpen(a); /* v131 마지막 방 봉인이 풀려요 */ }
   emit('diary', a.id); }
 export const archDiaryIds = () => archList().filter(a => a.done).map(a => a.id);
 // 도전 퀘스트: 이끼 굴 기록관 깨기

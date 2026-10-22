@@ -41,7 +41,7 @@ export const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) 
 // v125 장(dev/design/퀘스트설계.md 3-7): 관문 이야기 퀘스트(Q_CH_GATE)를 끝낼 때마다 다음 장 — 도전은 그 장이 되어야 열려요
 // (나루의 부탁은 나루가 방울로 줄 때 열려서 그대로, 이미 받은 도전은 늘 보여요)
 export const questChapter = () => { let c = 1; for (const id of Q_CH_GATE) { const k = GUIDE.findIndex(q => q.id === id); if (k >= 0 && k < G.guide) c++; } return c; };
-export const sideOpen = q => !Q_CH[q.id] || isAsk(q) || !!(G.qclaim || {})[q.id] || questChapter() >= Q_CH[q.id];
+export const sideOpen = q => (!q.gone || !q.gone() || !!(G.qclaim || {})[q.id]) /* v131 마지막 방이 없는 세계 */ && (!Q_CH[q.id] || isAsk(q) || !!(G.qclaim || {})[q.id] || questChapter() >= Q_CH[q.id]);
 export function questState(q, k) { const side = k == null; const done = side ? sideOpen(q) && q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = naruHolds(q); /* v118: 나루의 부탁도 */ return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
 export const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has && !st.nh; });
 export function claimQuest(id) {

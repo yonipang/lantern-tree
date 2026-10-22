@@ -98,5 +98,6 @@ export function onEnemyDie(e) { const def = ENEMY[e.k]; if (def && def.ai === 's
 // 맞을 때 피해 바꾸기 (sim/combat.js hitEnemy): 땅속 두더지는 안 맞고, 버섯 거북은 앞에서 맞으면 30%
 export function monDmg(e, dmg) { const def = ENEMY[e.k]; if (!def || !def.ai) return dmg;
   if (e.under) return 0;
+  if (def.ai === 'patrol') return 0; // v131 파수 돌인형은 때려도 안 다쳐요
   if ((def.ai === 'shell' || def.ai === 'knight') && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * (def.front || .3))); } // v129 잊힌 기사는 20%
   return dmg; }
