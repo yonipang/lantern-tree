@@ -2907,6 +2907,13 @@
 "blv": 5,
 "d": "5단계 작업대. 작업대·구리 작업대·철 작업대·석영 작업대·금 작업대에서 만드는 것도 모두 만들어요."
 },
+"benchSh": {
+"n": "그림자 작업대",
+"kind": "place",
+"obj": "bench",
+"blv": 6,
+"d": "6단계 작업대. 작업대·구리 작업대·철 작업대·석영 작업대·금 작업대·서리 작업대에서 만드는 것도 모두 만들어요."
+},
 "smelterCu": {
 "n": "구리 장비제작대",
 "kind": "place",
@@ -2941,6 +2948,13 @@
 "obj": "smelter",
 "blv": 5,
 "d": "5단계 장비제작대. 장비제작대·구리 장비제작대·철 장비제작대·석영 장비제작대·금 장비제작대에서 만드는 장비도 모두 만들어요."
+},
+"smelterSh": {
+"n": "그림자 장비제작대",
+"kind": "place",
+"obj": "smelter",
+"blv": 6,
+"d": "6단계 장비제작대. 장비제작대·구리 장비제작대·철 장비제작대·석영 장비제작대·금 장비제작대·서리 장비제작대에서 만드는 장비도 모두 만들어요."
 },
 "bucket": {
 "n": "빈 양동이",
@@ -4244,6 +4258,280 @@
 "wall": 16,
 "mat": 1,
 "d": "그림자 지대의 바위를 캐면 나와요. 들고 있으면 그림자 바위 벽을 쌓을 수 있어요."
+},
+"swordShadow": {
+"n": "그림자 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"d": "그림자 결정으로 벼린 검. 깊은 곳의 어둠을 베어요.",
+"orb": null,
+"dmg": 64,
+"rlv": 50,
+"wtier": 6
+},
+"daggerShadow": {
+"n": "그림자 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"d": "어둠처럼 소리 없이 찌르는 단검.",
+"orb": null,
+"dmg": 42,
+"rlv": 50,
+"wtier": 6
+},
+"spearShadow": {
+"n": "그림자 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"d": "끝이 그림자 결정으로 된 긴 창.",
+"orb": null,
+"dmg": 67,
+"rlv": 50,
+"wtier": 6
+},
+"hammerShadow": {
+"n": "그림자 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"d": "그림자 바위를 통째로 단 망치. 쿵! 하고 땅이 울려요.",
+"orb": null,
+"dmg": 96,
+"rlv": 50,
+"wtier": 6
+},
+"bowShadow": {
+"n": "그림자 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"d": "그림자 결정으로 깎은 활. 화살이 어둠을 가르며 날아가요.",
+"orb": null,
+"dmg": 54,
+"rlv": 50,
+"wtier": 6
+},
+"staffShadow": {
+"n": "그림자 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"d": "보랏빛 결정 끝에서 그림자 구슬이 날아가요.",
+"orb": "#c9a8ff",
+"dmg": 51,
+"rlv": 50,
+"wtier": 6
+},
+"swordDawnstone": {
+"n": "새벽돌 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"d": "새벽돌로 벼린 검. 따뜻한 빛이 날을 따라 흘러요.",
+"orb": null,
+"dmg": 84,
+"rlv": 60,
+"wtier": 7
+},
+"daggerDawnstone": {
+"n": "새벽돌 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"d": "새벽빛처럼 날카로운 단검.",
+"orb": null,
+"dmg": 55,
+"rlv": 60,
+"wtier": 7
+},
+"spearDawnstone": {
+"n": "새벽돌 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"d": "끝에서 새벽빛이 번지는 긴 창.",
+"orb": null,
+"dmg": 88,
+"rlv": 60,
+"wtier": 7
+},
+"hammerDawnstone": {
+"n": "새벽돌 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"d": "새벽돌을 박은 망치. 내려치면 빛이 터져요.",
+"orb": null,
+"dmg": 126,
+"rlv": 60,
+"wtier": 7
+},
+"bowDawnstone": {
+"n": "새벽돌 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"d": "새벽돌로 보강한 활. 빛나는 화살이 멀리 날아가요.",
+"orb": null,
+"dmg": 71,
+"rlv": 60,
+"wtier": 7
+},
+"staffDawnstone": {
+"n": "새벽돌 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"d": "새벽돌 끝에서 아침 햇살 같은 구슬이 날아가요.",
+"orb": "#ffe9a8",
+"dmg": 67,
+"rlv": 60,
+"wtier": 7
+},
+"helmShadow": {
+"n": "그림자 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 18,
+"rlv": 50,
+"wtier": 6,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorShadow": {
+"n": "그림자 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 29,
+"rlv": 50,
+"wtier": 6,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsShadow": {
+"n": "그림자 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 18,
+"rlv": 50,
+"wtier": 6,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"helmDawnstone": {
+"n": "새벽돌 투구",
+"kind": "wear",
+"slot": "head",
+"stack": 1,
+"def": 24,
+"rlv": 60,
+"wtier": 7,
+"d": "머리에 써요. 받는 피해를 줄여 줘요."
+},
+"armorDawnstone": {
+"n": "새벽돌 갑옷",
+"kind": "wear",
+"slot": "body",
+"stack": 1,
+"def": 37,
+"rlv": 60,
+"wtier": 7,
+"d": "몸에 입어요. 받는 피해를 줄여 줘요."
+},
+"legsDawnstone": {
+"n": "새벽돌 각반",
+"kind": "wear",
+"slot": "legs",
+"stack": 1,
+"def": 24,
+"rlv": 60,
+"wtier": 7,
+"d": "다리에 입어요. 받는 피해를 줄여 줘요."
+},
+"dawnstone": {
+"n": "새벽돌",
+"d": "큰 어둠을 물리치면 나오는, 새벽처럼 따뜻하게 빛나는 돌. 8단계 장비의 재료예요."
+},
+"swordDark": {
+"n": "큰 어둠의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "chain",
+"d": "큰 어둠이 남긴 검. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.",
+"orb": null,
+"dmg": 80,
+"rlv": 50,
+"wtier": 6
+},
+"daggerDark": {
+"n": "큰 어둠의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "chain",
+"d": "큰 어둠이 남긴 단검. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.",
+"orb": null,
+"dmg": 53,
+"rlv": 50,
+"wtier": 6
+},
+"spearDark": {
+"n": "큰 어둠의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "chain",
+"d": "큰 어둠이 남긴 창. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.",
+"orb": null,
+"dmg": 84,
+"rlv": 50,
+"wtier": 6
+},
+"hammerDark": {
+"n": "큰 어둠의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "chain",
+"d": "큰 어둠이 남긴 망치. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.",
+"orb": null,
+"dmg": 120,
+"rlv": 50,
+"wtier": 6
+},
+"bowDark": {
+"n": "큰 어둠의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "chain",
+"d": "큰 어둠이 남긴 활. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.",
+"orb": null,
+"dmg": 68,
+"rlv": 50,
+"wtier": 6
+},
+"staffDark": {
+"n": "큰 어둠의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "chain",
+"d": "큰 어둠이 남긴 지팡이. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.",
+"orb": "#c9a8ff",
+"dmg": 64,
+"rlv": 50,
+"wtier": 6
+},
+"darkIdol": {
+"n": "어둠의 심장 조각상",
+"kind": "summon",
+"boss": "dark",
+"d": "큰 어둠을 물리친 뒤 가장 깊은 곳 보스방에서 쓰면 큰 어둠이 다시 나타나요. 다시 잡으면 새벽돌과 함께 가끔 큰 어둠의 무기가 떨어져요."
 },
 "brazier": {
 "n": "횃대",
@@ -14246,6 +14534,369 @@
 "at": "bench",
 "cat": "nature",
 "tier": 0
+},
+{
+"out": "swordShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+8
+],
+[
+"shadowRock",
+6
+],
+[
+"frostShard",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "daggerShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+5
+],
+[
+"shadowRock",
+3
+],
+[
+"frostShard",
+1
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "spearShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+7
+],
+[
+"shadowRock",
+4
+],
+[
+"wood",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "hammerShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+10
+],
+[
+"shadowRock",
+8
+],
+[
+"goldBar",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "bowShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+6
+],
+[
+"shadowRock",
+2
+],
+[
+"rope",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "staffShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+6
+],
+[
+"glowcap",
+4
+],
+[
+"goldBar",
+2
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "swordDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+4
+],
+[
+"shadowCry",
+6
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "daggerDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+3
+],
+[
+"shadowCry",
+4
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "spearDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+4
+],
+[
+"shadowCry",
+5
+],
+[
+"wood",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "hammerDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+5
+],
+[
+"shadowCry",
+8
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "bowDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+3
+],
+[
+"shadowCry",
+5
+],
+[
+"rope",
+3
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "staffDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+3
+],
+[
+"shadowCry",
+5
+],
+[
+"glowcap",
+4
+]
+],
+"at": "smelter",
+"cat": "weapon",
+"tier": 6
+},
+{
+"out": "helmShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+4
+],
+[
+"goldBar",
+1
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 6
+},
+{
+"out": "armorShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+7
+],
+[
+"shadowRock",
+4
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 6
+},
+{
+"out": "legsShadow",
+"n": 1,
+"req": [
+[
+"shadowCry",
+5
+],
+[
+"shadowRock",
+3
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 6
+},
+{
+"out": "helmDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+2
+],
+[
+"shadowCry",
+3
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 6
+},
+{
+"out": "armorDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+4
+],
+[
+"shadowCry",
+5
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 6
+},
+{
+"out": "legsDawnstone",
+"n": 1,
+"req": [
+[
+"dawnstone",
+3
+],
+[
+"shadowCry",
+4
+]
+],
+"at": "smelter",
+"cat": "armor",
+"tier": 6
+},
+{
+"out": "darkIdol",
+"n": 1,
+"req": [
+[
+"shadowCry",
+10
+],
+[
+"shadowRock",
+10
+],
+[
+"goldBar",
+4
+]
+],
+"at": "bench",
+"cat": "tool",
+"tier": 6
 }
 ],
 "ENEMY": {
@@ -17282,7 +17933,31 @@
 "legsGold": 3,
 "helmFrost": 3,
 "armorFrost": 3,
-"legsFrost": 3
+"legsFrost": 3,
+"swordShadow": 3,
+"daggerShadow": 3,
+"spearShadow": 3,
+"hammerShadow": 3,
+"bowShadow": 3,
+"staffShadow": 3,
+"swordDawnstone": 4,
+"daggerDawnstone": 4,
+"spearDawnstone": 4,
+"hammerDawnstone": 4,
+"bowDawnstone": 4,
+"staffDawnstone": 4,
+"helmShadow": 3,
+"armorShadow": 3,
+"legsShadow": 3,
+"helmDawnstone": 4,
+"armorDawnstone": 4,
+"legsDawnstone": 4,
+"swordDark": 3,
+"daggerDark": 3,
+"spearDark": 3,
+"hammerDark": 3,
+"bowDark": 3,
+"staffDark": 3
 },
 "TIERNAME": [
 "나무 곡괭이",
@@ -17297,7 +17972,8 @@
 "철 작업대",
 "석영 작업대",
 "금 작업대",
-"서리 작업대"
+"서리 작업대",
+"그림자 작업대"
 ],
 "GEAR_N": [
 "장비제작대",
@@ -17305,7 +17981,8 @@
 "철 장비제작대",
 "석영 장비제작대",
 "금 장비제작대",
-"서리 장비제작대"
+"서리 장비제작대",
+"그림자 장비제작대"
 ],
 "DISH": {
 "skewer": {
@@ -20404,6 +21081,168 @@
 3
 ]
 ]
+],
+"swordShadow": [
+1600,
+[
+[
+"shadowCry",
+2
+]
+]
+],
+"daggerShadow": [
+1600,
+[
+[
+"shadowCry",
+2
+]
+]
+],
+"spearShadow": [
+1600,
+[
+[
+"shadowCry",
+2
+]
+]
+],
+"hammerShadow": [
+1600,
+[
+[
+"shadowCry",
+2
+]
+]
+],
+"bowShadow": [
+1600,
+[
+[
+"shadowCry",
+2
+]
+]
+],
+"staffShadow": [
+1600,
+[
+[
+"shadowCry",
+2
+]
+]
+],
+"swordDawnstone": [
+2000,
+[
+[
+"dawnstone",
+1
+]
+]
+],
+"daggerDawnstone": [
+2000,
+[
+[
+"dawnstone",
+1
+]
+]
+],
+"spearDawnstone": [
+2000,
+[
+[
+"dawnstone",
+1
+]
+]
+],
+"hammerDawnstone": [
+2000,
+[
+[
+"dawnstone",
+1
+]
+]
+],
+"bowDawnstone": [
+2000,
+[
+[
+"dawnstone",
+1
+]
+]
+],
+"staffDawnstone": [
+2000,
+[
+[
+"dawnstone",
+1
+]
+]
+],
+"swordDark": [
+1600,
+[
+[
+"shadowCry",
+3
+]
+]
+],
+"daggerDark": [
+1600,
+[
+[
+"shadowCry",
+3
+]
+]
+],
+"spearDark": [
+1600,
+[
+[
+"shadowCry",
+3
+]
+]
+],
+"hammerDark": [
+1600,
+[
+[
+"shadowCry",
+3
+]
+]
+],
+"bowDark": [
+1600,
+[
+[
+"shadowCry",
+3
+]
+]
+],
+"staffDark": [
+1600,
+[
+[
+"shadowCry",
+3
+]
+]
 ]
 },
 "DECOR": {
@@ -20915,6 +21754,16 @@ null,
 "iceBlock",
 20
 ]
+],
+[
+[
+"shadowCry",
+10
+],
+[
+"shadowRock",
+20
+]
 ]
 ],
 "BENCH_IT": [
@@ -20923,7 +21772,8 @@ null,
 "benchFe",
 "benchQ",
 "benchAu",
-"benchFr"
+"benchFr",
+"benchSh"
 ],
 "GEAR_IT": [
 "smelter",
@@ -20931,9 +21781,18 @@ null,
 "smelterFe",
 "smelterQ",
 "smelterAu",
-"smelterFr"
+"smelterFr",
+"smelterSh"
 ],
 "TIER_MAT": [
+[
+6,
+[
+"shadowCry",
+"shadowRock",
+"dawnstone"
+]
+],
 [
 5,
 [
@@ -23151,6 +24010,25 @@ null,
 "spearSpirit": "[그림 16x16 96edf0aa]",
 "hammerSpirit": "[그림 16x16 89115f9c]",
 "staffSpirit": "[그림 16x16 75f17704]",
+"swordShadow": "[그림 16x16 7cc934af]",
+"daggerShadow": "[그림 16x16 7b717770]",
+"spearShadow": "[그림 16x16 fa8b1d8]",
+"hammerShadow": "[그림 16x16 50c2aed9]",
+"bowShadow": "[그림 16x16 b1eb3610]",
+"staffShadow": "[그림 16x16 17f72dc3]",
+"swordDawnstone": "[그림 16x16 5a0713fa]",
+"daggerDawnstone": "[그림 16x16 18ae0ae2]",
+"spearDawnstone": "[그림 16x16 7cdabf51]",
+"hammerDawnstone": "[그림 16x16 21242353]",
+"bowDawnstone": "[그림 16x16 25e916b]",
+"staffDawnstone": "[그림 16x16 2aa2921d]",
+"swordDark": "[그림 16x16 7d5b307a]",
+"daggerDark": "[그림 16x16 6d69d9f1]",
+"spearDark": "[그림 16x16 9a1658e1]",
+"hammerDark": "[그림 16x16 76ddc28e]",
+"bowDark": "[그림 16x16 23028570]",
+"staffDark": "[그림 16x16 5d83ec8a]",
+"dawnstone": "[그림 16x16 c56fa163]",
 "helmMoss": "[그림 16x16 ea21da72]",
 "armorMoss": "[그림 16x16 23600e45]",
 "legsMoss": "[그림 16x16 1433056f]",
@@ -23169,6 +24047,12 @@ null,
 "helmFrost": "[그림 16x16 a739053c]",
 "armorFrost": "[그림 16x16 7497c75e]",
 "legsFrost": "[그림 16x16 45cc62e9]",
+"helmShadow": "[그림 16x16 15b46f4d]",
+"armorShadow": "[그림 16x16 b237d524]",
+"legsShadow": "[그림 16x16 7560f377]",
+"helmDawnstone": "[그림 16x16 357b8e0c]",
+"armorDawnstone": "[그림 16x16 40394c3d]",
+"legsDawnstone": "[그림 16x16 12337adb]",
 "arrowStone": "[그림 16x16 ab61a433]",
 "arrowCopper": "[그림 16x16 3051e2a1]",
 "arrowIron": "[그림 16x16 a3ec5cc2]",
@@ -23179,6 +24063,7 @@ null,
 "golemIdol": "[그림 16x16 9f9ec626]",
 "turtleIdol": "[그림 16x16 8099fa17]",
 "spiritIdol": "[그림 16x16 f7a40c25]",
+"darkIdol": "[그림 16x16 e843040]",
 "sickle": "[그림 16x16 191af886]",
 "wcan": "[그림 16x16 9c291463]",
 "fert": "[그림 16x16 59bd3474]",
@@ -23367,11 +24252,13 @@ null,
 "benchQ": "[그림 32x32 f1071c66]",
 "benchAu": "[그림 32x32 afb2669c]",
 "benchFr": "[그림 32x32 8ad158c1]",
+"benchSh": "[그림 32x32 ee353984]",
 "smelterCu": "[그림 22x22 5ca2e3d0]",
 "smelterFe": "[그림 22x22 7f5bc2e5]",
 "smelterQ": "[그림 22x22 52cb2ffa]",
 "smelterAu": "[그림 22x22 7c11d58a]",
 "smelterFr": "[그림 22x22 5e5b1d6f]",
+"smelterSh": "[그림 22x22 663b428c]",
 "bucket": "[그림 16x16 7584a5ea]",
 "floorPlank": "[그림 16x16 a7b8efa1]",
 "floorBrickRed": "[그림 16x16 fafda27d]",
@@ -26011,11 +26898,13 @@ null
 "benchQ": "f1071c66",
 "benchAu": "afb2669c",
 "benchFr": "8ad158c1",
+"benchSh": "ee353984",
 "smelterCu": "5ca2e3d0",
 "smelterFe": "7f5bc2e5",
 "smelterQ": "52cb2ffa",
 "smelterAu": "7c11d58a",
 "smelterFr": "5e5b1d6f",
+"smelterSh": "663b428c",
 "bucket": "7584a5ea",
 "portal": "28c2dfc0",
 "hammerWood": "27711245",
@@ -26185,6 +27074,32 @@ null
 "palmTreeS": "d13dfbc9",
 "shadowCry": "46fb27f5",
 "shadowRock": "e5c60d09",
+"swordShadow": "7cc934af",
+"daggerShadow": "7b717770",
+"spearShadow": "fa8b1d8",
+"hammerShadow": "50c2aed9",
+"bowShadow": "b1eb3610",
+"staffShadow": "17f72dc3",
+"swordDawnstone": "5a0713fa",
+"daggerDawnstone": "18ae0ae2",
+"spearDawnstone": "7cdabf51",
+"hammerDawnstone": "21242353",
+"bowDawnstone": "25e916b",
+"staffDawnstone": "2aa2921d",
+"helmShadow": "15b46f4d",
+"armorShadow": "b237d524",
+"legsShadow": "7560f377",
+"helmDawnstone": "357b8e0c",
+"armorDawnstone": "40394c3d",
+"legsDawnstone": "12337adb",
+"dawnstone": "c56fa163",
+"swordDark": "7d5b307a",
+"daggerDark": "6d69d9f1",
+"spearDark": "9a1658e1",
+"hammerDark": "76ddc28e",
+"bowDark": "23028570",
+"staffDark": "5d83ec8a",
+"darkIdol": "e843040",
 "brazier": "7dc590a9"
 }
 }

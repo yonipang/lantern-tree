@@ -17,7 +17,7 @@ def test_workbench_tiers():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             await ev(pg,"()=>{"+SET+"}")
             r=await ev(pg,"()=>{const T=__T,t=id=>{const r=T.RECIPES.find(q=>q.out===id);return r?r.at+r.tier:'-'};return [T.BENCH_N.join(','),['chest','pot','pickCopper','pickIron','lampCrystal','swordCrystal','pickGold','swordDawn','forge'].map(t).join(','),T.RECIPES.some(r=>r.at==='forge')]}")
-            rec('단계','작업대 6단계, 레시피는 재료로 단계가 정해짐 (구리 작업대 레시피는 없어짐)', r==['작업대,구리 작업대,철 작업대,석영 작업대,금 작업대,서리 작업대','bench0,bench1,smelter1,smelter2,bench3,smelter3,smelter5,smelter5,-',False], str(r))
+            rec('단계','작업대 7단계(v130 그림자), 레시피는 재료로 단계가 정해짐 (구리 작업대 레시피는 없어짐)', r==['작업대,구리 작업대,철 작업대,석영 작업대,금 작업대,서리 작업대,그림자 작업대','bench0,bench1,smelter1,smelter2,bench3,smelter3,smelter5,smelter5,-',False], str(r))
             await ev(pg,"()=>{const T=__T,bi=__set();T.openPanel('craft',{st:'bench',i:bi})}"); await pg.wait_for_timeout(500)
             r=await ev(pg,"()=>{const t=document.querySelector('#sheet').innerText;const T=__T;return [document.querySelector('#sheet h2').innerText.trim(),!!document.querySelector('#sheet .benchup'),t.includes('구리 작업대로 올리기'),t.includes('구리괴 0/8'),t.includes('흙 0/20'),document.querySelector('#sheet [data-a=benchUp]').disabled,__rows().every(t=>t===0)]}")
             rec('창','작업대 창 맨 위에 「구리 작업대로 올리기」(구리괴 8·흙 20 — v88: 돌→흙), 재료 없으면 못 누름, 목록은 작업대 물건만', r==['작업대',True,True,True,True,True,True], str(r))
@@ -28,16 +28,16 @@ def test_workbench_tiers():
           return [o.lv,T.countItem('copperBar'),T.countItem('dirt'),T.countItem('stone'),G.stats.forge,document.querySelector('#sheet h2').innerText.trim(),document.querySelector('#sheet').innerText.includes('철 작업대로 올리기'),ts[0],ts.includes(0),ts.every((t,k)=>k===0||t<=ts[k-1]),!ts.includes(2)]}""")
             rec('올리기','올리면 「구리 작업대」: 구리괴 8·흙 20이 빠지고 돌은 그대로(v88), 구리 물건이 맨 위·작업대 물건도 아래에 나옴, 다음은 철 작업대', r==[1,0,5,7,1,'구리 작업대',True,1,True,True,True], str(r))
             await pg.screenshot(path=SP+'bench1.png')
-            r=await ev(pg,"()=>{const T=__T,G=T.G;const give=[['ironBar',8],['stone',30],['quartzR',6],['granite',20],['goldBar',6],['basalt',20],['frostShard',10],['iceBlock',20]];give.forEach(([id,c],k)=>G.inv[12+k]={id,c});T.renderPanel();return 1}")
-            for _ in range(4):
+            r=await ev(pg,"()=>{const T=__T,G=T.G;const give=[['ironBar',8],['stone',30],['quartzR',6],['granite',20],['goldBar',6],['basalt',20],['frostShard',10],['iceBlock',20],['shadowCry',10],['shadowRock',20]];give.forEach(([id,c],k)=>G.inv[12+k]={id,c});T.renderPanel();return 1}")
+            for _ in range(5):
                 await ev(pg,"()=>document.querySelector('#sheet [data-a=benchUp]').click()"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>{const T=__T,G=T.G,o=G.objs.get(T.panel.i);return [o.lv,G.stats.benchLv,document.querySelector('#sheet h2').innerText.trim(),!document.querySelector('#sheet [data-a=benchUp]'),document.querySelector('#sheet').innerText.includes('가장 높은 단계')]}")
-            rec('올리기','철 → 석영 → 금 → 서리 작업대까지 (서리가 끝)', r==[5,5,'서리 작업대',True,True], str(r))
+            rec('올리기','철 → 석영 → 금 → 서리 → 그림자 작업대까지 (v130 그림자가 끝)', r==[6,6,'그림자 작업대',True,True], str(r))
             await ev(pg,"()=>__T.closePanel()")
             # pick up and place again keeps the tier
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const bi=T.idx(T.CX+6,T.CY+5),o=G.objs.get(bi);o.lv=3;G.objs.delete(bi);G.objs.delete(bi+1);G.inv.fill(null);T.returnObj(o,G.p.x,G.p.y);const k=G.inv.findIndex(x=>x&&x.id==='benchQ');
           G.inv[0]=G.inv[k];if(k)G.inv[k]=null;G.sel=0;G.p.face={x:1,y:0};const a=T.decide();T.perform(a);const n=[...G.objs.values()].find(q=>q.t==='bench');return [k>=0,T.ITEMS.benchQ.n,a.k,n&&n.lv]}""")
-            rec('회수','올린 작업대를 회수하면 「석영 작업대」 아이템, 다시 놓으면 세계의 제작대 등급(여기선 서리 5단계)으로 놓임 (v128)', r==[True,'석영 작업대','place',5], str(r))
+            rec('회수','올린 작업대를 회수하면 「석영 작업대」 아이템, 다시 놓으면 세계의 제작대 등급(여기선 그림자 6단계 — v130)으로 놓임 (v128)', r==[True,'석영 작업대','place',6], str(r))
             # old saves: the copper workbench becomes a tier-1 workbench (2 tiles)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;__set();G.stats.benchLv=0;G.stats.gearLv=0;/* v128: 앞에서 올린 세계 등급을 비우고 옛 세이브만 봄 */const fi=T.idx(T.CX+9,T.CY+9);G.objs.set(fi,{t:'forge'});G.inv[12]={id:'forge',c:1};const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G,o=G2.objs.get(fi);
           return [o&&o.t,o&&o.lv,T.fpTiles(fi,o).length,G2.objs.get(fi+1)&&G2.objs.get(fi+1).t,G2.inv[12]&&G2.inv[12].id,T.ITEMS.forge.n,T.STN.forge]}""")
@@ -95,7 +95,7 @@ def test_bench_up_dirt():
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             r=await ev(pg,"()=>{const T=__T;return [JSON.stringify(T.BENCH_UP),T.ITEMS.dirt.n]}")
-            rec('올리기','1단계 재료 구리괴 8·흙 20, 2~5단계는 그대로', r[0]=='[null,[["copperBar",8],["dirt",20]],[["ironBar",8],["stone",30]],[["quartzR",6],["granite",20]],[["goldBar",6],["basalt",20]],[["frostShard",10],["iceBlock",20]]]' and r[1]=='흙', str(r))
+            rec('올리기','1단계 재료 구리괴 8·흙 20, 2~5단계는 그대로 (v130 6단계 그림자 결정 10·그림자 바위 20)', r[0]=='[null,[["copperBar",8],["dirt",20]],[["ironBar",8],["stone",30]],[["quartzR",6],["granite",20]],[["goldBar",6],["basalt",20]],[["frostShard",10],["iceBlock",20]],[["shadowCry",10],["shadowRock",20]]]' and r[1]=='흙', str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

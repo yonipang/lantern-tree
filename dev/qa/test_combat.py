@@ -508,9 +508,9 @@ def test_weapon_tiers_v99():
             r=await ev(pg,"""()=>{const T=__T,bad=[];T.WT_TABLE.forEach((row,t)=>row.forEach((id,k)=>{const it=T.ITEMS[id],wt=T.WT_ORDER[k];
               if(!it||it.wt!==wt||it.dmg!==Math.round(T.WT_SW[t]*T.WT_MUL[wt])||it.rlv!==T.WT_RLV[t]||!T.ICON[id])bad.push(id)}));
               return [T.WT_TABLE.flat().length,new Set(T.WT_TABLE.flat()).size,bad.join(','),T.ITEMS.hammerCopper.dmg,T.ITEMS.spearFrost.dmg]}""")
-            rec('무기','6종 × 6단계 36개, 공격력·착용 레벨이 표대로, 아이콘 있음 (구리 망치 17·서리 창 50)', r==[36,36,'',17,50], str(r))
-            r=await ev(pg,"""()=>{const T=__T,out=[];T.WT_TABLE.forEach((row,t)=>row.forEach(id=>{if(id==='swordWood')return;const rc=T.RECIPES.find(x=>x.out===id);if(!rc||rc.at!=='smelter'||rc.tier!==t)out.push(id+':'+(rc?rc.at+rc.tier:'없음'))}));return out.join(',')}""")
-            rec('무기','나무 검 말고 모두 장비제작대 그 단계에서 만듦 (황금 활은 금 단계로)', r=='', r)
+            rec('무기','6종 × 8단계 48개(v130 7·8단계), 공격력·착용 레벨이 표대로, 아이콘 있음 (구리 망치 17·서리 창 50)', r==[48,48,'',17,50], str(r))
+            r=await ev(pg,"""()=>{const T=__T,out=[];T.WT_TABLE.forEach((row,t)=>row.forEach(id=>{if(id==='swordWood')return;const rc=T.RECIPES.find(x=>x.out===id);if(!rc||rc.at!=='smelter'||rc.tier!==Math.min(t,6))out.push(id+':'+(rc?rc.at+rc.tier:'없음'))}));return out.join(',')}""")
+            rec('무기','나무 검 말고 모두 장비제작대 그 단계에서 만듦 (황금 활은 금 단계로, v130 7·8단계는 그림자 장비제작대 = 6)', r=='', r)
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.inv[0]={id:'swordIron',c:1};G.inv[1]={id:'swordCopper',c:1};G.sel=0;G.lastW=null;
               const a=[];for(const lv of [1,5,12]){G.rpg.lv=lv;a.push(T.curWeapon().id)}const h=T.slotHTML(G.inv[0],'inv',0);G.rpg.lv=1;const h1=T.slotHTML(G.inv[0],'inv',0);return [a.join(','),h.includes('rlvb'),h1.includes('rlvb')&&h1.includes('Lv.12')]}""")
             rec('착용 레벨','레벨이 모자란 무기는 못 들고 다른 무기로(Lv.1 주먹 · Lv.5 구리 검 · Lv.12 철 검), 칸에 빨간 Lv.12', r==['hand,swordCopper,swordIron',False,True], str(r))
@@ -533,9 +533,9 @@ def test_armor_v100():
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             r=await ev(pg,"""()=>{const T=__T,bad=[],sl=['head','body','legs'];T.AR_TABLE.forEach((row,t)=>row.forEach(([id],k)=>{const it=T.ITEMS[id],rc=T.RECIPES.find(x=>x.out===id);
-              if(!it||it.slot!==sl[k]||it.def!==T.AR_DEF[sl[k]][t]||it.rlv!==T.WT_RLV[t]||!rc||rc.at!=='smelter'||rc.tier!==t||!T.ICON[id])bad.push(id)}));
+              if(!it||it.slot!==sl[k]||it.def!==T.AR_DEF[sl[k]][t]||it.rlv!==T.WT_RLV[t]||!rc||rc.at!=='smelter'||rc.tier!==Math.min(t,6)||!T.ICON[id])bad.push(id)}));
               return [T.AR_TABLE.flat().length,bad.join(','),['obsCoat','frostRobe','woolHat','snowBrooch'].map(id=>T.ITEMS[id].def+'/'+(T.ITEMS[id].rlv||1)).join(',')]}""")
-            rec('방어구','머리·상의·하의 × 6단계 18개, 방어력·착용 레벨·장비제작대 단계·아이콘 / 특수 옷 방어력 70%·착용 레벨 없음', r==[18,'','11/1,15/1,1/1,9/1'], str(r))
+            rec('방어구','머리·상의·하의 × 8단계 24개(v130 7·8단계는 그림자 장비제작대), 방어력·착용 레벨·장비제작대 단계·아이콘 / 특수 옷 방어력 70%·착용 레벨 없음', r==[24,'','11/1,15/1,1/1,9/1'], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.inv.fill(null);G.equip={body:null,head:null,neck:null,ring:null,legs:null};G.rpg.lv=1;G.inv[0]={id:'armorIron',c:1};T.wearItem(0);const a=[G.equip.body,G.inv[0]&&G.inv[0].id];
               G.rpg.lv=12;T.wearItem(0);G.inv[1]={id:'helmIron',c:1};G.inv[2]={id:'legsIron',c:1};T.wearItem(1);T.wearItem(2);
               const d=T.armorDef();G.p.inv=0;G.p.dead=0;G.p.sleep=null;G.p.sit=null;G.p.hp=500;G.buffs=[];G.rpg.sk={};T.hurtPlayer(100,G.p.x+1,G.p.y);const lost=500-G.p.hp;
@@ -1219,6 +1219,53 @@ def test_shadow_zone_v129():
             await wait_game(pg,1.5)
             r=await ev(pg,"()=>{const T=__T;return [!!T.TR.ore[17]||!T.TR.ready,!!T.TR.wtop16[16]||!T.TR.ready]}")
             rec('그림','그림자 바위·결정 광맥 그림(현무암을 물들임)이 만들어지고, 지대 안에서 몬스터와 함께 그려도 오류 없음', r==[True,True] and not errs, str(r)+' '+str(errs[:3]))
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+def test_tier78_v130():
+    # v130 남은 성장 확장 ②: 그림자 작업대(6단계) · 7·8단계 무기·방어구 · 큰 어둠 특별 무기(어둠 번개) · 새벽돌 · 큰 어둠 다시 부르기 · 옛 세이브는 나루에게서
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,BENCH_UP,BENCH_N,GEAR_N,runCmd,ENEMY,mkEnemy,hitEnemy,hitBoss,summonBoss,summonDecide,markLight,XP_NEED,talkTo,naruAsk,ICON,DUR,RAR,BOSS_W,DEEP_W,DEEP_H}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,I=T.ITEMS;const ks=['sword','dagger','spear','hammer','bow','staff'];const w7=ks.map(k=>k+'Shadow'),w8=ks.map(k=>k+'Dawnstone'),wd=ks.map(k=>k+'Dark');
+              const ar=['helm','armor','legs'];const a7=ar.map(k=>k+'Shadow'),a8=ar.map(k=>k+'Dawnstone');const rc=id=>T.RECIPES.find(r=>r.out===id);
+              const all=[...w7,...w8,...a7,...a8];const ri=rc('darkIdol');
+              return [w7.map(id=>I[id].dmg).join(','),w8.map(id=>I[id].dmg).join(','),wd.map(id=>I[id].dmg).join(','),[...w7,...wd].every(id=>I[id].rlv===50),w8.every(id=>I[id].rlv===60),
+                a7.map(id=>I[id].def).join(','),a8.map(id=>I[id].def).join(','),all.every(id=>{const r=rc(id);return r&&r.at==='smelter'&&r.tier===6}),wd.every(id=>!rc(id)&&I[id].fx==='chain'&&T.DUR[id]),
+                ri&&ri.at==='bench'&&ri.tier===6,I.darkIdol.boss,T.BENCH_UP[6].map(q=>q.join(':')).join(','),T.BENCH_N[6],T.GEAR_N[6],[...all,...wd,'dawnstone','darkIdol'].every(id=>!!T.ICON[id]),w7.every(id=>T.RAR[id]===3)&&w8.every(id=>T.RAR[id]===4)]}""")
+            rec('데이터','7단계 검 64·8단계 84 × 종류 배율, 큰 어둠 무기 × 1.25, 착용 Lv.50·60, 방어력 18·29·18 / 24·37·24, 모두 그림자 장비제작대(6단계), 조각상은 그림자 작업대, 올리기 그림자 결정 10·바위 20, 아이콘 있음',
+                r==['64,42,67,96,54,51','84,55,88,126,71,67','80,53,84,120,68,64',True,True,'18,29,18','24,37,24',True,True,True,'dark','shadowCry:10,shadowRock:20','그림자 작업대','그림자 장비제작대',True,True], str(r))
+            await ev(pg,"""()=>{const T=__T,G=T.G;window.__L={};for(let y=T.CY+2;y<T.CY+14;y++)for(let x=T.CX+2;x<T.CX+14;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i)}
+              G.enemies.length=0;G.inv.fill(null);G.p.x=T.CX+5.5;G.p.y=T.CY+5.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;Object.assign(G.stats,{benchLv:5,gearLv:5,forge:1});
+              const bi=T.idx(T.CX+3,T.CY+3),si=T.idx(T.CX+3,T.CY+8);G.objs.set(bi,{t:'bench',lv:5});G.objs.set(bi+1,{t:'_part',a:bi});G.objs.set(si,{t:'smelter',lv:5});__L={bi,si};return 1}""")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,L=__L;G.inv[12]={id:'shadowCry',c:12};G.inv[13]={id:'shadowRock',c:20};T.runCmd({k:'benchUp',o:L.si});
+              return [G.objs.get(L.bi).lv,G.objs.get(L.si).lv,T.countItem('shadowCry'),T.countItem('shadowRock'),G.stats.benchLv,G.stats.gearLv]}""")
+            rec('그림자 작업대','서리 장비제작대를 올리면 작업대와 같이 6단계(그림자), 재료 그림자 결정 10·바위 20', r==[6,6,2,0,6,6], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const k=Object.keys(T.ENEMY).find(k=>{const E=T.ENEMY[k];return !E.ai&&!E.shadow&&!E.pack&&!E.calm&&!E.front&&!E.boss});
+              const mk=(dx,dy)=>{const e=T.mkEnemy(k,G.p.x+dx,G.p.y+dy);e.hp=9999;G.enemies.push(e);return e};const e1=mk(2,0),e2=mk(3.5,0),e3=mk(5,0),e4=mk(2,7),e5=mk(6.5,0),e6=mk(8,0);
+              T.hitEnemy(e1,100,false,0,'chain');const out=[e1,e2,e3,e4,e5,e6].map(e=>9999-e.hp);G.enemies.length=0;return [k,...out]}""")
+            rec('어둠 번개','큰 어둠의 무기로 맞힌 적에서 3칸 안의 적에게 차례로 3마리까지 피해 40% (멀리 있는 적·네 번째는 안 맞음)', r[1:]==[100,40,40,0,40,0], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const tot=()=>{let s=G.rpg.xp;for(let l=1;l<G.rpg.lv;l++)s+=T.XP_NEED(l);return s};G.rpg.lv=45;G.rpg.xp=0;const b=G.bosses.dark;b.st='fight';b.hp=1;
+              G.stats.deep.read=1;for(const [i,o] of G.objs)if(o.t==='brazier')o.off=0;T.markLight();T.computeLight();G.p.x=b.x;G.p.y=b.y+2;G.drops.length=0;const e0=G.stats.ending|0,x0=tot();T.hitBoss(b,5,false);
+              const dawn=G.drops.filter(q=>q.id==='dawnstone').reduce((a,q)=>a+q.c,0),wd=G.drops.filter(q=>T.BOSS_W.dark.ids.includes(q.id)).length;return [G.bossDead.dark,tot()-x0,dawn,wd,(G.stats.ending|0)-e0]}""")
+            rec('큰 어둠 첫 처치','새벽돌 6 + 큰 어둠의 무기 하나, 경험치 4,000, 엔딩', r==[True,4000,6,1,1], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const tot=()=>{let s=G.rpg.xp;for(let l=1;l<G.rpg.lv;l++)s+=T.XP_NEED(l);return s};const h=T.BOSSES.dark.home();G.p.x=h.x;G.p.y=h.y+3;
+              G.inv.fill(null);G.inv[0]={id:'darkIdol',c:1};G.sel=0;const dec=T.summonDecide(T.ITEMS.darkIdol,G.inv[0]).k;T.summonBoss('dark');const b=G.bosses.dark;const back=!G.bossDead.dark&&!!b;
+              b.st='fight';b.hp=1;for(const [i,o] of G.objs)if(o.t==='brazier')o.off=0;T.markLight();T.computeLight();G.p.x=b.x;G.p.y=b.y+2;G.drops.length=0;const e0=G.stats.ending|0,x0=tot();T.hitBoss(b,5,false);
+              const dawn=G.drops.filter(q=>q.id==='dawnstone').reduce((a,q)=>a+q.c,0);return [dec,back,T.countItem('darkIdol'),G.bossDead.dark,tot()-x0,dawn>=2&&dawn<=4,(G.stats.ending|0)-e0]}""")
+            rec('큰 어둠 다시','어둠의 심장 조각상을 보스방에서 쓰면 다시 나타나고, 다시 물리치면 새벽돌 2~4·경험치 1,000, 엔딩은 다시 안 나옴', r==['summon',True,0,True,1000,True,0], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.stats.beaten.dark=1;delete G.stats.uniq.dark;delete G.stats.dark130;delete G.stats.darkOwe;for(const id of T.BOSS_W.dark.ids)if(G.stats.spGot)delete G.stats.spGot[id];G.stats.naruMet=1;delete G.stats.introAt;G.stats.naruCall=null;
+              T.deserialize(JSON.parse(JSON.stringify(T.serialize())));const G2=T.G;const owe=G2.stats.darkOwe,ask=T.naruAsk();G2.inv.fill(null);for(let k=0;k<6&&G2.stats.darkOwe;k++){T.talkTo('guide');T.closePanel()}
+              const wd=T.BOSS_W.dark.ids.reduce((a,id)=>a+T.countItem(id),0),dn=T.countItem('dawnstone');T.deserialize(JSON.parse(JSON.stringify(T.serialize())));return [owe,ask,dn,wd,!!T.G.stats.darkOwe,!!T.G.stats.uniq.dark]}""")
+            rec('옛 세이브','이미 큰 어둠을 물리친 옛 세이브는 나루 머리 위 ? → 말 걸면 새벽돌 6 + 큰 어둠의 무기 하나, 다시 불러와도 또 주지 않음', r==[1,True,6,1,False,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T;T.deserialize(JSON.parse(JSON.stringify(T.serialize())));return 1}""")
+            await ev(pg,"()=>__T.closePanel()")
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main

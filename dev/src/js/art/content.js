@@ -237,11 +237,19 @@ export const W99_ICON = {
   swordSpirit: swordIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), daggerSpirit: daggerIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), spearSpirit: spearIcon('#5a9ac8', '#e8f8ff'), hammerSpirit: hammerIcon('#5a9ac8', '#e8f8ff', '#3a6a98'), staffSpirit: staffIcon('#d4f6ff', '#ffffff'),
 };
 for (const id in W99_ICON) ICON[id] = W99_ICON[id];
+// v130 7·8단계 무기 · 큰 어둠 특별 무기 아이콘 (Claude 임시 그림 — 지금 무기 모양에 색만. 손그림은 dev/art/icons/<id>.png)
+export const W130_ICON = {
+  swordShadow: swordIcon('#5a3a8a', '#c9a8ff', '#2e2244'), daggerShadow: daggerIcon('#5a3a8a', '#c9a8ff', '#2e2244'), spearShadow: spearIcon('#5a3a8a', '#c9a8ff'), hammerShadow: hammerIcon('#5a3a8a', '#c9a8ff', '#2e2244'), bowShadow: bowIcon('#2e2244', '#8a6ad0', '#c9a8ff'), staffShadow: staffIcon('#8a6ad0', '#e8dcff'),
+  swordDawnstone: swordIcon('#ffd98a', '#fff6d8', '#d89a3a'), daggerDawnstone: daggerIcon('#ffd98a', '#fff6d8', '#d89a3a'), spearDawnstone: spearIcon('#ffd98a', '#fff6d8'), hammerDawnstone: hammerIcon('#ffd98a', '#fff6d8', '#d89a3a'), bowDawnstone: bowIcon('#d89a3a', '#ffd98a', '#fff6d8'), staffDawnstone: staffIcon('#ffd98a', '#ffffff'),
+  swordDark: swordIcon('#2e2244', '#8a6ad0', '#c9a8ff'), daggerDark: daggerIcon('#2e2244', '#8a6ad0', '#c9a8ff'), spearDark: spearIcon('#2e2244', '#c9a8ff'), hammerDark: hammerIcon('#3a2a5a', '#c9a8ff', '#1e1630'), bowDark: bowIcon('#1e1630', '#3a2a5a', '#c9a8ff'), staffDark: staffIcon('#3a2a5a', '#c9a8ff'),
+  dawnstone: A => { A.e(8, 9.5, 6, 5, '#d89a3a'); A.e(8, 9, 5.5, 4.5, '#ffd98a'); A.e(7, 7.5, 3, 2.2, '#fff6d8'); A.p(6, 7, '#ffffff'); A.p(11, 11, '#d89a3a'); A.p(3, 4, '#ffe9a8'); A.p(13, 3, '#ffe9a8'); A.p(12, 5, '#fff6d8'); },
+};
+for (const id in W130_ICON) ICON[id] = W130_ICON[id];
 // v100 방어구 아이콘 (Claude 임시 그림: 머리 투구 · 상의 갑옷 · 하의 각반, 단계 재료 색 — 밝은색 c · 어두운색 d · 반짝 l)
 const helmIcon = (c, d, l) => A => { A.e(8, 8, 6, 5.5, d); A.e(8, 7.5, 5, 4.5, c); A.r(2, 9, 12, 3, d); A.r(3, 9, 10, 2, c); A.r(5, 5, 2, 1, l); A.p(4, 7, l); A.r(7, 1, 2, 2, d); };
 const armorIcon = (c, d, l) => A => { A.poly([[2, 4], [5, 2], [11, 2], [14, 4], [13, 8], [12, 7], [12, 14], [4, 14], [4, 7], [3, 8]], d); A.poly([[3, 4.5], [5.5, 3], [10.5, 3], [13, 4.5], [12.3, 6.5], [11, 6], [11, 13], [5, 13], [5, 6], [3.7, 6.5]], c); A.r(7, 3, 2, 10, d); A.p(6, 5, l); A.p(6, 8, l); A.r(5, 11, 6, 1, d); };
 const legsIcon = (c, d, l) => A => { A.r(3, 2, 10, 4, d); A.r(4, 3, 8, 2, c); A.r(3, 6, 4, 9, d); A.r(9, 6, 4, 9, d); A.r(4, 6, 2, 8, c); A.r(10, 6, 2, 8, c); A.p(5, 7, l); A.p(11, 7, l); A.r(3, 14, 4, 1, d); A.r(9, 14, 4, 1, d); };
-const AR_PAL = [['#7fb069', '#4f7a45', '#b8dca0'], [C.copper, C.copperD, C.copperL], [C.iron, C.ironD, C.ironL], [C.cry, C.cryD, C.cryL], ['#ffd25c', '#c9902a', '#fff1b0'], ['#9fd8f0', '#5a9ac8', '#e8f8ff']];
+const AR_PAL = [['#7fb069', '#4f7a45', '#b8dca0'], [C.copper, C.copperD, C.copperL], [C.iron, C.ironD, C.ironL], [C.cry, C.cryD, C.cryL], ['#ffd25c', '#c9902a', '#fff1b0'], ['#9fd8f0', '#5a9ac8', '#e8f8ff'], ['#5a3a8a', '#2e2244', '#c9a8ff'], ['#ffd98a', '#d89a3a', '#fff6d8']]; // v130 그림자 · 새벽돌 (Claude 임시)
 AR_TABLE.forEach((row, t) => { const [c, d, l] = AR_PAL[t]; ICON[row[0][0]] = helmIcon(c, d, l); ICON[row[1][0]] = t === 4 ? armorIcon('#4a3a5a', '#2a2238', '#ffd25c') : armorIcon(c, d, l); ICON[row[2][0]] = legsIcon(c, d, l); });
 export const arrowIcon = (h, hl) => A => { A.line(2, 14, 11, 5, '#8a6a52', 1); A.line(3, 14, 11, 6, '#b8946a', 1); A.poly([[9.5, 3.5], [14.5, 1.5], [12.5, 6.5]], h); A.p(12, 4, hl); A.r(1, 11, 2, 2, '#eef2f7'); A.r(3, 13, 2, 2, '#eef2f7'); A.p(2, 12, '#ff8fa3'); };
 for (const id in ARROWS) ICON[id] = arrowIcon(ARROWS[id][2], '#ffffff');
