@@ -7,7 +7,7 @@
 // 그래픽 칩을 못 쓰거나 메뉴에서 「예전 빛」을 고르면 예전 방식 그대로예요.
 import { G } from '../save/state.js';
 import { H, idx, W } from '../world/map.js';
-import { LIGHTS } from './light.js';
+import { ICE_LIGHT, iceView, LIGHTS } from './light.js';
 import { GLOW_RULE } from './terrain.js';
 import { wallOcc4 } from './icecave.js';
 
@@ -228,11 +228,11 @@ function gxbake(s, lx, ly) {
 const gxU0 = new Float32Array(gxMAXL * 4), gxU1 = new Float32Array(gxMAXL * 4), gxUV = new Float32Array(gxMAXL * 4), gxUG = new Float32Array(gxMAXL * 4);
 // 이번 장에 쓸 빛 고르기 (보이는 곳에 닿는 것, 플레이어 빛 먼저, 가까운 순)
 function gxpickLights(camX, camY, bw, bh) {
-  const p = G.p, out = [], cx = camX + bw / 2, cy = camY + bh / 2;
-  LIGHTS.forEach((L, i) => { const x = (i === 0 ? p.x : L.x) * 16, y = (i === 0 ? p.y - .3 : L.y) * 16, r = L.r * 16;
+  const p = G.p, out = [], cx = camX + bw / 2, cy = camY + bh / 2, ice = iceView(); // v132: 얼음 동굴에서는 내 빛이 차가운 흰빛·조금 넓게 (보이기만)
+  LIGHTS.forEach((L, i) => { const x = (i === 0 ? p.x : L.x) * 16, y = (i === 0 ? p.y - .3 : L.y) * 16, r = L.r * 16 * (i === 0 && ice ? ICE_LIGHT.pr : 1);
     if (x + r < camX || y + r < camY || x - r > camX + bw || y - r > camY + bh + 24) return;
     const z = i === 0 ? 22 : i === 1 ? 34 : L.col ? (L.tall ? 18 : 9) : L.c[1] < .6 && !L.col ? 5 : 16;
-    out.push({ key: i === 0 ? 'P' : i === 1 ? 'T' : (x | 0) + ',' + (y | 0), x, y, z, r, c: L.c, k: L.k, glow: !!L.col && i !== 0, tall: L.tall, d: i === 0 ? -1 : Math.hypot(x - cx, y - cy) }); });
+    out.push({ key: i === 0 ? 'P' : i === 1 ? 'T' : (x | 0) + ',' + (y | 0), x, y, z, r, c: i === 0 && ice ? ICE_LIGHT.player : L.c, k: L.k, glow: !!L.col && i !== 0, tall: L.tall, d: i === 0 ? -1 : Math.hypot(x - cx, y - cy) }); });
   out.sort((a, b) => a.d - b.d); if (out.length > gxMAXL) out.length = gxMAXL; return out;
 }
 // 세계를 다 그린 뒤: 빛을 입힌 그림(glCv, bw×bh)을 돌려줘요 — 화면에는 예전처럼 lowCv를 거쳐 그려요
@@ -256,7 +256,7 @@ export function shadeGL(albCv, bw, bh, camX, camY) {
   // 빛 계산
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbLit.f); gl.viewport(0, 0, bw, bh); gl.useProgram(PL.p); const u = PL.u;
   gl.uniform4fv(u.uL0, gxU0); gl.uniform4fv(u.uL1, gxU1); gl.uniform4fv(u.uVisR, gxUV); gl.uniform4fv(u.uGlow, gxUG); gl.uniform1i(u.uN, n);
-  const amb = (.075 + G.treeSeeds * .03) * .7; gl.uniform3f(u.uAmb, amb * .85, amb * .8, amb * 1.35);
+  const ice = iceView(), amb = (.075 + G.treeSeeds * .03 + (ice ? ICE_LIGHT.amb : 0)) * .7, am = ice ? ICE_LIGHT.ambMul : [.85, .8, 1.35]; gl.uniform3f(u.uAmb, amb * am[0], amb * am[1], amb * am[2]); // v132 얼음 동굴은 푸르게
   gl.uniform2f(u.uCam, camX, camY); gxbindT(0, texA, u.uAlb); gxbindT(1, texM, u.uMat); gxbindT(2, texE, u.uEm); gxbindT(4, visTex, u.uVis);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   // 번짐

@@ -1,6 +1,7 @@
 // ================= UI =================
 import { cineDefer } from './cutscene.js';
 import { DECO122 } from '../data/decor122.js';
+import { DECO132 } from '../data/winter132.js';
 import { GLST, lightPref } from '../render/glight.js';
 import { CHARS, cleanLook, curChar, EYEC, HAIRC, HAIRS, HATS, lookDef, OUTC, OUTFITS2 } from '../art/characters.js';
 import { TREE_BLESS, TREE_STAGE } from '../art/world.js';
@@ -72,6 +73,7 @@ export const BT2 = { stn: [['all', '전체'], ['make', '제작'], ['smelt', '제
 export const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair cryChair mossSofa stumpStool shroomStool', table: 'table longTable kitchenSet cryTable shroomTable', bed: 'bed bedDouble mossBed', store: 'chest shelf bookcase2 woodCrate strawBasket shroomWardrobe woodWardrobe', light: 'torch lampShroom lampCrystal copperLamp stoneLantern sproutLamp sporeLamp' };
 export const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
 for (const id in DECO122) if (DECO122[id][7]) FURN2_OF[id] = DECO122[id][7]; // v122 받은 그림 가구
+for (const id in DECO132) if (DECO132[id][5]) FURN2_OF[id] = DECO132[id][5]; // v132 눈사람·트리·토템
 export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
   if (o.station) t = ['stn', o.station === 'furnace' ? 'smelt' : o.station === 'pot' ? 'cook' : 'make'];
   else if (c === 'mat') t = ['mat'];

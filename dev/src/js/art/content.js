@@ -114,7 +114,7 @@ Object.assign(ICON, {
   capSapling: A => { A.r(4, 11, 8, 4, '#d9774a'); A.r(3, 10, 10, 2, '#e8915f'); A.r(7, 6, 2, 5, C.cream); A.e(8, 5.5, 4, 2.8, '#b673de'); A.p(6, 4, '#fbe7ff'); A.p(10, 5, '#fbe7ff'); },
   berryBush: A => { A.e(8, 10, 6.6, 4.8, C.leafD); A.e(6, 8.6, 3.6, 3, C.leaf); A.e(10.4, 8.2, 3.6, 3, C.leaf); A.e(5, 7.4, 1.4, 1, C.leafL); for (const [x, y] of [[4, 10], [8, 8], [11, 11], [7, 12], [12, 8]]) { A.e(x + .5, y + .5, 1.3, 1.3, C.berry); A.p(x, y, '#ffc2d4'); } },
 });
-Object.assign(FPAL, { 21: ['#6b4838', '#62ad62', '#5a3a2c'], 17: ['#e8501f', '#ff8a3d', '#9a2e14'], 18: ['#4a3f48', '#5a4f58', '#3a3038'], 19: ['#b8cde0', '#d8e8f5', '#9ab0c8'], 20: ['#9fd8f0', '#e8f8ff', '#7ab8d8'], 11: ['#5fa8d8', '#8fd0f0', '#3f7fb5'], 12: ['#3a6fa8', '#5b9bd0', '#2a5288'], 13: ['#4f93c8', '#7fbfe8', '#356fa0'], 14: ['#6a62b8', '#a99cf0', '#4a4290'], 15: ['#4f93c8', '#7fbfe8', '#356fa0'], 16: ['#4f8f57', '#f7b8cf', '#ffffff'] });
+Object.assign(FPAL, { 35: ['#c5dadd', '#d7ebed', '#acc2c8'], /* v132 눈 무더기 (그림은 dev/art/floor/35) */ 21: ['#6b4838', '#62ad62', '#5a3a2c'], 17: ['#e8501f', '#ff8a3d', '#9a2e14'], 18: ['#4a3f48', '#5a4f58', '#3a3038'], 19: ['#b8cde0', '#d8e8f5', '#9ab0c8'], 20: ['#9fd8f0', '#e8f8ff', '#7ab8d8'], 11: ['#5fa8d8', '#8fd0f0', '#3f7fb5'], 12: ['#3a6fa8', '#5b9bd0', '#2a5288'], 13: ['#4f93c8', '#7fbfe8', '#356fa0'], 14: ['#6a62b8', '#a99cf0', '#4a4290'], 15: ['#4f93c8', '#7fbfe8', '#356fa0'], 16: ['#4f8f57', '#f7b8cf', '#ffffff'] });
 export function regFloorTex(t, v) {
   const R = rng(t * 577 + v * 41 + 9), pal = FPAL[t];
   return mk(16, 16, A => { A.r(0, 0, 16, 16, pal[0]);

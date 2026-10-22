@@ -80,7 +80,7 @@ export function digGround(t) {
   if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
   if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
   else { const id = DIG_YIELD[f]; G.floor[i] = PIT; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 || f === 35 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
   flowNear(t.x, t.y); // 새 구덩이(또는 걷어서 드러난 구덩이) 옆에 물·용암이 있으면 흘러 들어와요
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }

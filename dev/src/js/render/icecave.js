@@ -8,6 +8,7 @@
 //     들어가는 건 칸 안쪽으로만 (부딪히는 판정은 칸 단위 그대로). 벽 칸 아래에도 얼음 바닥을 깔아 깎인 곳에 바닥이 보여요.
 //   바닥(얼음 동굴의 눈 바닥 19): 길쭉한 얼음 조각 면이 두 방향으로 엇갈림, 파랑 5단계(#1a49c4~#3f86f2), 꾸밈 X 서리 무늬·작은 연보라 점.
 //   벽과 바닥 사이: 바닥 쪽으로 청록빛이 덩어리지게 들쭉날쭉 번짐(벽에서 0~11px, #86f2d2 → #2a7ee6) — 새 빛에서는 스스로 빛나요.
+import { ARTC } from '../art/hand-art.js';
 import { hash2 } from '../engine/random.js';
 import { G } from '../save/state.js';
 import { idx, inB } from '../world/map.js';
@@ -18,12 +19,13 @@ export const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19, ICE_FROZEN = 20;
 export const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13, 16, 17]); // v129 그림자 바위·결정 광맥도 // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
 const ic_hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const ic_mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+// v132: 벽·물가·얼어붙은 물 색을 받은 얼음 타일맵(Ground_ice) 절벽 색에 푸른 기를 더한 색으로 (사용자 선택 2026-10-23). 바닥 무늬는 받은 얼음 타일(dev/art/tiles/iceFloor)
 const IC = {
-  top: ['#1d42ad', '#2350bd', '#295bc8', '#2f63d1', '#356bd9'].map(ic_hex), crack: ic_hex('#162f8c'), line: ic_hex('#5a8ce6'), spark: ic_hex('#ffffff'),
-  rim: ic_hex('#7fb8f8'), rimT: ic_hex('#7ff0d6'), fTop: ic_hex('#2552c2'), fBot: ic_hex('#122c82'), fHi: ic_hex('#5a8ce6'), fLow: ic_hex('#54d8c6'), fSide: ic_hex('#0e2266'),
+  top: ['#8fb8da', '#9cc4e2', '#abd0e8', '#bddcef', '#d2eaf7'].map(ic_hex), crack: ic_hex('#6f94b8'), line: ic_hex('#e3f3f8'), spark: ic_hex('#ffffff'),
+  rim: ic_hex('#edfeff'), rimT: ic_hex('#cff5fa'), fTop: ic_hex('#6f93b8'), fBot: ic_hex('#3f557a'), fHi: ic_hex('#9cbcd8'), fLow: ic_hex('#78d1ed'), fSide: ic_hex('#283a5a'),
   floor: ['#1a49c4', '#2357cf', '#2b66da', '#3576e6', '#3f86f2'].map(ic_hex), seam: ic_hex('#173fae'), frost: ic_hex('#a8e4ff'), dot: ic_hex('#c6b6ff'),
-  frz: ['#3577dc', '#3d80e1', '#4789e6'].map(ic_hex), frzLine: ic_hex('#cdeeff'), frzBub: ic_hex('#9fd0ff'), frzRim: ic_hex('#e2f6ff'),
-  glowA: ic_hex('#86f2d2'), glowB: ic_hex('#2a7ee6'), edge: ic_hex('#123590'), edgeS: ic_hex('#1b44b4'), cliffT: ic_hex('#2a5ccc'), cliffB: ic_hex('#15358f'), foam: ic_hex('#d6f4ff'),
+  frz: ['#68b9dc', '#78d1ed', '#80d6ee'].map(ic_hex), frzLine: ic_hex('#edfefe'), frzBub: ic_hex('#cff5fa'), frzRim: ic_hex('#edfefe'),
+  glowA: ic_hex('#cff5fa'), glowB: ic_hex('#68b9dc'), edge: ic_hex('#283a5a'), edgeS: ic_hex('#4f6a92'), cliffT: ic_hex('#5f82aa'), cliffB: ic_hex('#283a5a'), foam: ic_hex('#edfefe'),
 };
 const ICE = { ins: [1, 1, 2, 3, 5], round: 5, shadeRim: 4, shadeFade: 9, shadeBlack: .9, glowMax: 11, frontUp: 12 };
 const ROCK = { shadeRim: 2, shadeFade: 5, shadeBlack: .96, shadow: [.34, .2, .09] }; // 바위: 예전 벽 그늘 그대로, 벽 옆 바닥 그림자 3px
@@ -121,6 +123,8 @@ function ic_topPx(wx, wy) {
 // 얼음 조각 바닥 무늬는 256px마다 반복 — 처음 한 번 만들어 두고 베껴 써요 (v81: 픽셀마다 계산하던 것이 폰에서 느렸어요)
 const IC_P = 256; let ic_FT = null, ic_FC = null;
 function ic_floorTex() { if (ic_FT) return ic_FT; ic_FT = new Uint8ClampedArray(IC_P * IC_P * 4);
+  const art = ARTC['tiles/iceFloor']; // v132: 받은 얼음 타일 5장을 섞어 깐 256×256 무늬 (작은 눈 덩이 몇 개)
+  if (art && art.width === IC_P && art.height === IC_P) { ic_FC = ic_cnv(IC_P, IC_P); const g = ic_FC.getContext('2d'); g.drawImage(art, 0, 0); ic_FT.set(g.getImageData(0, 0, IC_P, IC_P).data); return ic_FT; }
   for (let y = 0; y < IC_P; y++) for (let x = 0; x < IC_P; x++) { const c = ic_floorCalc(x, y), k = (y * IC_P + x) * 4; ic_FT[k] = c[0]; ic_FT[k + 1] = c[1]; ic_FT[k + 2] = c[2]; ic_FT[k + 3] = 255; }
   ic_FC = ic_cnv(IC_P, IC_P); ic_FC.getContext('2d').putImageData(new ImageData(ic_FT, IC_P, IC_P), 0, 0); return ic_FT; }
 function ic_floorPx(wx, wy) { const t = ic_floorTex(), k = (((wy & 255) * IC_P) + (wx & 255)) * 4; return [t[k], t[k + 1], t[k + 2]]; }

@@ -897,3 +897,49 @@ def test_beaver_nest_v114():
             rec('기능','콘솔 오류 없음', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
+
+
+def test_ice_cave_v132():
+    # v132 얼음 동굴 새 단장: 눈 무더기(35) · 겨울 자연물·얼음 결정 A~C는 눈 무더기 위에만 · 옛 세계도 한 번 · 하루 하나도 눈 무더기에선 겨울 것만
+    # · 차가운 빛은 보이기만(몬스터가 생기는 밝기 lightAt은 그대로) · 꾸미기 전용(눈사람·트리)은 자연에 안 나옴
+    H2=HOOK.replace("computeLight}","computeLight,newGame,pickNat,SNOW_F,SNOW_GEN,SNOW_DAY,DIG_YIELD,SPR,RECIPES,iceView,cam,get SI(){return SI}}")
+    GEN="""()=>{const T=__T;T.newGame(777);T.newGame(777);const G=T.G,N=G.biome.length;let snow=0;const off=[];const snowIds=new Set(T.SNOW_GEN.map(a=>a[0]));
+      for(let i=0;i<N;i++){if(G.floor[i]===T.SNOW_F){snow++;if(G.biome[i]!==4)off.push('biome'+i)}}
+      const W=Math.round(Math.sqrt(N));let onSnow=0,deco=0;
+      for(const [i,o] of G.objs){if(!snowIds.has(o.t)){if(['snowman','xmasTree','snowArch','snowTotem'].includes(o.t))deco++;continue}const x=i%W,y=(i/W)|0;
+        if(o.t==='iceCluster'&&Math.hypot(x-T.SI.x,y-T.SI.y)<6)continue; if(G.floor[i]===T.SNOW_F)onSnow++;else off.push(o.t+'@'+x+','+y+' f'+G.floor[i])}
+      return {snow,onSnow,off:off.slice(0,5),nOff:off.length,deco}}"""
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,GEN)
+            rec('얼음 동굴','새 세계 얼음 동굴에 눈 무더기가 깔림 (얼음 동굴 안에만)', r['snow']>500 and not any(s.startswith('biome') for s in r['off']), r)
+            rec('얼음 동굴','겨울 자연물·얼음 결정은 눈 무더기 위에만 (서리 정령 제단 둘레 6개 빼고)', r['onSnow']>100 and r['nOff']==0, r)
+            rec('얼음 동굴','꾸미기 전용(눈사람·트리·아치·토템)은 자연에 안 나옴', r['deco']==0, r)
+            # 옛 세계: 눈 무더기·겨울 자연물을 지운 세이브 → 불러오면 한 번 깔림, 지은 물건(횃불) 둘레 3칸은 그대로
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,N=G.biome.length,W=Math.round(Math.sqrt(N));const ids=new Set(T.SNOW_GEN.map(a=>a[0]));
+              for(let i=0;i<N;i++)if(G.floor[i]===T.SNOW_F)G.floor[i]=19; for(const [i,o] of [...G.objs])if(ids.has(o.t))G.objs.delete(i);
+              let tx=-1;for(let i=0;i<N&&tx<0;i++){const x=i%W,y=(i/W)|0;if(G.biome[i]!==4||G.floor[i]!==19||G.wall[i])continue;let ok=true;for(let dy=-3;dy<=3&&ok;dy++)for(let dx=-3;dx<=3;dx++){const j=T.idx(x+dx,y+dy);if(G.wall[j]||G.floor[j]!==19||G.objs.has(j)){ok=false;break}}if(ok)tx=i}
+              G.objs.set(tx,{t:'torch'});const s=T.serialize();delete s.stats.snow132;T.deserialize(JSON.parse(JSON.stringify(s)));const H=T.G;let snow=0;for(let i=0;i<N;i++)if(H.floor[i]===T.SNOW_F)snow++;
+              const x=tx%W,y=(tx/W)|0;let near=0;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const j=T.idx(x+dx,y+dy);if(H.floor[j]===T.SNOW_F||(H.objs.get(j)&&ids.has(H.objs.get(j).t)))near++}
+              const again=(()=>{const s2=T.serialize();T.deserialize(JSON.parse(JSON.stringify(s2)));let n=0;for(let i=0;i<N;i++)if(T.G.floor[i]===T.SNOW_F)n++;return n})();
+              return {snow,st:H.stats.snow132,near,again}}""")
+            rec('얼음 동굴','옛 세계: 불러올 때 한 번 눈 무더기·겨울 자연물이 깔림', r['snow']>500 and r['st'] and r['st']['objs']>50, r)
+            rec('얼음 동굴','옛 세계: 지은 물건(횃불) 둘레 3칸은 그대로', r['near']==0, r)
+            rec('얼음 동굴','옛 세계: 다시 불러와도 또 깔지 않음', r['again']==r['snow'], r)
+            r=await ev(pg,"""()=>{const T=__T;const day=new Set(T.SNOW_DAY.map(a=>a[0]));let bad=0,ice=0;for(let k=0;k<300;k++){if(!day.has(T.pickNat(4,T.SNOW_F)))bad++;if(T.pickNat(4,19)==='iceCluster')ice++}
+              const O=T.OBJ,R=T.RECIPES;return {bad,ice,dig:T.DIG_YIELD[T.SNOW_F],drops:['iceCluster','iceClusterB','iceClusterC'].map(k=>O[k].drops[0][0]+':'+O[k].nat+':'+(O[k].light?1:0)),art:[T.SPR.obj.iceCluster.width,T.SPR.obj.iceCluster.height],
+                deco:['snowman','xmasTree','snowArch'].map(k=>!!R.find(r=>r.out===k)),floor:!!(T.SPR.floor[35]&&T.SPR.floor[35].length===4)}}""")
+            rec('얼음 동굴','하루 하나: 눈 무더기엔 겨울 것만, 얼음 바닥엔 얼음 결정 안 나옴', r['bad']==0 and r['ice']==0, r)
+            rec('얼음 동굴','얼음 결정 A~C는 캐면 서리 결정 · 빛남, 눈 무더기를 파면 눈', r['drops']==['frostShard:mine:1']*3 and r['dig']=='gSnow', r)
+            rec('얼음 동굴','새 그림(얼음 결정 A 24×22)·눈 무더기 바닥 4장·꾸미기 레시피', r['art']==[24,22] and r['floor'] and all(r['deco']), r)
+            # 차가운 빛은 보이기만: 얼음 동굴에서도 바탕 밝기(lightAt)는 예전 식 그대로
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,N=G.biome.length,W=Math.round(Math.sqrt(N));let pt=null;for(let i=0;i<N&&!pt;i++){const x=i%W,y=(i/W)|0;if(G.biome[i]===4&&!G.wall[i]&&x>20&&y>20&&x<W-20&&y<W-20)pt=[x,y]}
+              for(let dy=-16;dy<=16;dy++)for(let dx=-16;dx<=16;dx++)G.objs.delete(T.idx(pt[0]+dx,pt[1]+dy)); G.enemies.length=0;G.p.x=pt[0]+.5;G.p.y=pt[1]+.5;T.cam.x=G.p.x;T.cam.y=G.p.y;T.computeLight();
+              const amb=0.075+G.treeSeeds*0.03;return {ice:T.iceView(),far:T.lightAt(pt[0],pt[1]+8),amb}}""")
+            rec('얼음 동굴','차가운 빛은 보이기만 (얼음 동굴 바탕 밝기 lightAt = 예전 값)', r['ice'] and abs(r['far']-r['amb'])<1e-6, r)
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main

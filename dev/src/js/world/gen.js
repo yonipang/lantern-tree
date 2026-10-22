@@ -4,6 +4,7 @@ import { ANCH, ANCH2, BX, BY, CX, CY, H, L2, LAVA, LAY, MAPV, PIT, SA, SB, SI, S
 import { G } from '../save/state.js';
 import { ROOM_DECO, ROOM_LOOT, ROOM_N } from '../data/farming-cooking.js';
 import { NAT_GEN, NAT_SHORE } from '../data/nature123.js';
+import { ASH_GEN, roomFor, SIZE132, SNOW_F, SNOW_GEN } from '../data/winter132.js';
 import { OBJ } from '../data/items.js';
 import { fbm, hash2, rng, vn } from '../engine/random.js';
 import { spawnDrop } from '../sim/drops.js';
@@ -103,6 +104,7 @@ export function genWorld(seed) {
   const nearSafe = (x, y) => Math.hypot(x - CX, y - CY) < 9.5 || Math.hypot(x - BX, y - BY) < 10.5 || Math.hypot(x - SA.x, y - SA.y) < 9.5 || Math.hypot(x - SB.x, y - SB.y) < 9.5 || Math.hypot(x - SL.x, y - SL.y) < 10.5 || Math.hypot(x - SI.x, y - SI.y) < 10.5;
   addWater({ wall, floor, objs }, seed, nearSafe, null);
   for (let i = 0; i < W * H; i++) if (floor[i] === WATER && !(LAY === 2 && Math.hypot(i % W - CX, ((i / W) | 0) - CY) > L2.r3 - 12)) { if (biome[i] === 3) floor[i] = LAVA; else if (biome[i] === 4 && hash2(i % W, (i / W) | 0, seed + 3) < .7) floor[i] = 20; }
+  addSnow132({ wall, floor, biome }, seed, nearSafe); // v132: 얼음 동굴 바닥에 눈 무더기(35)
   for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
     const i = idx(x, y), dT = Math.hypot(x - CX, y - CY), home = dT < 9.5; if (wall[i] || floor[i] === WATER || (nearSafe(x, y) && !home)) continue;
     if (home && (dT < 3.2 || (y >= CY + 1 && y <= CY + 5 && x >= CX - 5 && x <= CX + 5))) continue; // keep the tree and the starter deck clear
@@ -112,11 +114,12 @@ export function genWorld(seed) {
     if (b === 0) { const rt = 0.05 * grove / 3, bu = rt + 0.014, gr = bu + 0.13 * mead / 2; t = r < rt ? 'root' : r < bu ? 'bush' : r < gr ? 'grass' : r < gr + 0.01 ? 'glow' : null; }
     else if (b === 1) { const re = 0.03 + 0.02 * grove / 3, ge = re + Math.max(0, 0.042 - 0.02 * grove), gre = ge + 0.04 * mead, be = gre + Math.max(0, 0.088 - 0.08 * mead); t = r < 0.03 ? 'bigShroom' : r < re ? 'root' : r < ge ? 'glow' : r < gre ? 'grass' : r < be ? 'bush' : null; }
     else if (b === 3) t = r < 0.022 ? 'fireBloom' : null;
-    else if (b === 4) t = r < 0.02 ? 'iceCluster' : null;
+    else if (b === 4) t = null; // v132: 얼음 결정은 이제 눈 무더기 위에만 (placeSnow132)
     else t = r < 0.024 ? 'cluster' : r < 0.036 ? 'glow' : null;
     if (t) objs.set(i, t === 'bush' ? { t, r: 0 } : { t });
   }
   addNature123({ wall, floor, biome, objs }, seed, nearSafe); // v123: 지역마다 나무·덤불·그루터기·선인장·야자 (data/nature123.js)
+  placeSnow132({ wall, floor, biome, objs }, seed, nearSafe); // v132: 눈 무더기 위 겨울 자연물·얼음 결정 A~C, 용암 동굴 재 바닥의 해골·뼈 (data/winter132.js)
   for (let y = CY - 1; y <= CY; y++) for (let x = CX - 1; x <= CX + 1; x++) objs.set(idx(x, y), { t: 'treeP' });
   for (let y = CY + 2; y <= CY + 4; y++) for (let x = CX - 4; x <= CX + 4; x++) floor[idx(x, y)] = 5;
   const put = (dx, dy, o) => objs.set(idx(CX + dx, CY + dy), o);
@@ -136,7 +139,7 @@ export function genWorld(seed) {
 }
 // v123 (data/nature123.js NAT_GEN·NAT_SHORE): 새 세계에 지역 자연물을 드문드문. 둘레 3×3에 벽이 없는 열린 바닥에만(좁은 굴을 막지 않게),
 // 여러 칸(큰 고목 2×2·쓰러진 통나무 4×2)은 모든 칸과 그 둘레가 비어야 해요. 등불나무 둘레·보스방 곁(nearSafe)은 빼요. 무작위는 칸 좌표 hash2라 같은 시드면 같은 자리.
-export function addNature123(w, seed, nearSafe) { const { wall, floor, biome, objs } = w, bad = f => f === WATER || f === LAVA || f === 20 || f === PIT;
+export function addNature123(w, seed, nearSafe) { const { wall, floor, biome, objs } = w, bad = f => f === WATER || f === LAVA || f === 20 || f === PIT || f === SNOW_F; // v132: 눈 무더기는 새 겨울 자연물 자리
   const open = (x, y, fw, fh) => { for (let yy = y - 1; yy <= y + fh; yy++) for (let xx = x - 1; xx <= x + fw; xx++) { if (!inB(xx, yy)) return false; const j = idx(xx, yy); if (wall[j]) return false; if (xx >= x && xx < x + fw && yy >= y && yy < y + fh && (bad(floor[j]) || objs.has(j) || nearSafe(xx, yy) || Math.hypot(xx - CX, yy - CY) < 9.5)) return false; } return true; };
   const nearWater = (x, y) => { for (let yy = y - 2; yy <= y + 2; yy++) for (let xx = x - 2; xx <= x + 2; xx++) if (inB(xx, yy) && floor[idx(xx, yy)] === WATER) return true; return false; };
   for (let y = 3; y < H - 6; y++) for (let x = 3; x < W - 6; x++) { const i = idx(x, y); if (wall[i] || objs.has(i) || bad(floor[i])) continue;
@@ -145,6 +148,23 @@ export function addNature123(w, seed, nearSafe) { const { wall, floor, biome, ob
     else { let c = 0; for (const [k, p] of NAT_GEN[b] || []) { c += p; if (r < c) { t = k; break; } } }
     if (!t) continue; const fp = OBJ[t].sz || [1, 1]; if (!open(x, y, fp[0], fp[1])) continue;
     objs.set(i, { t }); for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) if (dx || dy) objs.set(idx(x + dx, y + dy), { t: '_part', a: i }); } }
+// v132 (data/winter132.js): 얼음 동굴(지역 4)의 얼음 바닥(19) 곳곳에 눈 무더기(35)를 둥글게 깔아요. 칸 좌표 잡음이라 같은 시드면 같은 자리.
+// ok(i)가 거짓인 칸은 건너뛰어요(옛 세계: 깐 바닥·지은 것 곁). 혼자 떨어진 한 칸짜리 눈은 지워요. 바꾼 칸 수를 돌려줘요.
+export const SNOW132 = { sc: .085, th: .7, sc2: .3, k2: .12 }; // 눈 무더기 크기·양 (Claude 임시)
+export function addSnow132(w, seed, nearSafe, ok) { const { wall, floor, biome } = w, S = SNOW132, set = [];
+  for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) { const i = idx(x, y); if (biome[i] !== 4 || wall[i] || floor[i] !== 19 || nearSafe(x, y) || (ok && !ok(i))) continue;
+    if (vn(x * S.sc, y * S.sc, seed + 132) + S.k2 * (vn(x * S.sc2, y * S.sc2, seed + 133) - .5) > S.th) set.push(i); }
+  for (const i of set) floor[i] = SNOW_F;
+  let n = 0; for (const i of set) { const nb = [1, -1, W, -W].filter(d => floor[i + d] === SNOW_F).length; if (nb === 0) floor[i] = 19; else n++; }
+  return n; }
+// 눈 무더기 위 겨울 자연물·얼음 결정(SNOW_GEN), 용암 동굴 재 바닥의 해골·뼈(ASH_GEN). 크기(SIZE132)마다 둘레가 비어 있을 때만(좁은 곳엔 작은 것만).
+export function placeSnow132(w, seed, nearSafe, ok) { const { wall, floor, biome, objs } = w; let n = 0;
+  for (let y = 4; y < H - 4; y++) for (let x = 4; x < W - 4; x++) { const i = idx(x, y), f = floor[i]; if (wall[i] || objs.has(i) || nearSafe(x, y) || (ok && !ok(i))) continue;
+    const L = f === SNOW_F ? SNOW_GEN : f === 18 && biome[i] === 3 ? ASH_GEN : null; if (!L) continue;
+    const r = hash2(x, y, seed + 232) * 100; let c = 0, t = null; for (const [k, p] of L) { c += p; if (r < c) { t = k; break; } }
+    if (!t || !roomFor(SIZE132[t], x, y, wall, objs, inB, idx)) continue;
+    objs.set(i, { t }); n++; }
+  return n; }
 export function addWater(w, seed, nearSafe, ok) {
   for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) {
     const i = idx(x, y); if (w.wall[i] || nearSafe(x, y) || vn(x * .09, y * .09, seed + 77) < (LAY === 2 ? 0.76 : 0.715)) continue;
@@ -210,6 +230,7 @@ export const START_DIRT_R = 35;
 export const BF04 = { tries: 20, gap: 60, near: [55, 80], far: [150, 200],
   ang: { B: [-75, -35], A: [100, 145], SB: [-115, -65], SL: [5, 55], SI: [125, 175] }, reg: { B: 0, A: 1, SB: 2, SL: 3, SI: 4 },
   minWall: { 4: 1460, 5: 2176, 10: 2402, 12: 2852, 13: 1276 }, minObj: { root: 84, bigShroom: 68, cluster: 201, glow: 208, fireBloom: 220, iceCluster: 176 } };
+const MINOBJ_AS = { iceClusterB: 'iceCluster', iceClusterC: 'iceCluster' };
 const AKEYS = ['B', 'A', 'SB', 'SL', 'SI'];
 export function rollAnch(seed, k) { const R = rng((Math.imul(seed | 0, 31) + 977 * (k + 1)) >>> 0), u = (a, b) => a + (b - a) * R(), o = {};
   for (const key of AKEYS) { const [a0, a1] = BF04.ang[key], [d0, d1] = key === 'B' || key === 'A' ? BF04.near : BF04.far; o[key] = [Math.round(u(a0, a1)), Math.round(u(d0, d1))]; }
@@ -228,7 +249,7 @@ export function checkWorld(w) { const P = anchPts();
   for (const k of ['SL', 'SI']) if (!near(P[k], 12)) return 'path ' + k;
   const wc = {}; for (let i = 0; i < N; i++) { const v = w.wall[i]; if (BF04.minWall[v]) wc[v] = (wc[v] || 0) + 1; }
   for (const v in BF04.minWall) if ((wc[v] || 0) < BF04.minWall[v]) return 'wall ' + v;
-  const oc = {}; for (const o of w.objs.values()) if (BF04.minObj[o.t]) oc[o.t] = (oc[o.t] || 0) + 1;
+  const oc = {}; for (const o of w.objs.values()) { const t = MINOBJ_AS[o.t] || o.t; if (BF04.minObj[t]) oc[t] = (oc[t] || 0) + 1; } // v132: 얼음 결정 A~C는 함께 세요
   for (const t in BF04.minObj) if ((oc[t] || 0) < BF04.minObj[t]) return 'obj ' + t;
   return ''; }
 // a new world on map version 3: try up to 20 sets of places and cave shapes; if none passes, layout 2's fixed places and cave shape
