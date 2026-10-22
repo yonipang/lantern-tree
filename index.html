@@ -839,6 +839,7 @@ const FRAME_ORDER = [
   'enemies', 'bosses', // 몬스터·보스 (game/update.js)
   'pshots',   // 내 화살·마법 (game/actions.js)
   'deep', 'darkContact', // v108 가장 깊은 곳·큰 어둠 닿기
+  'shadow', // v129 그림자 지대 들어가면 알림 (sim/shadow.js)
   'archives', // v106 기록관 안 그림자 조각
   'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'naru', // v117 나루 하는 중 한마디 (sim/npc.js)
@@ -1424,8 +1425,8 @@ function floorTex(t, v) {
     if (t === 4) { for (let k = 0; k < 2; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#a99cf0'); A.r(0, 0, 16, 1, '#454e72'); A.r(0, 0, 1, 16, '#454e72'); }
   }, null);
 }
-const WPAL = { 14: ['#c8894a', '#e0a560', '#9c6534'], 15: ['#a04a32', '#c0613a', '#7a3420'], /* v122 판자 벽·붉은 나무 벽(그림은 dev/art/wtop·wfront/14·15) */ 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
-const WFRONT_COL = { 14: '#8a5a30', 15: '#6e2e1e', 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
+const WPAL = { 16: ['#3a2e4e', '#4e4066', '#241c34'], 17: ['#3a2e4e', '#4e4066', '#241c34'], /* v129 그림자 바위·결정 광맥 */ 14: ['#c8894a', '#e0a560', '#9c6534'], 15: ['#a04a32', '#c0613a', '#7a3420'], /* v122 판자 벽·붉은 나무 벽(그림은 dev/art/wtop·wfront/14·15) */ 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
+const WFRONT_COL = { 16: '#1e1830', 17: '#1e1830', 14: '#8a5a30', 15: '#6e2e1e', 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
 function wallTop(t, v) {
   const R = rng(t * 733 + v * 97 + 3), pal = WPAL[t];
   return mk(16, 16, A => {
@@ -1442,6 +1443,7 @@ function wallTop(t, v) {
     if (t === 9 || t === 10) { let x = R() * 16 | 0, y = R() * 16 | 0; for (let k = 0; k < 7; k++) { A.p(x, y, k % 3 ? '#c4441a' : '#ff8a3d'); x = (x + (R() < .5 ? 1 : 0)) % 16; y = (y + (R() < .7 ? 1 : 0)) % 16; } }
     if (t === 10) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.e(x, y, 1.6, 1.3, '#ffd25c'); A.p(x - 1, y - 1, '#fff1b0'); A.p(x + 1, y, '#c9902a'); }
     if (t === 11 || t === 12) { for (let k = 0; k < 3; k++) { const x = R() * 14 | 0, y = R() * 14 | 0; A.p(x, y, '#ffffff'); A.p(x + 1, y + 1, '#e8f8ff'); } }
+    if (t === 17) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.poly([[x, y - 2.5], [x + 1.6, y], [x, y + 2], [x - 1.6, y]], '#8a6ad0'); A.p(x | 0, (y - 1) | 0, '#e8dcff'); } // v129
     if (t === 12) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.poly([[x, y - 2.5], [x + 1.6, y], [x, y + 2], [x - 1.6, y]], '#5ad8f0'); A.p(x | 0, (y - 1) | 0, '#ffffff'); }
   }, null);
 }
@@ -1495,7 +1497,7 @@ const DECO_DEF = {
 const SPR = {};
 function buildTerrain() {
   SPR.fringe = {}; SPR.fringeW = {}; SPR.corner = {}; SPR.cornerW = {}; SPR.fringeL = {}; SPR.fringeX = {}; SPR.fringeWL = {}; SPR.fringeWX = {};
-  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 30, 31, 32, 33, 34]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
+  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 30, 31, 32, 33, 34]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
   SPR.deco = {}; for (const t in DECO_DEF) SPR.deco[t] = DECO_DEF[t].map(f => mk(7, 7, f, 'soft'));
   SPR.lily = ARTC['lily/0'] ? [artPaint('lily/0', 'sel'), artPaint(ARTC['lily/1'] ? 'lily/1' : 'lily/0', 'sel')] : [mk(9, 7, /* v122 손그림 연잎(16px)이 있으면 그것 */ A => { A.e(4.5, 3.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 2.8, 1.6, 1, '#6cbb76'); A.poly([[4.5, 3.5], [8.5, 1.8], [8.5, 3.4]], '#00000000'); A.g.globalCompositeOperation = 'destination-out'; A.poly([[4.5, 3.5], [8.6, 1.6], [8.6, 3.6]], '#000'); A.g.globalCompositeOperation = 'source-over'; }, 'sel'),
     mk(9, 8, A => { A.e(4.5, 4.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 3.8, 1.6, 1, '#6cbb76'); A.e(5, 2.6, 1.5, 1.3, '#ffb3c6'); A.p(5, 2, '#ffe0ea'); A.p(5, 3, C.amber); }, 'sel')];
@@ -1527,7 +1529,7 @@ function buildSprites() {
   applyArt();
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
   for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem', 'magmaSlime', 'frostSlime', 'cinder', 'snowling', 'turtle', 'turtleS', 'spirit']) SPR[k + 'W'] = whiten(SPR[k]);
-  for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } npcSprites(); /* v104 */ SPR.shadowBit = shadowBitSpr(); SPR.shadowBitW = whiten(SPR.shadowBit); SPR.dark = darkSpr(); SPR.darkW = whiten(SPR.dark); /* v108 */ SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
+  for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } npcSprites(); /* v104 */ SPR.shadowBit = shadowBitSpr(); SPR.shadowBitW = whiten(SPR.shadowBit); SPR.dark = darkSpr(); SPR.darkW = whiten(SPR.dark); /* v108 */ SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.shade = shotSpr('#5a3a8a', '#e8dcff'); /* v129 길 잃은 등불지기 */ SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];
@@ -2790,7 +2792,7 @@ function deserialize(s) {
   syncTiers128(); // v128: 작업대·장비제작대 같은 단계
   grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); shadowOnLoad(); /* v129 */ migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
@@ -4427,6 +4429,48 @@ NAT_DAY_KINDS[0].push(['greenTree', 0.12], ['vineTree', 0.1]);
 NAT_DAY_KINDS[1].push(['pinkTree', 0.08], ['pinkTreeS', 0.08], ['mapleTree', 0.08], ['mapleTreeS', 0.08], ['mapleBush', 0.12], ['treeStumpL', 0.06], ['treeStump', 0.06], ['treeStumpS', 0.06]);
 NAT_DAY_KINDS[3].push(['deadTree', 0.16], ['cactus', 0.11], ['cactusS', 0.11]);
 NAT_DAY_KINDS[4].push(['snowTree', 0.1], ['blossomTree', 0.07], ['blossomTreeS', 0.07], ['snowBush', 0.25]);
+// ================= v129 남은 성장 확장 ① 그림자 지대 · 깊은 몬스터 5종 · 그림자 결정 (dev/design/성장확장.md 8장) =================
+// 사용자 선택(2026-10-22, 모두 추천대로): 빛씨앗 5개를 심으면 가장 깊은 곳 유적 둘레 약 25칸이 「그림자 지대」로 깨어나요
+// (자연 바위 → 그림자 바위, 자연 바닥 → 그림자 바닥, 바위의 약 6%는 그림자 결정 광맥). 그림자 바위는 황금 곡괭이 이상.
+// 깊은 몬스터 5종은 그림자 지대에서만 나오고, 모두 빛 안에서 받는 피해 2배(그림자 조각과 같은 shadow 표시). 더위·추위는 밑의 용암·얼음 동굴 그대로.
+// 경험치는 지금 규칙(체력의 절반) 그대로라 체력을 높게 잡았어요. 큰 어둠 첫 처치 경험치 100 → 4,000(sim/bosses.js).
+// 동작은 sim/shadow.js(지대 깨우기·출현)·sim/monsters.js(움직임), 그림은 art/content.js(Claude 임시). 이 파일은 data/nature123.js 다음에 와요.
+
+// 그림자 지대 크기: 유적 가운데에서 반지름 SHADOW_R 칸(± SHADOW_WOB 칸 구불구불), 바위 가운데 결정 광맥 비율
+const SHADOW_R = 25, SHADOW_WOB = 4, SHADOW_VEIN = 0.06;
+const SHADOW_FLOOR = 23, SHADOW_ROCK = 16, SHADOW_VEIN_W = 17; // 바닥·벽 번호 (22 구덩이 · 14·15 v122 벽 다음)
+// 그림자 지대로 바뀌는 것: 자연 바위(흙·돌·화강암·현무암·얼음) · 자연 바닥(흙·이끼·버섯흙·수정 모래·재·눈). 광맥·물·용암·얼어붙은 물·놓은 것은 그대로
+const SHADOW_FROM_WALL = new Set([1, 2, 3, 9, 11]);
+const SHADOW_FROM_FLOOR = new Set([1, 2, 3, 4, 18, 19]);
+
+// 벽 (황금 곡괭이 = 단계 4)
+WALLS[SHADOW_ROCK] = { n: '그림자 바위', tier: 4, hp: 10, drop: [['shadowRock', 1, 1, 1]] };
+WALLS[SHADOW_VEIN_W] = { n: '그림자 결정 광맥', tier: 4, hp: 12, drop: [['shadowCry', 1, 2, 1], ['shadowRock', 1, 1, 0.3]] };
+TIERNAME.push('황금 곡괭이');
+ITEMS.pickGold.tier = 4; ITEMS.pickStar.tier = 4; // 황금·별빛 곡괭이만 그림자 바위를 캐요 (힘·내구도는 그대로)
+ITEMS.pickGold.d = '깊은 동굴의 벽도 빠르게 캐는 곡괭이. 그림자 바위도 캘 수 있어요.';
+
+// 아이템
+ITEMS.shadowCry = { n: '그림자 결정', d: '그림자 지대의 결정 광맥과 깊은 몬스터에게서 얻어요. 7단계 장비의 재료가 될 거예요.' };
+ITEMS.shadowRock = { n: '그림자 바위', kind: 'wall', wall: SHADOW_ROCK, mat: 1, d: '그림자 지대의 바위를 캐면 나와요. 들고 있으면 그림자 바위 벽을 쌓을 수 있어요.' };
+
+// 깊은 몬스터 5종 (모두 shadow: 빛 안에서 받는 피해 2배 · 지역 보정 없음)
+Object.assign(ENEMY, {
+  // 땅속으로 다가와 발밑에서 튀어나와 붙잡아요(2초 느려짐)
+  shadowHand: { n: '그림자 손', hp: 300, dmg: 28, spd: 2.0, r: 0.34, hop: 0, ai: 'grab', aggro: 6.5, shadow: 1, grab: 2, mound: '#2a1e3a', drops: [['shadowCry', 1, 1, 0.2], ['shadowRock', 1, 2, 0.5]], col: '#3a2a5a' },
+  // 벽을 지나다니고, 밝은 곳에 들어가면 1초 깜빡이다 사라져요(경험치·드롭 없음)
+  shadowGhost: { n: '망각 유령', hp: 360, dmg: 30, spd: 2.4, r: 0.32, hop: 0, ai: 'ghost', aggro: 6.5, shadow: 1, xray: 1, alpha: 0.72, drops: [['shadowCry', 1, 1, 0.25]], col: '#8a7ab8' },
+  // 앞(±60°)에서 맞으면 피해 20%만, 4초마다 조준 뒤 돌진
+  shadowKnight: { n: '잊힌 기사', hp: 560, dmg: 36, spd: 1.8, r: 0.38, hop: 0, ai: 'knight', aggro: 6.5, shadow: 1, front: 0.2, drops: [['shadowCry', 1, 2, 0.4], ['goldBar', 1, 1, 0.3]], col: '#5a5070' },
+  // 빠르고 3마리 무리
+  shadowWolf: { n: '그림자 늑대', hp: 320, dmg: 32, spd: 4.6, r: 0.34, hop: 0, pack: 2, aggro: 6.5, shadow: 1, drops: [['shadowCry', 1, 1, 0.15], ['wool', 1, 1, 0.3]], col: '#2e2244' },
+  // 그림자 탄·발밑 경고 원·짧은 순간이동을 번갈아 써요, 결정을 꼭 줘요
+  lostKeeper: { n: '길 잃은 등불지기', hp: 700, dmg: 34, spd: 2.2, r: 0.34, hop: 0, ai: 'keeper', aggro: 7, shadow: 1, drops: [['shadowCry', 2, 3, 1]], col: '#c9a8ff' },
+});
+// 그림자 지대에서 나오는 몬스터와 비율 (생기는 간격·최대 수는 그 자리 지역(용암·얼음) 그대로)
+const SHADOW_TABLE = [['shadowHand', .25], ['shadowGhost', .2], ['shadowKnight', .2], ['shadowWolf', .25], ['lostKeeper', .1]];
+// 벽 캘 때 경험치 (sim/gathering.js breakWall)
+const SHADOW_WALL_XP = { [SHADOW_ROCK]: 4, [SHADOW_VEIN_W]: 10 };
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -4841,7 +4885,7 @@ function setFootprints(v) { FPV = v === 2 ? 2 : 1;
 setFootprints(2);
 // ================= 모으기: 벽 캐기·나무 베기·수확, 쳐서 회수(공격 버튼으로 가구 떼기) =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
-function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
+function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(SHADOW_WALL_XP[w] || (w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0)); } // v129 그림자 바위 4 · 결정 광맥 10
 function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
   faceTo(t.x + .5 - p.x, t.y + .5 - p.y);
@@ -5546,7 +5590,7 @@ function enemyStep(e, dt) {
   const alerted = e.alertAt != null && G.time - e.alertAt < 4;
   let chase = false;
   if (d < (def.aggro || 5) + (e.chasing || alerted ? 3 : 0) && p.dead <= 0 && !p.cine /* v127: 연출 장면을 보는 사람은 쫓지 않아요 */ && (!def.calm || e.angry > 0)) {
-    e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = canSee(e.x, e.y, p.x, p.y); }
+    e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = def.xray ? true : canSee(e.x, e.y, p.x, p.y); } // v129 망각 유령은 벽 너머도 봐요
     if (e.sees) e.seenAt = G.time;
     chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
   } else e.losT = 0;
@@ -5584,10 +5628,11 @@ function trySpawn() {
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
     if (warpSafe(x + .5, y + .5)) continue; // v89: 워프포인트·포탈 둘레 6칸
-    const b = G.biome[idx(x, y)]; const kk = pickMon(b); // v101: 지역별 표(MON_TABLE)
-    G.enemies.push(regionEnemy(mkEnemy(kk, x + .5, y + .6), b));
-    const packN = ENEMY[kk].pack || 0; for (let q = 0; q < packN; q++) { const dx = Math.round((rand() - .5) * 3), dy = Math.round((rand() - .5) * 3); if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); } // v101 떼 몬스터
-    if (!packN && rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
+    const sh = inShadow(x, y), b = G.biome[idx(x, y)]; const kk = sh ? pickShadow() : pickMon(b); // v101: 지역별 표(MON_TABLE) · v129 그림자 지대는 깊은 몬스터(지역 보정 없음)
+    const reg = e => sh ? e : regionEnemy(e, b);
+    G.enemies.push(reg(mkEnemy(kk, x + .5, y + .6)));
+    const packN = ENEMY[kk].pack || 0; for (let q = 0; q < packN; q++) { const dx = Math.round((rand() - .5) * 3), dy = Math.round((rand() - .5) * 3); if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy)) && inShadow(x + dx, y + dy) === sh) G.enemies.push(reg(mkEnemy(kk, x + dx + .5, y + dy + .6))); } // v101 떼 몬스터
+    if (!packN && rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy)) && inShadow(x + dx, y + dy) === sh) { G.enemies.push(reg(mkEnemy(kk, x + dx + .5, y + dy + .6))); break; } }
     return;
   }
 }
@@ -5633,6 +5678,7 @@ function updateHazards(dt) {
     const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
     if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
     else if (h.k === 'poison') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } // v101 독 구름·독 웅덩이(닿아 있는 동안 계속)
+    else if (h.k === 'shade') { if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#c9a8ff', 22, 4, .4); emit('shake', .2); for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } } // v129 길 잃은 등불지기의 발밑 원
     else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
 function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; emit('ftext', b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
@@ -5645,7 +5691,7 @@ function hitBoss(b, dmg, crit, fx) {
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
@@ -6197,7 +6243,7 @@ function spreadKind(x, y, R) {
 }
 function insertSeeds() {
   const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; const from = treeStage(); removeItem('lightSeed', n); G.treeSeeds += n; markLight();
-  G.p.hp = maxHp(); gainXp(50 * n);
+  G.p.hp = maxHp(); gainXp(50 * n); if (G.treeSeeds >= 5) shadowWake(); // v129 그림자 지대
   // v103: 단계가 오를 때마다 나무가 옛 기억 한 장면을 보여 줘요 (엔딩 두 갈래는 하나로 — 마지막 장면은 가장 깊은 곳에서, v108). won·won2는 옛 세이브·축제 케이크 해금을 위해 그대로 둬요
   if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); }
   else if (G.treeSeeds >= 3 && !G.won) G.won = true;
@@ -6622,13 +6668,41 @@ const MON_AI = {
     return false; },
   // 아기 설인: 눈덩이를 던져요
   throw(e, def, dt, d, dx, dy, chase) { if (tick(e, 'cd', dt) <= 0 && chase && e.sees && d < 6.5) { e.cd = 2.3; shoot(e, dx, dy, d, 6.5, 'snow', dmgOf(e, def, .8)); emit('sfx', 'swing'); } return false; },
+  // ---- v129 깊은 몬스터 (data/shadow.js) ----
+  // 그림자 손: 이끼 두더지처럼 땅속으로 다가와, 튀어나올 때 1.3칸 안이면 붙잡아요(def.grab초 느려짐)
+  grab(e, def, dt, d, dx, dy, chase, sm) { const was = e.under, r = MON_AI.burrow(e, def, dt, d, dx, dy, chase, sm);
+    if (was && !e.under && chase && d < 1.3 && G.p.dead <= 0) { G.p.slowT = Math.max(G.p.slowT || 0, def.grab); hurtPlayer(dmgOf(e, def), e.x, e.y); emit('ftext', G.p.x, G.p.y - 1.6, '붙잡혔어요!', '#c9a8ff'); }
+    return r; },
+  // 망각 유령: 벽을 지나다녀요(암반·지도 밖만 막힘). 밝은 곳에 들어가면 1초 깜빡이다 사라져요(경험치·드롭 없음)
+  ghost(e, def, dt, d, dx, dy, chase, sm) {
+    if (e.fade > 0) { e.fade -= dt; e.flash = 1; if (e.fade <= 0) { const at = G.enemies.indexOf(e); if (at >= 0) G.enemies.splice(at, 1); emit('puff', e.x, e.y - .4, '#c9a8ff', 14, 2.6, .5); } return true; }
+    if (isLit(Math.floor(e.x), Math.floor(e.y))) { e.fade = 1; emit('sfx', 'cast'); return true; }
+    if (!chase) { if (tick(e, 't', dt) <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; } }
+    else { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; }
+    const nx = e.x + e.vx * dt * sm, ny = e.y + e.vy * dt * sm, tx = Math.floor(nx), ty = Math.floor(ny);
+    if (inB(tx, ty) && G.wall[idx(tx, ty)] !== 8 && !(!chase && isLit(tx, ty))) { e.x = nx; e.y = ny; } else { e.vx = -e.vx; e.vy = -e.vy; }
+    e.anim = (e.anim || 0) + dt; if (Math.abs(e.vx) > .05) e.flip = e.vx < 0; return true; },
+  // 잊힌 기사: 버섯 거북처럼 돌아서 앞을 막고(monDmg, def.front), 4초마다 조준 뒤 돌진
+  knight(e, def, dt, d, dx, dy, chase, sm) { MON_AI.shell(e, def, dt, d, dx, dy, chase); tick(e, 'cd', dt);
+    if (e.dash > 0) { e.dash -= dt; moveEnt(e, e.cx * 7 * dt * sm, e.cy * 7 * dt * sm, def.r); e.anim = (e.anim || 0) + dt * 2; return true; }
+    if (e.aim > 0) { e.aim -= dt; e.flash = 1; if (e.aim <= 0) { e.flash = 0; e.dash = .5; emit('sfx', 'swing'); } return true; }
+    if (chase && e.sees && d < 6 && d > 1.5 && e.cd <= 0) { e.cd = 4; e.aim = .7; e.cx = dx / d; e.cy = dy / d; e.fa = Math.atan2(dy, dx); return true; }
+    return false; },
+  // 길 잃은 등불지기: 거리를 두고, 2.4초마다 그림자 탄 3발 → 발밑 경고 원 → 짧은 순간이동을 돌아가며
+  keeper(e, def, dt, d, dx, dy, chase, sm) { if (!chase) return false; const p = G.p;
+    if (tick(e, 'cd', dt) <= 0 && e.sees && d < 8) { e.cd = 2.4; const m = e.mv = ((e.mv || 0) + 1) % 3;
+      if (m === 1) { const base = Math.atan2(dy, dx); for (let k = -1; k <= 1; k++) { const a = base + k * .26; G.shots.push({ x: e.x, y: e.y - .3, vx: Math.cos(a) * 6, vy: Math.sin(a) * 6, life: 2.6, dmg: dmgOf(e, def, .8), k: 'shade' }); } emit('sfx', 'cast'); }
+      else if (m === 2) { hz({ x: p.x, y: p.y, r: 1.1, warn: .9, life: 1.05, dmg: dmgOf(e, def, 1.1), k: 'shade' }); emit('sfx', 'cast'); }
+      else { for (let k = 0; k < 8; k++) { const a = rand() * 6.283, nx = p.x + Math.cos(a) * 3.5, ny = p.y + Math.sin(a) * 3.5; if (!inB(Math.floor(nx), Math.floor(ny)) || isSolid(Math.floor(nx), Math.floor(ny))) continue; emit('puff', e.x, e.y - .4, '#c9a8ff', 10, 2.4, .4); e.x = nx; e.y = ny; emit('puff', e.x, e.y - .4, '#c9a8ff', 10, 2.4, .4); break; } } }
+    if (d < 3) { moveEnt(e, -dx / d * def.spd * dt * sm, -dy / d * def.spd * dt * sm, def.r); e.anim = (e.anim || 0) + dt; e.flip = dx > 0; return true; }
+    return false; },
 };
 // 쓰러질 때 (sim/combat.js enemyDie)
 function onEnemyDie(e) { const def = ENEMY[e.k]; if (def && def.ai === 'spore') hz({ x: e.x, y: e.y, r: 1.4, warn: .35, life: 3.2, dmg: Math.max(3, Math.round(def.dmg * .5)), k: 'poison' }); }
 // 맞을 때 피해 바꾸기 (sim/combat.js hitEnemy): 땅속 두더지는 안 맞고, 버섯 거북은 앞에서 맞으면 30%
 function monDmg(e, dmg) { const def = ENEMY[e.k]; if (!def || !def.ai) return dmg;
   if (e.under) return 0;
-  if (def.ai === 'shell' && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * .3)); }
+  if ((def.ai === 'shell' || def.ai === 'knight') && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * (def.front || .3))); } // v129 잊힌 기사는 20%
   return dmg; }
 // ================= v102 새 스킬 동작 (data/growth.js의 SKILLS 추가분, sim/combat.js의 SK_FN에 덧붙여요) =================
 // 항상 효과(패시브)는 각 규칙 파일에서 skl('이름')으로 봐요: parry·vital·longArm·heavyHand(sim/combat.js) · leech·secondWind·sprint(sim/player.js) · farmer(sim/nature.js) · fisher(sim/fishing.js) · chef(sim/cooking.js) · porter(sim/inventory.js) · animalFriend(sim/drops.js·loop.js·cooking.js)
@@ -6996,6 +7070,42 @@ GUIDE.splice(GUIDE.length - 1, 0,
 Q_GO.deep = ['tgt']; Q_GO.dark = ['tgt'];
 // 불러올 때: 가장 깊은 곳 놓기(한 번) + 보스 자리 맞추기
 function deepOnLoad() { placeDeep(); if (G.stats.deep && !G.bossDead.dark) G.bosses.dark = freshBoss('dark'); }
+// ================= v129 그림자 지대 (dev/design/성장확장.md 8장, 수치는 data/shadow.js) =================
+// 빛씨앗 5개를 심는 순간(옛 세이브는 불러올 때) 가장 깊은 곳 유적 둘레가 한 번 바뀌어요(stats.shadowV, 자리 stats.shadow = {x, y}).
+// 바뀌는 것: 자연 바위 → 그림자 바위(약 6%는 그림자 결정 광맥), 자연 바닥 → 그림자 바닥. 그대로인 것: 유적 안, 광맥, 물·용암·얼어붙은 물,
+// 직접 쌓은 벽(G.bwall)·깐 바닥, 보스방 둘레 18칸(바위 고리를 수정 곡괭이로 여는 길 그대로), 등불나무·숨은 방·기록관·워프포인트 둘레.
+// 그림자 지대 안에서 생기는 몬스터는 SHADOW_TABLE(sim/enemies.js trySpawn이 inShadow로 물어봐요). 들어가면 알림 한 줄.
+
+const sh_seed = () => ((G.seed | 0) ^ 0x5ad0) | 0;
+// 그 칸이 지대 둘레 안인지 (가운데 c에서 반지름 SHADOW_R ± SHADOW_WOB, 칸 좌표 노이즈라 같은 세계면 늘 같아요)
+function sh_inRing(x, y, c) { const d = Math.hypot(x + .5 - c.x, y + .5 - c.y); if (d > SHADOW_R + SHADOW_WOB) return false; if (d < SHADOW_R - SHADOW_WOB) return true;
+  return d < SHADOW_R - SHADOW_WOB + 2 * SHADOW_WOB * vn(x / 7, y / 7, sh_seed()); }
+// 그림자 지대 안인지 (깨어난 뒤에만, 유적 안은 빼요)
+function inShadow(x, y) { const c = G && G.stats && G.stats.shadow; if (!c) return false; x = Math.floor(x); y = Math.floor(y); return !deepAt(x, y) && sh_inRing(x, y, c); }
+function pickShadow() { let r = rand(); for (const [k, w] of SHADOW_TABLE) { r -= w; if (r < 0) return k; } return SHADOW_TABLE[0][0]; }
+// 바꾸지 않는 칸: 보스방 둘레·등불나무 둘레·숨은 방·기록관·워프포인트
+function sh_keep(x, y) { for (const b of [{ x: BX, y: BY }, SA, SB, SL, SI]) if (Math.hypot(x - b.x, y - b.y) < 18) return true;
+  return !!(noDigZone(x, y) || roomNear(x, y) || archAt(x, y) || nearWarpPt(x, y)); }
+// 깨우기: 빛씨앗 5개 + 가장 깊은 곳이 있을 때 한 번. silent = 불러올 때(알림 없이)
+function shadowWake(silent) {
+  const S = G && G.stats; if (!S || S.shadowV || !S.deep || (G.treeSeeds | 0) < 5) return 0; S.shadowV = 1;
+  const d = S.deep, c = { x: d.x + DEEP_W / 2, y: d.y + DEEP_H / 2 }; S.shadow = { x: c.x, y: c.y };
+  const R = SHADOW_R + SHADOW_WOB + 1, seed = sh_seed(); let walls = 0, veins = 0, floors = 0;
+  for (let y = Math.floor(c.y - R); y <= c.y + R; y++) for (let x = Math.floor(c.x - R); x <= c.x + R; x++) {
+    if (!inB(x, y) || !sh_inRing(x, y, c) || deepAt(x, y) || sh_keep(x, y)) continue; const i = idx(x, y); let ch = false;
+    const w = G.wall[i];
+    if (w) { if (SHADOW_FROM_WALL.has(w) && !(G.bwall && G.bwall.has(i))) { const v = hash2(x, y, seed) < SHADOW_VEIN; G.wall[i] = v ? SHADOW_VEIN_W : SHADOW_ROCK; if (G.wdmg) G.wdmg.delete(i); if (v) veins++; else walls++; ch = true; } }
+    const f = G.floor[i]; if (SHADOW_FROM_FLOOR.has(f) && !isPlacedFloor(f)) { G.floor[i] = SHADOW_FLOOR; floors++; ch = true; }
+    if (ch && G.explored[i]) emit('tile', x, y); }
+  S.shadowN = { walls, veins, floors };
+  if (!silent) { emit('toast', '가장 깊은 곳 둘레가 그림자에 물들었어요 — 그림자 지대가 깨어났어요', 'warn', 'shadowWake'); emit('shake', .25); }
+  return 1; }
+// 불러올 때 (save/state.js deserialize — 가장 깊은 곳을 넣은 뒤)
+const shadowOnLoad = () => shadowWake(true);
+// 들어가면 알림 (처음 한 번은 길게)
+const sh_in = new WeakMap();
+onFrame('shadow', () => { const p = G.p; if (!p || !G.stats.shadow) return; const now = inShadow(p.x, p.y);
+  if (now !== !!sh_in.get(p)) { sh_in.set(p, now); if (now) { if (!G.stats.shadowSeen) { G.stats.shadowSeen = 1; emit('toast', '그림자 지대 — 그림자 몬스터는 빛 안에서 피해를 2배로 받아요. 횃불을 챙겨요!', 'warn', 'shadowIn'); } else emit('toast', '그림자 지대', null, 'shadowIn'); } } });
 // ================= v114 자동 생산 2: 비버 둥지 · 먹이통 (규칙) =================
 // 기획: dev/design/자동생산.md 3장. 수치·먹이 표는 data/beaver.js.
 // 둥지 o: bv(비버가 들어 있음) · fd(먹은 먹이로 남은 초) · prog(이번 나무까지 일한 초) · tgt(베는 나무 칸) · from(방금 벤 나무 칸, 돌아오는 걸음 그림용)
@@ -7915,6 +8025,20 @@ function darkSpr() { return mk(40, 40, A => { A.e(20, 36, 14, 3, 'rgba(0,0,0,.3)
 OSPR.brazier = [16, 28, A => { A.r(6, 26, 4, 1, '#2a2238'); A.r(7, 14, 2, 12, '#5a4a4a'); A.r(4, 24, 8, 2, '#4a3a3a'); A.r(3, 10, 10, 5, '#6a5a5a'); A.r(4, 11, 8, 3, '#8a7a7a'); A.poly([[4, 10], [6, 3], [8, 7], [10, 1], [12, 10]], '#ff6a2a'); A.poly([[6, 10], [8, 6], [10, 10]], '#ffc861'); A.p(7, 2, '#ffe9a8'); }];
 OSPR.brazierOff = [16, 28, A => { A.r(6, 26, 4, 1, '#2a2238'); A.r(7, 14, 2, 12, '#5a4a4a'); A.r(4, 24, 8, 2, '#4a3a3a'); A.r(3, 10, 10, 5, '#6a5a5a'); A.r(4, 11, 8, 3, '#8a7a7a'); A.e(8, 9, 3, 1.5, '#3a3030'); A.p(7, 8, '#5a4a4a'); }];
 OSPR.diaryLast = OSPR.diary;
+// ================= v129 그림자 지대 (Claude 임시 그림 — 손그림은 같은 이름으로 dev/art/에) =================
+// 그림자 결정·그림자 바위 아이콘, 그림자 바닥 색(23), 깊은 몬스터 5종. 그림자 바위·결정 광맥 벽은 render/terrain.js가 현무암 그림을 물들여 만들어요
+Object.assign(ICON, {
+  shadowCry: A => { A.poly([[8, 1], [12, 7], [8, 15], [4, 7]], '#5a3a8a'); A.poly([[8, 1], [8, 15], [4, 7]], '#8a6ad0'); A.poly([[12, 5], [14.5, 9], [12, 14], [10.5, 9]], '#3a2a5a'); A.p(7, 5, '#e8dcff'); A.p(6, 7, '#c9a8ff'); A.p(13, 8, '#8a6ad0'); },
+  shadowRock: A => { A.e(8, 9.5, 6.5, 5, '#1e1630'); A.e(8, 9, 6, 4.5, '#3a2e4e'); A.e(6, 7.5, 2.5, 1.6, '#4e4066'); A.p(10, 10, '#8a6ad0'); A.p(5, 11, '#2a2238'); A.p(11, 7, '#2a2238'); },
+});
+Object.assign(FPAL, { 23: ['#2a2234', '#3a2e48', '#1e1828'] }); // v129 그림자 바닥
+Object.assign(MON_SPR_DEF, {
+  shadowHand: () => mk(16, 18, A => { A.e(8, 16, 5.5, 2, '#1e1630'); A.r(5, 9, 6, 7, '#2e2244'); A.e(8, 9, 3.6, 3, '#3a2a5a'); for (const [x, t] of [[5, 2], [7, 0], [9, 0], [11, 2]]) { A.r(x, t + 1, 1.6, 8 - t, '#3a2a5a'); A.p(x, t + 1, '#5a4a7a'); } A.line(4, 11, 2, 7, '#3a2a5a', 2); A.p(7, 10, '#c9a8ff'); A.p(9, 10, '#c9a8ff'); }),
+  shadowGhost: () => mk(16, 18, A => { A.e(8, 7, 5.5, 5.5, '#b8a8e0'); A.r(2.5, 7, 11, 7, '#b8a8e0'); for (const x of [3, 7, 11]) A.poly([[x - .5, 14], [x + 1.5, 17], [x + 3.5, 14]], '#b8a8e0'); A.e(8, 6.5, 4.6, 4.6, '#d8ccf4'); A.e(6, 7, 1.2, 1.6, '#2a1e3a'); A.e(10, 7, 1.2, 1.6, '#2a1e3a'); A.e(8, 10.5, 1.2, .8, '#2a1e3a'); A.p(5, 4, '#ffffff'); }),
+  shadowKnight: () => mk(18, 22, A => { A.e(9, 20.5, 6.5, 1.8, 'rgba(0,0,0,.3)'); A.r(5, 18, 3, 3, '#3a3448'); A.r(10, 18, 3, 3, '#3a3448'); A.r(4, 9, 10, 10, '#4a4460'); A.r(5, 10, 8, 3, '#6a6480'); A.e(9, 6, 4.5, 4.5, '#5a5070'); A.r(5, 5, 8, 3, '#2a2238'); A.r(6, 6, 2, 1, '#c9a8ff'); A.r(10, 6, 2, 1, '#c9a8ff'); A.p(9, 1, '#8a6ad0'); A.p(9, 2, '#8a6ad0'); A.poly([[0, 10], [5, 9], [5, 18], [2.5, 20], [0, 18]], '#3a3448'); A.poly([[1, 11], [4, 10.5], [4, 17], [2.5, 18.5], [1, 17]], '#6a5a8a'); A.p(2, 13, '#c9a8ff'); A.line(14, 8, 17, 1, '#8a8aa0', 1); }),
+  shadowWolf: () => mk(20, 14, A => { A.line(16, 8, 19, 4, '#1e1630', 2); A.e(9, 8.5, 7, 3.5, '#1e1630'); A.e(9, 8, 6.5, 3, '#2e2244'); A.e(4, 6, 3.2, 2.6, '#2e2244'); A.poly([[2, 4], [3, 1], [4, 4]], '#2e2244'); A.poly([[5, 4], [6, 1], [7, 4]], '#2e2244'); A.p(3, 6, '#c9a8ff'); A.p(5, 6, '#c9a8ff'); A.p(1, 7, '#8a6ad0'); A.r(5, 11, 2, 2, '#1e1630'); A.r(12, 11, 2, 2, '#1e1630'); A.p(10, 6, '#3a2a5a'); A.p(13, 7, '#3a2a5a'); }),
+  lostKeeper: () => mk(16, 22, A => { A.e(8, 20.5, 5.5, 1.6, 'rgba(0,0,0,.3)'); A.poly([[3, 20], [4, 9], [8, 3], [12, 9], [13, 20]], '#2e2244'); A.poly([[4, 20], [5, 10], [8, 5], [11, 10], [12, 20]], '#3a2e52'); A.e(8, 9, 2.6, 2.4, '#14101c'); A.p(7, 9, '#c9a8ff'); A.p(9, 9, '#c9a8ff'); A.line(12, 12, 14, 15, '#6a5a5a', 1); A.r(13, 15, 3, 4, '#6a5a5a'); A.r(13.5, 15.5, 2, 3, '#8a6ad0'); A.p(14, 16, '#e8dcff'); }),
+});
 // ================= 빛: 등불·횃불 빛 계산(computeLight)과 밝기(lightAt), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
@@ -7972,7 +8096,7 @@ function computeLight() {
 //   벽과 바닥 사이: 바닥 쪽으로 청록빛이 덩어리지게 들쭉날쭉 번짐(벽에서 0~11px, #86f2d2 → #2a7ee6) — 새 빛에서는 스스로 빛나요.
 
 const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19, ICE_FROZEN = 20;
-const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13]); // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
+const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13, 16, 17]); // v129 그림자 바위·결정 광맥도 // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
 const ic_hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const ic_mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const IC = {
@@ -8222,7 +8346,7 @@ const NEW_FLOORS = new Set([1, 2, WATER, 5, 6]); // 새 방식으로 굽는 바�
 const tr_BUILT = new Set([5, 6]); // 블록처럼 칸 단위로 깔리는 바닥
 const ROCKS = [1, 2, 3, 9]; // 광석의 바탕이 될 수 있는 바위
 const ORE_T = new Set([4, 5, 10, 12, 13]);
-const tr_NEW_WALLS = new Set([...ROCKS, ...ORE_T]);
+const tr_NEW_WALLS = new Set([...ROCKS, ...ORE_T, 16, 17]); // v129 그림자 바위(16)·결정 광맥(17)은 현무암 그림을 물들여서
 const tr_A_EDGE = { gE: [32, 53, 20], gS: [49, 82, 31], pE: [54, 35, 23], pS: [90, 59, 39] }; // 외곽선·그늘 색 (텍스처의 가장 어두운 색에서)
 const tr_JOIN = { wobble: .16, jag: .085, pathWobble: .12, pathJag: .03, link: .2 }; // 경계가 구불거리는 정도 (칸 단위 ≈ ×16px)
 const tr_CLIFF = { h: 7, fh: 2 }; // 물가 절벽: 땅 쪽 7줄 + 물 쪽 거품 2줄
@@ -8233,6 +8357,7 @@ const GLOW_RULE = {
   10: (r, g, b) => r > 150 && g > 110 && b < 130,
   13: (r, g, b) => tr_lum(r, g, b) > 150,
   12: (r, g, b) => b > 200 && tr_lum(r, g, b) > 150,
+  17: (r, g, b) => r > 150 && b > 200 && g < 200, // v129 그림자 결정 (보랏빛)
   // v79: 켜진 빛 물건(횃불·등불·난로 …)의 불꽃 — 진한 빨강~노랑 불꽃과 아주 밝은 픽셀만 스스로 빛나요 (나무 손잡이·몸통은 빛을 받기만)
   lamp: (r, g, b) => (r > 150 && r - b > 100) || tr_lum(r, g, b) > 215,
 };
@@ -8250,6 +8375,9 @@ function terrainReady() {
   for (const t of ROCKS) { const t12 = tr_top12(AK('wtop/' + t)); TR.wtop[t] = [t12, t12, t12, t12]; TR.wfront[t] = [AK('wfront/' + t)]; TR.wtop16[t] = AK('wtop/' + t); }
   TR.ore = {};
   for (const t of ORE_T) for (const h of ROCKS) TR.ore[t + '_' + h] = { top: [0, 1, 2, 3].map(v => tr_top12(AK(`ore/${t}_${h}_top_${v}`))), top16: [0, 1, 2, 3].map(v => AK(`ore/${t}_${h}_top_${v}`)), front: [0, 1, 2].map(v => AK(`ore/${t}_${h}_front_${v}`)) };
+  // v129 그림자 바위 = 현무암 그림을 짙은 보라로 · 결정 광맥 = 현무암 속 서리 광맥 그림의 결정을 보랏빛으로 (Claude 임시)
+  TR.wtop16[16] = tr_shade(AK('wtop/9')); const s12 = tr_top12(TR.wtop16[16]); TR.wtop[16] = [s12, s12, s12, s12]; TR.wfront[16] = [tr_shade(AK('wfront/9'))];
+  { const t16 = [0, 1, 2, 3].map(v => tr_shade(AK(`ore/12_9_top_${v}`), true)); TR.ore[17] = { top: t16.map(tr_top12), top16: t16, front: [0, 1, 2].map(v => tr_shade(AK(`ore/12_9_front_${v}`), true)) }; }
   TR.ripple = [AK('ripple_0'), AK('ripple_1')];
   TR.built = {};
   for (const [f, k] of [[5, 'fwood'], [6, 'fstone']]) { const px = tr_pixOf(AK(k)); let dk = [255, 255, 255], best = 1e9;
@@ -8259,10 +8387,16 @@ function terrainReady() {
   iceWarm(); // v81: 얼음 무늬 표를 미리 (얼음 동굴에 처음 들어갈 때 끊기지 않게)
   return TR.ready = true;
 }
+// v129 그림 물들이기: 밝기를 짙은 보라 단계로 (cry = 서리 결정처럼 파랗게 빛나는 픽셀은 보랏빛 결정으로)
+const SH_RAMP = [[22, 16, 36], [46, 36, 68], [74, 60, 108], [118, 100, 166]], SH_CRY = [[110, 70, 190], [176, 140, 240], [236, 226, 255]];
+const sh_ramp = (R, t) => { t = Math.max(0, Math.min(.999, t)) * (R.length - 1); const k = Math.floor(t), f = t - k, a = R[k], b = R[k + 1]; return [0, 1, 2].map(j => Math.round(a[j] + (b[j] - a[j]) * f)); };
+function tr_shade(img, cry) { if (!img) return img; const w = img.width, h = img.height; return tcnv(w, h, g => { g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, w, h), D = d.data;
+  for (let k = 0; k < D.length; k += 4) { if (!D[k + 3]) continue; const r = D[k], gg = D[k + 1], b = D[k + 2], L = tr_lum(r, gg, b) / 255, c = cry && b > 170 && b > r + 30 ? sh_ramp(SH_CRY, L * 1.15) : sh_ramp(SH_RAMP, L * 1.9); D[k] = c[0]; D[k + 1] = c[1]; D[k + 2] = c[2]; }
+  g.putImageData(d, 0, 0); }); }
 // 광석이 박힐 바위: 가까운 둘레부터 세어 가장 많은 바위 (흙·돌·화강암·현무암). 없으면 돌
 function oreHost(x, y) {
   for (let r = 1; r <= 5; r++) { let best = 0, bn = 0; const n = { 1: 0, 2: 0, 3: 0, 9: 0 };
-    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || !inB(x + dx, y + dy)) continue; const w = G.wall[idx(x + dx, y + dy)]; if (n[w] !== undefined) n[w]++; }
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || !inB(x + dx, y + dy)) continue; const w0 = G.wall[idx(x + dx, y + dy)], w = w0 === 16 || w0 === 17 ? 9 : w0; if (n[w] !== undefined) n[w]++; } // v129 그림자 바위 곁 광맥은 현무암 속 그림
     for (const h of ROCKS) if (n[h] > bn) { bn = n[h]; best = h; }
     if (best) return best; }
   return 2;
@@ -8271,6 +8405,7 @@ function oreHost(x, y) {
 function wallArt(x, y, w) {
   if (!TR.ready || !tr_NEW_WALLS.has(w)) return null;
   const tv = (hash2(x, y, 9) * 4) | 0, fv = (hash2(x, y, 13) * 3) | 0;
+  if (w === 17) { const o = TR.ore[17]; return { top: o.top[tv], top16: o.top16[tv], front: o.front[fv], ore: 17 }; }
   if (ORE_T.has(w)) { const o = TR.ore[w + '_' + oreHost(x, y)]; return { top: o.top[tv], top16: o.top16[tv], front: o.front[fv], ore: w }; }
   return { top: TR.wtop[w][tv], top16: TR.wtop16[w], front: TR.wfront[w][0], ore: 0 };
 }
@@ -8673,8 +8808,8 @@ function gxglCvURL() { try { return glCv ? glCv.toDataURL() : ''; } catch (e) { 
 // ================= map =================
 let mapCv = null, mapCtx = null, mapImg = null;
 const MAPF = { 30: '#d29a58', 31: '#b8503f', 32: '#dcae70', 33: '#b0532f', 34: '#c0645a', 7: '#6fb36a', 8: '#7f6191', 9: '#958ccf', 10: '#3f7fb5', 1: '#4f8f57', 2: '#7a5442', 3: '#6a5272', 4: '#4a5378', 5: '#c08a58', 6: '#8f8aa3' };
-Object.assign(MAPF, { 22: '#2a1e22', 21: '#7a6a3a', 17: '#ff6a2a', 18: '#4a3f48', 19: '#c8dcef', 20: '#a8e0f8', 11: '#6fb6e0', 12: '#3f7fb5', 13: '#5b9bd0', 14: '#8a7ad0', 15: '#7fb0d8', 16: '#e8a8c0' });
-const MAPW = { 14: '#b07a42', 15: '#94402a', 13: '#8a72d0', 9: '#2e2832', 10: '#c9a03a', 11: '#9cc8e8', 12: '#5ad8f0', 1: '#3a2a25', 2: '#38364a', 3: '#4a3a78', 4: '#a85f32', 5: '#8d97a8', 6: '#8a5a32', 7: '#6f6a86', 8: '#0b0910' };
+Object.assign(MAPF, { 23: '#3a2e48', /* v129 그림자 바닥 */ 22: '#2a1e22', 21: '#7a6a3a', 17: '#ff6a2a', 18: '#4a3f48', 19: '#c8dcef', 20: '#a8e0f8', 11: '#6fb6e0', 12: '#3f7fb5', 13: '#5b9bd0', 14: '#8a7ad0', 15: '#7fb0d8', 16: '#e8a8c0' });
+const MAPW = { 16: '#241c34', 17: '#8a6ad0', /* v129 그림자 바위·결정 광맥 */ 14: '#b07a42', 15: '#94402a', 13: '#8a72d0', 9: '#2e2832', 10: '#c9a03a', 11: '#9cc8e8', 12: '#5ad8f0', 1: '#3a2a25', 2: '#38364a', 3: '#4a3a78', 4: '#a85f32', 5: '#8d97a8', 6: '#8a5a32', 7: '#6f6a86', 8: '#0b0910' };
 function rebuildMap() { chunks.clear(); AMB.length = 0; if (!mapCv || mapCv.width !== W) { mapCv = document.createElement('canvas'); mapCv.width = W; mapCv.height = H; mapCtx = mapCv.getContext('2d'); } mapImg = mapCtx.createImageData(W, H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (G.explored[idx(x, y)]) mapPixel(x, y, true); mapCtx.putImageData(mapImg, 0, 0); }
 function mapPixel(x, y, bulk) {
   const i = idx(x, y); if (!G.explored[i] || !mapImg) return; const w = G.wall[i]; const col = w ? MAPW[w] : MAPF[G.floor[i]] || '#555';
@@ -9315,11 +9450,13 @@ function drawEntity(it, t) {
   if (it.k === 'bv') { const b = it.b, img = animalImg(b.img); shadow(b.x, b.y + .1, .26, .3); const bob = b.moving && Math.floor(t * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, b.x, b.y + .12 - bob, { flip: b.flip }); // v114 비버: 걷기·갉기·잠
     if (b.img === 'beaverZ') { ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .3 + zz * .3) * T - camX, (b.y - .7 - zz * .5) * T - camY); ctx.globalAlpha = 1; } return; }
   if (it.k === 'e') {
-    const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
+    const e = it.e, def = ENEMY[e.k]; if (!def.alpha) shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3); // v129 망각 유령은 그림자 없이 반투명
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
     else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
-    if (e.under) { ctx.fillStyle = '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
+    if (def.alpha) ctx.globalAlpha = def.alpha * (e.fade > 0 ? Math.max(0, e.fade) : 1);
+    if (e.under) { ctx.fillStyle = def.mound || '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
     else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
+    ctx.globalAlpha = 1;
     if (e.slow > 0 || e.poison || e.burn) { ctx.fillStyle = e.burn ? '#ff9b4a' : e.poison ? '#9be37a' : '#bfe6ff'; ctx.fillRect(Math.round(e.x * T - camX) - Z, Math.round((e.y - 1.15 - (e.z || 0)) * T - camY), 2 * Z, 2 * Z); }
     if (e.hp < (e.mh || def.hp)) { // v111: 픽셀 칸에 맞춰(반올림) 그림 머리 위에 — 키 큰 몬스터 그림을 덮지 않게
       const img = SPR[e.k], top = e.y + .12 - (e.under || !img ? 14 : effH(img)) / 16 - (e.z || 0), w = 12 * Z, hh = 2 * Z,
@@ -9432,6 +9569,7 @@ function drawHazards(T, camX, camY) {
   for (const h of G.hz || []) { const X = h.x * T - camX, Y = h.y * T - camY, warn = h.t < h.warn;
     if (h.k === 'poison') { const a = warn ? .2 : Math.min(.75, (h.life - h.t) * 1.2); ctx.globalAlpha = a; ctx.fillStyle = '#9be37a'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); ctx.fillStyle = '#d59bff'; ctx.beginPath(); ctx.ellipse(X - h.r * T * .3, Y - h.r * T * .1, h.r * T * .3, h.r * T * .2, 0, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; } // v101
     else if (h.k === 'lava') { const a = warn ? .25 + .25 * Math.sin(t * 20) : Math.min(1, (h.life - h.t) * 1.5); ctx.globalAlpha = a; ctx.fillStyle = warn ? '#ff8a3d' : '#e8501f'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); if (!warn) { ctx.fillStyle = '#ffc861'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * .55, h.r * T * .32, 0, 0, 6.283); ctx.fill(); } ctx.globalAlpha = 1; }
+    else if (warn && h.k === 'shade') { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(201,168,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(58,42,90,${pr * .45})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } // v129 그림자 원
     else if (warn) { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(191,230,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(191,230,255,${pr * .25})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } }
 }
 const ROTC = new WeakMap(), turned = c => { let k = ROTC.get(c); if (!k) { k = rot90(c); ROTC.set(c, k); } return k; };
