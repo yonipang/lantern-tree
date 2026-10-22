@@ -19,12 +19,13 @@ import { rollStar } from './farming.js';
 import { toolPow, wear } from './inventory.js';
 import { afterCut, isYoung, youngDrops } from './nature.js';
 import { gainXp, mineMul } from './player.js';
+import { SHADOW_WALL_XP } from '../data/shadow.js';
 import { hasItem } from './quests.js';
 import { idx, inB, W } from '../world/map.js';
 import { anchorAt, delObj, fpOf } from '../world/tiles.js';
 import { markLight } from './loop.js';
 import { nestContents } from './beaver.js';
-export function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0); }
+export function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(SHADOW_WALL_XP[w] || (w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0)); } // v129 그림자 바위 4 · 결정 광맥 10
 export function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
   faceTo(t.x + .5 - p.x, t.y + .5 - p.y);

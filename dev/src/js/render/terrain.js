@@ -17,7 +17,7 @@ export const NEW_FLOORS = new Set([1, 2, WATER, 5, 6]); // 새 방식으로 굽�
 const tr_BUILT = new Set([5, 6]); // 블록처럼 칸 단위로 깔리는 바닥
 export const ROCKS = [1, 2, 3, 9]; // 광석의 바탕이 될 수 있는 바위
 export const ORE_T = new Set([4, 5, 10, 12, 13]);
-const tr_NEW_WALLS = new Set([...ROCKS, ...ORE_T]);
+const tr_NEW_WALLS = new Set([...ROCKS, ...ORE_T, 16, 17]); // v129 그림자 바위(16)·결정 광맥(17)은 현무암 그림을 물들여서
 const tr_A_EDGE = { gE: [32, 53, 20], gS: [49, 82, 31], pE: [54, 35, 23], pS: [90, 59, 39] }; // 외곽선·그늘 색 (텍스처의 가장 어두운 색에서)
 const tr_JOIN = { wobble: .16, jag: .085, pathWobble: .12, pathJag: .03, link: .2 }; // 경계가 구불거리는 정도 (칸 단위 ≈ ×16px)
 const tr_CLIFF = { h: 7, fh: 2 }; // 물가 절벽: 땅 쪽 7줄 + 물 쪽 거품 2줄
@@ -28,6 +28,7 @@ export const GLOW_RULE = {
   10: (r, g, b) => r > 150 && g > 110 && b < 130,
   13: (r, g, b) => tr_lum(r, g, b) > 150,
   12: (r, g, b) => b > 200 && tr_lum(r, g, b) > 150,
+  17: (r, g, b) => r > 150 && b > 200 && g < 200, // v129 그림자 결정 (보랏빛)
   // v79: 켜진 빛 물건(횃불·등불·난로 …)의 불꽃 — 진한 빨강~노랑 불꽃과 아주 밝은 픽셀만 스스로 빛나요 (나무 손잡이·몸통은 빛을 받기만)
   lamp: (r, g, b) => (r > 150 && r - b > 100) || tr_lum(r, g, b) > 215,
 };
@@ -45,6 +46,9 @@ export function terrainReady() {
   for (const t of ROCKS) { const t12 = tr_top12(AK('wtop/' + t)); TR.wtop[t] = [t12, t12, t12, t12]; TR.wfront[t] = [AK('wfront/' + t)]; TR.wtop16[t] = AK('wtop/' + t); }
   TR.ore = {};
   for (const t of ORE_T) for (const h of ROCKS) TR.ore[t + '_' + h] = { top: [0, 1, 2, 3].map(v => tr_top12(AK(`ore/${t}_${h}_top_${v}`))), top16: [0, 1, 2, 3].map(v => AK(`ore/${t}_${h}_top_${v}`)), front: [0, 1, 2].map(v => AK(`ore/${t}_${h}_front_${v}`)) };
+  // v129 그림자 바위 = 현무암 그림을 짙은 보라로 · 결정 광맥 = 현무암 속 서리 광맥 그림의 결정을 보랏빛으로 (Claude 임시)
+  TR.wtop16[16] = tr_shade(AK('wtop/9')); const s12 = tr_top12(TR.wtop16[16]); TR.wtop[16] = [s12, s12, s12, s12]; TR.wfront[16] = [tr_shade(AK('wfront/9'))];
+  { const t16 = [0, 1, 2, 3].map(v => tr_shade(AK(`ore/12_9_top_${v}`), true)); TR.ore[17] = { top: t16.map(tr_top12), top16: t16, front: [0, 1, 2].map(v => tr_shade(AK(`ore/12_9_front_${v}`), true)) }; }
   TR.ripple = [AK('ripple_0'), AK('ripple_1')];
   TR.built = {};
   for (const [f, k] of [[5, 'fwood'], [6, 'fstone']]) { const px = tr_pixOf(AK(k)); let dk = [255, 255, 255], best = 1e9;
@@ -54,10 +58,16 @@ export function terrainReady() {
   iceWarm(); // v81: 얼음 무늬 표를 미리 (얼음 동굴에 처음 들어갈 때 끊기지 않게)
   return TR.ready = true;
 }
+// v129 그림 물들이기: 밝기를 짙은 보라 단계로 (cry = 서리 결정처럼 파랗게 빛나는 픽셀은 보랏빛 결정으로)
+const SH_RAMP = [[22, 16, 36], [46, 36, 68], [74, 60, 108], [118, 100, 166]], SH_CRY = [[110, 70, 190], [176, 140, 240], [236, 226, 255]];
+const sh_ramp = (R, t) => { t = Math.max(0, Math.min(.999, t)) * (R.length - 1); const k = Math.floor(t), f = t - k, a = R[k], b = R[k + 1]; return [0, 1, 2].map(j => Math.round(a[j] + (b[j] - a[j]) * f)); };
+function tr_shade(img, cry) { if (!img) return img; const w = img.width, h = img.height; return tcnv(w, h, g => { g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, w, h), D = d.data;
+  for (let k = 0; k < D.length; k += 4) { if (!D[k + 3]) continue; const r = D[k], gg = D[k + 1], b = D[k + 2], L = tr_lum(r, gg, b) / 255, c = cry && b > 170 && b > r + 30 ? sh_ramp(SH_CRY, L * 1.15) : sh_ramp(SH_RAMP, L * 1.9); D[k] = c[0]; D[k + 1] = c[1]; D[k + 2] = c[2]; }
+  g.putImageData(d, 0, 0); }); }
 // 광석이 박힐 바위: 가까운 둘레부터 세어 가장 많은 바위 (흙·돌·화강암·현무암). 없으면 돌
 export function oreHost(x, y) {
   for (let r = 1; r <= 5; r++) { let best = 0, bn = 0; const n = { 1: 0, 2: 0, 3: 0, 9: 0 };
-    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || !inB(x + dx, y + dy)) continue; const w = G.wall[idx(x + dx, y + dy)]; if (n[w] !== undefined) n[w]++; }
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || !inB(x + dx, y + dy)) continue; const w0 = G.wall[idx(x + dx, y + dy)], w = w0 === 16 || w0 === 17 ? 9 : w0; if (n[w] !== undefined) n[w]++; } // v129 그림자 바위 곁 광맥은 현무암 속 그림
     for (const h of ROCKS) if (n[h] > bn) { bn = n[h]; best = h; }
     if (best) return best; }
   return 2;
@@ -66,6 +76,7 @@ export function oreHost(x, y) {
 export function wallArt(x, y, w) {
   if (!TR.ready || !tr_NEW_WALLS.has(w)) return null;
   const tv = (hash2(x, y, 9) * 4) | 0, fv = (hash2(x, y, 13) * 3) | 0;
+  if (w === 17) { const o = TR.ore[17]; return { top: o.top[tv], top16: o.top16[tv], front: o.front[fv], ore: 17 }; }
   if (ORE_T.has(w)) { const o = TR.ore[w + '_' + oreHost(x, y)]; return { top: o.top[tv], top16: o.top16[tv], front: o.front[fv], ore: w }; }
   return { top: TR.wtop[w][tv], top16: TR.wtop16[w], front: TR.wfront[w][0], ore: 0 };
 }

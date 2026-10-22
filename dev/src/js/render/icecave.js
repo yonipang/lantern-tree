@@ -15,7 +15,7 @@ import { presetLayers } from './glight.js';
 import { TR } from './terrain.js';
 
 export const ICE_W = 11, ICE_BIOME = 4, ICE_SNOW = 19, ICE_FROZEN = 20;
-export const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13]); // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
+export const SLANT = new Set([ICE_W, 1, 2, 3, 9, 4, 5, 10, 12, 13, 16, 17]); // v129 그림자 바위·결정 광맥도 // 가장자리가 기울어지는 벽 (얼음·흙·돌·화강암·현무암·광맥 5종)
 const ic_hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const ic_mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const IC = {

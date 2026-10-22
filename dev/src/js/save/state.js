@@ -23,6 +23,7 @@ import { placeWarps } from '../sim/warp.js';
 import { placeCocoons } from '../sim/npc.js';
 import { placeArchives } from '../sim/archive.js';
 import { deepOnLoad } from '../sim/deep.js';
+import { shadowOnLoad } from '../sim/shadow.js';
 export const SAVE_KEY = 'lantern-tree-save-v1';
 // each playthrough gets its own id so cloud sync never mixes two different adventures
 export const newRunId = () => Date.now().toString(36) + rand().toString(36).slice(2, 8);
@@ -181,7 +182,7 @@ export function deserialize(s) {
   syncTiers128(); // v128: 작업대·장비제작대 같은 단계
   grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); shadowOnLoad(); /* v129 */ migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed

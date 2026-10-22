@@ -30,6 +30,7 @@ export function updateHazards(dt) {
     const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
     if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
     else if (h.k === 'poison') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } // v101 독 구름·독 웅덩이(닿아 있는 동안 계속)
+    else if (h.k === 'shade') { if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#c9a8ff', 22, 4, .4); emit('shake', .2); for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } } // v129 길 잃은 등불지기의 발밑 원
     else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
 export function bossDot(b, n, col) { if (b.hp <= 0 || G.bossDead[b.k]) return; b.hp -= n; emit('ftext', b.x, b.y - 2.3, n, col); if (b.hp <= 0) hitBoss(b, 0, false); }
@@ -42,7 +43,7 @@ export function hitBoss(b, dmg, crit, fx) {
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500 }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
