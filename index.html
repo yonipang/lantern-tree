@@ -2659,7 +2659,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; /* v119 · v124 · v128 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; G.stats.dark130 = 1; /* v119 · v124 · v128 · v130 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2792,7 +2792,7 @@ function deserialize(s) {
   syncTiers128(); // v128: 작업대·장비제작대 같은 단계
   grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); shadowOnLoad(); /* v129 */ migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); shadowOnLoad(); /* v129 */ migrateDark130(); /* v130 */ migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
@@ -3022,6 +3022,8 @@ function syncTiers128() { if (!G.stats.tier128) { G.stats.tier128 = 1; if ((G.st
 function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 1; for (const o of G.objs.values()) if (o && o.t === 'smelter') { G.stats.gbench = 1; break; }
   const f = GUIDE.find(q => q.id === 'forge'), g = GUIDE.find(q => q.id === 'gbench'); if (!f || !g || !f.done() || !g.done()) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {}; G.qclaim.gbench = 1; qx.gbench = 1; }
 function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }
+// v130: 이미 큰 어둠을 물리친 옛 세이브는 첫 처치 보상(새벽돌 6 + 큰 어둠의 무기 하나)을 나루에게서 한 번 받아요 (sim/npc.js talkTo → sim/bosses.js darkOweGive). 처음 한 번만 확인(stats.dark130)
+function migrateDark130() { const S = G.stats; if (S.dark130) return; S.dark130 = 1; if ((S.beaten || {}).dark && !(S.uniq || {}).dark) S.darkOwe = 1; }
 let saveFailWarned = false;
 function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
@@ -3636,20 +3638,20 @@ const TERRAIN_MATS = new Set(['dirt', 'stone', 'granite', 'basalt', 'iceBlock'])
 for (const r of RECIPES) r.req = r.req.map(([id, c]) => [id, TERRAIN_MATS.has(id) ? c * 2 : c]);
 // ================= v60: workbench tiers — 작업대 → 구리 → 철 → 석영 → 금 → 서리 =================
 // one workbench upgraded in place (o.lv 0–5). A higher tier also makes everything the lower tiers make; its own things come first.
-const BENCH_N = ['작업대', '구리 작업대', '철 작업대', '석영 작업대', '금 작업대', '서리 작업대'];
-const BENCH_IT = ['bench', 'forge', 'benchFe', 'benchQ', 'benchAu', 'benchFr']; // the item you get back when picking one up ('forge' = the old copper workbench item)
-const BENCH_UP = [null, [['copperBar', 8], ['dirt', 20]], [['ironBar', 8], ['stone', 30]], [['quartzR', 6], ['granite', 20]], [['goldBar', 6], ['basalt', 20]], [['frostShard', 10], ['iceBlock', 20]]];
-const BENCH_COL = [null, '#e5884a', '#c8d0dc', '#d8d2ee', '#ffd25c', '#9fd8f0'];
+const BENCH_N = ['작업대', '구리 작업대', '철 작업대', '석영 작업대', '금 작업대', '서리 작업대', '그림자 작업대']; // v130: 6단계 그림자
+const BENCH_IT = ['bench', 'forge', 'benchFe', 'benchQ', 'benchAu', 'benchFr', 'benchSh']; // the item you get back when picking one up ('forge' = the old copper workbench item)
+const BENCH_UP = [null, [['copperBar', 8], ['dirt', 20]], [['ironBar', 8], ['stone', 30]], [['quartzR', 6], ['granite', 20]], [['goldBar', 6], ['basalt', 20]], [['frostShard', 10], ['iceBlock', 20]], [['shadowCry', 10], ['shadowRock', 20]]]; // v130 그림자: 그림자 결정 10 · 그림자 바위 20
+const BENCH_COL = [null, '#e5884a', '#c8d0dc', '#d8d2ee', '#ffd25c', '#9fd8f0', '#8a6ad0'];
 const BENCH_MAX = BENCH_N.length - 1;
-const TIER_MAT = [[5, ['frostShard', 'frostCore', 'iceBlock']], [4, ['goldBar', 'goldOre', 'obsidian', 'lavaCore', 'basalt']], [3, ['quartzR', 'crystal', 'cryGem', 'granite', 'golemCore', 'gCrystal']], [2, ['ironBar', 'ironOre']], [1, ['copperBar', 'copperOre']]];
+const TIER_MAT = [[6, ['shadowCry', 'shadowRock', 'dawnstone']], [5, ['frostShard', 'frostCore', 'iceBlock']], [4, ['goldBar', 'goldOre', 'obsidian', 'lavaCore', 'basalt']], [3, ['quartzR', 'crystal', 'cryGem', 'granite', 'golemCore', 'gCrystal']], [2, ['ironBar', 'ironOre']], [1, ['copperBar', 'copperOre']]];
 for (const r of RECIPES) if (r.at === 'bench' || r.at === 'forge') { let t = 0; for (const [lv, ms] of TIER_MAT) if (r.req.some(([id]) => ms.includes(id))) { t = lv; break; } r.tier = r.at === 'forge' ? Math.max(1, t) : t; r.at = 'bench'; }
 { const k = RECIPES.findIndex(r => r.out === 'forge'); if (k >= 0) RECIPES.splice(k, 1); } // no longer made: you upgrade the workbench instead
 Object.assign(ITEMS.forge, { n: BENCH_N[1], obj: 'bench', blv: 1, d: '1단계 작업대. 작업대에서 만드는 것도 모두 만들어요. (v60 전 이름: 구리 제작대)' });
 for (let lv = 2; lv <= BENCH_MAX; lv++) ITEMS[BENCH_IT[lv]] = { n: BENCH_N[lv], kind: 'place', obj: 'bench', blv: lv, d: `${lv}단계 작업대. ${BENCH_N.slice(0, lv).join('·')}에서 만드는 것도 모두 만들어요.` };
 Object.assign(OBJ.forge, { n: BENCH_N[1], station: 'bench' }); STN.forge = BENCH_N[1]; // old saves: placed copper workbenches become tier-1 workbenches (convertForges)
 // ================= v61: the 장비제작대 has the same six tiers; weapons · armour · accessories · tools are made, fixed, broken down and upgraded there =================
-const GEAR_N = ['장비제작대', '구리 장비제작대', '철 장비제작대', '석영 장비제작대', '금 장비제작대', '서리 장비제작대'];
-const GEAR_IT = ['smelter', 'smelterCu', 'smelterFe', 'smelterQ', 'smelterAu', 'smelterFr'];
+const GEAR_N = ['장비제작대', '구리 장비제작대', '철 장비제작대', '석영 장비제작대', '금 장비제작대', '서리 장비제작대', '그림자 장비제작대'];
+const GEAR_IT = ['smelter', 'smelterCu', 'smelterFe', 'smelterQ', 'smelterAu', 'smelterFr', 'smelterSh'];
 for (let lv = 1; lv <= BENCH_MAX; lv++) ITEMS[GEAR_IT[lv]] = { n: GEAR_N[lv], kind: 'place', obj: 'smelter', blv: lv, d: `${lv}단계 장비제작대. ${GEAR_N.slice(0, lv).join('·')}에서 만드는 장비도 모두 만들어요.` };
 const TIERED = { bench: BENCH_N, smelter: GEAR_N }, TIER_IT = { bench: BENCH_IT, smelter: GEAR_IT };
 const GEAR_TOOLS = ['pick', 'shovel', 'rod', 'wcan', 'sickle', 'lasso', 'recall'];
@@ -4471,6 +4473,75 @@ Object.assign(ENEMY, {
 const SHADOW_TABLE = [['shadowHand', .25], ['shadowGhost', .2], ['shadowKnight', .2], ['shadowWolf', .25], ['lostKeeper', .1]];
 // 벽 캘 때 경험치 (sim/gathering.js breakWall)
 const SHADOW_WALL_XP = { [SHADOW_ROCK]: 4, [SHADOW_VEIN_W]: 10 };
+// ================= v130 남은 성장 확장 ② 7·8단계 무기·방어구 · 큰 어둠 재도전 · 새벽돌 (dev/design/성장확장.md 8-2c) =================
+// 사용자 선택(2026-10-22, 수치는 추천대로): 작업대·장비제작대 6단계 「그림자」(data/automation-tiers.js — 올리기 그림자 결정 10 · 그림자 바위 20).
+// 7단계(그림자, 착용 Lv.50)와 8단계(새벽돌, 착용 Lv.60) 장비는 모두 그림자 장비제작대에서 만들어요(장비 단계 6). 7단계 곡괭이는 없어요.
+// 큰 어둠도 다른 보스처럼 특별 무기 6종(7단계 × 1.25, 효과 「어둠 번개」 — 사용자 선택: 주변 적까지 이어서 맞음).
+// 새벽돌은 큰 어둠에서: 첫 처치 6개 · 다시 물리치면 2~4개(sim/bosses.js). 옛 세이브에서 이미 물리친 사람은 나루에게서 한 번(sim/npc.js · save/migrations.js).
+// 이 파일은 data/shadow.js 다음이라 「지형 재료 2배」·레시피 단계 나누기가 적용되지 않아요 — 재료 개수와 단계(tier)를 여기 적힌 그대로 써요.
+
+const SHADOW_TIER = 6; // 장비제작대 6단계(그림자)에서 7·8단계 장비를 만들어요
+// 단계 6(7단계) · 7(8단계): 검 공격력 64 · 84, 착용 레벨 50 · 60
+WT_SW.push(64, 84); WT_RLV.push(50, 60);
+WT_TABLE.push(
+  ['swordShadow', 'daggerShadow', 'spearShadow', 'hammerShadow', 'bowShadow', 'staffShadow'],
+  ['swordDawnstone', 'daggerDawnstone', 'spearDawnstone', 'hammerDawnstone', 'bowDawnstone', 'staffDawnstone'],
+);
+const T78_NAME = ['그림자', '새벽돌'], T78_DUR = [1600, 2000], T78_RAR = [3, 4]; // 영웅 · 전설
+const T78_FIX = [[['shadowCry', 2]], [['dawnstone', 1]]];
+const KIND_N = { sword: '검', dagger: '단검', spear: '창', hammer: '망치', bow: '활', staff: '지팡이' };
+const T78_D = [
+  { sword: '그림자 결정으로 벼린 검. 깊은 곳의 어둠을 베어요.', dagger: '어둠처럼 소리 없이 찌르는 단검.', spear: '끝이 그림자 결정으로 된 긴 창.', hammer: '그림자 바위를 통째로 단 망치. 쿵! 하고 땅이 울려요.', bow: '그림자 결정으로 깎은 활. 화살이 어둠을 가르며 날아가요.', staff: '보랏빛 결정 끝에서 그림자 구슬이 날아가요.' },
+  { sword: '새벽돌로 벼린 검. 따뜻한 빛이 날을 따라 흘러요.', dagger: '새벽빛처럼 날카로운 단검.', spear: '끝에서 새벽빛이 번지는 긴 창.', hammer: '새벽돌을 박은 망치. 내려치면 빛이 터져요.', bow: '새벽돌로 보강한 활. 빛나는 화살이 멀리 날아가요.', staff: '새벽돌 끝에서 아침 햇살 같은 구슬이 날아가요.' },
+];
+const T78_ORB = ['#c9a8ff', '#ffe9a8'];
+// 재료: 종류 → [단계 7, 단계 8]
+const T78_REQ = {
+  sword: [[['shadowCry', 8], ['shadowRock', 6], ['frostShard', 2]], [['dawnstone', 4], ['shadowCry', 6]]],
+  dagger: [[['shadowCry', 5], ['shadowRock', 3], ['frostShard', 1]], [['dawnstone', 3], ['shadowCry', 4]]],
+  spear: [[['shadowCry', 7], ['shadowRock', 4], ['wood', 3]], [['dawnstone', 4], ['shadowCry', 5], ['wood', 3]]],
+  hammer: [[['shadowCry', 10], ['shadowRock', 8], ['goldBar', 2]], [['dawnstone', 5], ['shadowCry', 8]]],
+  bow: [[['shadowCry', 6], ['shadowRock', 2], ['rope', 3]], [['dawnstone', 3], ['shadowCry', 5], ['rope', 3]]],
+  staff: [[['shadowCry', 6], ['glowcap', 4], ['goldBar', 2]], [['dawnstone', 3], ['shadowCry', 5], ['glowcap', 4]]],
+};
+for (let s = 0; s < 2; s++) { const t = SHADOW_TIER + s; WT_TABLE[t].forEach((id, k) => { const wt = WT_ORDER[k];
+  ITEMS[id] = { n: `${T78_NAME[s]} ${KIND_N[wt]}`, kind: 'sword', wt, stack: 1, d: T78_D[s][wt], orb: wt === 'staff' ? T78_ORB[s] : undefined, dmg: tierDmg(t, wt), rlv: WT_RLV[t], wtier: t };
+  DUR[id] = [T78_DUR[s], T78_FIX[s]]; RAR[id] = T78_RAR[s];
+  const r = Rc(id, 1, T78_REQ[wt][s], 'smelter', 'weapon'); r.tier = SHADOW_TIER; r.cat = 'weapon'; RECIPES.push(r); }); }
+
+// ---- 방어구: 방어력 머리·하의 18 · 24, 상의 29 · 37 (한 벌 65 · 85 → 받는 피해 −57% · −63%) ----
+AR_DEF.head.push(18, 24); AR_DEF.body.push(29, 37); AR_DEF.legs.push(18, 24);
+AR_TABLE.push(
+  [['helmShadow', '그림자 투구', [['shadowCry', 4], ['goldBar', 1]]], ['armorShadow', '그림자 갑옷', [['shadowCry', 7], ['shadowRock', 4]]], ['legsShadow', '그림자 각반', [['shadowCry', 5], ['shadowRock', 3]]]],
+  [['helmDawnstone', '새벽돌 투구', [['dawnstone', 2], ['shadowCry', 3]]], ['armorDawnstone', '새벽돌 갑옷', [['dawnstone', 4], ['shadowCry', 5]]], ['legsDawnstone', '새벽돌 각반', [['dawnstone', 3], ['shadowCry', 4]]]],
+);
+const AR_D78 = { head: '머리에 써요', body: '몸에 입어요', legs: '다리에 입어요' };
+for (let s = 0; s < 2; s++) { const t = SHADOW_TIER + s; AR_TABLE[t].forEach(([id, n, req], k) => { const sl = AR_SLOTS[k];
+  ITEMS[id] = { n, kind: 'wear', slot: sl, stack: 1, def: AR_DEF[sl][t], rlv: WT_RLV[t], wtier: t, d: `${AR_D78[sl]}. 받는 피해를 줄여 줘요.` }; RAR[id] = T78_RAR[s];
+  const r = Rc(id, 1, req, 'smelter', 'armor'); r.tier = SHADOW_TIER; r.cat = 'armor'; RECIPES.push(r); }); }
+
+// ---- 새벽돌 ----
+ITEMS.dawnstone = { n: '새벽돌', d: '큰 어둠을 물리치면 나오는, 새벽처럼 따뜻하게 빛나는 돌. 8단계 장비의 재료예요.' };
+const DAWN_FIRST = 6, DAWN_AGAIN = [2, 4]; // 첫 처치 6개 · 다시 물리치면 2~4개
+const DARK_XP_AGAIN = 1000; // 다시 물리치면 경험치 (첫 처치 4,000의 1/4)
+
+// ---- 큰 어둠 특별 무기 6종 (7단계 × 1.25, 착용 Lv.50) · 효과 「어둠 번개」 ----
+// 맞은 적에서 CHAIN_R칸 안의 적에게 차례로 CHAIN_N마리까지 튀어 그 피해의 CHAIN_MUL만큼 (sim/combat.js chainFx, 보스를 맞혀도 둘레 적에게 튐)
+const CHAIN_N = 3, CHAIN_R = 3, CHAIN_MUL = 0.4;
+BOSS_TIER.dark = SHADOW_TIER;
+BOSS_W.dark = { ids: ['swordDark', 'daggerDark', 'spearDark', 'hammerDark', 'bowDark', 'staffDark'], pre: '큰 어둠의', fx: 'chain', fix: [['shadowCry', 3]], orb: '#c9a8ff' };
+BOSS_W.dark.ids.forEach((id, k) => { const wt = WT_ORDER[k]; SP_OF[id] = 'dark';
+  ITEMS[id] = { n: `큰 어둠의 ${KIND_N[wt]}`, kind: 'sword', wt, stack: 1, fx: 'chain', d: `큰 어둠이 남긴 ${KIND_N[wt]}. 맞힌 적 둘레의 적에게 어둠 번개가 튀어요.`, orb: wt === 'staff' ? '#c9a8ff' : undefined,
+    dmg: Math.round(tierDmg(SHADOW_TIER, wt) * SP_MUL), rlv: WT_RLV[SHADOW_TIER], wtier: SHADOW_TIER };
+  DUR[id] = [1600, BOSS_W.dark.fix]; RAR[id] = 3; });
+
+// ---- 큰 어둠 다시 부르기: 어둠의 심장 조각상 (그림자 작업대) ----
+SUMMON.darkIdol = ['어둠의 심장 조각상', 'dark', [['shadowCry', 10], ['shadowRock', 10], ['goldBar', 4]], '#3a2a5a', '#c9a8ff'];
+ITEMS.darkIdol = { n: '어둠의 심장 조각상', kind: 'summon', boss: 'dark', d: '큰 어둠을 물리친 뒤 가장 깊은 곳 보스방에서 쓰면 큰 어둠이 다시 나타나요. 다시 잡으면 새벽돌과 함께 가끔 큰 어둠의 무기가 떨어져요.' };
+{ const r = Rc('darkIdol', 1, SUMMON.darkIdol[2], 'bench', 'tool'); r.tier = SHADOW_TIER; RECIPES.push(r); }
+
+// ---- 옛 세이브: 이미 큰 어둠을 물리친 사람은 첫 처치 보상을 나루에게서 한 번 (sim/npc.js) — 나루 대사는 Claude 임시 ----
+const NARU_DAWN = ['{이름}님, 큰 어둠이 사라진 자리에서 이걸 찾았어요.', '새벽처럼 따뜻한 돌이랑, 어둠이 남긴 무기예요. {이름}님이 가져요!'];
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -4718,7 +4789,7 @@ const defOf = (it, lv) => Math.round(it.def * (1 + UPG_DMG * (lv || 0)));
 const armorDef = () => { let d = 0; if (!G || !G.equip) return 0; for (const [sl] of EQ_SLOTS) { const e = G.equip[sl], it = e && ITEMS[e.id]; if (it && it.def) d += defOf(it, lvOf(e)); } return d; };
 const armorMul = () => AR_K / (AR_K + armorDef());
 // 방어구 상의 색 (Claude 임시: 단계 재료 색)
-Object.assign(WEAR_PAL, { armorMoss: ['#7fb069', '#4f7a45', '#b8dca0'], armorCopper: ['#d9824a', '#a85a2e', '#f0b080'], armorIron: ['#aab4c4', '#6e7888', '#dfe6ee'], armorCrystal: ['#b493f5', '#7d5fc0', '#e0d0ff'], armorObsidian: ['#4a3a5a', '#2a2238', '#ffd25c'], armorFrost: ['#9fd8f0', '#5a9ac8', '#e8f8ff'] });
+Object.assign(WEAR_PAL, { armorMoss: ['#7fb069', '#4f7a45', '#b8dca0'], armorCopper: ['#d9824a', '#a85a2e', '#f0b080'], armorIron: ['#aab4c4', '#6e7888', '#dfe6ee'], armorCrystal: ['#b493f5', '#7d5fc0', '#e0d0ff'], armorObsidian: ['#4a3a5a', '#2a2238', '#ffd25c'], armorFrost: ['#9fd8f0', '#5a9ac8', '#e8f8ff'], armorShadow: ['#5a3a8a', '#2e2244', '#c9a8ff'], armorDawnstone: ['#ffd98a', '#d89a3a', '#fff6d8'] }); // v130
 // ================= 제작: 가까운 제작대·제작 자리, 만들 수 있는지, 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // recipes people usually make many of at once get a quantity picker
@@ -5541,6 +5612,7 @@ function applyFx(e, fx, dmg, boss) {
   else if (fx === 'burn') e.burn = { t: 3, dps: Math.max(3, dmg * .22) };
   else if (fx === 'slow' && !boss) e.slow = 2.5;
   else if (fx === 'chill' && !boss) { e.slow = 3.5; e.chill = 1; }
+  else if (fx === 'chain') chainFx(e, dmg); // v130 큰 어둠의 무기
   else if (fx === 'split') { for (let k = 0; k < 3; k++) { const a = rand() * 6.283; G.pshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: .32, hit: [e], ang: a, k: 'orb', dmg: Math.max(1, Math.round(dmg * .45)), crit: false, col: '#d6c2ff', kb: 3, pierce: 0, spd: 9 }); } }
 }
 function dotTick(e, dt, boss) {
@@ -5551,10 +5623,15 @@ function dotTick(e, dt, boss) {
 }
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
 function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
+// v130 어둠 번개: 맞은 적(또는 보스)에서 CHAIN_R칸 안의 가장 가까운 적에게 차례로 CHAIN_N마리까지, 그 피해의 CHAIN_MUL만큼 (번개는 다시 튀지 않아요)
+function chainFx(src, dmg) { const hit = new Set([src]), d = Math.max(1, Math.round(dmg * CHAIN_MUL)); let cur = src, from = { x: src.x, y: src.y - .3 };
+  for (let n = 0; n < CHAIN_N; n++) { let best = null, bd = CHAIN_R; for (const e of G.enemies) if (!hit.has(e) && e.hp > 0) { const dd = Math.hypot(e.x - cur.x, e.y - cur.y); if (dd < bd) { bd = dd; best = e; } }
+    if (!best) break; hit.add(best); for (let k = 1; k <= 4; k++) emit('puff', from.x + (best.x - from.x) * k / 4, from.y + (best.y - .3 - from.y) * k / 4, '#c9a8ff', 1, 1.2, .15);
+    hitEnemy(best, d, false, 3); from = { x: best.x, y: best.y - .3 }; cur = best; } }
 function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split' && fx !== 'chain') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
-  if (fx === 'split') applyFx(e, fx, dmg);
+  if (fx === 'split' || fx === 'chain') applyFx(e, fx, dmg); // 쓰러져도 파편·번개는 튀어요
   if (e.hp <= 0) enemyDie(e);
 }
 // ---- the attack button ----
@@ -5691,12 +5768,13 @@ function hitBoss(b, dmg, crit, fx) {
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    const again0 = !!(G.stats.beaten && G.stats.beaten[b.k]); // v130: 큰 어둠은 다시 물리치면 경험치 1,000 (다른 보스는 예전처럼 같은 경험치)
+    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
-    if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
+    if (UNIQ_OF[b.k] || BOSS_W[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { /* v130 큰 어둠도 특별 무기 6종 (UNIQ_OF 없이) */ const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
-    if (b.k === 'dark') darkDown(b); // v108 엔딩
+    if (b.k === 'dark') { spawnDrop('dawnstone', DAWN_FIRST, b.x, b.y); G.stats.darkOwe = 0; darkDown(b); } // v130 새벽돌 6 · v108 엔딩
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'slime') { spawnDrop('lightSeed', 1, b.x, b.y); spawnDrop('gel', 8, b.x, b.y); spawnDrop('copperBar', 5, b.x, b.y); spawnDrop('ironOre', 4, b.x, b.y); emit('toast', '말랑대왕을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -5704,7 +5782,7 @@ function hitBoss(b, dmg, crit, fx) {
     if (b.k === 'golem') { spawnDrop('crystal', 8, b.x, b.y); spawnDrop('cryGem', 3, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); emit('toast', '수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
   }
 }
-function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
+function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); if (b.k === 'dark') spawnDrop('dawnstone', DAWN_AGAIN[0] + Math.floor(rand() * (DAWN_AGAIN[1] - DAWN_AGAIN[0] + 1)), b.x, b.y); /* v130 새벽돌 2~4 */ const u = (UNIQ_OF[b.k] || BOSS_W[b.k]) && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   emit('toast', `${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
   if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
@@ -5819,6 +5897,11 @@ function pickSp(k) {
   const B = BOSS_W[k]; if (!B) return UNIQ_OF[k]; const got = G.stats.spGot = G.stats.spGot || {};
   if (G.stats.uniq && G.stats.uniq[k] && UNIQ_OF[k]) got[UNIQ_OF[k]] = 1;
   const left = B.ids.filter(id => !got[id]), pool = left.length ? left : B.ids, id = pool[Math.floor(rand() * pool.length)]; got[id] = 1; return id; }
+
+// v130 옛 세이브: 이미 큰 어둠을 물리쳤으면 첫 처치 보상(새벽돌 6 + 큰 어둠의 무기 하나)을 나루에게서 한 번 (sim/npc.js talkTo, G.stats.darkOwe — save/migrations.js)
+function darkOweGive() { if (!G.stats.darkOwe) return false; G.stats.darkOwe = 0; G.stats.uniq = G.stats.uniq || {}; G.stats.uniq.dark = 1; const sp = pickSp('dark');
+  for (const [it, c] of [['dawnstone', DAWN_FIRST], [sp, 1]]) { const l = addItem(it, c, false); if (l) spawnDrop(it, l, G.p.x, G.p.y); }
+  emit('inv'); emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 16, 2.6, .6); emit('toast', `나루에게 ${ITEMS.dawnstone.n} ${DAWN_FIRST}개, ${ITEMS[sp].n}를 받았어요`, 'good', 'naruRw'); return true; }
 // ================= 자연: 꽃잎 구역, 작물·어린나무 자라기, 벤 뒤 처리, 하루 하나 새 자연물 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 const WATER = 10;
@@ -6815,12 +6898,13 @@ function talkTo(id) {
   if (leadThere() && leadHere()) return; // v118: 광맥 옆에 먼저 가 있던 나루
   const ask = askOwed()[0]; if (ask) { naruGive([ask, ...naruOwed()], false); /* 쌓인 1부 보상도 같이 */ emit('talk', id, 'ask:' + ask); return; } // v118 나루의 부탁 끝 장면 + 보상
   const sc = naru2Scene(); if (sc) { naruGive([...sc[1], ...naruOwed()], false); emit('talk', id, sc[0]); return; } // v119 2부 장면 (돌아와서·출발 전·나루에게 가기·돌아가기·13번)
+  if (G.stats.darkOwe && darkOweGive()) { emit('talk', id, 'dawn'); return; } // v130 옛 세이브: 큰 어둠 첫 처치 보상
   const owed = naruOwed(); if (owed.length) { naruGive(owed, false); G.stats.naruRw = (G.stats.naruRw | 0) + 1; emit('talk', id, 'reward'); return; }
   emit('talk', id, 'talk'); }
 // ---- v117 나루에게 받는 보상: 끝냈지만 아직 안 받은 1부 이야기 퀘스트 (나루가 마을에 있을 때만 — 없으면 예전처럼 퀘스트 창에서) ----
 const naruHolds = q => !!q && (NARU_Q.includes(q.id) || ASK_IDS.includes(q.id)) && !!naruSpot(); // v118: 나루의 부탁도
 const naruOwed = () => GUIDE.filter((q, k) => NARU_Q.includes(q.id) && k < G.guide && !(G.qclaim || {})[q.id]).map(q => q.id);
-const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0 || (G.stats.nPend || []).length > 0); // v119: 쌓인 「돌아와서」 장면도 // 머리 위 ? (render/world.js)
+const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0 || (G.stats.nPend || []).length > 0 || !!G.stats.darkOwe); // v130 // v119: 쌓인 「돌아와서」 장면도 // 머리 위 ? (render/world.js)
 // 보상 주기: 물건 + 아직 안 받은 경험치(옛 세이브에서 이미 지나간 퀘스트) · quiet = 알림 없이(장면 안에서)
 function naruGive(ids, quiet) { G.qclaim = G.qclaim || {}; G.stats.qxp = G.stats.qxp || {}; const got = {};
   for (const id of ids) { const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q || G.qclaim[id]) continue; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'main';
@@ -6875,6 +6959,7 @@ function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind.startsWith('sc:')) return sceneLines(kind); // v119 2부 장면
   if (kind.startsWith('call:')) return (NARU_CALL[kind.slice(5)] || ['…']).slice(); // v117 마을로 부른 장면
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
+  if (kind === 'dawn') return NARU_DAWN.slice(); // v130
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1;
     if (id === 'guide') { const st = stageLine(o.met); if (st && o.met % 2) return [st]; /* v126 E: 이야기 단계마다 바뀌는 한마디가 있으면 번갈아 (홀수 번째) */
@@ -7730,11 +7815,19 @@ const W99_ICON = {
   swordSpirit: swordIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), daggerSpirit: daggerIcon('#5a9ac8', '#e8f8ff', '#7fd8f0'), spearSpirit: spearIcon('#5a9ac8', '#e8f8ff'), hammerSpirit: hammerIcon('#5a9ac8', '#e8f8ff', '#3a6a98'), staffSpirit: staffIcon('#d4f6ff', '#ffffff'),
 };
 for (const id in W99_ICON) ICON[id] = W99_ICON[id];
+// v130 7·8단계 무기 · 큰 어둠 특별 무기 아이콘 (Claude 임시 그림 — 지금 무기 모양에 색만. 손그림은 dev/art/icons/<id>.png)
+const W130_ICON = {
+  swordShadow: swordIcon('#5a3a8a', '#c9a8ff', '#2e2244'), daggerShadow: daggerIcon('#5a3a8a', '#c9a8ff', '#2e2244'), spearShadow: spearIcon('#5a3a8a', '#c9a8ff'), hammerShadow: hammerIcon('#5a3a8a', '#c9a8ff', '#2e2244'), bowShadow: bowIcon('#2e2244', '#8a6ad0', '#c9a8ff'), staffShadow: staffIcon('#8a6ad0', '#e8dcff'),
+  swordDawnstone: swordIcon('#ffd98a', '#fff6d8', '#d89a3a'), daggerDawnstone: daggerIcon('#ffd98a', '#fff6d8', '#d89a3a'), spearDawnstone: spearIcon('#ffd98a', '#fff6d8'), hammerDawnstone: hammerIcon('#ffd98a', '#fff6d8', '#d89a3a'), bowDawnstone: bowIcon('#d89a3a', '#ffd98a', '#fff6d8'), staffDawnstone: staffIcon('#ffd98a', '#ffffff'),
+  swordDark: swordIcon('#2e2244', '#8a6ad0', '#c9a8ff'), daggerDark: daggerIcon('#2e2244', '#8a6ad0', '#c9a8ff'), spearDark: spearIcon('#2e2244', '#c9a8ff'), hammerDark: hammerIcon('#3a2a5a', '#c9a8ff', '#1e1630'), bowDark: bowIcon('#1e1630', '#3a2a5a', '#c9a8ff'), staffDark: staffIcon('#3a2a5a', '#c9a8ff'),
+  dawnstone: A => { A.e(8, 9.5, 6, 5, '#d89a3a'); A.e(8, 9, 5.5, 4.5, '#ffd98a'); A.e(7, 7.5, 3, 2.2, '#fff6d8'); A.p(6, 7, '#ffffff'); A.p(11, 11, '#d89a3a'); A.p(3, 4, '#ffe9a8'); A.p(13, 3, '#ffe9a8'); A.p(12, 5, '#fff6d8'); },
+};
+for (const id in W130_ICON) ICON[id] = W130_ICON[id];
 // v100 방어구 아이콘 (Claude 임시 그림: 머리 투구 · 상의 갑옷 · 하의 각반, 단계 재료 색 — 밝은색 c · 어두운색 d · 반짝 l)
 const helmIcon = (c, d, l) => A => { A.e(8, 8, 6, 5.5, d); A.e(8, 7.5, 5, 4.5, c); A.r(2, 9, 12, 3, d); A.r(3, 9, 10, 2, c); A.r(5, 5, 2, 1, l); A.p(4, 7, l); A.r(7, 1, 2, 2, d); };
 const armorIcon = (c, d, l) => A => { A.poly([[2, 4], [5, 2], [11, 2], [14, 4], [13, 8], [12, 7], [12, 14], [4, 14], [4, 7], [3, 8]], d); A.poly([[3, 4.5], [5.5, 3], [10.5, 3], [13, 4.5], [12.3, 6.5], [11, 6], [11, 13], [5, 13], [5, 6], [3.7, 6.5]], c); A.r(7, 3, 2, 10, d); A.p(6, 5, l); A.p(6, 8, l); A.r(5, 11, 6, 1, d); };
 const legsIcon = (c, d, l) => A => { A.r(3, 2, 10, 4, d); A.r(4, 3, 8, 2, c); A.r(3, 6, 4, 9, d); A.r(9, 6, 4, 9, d); A.r(4, 6, 2, 8, c); A.r(10, 6, 2, 8, c); A.p(5, 7, l); A.p(11, 7, l); A.r(3, 14, 4, 1, d); A.r(9, 14, 4, 1, d); };
-const AR_PAL = [['#7fb069', '#4f7a45', '#b8dca0'], [C.copper, C.copperD, C.copperL], [C.iron, C.ironD, C.ironL], [C.cry, C.cryD, C.cryL], ['#ffd25c', '#c9902a', '#fff1b0'], ['#9fd8f0', '#5a9ac8', '#e8f8ff']];
+const AR_PAL = [['#7fb069', '#4f7a45', '#b8dca0'], [C.copper, C.copperD, C.copperL], [C.iron, C.ironD, C.ironL], [C.cry, C.cryD, C.cryL], ['#ffd25c', '#c9902a', '#fff1b0'], ['#9fd8f0', '#5a9ac8', '#e8f8ff'], ['#5a3a8a', '#2e2244', '#c9a8ff'], ['#ffd98a', '#d89a3a', '#fff6d8']]; // v130 그림자 · 새벽돌 (Claude 임시)
 AR_TABLE.forEach((row, t) => { const [c, d, l] = AR_PAL[t]; ICON[row[0][0]] = helmIcon(c, d, l); ICON[row[1][0]] = t === 4 ? armorIcon('#4a3a5a', '#2a2238', '#ffd25c') : armorIcon(c, d, l); ICON[row[2][0]] = legsIcon(c, d, l); });
 const arrowIcon = (h, hl) => A => { A.line(2, 14, 11, 5, '#8a6a52', 1); A.line(3, 14, 11, 6, '#b8946a', 1); A.poly([[9.5, 3.5], [14.5, 1.5], [12.5, 6.5]], h); A.p(12, 4, hl); A.r(1, 11, 2, 2, '#eef2f7'); A.r(3, 13, 2, 2, '#eef2f7'); A.p(2, 12, '#ff8fa3'); };
 for (const id in ARROWS) ICON[id] = arrowIcon(ARROWS[id][2], '#ffffff');
