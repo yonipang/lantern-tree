@@ -10,6 +10,7 @@ import { countItem, removeItem } from './inventory.js';
 import { gainXp, maxHp } from './player.js';
 import { CX, CY, idx, inB } from '../world/map.js';
 import { markLight } from './loop.js';
+import { shadowWake } from './shadow.js';
 import { seedScene } from './cutscene.js';
 export const treeStage = () => G ? clamp(G.treeSeeds | 0, 0, 5) : 0;
 // moss and little flowers on bare ground (dirt or moss with nothing on it) near the roots; decided per tile, never stored
@@ -20,7 +21,7 @@ export function spreadKind(x, y, R) {
 }
 export function insertSeeds() {
   const n = Math.min(countItem('lightSeed'), 5 - G.treeSeeds); if (n <= 0) return; const from = treeStage(); removeItem('lightSeed', n); G.treeSeeds += n; markLight();
-  G.p.hp = maxHp(); gainXp(50 * n);
+  G.p.hp = maxHp(); gainXp(50 * n); if (G.treeSeeds >= 5) shadowWake(); // v129 그림자 지대
   // v103: 단계가 오를 때마다 나무가 옛 기억 한 장면을 보여 줘요 (엔딩 두 갈래는 하나로 — 마지막 장면은 가장 깊은 곳에서, v108). won·won2는 옛 세이브·축제 케이크 해금을 위해 그대로 둬요
   if (G.treeSeeds >= 5 && !G.won2) { G.won = true; G.won2 = true; learnRecipe('festCake', true); }
   else if (G.treeSeeds >= 3 && !G.won) G.won = true;

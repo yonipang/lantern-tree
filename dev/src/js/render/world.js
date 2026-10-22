@@ -388,11 +388,13 @@ export function drawEntity(it, t) {
   if (it.k === 'bv') { const b = it.b, img = animalImg(b.img); shadow(b.x, b.y + .1, .26, .3); const bob = b.moving && Math.floor(t * 8) % 2 ? 1 / 16 : 0; if (img) drawImg(img, b.x, b.y + .12 - bob, { flip: b.flip }); // v114 비버: 걷기·갉기·잠
     if (b.img === 'beaverZ') { ctx.font = pxFont(6); ctx.fillStyle = '#d9d2ff'; ctx.textAlign = 'center'; const zz = (t * .7) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .3 + zz * .3) * T - camX, (b.y - .7 - zz * .5) * T - camY); ctx.globalAlpha = 1; } return; }
   if (it.k === 'e') {
-    const e = it.e, def = ENEMY[e.k]; shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3);
+    const e = it.e, def = ENEMY[e.k]; if (!def.alpha) shadow(e.x, e.y + .1, def.r * 0.95, .3 - (e.z || 0) * .3); // v129 망각 유령은 그림자 없이 반투명
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
     else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
-    if (e.under) { ctx.fillStyle = '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
+    if (def.alpha) ctx.globalAlpha = def.alpha * (e.fade > 0 ? Math.max(0, e.fade) : 1);
+    if (e.under) { ctx.fillStyle = def.mound || '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
     else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
+    ctx.globalAlpha = 1;
     if (e.slow > 0 || e.poison || e.burn) { ctx.fillStyle = e.burn ? '#ff9b4a' : e.poison ? '#9be37a' : '#bfe6ff'; ctx.fillRect(Math.round(e.x * T - camX) - Z, Math.round((e.y - 1.15 - (e.z || 0)) * T - camY), 2 * Z, 2 * Z); }
     if (e.hp < (e.mh || def.hp)) { // v111: 픽셀 칸에 맞춰(반올림) 그림 머리 위에 — 키 큰 몬스터 그림을 덮지 않게
       const img = SPR[e.k], top = e.y + .12 - (e.under || !img ? 14 : effH(img)) / 16 - (e.z || 0), w = 12 * Z, hh = 2 * Z,

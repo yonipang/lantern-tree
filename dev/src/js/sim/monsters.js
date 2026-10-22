@@ -5,7 +5,10 @@ import { ENEMY } from '../data/rpg-nature.js';
 import { G, alivePlayers, withPlayer } from '../save/state.js';
 import { emit } from './events.js';
 import { hurtPlayer } from './player.js';
-import { moveEnt } from '../world/tiles.js';
+import { isSolid, moveEnt } from '../world/tiles.js';
+import { idx, inB } from '../world/map.js';
+import { rand } from '../engine/random.js';
+import { isLit } from './enemies.js';
 const dmgOf = (e, def, k = 1) => Math.round(def.dmg * (e.dm || 1) * k);
 const hz = h => { G.hz = G.hz || []; G.hz.push(Object.assign({ t: 0 }, h)); };
 const shoot = (e, dx, dy, d, spd, k, dmg, extra) => G.shots.push(Object.assign({ x: e.x, y: e.y - .3, vx: dx / d * spd, vy: dy / d * spd, life: 2.6, dmg, k }, extra || {}));
@@ -61,11 +64,39 @@ export const MON_AI = {
     return false; },
   // 아기 설인: 눈덩이를 던져요
   throw(e, def, dt, d, dx, dy, chase) { if (tick(e, 'cd', dt) <= 0 && chase && e.sees && d < 6.5) { e.cd = 2.3; shoot(e, dx, dy, d, 6.5, 'snow', dmgOf(e, def, .8)); emit('sfx', 'swing'); } return false; },
+  // ---- v129 깊은 몬스터 (data/shadow.js) ----
+  // 그림자 손: 이끼 두더지처럼 땅속으로 다가와, 튀어나올 때 1.3칸 안이면 붙잡아요(def.grab초 느려짐)
+  grab(e, def, dt, d, dx, dy, chase, sm) { const was = e.under, r = MON_AI.burrow(e, def, dt, d, dx, dy, chase, sm);
+    if (was && !e.under && chase && d < 1.3 && G.p.dead <= 0) { G.p.slowT = Math.max(G.p.slowT || 0, def.grab); hurtPlayer(dmgOf(e, def), e.x, e.y); emit('ftext', G.p.x, G.p.y - 1.6, '붙잡혔어요!', '#c9a8ff'); }
+    return r; },
+  // 망각 유령: 벽을 지나다녀요(암반·지도 밖만 막힘). 밝은 곳에 들어가면 1초 깜빡이다 사라져요(경험치·드롭 없음)
+  ghost(e, def, dt, d, dx, dy, chase, sm) {
+    if (e.fade > 0) { e.fade -= dt; e.flash = 1; if (e.fade <= 0) { const at = G.enemies.indexOf(e); if (at >= 0) G.enemies.splice(at, 1); emit('puff', e.x, e.y - .4, '#c9a8ff', 14, 2.6, .5); } return true; }
+    if (isLit(Math.floor(e.x), Math.floor(e.y))) { e.fade = 1; emit('sfx', 'cast'); return true; }
+    if (!chase) { if (tick(e, 't', dt) <= 0) { e.t = 1.5 + rand() * 2; const a = rand() * 6.283, s = rand() < .4 ? 0 : def.spd * .4; e.vx = Math.cos(a) * s; e.vy = Math.sin(a) * s; } }
+    else { e.vx = dx / d * def.spd; e.vy = dy / d * def.spd; }
+    const nx = e.x + e.vx * dt * sm, ny = e.y + e.vy * dt * sm, tx = Math.floor(nx), ty = Math.floor(ny);
+    if (inB(tx, ty) && G.wall[idx(tx, ty)] !== 8 && !(!chase && isLit(tx, ty))) { e.x = nx; e.y = ny; } else { e.vx = -e.vx; e.vy = -e.vy; }
+    e.anim = (e.anim || 0) + dt; if (Math.abs(e.vx) > .05) e.flip = e.vx < 0; return true; },
+  // 잊힌 기사: 버섯 거북처럼 돌아서 앞을 막고(monDmg, def.front), 4초마다 조준 뒤 돌진
+  knight(e, def, dt, d, dx, dy, chase, sm) { MON_AI.shell(e, def, dt, d, dx, dy, chase); tick(e, 'cd', dt);
+    if (e.dash > 0) { e.dash -= dt; moveEnt(e, e.cx * 7 * dt * sm, e.cy * 7 * dt * sm, def.r); e.anim = (e.anim || 0) + dt * 2; return true; }
+    if (e.aim > 0) { e.aim -= dt; e.flash = 1; if (e.aim <= 0) { e.flash = 0; e.dash = .5; emit('sfx', 'swing'); } return true; }
+    if (chase && e.sees && d < 6 && d > 1.5 && e.cd <= 0) { e.cd = 4; e.aim = .7; e.cx = dx / d; e.cy = dy / d; e.fa = Math.atan2(dy, dx); return true; }
+    return false; },
+  // 길 잃은 등불지기: 거리를 두고, 2.4초마다 그림자 탄 3발 → 발밑 경고 원 → 짧은 순간이동을 돌아가며
+  keeper(e, def, dt, d, dx, dy, chase, sm) { if (!chase) return false; const p = G.p;
+    if (tick(e, 'cd', dt) <= 0 && e.sees && d < 8) { e.cd = 2.4; const m = e.mv = ((e.mv || 0) + 1) % 3;
+      if (m === 1) { const base = Math.atan2(dy, dx); for (let k = -1; k <= 1; k++) { const a = base + k * .26; G.shots.push({ x: e.x, y: e.y - .3, vx: Math.cos(a) * 6, vy: Math.sin(a) * 6, life: 2.6, dmg: dmgOf(e, def, .8), k: 'shade' }); } emit('sfx', 'cast'); }
+      else if (m === 2) { hz({ x: p.x, y: p.y, r: 1.1, warn: .9, life: 1.05, dmg: dmgOf(e, def, 1.1), k: 'shade' }); emit('sfx', 'cast'); }
+      else { for (let k = 0; k < 8; k++) { const a = rand() * 6.283, nx = p.x + Math.cos(a) * 3.5, ny = p.y + Math.sin(a) * 3.5; if (!inB(Math.floor(nx), Math.floor(ny)) || isSolid(Math.floor(nx), Math.floor(ny))) continue; emit('puff', e.x, e.y - .4, '#c9a8ff', 10, 2.4, .4); e.x = nx; e.y = ny; emit('puff', e.x, e.y - .4, '#c9a8ff', 10, 2.4, .4); break; } } }
+    if (d < 3) { moveEnt(e, -dx / d * def.spd * dt * sm, -dy / d * def.spd * dt * sm, def.r); e.anim = (e.anim || 0) + dt; e.flip = dx > 0; return true; }
+    return false; },
 };
 // 쓰러질 때 (sim/combat.js enemyDie)
 export function onEnemyDie(e) { const def = ENEMY[e.k]; if (def && def.ai === 'spore') hz({ x: e.x, y: e.y, r: 1.4, warn: .35, life: 3.2, dmg: Math.max(3, Math.round(def.dmg * .5)), k: 'poison' }); }
 // 맞을 때 피해 바꾸기 (sim/combat.js hitEnemy): 땅속 두더지는 안 맞고, 버섯 거북은 앞에서 맞으면 30%
 export function monDmg(e, dmg) { const def = ENEMY[e.k]; if (!def || !def.ai) return dmg;
   if (e.under) return 0;
-  if (def.ai === 'shell' && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * .3)); }
+  if ((def.ai === 'shell' || def.ai === 'knight') && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * (def.front || .3))); } // v129 잊힌 기사는 20%
   return dmg; }

@@ -224,8 +224,8 @@ export function floorTex(t, v) {
     if (t === 4) { for (let k = 0; k < 2; k++) A.p(R() * 16 | 0, R() * 16 | 0, '#a99cf0'); A.r(0, 0, 16, 1, '#454e72'); A.r(0, 0, 1, 16, '#454e72'); }
   }, null);
 }
-export const WPAL = { 14: ['#c8894a', '#e0a560', '#9c6534'], 15: ['#a04a32', '#c0613a', '#7a3420'], /* v122 판자 벽·붉은 나무 벽(그림은 dev/art/wtop·wfront/14·15) */ 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
-export const WFRONT_COL = { 14: '#8a5a30', 15: '#6e2e1e', 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
+export const WPAL = { 16: ['#3a2e4e', '#4e4066', '#241c34'], 17: ['#3a2e4e', '#4e4066', '#241c34'], /* v129 그림자 바위·결정 광맥 */ 14: ['#c8894a', '#e0a560', '#9c6534'], 15: ['#a04a32', '#c0613a', '#7a3420'], /* v122 판자 벽·붉은 나무 벽(그림은 dev/art/wtop·wfront/14·15) */ 13: ['#4b3f78', '#5b4d8f', '#3c3263'], 9: ['#3a3340', '#4a414f', '#2a2430'], 10: ['#3a3340', '#4a414f', '#2a2430'], 11: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 12: ['#8fc4e8', '#b8e0f8', '#6a9cc8'], 1: ['#8a5a3e', '#9c6a4a', '#704630'], 2: ['#8e89a3', '#a29db6', '#6f6a86'], 3: ['#4b3f78', '#5b4d8f', '#3c3263'], 4: ['#8a5a3e', '#9c6a4a', '#704630'], 5: ['#8e89a3', '#a29db6', '#6f6a86'], 6: ['#a06a3c', '#b97e4a', '#7d4d2a'], 7: ['#a59fb8', '#bab5cb', '#6f6a86'], 8: ['#2b2238', '#352a45', '#221b2d'] };
+export const WFRONT_COL = { 16: '#1e1830', 17: '#1e1830', 14: '#8a5a30', 15: '#6e2e1e', 13: '#33295a', 9: '#221c28', 10: '#221c28', 11: '#5a88b0', 12: '#5a88b0', 1: '#5e3b29', 2: '#5e5a74', 3: '#33295a', 4: '#5e3b29', 5: '#5e5a74', 6: '#6e4426', 7: '#77718c', 8: '#1a1424' };
 export function wallTop(t, v) {
   const R = rng(t * 733 + v * 97 + 3), pal = WPAL[t];
   return mk(16, 16, A => {
@@ -242,6 +242,7 @@ export function wallTop(t, v) {
     if (t === 9 || t === 10) { let x = R() * 16 | 0, y = R() * 16 | 0; for (let k = 0; k < 7; k++) { A.p(x, y, k % 3 ? '#c4441a' : '#ff8a3d'); x = (x + (R() < .5 ? 1 : 0)) % 16; y = (y + (R() < .7 ? 1 : 0)) % 16; } }
     if (t === 10) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.e(x, y, 1.6, 1.3, '#ffd25c'); A.p(x - 1, y - 1, '#fff1b0'); A.p(x + 1, y, '#c9902a'); }
     if (t === 11 || t === 12) { for (let k = 0; k < 3; k++) { const x = R() * 14 | 0, y = R() * 14 | 0; A.p(x, y, '#ffffff'); A.p(x + 1, y + 1, '#e8f8ff'); } }
+    if (t === 17) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.poly([[x, y - 2.5], [x + 1.6, y], [x, y + 2], [x - 1.6, y]], '#8a6ad0'); A.p(x | 0, (y - 1) | 0, '#e8dcff'); } // v129
     if (t === 12) for (let k = 0; k < 3; k++) { const x = 3 + R() * 10, y = 3 + R() * 10; A.poly([[x, y - 2.5], [x + 1.6, y], [x, y + 2], [x - 1.6, y]], '#5ad8f0'); A.p(x | 0, (y - 1) | 0, '#ffffff'); }
   }, null);
 }
@@ -295,7 +296,7 @@ export const DECO_DEF = {
 export const SPR = {};
 export function buildTerrain() {
   SPR.fringe = {}; SPR.fringeW = {}; SPR.corner = {}; SPR.cornerW = {}; SPR.fringeL = {}; SPR.fringeX = {}; SPR.fringeWL = {}; SPR.fringeWX = {};
-  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 30, 31, 32, 33, 34]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
+  for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 30, 31, 32, 33, 34]) { SPR.fringeW[t] = makeFringe(t, 'water'); SPR.fringeWL[t] = makeFringe(t, 'water', 'land'); SPR.fringeWX[t] = makeFringe(t, 'water', 'fx'); SPR.cornerW[t] = makeCorner(t, 'water'); if (PRI[t]) { SPR.fringe[t] = makeFringe(t, 'edge'); SPR.fringeL[t] = makeFringe(t, 'edge', 'land'); SPR.fringeX[t] = makeFringe(t, 'edge', 'fx'); SPR.corner[t] = makeCorner(t, 'edge'); } }
   SPR.deco = {}; for (const t in DECO_DEF) SPR.deco[t] = DECO_DEF[t].map(f => mk(7, 7, f, 'soft'));
   SPR.lily = ARTC['lily/0'] ? [artPaint('lily/0', 'sel'), artPaint(ARTC['lily/1'] ? 'lily/1' : 'lily/0', 'sel')] : [mk(9, 7, /* v122 손그림 연잎(16px)이 있으면 그것 */ A => { A.e(4.5, 3.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 2.8, 1.6, 1, '#6cbb76'); A.poly([[4.5, 3.5], [8.5, 1.8], [8.5, 3.4]], '#00000000'); A.g.globalCompositeOperation = 'destination-out'; A.poly([[4.5, 3.5], [8.6, 1.6], [8.6, 3.6]], '#000'); A.g.globalCompositeOperation = 'source-over'; }, 'sel'),
     mk(9, 8, A => { A.e(4.5, 4.5, 3.6, 2.6, '#4f9a5e'); A.e(3.6, 3.8, 1.6, 1, '#6cbb76'); A.e(5, 2.6, 1.5, 1.3, '#ffb3c6'); A.p(5, 2, '#ffe0ea'); A.p(5, 3, C.amber); }, 'sel')];
@@ -327,7 +328,7 @@ export function buildSprites() {
   applyArt();
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
   for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem', 'magmaSlime', 'frostSlime', 'cinder', 'snowling', 'turtle', 'turtleS', 'spirit']) SPR[k + 'W'] = whiten(SPR[k]);
-  for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } npcSprites(); /* v104 */ SPR.shadowBit = shadowBitSpr(); SPR.shadowBitW = whiten(SPR.shadowBit); SPR.dark = darkSpr(); SPR.darkW = whiten(SPR.dark); /* v108 */ SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
+  for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } npcSprites(); /* v104 */ SPR.shadowBit = shadowBitSpr(); SPR.shadowBitW = whiten(SPR.shadowBit); SPR.dark = darkSpr(); SPR.darkW = whiten(SPR.dark); /* v108 */ SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.shade = shotSpr('#5a3a8a', '#e8dcff'); /* v129 길 잃은 등불지기 */ SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];

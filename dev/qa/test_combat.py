@@ -1174,6 +1174,55 @@ def test_barter_v105():
     return main
 
 
+def test_shadow_zone_v129():
+    # v129 그림자 지대: 빛씨앗 5개를 심으면 가장 깊은 곳 둘레가 바뀜(유적·보스방·쌓은 벽·깐 바닥은 그대로), 황금 곡괭이, 결정 광맥, 깊은 몬스터 5종, 유령은 빛에서 사라짐, 기사는 앞을 막음, 큰 어둠 경험치 4,000, 옛 세이브는 불러올 때
+    H2=HOOK.replace("computeLight}","computeLight,DEEP_W,DEEP_H,ENEMY,WALLS,SHADOW_TABLE,shadowWake,inShadow,trySpawn,mkEnemy,enemyStep,hitEnemy,hitBoss,breakWall,insertSeeds,markLight,isLit,XP_NEED,get SPR(){return SPR},get TR(){return TR},get L(){return {W,BX,BY,SA,SB,SL,SI}}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            CNT="""const cnt=()=>{const G=T.G;let w16=0,w17=0,f23=0,in8=0;const d=G.stats.deep,c={x:d.x+T.DEEP_W/2,y:d.y+T.DEEP_H/2};for(let y=c.y-32;y<c.y+32;y++)for(let x=c.x-32;x<c.x+32;x++){const i=T.idx(x|0,y|0),w=G.wall[i];if(w===16)w16++;if(w===17)w17++;if(G.floor[i]===23)f23++;}for(let r=0;r<T.DEEP_H;r++)for(let q=0;q<T.DEEP_W;q++)if(G.wall[T.idx(d.x+q,d.y+r)]===8)in8++;return [w16,w17,f23,in8]};"""
+            r=await ev(pg,"()=>{const T=__T,G=T.G;"+CNT+"""const d=G.stats.deep;if(!d)return ['none'];const c={x:d.x+T.DEEP_W/2|0,y:d.y+T.DEEP_H/2|0};
+              let bw=null,pf=null;for(let k=12;k<20&&(!bw||!pf);k++){const i=T.idx(c.x+k,c.y);if(!bw&&[1,2,3,9,11].includes(G.wall[i])){bw=i;G.bwall.add(i);}const j=T.idx(c.x-k,c.y);if(!pf&&!G.wall[j]&&[1,2,3,4,18,19].includes(G.floor[j])){pf=j;G.floor[j]=5;}}
+              const before=cnt();G.treeSeeds=4;T.addItem('lightSeed',1);T.insertSeeds();const after=cnt();window.__sh={bw,pf,bwW:bw!=null?G.wall[bw]:-1,before,in8:before[3]};
+              const L=T.L;let nearBoss=0;for(const bb of [{x:L.BX,y:L.BY},L.SA,L.SB,L.SL,L.SI])for(let y=bb.y-17;y<=bb.y+17;y++)for(let x=bb.x-17;x<=bb.x+17;x++){if(Math.hypot(x-bb.x,y-bb.y)<17&&T.idx(x,y)>=0&&(G.wall[T.idx(x,y)]===16||G.wall[T.idx(x,y)]===17))nearBoss++}
+              return [G.treeSeeds,G.stats.shadowV,!!G.stats.shadow,before[0]+before[1]+before[2],after[0]>200,after[1]>3,after[1]/(after[0]+after[1]),after[2]>50,after[3]===before[3],bw==null||G.wall[bw]!==16&&G.wall[bw]!==17,pf==null||G.floor[pf]===5,nearBoss,T.shadowWake()]}""")
+            rec('그림자 지대','빛씨앗 5개째를 심으면 깨어남: 그림자 바위·결정 광맥(약 6%)·그림자 바닥, 유적 암반·쌓은 벽·깐 바닥·보스방 둘레는 그대로, 두 번은 안 바뀜',
+                r[:4]==[5,1,True,0] and r[4] and r[5] and 0.02<r[6]<0.12 and r[7] and r[8] and r[9] and r[10] and r[11]==0 and r[12]==0, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;return [T.WALLS[16].tier,T.WALLS[17].tier,T.ITEMS.pickGold.tier,T.ITEMS.pickStar.tier,T.ITEMS.pickCrystal.tier,T.ITEMS.shadowCry.n,T.ITEMS.shadowRock.wall]}""")
+            rec('곡괭이','그림자 바위·결정 광맥은 단계 4 = 황금·별빛 곡괭이만(수정 곡괭이 3)', r==[4,4,4,4,3,'그림자 결정',16], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep,c={x:d.x+T.DEEP_W/2|0,y:d.y+T.DEEP_H/2|0};let v=null;for(let y=c.y-26;y<c.y+26&&!v;y++)for(let x=c.x-26;x<c.x+26;x++)if(G.wall[T.idx(x,y)]===17){v=[x,y];break}
+              const tot=()=>{let s=G.rpg.xp;for(let l=1;l<G.rpg.lv;l++)s+=T.XP_NEED(l);return s};G.rpg.lv=40;G.rpg.xp=0;G.drops.length=0;const x0=tot();T.breakWall(v[0],v[1]);return [G.wall[T.idx(v[0],v[1])],G.drops.some(q=>q.id==='shadowCry'),tot()-x0]}""")
+            rec('결정 광맥','캐면 그림자 결정이 나오고 경험치 10', r==[0,True,10], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const E=T.ENEMY,ks=['shadowHand','shadowGhost','shadowKnight','shadowWolf','lostKeeper'];return [ks.map(k=>E[k].hp).join(','),ks.map(k=>E[k].dmg).join(','),ks.every(k=>E[k].shadow===1),T.SHADOW_TABLE.reduce((a,q)=>a+q[1],0).toFixed(2),ks.every(k=>T.SPR[k]&&T.SPR[k+'W']),!!T.SPR.shot.shade]}""")
+            rec('몬스터','깊은 몬스터 5종 체력 300·360·560·320·700, 닿으면 28·30·36·32·34, 모두 그림자(빛 안 2배), 비율 합 1, 그림 있음', r==['300,360,560,320,700','28,30,36,32,34',True,'1.00',True,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const s=G.stats.shadow;const d=G.stats.deep;G.p.x=d.x+T.DEEP_W/2;G.p.y=d.y+T.DEEP_H+6.5;G.p.dead=0;const ks=new Set(T.SHADOW_TABLE.map(q=>q[0]));let inZ=0,bad=0,n=0;
+              for(let k=0;k<300;k++){G.enemies.length=0;T.trySpawn();for(const e of G.enemies){n++;if(T.inShadow(e.x,e.y)){inZ++;if(!ks.has(e.k))bad++;else if(e.hp!==T.ENEMY[e.k].hp)bad++;}}}G.enemies.length=0;return [n>50,inZ>20,bad]}""")
+            rec('출현','그림자 지대 안에서 생기는 몬스터는 모두 깊은 몬스터(지역 보정 없이 표 체력 그대로)', r[0] and r[1] and r[2]==0, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep;const tx=d.x+T.DEEP_W/2|0,ty=d.y+T.DEEP_H+8;G.p.x=tx+.5;G.p.y=ty+.5;G.p.hp=9999;G.p.dead=0;
+              const tot=()=>{let s=G.rpg.xp;for(let l=1;l<G.rpg.lv;l++)s+=T.XP_NEED(l);return s};
+              let spot=null;for(let k=2;k<8&&!spot;k++)for(const [dx,dy] of [[k,0],[-k,0],[0,k]]){const i=T.idx(tx+dx,ty+dy);if(!G.wall[i]&&!G.objs.get(i)){spot=[tx+dx,ty+dy];break}}
+              G.objs.set(T.idx(spot[0],spot[1]),{t:'torch'});T.markLight();const lit=T.isLit(spot[0]+.5,spot[1]+.5);
+              G.enemies.length=0;const g=T.mkEnemy('shadowGhost',spot[0]+.5,spot[1]+.6);G.enemies.push(g);const x0=tot();for(let k=0;k<90&&G.enemies.includes(g);k++)T.enemyStep(g,1/60);const gone=!G.enemies.includes(g);G.objs.delete(T.idx(spot[0],spot[1]));T.markLight();
+              const kn=T.mkEnemy('shadowKnight',G.p.x+1.2,G.p.y);kn.fa=Math.atan2(G.p.y-kn.y,G.p.x-kn.x);G.enemies.push(kn);const h0=kn.hp;T.hitEnemy(kn,100,false,0);const front=h0-kn.hp;kn.fa+=Math.PI;const h1=kn.hp;T.hitEnemy(kn,100,false,0);const back=h1-kn.hp;G.enemies.length=0;
+              return [lit,gone,tot()-x0,front,back]}""")
+            rec('움직임','망각 유령은 밝은 곳에서 1초 깜빡이다 사라짐(경험치 없음), 잊힌 기사는 앞에서 맞으면 20%', r==[True,True,0,20,100], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const tot=()=>{let s=G.rpg.xp;for(let l=1;l<G.rpg.lv;l++)s+=T.XP_NEED(l);return s};G.rpg.lv=40;G.rpg.xp=0;const b=G.bosses.dark;b.st='fight';b.hp=1;const x0=tot();
+              G.stats.deep.read=1;const brz=[...G.objs].filter(([i,o])=>o.t==='brazier');for(const [i,o] of brz)o.off=0;T.markLight();T.computeLight();G.p.x=b.x;G.p.y=b.y+2;T.hitBoss(b,5,false);return [G.bossDead.dark,tot()-x0]}""")
+            rec('큰 어둠','첫 처치 경험치 4,000 (예전 100)', r==[True,4000], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;"""+CNT+"""G.treeSeeds=5;const s=T.serialize();const d=G.stats.deep;delete s.stats.shadowV;delete s.stats.shadow;
+              T.deserialize(JSON.parse(JSON.stringify(s)));const a=cnt();const s2=T.serialize();T.deserialize(JSON.parse(JSON.stringify(s2)));const b2=cnt();return [T.G.stats.shadowV,!!T.G.stats.shadow,a.join(),b2.join()]}""")
+            rec('옛 세이브','빛씨앗 5개인 옛 세이브는 불러올 때 한 번 깨어나고, 다시 불러와도 그대로', r[0]==1 and r[1] and r[2]==r[3], str(r))
+            # 그림자 지대 안에서 몇 장 그려 보기 (오류 없이)
+            await ev(pg,"""()=>{const T=__T,G=T.G;const d=G.stats.deep;G.p.x=d.x+T.DEEP_W/2;G.p.y=d.y+T.DEEP_H+8.5;G.enemies.length=0;for(const k of ['shadowHand','shadowGhost','shadowKnight','shadowWolf','lostKeeper'])G.enemies.push(T.mkEnemy(k,G.p.x+1,G.p.y+1))}""")
+            await wait_game(pg,1.5)
+            r=await ev(pg,"()=>{const T=__T;return [!!T.TR.ore[17]||!T.TR.ready,!!T.TR.wtop16[16]||!T.TR.ready]}")
+            rec('그림','그림자 바위·결정 광맥 그림(현무암을 물들임)이 만들어지고, 지대 안에서 몬스터와 함께 그려도 오류 없음', r==[True,True] and not errs, str(r)+' '+str(errs[:3]))
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_archive_v106():
     # v106 이끼 굴 기록관: 자리(지역·거리·거의 벽인 곳), 안은 지도에 안 남음, 레버 → 전기 문, 그림자 조각, 일기 읽기 → 깨짐(지도·레시피·학자 고치)
     H2=HOOK.replace("computeLight}","computeLight,archList,ARCH_W,ARCH_H,ARCH_PLAN,archHidden,circuitTick,decide,perform,readDiary,runFrame,knows,QSIDE,npcObjs,placeArchives,get SPR(){return SPR}}")

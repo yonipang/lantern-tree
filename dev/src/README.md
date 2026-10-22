@@ -59,6 +59,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/data/cutscene.js` | v127 연출 장면(레터박스) **대본** `CINE_SCRIPTS`(장면마다 순서만: 카메라·몸짓·대사·걷기·효과·이름 띠·기다리기), 근처 12칸 `CINE_NEAR`, 대사 읽을 시간 `cineSayT`, 시험 장면 대사 — `data/npc.js` 다음 |
 | `js/data/beaver.js` | v114 비버 둥지·먹이통 수치(둘레 3칸·30초·안에 60·먹이통 4칸·물 6칸), 먹이 표 `FEED`(먹이 하나로 몇 초), 비버(`ANIMALS.beaver`)·아이템·레시피(작업대) — `data/npc.js` 다음 |
 | `js/data/sieve.js` | v115 광석 그물 수치(재료 하나에 8초·30개까지), 나오는 것 표 `SIEVE`(넣는 재료 → [나오는 것, %], null = 꽝)·지역 광석 `sieveOre`·부서지는/가루 효과 색, 아이템·레시피(구리 작업대) — `data/beaver.js` 다음 |
+| `js/data/shadow.js` | v129 그림자 지대 수치(반지름 25칸 ±4·결정 광맥 6%·바닥 23·벽 16/17·바뀌는 바위·바닥), 그림자 바위·결정 광맥 벽(단계 4 — 황금·별빛 곡괭이 단계 4로), 아이템 그림자 결정·그림자 바위, 깊은 몬스터 5종(`ENEMY`)·출현 표 `SHADOW_TABLE`·벽 경험치 — `data/nature123.js` 다음 |
 | `js/sim/inventory.js` | 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도(`addItem`·`removeItem`·`countItem`·`moveInto`), 상자 재료 함께 쓰기(`availCount`·`takeAvail`), 가방·상자·도구 명령 |
 | `js/sim/gear.js` | 장비·옷·장신구·반지(`wearItem`·`wearing`·`ringV`), 강화 단계와 효과(`upgCost`·`upgText`), 무기 종류·희귀도(`wtOf`·`rarOf`) |
 | `js/sim/crafting.js` | 제작: 가까운 제작대(`nearStations`)·제작 자리(`craftable`·`stationTier`), 강화·분해·수리·작업대 올리기·제작 명령, 용광로·요리솥 시간 작업(`takeJob`) |
@@ -81,6 +82,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
 | `js/sim/warp.js` | v89 워프포인트·포탈: 놓기(`placeWarps`, 새·옛 세계)·켜기·목적지(`warpDests`)·이동(`startWarp`·`warpTick`)·포탈 제한(`portalWhy`)·둘레 규칙(`nearWarpPt`·`warpSafe`) — `sim/digging.js` 다음 |
 | `js/sim/buildmode.js` | v91 건축 모드 규칙: 건축 목록(`bmList`, 가방 + 16칸 안 상자 `bmCount`·`bmTake`), 분류(`bmCat`), 만들어서 놓기(`bmRecipe`, 제작대 단계), 놓을 수 있는지(`bmWhy`, 8칸·벽 바꾸기 `wallSwapOk`), 놓기 명령 `bplace` — `sim/warp.js` 다음 |
+| `js/sim/shadow.js` | v129 그림자 지대: 깨우기 `shadowWake`(빛씨앗 5개째 — `sim/tree.js`, 옛 세이브는 불러올 때 `shadowOnLoad`, `stats.shadowV`·`stats.shadow`), 안인지 `inShadow`(유적 안 빼고)·깊은 몬스터 고르기 `pickShadow`(`sim/enemies.js` trySpawn), 들어가면 알림 `onFrame('shadow')`. 움직임은 `sim/monsters.js` grab·ghost·knight·keeper — `sim/deep.js` 다음 |
 | `js/sim/beaver.js` | v114 비버 둥지 규칙: 둘레의 다 자란 나무 찾기(`treesNear`)·먹이통에서 먹기·베기(어린나무로 되돌림)·옆 상자로(`nestStep`, `onFrame('beaver')`), 둥지 앞 할 일(`nestOptions`·`nestUse`), 먹이통 명령(`feedIn`·`feedOut`·`feedAll`), 비버 사는 곳(`beaverHome`), 그림용 비버 자리(`beaverPose`) — `sim/deep.js` 다음 |
 | `js/sim/sieve.js` | v115 광석 그물 규칙: 굴리기(`sieveRoll`), 그물 앞 할 일(`sieveOptions`·`sieveUse`), 넣기 명령 `sievePut`, 꺼내기(`sieveTake` — `sim/crafting.js` `takeJob`이 그물이면 여기로). 넣어 둔 일은 용광로와 같은 `o.job`(`sv: 1`) — `sim/beaver.js` 다음 |
 | `js/sim/naru.js` | v118 나루 1부 ②: 나루가 걸어 다님(`naruPos`·`naruPose` 그림용·`lifeLine` 곁 한마디·`naruHold`), 먼저 걸어 나가기(`stats.nLead`, `leadPrep`·명령 `naruLead`·`leadSkip`·`leadTarget`), 나루의 부탁(`ASK_IDS`·`isAsk`·`askList`·`askOwed`), 1부 뒤 상황 한마디(`stats.nTip`) — `onFrame('naruLife')`, 수치·대사는 `data/npc.js` |

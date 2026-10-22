@@ -13,6 +13,7 @@ export const FRAME_ORDER = [
   'enemies', 'bosses', // 몬스터·보스 (game/update.js)
   'pshots',   // 내 화살·마법 (game/actions.js)
   'deep', 'darkContact', // v108 가장 깊은 곳·큰 어둠 닿기
+  'shadow', // v129 그림자 지대 들어가면 알림 (sim/shadow.js)
   'archives', // v106 기록관 안 그림자 조각
   'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'naru', // v117 나루 하는 중 한마디 (sim/npc.js)

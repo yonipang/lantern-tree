@@ -16,6 +16,7 @@ import { warpSafe } from './warp.js';
 import { MON_TABLE } from '../data/growth.js';
 import { MON_AI } from './monsters.js';
 import { shadowLeash } from './npc.js';
+import { inShadow, pickShadow } from './shadow.js';
 onFrame('enemies', updateEnemies);
 onFrame('spawn', dt => { const p = G.p;
   G.spawnT += dt; if (G.spawnT > (SPAWN_EVERY[G.biome[idx(Math.floor(p.x), Math.floor(p.y))] || 0] || 2.6)) { G.spawnT = 0; trySpawn(); }
@@ -33,7 +34,7 @@ export function enemyStep(e, dt) {
   const alerted = e.alertAt != null && G.time - e.alertAt < 4;
   let chase = false;
   if (d < (def.aggro || 5) + (e.chasing || alerted ? 3 : 0) && p.dead <= 0 && !p.cine /* v127: 연출 장면을 보는 사람은 쫓지 않아요 */ && (!def.calm || e.angry > 0)) {
-    e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = canSee(e.x, e.y, p.x, p.y); }
+    e.losT = (e.losT || 0) - dt; if (e.losT <= 0) { e.losT = 0.25; e.sees = def.xray ? true : canSee(e.x, e.y, p.x, p.y); } // v129 망각 유령은 벽 너머도 봐요
     if (e.sees) e.seenAt = G.time;
     chase = e.sees || alerted || (e.chasing && G.time - (e.seenAt || -9) < 1);
   } else e.losT = 0;
@@ -71,10 +72,11 @@ export function trySpawn() {
     if (lightAt(x, y) > 0.3) continue;
     if ((G.fzones || []).some(z => Math.hypot(x - z.x, y - z.y) < 7)) continue;
     if (warpSafe(x + .5, y + .5)) continue; // v89: 워프포인트·포탈 둘레 6칸
-    const b = G.biome[idx(x, y)]; const kk = pickMon(b); // v101: 지역별 표(MON_TABLE)
-    G.enemies.push(regionEnemy(mkEnemy(kk, x + .5, y + .6), b));
-    const packN = ENEMY[kk].pack || 0; for (let q = 0; q < packN; q++) { const dx = Math.round((rand() - .5) * 3), dy = Math.round((rand() - .5) * 3); if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); } // v101 떼 몬스터
-    if (!packN && rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy))) { G.enemies.push(regionEnemy(mkEnemy(kk, x + dx + .5, y + dy + .6), b)); break; } }
+    const sh = inShadow(x, y), b = G.biome[idx(x, y)]; const kk = sh ? pickShadow() : pickMon(b); // v101: 지역별 표(MON_TABLE) · v129 그림자 지대는 깊은 몬스터(지역 보정 없음)
+    const reg = e => sh ? e : regionEnemy(e, b);
+    G.enemies.push(reg(mkEnemy(kk, x + .5, y + .6)));
+    const packN = ENEMY[kk].pack || 0; for (let q = 0; q < packN; q++) { const dx = Math.round((rand() - .5) * 3), dy = Math.round((rand() - .5) * 3); if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy)) && inShadow(x + dx, y + dy) === sh) G.enemies.push(reg(mkEnemy(kk, x + dx + .5, y + dy + .6))); } // v101 떼 몬스터
+    if (!packN && rand() < (SPAWN_PACK[b] || 0)) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!isSolid(x + dx, y + dy) && !G.objs.get(idx(x + dx, y + dy)) && inShadow(x + dx, y + dy) === sh) { G.enemies.push(reg(mkEnemy(kk, x + dx + .5, y + dy + .6))); break; } }
     return;
   }
 }
