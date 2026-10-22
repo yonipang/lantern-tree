@@ -344,6 +344,7 @@ export function buildSprites() {
   SPR.young = {}; for (const k of YOUNG_TREES) if (OSPR[k]) SPR.young[k] = ARTC['obj/' + k] || GROW_SPR[k] ? youngOf(SPR.obj[k]) : youngSpr(OSPR[k]);
   SPR.glow = {}; bossExtraSprites();
   applyArt();
+  for (const k in MON_SPR_DEF) if (ARTC['mon/' + k]) SPR[k + 'W'] = whiten(SPR[k]); // v133 받은 그림으로 바꾼 몬스터(폭탄 슬라임·버섯·나무 정령)는 맞을 때 하얀 그림도 새 그림으로
   // v123: 자연물 그림(dev/art/obj)이 없을 때(그림 없이 묶은 판)는 비슷한 원래 그림으로 — 세계에 저절로 나기 때문에 빈 그림이면 멈춰요
   { const FB = { tree: 'roundTree', bush: 'bush', stump: 'root', cactus: 'grass', log: 'bigRock' }; for (const id in NAT123) if (!SPR.obj[id]) SPR.obj[id] = SPR.obj[FB[NAT123[id][2]]] || SPR.obj.root; }
   // v122: 뿌리기둥 크기 여러 가지 — 같은 나무가 자라는 단계 그림 4장(etc/rootS, Plants.png 31~34번, 그림자 지움)
