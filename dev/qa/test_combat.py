@@ -231,7 +231,7 @@ def test_bosses_regions():
           s.v=2;s.wall=rle(wall);s.floor=rle(floor);s.biome=rle(biome);s.explored=rle(ex);s.objs=s.objs.filter(([i,o])=>!['shrine','fireBloom','iceCluster'].includes(o.t)||(i!==T.idx(T.SL.x,T.SL.y)&&i!==T.idx(T.SI.x,T.SI.y)));s.objs=s.objs.filter(([i,o])=>o.t!=='fireBloom'&&o.t!=='iceCluster');delete s.bossDead.turtle;delete s.bossDead.spirit;
           T.deserialize(s);const G2=T.G;let n3=0,keep=0;for(let i=0;i<N;i++){if(G2.biome[i]===3)n3++;if(ex[i]&&G2.floor[i]===4)keep++}
           return [n3>800,G2.objs.get(T.idx(T.SL.x,T.SL.y))?.t,G2.bossDead.turtle,keep===exN,Object.keys(G2.bosses).length]}""")
-            rec('저장','옛 저장(v2) 불러오면 안 가 본 곳에 새 지역 생성 · 가 본 곳은 그대로 (보스 6: v108 큰 어둠)', r[0] and r[1]=='shrine' and r[2] is False and r[3] and r[4]==6, str(r))
+            rec('저장','옛 저장(v2) 불러오면 안 가 본 곳에 새 지역 생성 · 가 본 곳은 그대로 (보스 10: v108 큰 어둠 · v131 기록관 보스 4)', r[0] and r[1]=='shrine' and r[2] is False and r[3] and r[4]==10, str(r))
             r=await ev(pg,"()=>{try{const s=JSON.stringify(__T.serialize());__T.deserialize(JSON.parse(s));return JSON.parse(s).v}catch(e){return String(e)}}")
             rec('저장','새 저장 버전 3 왕복', r==3, str(r))
             # look at the ice cave
@@ -779,8 +779,8 @@ def test_quest_chapters_v125():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,402,874,True)
             r=await ev(pg,"""()=>{const T=__T,f=id=>JSON.stringify((T.GUIDE.find(q=>q.id===id)||T.QSIDE.find(q=>q.id===id)).rw);const cp=T.GUIDE.find(q=>q.id==='cpick').rw.map(x=>x[0]);
               return [f('gbench'),f('s_lv5'),f('s_kill'),f('s_giant'),f('dark'),cp.slice(0,3).join(),cp.filter(id=>id.startsWith('rn_')).length,cp.includes('homeStone'),f('s_fish').includes('rn_crucianBraise'),Object.keys(T.Q_CH).length,T.QSIDE.every(q=>T.Q_CH[q.id]>=1)]}""")
-            rec('보상','새 보상 표대로, 레시피 쪽지 4장·귀환석·쪽지는 그대로, 도전 28개 모두 장 번호',
-                r==['[["copperBar",2],["rope",2]]','[["copperBar",3],["stew",2]]','[["ironBar",6]]','[["frostShard",10],["stew",6]]','[["goldBar",8],["cryGem",4]]','crystal,ironBar,stew',4,True,True,28,True], str(r))
+            rec('보상','새 보상 표대로, 레시피 쪽지 4장·귀환석·쪽지는 그대로, 도전 32개 모두 장 번호 (v131 기록관 마지막 방 4개 더함)',
+                r==['[["copperBar",2],["rope",2]]','[["copperBar",3],["stew",2]]','[["ironBar",6]]','[["frostShard",10],["stew",6]]','[["goldBar",8],["cryGem",4]]','crystal,ironBar,stew',4,True,True,32,True], str(r))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;G.qclaim={naru:1};G.qAct='main';G.guide=T.GUIDE.findIndex(q=>q.id==='forge');const lv=T.QSIDE.find(q=>q.id==='s_lv5');G.rpg.lv=Math.max(5,G.rpg.lv);T.checkGuide();
               const h=T.questSideHTML();const a=[T.questChapter(),T.sideOpen(lv),T.questState(lv).done,!!(G.stats.qdone||{}).s_lv5,h.includes('이끼 섬유로 이끼 흙'),h.includes('레벨 5'),h.includes('몬스터 50마리')];
               T.runCmd({k:'qAct',id:'s_lv5'});a.push(G.qAct,T.activeQuest().id);return a}""")
