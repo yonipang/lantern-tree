@@ -1,5 +1,7 @@
 // ================= v104 그림자 고치 · NPC · 마을 · 대화 (데이터는 data/npc.js) =================
 // 고치 놓기(새 세계·옛 세계 모두 불러올 때 한 번, 워프포인트처럼) → 고치 둘레 그림자 조각 → 공격 버튼으로 3번 치면 풀려나 등불나무 곁 마을 자리에 서요 → 말 걸기(대화 창).
+import { NARU_DAWN } from '../data/tier78.js';
+import { darkOweGive } from './bosses.js';
 import { BARTER, BARTER_DAY, BARTER_PER, COCOON_GUARD_R, COCOON_GUARDS, COCOON_HITS, COCOON_WAKE, NARU_ASK_END, NARU_BOSS_CALL, NARU_CALL, NARU_LIFE, NARU_DOING, NARU_INTRO, NARU_Q, NARU_RW, NPC_IDS, NPCS } from '../data/npc.js';
 import { GUIDE, QSIDE } from '../data/quests.js';
 import { ASK_IDS, askOwed, grandmaScene, leadHere, leadThere, lifeLine, naru2Scene, naruBang, naruHold, sceneLines, stageLine } from './naru.js';
@@ -63,12 +65,13 @@ export function talkTo(id) {
   if (leadThere() && leadHere()) return; // v118: 광맥 옆에 먼저 가 있던 나루
   const ask = askOwed()[0]; if (ask) { naruGive([ask, ...naruOwed()], false); /* 쌓인 1부 보상도 같이 */ emit('talk', id, 'ask:' + ask); return; } // v118 나루의 부탁 끝 장면 + 보상
   const sc = naru2Scene(); if (sc) { naruGive([...sc[1], ...naruOwed()], false); emit('talk', id, sc[0]); return; } // v119 2부 장면 (돌아와서·출발 전·나루에게 가기·돌아가기·13번)
+  if (G.stats.darkOwe && darkOweGive()) { emit('talk', id, 'dawn'); return; } // v130 옛 세이브: 큰 어둠 첫 처치 보상
   const owed = naruOwed(); if (owed.length) { naruGive(owed, false); G.stats.naruRw = (G.stats.naruRw | 0) + 1; emit('talk', id, 'reward'); return; }
   emit('talk', id, 'talk'); }
 // ---- v117 나루에게 받는 보상: 끝냈지만 아직 안 받은 1부 이야기 퀘스트 (나루가 마을에 있을 때만 — 없으면 예전처럼 퀘스트 창에서) ----
 export const naruHolds = q => !!q && (NARU_Q.includes(q.id) || ASK_IDS.includes(q.id)) && !!naruSpot(); // v118: 나루의 부탁도
 export const naruOwed = () => GUIDE.filter((q, k) => NARU_Q.includes(q.id) && k < G.guide && !(G.qclaim || {})[q.id]).map(q => q.id);
-export const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0 || (G.stats.nPend || []).length > 0); // v119: 쌓인 「돌아와서」 장면도 // 머리 위 ? (render/world.js)
+export const naruAsk = () => !!G.stats.naruMet && (!!G.stats.naruCall || naruOwed().length > 0 || askOwed().length > 0 || (G.stats.nPend || []).length > 0 || !!G.stats.darkOwe); // v130 // v119: 쌓인 「돌아와서」 장면도 // 머리 위 ? (render/world.js)
 // 보상 주기: 물건 + 아직 안 받은 경험치(옛 세이브에서 이미 지나간 퀘스트) · quiet = 알림 없이(장면 안에서)
 export function naruGive(ids, quiet) { G.qclaim = G.qclaim || {}; G.stats.qxp = G.stats.qxp || {}; const got = {};
   for (const id of ids) { const q = GUIDE.find(x => x.id === id) || QSIDE.find(x => x.id === id); if (!q || G.qclaim[id]) continue; G.qclaim[id] = 1; if (G.qAct === id) G.qAct = 'main';
@@ -123,6 +126,7 @@ export function talkLines(id, kind) { const N = NPCS[id]; if (!N) return [];
   if (kind.startsWith('sc:')) return sceneLines(kind); // v119 2부 장면
   if (kind.startsWith('call:')) return (NARU_CALL[kind.slice(5)] || ['…']).slice(); // v117 마을로 부른 장면
   if (kind.startsWith('ask:')) return (NARU_ASK_END[kind.slice(4)] || ['…']).slice(); // v118 나루의 부탁 끝 장면
+  if (kind === 'dawn') return NARU_DAWN.slice(); // v130
   if (kind === 'reward') return [NARU_RW[((G.stats.naruRw | 0) + NARU_RW.length - 1) % NARU_RW.length]]; // v117 쌓인 보상
   for (const [, o] of G.objs) if (o.t === 'npc' && o.npc === id) { o.met = (o.met || 0) + 1;
     if (id === 'guide') { const st = stageLine(o.met); if (st && o.met % 2) return [st]; /* v126 E: 이야기 단계마다 바뀌는 한마디가 있으면 번갈아 (홀수 번째) */

@@ -239,3 +239,5 @@ export function syncTiers128() { if (!G.stats.tier128) { G.stats.tier128 = 1; if
 export function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 1; for (const o of G.objs.values()) if (o && o.t === 'smelter') { G.stats.gbench = 1; break; }
   const f = GUIDE.find(q => q.id === 'forge'), g = GUIDE.find(q => q.id === 'gbench'); if (!f || !g || !f.done() || !g.done()) return; G.qclaim = G.qclaim || {}; const qx = G.stats.qxp = G.stats.qxp || {}; G.qclaim.gbench = 1; qx.gbench = 1; }
 export function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }
+// v130: 이미 큰 어둠을 물리친 옛 세이브는 첫 처치 보상(새벽돌 6 + 큰 어둠의 무기 하나)을 나루에게서 한 번 받아요 (sim/npc.js talkTo → sim/bosses.js darkOweGive). 처음 한 번만 확인(stats.dark130)
+export function migrateDark130() { const S = G.stats; if (S.dark130) return; S.dark130 = 1; if ((S.beaten || {}).dark && !(S.uniq || {}).dark) S.darkOwe = 1; }

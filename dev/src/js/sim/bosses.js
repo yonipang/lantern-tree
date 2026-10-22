@@ -17,7 +17,8 @@ import { spawnDrop } from './drops.js';
 import { mkEnemy } from './enemies.js';
 import { emit } from './events.js';
 import { eqLv, wearing } from './gear.js';
-import { refillHot, selItem } from './inventory.js';
+import { addItem, refillHot, selItem } from './inventory.js';
+import { DARK_XP_AGAIN, DAWN_AGAIN, DAWN_FIRST } from '../data/tier78.js';
 import { gainXp, hurtPlayer } from './player.js';
 import { onFrame } from './systems.js';
 import { idx, inB, SI, SL } from '../world/map.js';
@@ -43,12 +44,13 @@ export function hitBoss(b, dmg, crit, fx) {
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp({ queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    const again0 = !!(G.stats.beaten && G.stats.beaten[b.k]); // v130: 큰 어둠은 다시 물리치면 경험치 1,000 (다른 보스는 예전처럼 같은 경험치)
+    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
-    if (UNIQ_OF[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
+    if (UNIQ_OF[b.k] || BOSS_W[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { /* v130 큰 어둠도 특별 무기 6종 (UNIQ_OF 없이) */ const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
-    if (b.k === 'dark') darkDown(b); // v108 엔딩
+    if (b.k === 'dark') { spawnDrop('dawnstone', DAWN_FIRST, b.x, b.y); G.stats.darkOwe = 0; darkDown(b); } // v130 새벽돌 6 · v108 엔딩
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'slime') { spawnDrop('lightSeed', 1, b.x, b.y); spawnDrop('gel', 8, b.x, b.y); spawnDrop('copperBar', 5, b.x, b.y); spawnDrop('ironOre', 4, b.x, b.y); emit('toast', '말랑대왕을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -56,7 +58,7 @@ export function hitBoss(b, dmg, crit, fx) {
     if (b.k === 'golem') { spawnDrop('crystal', 8, b.x, b.y); spawnDrop('cryGem', 3, b.x, b.y); spawnDrop('ironBar', 5, b.x, b.y); emit('toast', '수정골렘을 물리쳤어요! 제단의 봉인이 풀렸어요', 'good'); }
   }
 }
-export function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); const u = UNIQ_OF[b.k] && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
+export function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); if (b.k === 'dark') spawnDrop('dawnstone', DAWN_AGAIN[0] + Math.floor(rand() * (DAWN_AGAIN[1] - DAWN_AGAIN[0] + 1)), b.x, b.y); /* v130 새벽돌 2~4 */ const u = (UNIQ_OF[b.k] || BOSS_W[b.k]) && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
   emit('toast', `${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 export function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
   if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
@@ -171,3 +173,8 @@ export function pickSp(k) {
   const B = BOSS_W[k]; if (!B) return UNIQ_OF[k]; const got = G.stats.spGot = G.stats.spGot || {};
   if (G.stats.uniq && G.stats.uniq[k] && UNIQ_OF[k]) got[UNIQ_OF[k]] = 1;
   const left = B.ids.filter(id => !got[id]), pool = left.length ? left : B.ids, id = pool[Math.floor(rand() * pool.length)]; got[id] = 1; return id; }
+
+// v130 옛 세이브: 이미 큰 어둠을 물리쳤으면 첫 처치 보상(새벽돌 6 + 큰 어둠의 무기 하나)을 나루에게서 한 번 (sim/npc.js talkTo, G.stats.darkOwe — save/migrations.js)
+export function darkOweGive() { if (!G.stats.darkOwe) return false; G.stats.darkOwe = 0; G.stats.uniq = G.stats.uniq || {}; G.stats.uniq.dark = 1; const sp = pickSp('dark');
+  for (const [it, c] of [['dawnstone', DAWN_FIRST], [sp, 1]]) { const l = addItem(it, c, false); if (l) spawnDrop(it, l, G.p.x, G.p.y); }
+  emit('inv'); emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffe9a8', 16, 2.6, .6); emit('toast', `나루에게 ${ITEMS.dawnstone.n} ${DAWN_FIRST}개, ${ITEMS[sp].n}를 받았어요`, 'good', 'naruRw'); return true; }

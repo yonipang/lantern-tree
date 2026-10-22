@@ -79,4 +79,4 @@ export const defOf = (it, lv) => Math.round(it.def * (1 + UPG_DMG * (lv || 0)));
 export const armorDef = () => { let d = 0; if (!G || !G.equip) return 0; for (const [sl] of EQ_SLOTS) { const e = G.equip[sl], it = e && ITEMS[e.id]; if (it && it.def) d += defOf(it, lvOf(e)); } return d; };
 export const armorMul = () => AR_K / (AR_K + armorDef());
 // 방어구 상의 색 (Claude 임시: 단계 재료 색)
-Object.assign(WEAR_PAL, { armorMoss: ['#7fb069', '#4f7a45', '#b8dca0'], armorCopper: ['#d9824a', '#a85a2e', '#f0b080'], armorIron: ['#aab4c4', '#6e7888', '#dfe6ee'], armorCrystal: ['#b493f5', '#7d5fc0', '#e0d0ff'], armorObsidian: ['#4a3a5a', '#2a2238', '#ffd25c'], armorFrost: ['#9fd8f0', '#5a9ac8', '#e8f8ff'] });
+Object.assign(WEAR_PAL, { armorMoss: ['#7fb069', '#4f7a45', '#b8dca0'], armorCopper: ['#d9824a', '#a85a2e', '#f0b080'], armorIron: ['#aab4c4', '#6e7888', '#dfe6ee'], armorCrystal: ['#b493f5', '#7d5fc0', '#e0d0ff'], armorObsidian: ['#4a3a5a', '#2a2238', '#ffd25c'], armorFrost: ['#9fd8f0', '#5a9ac8', '#e8f8ff'], armorShadow: ['#5a3a8a', '#2e2244', '#c9a8ff'], armorDawnstone: ['#ffd98a', '#d89a3a', '#fff6d8'] }); // v130
