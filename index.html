@@ -841,6 +841,7 @@ const FRAME_ORDER = [
   'deep', 'darkContact', // v108 가장 깊은 곳·큰 어둠 닿기
   'shadow', // v129 그림자 지대 들어가면 알림 (sim/shadow.js)
   'archives', // v106 기록관 안 그림자 조각
+  'archWards', // v131 기록관 파수 돌인형 (sim/archboss.js)
   'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'naru', // v117 나루 하는 중 한마디 (sim/npc.js)
   'naruLife', // v118 나루가 걸어 다님·먼저 걸어 나가기·나루의 부탁·상황 한마디 (sim/naru.js)
@@ -1530,6 +1531,7 @@ function buildSprites() {
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
   for (const k of ['slimeG', 'slimeO', 'slimeP', 'shroomy', 'boss', 'queen', 'golem', 'magmaSlime', 'frostSlime', 'cinder', 'snowling', 'turtle', 'turtleS', 'spirit']) SPR[k + 'W'] = whiten(SPR[k]);
   for (const k in MON_SPR_DEF) { SPR[k] = MON_SPR_DEF[k](); SPR[k + 'W'] = whiten(SPR[k]); } npcSprites(); /* v104 */ SPR.shadowBit = shadowBitSpr(); SPR.shadowBitW = whiten(SPR.shadowBit); SPR.dark = darkSpr(); SPR.darkW = whiten(SPR.dark); /* v108 */ SPR.shot.web = shotSpr('#e8e4f8', '#ffffff'); SPR.shot.shade = shotSpr('#5a3a8a', '#e8dcff'); /* v129 길 잃은 등불지기 */ SPR.shot.snow = shotSpr('#ffffff', '#d4f6ff'); // v101 새 몬스터·탄
+  for (const k in ABOSS_SPR) { SPR[k] = ABOSS_SPR[k](); SPR[k + 'W'] = whiten(SPR[k]); } SPR.shot.book = shotSpr('#c9a26b', '#fff1d6'); // v131 기록관 보스 · 책 탄
   for (const k in OBJ) if (OBJ[k].sz && OBJ[k].rotV && !SPR.obj[k + 'V'] && SPR.obj[k]) SPR.obj[k + 'V'] = rot90(SPR.obj[k]);
   for (const k in OBJ) if (OBJ[k].dir4 && SPR.obj[k + 'U']) { const src = SPR.obj[k + 'U'], s = src.hd ? HD : 1, c2 = document.createElement('canvas'); c2.width = src.width; c2.height = src.height; c2.hd = src.hd; c2.getContext('2d').drawImage(src, 0, 0, src.width, 11 * s, 0, 0, src.width, 11 * s); SPR.obj[k + 'Ub'] = c2; }
   SPR.obj.bush = SPR.bush[1];
@@ -2143,6 +2145,8 @@ const BOSSES = {
   spirit: { n: '서리 정령', hp: 2000, home: () => ({ x: SI.x + 4, y: SI.y + .5 }), wake: 8, hr: 1.0, col: '#9fd8f0', spr: 'spirit', scale: 1.15 },
 };
 const BKEYS = ['slime', 'queen', 'golem', 'turtle', 'spirit'];
+// v131: 지금 없는 보스(기록관 마지막 방이 없거나 아직 봉인) — 그리지도 움직이지도 않아요 (BOSSES[k].off, sim/archboss.js)
+const bossAway = k => !!(BOSSES[k] && BOSSES[k].off && BOSSES[k].off());
 // ---- calling a beaten boss back for another fight ----
 const REMATCH = { queen: [['shroomCap', 6], ['glowcap', 4], ['spore', 2], ['ironBar', 2]], slime: [['gel', 10], ['copperBar', 4], ['ironOre', 4]], golem: [['crystal', 6], ['cryGem', 2], ['golemCore', 1], ['ironBar', 3]], turtle: [['lavaCore', 1], ['goldBar', 4], ['obsidian', 3]], spirit: [['frostCore', 1], ['frostShard', 8], ['goldBar', 2]] };
 
@@ -2659,7 +2663,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; G.stats.dark130 = 1; /* v119 · v124 · v128 · v130 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); /* v104·v106·v108 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; G.stats.dark130 = 1; /* v119 · v124 · v128 · v130 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); archBossOnLoad(); /* v104·v106·v108 · v131 기록관 마지막 방 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2792,7 +2796,7 @@ function deserialize(s) {
   syncTiers128(); // v128: 작업대·장비제작대 같은 단계
   grow122(); // v122: 커진 침대·탁자·긴 식탁
   if (oldFp) growFootprints(); fixParts(); grantUniques(); ensureDeepAltars();
-  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); shadowOnLoad(); /* v129 */ migrateDark130(); /* v130 */ migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
+  G.rooms = Array.isArray(s.rooms) ? cleanRooms(s.rooms) : placeRooms(genWorld(G.seed)); refreshDoors(); G.warpGo = null; migrateNaru110(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); archBossOnLoad(); /* v131 */ shadowOnLoad(); /* v129 */ migrateDark130(); /* v130 */ migrateNaru119(); migrateGbench124(); /* v104·v106·v108 · v119 · v124 */ // v89: 옛 세계에도 워프포인트를 한 번 (G.stats.warpV) // saves from before hidden rooms get them carved in now
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
@@ -4542,6 +4546,85 @@ ITEMS.darkIdol = { n: '어둠의 심장 조각상', kind: 'summon', boss: 'dark'
 
 // ---- 옛 세이브: 이미 큰 어둠을 물리친 사람은 첫 처치 보상을 나루에게서 한 번 (sim/npc.js) — 나루 대사는 Claude 임시 ----
 const NARU_DAWN = ['{이름}님, 큰 어둠이 사라진 자리에서 이걸 찾았어요.', '새벽처럼 따뜻한 돌이랑, 어둠이 남긴 무기예요. {이름}님이 가져요!'];
+// ================= v131 남은 성장 확장 ③ 기록관 보스 4 · 기록관 몬스터 2종 (dev/design/성장확장.md 8-2d) =================
+// 사용자 선택(2026-10-22, 모두 추천대로): 기록관 일기를 읽으면 봉인된 마지막 방이 열리고 그 기록관의 보스가 있어요(이야기를 막지 않는 도전).
+// 보스는 그 지역 보스보다 한 단계 센 도전이고, 특별 무기 6종(보스 단계 × 1.25 + 보스 효과, 안 받은 것부터)을 줘요. 다시 부르기는 소환 조각상.
+// 동작은 sim/archboss.js(방 붙이기·보스 움직임·파수 돌인형), 그림은 art/content.js(Claude 임시). 이 파일은 data/tier78.js 다음에 와요 —
+// 「지형 재료 2배」·레시피 단계 나누기가 적용되지 않아서 재료 개수와 단계(tier)를 여기 적힌 그대로 써요.
+
+// 기록관 → 보스 (id = sim/archive.js ARCHIVES의 id)
+const ABOSS = [
+  { arch: 'arch0', k: 'bookGolem', n: '책더미 골렘', at: '이끼 굴', hp: 1200, xp: 400, tier: 2, col: '#c9a26b', hr: 1.0, scale: 1.2,
+    loot: [['ironBar', 6], ['rope', 4]], pre: '책더미 골렘의', fx: 'daze', fix: [['ironBar', 2]], orb: '#f0d8a8',
+    ids: ['swordBook', 'daggerBook', 'spearBook', 'hammerBook', 'bowBook', 'staffBook'] },
+  { arch: 'arch2', k: 'mirrorSage', n: '거울 사서', at: '수정 동굴', hp: 2400, xp: 800, tier: 4, col: '#d6c2ff', hr: 0.9, scale: 1.15,
+    loot: [['cryGem', 4], ['crystal', 6]], pre: '거울 사서의', fx: 'mirror', fix: [['cryGem', 2]], orb: '#efe6ff',
+    ids: ['swordMirror', 'daggerMirror', 'spearMirror', 'hammerMirror', 'bowMirror', 'staffMirror'] },
+  { arch: 'arch3', k: 'inkFlame', n: '잉크 불꽃', at: '용암 동굴', hp: 3000, xp: 1200, tier: 5, col: '#6a5aff', hr: 0.9, scale: 1.2,
+    loot: [['obsidian', 6], ['goldBar', 4]], pre: '잉크 불꽃의', fx: 'ink', fix: [['obsidian', 3]], orb: '#a89aff',
+    ids: ['swordInk', 'daggerInk', 'spearInk', 'hammerInk', 'bowInk', 'staffInk'] },
+  { arch: 'arch4', k: 'frostKeeper', n: '얼어붙은 기록관장', at: '얼음 동굴', hp: 4000, xp: 1600, tier: SHADOW_TIER, col: '#9fd8f0', hr: 1.0, scale: 1.2,
+    loot: [['frostShard', 10], ['goldBar', 4]], pre: '얼어붙은 기록관장의', fx: 'frost', fix: [['frostShard', 4]], orb: '#e8f8ff',
+    ids: ['swordKeeper', 'daggerKeeper', 'spearKeeper', 'hammerKeeper', 'bowKeeper', 'staffKeeper'] },
+];
+const ABOSS_OF = Object.fromEntries(ABOSS.map(A => [A.k, A]));
+const ABOSS_XP = Object.fromEntries(ABOSS.map(A => [A.k, A.xp])); // 첫 처치 경험치 (다시 잡아도 같음 — 지금 보스 규칙)
+const ABOSS_WAKE = 5; // 깨어나는 거리 (일기 방에서 바로 깨지 않게 다른 보스 8칸보다 짧게)
+
+// ---- 보스 공격 수치 (닿으면 · 탄 · 위험 지대) ----
+const AB_DMG = {
+  bookGolem: { touch: 16, dash: 22, book: 12 },
+  mirrorSage: { touch: 18, beam: 22 },
+  inkFlame: { touch: 22, fire: 22, ink: 6 },
+  frostKeeper: { touch: 26, pillar: 30, book: 22 },
+};
+
+// ---- 특별 무기 6종: 보스 단계 × 1.25 + 보스 효과 ----
+const AB_KIND_N = { sword: '검', dagger: '단검', spear: '창', hammer: '망치', bow: '활', staff: '지팡이' };
+const AB_FX_D = {
+  daze: '맞은 적이 가끔(20%) 1초 기절해요.',
+  mirror: '맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.',
+  ink: '맞은 적은 3초 동안 받는 피해가 20% 늘어요.',
+  frost: '쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.',
+};
+// 효과 수치 (sim/combat.js applyFx · hitEnemy)
+const DAZE_P = 0.2, DAZE_T = 1, MIRROR_R = 3, MIRROR_MUL = 0.3, INK_T = 3, INK_MUL = 1.2, FROST_R = 2;
+const AB_DUR = [0, 700, 800, 900, 1300, 1300, 1600]; // 단계별 내구도 (보스 무기와 같은 표 · 6 = 그림자)
+for (const A of ABOSS) { const t = A.tier; BOSS_TIER[A.k] = t; BOSS_W[A.k] = { ids: A.ids, pre: A.pre, fx: A.fx, fix: A.fix, orb: A.orb };
+  A.ids.forEach((id, k) => { const wt = WT_ORDER[k]; SP_OF[id] = A.k;
+    ITEMS[id] = { n: `${A.pre} ${AB_KIND_N[wt]}`, kind: 'sword', wt, stack: 1, fx: A.fx, d: `${josa(A.n, '이', '가')} 남긴 ${AB_KIND_N[wt]}. ${AB_FX_D[A.fx]}`, orb: wt === 'staff' ? A.orb : undefined,
+      dmg: Math.round(tierDmg(t, wt) * SP_MUL), rlv: WT_RLV[t], wtier: t };
+    DUR[id] = [AB_DUR[t], A.fix]; RAR[id] = 3; }); }
+
+// ---- 다시 부르기: 소환 조각상 (작업대 · 그 지역 단계) · 다시 잡으면 재료 + 특별 무기 35% (sim/bosses.js rematchLoot) ----
+// SUMMON: id → [이름, 보스, 재료, 색1, 색2] · 작업대 단계는 AB_IDOL_TIER
+SUMMON.bookIdol = ['책더미 조각상', 'bookGolem', [['ironBar', 4], ['rope', 4], ['wood', 6]], '#c9a26b', '#f0d8a8'];
+SUMMON.mirrorIdol = ['거울 조각상', 'mirrorSage', [['crystal', 10], ['cryGem', 2]], '#b493f5', '#efe6ff'];
+SUMMON.inkIdol = ['잉크병 조각상', 'inkFlame', [['obsidian', 6], ['goldBar', 3]], '#3a3060', '#a89aff'];
+SUMMON.keeperIdol = ['얼음 책 조각상', 'frostKeeper', [['frostShard', 12], ['goldBar', 3]], '#5a9ac8', '#e8f8ff'];
+const AB_IDOL_TIER = { bookIdol: 2, mirrorIdol: 3, inkIdol: 4, keeperIdol: 5 };
+for (const id in AB_IDOL_TIER) { const [n, k, req] = SUMMON[id], A = ABOSS_OF[k];
+  ITEMS[id] = { n, kind: 'summon', boss: k, d: `${josa(A.n, '을', '를')} 물리친 뒤 ${A.at} 기록관의 마지막 방에서 쓰면 ${josa(A.n, '이', '가')} 다시 나타나요. 다시 잡으면 재료와 함께 가끔 ${A.pre} 무기가 떨어져요.` };
+  const r = Rc(id, 1, req, 'bench', 'tool'); r.tier = AB_IDOL_TIER[id]; RECIPES.push(r); }
+Object.assign(REMATCH, { bookGolem: [['ironBar', 3], ['rope', 3]], mirrorSage: [['cryGem', 2], ['crystal', 4]], inkFlame: [['obsidian', 3], ['goldBar', 2]], frostKeeper: [['frostShard', 6], ['goldBar', 2]] });
+
+// ---- 기록관 몬스터 2종 (깨기 전 기록관 안에서만) ----
+Object.assign(ENEMY, {
+  // 파수 돌인형: 들어가는 방에서 네모 길을 정해진 대로 돌아요(2마리). 때려도 안 다치고, 레버를 켜면 멈춰 돌이 돼요(sim/archboss.js)
+  stoneWard: { n: '파수 돌인형', hp: 999, dmg: 12, spd: 1.6, r: 0.36, hop: 0, ai: 'patrol', aggro: 0, drops: [], col: '#8a8478', xp: 0 },
+  // 책벌레: 작고 약한 떼 (그림자 조각과 같이 나와요)
+  bookworm: { n: '책벌레', hp: 24, dmg: 7, spd: 3.4, r: 0.26, hop: 0, aggro: 6, drops: [['fiber', 1, 1, 0.3]], col: '#c9a26b' },
+  // 거울 사서의 분신: 제자리에서 빛줄기만 쏴요(경험치 없음, 보스가 쓰러지면 사라짐)
+  mirrorClone: { n: '거울 분신', hp: 120, dmg: 16, spd: 0, r: 0.34, hop: 0, ai: 'beam', aggro: 9, alpha: 0.75, drops: [], col: '#d6c2ff', xp: 0 },
+});
+const WARD_DM = [1, 1, 1.5, 2, 2.4]; // 지역별 파수 돌인형 닿으면 피해 배율 (이끼 12 · 수정 18 · 용암 24 · 얼음 29)
+const WORM_HP = [1, 1, 2.5, 4, 5]; // 지역별 책벌레 체력 배율
+const WORM_N = 3; // 한 번에 나오는 책벌레 수
+
+// ---- 도전 퀘스트 「○○ 기록관의 마지막 방」 4개: 장 번호 · 새 물건 보상 (dev/design/퀘스트설계.md 「보상 원칙」 — 그 장의 다음 관문 재료) ----
+Object.assign(Q_CH, { s_ab0: 5, s_ab2: 7, s_ab3: 9, s_ab4: 10 });
+Object.assign(Q_RW, { s_ab0: [['ironBar', 3], ['stew', 2]], s_ab2: [['cryGem', 2], ['stew', 2]], s_ab3: [['torch', 6], ['stew', 2]], s_ab4: [['frostShard', 6], ['stew', 2]] });
+const AB_Q_XP = { s_ab0: 120, s_ab2: 200, s_ab3: 260, s_ab4: 300 };
 // ================= 가방·상자·도구 주머니: 넣기·빼기·세기·쌓기·내구도, 상자 재료 함께 쓰기, 가방·상자·도구 명령 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 // ---- v77: 본 적 있는 물건 (캐릭터 것, 저장 칸 seen) — 처음 얻은 물건에 빨간 점 ----
@@ -5613,25 +5696,35 @@ function applyFx(e, fx, dmg, boss) {
   else if (fx === 'slow' && !boss) e.slow = 2.5;
   else if (fx === 'chill' && !boss) { e.slow = 3.5; e.chill = 1; }
   else if (fx === 'chain') chainFx(e, dmg); // v130 큰 어둠의 무기
+  else if (fx === 'daze' && !boss) { if (rand() < DAZE_P) { e.stun = Math.max(e.stun || 0, DAZE_T); emit('ftext', e.x, e.y - 1.2, '기절!', '#ffe9a8'); } } // v131 책더미 골렘의 무기
+  else if (fx === 'mirror') mirrorFx(e, dmg); // v131 거울 사서의 무기
+  else if (fx === 'ink') { e.ink = INK_T; if (fxRand() < .5) emit('puff', e.x, e.y - .3, '#3a3060', 4, 1.4, .3); } // v131 잉크 불꽃의 무기
   else if (fx === 'split') { for (let k = 0; k < 3; k++) { const a = rand() * 6.283; G.pshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: .32, hit: [e], ang: a, k: 'orb', dmg: Math.max(1, Math.round(dmg * .45)), crit: false, col: '#d6c2ff', kb: 3, pierce: 0, spd: 9 }); } }
 }
 function dotTick(e, dt, boss) {
   for (const [k, col] of [['poison', '#9be37a'], ['burn', '#ff9b4a']]) { const d = e[k]; if (!d) continue; d.t -= dt; d.acc = (d.acc || 0) + d.dps * dt * (boss ? .5 : 1);
     if (d.acc >= 1) { const n = Math.floor(d.acc); d.acc -= n; if (boss) bossDot(e, n, col); else dotHit(e, n, col); if (fxRand() < .5) emit('puff', e.x, e.y - .3, col, 2, 1, .3); }
     if (d.t <= 0) e[k] = null; }
+  if (e.ink > 0) e.ink -= dt; // v131 잉크 표식
   if (e.slow > 0) { e.slow -= dt; if (fxRand() < dt * 4) emit('puff', e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
 }
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
-function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
+function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); { const xp = def.xp != null ? def.xp : Math.max(2, Math.round(def.hp / 2)); if (xp > 0) gainXp(xp, e.x, e.y); } } // v131 xp: 0 = 경험치 없음(파수 돌인형·거울 분신)
 // v130 어둠 번개: 맞은 적(또는 보스)에서 CHAIN_R칸 안의 가장 가까운 적에게 차례로 CHAIN_N마리까지, 그 피해의 CHAIN_MUL만큼 (번개는 다시 튀지 않아요)
 function chainFx(src, dmg) { const hit = new Set([src]), d = Math.max(1, Math.round(dmg * CHAIN_MUL)); let cur = src, from = { x: src.x, y: src.y - .3 };
   for (let n = 0; n < CHAIN_N; n++) { let best = null, bd = CHAIN_R; for (const e of G.enemies) if (!hit.has(e) && e.hp > 0) { const dd = Math.hypot(e.x - cur.x, e.y - cur.y); if (dd < bd) { bd = dd; best = e; } }
     if (!best) break; hit.add(best); for (let k = 1; k <= 4; k++) emit('puff', from.x + (best.x - from.x) * k / 4, from.y + (best.y - .3 - from.y) * k / 4, '#c9a8ff', 1, 1.2, .15);
     hitEnemy(best, d, false, 3); from = { x: best.x, y: best.y - .3 }; cur = best; } }
+// v131 거울: 맞힌 적(또는 보스)에서 MIRROR_R칸 안의 가장 가까운 다른 적 하나에게 그 피해의 MIRROR_MUL (다시 튀지 않아요)
+function mirrorFx(src, dmg) { let best = null, bd = MIRROR_R; for (const e of G.enemies) if (e !== src && e.hp > 0) { const dd = Math.hypot(e.x - src.x, e.y - src.y); if (dd < bd) { bd = dd; best = e; } }
+  if (!best) return; for (let k = 1; k <= 4; k++) emit('puff', src.x + (best.x - src.x) * k / 4, src.y - .3 + (best.y - src.y) * k / 4, '#efe6ff', 1, 1.2, .15); hitEnemy(best, Math.max(1, Math.round(dmg * MIRROR_MUL)), false, 3); }
+// v131 얼음: 쓰러진 적 둘레 FROST_R칸의 적이 얼어붙어요
+function frostFx(src) { emit('puff', src.x, src.y - .3, '#d4f6ff', 14, 2.6, .4); for (const e of G.enemies) if (e !== src && e.hp > 0 && Math.hypot(e.x - src.x, e.y - src.y) < FROST_R) { e.slow = 3.5; e.chill = 1; emit('ftext', e.x, e.y - 1.2, '꽁꽁!', '#bfe6ff'); } }
 function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split' && fx !== 'chain') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (e.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); /* v131 잉크 표식 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split' && fx !== 'chain' && fx !== 'mirror') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
-  if (fx === 'split' || fx === 'chain') applyFx(e, fx, dmg); // 쓰러져도 파편·번개는 튀어요
+  if (fx === 'split' || fx === 'chain' || fx === 'mirror') applyFx(e, fx, dmg); // 쓰러져도 파편·번개·거울은 튀어요
+  if (e.hp <= 0 && fx === 'frost') frostFx(e); // v131 얼어붙은 기록관장의 무기: 쓰러뜨리면 둘레가 얼어요
   if (e.hp <= 0) enemyDie(e);
 }
 // ---- the attack button ----
@@ -5689,7 +5782,7 @@ function enemyStep(e, dt) {
   }
   if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
   e.hurt = Math.max(0, (e.hurt || 0) - dt); shadowLeash(e); /* v104 */
-  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
+  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && !e.stone /* v131 돌이 된 파수 돌인형 */ && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
 const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];
@@ -5755,6 +5848,7 @@ function updateHazards(dt) {
     const hit = pl => Math.hypot(pl.p.x - h.x, pl.p.y - h.y) < h.r; // 살아 있는 플레이어마다 (8단계)
     if (h.k === 'lava') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y, 'fire')); }
     else if (h.k === 'poison') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } // v101 독 구름·독 웅덩이(닿아 있는 동안 계속)
+    else if (h.k === 'ink') { for (const pl of live) if (hit(pl)) withPlayer(pl, () => { G.p.slowT = Math.max(G.p.slowT || 0, .5); hurtPlayer(h.dmg, h.x, h.y); }); } // v131 잉크 웅덩이(닿아 있는 동안 느려지고 조금씩)
     else if (h.k === 'shade') { if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#c9a8ff', 22, 4, .4); emit('shake', .2); for (const pl of live) if (hit(pl)) withPlayer(pl, () => hurtPlayer(h.dmg, h.x, h.y)); } } // v129 길 잃은 등불지기의 발밑 원
     else if (!h.done) { h.done = 1; emit('puff', h.x, h.y, '#d4f6ff', 26, 4.5, .4); emit('shake', .3); for (const pl of live) if (hit(pl)) withPlayer(pl, () => { const p = G.p; hurtPlayer(h.dmg, h.x, h.y); p.slowT = (h.slow || 2) * (wearing('snowBrooch') ? broochMul(eqLv('snowBrooch')) : 1); emit('ftext', p.x, p.y - 1.6, '꽁꽁!', '#bfe6ff'); }); } }
 }
@@ -5766,14 +5860,16 @@ function hitBoss(b, dmg, crit, fx) {
   if (b.k === 'turtle' && b.ph === 'open' && dmg > 0) { dmg = Math.round(dmg * 1.5); crit = true; }
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
+  if (b.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); // v131 잉크 불꽃의 무기: 받는 피해 +20%
   if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
     const again0 = !!(G.stats.beaten && G.stats.beaten[b.k]); // v130: 큰 어둠은 다시 물리치면 경험치 1,000 (다른 보스는 예전처럼 같은 경험치)
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */, ...ABOSS_XP /* v131 기록관 보스 */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k] || BOSS_W[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { /* v130 큰 어둠도 특별 무기 6종 (UNIQ_OF 없이) */ const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
     if (b.k === 'golem') spawnDrop('golemCore', 1, b.x, b.y);
+    if (isABoss(b.k)) { for (const [id, c] of ABOSS_OF[b.k].loot) spawnDrop(id, c, b.x, b.y); abDownToast(b.k); } // v131 기록관 보스 첫 처치 재료
     if (b.k === 'dark') { spawnDrop('dawnstone', DAWN_FIRST, b.x, b.y); G.stats.darkOwe = 0; darkDown(b); } // v130 새벽돌 6 · v108 엔딩
     if (b.k === 'turtle') { spawnDrop('lavaCore', 2, b.x, b.y); spawnDrop('goldBar', 6, b.x, b.y); spawnDrop('obsidian', 4, b.x, b.y); deepSeedDrop('turtle', SL, b); emit('toast', '용암 거북을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
     if (b.k === 'spirit') { spawnDrop('frostCore', 2, b.x, b.y); spawnDrop('frostShard', 10, b.x, b.y); spawnDrop('goldBar', 3, b.x, b.y); deepSeedDrop('spirit', SI, b); emit('toast', '서리 정령을 물리쳤어요! 빛씨앗이 떨어졌어요', 'good'); }
@@ -5783,19 +5879,19 @@ function hitBoss(b, dmg, crit, fx) {
   }
 }
 function rematchLoot(b) { for (const [id, c] of REMATCH[b.k] || []) spawnDrop(id, c, b.x, b.y); if (b.k === 'dark') spawnDrop('dawnstone', DAWN_AGAIN[0] + Math.floor(rand() * (DAWN_AGAIN[1] - DAWN_AGAIN[0] + 1)), b.x, b.y); /* v130 새벽돌 2~4 */ const u = (UNIQ_OF[b.k] || BOSS_W[b.k]) && rand() < .35; if (u) spawnDrop(pickSp(b.k), 1, b.x, b.y); G.stats.rematch = (G.stats.rematch || 0) + 1;
-  emit('toast', `${BOSSES[b.k].n}을 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
+  emit('toast', `${josa(BOSSES[b.k].n, '을', '를')} 다시 물리쳤어요!${u ? ' 전용 장비가 떨어졌어요' : ''}`, 'good'); }
 function summonDecide(it, s0) { const k = it.boss, h = BOSSES[k].home(), d = Math.hypot(G.p.x - h.x, G.p.y - h.y), t = targetTile();
-  if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${BOSSES[k].n}을 한 번 물리친 뒤에 쓸 수 있어요`, t };
-  if (!G.bossDead[k]) return { k: 'info', lbl: '깨어 있음', icon: 'dots', msg: `${BOSSES[k].n}이 이미 보스방에 있어요`, t };
+  if (!beat(k)) return { k: 'info', lbl: '아직 몰라요', icon: 'dots', msg: `${josa(BOSSES[k].n, '을', '를')} 한 번 물리친 뒤에 쓸 수 있어요`, t };
+  if (!G.bossDead[k]) return { k: 'info', lbl: '깨어 있음', icon: 'dots', msg: `${josa(BOSSES[k].n, '이', '가')} 이미 보스방에 있어요`, t };
   if (d > 9) return { k: 'info', lbl: '보스방에서', icon: 'dots', msg: `${BOSSES[k].n}의 보스방 안에서 써요`, t };
   return { k: 'summon', lbl: '소환', icon: s0.id, t, boss: k }; }
 function summonBoss(k) { const s0 = selItem(); if (!s0 || ITEMS[s0.id].boss !== k || !G.bossDead[k]) return;
   s0.c--; if (!s0.c) { G.inv[G.sel] = null; refillHot(G.sel, s0.id); } emit('inv');
-  G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; emit('puff', b.x, b.y, BOSSES[k].col, 30, 4, .8); emit('shake', .4, true); emit('sfx', 'boss'); emit('toast', `${BOSSES[k].n}이 다시 나타났어요!`, 'warn', 'summon'); }
+  G.bossDead[k] = false; G.bosses[k] = freshBoss(k); const b = G.bosses[k]; emit('puff', b.x, b.y, BOSSES[k].col, 30, 4, .8); emit('shake', .4, true); emit('sfx', 'boss'); emit('toast', `${josa(BOSSES[k].n, '이', '가')} 다시 나타났어요!`, 'warn', 'summon'); }
 onFrame('bosses', updateBosses);
 function updateBosses(dt) {
   let active = null;
-  for (const k of BKEYS) { if (G.bossDead[k]) continue; const b = G.bosses[k]; withPlayer(nearestPlayer(b.x, b.y), () => { if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }); } // 보스마다 가장 가까운 플레이어 (8단계)
+  for (const k of BKEYS) { if (G.bossDead[k] || bossAway(k)) continue; const b = G.bosses[k]; withPlayer(nearestPlayer(b.x, b.y), () => { if (bossCommon(b, dt)) { if (b.inv > 0) b.inv -= dt; phaseCheck(b); if (b.ph === 'roar') { b.t -= dt; b.anim = (b.anim || 0) + dt; if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } } else BOSS_AI[k](b, dt); if (k === 'spirit' && (b.stage || 1) >= 3) cloneTick(b, dt); if (!G.bossDead[k]) dotTick(b, dt, true); active = G.bossDead[k] ? null : b; } }); } // 보스마다 가장 가까운 플레이어 (8단계)
   if (active) withPlayer(nearestPlayer(active.x, active.y), () => emit('bossHp', active.k, active.hp, active.max));
   updateShots(dt); updateHazards(dt);
 }
@@ -5806,7 +5902,7 @@ function bossCommon(b, dt) {
   return true;
 }
 // 보스가 깨어나 싸움 시작 (v127 연출 장면 뒤에는 흔들림·소리를 장면에서 이미 했어요)
-function bossWake(b, cine) { const def = BOSSES[b.k]; b.st = 'fight'; b.t = 1.2; if (!cine) { emit('sfx', 'boss'); emit('shake', 0.4, true); } emit('toast', `${def.n}이 깨어났어요!`); emit('bossbar', true); }
+function bossWake(b, cine) { const def = BOSSES[b.k]; b.st = 'fight'; b.t = 1.2; if (!cine) { emit('sfx', 'boss'); emit('shake', 0.4, true); } emit('toast', `${josa(def.n, '이', '가')} 깨어났어요!`); emit('bossbar', true); }
 const BOSS_AI = {
   turtle(b, dt) {
     const p = G.p, d = b.d, st = b.stage || 1, half = st >= 2; b.t -= dt;
@@ -5882,7 +5978,7 @@ function phaseCheck(b) { if (!PHASE_BOSS[b.k] || b.hp <= 0) return; b.stage = b.
   b.stage = s; b.ph = 'roar'; b.t = 1.5; b.inv = 1.5; G.shots.length = 0; emit('shake', .5); emit('sfx', 'boss'); emit('puff', b.x, b.y - .5, BOSSES[b.k].col, 30, 4, .6); emit('puff', b.x, b.y - .5, '#ffe9a8', 12, 3, .8); emit('ftext', b.x, b.y - 2.6, '!!', '#ffd25c');
   G.stats.phaseTip = G.stats.phaseTip || {}; const key = b.k + s; if (!G.stats.phaseTip[key]) { G.stats.phaseTip[key] = 1; emit('toast', PHASE_TIP[b.k][s - 2], 'warn', 'phase'); }
   if (b.k === 'spirit' && s >= 2 && !(b.pillars || []).length) spiritPillars(b); if (b.k === 'spirit' && s === 3) spiritClones(b, 2); }
-function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone'); markLight(); }
+function bossCleanup(b) { for (const i of b.pillars || []) { const o = G.objs.get(i); if (o && o.t === 'icePillar') G.objs.delete(i); } b.pillars = []; if (G.enemies.some(e => e.k === 'spiritClone' || e.k === 'mirrorClone')) G.enemies = G.enemies.filter(e => e.k !== 'spiritClone' && e.k !== 'mirrorClone'); /* v131 거울 분신 */ markLight(); }
 // lava turtle: stage 2 sparks off every wall bounce, stage 3 erupts around you and then opens its shell
 function emberBurst(b) { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (const da of [-.45, .45]) { const a = base + da + (rand() - .5) * .3; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 2.4, dmg: 12, k: 'fire' }); } }
 function turtleErupt(b) { const p = G.p; G.hz = G.hz || []; for (let k = 0; k < 6; k++) { const a = rand() * 6.283, r = k ? 1.3 + rand() * 2.4 : 0, hx = p.x + Math.cos(a) * r, hy = p.y + Math.sin(a) * r; if (!isSolid(Math.floor(hx), Math.floor(hy))) G.hz.push({ x: hx, y: hy, r: 1.0, t: 0, warn: .9, life: 2.6, dmg: 18, k: 'lava' }); }
@@ -6227,7 +6323,7 @@ const epicOwned = () => { const got = new Set(); for (const s2 of G.inv) if (s2 
 // v125 장(dev/design/퀘스트설계.md 3-7): 관문 이야기 퀘스트(Q_CH_GATE)를 끝낼 때마다 다음 장 — 도전은 그 장이 되어야 열려요
 // (나루의 부탁은 나루가 방울로 줄 때 열려서 그대로, 이미 받은 도전은 늘 보여요)
 const questChapter = () => { let c = 1; for (const id of Q_CH_GATE) { const k = GUIDE.findIndex(q => q.id === id); if (k >= 0 && k < G.guide) c++; } return c; };
-const sideOpen = q => !Q_CH[q.id] || isAsk(q) || !!(G.qclaim || {})[q.id] || questChapter() >= Q_CH[q.id];
+const sideOpen = q => (!q.gone || !q.gone() || !!(G.qclaim || {})[q.id]) /* v131 마지막 방이 없는 세계 */ && (!Q_CH[q.id] || isAsk(q) || !!(G.qclaim || {})[q.id] || questChapter() >= Q_CH[q.id]);
 function questState(q, k) { const side = k == null; const done = side ? sideOpen(q) && q.done() : k < G.guide; const cur = !side && k === G.guide; const nh = naruHolds(q); /* v118: 나루의 부탁도 */ return { done, cur, claimed: !!(G.qclaim || {})[q.id], has: nh ? q.rw.length > 0 : (q.rw && q.rw.length) || q.xp, nh }; } // v117 nh: 보상은 마을의 나루에게
 const canClaim = () => GUIDE.some((q, k) => { const st = questState(q, k); return st.done && !st.claimed && st.has && !st.nh; }) || QSIDE.some(q => { const st = questState(q); return st.done && !st.claimed && st.has && !st.nh; });
 function claimQuest(id) {
@@ -6785,6 +6881,7 @@ function onEnemyDie(e) { const def = ENEMY[e.k]; if (def && def.ai === 'spore') 
 // 맞을 때 피해 바꾸기 (sim/combat.js hitEnemy): 땅속 두더지는 안 맞고, 버섯 거북은 앞에서 맞으면 30%
 function monDmg(e, dmg) { const def = ENEMY[e.k]; if (!def || !def.ai) return dmg;
   if (e.under) return 0;
+  if (def.ai === 'patrol') return 0; // v131 파수 돌인형은 때려도 안 다쳐요
   if ((def.ai === 'shell' || def.ai === 'knight') && e.fa != null) { const p = G.p; let da = Math.atan2(p.y - e.y, p.x - e.x) - e.fa; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; if (Math.abs(da) < 1.05) return Math.max(1, Math.round(dmg * (def.front || .3))); } // v129 잊힌 기사는 20%
   return dmg; }
 // ================= v102 새 스킬 동작 (data/growth.js의 SKILLS 추가분, sim/combat.js의 SK_FN에 덧붙여요) =================
@@ -7050,12 +7147,15 @@ function carveArch(A, x0, y0) { const wires = [], sleepers = [], PLAN = planOf(A
 onFrame('archives', dt => { for (const a of archList()) { if (a.done) continue; const pl = playerList().find(q => archAt(Math.floor(q.p.x), Math.floor(q.p.y)) === a); if (!pl) continue;
   if (G.time - a.gT < 45) continue; const inside = G.enemies.filter(e => e.k === 'shadowBit' && archAt(Math.floor(e.x), Math.floor(e.y)) === a).length; if (inside >= 2) continue; a.gT = G.time;
   for (let k = inside; k < 4; k++) for (let tr = 0; tr < 12; tr++) { const x = a.x + 1 + Math.floor(rand() * (ARCH_W - 2)), y = a.y + 1 + Math.floor(rand() * (ARCH_H - 2)); const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || Math.hypot(x + .5 - pl.p.x, y + .5 - pl.p.y) < 3) continue;
-    const e = regionEnemy(mkEnemy('shadowBit', x + .5, y + .6), a.b); e.home = { x: a.x + ARCH_W / 2, y: a.y + ARCH_H / 2, r: ARCH_W }; G.enemies.push(e); break; } } });
+    const e = regionEnemy(mkEnemy('shadowBit', x + .5, y + .6), a.b); e.home = { x: a.x + ARCH_W / 2, y: a.y + ARCH_H / 2, r: ARCH_W }; G.enemies.push(e); break; }
+  // v131 책벌레: 작은 떼가 같이 나와요 (지역마다 체력 배율)
+  for (let k = 0; k < WORM_N; k++) for (let tr = 0; tr < 12; tr++) { const x = a.x + 1 + Math.floor(rand() * (ARCH_W - 2)), y = a.y + 1 + Math.floor(rand() * (ARCH_H - 2)); const i = idx(x, y); if (G.wall[i] || G.objs.get(i) || Math.hypot(x + .5 - pl.p.x, y + .5 - pl.p.y) < 3) continue;
+    const e = mkEnemy('bookworm', x + .5, y + .6); e.hp = e.mh = Math.round(e.hp * (WORM_HP[a.b] || 1)); G.enemies.push(e); break; } } });
 // 일기 읽기 → 기록관을 깼어요: 지도가 모두 보이고, 지역 레시피를 배우고, 기록
 function readDiary(o) { const a = archList().find(q => q.id === o.a); if (!a) return; const A = ARCHIVES.find(q => q.id === a.id);
   if (!a.done) { a.done = 1; for (let r = 0; r < ARCH_H; r++) for (let c = 0; c < ARCH_W; c++) G.explored[idx(a.x + c, a.y + r)] = 1; emit('remap'); G.stats.archDone = (G.stats.archDone || 0) + 1;
     if (A && A.recipe && learnRecipe(A.recipe)) emit('toast', `기록관을 깼어요! 지도에 기록관이 보이고, 등불지기의 레시피 「${(ITEMS['rn_' + A.recipe] || {}).n ? ITEMS['rn_' + A.recipe].n.replace('레시피 쪽지 · ', '') : A.recipe}」를 배웠어요`, 'good', 'arch');
-    else emit('toast', '기록관을 깼어요! 지도에 기록관이 보여요', 'good', 'arch'); emit('sfx', 'win'); emit('puff', o.x, o.y, '#ffe9a8', 24, 3.5, .8); }
+    else emit('toast', '기록관을 깼어요! 지도에 기록관이 보여요', 'good', 'arch'); emit('sfx', 'win'); emit('puff', o.x, o.y, '#ffe9a8', 24, 3.5, .8); abOpen(a); /* v131 마지막 방 봉인이 풀려요 */ }
   emit('diary', a.id); }
 const archDiaryIds = () => archList().filter(a => a.done).map(a => a.id);
 // 도전 퀘스트: 이끼 굴 기록관 깨기
@@ -7191,6 +7291,156 @@ const shadowOnLoad = () => shadowWake(true);
 const sh_in = new WeakMap();
 onFrame('shadow', () => { const p = G.p; if (!p || !G.stats.shadow) return; const now = inShadow(p.x, p.y);
   if (now !== !!sh_in.get(p)) { sh_in.set(p, now); if (now) { if (!G.stats.shadowSeen) { G.stats.shadowSeen = 1; emit('toast', '그림자 지대 — 그림자 몬스터는 빛 안에서 피해를 2배로 받아요. 횃불을 챙겨요!', 'warn', 'shadowIn'); } else emit('toast', '그림자 지대', null, 'shadowIn'); } } });
+// ================= v131 기록관 보스 4 · 기록관 몬스터 2종 (dev/design/성장확장.md 8-2d, 수치는 data/archboss.js) =================
+// 기록관마다 일기 방 바깥 벽 너머에 13×9 「마지막 방」을 붙여요(위 → 오른쪽 → 왼쪽 순서로 자리를 찾고, 없으면 그 기록관은 보스 없음).
+// 문은 암반으로 봉인돼 있다가 일기를 읽으면 열려요(sim/archive.js readDiary → abOpen). 옛 세계도 불러올 때 한 번(stats.abV), 이미 읽었으면 열린 채로.
+// 자리는 기록관 기록(G.stats.arch[]의 br = { d, x, y, door, bx, by })에. 방이 없거나 아직 봉인이면 그 보스는 없는 것처럼(BOSSES[k].off) 그리지도 움직이지도 않아요.
+// 파수 돌인형: 깨기 전 기록관 들어가는 방에서 네모 길을 돌고, 레버를 켜면 멈춰 돌이 돼요. 책벌레는 그림자 조각과 같이 나와요(sim/archive.js).
+
+// 13 × 9 마지막 방 (# 암반 · . 돌바닥 · X 보스 자리)
+const AB_PLAN = [
+  '#############',
+  '#...........#',
+  '#...........#',
+  '#...........#',
+  '#.....X.....#',
+  '#...........#',
+  '#...........#',
+  '#...........#',
+  '#############',
+];
+const AB_W = AB_PLAN[0].length, AB_H = AB_PLAN.length;
+// 붙이는 방향: 방 왼쪽 위 칸과 봉인 문(기록관 벽 위, 기록관 왼쪽 위 기준). 위 문은 일기 방 위 벽(얼음 기록관 얼음 속 등불지기 자리를 피해 8번째 칸)
+// 같은 방향 안에서는 문이 방 벽 가운데쯤 오는 자리부터, 벽을 따라 조금씩 밀어 보며 찾아요 (위 → 오른쪽 → 왼쪽)
+const AB_DIRS = [
+  ...[0, -1, 1, -2, 2, -3, 3, 4, 5, 6, 7].map(o => ({ d: 'up', rx: o, ry: -(AB_H - 1), dx: 8, dy: 0 })),
+  ...[0, -1, 1, -2, 2, -3, 3].map(o => ({ d: 'right', rx: ARCH_W - 1, ry: -1 + o, dx: ARCH_W - 1, dy: 3 })),
+  ...[0, -1, 1, -2, 2, -3, 3].map(o => ({ d: 'left', rx: -(AB_W - 1), ry: -1 + o, dx: 0, dy: 3 })),
+];
+const inArchRect = (a, x, y) => x >= a.x && x < a.x + ARCH_W && y >= a.y && y < a.y + ARCH_H;
+const abArchOf = k => { const A = ABOSS_OF[k]; return A ? archList().find(a => a.id === A.arch) || null : null; };
+// 마지막 방 안인지 (그 기록관 기록을 돌려줘요)
+const abRoomAt = (x, y) => archList().find(a => a.br && x >= a.br.x && x < a.br.x + AB_W && y >= a.br.y && y < a.br.y + AB_H) || null;
+// 보스 자리 (방이 없으면 쓰이지 않는 자리 — off가 막아요)
+const abHome = k => { const a = abArchOf(k); return a && a.br ? { x: a.br.bx + .5, y: a.br.by + .5 } : { x: 2.5, y: 2.5 }; };
+// 그 보스가 지금 없는 것처럼 할지: 방이 없거나, 아직 일기를 안 읽어 봉인돼 있으면
+const abOff = k => { const a = abArchOf(k); return !a || !a.br || !a.done; };
+
+// ---- 보스 등록 ----
+for (const A of ABOSS) { BOSSES[A.k] = { n: A.n, hp: A.hp, home: () => abHome(A.k), wake: ABOSS_WAKE, hr: A.hr, col: A.col, spr: A.k, scale: A.scale, off: () => abOff(A.k) }; BKEYS.push(A.k); }
+
+// ---- 방 붙이기 ----
+// 그 방향에 붙일 수 있는지 — 안 되면 까닭(글), 되면 '' (테스트도 써요)
+function abFitWhy(a, D, taken = []) { const x0 = a.x + D.rx, y0 = a.y + D.ry; let n = 0, walls = 0;
+  if (roomInRect(x0, y0, x0 + AB_W - 1, y0 + AB_H - 1)) return 'room';
+  for (const [sx, sy] of [[x0, y0], [x0 + AB_W - 1, y0], [x0, y0 + AB_H - 1], [x0 + AB_W - 1, y0 + AB_H - 1], [x0 + 6, y0 + 4]]) if (noDigZone(sx, sy)) return 'nodig';
+  for (const b of [{ x: BX, y: BY }, SA, SB, SL, SI]) if (Math.hypot(x0 + 6 - b.x, y0 + 4 - b.y) < 16) return 'boss';
+  for (let y = y0; y < y0 + AB_H; y++) for (let x = x0; x < x0 + AB_W; x++) { if (inArchRect(a, x, y)) continue;
+    if (!inB(x, y) || x < 2 || y < 2 || x > W - 3 || y > H - 3) return 'edge'; const i = idx(x, y);
+    if ((archAt(x, y) && archAt(x, y) !== a) || deepAt(x, y) || abRoomAt(x, y) || taken.some(r => x >= r.x && x < r.x + AB_W && y >= r.y && y < r.y + AB_H)) return 'other';
+    const o = G.objs.get(i), od = o && OBJ[o.t]; // 저절로 난 자연물(풀·빛버섯·덤불·나무 …)은 덮어도 돼요 — 놓은 물건만 피해요
+    if ((o && !(od && (od.nat || od.bush || od.ntree))) || G.wire.has(i) || G.under.has(i) || G.floor[i] === PIT || (G.bwall && G.bwall.has(i)) || nearWarpPt(x, y)) return 'stuff';
+    n++; if (G.wall[i] || !G.explored[i]) walls++; }
+  return walls >= n * .75 ? '' : 'open:' + Math.round(walls / n * 100); } // 밝힌 곳(플레이어가 다닌 굴)이 거의 없는 곳에만 — 안 가 본 동굴은 덮어도 돼요
+const abFits = (a, D, taken) => !abFitWhy(a, D, taken);
+function abCarve(a, D) { const x0 = a.x + D.rx, y0 = a.y + D.ry, door = idx(a.x + D.dx, a.y + D.dy); let bx = x0 + 6, by = y0 + 4;
+  for (let r = 0; r < AB_H; r++) for (let c = 0; c < AB_W; c++) { const x = x0 + c, y = y0 + r; if (inArchRect(a, x, y)) continue; const i = idx(x, y), ch = AB_PLAN[r][c];
+    G.objs.delete(i); G.wire.delete(i); if (G.wdmg) G.wdmg.delete(i);
+    if (ch === '#') G.wall[i] = 8; else { G.wall[i] = 0; G.floor[i] = 6; if (ch === 'X') { bx = x; by = y; } }
+    if (G.explored[i]) emit('tile', x, y); }
+  a.br = { d: D.d, x: x0, y: y0, door, bx, by }; G.wall[door] = 8; if (a.done) abOpenDoor(a); }
+function placeArchBosses() { if (!G || !G.stats || G.stats.abV) return 0; G.stats.abV = 1; let n = 0; const taken = [];
+  for (const a of archList()) { if (a.br !== undefined || !ABOSS.some(A => A.arch === a.id)) continue; a.br = null;
+    for (const D of AB_DIRS) if (abFits(a, D, taken)) { abCarve(a, D); taken.push({ x: a.br.x, y: a.br.y }); n++; break; } }
+  if (n) { markLight(); emit('remap'); } return n; }
+function abOpenDoor(a) { const i = a.br.door; G.wall[i] = 0; G.floor[i] = 6; if (G.wdmg) G.wdmg.delete(i); if (G.explored[i]) emit('tile', i % W, (i / W) | 0); }
+// 일기를 읽으면 봉인이 풀려요 (sim/archive.js readDiary)
+function abOpen(a) { if (!a || !a.br || !G.wall[a.br.door]) return false; abOpenDoor(a); markLight(); const A = ABOSS.find(q => q.arch === a.id);
+  if (A && !G.bossDead[A.k]) G.bosses[A.k] = freshBoss(A.k);
+  emit('shake', .3); emit('sfx', 'boss'); emit('puff', a.br.door % W + .5, ((a.br.door / W) | 0) + .5, '#ffe9a8', 18, 3, .6);
+  emit('toast', '일기 방 벽의 봉인이 풀렸어요… 마지막 방에서 무언가 기다려요', 'warn', 'abOpen'); return true; }
+// 불러올 때 (save/state.js — 기록관을 놓은 뒤): 방 붙이기(한 번) + 보스 자리 맞추기
+function archBossOnLoad() { placeArchBosses(); for (const A of ABOSS) if (!G.bossDead[A.k]) G.bosses[A.k] = freshBoss(A.k); }
+
+// ---- 보스 움직임 ----
+const shotsFan = (b, n, gap, spd, dmg, k, life = 3) => { const p = G.p, base = Math.atan2(p.y - b.y, p.x - b.x); for (let q = 0; q < n; q++) { const a = base + (q - (n - 1) / 2) * gap; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, life, dmg, k, a }); } };
+const abHz = h => { G.hz = G.hz || []; G.hz.push(Object.assign({ t: 0 }, h)); };
+// 방 안에서 내 둘레의 빈 자리
+function spotNear(b, r0, r1) { const p = G.p, h = BOSSES[b.k].home(); for (let q = 0; q < 16; q++) { const a = rand() * 6.283, r = r0 + rand() * (r1 - r0), x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
+    if (!boxHits(x, y, .4) && Math.hypot(x - h.x, y - h.y) < 6.5) return { x, y }; } return null; }
+Object.assign(BOSS_AI, {
+  // 책더미 골렘: 걸어오며 책을 부채꼴로 던지고, 세 번째마다 조준 뒤 돌진(벽에 부딪히면 잠깐 멈춤 + 책이 사방으로)
+  bookGolem(b, dt) { const p = G.p, d = b.d, half = b.hp < b.max / 2, D = AB_DMG.bookGolem; b.t -= dt; b.anim = (b.anim || 0) + dt;
+    if (b.ph === 'walk') { if (d > 2.2) moveEnt(b, (p.x - b.x) / d * 1.5 * dt, (p.y - b.y) / d * 1.5 * dt, .9); if (b.t <= 0) { b.casts++; if (b.casts % 3 === 0) { b.ph = 'aim'; b.t = .75; } else { b.ph = 'throw'; b.t = .45; } } }
+    else if (b.ph === 'throw') { if (b.t <= 0) { shotsFan(b, half ? 7 : 5, .26, 6, D.book, 'book'); emit('sfx', 'swing'); b.ph = 'walk'; b.t = half ? .8 : 1.2; } }
+    else if (b.ph === 'aim') { if (b.t > .3) { b.dx = (p.x - b.x) / (d || 1); b.dy = (p.y - b.y) / (d || 1); } if (b.t <= 0) { b.ph = 'dash'; b.t = .6; emit('sfx', 'swing'); } }
+    else if (b.ph === 'dash') { const blocked = moveEnt(b, b.dx * (half ? 12 : 10) * dt, b.dy * (half ? 12 : 10) * dt, .9);
+      if (blocked) { b.ph = 'stun'; b.t = 1.1; emit('shake', .4, true); emit('sfx', 'brk'); emit('puff', b.x, b.y - .5, '#f0d8a8', 16, 3); emit('ftext', b.x, b.y - 2.6, '쿵!', '#ffe9a8');
+        for (let q = 0; q < 8; q++) { const a = q / 8 * 6.283; G.shots.push({ x: b.x, y: b.y - .4, vx: Math.cos(a) * 4.5, vy: Math.sin(a) * 4.5, life: 2, dmg: D.book, k: 'book', a }); } }
+      else if (b.t <= 0) { b.ph = 'walk'; b.t = .8; } }
+    else if (b.ph === 'stun') { if (b.t <= 0) { b.ph = 'walk'; b.t = .6; } }
+    else { b.ph = 'walk'; b.t = .5; }
+    if (d < 1.4 && b.ph !== 'stun') hurtPlayer(b.ph === 'dash' ? D.dash : D.touch, b.x, b.y); },
+  // 거울 사서: 거리를 두고 조준 뒤 빛줄기, 세 번째마다 거울 분신(분신도 빛줄기를 쏴요) — 체력 절반 아래면 빛줄기 두 번·분신 3개
+  mirrorSage(b, dt) { const p = G.p, d = b.d, half = b.hp < b.max / 2, D = AB_DMG.mirrorSage; b.t -= dt; b.anim = (b.anim || 0) + dt;
+    if (b.ph === 'walk') { const want = d > 6 ? 1 : d < 3.5 ? -1 : 0; if (want && d > 0) moveEnt(b, (p.x - b.x) / d * 1.8 * want * dt, (p.y - b.y) / d * 1.8 * want * dt, .8);
+      if (b.t <= 0) { b.casts++; if (b.casts % 3 === 0) { b.ph = 'mirror'; b.t = .6; } else { b.ph = 'aim'; b.t = .8; } } }
+    else if (b.ph === 'aim') { if (b.t > .25) { b.dx = (p.x - b.x) / (d || 1); b.dy = (p.y - b.y) / (d || 1); } if (b.t <= 0) { const a = Math.atan2(b.dy, b.dx);
+        for (let q = 0; q < 7; q++) G.shots.push({ x: b.x - Math.cos(a) * q * .35, y: b.y - .4 - Math.sin(a) * q * .35, vx: Math.cos(a) * 10, vy: Math.sin(a) * 10, life: 1.6, dmg: D.beam, k: 'shard', a }); emit('sfx', 'clink');
+        if (half && !b.dbl) { b.dbl = 1; b.ph = 'aim'; b.t = .55; } else { b.dbl = 0; b.ph = 'walk'; b.t = half ? 1.1 : 1.4; } } }
+    else if (b.ph === 'mirror') { if (b.t <= 0) { const have = G.enemies.filter(e => e.k === 'mirrorClone').length, want = half ? 3 : 2;
+        for (let q = have; q < want; q++) { const s = spotNear(b, 2.5, 3.5); if (!s) break; const e = mkEnemy('mirrorClone', s.x, s.y); e.cd = 1 + q * .5; G.enemies.push(e); emit('puff', s.x, s.y - .5, '#efe6ff', 12, 2.5, .5); }
+        emit('sfx', 'cast2'); b.ph = 'walk'; b.t = 1; } }
+    else { b.ph = 'walk'; b.t = .5; }
+    if (d < 1.2) hurtPlayer(D.touch, b.x, b.y); },
+  // 잉크 불꽃: 걸어오며 불꽃 탄과 잉크 웅덩이(밟으면 느려지고 조금씩 다침)를 번갈아 — 체력 절반 아래면 지나간 자리에도 잉크
+  inkFlame(b, dt) { const p = G.p, d = b.d, half = b.hp < b.max / 2, D = AB_DMG.inkFlame; b.t -= dt; b.anim = (b.anim || 0) + dt;
+    if (half) { b.trail = (b.trail || 0) - dt; if (b.trail <= 0) { b.trail = .8; abHz({ x: b.x, y: b.y + .2, r: .8, warn: .3, life: 4, dmg: D.ink, k: 'ink' }); } }
+    if (b.ph === 'walk') { if (d > 2) moveEnt(b, (p.x - b.x) / d * 1.8 * dt, (p.y - b.y) / d * 1.8 * dt, .8); if (b.t <= 0) { b.casts++; b.ph = b.casts % 2 === 0 ? 'pour' : 'spit'; b.t = b.ph === 'pour' ? .6 : .5; } }
+    else if (b.ph === 'spit') { if (b.t <= 0) { shotsFan(b, half ? 7 : 5, .24, 6.2, D.fire, 'fire'); emit('sfx', 'cast2'); b.ph = 'walk'; b.t = half ? .9 : 1.3; } }
+    else if (b.ph === 'pour') { if (b.t <= 0) { abHz({ x: p.x, y: p.y, r: 1.2, warn: .5, life: 6, dmg: D.ink, k: 'ink' }); for (let q = 0; q < (half ? 4 : 2); q++) { const s = spotNear(b, 1.2, 2.8); if (s) abHz({ x: s.x, y: s.y, r: 1.2, warn: .5, life: 6, dmg: D.ink, k: 'ink' }); }
+        emit('sfx', 'cast'); emit('puff', b.x, b.y - .5, '#3a3060', 14, 2.6, .5); b.ph = 'walk'; b.t = 1; } }
+    else { b.ph = 'walk'; b.t = .5; }
+    if (d < 1.3) hurtPlayer(D.touch, b.x, b.y, 'fire'); },
+  // 얼어붙은 기록관장: 천천히 걸으며 경고 원 뒤 얼음 기둥, 그다음 책 고리(빙 둘러 퍼지는 책, 빈틈 셋) — 체력 절반 아래면 원 5개·고리 두 번
+  frostKeeper(b, dt) { const p = G.p, d = b.d, half = b.hp < b.max / 2, D = AB_DMG.frostKeeper; b.t -= dt; b.anim = (b.anim || 0) + dt;
+    if (b.ph === 'walk') { if (d > 2.4) moveEnt(b, (p.x - b.x) / d * 1.2 * dt, (p.y - b.y) / d * 1.2 * dt, .9); if (b.t <= 0) { b.casts++; b.ph = b.casts % 2 === 1 ? 'pillars' : 'ring'; b.t = b.ph === 'ring' ? .7 : .5; } }
+    else if (b.ph === 'pillars') { if (b.t <= 0) { abHz({ x: p.x, y: p.y, r: 1.1, warn: .9, life: 1.05, dmg: D.pillar, k: 'frost', slow: 2 }); for (let q = 0; q < (half ? 4 : 2); q++) { const s = spotNear(b, 1.5, 3); if (s) abHz({ x: s.x, y: s.y, r: 1.1, warn: .9, life: 1.05, dmg: D.pillar, k: 'frost', slow: 2 }); }
+        emit('sfx', 'cast'); b.ph = 'walk'; b.t = 1; } }
+    else if (b.ph === 'ring') { if (b.t <= 0) { const n = 16, gap = Math.floor(rand() * n); for (let q = 0; q < n; q++) { if ((q - gap + n) % n < 3) continue; const a = q / n * 6.283 + (b.rings || 0) * .2; G.shots.push({ x: b.x, y: b.y - .3, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, life: 4, dmg: D.book, k: 'book', a }); }
+        emit('sfx', 'cast2'); b.rings = (b.rings || 0) + 1; if (half && b.rings % 2 === 1) b.t = .55; else { b.ph = 'walk'; b.t = half ? 1.1 : 1.5; } } }
+    else { b.ph = 'walk'; b.t = .5; }
+    if (d < 1.3) hurtPlayer(D.touch, b.x, b.y); },
+});
+
+// ---- 파수 돌인형: 들어가는 방(기록관 안 1~5번째 칸 · 1~6번째 줄)의 네모 길을 돌아요 ----
+const WARD_PATH = [[1.5, 1.6], [5.5, 1.6], [5.5, 6.6], [1.5, 6.6]];
+const leverOf = a => G.objs.get(idx(a.x + ARCH_PLAN[3].indexOf('L'), a.y + 3));
+MON_AI.patrol = function (e, def, dt) { e.vx = e.vy = 0; if (e.stone) return true; const a = archList().find(q => q.id === e.arch); if (!a) return true;
+  const [px, py] = WARD_PATH[(e.wp || 0) % WARD_PATH.length], tx = a.x + px, ty = a.y + py, dx = tx - e.x, dy = ty - e.y, dd = Math.hypot(dx, dy);
+  if (dd < .06) { e.wp = ((e.wp || 0) + 1) % WARD_PATH.length; return true; }
+  const s = Math.min(dd, def.spd * dt); e.x += dx / dd * s; e.y += dy / dd * s; e.anim = (e.anim || 0) + dt; if (Math.abs(dx) > .05) e.flip = dx < 0; return true; };
+// 깨기 전, 플레이어가 기록관 안에 있으면 2마리가 늘 돌아요(서로 반대편에서). 레버를 켜면 멈춰 돌이 돼요(다시 움직이지 않아요)
+onFrame('archWards', () => { for (const a of archList()) { if (a.done) continue; const inside = playerList().some(q => archAt(Math.floor(q.p.x), Math.floor(q.p.y)) === a); if (!inside) continue;
+  const lv = leverOf(a), on = !!(lv && lv.t === 'lever' && lv.on), wards = G.enemies.filter(e => e.k === 'stoneWard' && e.arch === a.id);
+  if (on) { for (const e of wards) if (!e.stone) { e.stone = 1; emit('puff', e.x, e.y - .4, '#bdb6a8', 12, 2.4, .5); emit('sfx', 'brk'); emit('toast', '레버를 켜자 파수 돌인형이 멈춰 돌이 됐어요', 'good', 'wardStone'); } continue; }
+  for (const wp of [0, 2]) { if (wards.some(e => e.home0 === wp)) continue; const [px, py] = WARD_PATH[wp], e = mkEnemy('stoneWard', a.x + px, a.y + py);
+    Object.assign(e, { arch: a.id, wp: (wp + 1) % WARD_PATH.length, home0: wp, dm: WARD_DM[a.b] || 1 }); G.enemies.push(e); } } });
+
+// ---- 도전 퀘스트 「○○ 기록관의 마지막 방」 ----
+const AB_HINT = {
+  bookGolem: '이끼 굴 기록관에서 일기를 읽으면 일기 방 벽 너머 봉인된 문이 열려요. 책더미 골렘의 돌진을 옆으로 피하면 벽에 부딪혀 잠깐 멈춰요.',
+  mirrorSage: '수정 동굴 기록관의 마지막 방에 거울 사서가 있어요. 거울 분신도 빛줄기를 쏘니까 분신부터 깨요.',
+  inkFlame: '용암 동굴 기록관의 마지막 방에 잉크 불꽃이 있어요. 잉크 웅덩이를 밟으면 느려지고 조금씩 다쳐요. 더위 대비도 챙겨요.',
+  frostKeeper: '얼음 동굴 기록관의 마지막 방에 얼어붙은 기록관장이 있어요. 점선 원 밖으로 피하고, 책 고리는 빈틈으로 빠져나가요.',
+};
+for (const A of ABOSS) { const id = 's_ab' + A.arch.slice(4); Q_GO[id] = ['tgt'];
+  QSIDE.push({ id, t: `${A.at} 기록관의 마지막 방`, h: AB_HINT[A.k], done: () => beat(A.k), rw: [], xp: AB_Q_XP[id] || 100,
+    gone: () => { const a = archList().find(q => q.id === A.arch); return !!G.stats.abV && !(a && a.br); }, // 방이 없는 세계에서는 안 보여요
+    target: () => { const a = archList().find(q => q.id === A.arch); if (!a) return null; if (a.br && a.done) return abHome(A.k); return { x: a.x + ARCH_PLAN[ARCH_H - 1].indexOf('E') + .5, y: a.y + ARCH_H + .5 }; } }); }
+// 처음 물리쳤을 때 알림 (sim/bosses.js hitBoss)
+const abDownToast = k => emit('toast', `${josa(BOSSES[k].n, '을', '를')} 물리쳤어요! ${ABOSS_OF[k].at} 기록관의 마지막 방을 깼어요`, 'good');
+const isABoss = k => !!ABOSS_OF[k];
 // ================= v114 자동 생산 2: 비버 둥지 · 먹이통 (규칙) =================
 // 기획: dev/design/자동생산.md 3장. 수치·먹이 표는 data/beaver.js.
 // 둥지 o: bv(비버가 들어 있음) · fd(먹은 먹이로 남은 초) · prog(이번 나무까지 일한 초) · tgt(베는 나무 칸) · from(방금 벤 나무 칸, 돌아오는 걸음 그림용)
@@ -8132,6 +8382,33 @@ Object.assign(MON_SPR_DEF, {
   shadowWolf: () => mk(20, 14, A => { A.line(16, 8, 19, 4, '#1e1630', 2); A.e(9, 8.5, 7, 3.5, '#1e1630'); A.e(9, 8, 6.5, 3, '#2e2244'); A.e(4, 6, 3.2, 2.6, '#2e2244'); A.poly([[2, 4], [3, 1], [4, 4]], '#2e2244'); A.poly([[5, 4], [6, 1], [7, 4]], '#2e2244'); A.p(3, 6, '#c9a8ff'); A.p(5, 6, '#c9a8ff'); A.p(1, 7, '#8a6ad0'); A.r(5, 11, 2, 2, '#1e1630'); A.r(12, 11, 2, 2, '#1e1630'); A.p(10, 6, '#3a2a5a'); A.p(13, 7, '#3a2a5a'); }),
   lostKeeper: () => mk(16, 22, A => { A.e(8, 20.5, 5.5, 1.6, 'rgba(0,0,0,.3)'); A.poly([[3, 20], [4, 9], [8, 3], [12, 9], [13, 20]], '#2e2244'); A.poly([[4, 20], [5, 10], [8, 5], [11, 10], [12, 20]], '#3a2e52'); A.e(8, 9, 2.6, 2.4, '#14101c'); A.p(7, 9, '#c9a8ff'); A.p(9, 9, '#c9a8ff'); A.line(12, 12, 14, 15, '#6a5a5a', 1); A.r(13, 15, 3, 4, '#6a5a5a'); A.r(13.5, 15.5, 2, 3, '#8a6ad0'); A.p(14, 16, '#e8dcff'); }),
 });
+// ================= v131 기록관 보스 4 · 기록관 몬스터 (Claude 임시 그림 — 손그림은 같은 이름으로 dev/art/에) =================
+const ABOSS_SPR = {
+  bookGolem: () => mk(32, 32, A => { A.e(16, 30, 11, 2.5, 'rgba(0,0,0,.3)'); A.r(8, 24, 6, 6, '#7a4a2e'); A.r(8, 24, 6, 1, '#c9a26b'); A.r(18, 24, 6, 6, '#3a5a8a'); A.r(18, 24, 6, 1, '#9fc0e8');
+    A.r(5, 18, 22, 6, '#8a3a3a'); A.r(5, 18, 22, 1, '#e8c8a0'); A.r(5, 23, 22, 1, '#5a2020'); A.r(7, 12, 18, 6, '#3a6a4a'); A.r(7, 12, 18, 1, '#e8d8b0'); A.r(7, 17, 18, 1, '#244432');
+    A.r(6, 6, 20, 6, '#c9a26b'); A.r(6, 6, 20, 1, '#fff1d6'); A.r(6, 11, 20, 1, '#8a6a3a'); A.r(1, 13, 4, 8, '#5a3a7a'); A.r(27, 13, 4, 8, '#5a3a7a'); A.r(1, 13, 4, 1, '#c9a8ff'); A.r(27, 13, 4, 1, '#c9a8ff');
+    A.r(11, 8, 3, 2, '#2a1e1a'); A.r(18, 8, 3, 2, '#2a1e1a'); A.p(12, 8, '#ffe9a8'); A.p(19, 8, '#ffe9a8'); for (const x of [9, 14, 20]) A.line(x, 19, x, 22, '#e8c8a0', 1); A.r(15, 2, 2, 4, '#ff8fa3'); }),
+  mirrorSage: () => mk(26, 32, A => { A.e(13, 30, 9, 2.2, 'rgba(0,0,0,.3)'); A.poly([[4, 30], [7, 12], [13, 8], [19, 12], [22, 30]], '#5a4a8a'); A.poly([[6, 30], [8.5, 13], [13, 10], [17.5, 13], [20, 30]], '#7a6ab0'); A.r(12, 13, 2, 17, '#efe6ff');
+    A.e(13, 8, 6, 6.5, '#8a7ab8'); A.e(13, 8, 4.6, 5, '#d6c2ff'); A.e(13, 8, 3.2, 3.6, '#efe6ff'); A.p(11, 6, '#ffffff'); A.p(12, 6, '#ffffff'); A.line(2, 16, 5, 22, '#7a6ab0', 2); A.line(24, 16, 21, 22, '#7a6ab0', 2);
+    A.e(23, 15, 2.6, 3, '#b493f5'); A.e(23, 15, 1.6, 2, '#efe6ff'); A.p(13, 2, '#ffe9a8'); }),
+  inkFlame: () => mk(26, 30, A => { A.e(13, 28, 8, 2, 'rgba(0,0,0,.3)'); A.poly([[13, 1], [17, 8], [22, 14], [22, 21], [18, 27], [8, 27], [4, 21], [4, 14], [9, 8]], '#4a40a0');
+    A.poly([[13, 5], [16, 10], [19, 15], [19, 21], [16, 25], [10, 25], [7, 21], [7, 15], [10, 10]], '#2a2450'); A.poly([[13, 11], [15, 15], [16, 20], [13, 24], [10, 20], [11, 15]], '#6a5aff'); A.e(13, 20, 2.2, 2.6, '#a89aff');
+    A.e(9.5, 16, 1.6, 2, '#ffe9a8'); A.e(16.5, 16, 1.6, 2, '#ffe9a8'); A.p(9, 16, '#2a1e1a'); A.p(16, 16, '#2a1e1a'); A.p(5, 24, '#3a3060'); A.p(21, 23, '#3a3060'); A.e(3, 27, 1.5, 1, '#1e1a3a'); A.e(23, 27, 1.5, 1, '#1e1a3a'); }),
+  frostKeeper: () => mk(28, 32, A => { A.e(14, 30, 10, 2.4, 'rgba(0,0,0,.3)'); A.poly([[3, 30], [4, 8], [9, 2], [19, 2], [24, 8], [25, 30]], '#5a9ac8'); A.poly([[5, 29], [6, 9], [10, 4], [18, 4], [22, 9], [23, 29]], '#9fd8f0');
+    A.e(14, 10, 3.6, 3.6, 'rgba(240,200,168,.7)'); A.poly([[9, 29], [10, 15], [14, 13], [18, 15], [19, 29]], 'rgba(70,90,140,.7)'); A.r(12, 10, 1, 1, '#2a3a5a'); A.r(15, 10, 1, 1, '#2a3a5a');
+    A.r(10, 17, 8, 6, '#7a4a2e'); A.r(10, 17, 8, 1, '#fff1d6'); A.line(14, 17, 14, 23, '#5a3420', 1); A.line(7, 6, 9, 24, '#e8f8ff', 1); A.p(20, 8, '#ffffff'); A.p(21, 20, '#ffffff'); A.r(12, 2, 4, 2, '#e8f8ff'); }),
+};
+Object.assign(MON_SPR_DEF, {
+  stoneWard: () => mk(16, 20, A => { A.e(8, 18.5, 5.5, 1.6, 'rgba(0,0,0,.3)'); A.r(4, 15, 3, 4, '#6a645a'); A.r(9, 15, 3, 4, '#6a645a'); A.r(3, 7, 10, 9, '#8a8478'); A.r(4, 8, 8, 2, '#a8a294'); A.r(4, 2, 8, 6, '#9a9486'); A.r(5, 3, 6, 1, '#bdb6a8');
+    A.r(5, 5, 2, 1, '#ffc861'); A.r(9, 5, 2, 1, '#ffc861'); A.r(1, 8, 2, 6, '#7a7468'); A.r(13, 8, 2, 6, '#7a7468'); A.p(7, 11, '#5a5448'); A.p(10, 13, '#5a5448'); }),
+  bookworm: () => mk(12, 10, A => { A.e(6, 9, 4.5, 1, 'rgba(0,0,0,.25)'); A.r(2, 4, 8, 5, '#e8d8b0'); A.r(2, 4, 8, 1, '#fff1d6'); A.line(6, 4, 6, 8, '#a8946a', 1); A.e(3, 6, 2.2, 2, '#9be37a'); A.e(5, 5.5, 1.8, 1.8, '#86c860'); A.p(2, 5, '#2a1e1a'); A.p(9, 7, '#c9a26b'); }),
+  mirrorClone: () => mk(16, 20, A => { A.e(8, 18.5, 5, 1.4, 'rgba(0,0,0,.2)'); A.poly([[3, 18], [5, 6], [8, 2], [11, 6], [13, 18]], '#b493f5'); A.poly([[4.5, 17], [6, 7], [8, 3.5], [10, 7], [11.5, 17]], '#efe6ff'); A.e(8, 8, 2.4, 2.6, '#d6c2ff'); A.p(7, 7, '#ffffff'); A.line(6, 10, 7, 16, '#ffffff', 1); }),
+});
+// 기록관 보스 특별 무기 아이콘 (지금 무기 모양에 보스 색만)
+const W131_ICON = {};
+for (const [k, c, l, d] of [['Book', '#c9a26b', '#fff1d6', '#7a4a2e'], ['Mirror', '#b493f5', '#efe6ff', '#6a5aa0'], ['Ink', '#3a3060', '#a89aff', '#1e1a3a'], ['Keeper', '#9fd8f0', '#ffffff', '#5a9ac8']])
+  Object.assign(W131_ICON, { ['sword' + k]: swordIcon(c, l, d), ['dagger' + k]: daggerIcon(c, l, d), ['spear' + k]: spearIcon(c, l), ['hammer' + k]: hammerIcon(c, l, d), ['bow' + k]: bowIcon(d, c, l), ['staff' + k]: staffIcon(c, l) });
+for (const id in W131_ICON) ICON[id] = W131_ICON[id];
 // ================= 빛: 등불·횃불 빛 계산(computeLight)과 밝기(lightAt), 빛이 닿은 곳 지도에 밝히기 — 몬스터 생기기(밝은 곳엔 안 생김)도 이 값을 봐요 =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // ================= lighting =================
@@ -9268,7 +9545,7 @@ function renderWorld(cw, ch, glOn = false) {
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
   for (const e of G.enemies) push(e.y, { k: 'e', e, s: e.y });
   for (const w of G.wild || []) push(w.y, { k: 'w', w, s: w.y }); if (G.petE && G.petOn) push(G.petE.y, { k: 'w', w: G.petE, pk: G.petOn, s: G.petE.y });
-  for (const k of BKEYS) if (!G.bossDead[k]) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
+  for (const k of BKEYS) if (!G.bossDead[k] && !bossAway(k)) push(G.bosses[k].y, { k: 'b', b: G.bosses[k], s: G.bosses[k].y });
   for (const d of G.drops) push(d.y, { k: 'd', d, s: d.y });
   const L = LIFT;
   // v81: make the slanted-wall pictures first, then send the changed atlas pages once (render/icecave.js)
@@ -9547,6 +9824,7 @@ function drawEntity(it, t) {
     let sx = 1, sy = 1; if (def.hop) { if (e.air > 0) { sx = .9; sy = 1.12; } else if (e.land > 0) { sx = 1.18; sy = .82; } else { const b = Math.sin(t * 5 + e.x) * .04; sx = 1 + b; sy = 1 - b; } }
     else { const b = Math.floor((e.anim || 0) * 8) % 2; sy = b ? .95 : 1; }
     if (def.alpha) ctx.globalAlpha = def.alpha * (e.fade > 0 ? Math.max(0, e.fade) : 1);
+    if (e.stone) ctx.globalAlpha = .55; // v131 돌이 된 파수 돌인형
     if (e.under) { ctx.fillStyle = def.mound || '#5a4232'; ctx.beginPath(); ctx.ellipse(Math.round(e.x * T - camX), Math.round((e.y + .15) * T - camY), 6 * Z, 3 * Z, 0, 0, 6.283); ctx.fill(); } // v101 땅속 두더지: 흙더미만
     else drawImg(e.hurt > 0 || (e.flash && Math.floor(t * 12) % 2) ? SPR[e.k + 'W'] : SPR[e.k], e.x, e.y + .12, { sx, sy, z: e.z || 0, flip: e.flip }); // v101 flash: 조준·터지기 전 깜빡임
     ctx.globalAlpha = 1;
@@ -9568,13 +9846,13 @@ function drawEntity(it, t) {
     else if (b.k === 'queen') { if (b.ph === 'cast') { sx = 1.05 + Math.sin(t * 30) * .03; sy = .96; } else { const k = Math.sin((b.anim || 0) * 8) * .04; sx = 1 - k; sy = 1 + k; } }
     else { if (b.ph === 'aim') { sx = 1.07; sy = .93; } else if (b.ph === 'dash') { sx = 1.1; sy = .92; } else if (b.ph === 'stun') sx = 1 + Math.sin(t * 40) * .03; }
     if (b.st === 'fight' && b.k === 'queen' && b.ph === 'cast') { const pr = 1 - Math.max(0, b.t) / .75; ctx.strokeStyle = `rgba(213,155,255,${.35 + pr * .45})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.6 + pr * 1.4) * T, (.3 + pr * .7) * T, 0, 0, 6.283); ctx.stroke(); }
-    if (b.st === 'fight' && b.k === 'golem' && b.ph === 'aim') { ctx.strokeStyle = 'rgba(255,110,130,0.7)'; ctx.lineWidth = 1.5 * Z; ctx.setLineDash([3 * Z, 2 * Z]); ctx.beginPath(); ctx.moveTo(b.x * T - camX, b.y * T - camY); ctx.lineTo((b.x + b.dx * 7) * T - camX, (b.y + b.dy * 7) * T - camY); ctx.stroke(); ctx.setLineDash([]); }
+    if (b.st === 'fight' && (b.k === 'golem' || b.k === 'bookGolem' || b.k === 'mirrorSage') && b.ph === 'aim') /* v131 책더미 골렘·거울 사서도 조준선 */ { ctx.strokeStyle = 'rgba(255,110,130,0.7)'; ctx.lineWidth = 1.5 * Z; ctx.setLineDash([3 * Z, 2 * Z]); ctx.beginPath(); ctx.moveTo(b.x * T - camX, b.y * T - camY); ctx.lineTo((b.x + b.dx * 7) * T - camX, (b.y + b.dy * 7) * T - camY); ctx.stroke(); ctx.setLineDash([]); }
     if (b.k === 'turtle' && b.ph === 'open') { const pr = .5 + Math.sin(t * 8) * .3; ctx.strokeStyle = `rgba(255,210,92,${pr})`; ctx.lineWidth = 1.5 * Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .25) * T - camY, 1.4 * T, .6 * T, 0, 0, 6.283); ctx.stroke(); }
     const sk = b.k === 'turtle' ? (b.ph === 'shell' ? 'turtleS' : 'turtle') + ((b.stage || 1) >= 2 ? 'C' : '') : def.spr, bz = b.k === 'spirit' ? .45 + Math.sin(t * 2) * .12 : (b.z || 0), ba = b.k === 'spirit' && b.ph === 'fade' ? Math.max(.1, b.t / .6) : null;
     if (b.k === 'spirit' && b.st === 'fight' && b.ph === 'ring') { const pr = 1 - Math.max(0, b.t) / .7; ctx.strokeStyle = `rgba(191,230,255,${.3 + pr * .5})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.5 + pr * 1.5) * T, (.3 + pr * .8) * T, 0, 0, 6.283); ctx.stroke(); }
     drawImg(b.hurt > 0 ? SPR[sk + 'W'] : SPR[sk], b.x, b.y + .3, { sx: sx * def.scale, sy: sy * def.scale, z: bz, alpha: ba }); ctx.globalAlpha = 1;
     if (b.st === 'sleep') { ctx.font = pxFont(7); ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
-    if (b.k === 'golem' && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
+    if ((b.k === 'golem' || b.k === 'bookGolem') && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
     return;
   }
   if (it.k === 'd') { const d = it.d; shadow(d.x, d.y + .05, .16, .3); const bob = d.z === 0 ? Math.sin(t * 4 + d.x * 3) * 0.05 + 0.05 : 0; drawImg(iconCanvas(d.id), d.x, d.y + .05, { sx: .6, sy: .6, z: d.z + bob }); }
@@ -9662,6 +9940,7 @@ function drawHazards(T, camX, camY) {
   for (const h of G.hz || []) { const X = h.x * T - camX, Y = h.y * T - camY, warn = h.t < h.warn;
     if (h.k === 'poison') { const a = warn ? .2 : Math.min(.75, (h.life - h.t) * 1.2); ctx.globalAlpha = a; ctx.fillStyle = '#9be37a'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); ctx.fillStyle = '#d59bff'; ctx.beginPath(); ctx.ellipse(X - h.r * T * .3, Y - h.r * T * .1, h.r * T * .3, h.r * T * .2, 0, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; } // v101
     else if (h.k === 'lava') { const a = warn ? .25 + .25 * Math.sin(t * 20) : Math.min(1, (h.life - h.t) * 1.5); ctx.globalAlpha = a; ctx.fillStyle = warn ? '#ff8a3d' : '#e8501f'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); if (!warn) { ctx.fillStyle = '#ffc861'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * .55, h.r * T * .32, 0, 0, 6.283); ctx.fill(); } ctx.globalAlpha = 1; }
+    else if (h.k === 'ink') { const a = warn ? .25 : Math.min(.8, (h.life - h.t) * 1.2); ctx.globalAlpha = a; ctx.fillStyle = '#1e1a3a'; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.fill(); ctx.fillStyle = '#6a5aff'; ctx.beginPath(); ctx.ellipse(X - h.r * T * .25, Y - h.r * T * .12, h.r * T * .28, h.r * T * .16, 0, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; } // v131 잉크 웅덩이
     else if (warn && h.k === 'shade') { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(201,168,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(58,42,90,${pr * .45})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } // v129 그림자 원
     else if (warn) { const pr = h.t / h.warn; ctx.strokeStyle = `rgba(191,230,255,${.4 + pr * .5})`; ctx.lineWidth = 2 * Z; ctx.setLineDash([4 * Z, 3 * Z]); ctx.beginPath(); ctx.ellipse(X, Y, h.r * T, h.r * T * .62, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = `rgba(191,230,255,${pr * .25})`; ctx.beginPath(); ctx.ellipse(X, Y, h.r * T * pr, h.r * T * .62 * pr, 0, 0, 6.283); ctx.fill(); } }
 }
@@ -10658,7 +10937,7 @@ const MK = {
 function mapMarks() { const L = [], add = (k, x, y, ex) => L.push({ k, x, y, name: MK[k].n, ...ex });
   add('tree', CX + .5, CY);
   if (G.spawnPt) add('bed', G.spawnPt.x + .5, G.spawnPt.y + .5);
-  for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) add('boss', h.x, h.y, { b: k, col: BOSSES[k].col, name: BOSSES[k].n }); }
+  for (const k of BKEYS) { if (bossAway(k)) continue; /* v131 */ const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) add('boss', h.x, h.y, { b: k, col: BOSSES[k].col, name: BOSSES[k].n }); }
   for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) add('altar', sp.x + .5, sp.y + .5);
   for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) add('fzone', z.x + .5, z.y + .5, { c: z.c, col: FLOWERS[z.c][2], name: `${FLOWERS[z.c][1]} 꽃망울 구역` });
   if (mapChestOn()) for (const r of G.rooms || []) if (r.found && !r.open) add('chest', r.cx + .5, r.cy + .5, { name: '보물상자' });
