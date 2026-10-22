@@ -56,7 +56,7 @@ export function enemyStep(e, dt) {
   }
   if (Math.abs(e.kx || 0) + Math.abs(e.ky || 0) > 0.05) { moveEnt(e, e.kx * dt, e.ky * dt, def.r); const k = Math.pow(0.001, dt); e.kx *= k; e.ky *= k; }
   e.hurt = Math.max(0, (e.hurt || 0) - dt); shadowLeash(e); /* v104 */
-  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
+  if (d < def.r + 0.34 && (e.z || 0) < 0.2 && (!def.calm || e.angry > 0) && !e.under && !e.stone /* v131 돌이 된 파수 돌인형 */ && def.spd > 0) hurtPlayer(Math.round(def.dmg * (e.dm || 1)), e.x, e.y);
 }
 // v43 region difficulty: monsters grow tougher the deeper the region (gear can now be upgraded up to +5)
 export const REGION_HP = [1, 1, 1.2, 1.15, 1.15], REGION_DMG = [1, 1, 1.1, 1.1, 1.1];

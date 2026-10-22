@@ -2,14 +2,14 @@
 "bosses_beaten": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28190자 b0e33d278cfd]",
+"objs": "[큰 값 28119자 fa58ad152b8e]",
 "inv": [
 {
 "id": "berry",
@@ -283,7 +283,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -291,7 +299,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -299,7 +315,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -307,7 +331,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -325,6 +357,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -344,7 +377,11 @@ null
 "golem": true,
 "turtle": true,
 "spirit": true,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -544,14 +581,14 @@ null
 "no_mapV": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28190자 b0e33d278cfd]",
+"objs": "[큰 값 28119자 fa58ad152b8e]",
 "inv": [
 {
 "id": "berry",
@@ -789,7 +826,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -797,7 +842,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -805,7 +858,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -813,7 +874,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -831,6 +900,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -847,7 +917,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -1030,14 +1104,14 @@ null
 "old_bag": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28190자 b0e33d278cfd]",
+"objs": "[큰 값 28119자 fa58ad152b8e]",
 "inv": [
 {
 "id": "berry",
@@ -1271,7 +1345,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -1279,7 +1361,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -1287,7 +1377,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -1295,7 +1393,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -1313,6 +1419,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -1329,7 +1436,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -1511,14 +1622,14 @@ null
 "old_build_pieces": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28084자 25e35dd5f515]",
+"objs": "[큰 값 28013자 5c03cfd79aca]",
 "inv": [
 {
 "id": "berry",
@@ -1843,7 +1954,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -1851,7 +1970,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -1859,7 +1986,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -1867,7 +2002,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -1885,6 +2028,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -1901,7 +2045,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -2075,14 +2223,14 @@ null
 "old_equip_no_sets": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 21399자 799dce0ac382]",
+"objs": "[큰 값 21328자 c286fd3f25fe]",
 "inv": [
 {
 "id": "berry",
@@ -2320,7 +2468,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -2328,7 +2484,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -2336,7 +2500,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -2344,7 +2516,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -2362,6 +2542,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -2378,7 +2559,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -2559,8 +2744,8 @@ null
 "old_fields": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20974자 fcae4cb0ea48]",
-"floor": "[큰 값 8350자 f321d8003b61]",
+"wall": "[큰 값 21104자 03f6267410ea]",
+"floor": "[큰 값 8535자 1b4f91caf96a]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
@@ -2792,7 +2977,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 128,
+"y": 59,
+"door": 12728,
+"bx": 134,
+"by": 63
+}
 },
 {
 "id": "arch2",
@@ -2800,7 +2993,15 @@ null
 "x": 52,
 "y": 22,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 52,
+"y": 14,
+"door": 4460,
+"bx": 58,
+"by": 18
+}
 },
 {
 "id": "arch3",
@@ -2808,7 +3009,15 @@ null
 "x": 130,
 "y": 168,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 130,
+"y": 160,
+"door": 33738,
+"bx": 136,
+"by": 164
+}
 }
 ],
 "rescued": {
@@ -2826,6 +3035,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -2842,7 +3052,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -3025,14 +3239,14 @@ null
 "old_furniture_v121": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 21553자 3c350ed37a78]",
+"objs": "[큰 값 21482자 48491c7a5e46]",
 "inv": [
 {
 "id": "berry",
@@ -3267,7 +3481,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -3275,7 +3497,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -3283,7 +3513,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -3291,7 +3529,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -3319,6 +3565,7 @@ null
 },
 "uniq": {},
 "deepSeed": {},
+"abV": 1,
 "dark130": 1,
 "gb124": 1,
 "accGot": {}
@@ -3334,7 +3581,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -3505,14 +3756,14 @@ null
 "old_no_quest_active": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 21399자 799dce0ac382]",
+"objs": "[큰 값 21328자 c286fd3f25fe]",
 "inv": [
 {
 "id": "berry",
@@ -3750,7 +4001,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -3758,7 +4017,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -3766,7 +4033,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -3774,7 +4049,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -3792,6 +4075,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -3808,7 +4092,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -3979,14 +4267,14 @@ null
 "old_pits_v111": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 21399자 683fdddef7ff]",
+"objs": "[큰 값 21328자 3b2fbc77eb7e]",
 "inv": [
 {
 "id": "berry",
@@ -4232,7 +4520,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -4240,7 +4536,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -4248,7 +4552,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -4256,7 +4568,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -4298,6 +4618,7 @@ null
 },
 "uniq": {},
 "deepSeed": {},
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -4314,7 +4635,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -4485,14 +4810,14 @@ null
 "old_roof_drill_weapon": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28190자 b0e33d278cfd]",
+"objs": "[큰 값 28119자 fa58ad152b8e]",
 "inv": [
 {
 "id": "berry",
@@ -4750,7 +5075,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -4758,7 +5091,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -4766,7 +5107,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -4774,7 +5123,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -4792,6 +5149,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -4808,7 +5166,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -4997,14 +5359,14 @@ null
 "old_stations": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28251자 3eac98a8680d]",
+"objs": "[큰 값 28180자 fed38be48d0a]",
 "inv": [
 {
 "id": "berry",
@@ -5251,7 +5613,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -5259,7 +5629,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -5267,7 +5645,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -5275,7 +5661,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -5293,6 +5687,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -5309,7 +5704,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -5494,14 +5893,14 @@ null
 "old_tools_in_bag": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28190자 b0e33d278cfd]",
+"objs": "[큰 값 28119자 fa58ad152b8e]",
 "inv": [
 {
 "id": "berry",
@@ -5765,7 +6164,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -5773,7 +6180,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -5781,7 +6196,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -5789,7 +6212,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -5807,6 +6238,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -5826,7 +6258,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -6014,8 +6450,8 @@ null
 "v1": {
 "v": 3,
 "seed": 20261008,
-"wall": "[큰 값 21075자 55e17286fd68]",
-"floor": "[큰 값 9756자 8aa2b408d385]",
+"wall": "[큰 값 21332자 0c0024cd4c8f]",
+"floor": "[큰 값 10006자 b539b4813f51]",
 "biome": "[큰 값 4211자 2784536e693c]",
 "explored": [
 0,
@@ -6105,7 +6541,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 19545자 38b3406c6b3b]",
+"objs": "[큰 값 19480자 46d25b63474d]",
 "inv": [
 {
 "id": "berry",
@@ -6341,7 +6777,15 @@ null
 "x": 136,
 "y": 58,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 136,
+"y": 50,
+"door": 11744,
+"bx": 142,
+"by": 54
+}
 },
 {
 "id": "arch2",
@@ -6349,7 +6793,15 @@ null
 "x": 156,
 "y": 22,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 156,
+"y": 14,
+"door": 4564,
+"bx": 162,
+"by": 18
+}
 },
 {
 "id": "arch3",
@@ -6357,7 +6809,15 @@ null
 "x": 66,
 "y": 176,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 66,
+"y": 168,
+"door": 35274,
+"bx": 72,
+"by": 172
+}
 },
 {
 "id": "arch4",
@@ -6365,7 +6825,15 @@ null
 "x": 18,
 "y": 142,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 18,
+"y": 134,
+"door": 28426,
+"bx": 24,
+"by": 138
+}
 }
 ],
 "rescued": {
@@ -6383,6 +6851,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -6399,7 +6868,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -6582,8 +7055,8 @@ null
 "v2": {
 "v": 3,
 "seed": 20261008,
-"wall": "[큰 값 21066자 1c42a9d5afc6]",
-"floor": "[큰 값 9620자 d583a3ab5072]",
+"wall": "[큰 값 21323자 f42585667e9d]",
+"floor": "[큰 값 9870자 9d7b335c5b9d]",
 "biome": "[큰 값 4211자 2784536e693c]",
 "explored": [
 0,
@@ -6673,7 +7146,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 18405자 c59f1cb3d8f4]",
+"objs": "[큰 값 18340자 ae0458d7c604]",
 "inv": [
 {
 "id": "berry",
@@ -6909,7 +7382,15 @@ null
 "x": 136,
 "y": 58,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 136,
+"y": 50,
+"door": 11744,
+"bx": 142,
+"by": 54
+}
 },
 {
 "id": "arch2",
@@ -6917,7 +7398,15 @@ null
 "x": 156,
 "y": 22,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 156,
+"y": 14,
+"door": 4564,
+"bx": 162,
+"by": 18
+}
 },
 {
 "id": "arch3",
@@ -6925,7 +7414,15 @@ null
 "x": 66,
 "y": 176,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 66,
+"y": 168,
+"door": 35274,
+"bx": 72,
+"by": 172
+}
 },
 {
 "id": "arch4",
@@ -6933,7 +7430,15 @@ null
 "x": 18,
 "y": 142,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 18,
+"y": 134,
+"door": 28426,
+"bx": 24,
+"by": 138
+}
 }
 ],
 "rescued": {
@@ -6951,6 +7456,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -6967,7 +7473,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -7150,8 +7660,8 @@ null
 "v3": {
 "v": 3,
 "seed": 20261008,
-"wall": "[큰 값 21066자 1c42a9d5afc6]",
-"floor": "[큰 값 9620자 d583a3ab5072]",
+"wall": "[큰 값 21323자 f42585667e9d]",
+"floor": "[큰 값 9870자 9d7b335c5b9d]",
 "biome": "[큰 값 4211자 2784536e693c]",
 "explored": [
 0,
@@ -7241,7 +7751,7 @@ null
 0,
 18494
 ],
-"objs": "[큰 값 18405자 c59f1cb3d8f4]",
+"objs": "[큰 값 18340자 ae0458d7c604]",
 "inv": [
 {
 "id": "berry",
@@ -7477,7 +7987,15 @@ null
 "x": 136,
 "y": 58,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 136,
+"y": 50,
+"door": 11744,
+"bx": 142,
+"by": 54
+}
 },
 {
 "id": "arch2",
@@ -7485,7 +8003,15 @@ null
 "x": 156,
 "y": 22,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 156,
+"y": 14,
+"door": 4564,
+"bx": 162,
+"by": 18
+}
 },
 {
 "id": "arch3",
@@ -7493,7 +8019,15 @@ null
 "x": 66,
 "y": 176,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 66,
+"y": 168,
+"door": 35274,
+"bx": 72,
+"by": 172
+}
 },
 {
 "id": "arch4",
@@ -7501,7 +8035,15 @@ null
 "x": 18,
 "y": 142,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 18,
+"y": 134,
+"door": 28426,
+"bx": 24,
+"by": 138
+}
 }
 ],
 "rescued": {
@@ -7519,6 +8061,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -7535,7 +8078,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -7718,14 +8265,14 @@ null
 "v62_layout1": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 20806자 a4927bb2b18a]",
-"floor": "[큰 값 8271자 21ebe71ad6ee]",
+"wall": "[큰 값 20943자 da7d54befd52]",
+"floor": "[큰 값 8428자 95a49cf26bf6]",
 "biome": "[큰 값 3481자 bea050e13029]",
 "explored": [
 0,
 40000
 ],
-"objs": "[큰 값 28190자 b0e33d278cfd]",
+"objs": "[큰 값 28119자 fa58ad152b8e]",
 "inv": [
 {
 "id": "berry",
@@ -7963,7 +8510,15 @@ null
 "x": 116,
 "y": 60,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 116,
+"y": 52,
+"door": 12124,
+"bx": 122,
+"by": 56
+}
 },
 {
 "id": "arch2",
@@ -7971,7 +8526,15 @@ null
 "x": 56,
 "y": 24,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 56,
+"y": 16,
+"door": 4864,
+"bx": 62,
+"by": 20
+}
 },
 {
 "id": "arch3",
@@ -7979,7 +8542,15 @@ null
 "x": 158,
 "y": 162,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 158,
+"y": 154,
+"door": 32566,
+"bx": 164,
+"by": 158
+}
 },
 {
 "id": "arch4",
@@ -7987,7 +8558,15 @@ null
 "x": 6,
 "y": 116,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "right",
+"x": 18,
+"y": 116,
+"door": 23818,
+"bx": 24,
+"by": 120
+}
 }
 ],
 "rescued": {
@@ -8005,6 +8584,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -8021,7 +8601,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,
@@ -8204,8 +8788,8 @@ null
 "v62_layout2": {
 "v": 3,
 "seed": 20261012,
-"wall": "[큰 값 96200자 d2284a421b3e]",
-"floor": "[큰 값 38550자 bed8ad955533]",
+"wall": "[큰 값 96646자 248c8c5a6d84]",
+"floor": "[큰 값 38795자 5618e6c29f38]",
 "biome": "[큰 값 8868자 96a846808eb4]",
 "explored": [
 0,
@@ -8221,7 +8805,7 @@ null
 0,
 32325
 ],
-"objs": "[큰 값 79741자 04058fd2ee13]",
+"objs": "[큰 값 79719자 1c783f69b3a3]",
 "inv": [
 {
 "id": "berry",
@@ -8459,7 +9043,15 @@ null
 "x": 250,
 "y": 252,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 250,
+"y": 244,
+"door": 151458,
+"bx": 256,
+"by": 248
+}
 },
 {
 "id": "arch2",
@@ -8467,7 +9059,15 @@ null
 "x": 320,
 "y": 180,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 320,
+"y": 172,
+"door": 108328,
+"bx": 326,
+"by": 176
+}
 },
 {
 "id": "arch3",
@@ -8475,7 +9075,15 @@ null
 "x": 470,
 "y": 238,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 470,
+"y": 230,
+"door": 143278,
+"bx": 476,
+"by": 234
+}
 },
 {
 "id": "arch4",
@@ -8483,7 +9091,15 @@ null
 "x": 190,
 "y": 462,
 "done": 0,
-"gT": -999
+"gT": -999,
+"br": {
+"d": "up",
+"x": 190,
+"y": 454,
+"door": 277398,
+"bx": 196,
+"by": 458
+}
 }
 ],
 "rescued": {
@@ -8501,6 +9117,7 @@ null
 "read": 0,
 "gT": -999
 },
+"abV": 1,
 "dark130": 1,
 "naru119": 1,
 "gb124": 1,
@@ -8517,7 +9134,11 @@ null
 "golem": false,
 "turtle": false,
 "spirit": false,
-"dark": false
+"dark": false,
+"bookGolem": false,
+"mirrorSage": false,
+"inkFlame": false,
+"frostKeeper": false
 },
 "guide": 0,
 "at": 1760000000000,

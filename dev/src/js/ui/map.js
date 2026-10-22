@@ -1,7 +1,7 @@
 // ================= 지도 창: 상자 표시 설정, 지도 그리기(drawMap) =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // the map's unopened-treasure markers can be hidden; a per-viewer setting kept in this browser
-import { BKEYS, BOSSES, FLOWERS } from '../data/rpg-nature.js';
+import { BKEYS, BOSSES, FLOWERS, bossAway } from '../data/rpg-nature.js';
 import { ITEMS } from '../data/items.js';
 import { SUMMON } from '../data/quests.js';
 import { INK } from '../engine/canvas.js';
@@ -104,7 +104,7 @@ export const MK = {
 export function mapMarks() { const L = [], add = (k, x, y, ex) => L.push({ k, x, y, name: MK[k].n, ...ex });
   add('tree', CX + .5, CY);
   if (G.spawnPt) add('bed', G.spawnPt.x + .5, G.spawnPt.y + .5);
-  for (const k of BKEYS) { const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) add('boss', h.x, h.y, { b: k, col: BOSSES[k].col, name: BOSSES[k].n }); }
+  for (const k of BKEYS) { if (bossAway(k)) continue; /* v131 */ const h = BOSSES[k].home(); if (!G.bossDead[k] && G.explored[idx(Math.floor(h.x), Math.floor(h.y))]) add('boss', h.x, h.y, { b: k, col: BOSSES[k].col, name: BOSSES[k].n }); }
   for (const sp of [SA, SB]) if (G.explored[idx(sp.x, sp.y)] && G.objs.get(idx(sp.x, sp.y))?.has) add('altar', sp.x + .5, sp.y + .5);
   for (const z of G.fzones || []) if (G.explored[idx(z.x, z.y)]) add('fzone', z.x + .5, z.y + .5, { c: z.c, col: FLOWERS[z.c][2], name: `${FLOWERS[z.c][1]} 꽃망울 구역` });
   if (mapChestOn()) for (const r of G.rooms || []) if (r.found && !r.open) add('chest', r.cx + .5, r.cy + .5, { name: '보물상자' });

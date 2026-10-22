@@ -1270,6 +1270,72 @@ def test_tier78_v130():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+def test_archboss_v131():
+    # v131 남은 성장 확장 ③: 기록관 마지막 방(봉인 → 일기를 읽으면 열림) · 기록관 보스 4 · 특별 무기 효과 4 · 파수 돌인형 · 책벌레 · 도전 퀘스트 4 · 옛 세계
+    H2=HOOK.replace("computeLight}","computeLight,archList,ABOSS,BKEYS,bossAway,abRoomAt,AB_W,AB_H,AB_PLAN,ARCH_W,ARCH_H,ARCH_PLAN,readDiary,runFrame,freshBoss,hitBoss,hitEnemy,mkEnemy,ENEMY,QSIDE,Q_CH,sideOpen,summonBoss,summonDecide,XP_NEED,RECIPES,ICON,RAR,BOSS_W,SUMMON,closePanel}")
+    async def main():
+        mkpage(SRC,'qa.html',H2,layout=2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,I=T.ITEMS,ks=['sword','dagger','spear','hammer','bow','staff'];const rc=id=>T.RECIPES.find(q=>q.out===id);
+              return [T.ABOSS.map(A=>T.BOSSES[A.k].hp).join(','),T.ABOSS.map(A=>T.BKEYS.includes(A.k)).every(Boolean),T.ABOSS.map(A=>I[A.ids[0]].dmg+'/'+I[A.ids[0]].rlv).join(','),T.ABOSS.map(A=>A.ids.map(id=>I[id].dmg).join(':')).join(' '),
+                T.ABOSS.every(A=>A.ids.every(id=>T.RAR[id]===3&&I[id].fx===A.fx&&!!T.ICON[id]&&!rc(id))),['bookIdol','mirrorIdol','inkIdol','keeperIdol'].map(id=>{const r=rc(id);return r&&r.at==='bench'?r.tier:'x'}).join(','),
+                ['bookIdol','mirrorIdol','inkIdol','keeperIdol'].every(id=>!!T.ICON[id]),['s_ab0','s_ab2','s_ab3','s_ab4'].map(id=>T.Q_CH[id]).join(','),['s_ab0','s_ab2','s_ab3','s_ab4'].every(id=>{const q=T.QSIDE.find(q=>q.id===id);return q&&q.rw.length>0})]}""")
+            rec('데이터','보스 체력 1,200·2,400·3,000·4,000 · 특별 무기 철·금·서리·그림자 단계 × 1.25(검 21·45·60·80, Lv.12·30·40·50) · 영웅 · 효과 · 아이콘 · 조각상 작업대 2~5단계 · 도전 장 5·7·9·10',
+                r==['1200,2400,3000,4000',True,'21/12,45/30,60/40,80/50','21:14:23:33:18:18 45:29:48:68:39:36 60:39:63:90:51:48 80:53:84:120:68:64',True,'2,3,4,5',True,'5,7,9,10',True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;return T.archList().map(a=>{if(!a.br)return [a.id,'none'];let rock=0,n=0;for(let y=0;y<T.AB_H;y++)for(let x=0;x<T.AB_W;x++){if(T.AB_PLAN[y][x]!=='#')continue;n++;if(G.wall[T.idx(a.br.x+x,a.br.y+y)]===8||T.idx(a.br.x+x,a.br.y+y)===a.br.door)rock++}
+              const A=T.ABOSS.find(q=>q.arch===a.id);const h=T.BOSSES[A.k].home();return [a.id,rock===n,G.wall[a.br.door]===8,!G.wall[T.idx(Math.floor(h.x),Math.floor(h.y))],T.bossAway(A.k),!!T.abRoomAt(Math.floor(h.x),Math.floor(h.y))]})}""")
+            rec('마지막 방','새 세계 기록관 4곳 모두 13×9 방이 붙고(암반 벽), 문은 봉인(암반), 일기를 읽기 전엔 보스가 없는 것처럼', r==[[x,True,True,True,True,True] for x in ['arch0','arch2','arch3','arch4']], str(r))
+            # 파수 돌인형 · 책벌레
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.archList()[0];G.enemies.length=0;G.p.x=a.x+3.5;G.p.y=a.y+4.6;G.p.dead=0;a.gT=-999;for(let k=0;k<3;k++)T.runFrame(1/30);
+              const w=G.enemies.filter(e=>e.k==='stoneWard'),worm=G.enemies.filter(e=>e.k==='bookworm').length;const x0=w.map(e=>e.x+','+e.y);for(let k=0;k<30;k++)T.runFrame(1/30);const moved=w.some((e,i)=>e.x+','+e.y!==x0[i]);
+              const hp0=w[0].hp;T.hitEnemy(w[0],500,false,0);const lv=G.objs.get(T.idx(a.x+3,a.y+3));lv.on=1;T.runFrame(1/30);const st=w.every(e=>e.stone);const xs=w.map(e=>e.x+','+e.y);G.enemies=G.enemies.filter(e=>e.k==='stoneWard');a.gT=G.time;G.p.x=w[0].x;G.p.y=w[0].y;const hp=G.p.hp=50;for(let k=0;k<20;k++)T.runFrame(1/30);
+              return [w.length,w.map(e=>e.home0).sort().join(','),moved,w[0].hp===hp0,st,w.every((e,i)=>e.x+','+e.y===xs[i]),G.p.hp>=hp,worm>=1]}""")
+            rec('파수 돌인형','깨기 전 기록관에 들어가면 2마리가 네모 길을 돌고, 때려도 안 다치고, 레버를 켜면 멈춰 돌이 돼 닿아도 안 아픔 · 책벌레도 나옴', r==[2,'0,2',True,True,True,True,True,True], str(r))
+            # 일기 → 봉인이 풀리고 보스가 생김 → 깨어남 → 처치
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.archList()[0];G.stats.bIntro=G.stats.bIntro||{};for(const k of T.BKEYS)G.stats.bIntro[k]=1;const di=[...G.objs].find(([i,o])=>o.t==='diary'&&o.a===a.id),WW=Math.round(Math.sqrt(G.wall.length));
+              T.readDiary({...di[1],x:di[0]%WW+.5,y:((di[0]/WW)|0)+.5});T.closePanel();const b=G.bosses.bookGolem,h=T.BOSSES.bookGolem.home();const open=!G.wall[a.br.door],away=T.bossAway('bookGolem');
+              G.enemies.length=0;G.p.x=h.x;G.p.y=h.y+3;G.p.dead=0;for(let k=0;k<4;k++)T.runFrame(1/30);return [open,away,b.st,Math.round(b.hp)]}""")
+            rec('봉인 풀림','일기를 읽으면 마지막 방 문이 열리고 책더미 골렘이 생김, 5칸 안에 들어가면 깨어남', r==[True,False,'fight',1200], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const tot=()=>{let s=G.rpg.xp;for(let l=1;l<G.rpg.lv;l++)s+=T.XP_NEED(l);return s};G.rpg.lv=15;G.rpg.xp=0;const b=G.bosses.bookGolem;b.hp=1;G.drops.length=0;const x0=tot();T.hitBoss(b,5,false);
+              const c=id=>G.drops.filter(q=>q.id===id).reduce((a,q)=>a+q.c,0);const sp=G.drops.filter(q=>T.BOSS_W.bookGolem.ids.includes(q.id)).length;const q=T.QSIDE.find(q=>q.id==='s_ab0');return [G.bossDead.bookGolem,tot()-x0,c('ironBar'),c('rope'),sp,q.done()]}""")
+            rec('첫 처치','책더미 골렘: 경험치 400 · 철괴 6 · 이끼 끈 4 · 특별 무기 하나 · 도전 퀘스트 다 됨', r==[True,400,6,4,1,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const h=T.BOSSES.bookGolem.home();G.p.x=h.x;G.p.y=h.y+2;G.inv.fill(null);G.inv[0]={id:'bookIdol',c:1};G.sel=0;const dec=T.summonDecide(T.ITEMS.bookIdol,G.inv[0]).k;T.summonBoss('bookGolem');const b=G.bosses.bookGolem;
+              b.st='fight';b.hp=1;G.drops.length=0;T.hitBoss(b,5,false);const c=id=>G.drops.filter(q=>q.id===id).reduce((a,q)=>a+q.c,0);return [dec,G.bossDead.bookGolem,c('ironBar'),c('rope')]}""")
+            rec('다시 부르기','책더미 조각상을 마지막 방에서 쓰면 다시 나타나고, 다시 잡으면 철괴 3·이끼 끈 3', r==['summon',True,3,3], str(r))
+            # 무기 효과
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;G.enemies.length=0;const k=Object.keys(T.ENEMY).find(k=>{const E=T.ENEMY[k];return !E.ai&&!E.shadow&&!E.pack&&!E.calm&&!E.front&&!E.boss&&!(E.xp===0)});
+              const mk=(dx,dy)=>{const e=T.mkEnemy(k,G.p.x+dx,G.p.y+dy);e.hp=9999;G.enemies.push(e);return e};
+              let e1=mk(2,0),e2=mk(4,0),e3=mk(7,0);T.hitEnemy(e1,100,false,0,'mirror');const mir=[9999-e1.hp,9999-e2.hp,9999-e3.hp];
+              G.enemies.length=0;e1=mk(2,0);T.hitEnemy(e1,100,false,0,'ink');const a1=9999-e1.hp;T.hitEnemy(e1,100,false,0);const ink=[a1,9999-e1.hp-a1];
+              G.enemies.length=0;e1=mk(2,0);e2=mk(3.2,0);e3=mk(6,0);e1.hp=50;T.hitEnemy(e1,100,false,0,'frost');const fr=[G.enemies.includes(e1),!!e2.chill,!!e3.chill];
+              G.enemies.length=0;let n=0;for(let q=0;q<300;q++){const e=mk(2,0);T.hitEnemy(e,10,false,0,'daze');if(e.stun>0)n++;G.enemies.length=0}
+              return [mir,ink,fr,n>=30&&n<=90]}""")
+            rec('무기 효과','거울: 3칸 안 다른 적 하나에 30% · 잉크: 다음 피해 +20% · 얼음: 쓰러뜨리면 둘레 2칸 얼음 · 기절: 약 20%', r==[[100,30,0],[100,120],[False,True,False],True], str(r))
+            # 보스 4 움직임 (300번 돌려 봄: 탄·위험 지대가 나오고, 방을 벗어나지 않음)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const out=[];for(const A of T.ABOSS){const a=T.archList().find(q=>q.id===A.arch);a.done=1;G.wall[a.br.door]=0;G.bossDead[A.k]=false;G.bosses[A.k]=T.freshBoss(A.k);const b=G.bosses[A.k],h=T.BOSSES[A.k].home();
+                G.enemies.length=0;G.shots.length=0;G.hz=[];G.p.x=h.x+3;G.p.y=h.y+1;G.p.dead=0;const kinds=new Set();let clones=0;for(let k=0;k<300;k++){G.p.hp=9999;G.p.dead=0;T.runFrame(1/30);for(const s of G.shots)kinds.add('s:'+s.k);for(const z of G.hz||[])kinds.add('h:'+z.k);clones=Math.max(clones,G.enemies.filter(e=>e.k==='mirrorClone').length)}
+                out.push([A.k,b.st,[...kinds].sort().join(','),clones,!!T.abRoomAt(Math.floor(b.x),Math.floor(b.y))]);G.bossDead[A.k]=true}return out}""")
+            exp={'bookGolem':['s:book'],'mirrorSage':['s:shard'],'inkFlame':['h:ink','s:fire'],'frostKeeper':['h:frost','s:book']}
+            ok=all(x[1]=='fight' and all(k in x[2].split(',') for k in exp[x[0]]) and x[4] for x in r) and [x[3] for x in r if x[0]=='mirrorSage'][0]>=2
+            rec('보스 움직임','책 탄(골렘) · 빛줄기·거울 분신 2+(사서) · 불꽃 탄·잉크 웅덩이(불꽃) · 얼음 기둥 원·책 고리(기록관장), 모두 방 안에서', ok, str(r))
+            # 그림이 그려지는지 (싸우는 중 화면 1초)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const A=T.ABOSS[2];G.bossDead[A.k]=false;G.bosses[A.k]=T.freshBoss(A.k);const b=G.bosses[A.k],h=T.BOSSES[A.k].home();b.st='fight';G.p.x=h.x+2;G.p.y=h.y;G.p.dead=0;G.p.hp=9999;G.enemies.length=0;
+              G.enemies.push(T.mkEnemy('stoneWard',h.x-2,h.y),T.mkEnemy('bookworm',h.x-1,h.y+1),T.mkEnemy('mirrorClone',h.x+1,h.y-2));G.hz=[{x:h.x,y:h.y+1,r:1.2,t:1,warn:.5,life:6,dmg:0,k:'ink'}];G.shots.push({x:h.x,y:h.y,vx:0,vy:0,life:5,dmg:0,k:'book'});return 1}""")
+            await wait_game(pg,1)
+            await ev(pg,"""()=>{const G=__T.G;G.bossDead.inkFlame=true;G.enemies.length=0;G.hz=[];G.shots.length=0;return 1}""")
+            # 옛 세계: 기록 없는 세이브는 불러올 때 한 번 붙임 (이미 일기를 읽은 기록관은 열린 채, 안 읽은 곳은 봉인)
+            r=await ev(pg,"""()=>{const T=__T;const s=JSON.parse(JSON.stringify(T.serialize()));delete s.stats.abV;for(const a of s.stats.arch){delete a.br;a.done=a.id==='arch2'?1:0}
+              const L=s.stats.arch.map(a=>a.id);T.deserialize(s);const G=T.G;return [G.stats.abV,T.archList().map(a=>a.br?(G.wall[a.br.door]===8?'sealed':'open'):'none').join(','),T.bossAway('mirrorSage'),T.bossAway('bookGolem')]}""")
+            rec('옛 세계','기록이 없는 옛 세이브도 불러올 때 마지막 방을 붙이고, 이미 일기를 읽은 곳(수정)은 문이 열린 채', r==[1,'sealed,open,sealed,sealed',False,True], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const a=T.archList().find(q=>q.id==='arch3');const q=T.QSIDE.find(q=>q.id==='s_ab3');const br=a.br;a.br=null;const gone=!T.sideOpen(q);a.br=br;const back=T.Q_CH.s_ab3;return [gone,back]}""")
+            rec('방 없는 세계','마지막 방을 못 붙인 기록관의 도전 퀘스트는 안 보임', r==[True,9], str(r))
+            await ev(pg,"()=>__T.closePanel()")
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_archive_v106():
     # v106 이끼 굴 기록관: 자리(지역·거리·거의 벽인 곳), 안은 지도에 안 남음, 레버 → 전기 문, 그림자 조각, 일기 읽기 → 깨짐(지도·레시피·학자 고치)
     H2=HOOK.replace("computeLight}","computeLight,archList,ARCH_W,ARCH_H,ARCH_PLAN,archHidden,circuitTick,decide,perform,readDiary,runFrame,knows,QSIDE,npcObjs,placeArchives,get SPR(){return SPR}}")

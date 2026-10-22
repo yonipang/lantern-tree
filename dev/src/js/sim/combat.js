@@ -1,6 +1,7 @@
 // ================= 전투: 무기·휘두르기·쏘기, 스킬, 피해·상태 이상·몬스터 처치, 화살, 공격 버튼 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
 import { CHAIN_MUL, CHAIN_N, CHAIN_R } from '../data/tier78.js';
+import { DAZE_P, DAZE_T, FROST_R, INK_MUL, INK_T, MIRROR_MUL, MIRROR_R } from '../data/archboss.js';
 import { ARROW_ORD } from '../data/circuits-regions.js';
 import { UPG_DMG, UPG_POW } from '../data/gear-animals.js';
 import { ITEMS, WALLS, WTYPE } from '../data/items.js';
@@ -119,25 +120,35 @@ export function applyFx(e, fx, dmg, boss) {
   else if (fx === 'slow' && !boss) e.slow = 2.5;
   else if (fx === 'chill' && !boss) { e.slow = 3.5; e.chill = 1; }
   else if (fx === 'chain') chainFx(e, dmg); // v130 큰 어둠의 무기
+  else if (fx === 'daze' && !boss) { if (rand() < DAZE_P) { e.stun = Math.max(e.stun || 0, DAZE_T); emit('ftext', e.x, e.y - 1.2, '기절!', '#ffe9a8'); } } // v131 책더미 골렘의 무기
+  else if (fx === 'mirror') mirrorFx(e, dmg); // v131 거울 사서의 무기
+  else if (fx === 'ink') { e.ink = INK_T; if (fxRand() < .5) emit('puff', e.x, e.y - .3, '#3a3060', 4, 1.4, .3); } // v131 잉크 불꽃의 무기
   else if (fx === 'split') { for (let k = 0; k < 3; k++) { const a = rand() * 6.283; G.pshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: .32, hit: [e], ang: a, k: 'orb', dmg: Math.max(1, Math.round(dmg * .45)), crit: false, col: '#d6c2ff', kb: 3, pierce: 0, spd: 9 }); } }
 }
 export function dotTick(e, dt, boss) {
   for (const [k, col] of [['poison', '#9be37a'], ['burn', '#ff9b4a']]) { const d = e[k]; if (!d) continue; d.t -= dt; d.acc = (d.acc || 0) + d.dps * dt * (boss ? .5 : 1);
     if (d.acc >= 1) { const n = Math.floor(d.acc); d.acc -= n; if (boss) bossDot(e, n, col); else dotHit(e, n, col); if (fxRand() < .5) emit('puff', e.x, e.y - .3, col, 2, 1, .3); }
     if (d.t <= 0) e[k] = null; }
+  if (e.ink > 0) e.ink -= dt; // v131 잉크 표식
   if (e.slow > 0) { e.slow -= dt; if (fxRand() < dt * 4) emit('puff', e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
 }
 export function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
-export function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); gainXp(Math.max(2, Math.round(def.hp / 2)), e.x, e.y); }
+export function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); { const xp = def.xp != null ? def.xp : Math.max(2, Math.round(def.hp / 2)); if (xp > 0) gainXp(xp, e.x, e.y); } } // v131 xp: 0 = 경험치 없음(파수 돌인형·거울 분신)
 // v130 어둠 번개: 맞은 적(또는 보스)에서 CHAIN_R칸 안의 가장 가까운 적에게 차례로 CHAIN_N마리까지, 그 피해의 CHAIN_MUL만큼 (번개는 다시 튀지 않아요)
 export function chainFx(src, dmg) { const hit = new Set([src]), d = Math.max(1, Math.round(dmg * CHAIN_MUL)); let cur = src, from = { x: src.x, y: src.y - .3 };
   for (let n = 0; n < CHAIN_N; n++) { let best = null, bd = CHAIN_R; for (const e of G.enemies) if (!hit.has(e) && e.hp > 0) { const dd = Math.hypot(e.x - cur.x, e.y - cur.y); if (dd < bd) { bd = dd; best = e; } }
     if (!best) break; hit.add(best); for (let k = 1; k <= 4; k++) emit('puff', from.x + (best.x - from.x) * k / 4, from.y + (best.y - .3 - from.y) * k / 4, '#c9a8ff', 1, 1.2, .15);
     hitEnemy(best, d, false, 3); from = { x: best.x, y: best.y - .3 }; cur = best; } }
+// v131 거울: 맞힌 적(또는 보스)에서 MIRROR_R칸 안의 가장 가까운 다른 적 하나에게 그 피해의 MIRROR_MUL (다시 튀지 않아요)
+export function mirrorFx(src, dmg) { let best = null, bd = MIRROR_R; for (const e of G.enemies) if (e !== src && e.hp > 0) { const dd = Math.hypot(e.x - src.x, e.y - src.y); if (dd < bd) { bd = dd; best = e; } }
+  if (!best) return; for (let k = 1; k <= 4; k++) emit('puff', src.x + (best.x - src.x) * k / 4, src.y - .3 + (best.y - src.y) * k / 4, '#efe6ff', 1, 1.2, .15); hitEnemy(best, Math.max(1, Math.round(dmg * MIRROR_MUL)), false, 3); }
+// v131 얼음: 쓰러진 적 둘레 FROST_R칸의 적이 얼어붙어요
+export function frostFx(src) { emit('puff', src.x, src.y - .3, '#d4f6ff', 14, 2.6, .4); for (const e of G.enemies) if (e !== src && e.hp > 0 && Math.hypot(e.x - src.x, e.y - src.y) < FROST_R) { e.slow = 3.5; e.chill = 1; emit('ftext', e.x, e.y - 1.2, '꽁꽁!', '#bfe6ff'); } }
 export function hitEnemy(e, dmg, crit, kb = 8, fx) {
-  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split' && fx !== 'chain') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
+  const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (e.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); /* v131 잉크 표식 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split' && fx !== 'chain' && fx !== 'mirror') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
   e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
-  if (fx === 'split' || fx === 'chain') applyFx(e, fx, dmg); // 쓰러져도 파편·번개는 튀어요
+  if (fx === 'split' || fx === 'chain' || fx === 'mirror') applyFx(e, fx, dmg); // 쓰러져도 파편·번개·거울은 튀어요
+  if (e.hp <= 0 && fx === 'frost') frostFx(e); // v131 얼어붙은 기록관장의 무기: 쓰러뜨리면 둘레가 얼어요
   if (e.hp <= 0) enemyDie(e);
 }
 // ---- the attack button ----

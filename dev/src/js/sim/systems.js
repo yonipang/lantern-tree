@@ -15,6 +15,7 @@ export const FRAME_ORDER = [
   'deep', 'darkContact', // v108 가장 깊은 곳·큰 어둠 닿기
   'shadow', // v129 그림자 지대 들어가면 알림 (sim/shadow.js)
   'archives', // v106 기록관 안 그림자 조각
+  'archWards', // v131 기록관 파수 돌인형 (sim/archboss.js)
   'cocoons', // v104 그림자 고치 둘레 그림자 조각
   'naru', // v117 나루 하는 중 한마디 (sim/npc.js)
   'naruLife', // v118 나루가 걸어 다님·먼저 걸어 나가기·나루의 부탁·상황 한마디 (sim/naru.js)

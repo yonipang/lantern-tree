@@ -4533,6 +4533,318 @@
 "boss": "dark",
 "d": "큰 어둠을 물리친 뒤 가장 깊은 곳 보스방에서 쓰면 큰 어둠이 다시 나타나요. 다시 잡으면 새벽돌과 함께 가끔 큰 어둠의 무기가 떨어져요."
 },
+"swordBook": {
+"n": "책더미 골렘의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "daze",
+"d": "책더미 골렘이 남긴 검. 맞은 적이 가끔(20%) 1초 기절해요.",
+"orb": null,
+"dmg": 21,
+"rlv": 12,
+"wtier": 2
+},
+"daggerBook": {
+"n": "책더미 골렘의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "daze",
+"d": "책더미 골렘이 남긴 단검. 맞은 적이 가끔(20%) 1초 기절해요.",
+"orb": null,
+"dmg": 14,
+"rlv": 12,
+"wtier": 2
+},
+"spearBook": {
+"n": "책더미 골렘의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "daze",
+"d": "책더미 골렘이 남긴 창. 맞은 적이 가끔(20%) 1초 기절해요.",
+"orb": null,
+"dmg": 23,
+"rlv": 12,
+"wtier": 2
+},
+"hammerBook": {
+"n": "책더미 골렘의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "daze",
+"d": "책더미 골렘이 남긴 망치. 맞은 적이 가끔(20%) 1초 기절해요.",
+"orb": null,
+"dmg": 33,
+"rlv": 12,
+"wtier": 2
+},
+"bowBook": {
+"n": "책더미 골렘의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "daze",
+"d": "책더미 골렘이 남긴 활. 맞은 적이 가끔(20%) 1초 기절해요.",
+"orb": null,
+"dmg": 18,
+"rlv": 12,
+"wtier": 2
+},
+"staffBook": {
+"n": "책더미 골렘의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "daze",
+"d": "책더미 골렘이 남긴 지팡이. 맞은 적이 가끔(20%) 1초 기절해요.",
+"orb": "#f0d8a8",
+"dmg": 18,
+"rlv": 12,
+"wtier": 2
+},
+"swordMirror": {
+"n": "거울 사서의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "mirror",
+"d": "거울 사서가 남긴 검. 맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.",
+"orb": null,
+"dmg": 45,
+"rlv": 30,
+"wtier": 4
+},
+"daggerMirror": {
+"n": "거울 사서의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "mirror",
+"d": "거울 사서가 남긴 단검. 맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.",
+"orb": null,
+"dmg": 29,
+"rlv": 30,
+"wtier": 4
+},
+"spearMirror": {
+"n": "거울 사서의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "mirror",
+"d": "거울 사서가 남긴 창. 맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.",
+"orb": null,
+"dmg": 48,
+"rlv": 30,
+"wtier": 4
+},
+"hammerMirror": {
+"n": "거울 사서의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "mirror",
+"d": "거울 사서가 남긴 망치. 맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.",
+"orb": null,
+"dmg": 68,
+"rlv": 30,
+"wtier": 4
+},
+"bowMirror": {
+"n": "거울 사서의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "mirror",
+"d": "거울 사서가 남긴 활. 맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.",
+"orb": null,
+"dmg": 39,
+"rlv": 30,
+"wtier": 4
+},
+"staffMirror": {
+"n": "거울 사서의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "mirror",
+"d": "거울 사서가 남긴 지팡이. 맞힌 피해의 30%가 가까운 다른 적 하나에게 튀어요.",
+"orb": "#efe6ff",
+"dmg": 36,
+"rlv": 30,
+"wtier": 4
+},
+"swordInk": {
+"n": "잉크 불꽃의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "ink",
+"d": "잉크 불꽃이 남긴 검. 맞은 적은 3초 동안 받는 피해가 20% 늘어요.",
+"orb": null,
+"dmg": 60,
+"rlv": 40,
+"wtier": 5
+},
+"daggerInk": {
+"n": "잉크 불꽃의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "ink",
+"d": "잉크 불꽃이 남긴 단검. 맞은 적은 3초 동안 받는 피해가 20% 늘어요.",
+"orb": null,
+"dmg": 39,
+"rlv": 40,
+"wtier": 5
+},
+"spearInk": {
+"n": "잉크 불꽃의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "ink",
+"d": "잉크 불꽃이 남긴 창. 맞은 적은 3초 동안 받는 피해가 20% 늘어요.",
+"orb": null,
+"dmg": 63,
+"rlv": 40,
+"wtier": 5
+},
+"hammerInk": {
+"n": "잉크 불꽃의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "ink",
+"d": "잉크 불꽃이 남긴 망치. 맞은 적은 3초 동안 받는 피해가 20% 늘어요.",
+"orb": null,
+"dmg": 90,
+"rlv": 40,
+"wtier": 5
+},
+"bowInk": {
+"n": "잉크 불꽃의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "ink",
+"d": "잉크 불꽃이 남긴 활. 맞은 적은 3초 동안 받는 피해가 20% 늘어요.",
+"orb": null,
+"dmg": 51,
+"rlv": 40,
+"wtier": 5
+},
+"staffInk": {
+"n": "잉크 불꽃의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "ink",
+"d": "잉크 불꽃이 남긴 지팡이. 맞은 적은 3초 동안 받는 피해가 20% 늘어요.",
+"orb": "#a89aff",
+"dmg": 48,
+"rlv": 40,
+"wtier": 5
+},
+"swordKeeper": {
+"n": "얼어붙은 기록관장의 검",
+"kind": "sword",
+"wt": "sword",
+"stack": 1,
+"fx": "frost",
+"d": "얼어붙은 기록관장이 남긴 검. 쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.",
+"orb": null,
+"dmg": 80,
+"rlv": 50,
+"wtier": 6
+},
+"daggerKeeper": {
+"n": "얼어붙은 기록관장의 단검",
+"kind": "sword",
+"wt": "dagger",
+"stack": 1,
+"fx": "frost",
+"d": "얼어붙은 기록관장이 남긴 단검. 쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.",
+"orb": null,
+"dmg": 53,
+"rlv": 50,
+"wtier": 6
+},
+"spearKeeper": {
+"n": "얼어붙은 기록관장의 창",
+"kind": "sword",
+"wt": "spear",
+"stack": 1,
+"fx": "frost",
+"d": "얼어붙은 기록관장이 남긴 창. 쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.",
+"orb": null,
+"dmg": 84,
+"rlv": 50,
+"wtier": 6
+},
+"hammerKeeper": {
+"n": "얼어붙은 기록관장의 망치",
+"kind": "sword",
+"wt": "hammer",
+"stack": 1,
+"fx": "frost",
+"d": "얼어붙은 기록관장이 남긴 망치. 쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.",
+"orb": null,
+"dmg": 120,
+"rlv": 50,
+"wtier": 6
+},
+"bowKeeper": {
+"n": "얼어붙은 기록관장의 활",
+"kind": "sword",
+"wt": "bow",
+"stack": 1,
+"fx": "frost",
+"d": "얼어붙은 기록관장이 남긴 활. 쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.",
+"orb": null,
+"dmg": 68,
+"rlv": 50,
+"wtier": 6
+},
+"staffKeeper": {
+"n": "얼어붙은 기록관장의 지팡이",
+"kind": "sword",
+"wt": "staff",
+"stack": 1,
+"fx": "frost",
+"d": "얼어붙은 기록관장이 남긴 지팡이. 쓰러뜨린 적 둘레 2칸의 적이 얼어붙어요.",
+"orb": "#e8f8ff",
+"dmg": 64,
+"rlv": 50,
+"wtier": 6
+},
+"bookIdol": {
+"n": "책더미 조각상",
+"kind": "summon",
+"boss": "bookGolem",
+"d": "책더미 골렘을 물리친 뒤 이끼 굴 기록관의 마지막 방에서 쓰면 책더미 골렘이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 책더미 골렘의 무기가 떨어져요."
+},
+"mirrorIdol": {
+"n": "거울 조각상",
+"kind": "summon",
+"boss": "mirrorSage",
+"d": "거울 사서를 물리친 뒤 수정 동굴 기록관의 마지막 방에서 쓰면 거울 사서가 다시 나타나요. 다시 잡으면 재료와 함께 가끔 거울 사서의 무기가 떨어져요."
+},
+"inkIdol": {
+"n": "잉크병 조각상",
+"kind": "summon",
+"boss": "inkFlame",
+"d": "잉크 불꽃을 물리친 뒤 용암 동굴 기록관의 마지막 방에서 쓰면 잉크 불꽃이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 잉크 불꽃의 무기가 떨어져요."
+},
+"keeperIdol": {
+"n": "얼음 책 조각상",
+"kind": "summon",
+"boss": "frostKeeper",
+"d": "얼어붙은 기록관장을 물리친 뒤 얼음 동굴 기록관의 마지막 방에서 쓰면 얼어붙은 기록관장이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 얼어붙은 기록관장의 무기가 떨어져요."
+},
 "brazier": {
 "n": "횃대",
 "d": "등불지기들이 세운 큰 횃대. 불을 붙이면 둘레가 환해져요."
@@ -14897,6 +15209,78 @@
 "at": "bench",
 "cat": "tool",
 "tier": 6
+},
+{
+"out": "bookIdol",
+"n": 1,
+"req": [
+[
+"ironBar",
+4
+],
+[
+"rope",
+4
+],
+[
+"wood",
+6
+]
+],
+"at": "bench",
+"cat": "tool",
+"tier": 2
+},
+{
+"out": "mirrorIdol",
+"n": 1,
+"req": [
+[
+"crystal",
+10
+],
+[
+"cryGem",
+2
+]
+],
+"at": "bench",
+"cat": "tool",
+"tier": 3
+},
+{
+"out": "inkIdol",
+"n": 1,
+"req": [
+[
+"obsidian",
+6
+],
+[
+"goldBar",
+3
+]
+],
+"at": "bench",
+"cat": "tool",
+"tier": 4
+},
+{
+"out": "keeperIdol",
+"n": 1,
+"req": [
+[
+"frostShard",
+12
+],
+[
+"goldBar",
+3
+]
+],
+"at": "bench",
+"cat": "tool",
+"tier": 5
 }
 ],
 "ENEMY": {
@@ -15732,6 +16116,51 @@
 ]
 ],
 "col": "#c9a8ff"
+},
+"stoneWard": {
+"n": "파수 돌인형",
+"hp": 999,
+"dmg": 12,
+"spd": 1.6,
+"r": 0.36,
+"hop": 0,
+"ai": "patrol",
+"aggro": 0,
+"drops": [],
+"col": "#8a8478",
+"xp": 0
+},
+"bookworm": {
+"n": "책벌레",
+"hp": 24,
+"dmg": 7,
+"spd": 3.4,
+"r": 0.26,
+"hop": 0,
+"aggro": 6,
+"drops": [
+[
+"fiber",
+1,
+1,
+0.3
+]
+],
+"col": "#c9a26b"
+},
+"mirrorClone": {
+"n": "거울 분신",
+"hp": 120,
+"dmg": 16,
+"spd": 0,
+"r": 0.34,
+"hop": 0,
+"ai": "beam",
+"aggro": 9,
+"alpha": 0.75,
+"drops": [],
+"col": "#d6c2ff",
+"xp": 0
 }
 },
 "BOSSES": {
@@ -15794,6 +16223,50 @@
 "col": "#3a2a5a",
 "spr": "dark",
 "scale": 1.4
+},
+"bookGolem": {
+"n": "책더미 골렘",
+"hp": 1200,
+"home": "[함수]",
+"wake": 5,
+"hr": 1,
+"col": "#c9a26b",
+"spr": "bookGolem",
+"scale": 1.2,
+"off": "[함수]"
+},
+"mirrorSage": {
+"n": "거울 사서",
+"hp": 2400,
+"home": "[함수]",
+"wake": 5,
+"hr": 0.9,
+"col": "#d6c2ff",
+"spr": "mirrorSage",
+"scale": 1.15,
+"off": "[함수]"
+},
+"inkFlame": {
+"n": "잉크 불꽃",
+"hp": 3000,
+"home": "[함수]",
+"wake": 5,
+"hr": 0.9,
+"col": "#6a5aff",
+"spr": "inkFlame",
+"scale": 1.2,
+"off": "[함수]"
+},
+"frostKeeper": {
+"n": "얼어붙은 기록관장",
+"hp": 4000,
+"home": "[함수]",
+"wake": 5,
+"hr": 1,
+"col": "#9fd8f0",
+"spr": "frostKeeper",
+"scale": 1.2,
+"off": "[함수]"
 }
 },
 "GUIDE": [
@@ -16792,6 +17265,90 @@
 "target": "[함수]",
 "_t0": "이끼 굴의 기록관 깨기",
 "_h0": "이끼 굴 어딘가에 등불지기들이 남긴 기록관이 있어요. 안은 어두워요 — 횃불을 챙기고, 레버로 빛 문을 열어 일기를 읽어요."
+},
+{
+"id": "s_ab0",
+"t": "이끼 굴 기록관의 마지막 방",
+"h": "이끼 굴 기록관에서 일기를 읽으면 일기 방 벽 너머 봉인된 문이 열려요. 책더미 골렘의 돌진을 옆으로 피하면 벽에 부딪혀 잠깐 멈춰요.",
+"done": "[함수]",
+"rw": [
+[
+"ironBar",
+3
+],
+[
+"stew",
+2
+]
+],
+"xp": 120,
+"gone": "[함수]",
+"target": "[함수]",
+"_t0": "이끼 굴 기록관의 마지막 방",
+"_h0": "이끼 굴 기록관에서 일기를 읽으면 일기 방 벽 너머 봉인된 문이 열려요. 책더미 골렘의 돌진을 옆으로 피하면 벽에 부딪혀 잠깐 멈춰요."
+},
+{
+"id": "s_ab2",
+"t": "수정 동굴 기록관의 마지막 방",
+"h": "수정 동굴 기록관의 마지막 방에 거울 사서가 있어요. 거울 분신도 빛줄기를 쏘니까 분신부터 깨요.",
+"done": "[함수]",
+"rw": [
+[
+"cryGem",
+2
+],
+[
+"stew",
+2
+]
+],
+"xp": 200,
+"gone": "[함수]",
+"target": "[함수]",
+"_t0": "수정 동굴 기록관의 마지막 방",
+"_h0": "수정 동굴 기록관의 마지막 방에 거울 사서가 있어요. 거울 분신도 빛줄기를 쏘니까 분신부터 깨요."
+},
+{
+"id": "s_ab3",
+"t": "용암 동굴 기록관의 마지막 방",
+"h": "용암 동굴 기록관의 마지막 방에 잉크 불꽃이 있어요. 잉크 웅덩이를 밟으면 느려지고 조금씩 다쳐요. 더위 대비도 챙겨요.",
+"done": "[함수]",
+"rw": [
+[
+"torch",
+6
+],
+[
+"stew",
+2
+]
+],
+"xp": 260,
+"gone": "[함수]",
+"target": "[함수]",
+"_t0": "용암 동굴 기록관의 마지막 방",
+"_h0": "용암 동굴 기록관의 마지막 방에 잉크 불꽃이 있어요. 잉크 웅덩이를 밟으면 느려지고 조금씩 다쳐요. 더위 대비도 챙겨요."
+},
+{
+"id": "s_ab4",
+"t": "얼음 동굴 기록관의 마지막 방",
+"h": "얼음 동굴 기록관의 마지막 방에 얼어붙은 기록관장이 있어요. 점선 원 밖으로 피하고, 책 고리는 빈틈으로 빠져나가요.",
+"done": "[함수]",
+"rw": [
+[
+"frostShard",
+6
+],
+[
+"stew",
+2
+]
+],
+"xp": 300,
+"gone": "[함수]",
+"target": "[함수]",
+"_t0": "얼음 동굴 기록관의 마지막 방",
+"_h0": "얼음 동굴 기록관의 마지막 방에 얼어붙은 기록관장이 있어요. 점선 원 밖으로 피하고, 책 고리는 빈틈으로 빠져나가요."
 }
 ],
 "SKILLS": {
@@ -17957,7 +18514,31 @@
 "spearDark": 3,
 "hammerDark": 3,
 "bowDark": 3,
-"staffDark": 3
+"staffDark": 3,
+"swordBook": 3,
+"daggerBook": 3,
+"spearBook": 3,
+"hammerBook": 3,
+"bowBook": 3,
+"staffBook": 3,
+"swordMirror": 3,
+"daggerMirror": 3,
+"spearMirror": 3,
+"hammerMirror": 3,
+"bowMirror": 3,
+"staffMirror": 3,
+"swordInk": 3,
+"daggerInk": 3,
+"spearInk": 3,
+"hammerInk": 3,
+"bowInk": 3,
+"staffInk": 3,
+"swordKeeper": 3,
+"daggerKeeper": 3,
+"spearKeeper": 3,
+"hammerKeeper": 3,
+"bowKeeper": 3,
+"staffKeeper": 3
 },
 "TIERNAME": [
 "나무 곡괭이",
@@ -19073,6 +19654,46 @@
 [
 "frostShard",
 8
+],
+[
+"goldBar",
+2
+]
+],
+"bookGolem": [
+[
+"ironBar",
+3
+],
+[
+"rope",
+3
+]
+],
+"mirrorSage": [
+[
+"cryGem",
+2
+],
+[
+"crystal",
+4
+]
+],
+"inkFlame": [
+[
+"obsidian",
+3
+],
+[
+"goldBar",
+2
+]
+],
+"frostKeeper": [
+[
+"frostShard",
+6
 ],
 [
 "goldBar",
@@ -21241,6 +21862,222 @@
 [
 "shadowCry",
 3
+]
+]
+],
+"swordBook": [
+800,
+[
+[
+"ironBar",
+2
+]
+]
+],
+"daggerBook": [
+800,
+[
+[
+"ironBar",
+2
+]
+]
+],
+"spearBook": [
+800,
+[
+[
+"ironBar",
+2
+]
+]
+],
+"hammerBook": [
+800,
+[
+[
+"ironBar",
+2
+]
+]
+],
+"bowBook": [
+800,
+[
+[
+"ironBar",
+2
+]
+]
+],
+"staffBook": [
+800,
+[
+[
+"ironBar",
+2
+]
+]
+],
+"swordMirror": [
+1300,
+[
+[
+"cryGem",
+2
+]
+]
+],
+"daggerMirror": [
+1300,
+[
+[
+"cryGem",
+2
+]
+]
+],
+"spearMirror": [
+1300,
+[
+[
+"cryGem",
+2
+]
+]
+],
+"hammerMirror": [
+1300,
+[
+[
+"cryGem",
+2
+]
+]
+],
+"bowMirror": [
+1300,
+[
+[
+"cryGem",
+2
+]
+]
+],
+"staffMirror": [
+1300,
+[
+[
+"cryGem",
+2
+]
+]
+],
+"swordInk": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"daggerInk": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"spearInk": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"hammerInk": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"bowInk": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"staffInk": [
+1300,
+[
+[
+"obsidian",
+3
+]
+]
+],
+"swordKeeper": [
+1600,
+[
+[
+"frostShard",
+4
+]
+]
+],
+"daggerKeeper": [
+1600,
+[
+[
+"frostShard",
+4
+]
+]
+],
+"spearKeeper": [
+1600,
+[
+[
+"frostShard",
+4
+]
+]
+],
+"hammerKeeper": [
+1600,
+[
+[
+"frostShard",
+4
+]
+]
+],
+"bowKeeper": [
+1600,
+[
+[
+"frostShard",
+4
+]
+]
+],
+"staffKeeper": [
+1600,
+[
+[
+"frostShard",
+4
 ]
 ]
 ]
@@ -23862,7 +24699,8 @@ null,
 "ice": "[그림 8x8 86cfc490]",
 "web": "[그림 8x8 f68da5fe]",
 "shade": "[그림 8x8 e3455648]",
-"snow": "[그림 8x8 b010bf53]"
+"snow": "[그림 8x8 b010bf53]",
+"book": "[그림 8x8 67844f43]"
 },
 "magmaSlime": "[그림 16x14 eab41d48]",
 "frostSlime": "[그림 16x14 b3d49230]",
@@ -24064,6 +24902,10 @@ null,
 "turtleIdol": "[그림 16x16 8099fa17]",
 "spiritIdol": "[그림 16x16 f7a40c25]",
 "darkIdol": "[그림 16x16 e843040]",
+"bookIdol": "[그림 16x16 56c127f6]",
+"mirrorIdol": "[그림 16x16 a0666426]",
+"inkIdol": "[그림 16x16 7f0ff27f]",
+"keeperIdol": "[그림 16x16 12563ea0]",
 "sickle": "[그림 16x16 191af886]",
 "wcan": "[그림 16x16 9c291463]",
 "fert": "[그림 16x16 59bd3474]",
@@ -24219,6 +25061,30 @@ null,
 "rotate": "[그림 16x16 18936c89]",
 "shadowCry": "[그림 16x16 46fb27f5]",
 "shadowRock": "[그림 16x16 e5c60d09]",
+"swordBook": "[그림 16x16 3687f8fb]",
+"daggerBook": "[그림 16x16 ce01d85e]",
+"spearBook": "[그림 16x16 a1c9b040]",
+"hammerBook": "[그림 16x16 a206aafe]",
+"bowBook": "[그림 16x16 c8310de]",
+"staffBook": "[그림 16x16 92a7e33d]",
+"swordMirror": "[그림 16x16 e9ed1286]",
+"daggerMirror": "[그림 16x16 cec3b77b]",
+"spearMirror": "[그림 16x16 e18dcb]",
+"hammerMirror": "[그림 16x16 fa08b63]",
+"bowMirror": "[그림 16x16 668ca63d]",
+"staffMirror": "[그림 16x16 e8c53a9e]",
+"swordInk": "[그림 16x16 9f00fe44]",
+"daggerInk": "[그림 16x16 9710ddf1]",
+"spearInk": "[그림 16x16 7b43b22c]",
+"hammerInk": "[그림 16x16 43ff500f]",
+"bowInk": "[그림 16x16 bf351bae]",
+"staffInk": "[그림 16x16 8293a7fa]",
+"swordKeeper": "[그림 16x16 d2ad57b4]",
+"daggerKeeper": "[그림 16x16 c589f116]",
+"spearKeeper": "[그림 16x16 de460650]",
+"hammerKeeper": "[그림 16x16 e8ce61a3]",
+"bowKeeper": "[그림 16x16 eaef7017]",
+"staffKeeper": "[그림 16x16 2162b5c8]",
 "bFenceWood": "[그림 16x16 cd55148]",
 "bDoorWood": "[그림 16x16 8d12fc4c]",
 "bFenceStone": "[그림 16x16 1b87a867]",
@@ -25471,6 +26337,12 @@ null,
 "shadowWolfW": "[그림 20x14 dabbebe3]",
 "lostKeeper": "[그림 16x22 e0edd914]",
 "lostKeeperW": "[그림 16x22 b438954c]",
+"stoneWard": "[그림 16x20 cdffbf5c]",
+"stoneWardW": "[그림 16x20 ec007cc4]",
+"bookworm": "[그림 12x10 e3508c8b]",
+"bookwormW": "[그림 12x10 e0c90ef7]",
+"mirrorClone": "[그림 16x20 6d5c8690]",
+"mirrorCloneW": "[그림 16x20 22f1244]",
 "npc_farmer": "[그림 16x19 14b26e87]",
 "npc_farmerW": "[그림 16x19 675a1b21]",
 "npc_cook": "[그림 16x19 ee8ccb08]",
@@ -25487,6 +26359,14 @@ null,
 "shadowBitW": "[그림 16x16 4c729d4]",
 "dark": "[그림 40x40 737f2de2]",
 "darkW": "[그림 40x40 51dab18c]",
+"bookGolem": "[그림 32x32 d97abfa1]",
+"bookGolemW": "[그림 32x32 ee7e68dd]",
+"mirrorSage": "[그림 26x32 9922d78]",
+"mirrorSageW": "[그림 26x32 108a9c58]",
+"inkFlame": "[그림 26x30 914a9d0]",
+"inkFlameW": "[그림 26x30 1935179d]",
+"frostKeeper": "[그림 28x32 27d4a13a]",
+"frostKeeperW": "[그림 28x32 5e9ab66c]",
 "objOff": {
 "torch": "[그림 14x24 2087b6]",
 "lampShroom": "[그림 16x24 6d9988a]",
@@ -27100,6 +27980,34 @@ null
 "bowDark": "23028570",
 "staffDark": "5d83ec8a",
 "darkIdol": "e843040",
+"swordBook": "3687f8fb",
+"daggerBook": "ce01d85e",
+"spearBook": "a1c9b040",
+"hammerBook": "a206aafe",
+"bowBook": "c8310de",
+"staffBook": "92a7e33d",
+"swordMirror": "e9ed1286",
+"daggerMirror": "cec3b77b",
+"spearMirror": "e18dcb",
+"hammerMirror": "fa08b63",
+"bowMirror": "668ca63d",
+"staffMirror": "e8c53a9e",
+"swordInk": "9f00fe44",
+"daggerInk": "9710ddf1",
+"spearInk": "7b43b22c",
+"hammerInk": "43ff500f",
+"bowInk": "bf351bae",
+"staffInk": "8293a7fa",
+"swordKeeper": "d2ad57b4",
+"daggerKeeper": "c589f116",
+"spearKeeper": "de460650",
+"hammerKeeper": "e8ce61a3",
+"bowKeeper": "eaef7017",
+"staffKeeper": "2162b5c8",
+"bookIdol": "56c127f6",
+"mirrorIdol": "a0666426",
+"inkIdol": "7f0ff27f",
+"keeperIdol": "12563ea0",
 "brazier": "7dc590a9"
 }
 }
