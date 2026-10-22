@@ -4248,6 +4248,300 @@
 "obj": "palmTreeS",
 "d": "물가의 작은 야자나무. 베면 나무와 뿌리기둥 묘목을 줘요."
 },
+"iceTreeL": {
+"n": "큰 얼음 나무",
+"kind": "place",
+"obj": "iceTreeL",
+"d": "가지까지 얼어붙은 커다란 얼음 나무."
+},
+"iceTree": {
+"n": "얼음 나무",
+"kind": "place",
+"obj": "iceTree",
+"d": "가지까지 얼어붙은 얼음 나무."
+},
+"snowPineL": {
+"n": "큰 눈 전나무",
+"kind": "place",
+"obj": "snowPineL",
+"d": "눈이 소복이 쌓인 커다란 전나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowPine": {
+"n": "눈 전나무",
+"kind": "place",
+"obj": "snowPine",
+"d": "눈이 소복이 쌓인 전나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowPineS": {
+"n": "작은 눈 전나무",
+"kind": "place",
+"obj": "snowPineS",
+"d": "눈 쌓인 작은 전나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowRoundL": {
+"n": "큰 눈꽃 둥근 나무",
+"kind": "place",
+"obj": "snowRoundL",
+"d": "하얀 눈이 덮인 둥근 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowRound": {
+"n": "눈꽃 둥근 나무",
+"kind": "place",
+"obj": "snowRound",
+"d": "하얀 눈이 덮인 둥근 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowRoundS": {
+"n": "작은 눈꽃 덤불",
+"kind": "place",
+"obj": "snowRoundS",
+"d": "눈이 덮인 동그란 덤불. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowTwigL": {
+"n": "큰 눈 가지 나무",
+"kind": "place",
+"obj": "snowTwigL",
+"d": "앙상한 가지마다 눈이 얹힌 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowTwig": {
+"n": "눈 가지 나무",
+"kind": "place",
+"obj": "snowTwig",
+"d": "앙상한 가지마다 눈이 얹힌 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowTwigS": {
+"n": "작은 눈 가지 나무",
+"kind": "place",
+"obj": "snowTwigS",
+"d": "눈이 얹힌 작은 가지 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"frostTreeL": {
+"n": "큰 서리 나무",
+"kind": "place",
+"obj": "frostTreeL",
+"d": "청록 잎에 서리가 내린 커다란 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"frostTree": {
+"n": "서리 나무",
+"kind": "place",
+"obj": "frostTree",
+"d": "청록 잎에 서리가 내린 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"frostTreeS": {
+"n": "작은 서리 나무",
+"kind": "place",
+"obj": "frostTreeS",
+"d": "서리 내린 작은 청록 나무. 베면 나무와 뿌리기둥 묘목을 줘요."
+},
+"snowRockL": {
+"n": "큰 눈 바위",
+"kind": "place",
+"obj": "snowRockL",
+"d": "눈이 덮인 커다란 바위 무더기."
+},
+"snowRock": {
+"n": "눈 바위",
+"kind": "place",
+"obj": "snowRock",
+"d": "눈이 덮인 바위."
+},
+"snowRockS": {
+"n": "작은 눈 바위",
+"kind": "place",
+"obj": "snowRockS",
+"d": "눈이 얹힌 작은 바위."
+},
+"snowPebble": {
+"n": "눈 돌멩이",
+"kind": "place",
+"obj": "snowPebble",
+"d": "눈 속에 박힌 돌멩이."
+},
+"iceFlowerL": {
+"n": "큰 얼음꽃",
+"kind": "place",
+"obj": "iceFlowerL",
+"d": "얼음처럼 투명한 꽃이 은은하게 빛나요."
+},
+"iceFlower": {
+"n": "얼음꽃",
+"kind": "place",
+"obj": "iceFlower",
+"d": "얼음처럼 투명한 꽃이 은은하게 빛나요."
+},
+"iceFlowerS": {
+"n": "작은 얼음꽃",
+"kind": "place",
+"obj": "iceFlowerS",
+"d": "은은하게 빛나는 작은 얼음꽃."
+},
+"frostWeedL": {
+"n": "큰 서리풀",
+"kind": "place",
+"obj": "frostWeedL",
+"d": "붉은 줄기에 얼음 잎이 돋은 풀."
+},
+"frostWeed": {
+"n": "서리풀",
+"kind": "place",
+"obj": "frostWeed",
+"d": "붉은 줄기에 얼음 잎이 돋은 풀."
+},
+"frostWeedS": {
+"n": "작은 서리풀",
+"kind": "place",
+"obj": "frostWeedS",
+"d": "붉은 줄기의 작은 서리풀."
+},
+"ashSkullL": {
+"n": "큰 해골",
+"kind": "place",
+"obj": "ashSkullL",
+"d": "재 속에 반쯤 묻힌 커다란 해골."
+},
+"ashSkull": {
+"n": "해골",
+"kind": "place",
+"obj": "ashSkull",
+"d": "재 속에 묻힌 해골."
+},
+"ashSkullS": {
+"n": "작은 해골",
+"kind": "place",
+"obj": "ashSkullS",
+"d": "재 위에 굴러다니는 작은 해골."
+},
+"ashSpine": {
+"n": "등뼈",
+"kind": "place",
+"obj": "ashSpine",
+"d": "재 위에 휘어진 커다란 등뼈."
+},
+"ashRibs": {
+"n": "갈비뼈",
+"kind": "place",
+"obj": "ashRibs",
+"d": "재 위에 흩어진 갈비뼈."
+},
+"ashJaw": {
+"n": "짐승 해골",
+"kind": "place",
+"obj": "ashJaw",
+"d": "뿔 달린 짐승의 해골."
+},
+"snowman": {
+"n": "눈사람",
+"kind": "place",
+"obj": "snowman",
+"d": "목도리를 두르고 모자를 쓴 눈사람 (2×1)."
+},
+"snowmanHat": {
+"n": "모자 쓴 눈사람",
+"kind": "place",
+"obj": "snowmanHat",
+"d": "갈색 모자를 쓴 눈사람."
+},
+"snowmanKid": {
+"n": "꼬마 눈사람",
+"kind": "place",
+"obj": "snowmanKid",
+"d": "빨간 모자를 쓴 꼬마 눈사람."
+},
+"snowmanRound": {
+"n": "동글 눈사람",
+"kind": "place",
+"obj": "snowmanRound",
+"d": "나뭇가지 팔을 단 동글동글한 눈사람."
+},
+"snowmanS": {
+"n": "작은 눈사람",
+"kind": "place",
+"obj": "snowmanS",
+"d": "손바닥만 한 작은 눈사람."
+},
+"xmasTree": {
+"n": "크리스마스 트리",
+"kind": "place",
+"obj": "xmasTree",
+"d": "별과 방울로 꾸민 커다란 전나무 (2×1)."
+},
+"snowShroomL": {
+"n": "큰 눈 버섯",
+"kind": "place",
+"obj": "snowShroomL",
+"d": "눈이 소복이 쌓인 커다란 버섯 (2×1)."
+},
+"snowShroom": {
+"n": "눈 버섯",
+"kind": "place",
+"obj": "snowShroom",
+"d": "눈이 쌓인 버섯."
+},
+"snowShroomS": {
+"n": "작은 눈 버섯",
+"kind": "place",
+"obj": "snowShroomS",
+"d": "눈이 얹힌 작은 버섯."
+},
+"frostShroomL": {
+"n": "큰 붉은 눈 버섯",
+"kind": "place",
+"obj": "frostShroomL",
+"d": "붉은 갓에 눈이 얹힌 버섯 나무."
+},
+"frostShroom": {
+"n": "붉은 눈 버섯",
+"kind": "place",
+"obj": "frostShroom",
+"d": "붉은 갓에 눈이 얹힌 버섯."
+},
+"frostShroomS": {
+"n": "작은 붉은 눈 버섯",
+"kind": "place",
+"obj": "frostShroomS",
+"d": "붉은 갓의 작은 눈 버섯."
+},
+"snowArch": {
+"n": "눈 덮인 돌 아치",
+"kind": "place",
+"obj": "snowArch",
+"d": "눈이 쌓인 옛 돌 아치 (3×1)."
+},
+"snowRuinWall": {
+"n": "눈 덮인 돌담",
+"kind": "place",
+"obj": "snowRuinWall",
+"d": "계단이 붙은 무너진 돌담에 눈이 얹혔어요 (3×1)."
+},
+"snowRuinRing": {
+"n": "눈 덮인 돌 고리",
+"kind": "place",
+"obj": "snowRuinRing",
+"d": "둥글게 놓인 옛 돌들 (3×2)."
+},
+"snowRuinS": {
+"n": "눈 덮인 돌무더기",
+"kind": "place",
+"obj": "snowRuinS",
+"d": "눈이 쌓인 옛 돌무더기 (2×1)."
+},
+"snowTotem": {
+"n": "나무 토템",
+"kind": "place",
+"obj": "snowTotem",
+"d": "곰 얼굴을 새긴 나무 토템 (2×1)."
+},
+"snowTotemS": {
+"n": "작은 나무 토템",
+"kind": "place",
+"obj": "snowTotemS",
+"d": "눈이 얹힌 작은 나무 토템."
+},
+"ashDragon": {
+"n": "커다란 뼈 무더기",
+"kind": "place",
+"obj": "ashDragon",
+"d": "재 속에 길게 누운 커다란 짐승 뼈 (4×2)."
+},
 "shadowCry": {
 "n": "그림자 결정",
 "d": "그림자 지대의 결정 광맥과 깊은 몬스터에게서 얻어요. 7단계 장비의 재료가 될 거예요."
@@ -5669,7 +5963,7 @@
 "tier": 2,
 "nat": "mine",
 "light": [
-3,
+1.7,
 "#9fe8ff"
 ],
 "drops": [
@@ -7161,6 +7455,797 @@
 1,
 0.3
 ]
+]
+},
+"iceClusterB": {
+"n": "얼음 결정",
+"solid": 1,
+"hp": 5,
+"tier": 2,
+"nat": "mine",
+"light": [
+2,
+"#9fe8ff"
+],
+"drops": [
+[
+"frostShard",
+1,
+3,
+1
+]
+]
+},
+"iceClusterC": {
+"n": "얼음 가시 결정",
+"solid": 1,
+"hp": 6,
+"tier": 2,
+"nat": "mine",
+"light": [
+2.4,
+"#a8eeff"
+],
+"drops": [
+[
+"frostShard",
+2,
+3,
+1
+]
+]
+},
+"iceTreeL": {
+"n": "큰 얼음 나무",
+"item": "iceTreeL",
+"solid": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"iceBlock",
+2,
+4,
+1
+],
+[
+"frostShard",
+1,
+1,
+0.3
+]
+]
+},
+"iceTree": {
+"n": "얼음 나무",
+"item": "iceTree",
+"solid": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"iceBlock",
+2,
+4,
+1
+],
+[
+"frostShard",
+1,
+1,
+0.3
+]
+]
+},
+"snowPineL": {
+"n": "큰 눈 전나무",
+"item": "snowPineL",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowPine": {
+"n": "눈 전나무",
+"item": "snowPine",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowPineS": {
+"n": "작은 눈 전나무",
+"item": "snowPineS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+1,
+3,
+1
+]
+]
+},
+"snowRoundL": {
+"n": "큰 눈꽃 둥근 나무",
+"item": "snowRoundL",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowRound": {
+"n": "눈꽃 둥근 나무",
+"item": "snowRound",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowRoundS": {
+"n": "작은 눈꽃 덤불",
+"item": "snowRoundS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+1,
+3,
+1
+]
+]
+},
+"snowTwigL": {
+"n": "큰 눈 가지 나무",
+"item": "snowTwigL",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowTwig": {
+"n": "눈 가지 나무",
+"item": "snowTwig",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"snowTwigS": {
+"n": "작은 눈 가지 나무",
+"item": "snowTwigS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+1,
+3,
+1
+]
+]
+},
+"frostTreeL": {
+"n": "큰 서리 나무",
+"item": "frostTreeL",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"frostTree": {
+"n": "서리 나무",
+"item": "frostTree",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 5,
+"drops": [
+[
+"wood",
+3,
+5,
+1
+],
+[
+"resin",
+1,
+1,
+0.3
+]
+]
+},
+"frostTreeS": {
+"n": "작은 서리 나무",
+"item": "frostTreeS",
+"solid": 1,
+"ntree": 1,
+"nat": "chop",
+"hp": 3,
+"drops": [
+[
+"wood",
+1,
+3,
+1
+]
+]
+},
+"snowRockL": {
+"n": "큰 눈 바위",
+"item": "snowRockL",
+"solid": 1,
+"nat": "mine",
+"hp": 4,
+"tier": 1,
+"drops": [
+[
+"stone",
+2,
+4,
+1
+],
+[
+"gSnow",
+1,
+1,
+0.5
+]
+]
+},
+"snowRock": {
+"n": "눈 바위",
+"item": "snowRock",
+"solid": 1,
+"nat": "mine",
+"hp": 4,
+"tier": 1,
+"drops": [
+[
+"stone",
+2,
+4,
+1
+],
+[
+"gSnow",
+1,
+1,
+0.5
+]
+]
+},
+"snowRockS": {
+"n": "작은 눈 바위",
+"item": "snowRockS",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 1,
+"drops": [
+[
+"stone",
+1,
+2,
+1
+],
+[
+"gSnow",
+1,
+1,
+0.3
+]
+]
+},
+"snowPebble": {
+"n": "눈 돌멩이",
+"item": "snowPebble",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 1,
+"drops": [
+[
+"stone",
+1,
+2,
+1
+],
+[
+"gSnow",
+1,
+1,
+0.3
+]
+]
+},
+"iceFlowerL": {
+"n": "큰 얼음꽃",
+"item": "iceFlowerL",
+"solid": 1,
+"nat": "cut",
+"hp": 1,
+"light": [
+1.2,
+"#bfefff"
+],
+"drops": [
+[
+"fiber",
+1,
+1,
+1
+],
+[
+"frostShard",
+1,
+1,
+0.15
+]
+]
+},
+"iceFlower": {
+"n": "얼음꽃",
+"item": "iceFlower",
+"solid": 1,
+"nat": "cut",
+"hp": 1,
+"light": [
+1.2,
+"#bfefff"
+],
+"drops": [
+[
+"fiber",
+1,
+1,
+1
+],
+[
+"frostShard",
+1,
+1,
+0.15
+]
+]
+},
+"iceFlowerS": {
+"n": "작은 얼음꽃",
+"item": "iceFlowerS",
+"solid": 1,
+"nat": "cut",
+"hp": 1,
+"light": [
+1.2,
+"#bfefff"
+],
+"drops": [
+[
+"fiber",
+1,
+1,
+1
+],
+[
+"frostShard",
+1,
+1,
+0.15
+]
+]
+},
+"frostWeedL": {
+"n": "큰 서리풀",
+"item": "frostWeedL",
+"solid": 1,
+"nat": "cut",
+"hp": 1,
+"drops": [
+[
+"fiber",
+1,
+2,
+1
+]
+]
+},
+"frostWeed": {
+"n": "서리풀",
+"item": "frostWeed",
+"solid": 1,
+"nat": "cut",
+"hp": 1,
+"drops": [
+[
+"fiber",
+1,
+2,
+1
+]
+]
+},
+"frostWeedS": {
+"n": "작은 서리풀",
+"item": "frostWeedS",
+"solid": 1,
+"nat": "cut",
+"hp": 1,
+"drops": [
+[
+"fiber",
+1,
+2,
+1
+]
+]
+},
+"ashSkullL": {
+"n": "큰 해골",
+"item": "ashSkullL",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 0,
+"drops": [
+[
+"gAsh",
+1,
+2,
+1
+],
+[
+"stone",
+1,
+1,
+0.4
+]
+]
+},
+"ashSkull": {
+"n": "해골",
+"item": "ashSkull",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 0,
+"drops": [
+[
+"gAsh",
+1,
+2,
+1
+],
+[
+"stone",
+1,
+1,
+0.4
+]
+]
+},
+"ashSkullS": {
+"n": "작은 해골",
+"item": "ashSkullS",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 0,
+"drops": [
+[
+"gAsh",
+1,
+2,
+1
+],
+[
+"stone",
+1,
+1,
+0.4
+]
+]
+},
+"ashSpine": {
+"n": "등뼈",
+"item": "ashSpine",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 0,
+"drops": [
+[
+"gAsh",
+1,
+2,
+1
+],
+[
+"stone",
+1,
+1,
+0.4
+]
+]
+},
+"ashRibs": {
+"n": "갈비뼈",
+"item": "ashRibs",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 0,
+"drops": [
+[
+"gAsh",
+1,
+2,
+1
+],
+[
+"stone",
+1,
+1,
+0.4
+]
+]
+},
+"ashJaw": {
+"n": "짐승 해골",
+"item": "ashJaw",
+"solid": 1,
+"nat": "mine",
+"hp": 2,
+"tier": 0,
+"drops": [
+[
+"gAsh",
+1,
+2,
+1
+],
+[
+"stone",
+1,
+1,
+0.4
+]
+]
+},
+"snowman": {
+"n": "눈사람",
+"item": "snowman",
+"solid": 1,
+"sz": [
+2,
+1
+]
+},
+"snowmanHat": {
+"n": "모자 쓴 눈사람",
+"item": "snowmanHat",
+"solid": 1
+},
+"snowmanKid": {
+"n": "꼬마 눈사람",
+"item": "snowmanKid",
+"solid": 1
+},
+"snowmanRound": {
+"n": "동글 눈사람",
+"item": "snowmanRound",
+"solid": 1
+},
+"snowmanS": {
+"n": "작은 눈사람",
+"item": "snowmanS",
+"solid": 1
+},
+"xmasTree": {
+"n": "크리스마스 트리",
+"item": "xmasTree",
+"solid": 1,
+"sz": [
+2,
+1
+]
+},
+"snowShroomL": {
+"n": "큰 눈 버섯",
+"item": "snowShroomL",
+"solid": 1,
+"sz": [
+2,
+1
+]
+},
+"snowShroom": {
+"n": "눈 버섯",
+"item": "snowShroom",
+"solid": 1
+},
+"snowShroomS": {
+"n": "작은 눈 버섯",
+"item": "snowShroomS",
+"solid": 1
+},
+"frostShroomL": {
+"n": "큰 붉은 눈 버섯",
+"item": "frostShroomL",
+"solid": 1
+},
+"frostShroom": {
+"n": "붉은 눈 버섯",
+"item": "frostShroom",
+"solid": 1
+},
+"frostShroomS": {
+"n": "작은 붉은 눈 버섯",
+"item": "frostShroomS",
+"solid": 1
+},
+"snowArch": {
+"n": "눈 덮인 돌 아치",
+"item": "snowArch",
+"solid": 1,
+"sz": [
+3,
+1
+]
+},
+"snowRuinWall": {
+"n": "눈 덮인 돌담",
+"item": "snowRuinWall",
+"solid": 1,
+"sz": [
+3,
+1
+]
+},
+"snowRuinRing": {
+"n": "눈 덮인 돌 고리",
+"item": "snowRuinRing",
+"solid": 1,
+"sz": [
+3,
+2
+]
+},
+"snowRuinS": {
+"n": "눈 덮인 돌무더기",
+"item": "snowRuinS",
+"solid": 1,
+"sz": [
+2,
+1
+]
+},
+"snowTotem": {
+"n": "나무 토템",
+"item": "snowTotem",
+"solid": 1,
+"sz": [
+2,
+1
+]
+},
+"snowTotemS": {
+"n": "작은 나무 토템",
+"item": "snowTotemS",
+"solid": 1
+},
+"ashDragon": {
+"n": "커다란 뼈 무더기",
+"item": "ashDragon",
+"solid": 1,
+"sz": [
+4,
+2
 ]
 },
 "diary": {
@@ -14841,6 +15926,907 @@
 [
 "wood",
 2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "iceTreeL",
+"n": 1,
+"req": [
+[
+"iceBlock",
+8
+],
+[
+"gSnow",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 5
+},
+{
+"out": "iceTree",
+"n": 1,
+"req": [
+[
+"iceBlock",
+6
+],
+[
+"gSnow",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 5
+},
+{
+"out": "snowPineL",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+6
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowPine",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowPineS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gSnow",
+2
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRoundL",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRound",
+"n": 1,
+"req": [
+[
+"dirt",
+3
+],
+[
+"gSnow",
+3
+],
+[
+"wood",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRoundS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gSnow",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowTwigL",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowTwig",
+"n": 1,
+"req": [
+[
+"dirt",
+3
+],
+[
+"gSnow",
+3
+],
+[
+"wood",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowTwigS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gSnow",
+2
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostTreeL",
+"n": 1,
+"req": [
+[
+"dirt",
+4
+],
+[
+"gSnow",
+4
+],
+[
+"wood",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostTree",
+"n": 1,
+"req": [
+[
+"dirt",
+3
+],
+[
+"gSnow",
+3
+],
+[
+"wood",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostTreeS",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"gSnow",
+2
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRockL",
+"n": 1,
+"req": [
+[
+"stone",
+8
+],
+[
+"gSnow",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRock",
+"n": 1,
+"req": [
+[
+"stone",
+6
+],
+[
+"gSnow",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRockS",
+"n": 1,
+"req": [
+[
+"stone",
+3
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowPebble",
+"n": 1,
+"req": [
+[
+"stone",
+2
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "iceFlowerL",
+"n": 1,
+"req": [
+[
+"fiber",
+2
+],
+[
+"frostShard",
+1
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 5
+},
+{
+"out": "iceFlower",
+"n": 1,
+"req": [
+[
+"fiber",
+2
+],
+[
+"frostShard",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 5
+},
+{
+"out": "iceFlowerS",
+"n": 1,
+"req": [
+[
+"fiber",
+1
+],
+[
+"frostShard",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 5
+},
+{
+"out": "frostWeedL",
+"n": 1,
+"req": [
+[
+"fiber",
+3
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostWeed",
+"n": 1,
+"req": [
+[
+"fiber",
+2
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostWeedS",
+"n": 1,
+"req": [
+[
+"fiber",
+1
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "ashSkullL",
+"n": 1,
+"req": [
+[
+"stone",
+6
+],
+[
+"gAsh",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "ashSkull",
+"n": 1,
+"req": [
+[
+"stone",
+4
+],
+[
+"gAsh",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "ashSkullS",
+"n": 1,
+"req": [
+[
+"stone",
+2
+],
+[
+"gAsh",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "ashSpine",
+"n": 1,
+"req": [
+[
+"stone",
+4
+],
+[
+"gAsh",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "ashRibs",
+"n": 1,
+"req": [
+[
+"stone",
+3
+],
+[
+"gAsh",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "ashJaw",
+"n": 1,
+"req": [
+[
+"stone",
+3
+],
+[
+"gAsh",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowman",
+"n": 1,
+"req": [
+[
+"gSnow",
+8
+],
+[
+"wood",
+2
+],
+[
+"fiber",
+2
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "snowmanHat",
+"n": 1,
+"req": [
+[
+"gSnow",
+6
+],
+[
+"fiber",
+2
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "snowmanKid",
+"n": 1,
+"req": [
+[
+"gSnow",
+5
+],
+[
+"petalR",
+1
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "snowmanRound",
+"n": 1,
+"req": [
+[
+"gSnow",
+6
+],
+[
+"wood",
+2
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "snowmanS",
+"n": 1,
+"req": [
+[
+"gSnow",
+3
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "xmasTree",
+"n": 1,
+"req": [
+[
+"wood",
+8
+],
+[
+"gSnow",
+4
+],
+[
+"copperBar",
+1
+],
+[
+"petalR",
+2
+],
+[
+"petalY",
+2
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 1
+},
+{
+"out": "snowShroomL",
+"n": 1,
+"req": [
+[
+"mushroom",
+4
+],
+[
+"gSnow",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowShroom",
+"n": 1,
+"req": [
+[
+"mushroom",
+3
+],
+[
+"gSnow",
+2
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowShroomS",
+"n": 1,
+"req": [
+[
+"mushroom",
+2
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostShroomL",
+"n": 1,
+"req": [
+[
+"mushroom",
+4
+],
+[
+"gSnow",
+3
+],
+[
+"petalR",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostShroom",
+"n": 1,
+"req": [
+[
+"mushroom",
+3
+],
+[
+"gSnow",
+2
+],
+[
+"petalR",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "frostShroomS",
+"n": 1,
+"req": [
+[
+"mushroom",
+2
+],
+[
+"gSnow",
+1
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowArch",
+"n": 1,
+"req": [
+[
+"stone",
+16
+],
+[
+"gSnow",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRuinWall",
+"n": 1,
+"req": [
+[
+"stone",
+14
+],
+[
+"gSnow",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRuinRing",
+"n": 1,
+"req": [
+[
+"stone",
+16
+],
+[
+"gSnow",
+4
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowRuinS",
+"n": 1,
+"req": [
+[
+"stone",
+10
+],
+[
+"gSnow",
+3
+]
+],
+"at": "bench",
+"cat": "nature",
+"tier": 0
+},
+{
+"out": "snowTotem",
+"n": 1,
+"req": [
+[
+"wood",
+10
+],
+[
+"frostShard",
+1
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 5
+},
+{
+"out": "snowTotemS",
+"n": 1,
+"req": [
+[
+"wood",
+6
+],
+[
+"frostShard",
+1
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 5
+},
+{
+"out": "ashDragon",
+"n": 1,
+"req": [
+[
+"stone",
+12
+],
+[
+"gAsh",
+6
 ]
 ],
 "at": "bench",
@@ -25282,7 +27268,7 @@ null,
 "drillCuR": "[그림 16x22 2bc391ad]",
 "drillFeR": "[그림 16x22 f5b08af]",
 "fireBloom": "[그림 16x16 40908e22]",
-"iceCluster": "[그림 16x18 cf172783]",
+"iceCluster": "[그림 24x22 d1ff79d9]",
 "drillStone": "[그림 16x22 d067c9e3]",
 "drillStoneU": "[그림 16x22 d067c9e3]",
 "drillStoneD": "[그림 16x22 b09061b1]",
@@ -25363,6 +27349,13 @@ null,
 "bFenceStone": "[그림 16x42 7dd1a0e0]",
 "bDoorStone": "[그림 16x42 51929e7c]",
 "slideDoor": "[그림 16x42 486c5abc]",
+"ashDragon": "[그림 108x90 7c79e122]",
+"ashJaw": "[그림 42x26 40853ebf]",
+"ashRibs": "[그림 48x42 8cfa123]",
+"ashSkull": "[그림 50x38 92a5e599]",
+"ashSkullL": "[그림 66x50 15a038b4]",
+"ashSkullS": "[그림 32x24 80f9c0f]",
+"ashSpine": "[그림 50x66 f4eb7073]",
 "bannerGreen": "[그림 10x32 be0fce6]",
 "bannerPurple": "[그림 10x32 12fda532]",
 "bannerRed": "[그림 10x32 b13a48d1]",
@@ -25407,9 +27400,25 @@ null,
 "flowerBoxFv": "[그림 30x28 161d32b9]",
 "flowerPotPurple": "[그림 16x38 3712aff6]",
 "flowerPotRed": "[그림 16x34 24ba810e]",
+"frostShroom": "[그림 36x48 2c199909]",
+"frostShroomL": "[그림 48x62 40b2b9a5]",
+"frostShroomS": "[그림 18x38 77b7bebd]",
+"frostTree": "[그림 60x66 541d6bb8]",
+"frostTreeL": "[그림 72x76 aa64a594]",
+"frostTreeS": "[그림 40x40 594d714f]",
+"frostWeed": "[그림 44x52 35076b53]",
+"frostWeedL": "[그림 44x72 32b20a8b]",
+"frostWeedS": "[그림 28x50 402e7c14]",
 "glowVineTree": "[그림 48x58 7ae247e]",
 "greenTree": "[그림 40x42 35fe30dd]",
 "hangLamp": "[그림 24x42 d5176c7]",
+"iceClusterB": "[그림 30x26 be5bb5c]",
+"iceClusterC": "[그림 34x40 6523db11]",
+"iceFlower": "[그림 30x40 f912dc7c]",
+"iceFlowerL": "[그림 46x50 82bf70ae]",
+"iceFlowerS": "[그림 22x28 181afb7b]",
+"iceTree": "[그림 56x58 be6eb44f]",
+"iceTreeL": "[그림 80x96 1b20e1a8]",
 "jarBlue": "[그림 14x16 1b95c0e3]",
 "jarOrange": "[그림 14x16 5397d8c2]",
 "jarRed": "[그림 14x16 a40fb14]",
@@ -25445,8 +27454,35 @@ null,
 "rugRetroTall": "[그림 48x64 cb22d784]",
 "shelfEmpty": "[그림 30x36 5c4e9c0e]",
 "shelfGoods": "[그림 32x32 4739d39a]",
+"snowArch": "[그림 58x60 b19d0d94]",
 "snowBush": "[그림 32x30 dcabf9ca]",
+"snowPebble": "[그림 26x24 b760a157]",
+"snowPine": "[그림 64x72 ec1a68f]",
+"snowPineL": "[그림 76x92 a8e2f85a]",
+"snowPineS": "[그림 36x46 f6690688]",
+"snowRock": "[그림 56x50 a57f0df4]",
+"snowRockL": "[그림 62x62 5b49a2b0]",
+"snowRockS": "[그림 32x32 fa8cc8b8]",
+"snowRound": "[그림 50x62 16f0e237]",
+"snowRoundL": "[그림 64x80 862055f2]",
+"snowRoundS": "[그림 30x32 7347eeb7]",
+"snowRuinRing": "[그림 76x78 2fa34553]",
+"snowRuinS": "[그림 60x54 68619268]",
+"snowRuinWall": "[그림 70x70 3b7e2851]",
+"snowShroom": "[그림 44x64 4be8b99d]",
+"snowShroomL": "[그림 68x88 5ed88df0]",
+"snowShroomS": "[그림 36x48 f45a11bf]",
+"snowTotem": "[그림 54x74 90a0d38e]",
+"snowTotemS": "[그림 30x64 ea7ac070]",
 "snowTree": "[그림 50x54 6db5cbbb]",
+"snowTwig": "[그림 54x66 38c5f14e]",
+"snowTwigL": "[그림 66x78 2cb9846d]",
+"snowTwigS": "[그림 34x44 4b9e75e0]",
+"snowman": "[그림 44x54 4c40d331]",
+"snowmanHat": "[그림 28x50 78aefdd0]",
+"snowmanKid": "[그림 32x48 37c9f2ce]",
+"snowmanRound": "[그림 36x34 30d6bb71]",
+"snowmanS": "[그림 22x26 243c5ff2]",
 "sofaBlue": "[그림 32x24 80eea1b]",
 "sofaBlueV": "[그림 14x38 6e976284]",
 "sofaPurple": "[그림 32x24 b5551fc1]",
@@ -25469,6 +27505,7 @@ null,
 "waterRock": "[그림 30x24 32f27515]",
 "waterRockS": "[그림 18x16 2ef3d0b1]",
 "well": "[그림 32x60 56ed8145]",
+"xmasTree": "[그림 90x114 b4ca7b9d]",
 "logBenchV": "[그림 16x32 1a6dafd3]",
 "stoneBenchV": "[그림 16x32 c8400e2e]",
 "rugLongV": "[그림 32x48 f2670be5]",
@@ -26128,6 +28165,12 @@ null,
 "[그림 16x16 39da1763]",
 "[그림 16x16 35837e0d]",
 "[그림 16x16 cffe30be]"
+],
+"35": [
+"[그림 16x16 fe2bb34d]",
+"[그림 16x16 6e9c6595]",
+"[그림 16x16 a3c21aa9]",
+"[그림 16x16 2b11b1c1]"
 ]
 },
 "wtop": {
@@ -26538,6 +28581,12 @@ null
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]"
+],
+"35": [
+"[그림 16x16 643d41d2]",
+"[그림 16x16 44c5429a]",
+"[그림 16x16 152f3146]",
+"[그림 16x16 e79cbb5]"
 ]
 },
 "fringeW": {
@@ -26696,6 +28745,12 @@ null
 "[그림 16x16 8319602e]",
 "[그림 16x16 d6f09140]",
 "[그림 16x16 b8c82118]"
+],
+"35": [
+"[그림 16x16 fa3739fd]",
+"[그림 16x16 9ca63e4a]",
+"[그림 16x16 be2ed5d6]",
+"[그림 16x16 c03b42ee]"
 ]
 },
 "corner": {
@@ -26734,6 +28789,12 @@ null
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]"
+],
+"35": [
+"[그림 16x16 80d4b5e1]",
+"[그림 16x16 4fb8c276]",
+"[그림 16x16 5f1c0bb9]",
+"[그림 16x16 e3a78e44]"
 ]
 },
 "cornerW": {
@@ -26892,6 +28953,12 @@ null
 "[그림 16x16 e3af914]",
 "[그림 16x16 9206018e]",
 "[그림 16x16 ea528924]"
+],
+"35": [
+"[그림 16x16 2bb57bf4]",
+"[그림 16x16 14a9605b]",
+"[그림 16x16 c23f671f]",
+"[그림 16x16 b67eaf59]"
 ]
 },
 "fringeL": {
@@ -26930,6 +28997,12 @@ null
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]"
+],
+"35": [
+"[그림 16x16 bfd18da7]",
+"[그림 16x16 19f2ccab]",
+"[그림 16x16 bcfae42]",
+"[그림 16x16 fa233c3c]"
 ]
 },
 "fringeX": {
@@ -26968,6 +29041,12 @@ null
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]",
 "[그림 16x16 b6586c3f]"
+],
+"35": [
+"[그림 16x16 d65520bb]",
+"[그림 16x16 739e6645]",
+"[그림 16x16 19c5e93b]",
+"[그림 16x16 7c6e3779]"
 ]
 },
 "fringeWL": {
@@ -27126,6 +29205,12 @@ null
 "[그림 16x16 3a1728ba]",
 "[그림 16x16 ef10f31f]",
 "[그림 16x16 3f30941c]"
+],
+"35": [
+"[그림 16x16 89307188]",
+"[그림 16x16 74718c21]",
+"[그림 16x16 e4736d]",
+"[그림 16x16 7182126c]"
 ]
 },
 "fringeWX": {
@@ -27284,6 +29369,12 @@ null
 "[그림 16x16 7676e813]",
 "[그림 16x16 d5fb8afb]",
 "[그림 16x16 27351b19]"
+],
+"35": [
+"[그림 16x16 ebdfe392]",
+"[그림 16x16 33c31f7b]",
+"[그림 16x16 dee23ac3]",
+"[그림 16x16 b22842b8]"
 ]
 },
 "deco": {
@@ -27952,6 +30043,55 @@ null
 "snowBush": "e6fd86a6",
 "palmTree": "d08d81ff",
 "palmTreeS": "d13dfbc9",
+"iceTreeL": "ad4cb434",
+"iceTree": "2016b6",
+"snowPineL": "66b2366f",
+"snowPine": "fc048a48",
+"snowPineS": "74067e19",
+"snowRoundL": "97732d1e",
+"snowRound": "cba7e848",
+"snowRoundS": "89cbdff3",
+"snowTwigL": "3812bd7a",
+"snowTwig": "1d2de970",
+"snowTwigS": "2109853f",
+"frostTreeL": "81157a92",
+"frostTree": "6a8cfcba",
+"frostTreeS": "594d714f",
+"snowRockL": "5b49a2b0",
+"snowRock": "ba8bae2f",
+"snowRockS": "fa8cc8b8",
+"snowPebble": "35ed73c2",
+"iceFlowerL": "f254c85c",
+"iceFlower": "2753ca8",
+"iceFlowerS": "b76f8bb9",
+"frostWeedL": "a4842457",
+"frostWeed": "3b3f50d",
+"frostWeedS": "de726e16",
+"ashSkullL": "fbab487b",
+"ashSkull": "bea9092e",
+"ashSkullS": "3985ab49",
+"ashSpine": "55af13e6",
+"ashRibs": "eadb9142",
+"ashJaw": "e1f7f22a",
+"snowman": "33c623f",
+"snowmanHat": "5e1d8b19",
+"snowmanKid": "37afb20a",
+"snowmanRound": "754d1a90",
+"snowmanS": "d5becdf7",
+"xmasTree": "f7c84174",
+"snowShroomL": "8ba9b95a",
+"snowShroom": "3671d75e",
+"snowShroomS": "f9ebbd30",
+"frostShroomL": "96d00818",
+"frostShroom": "b6223a95",
+"frostShroomS": "c7849e64",
+"snowArch": "3f743f5d",
+"snowRuinWall": "3b7e2851",
+"snowRuinRing": "37684bb",
+"snowRuinS": "6baa39da",
+"snowTotem": "d153808e",
+"snowTotemS": "9d2ec0a4",
+"ashDragon": "9a5980fc",
 "shadowCry": "46fb27f5",
 "shadowRock": "e5c60d09",
 "swordShadow": "7cc934af",

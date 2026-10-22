@@ -94,7 +94,7 @@ function tileExtras(g, x, y, X, Y, f, i, tset, NEW) {
 // ---- v82: wavy edges between all natural floors (grass·dirt path·ice shards = "base" from the bake, mushroom soil 3, crystal sand 4, ash 18, lava) ----
 // each pixel near a tile edge goes to the floor whose share (blended between tile centres) plus a little noise is biggest — like the grass/water edge.
 // water stays where the bake put it (wavy shore for every floor), and the floor shows a darker rim at the shore.
-export const SOFT_FLOORS = new Set([3, 4, 18, LAVA]);
+export const SOFT_FLOORS = new Set([3, 4, 18, LAVA, 35]); // v132: 눈 무더기(35)
 // tile class: -1 none (water·wall·outside — no share), -2 fixed (built floors: a share of 0, never changed), 0 base, f soft floor
 function fclass(x, y) { if (!inB(x, y)) return -1; const j = idx(x, y); if (G.wall[j]) return -1; if (wallPiece(j)) return -2; const f = G.floor[j];
   if (f === WATER || (f === ICE_FROZEN && G.biome[j] === ICE_BIOME)) return -1; if (f === 1 || f === 2 || (f === 19 && G.biome[j] === ICE_BIOME)) return 0; return SOFT_FLOORS.has(f) ? f : -2; }

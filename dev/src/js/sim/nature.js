@@ -4,6 +4,7 @@ import { TREE_BLESS } from '../art/world.js';
 import { OBJ } from '../data/items.js';
 import { FLOWERS, SEED_OF, YOUNG_T } from '../data/rpg-nature.js';
 import { NAT_DAY_FLOORS, NAT_DAY_KINDS, NAT_DAY_MAX } from '../data/digging.js';
+import { roomFor, SIZE132, SNOW_DAY, SNOW_F } from '../data/winter132.js';
 import { rand, rng } from '../engine/random.js';
 import { alivePlayers, G, nearestPlayer, playerList } from '../save/state.js';
 import { rollDrops, spawnDrop } from './drops.js';
@@ -84,12 +85,12 @@ export const WFLOOR = new Set([11, 12, 13, 14, 15]);
 // 이끼풀·빛버섯·들꽃이 같은 자리에서 다시 자라는 것(G.regen, 위 growTick)은 그대로예요.
 export const dayNo = () => { const d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }; // 이 기기의 날짜
 export let regrowT = 0;
-export function pickNat(b) { const L = NAT_DAY_KINDS[b]; if (!L) return null; let s = 0; for (const [, w] of L) s += w; let r = rand() * s; for (const [k, w] of L) { r -= w; if (r < 0) return k; } return L[L.length - 1][0]; }
+export function pickNat(b, f) { const L = f === SNOW_F ? SNOW_DAY : NAT_DAY_KINDS[b]; /* v132: 눈 무더기에는 겨울 자연물·얼음 결정만 */ if (!L) return null; let s = 0; for (const [, w] of L) s += w; let r = rand() * s; for (const [k, w] of L) { r -= w; if (r < 0) return k; } return L[L.length - 1][0]; }
 export function spawnNatural() {
   for (let k = 0; k < 400; k++) {
     const x = 2 + Math.floor(rand() * (W - 4)), y = 2 + Math.floor(rand() * (H - 4)), i = idx(x, y), f = G.floor[i];
     if (G.wall[i] || G.objs.get(i) || !NAT_DAY_FLOORS.has(f) || noDigZone(x, y) || occupied(x, y)) continue;
-    const nt = pickNat(G.biome[i]); if (!nt || !OBJ[nt]) continue;
+    const nt = pickNat(G.biome[i], f); if (!nt || !OBJ[nt]) continue; if (SIZE132[nt] && !roomFor(SIZE132[nt], x, y, G.wall, G.objs, inB, idx)) continue; // v132: 큰 것은 넓은 곳에만
     G.objs.set(i, nt === 'bush' ? { t: nt, r: 0 } : { t: nt }); emit('tile', x, y); markLight(); return { x, y, t: nt };
   }
   return null;

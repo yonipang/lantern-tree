@@ -16,8 +16,8 @@ import { HOT, ITEMS, OBJ, OLD_PIECES, UNIQ_OF } from '../data/items.js';
 import { spawnDrop } from '../sim/drops.js';
 import { BX, BY, CX, CY, H, LAVA, PIT, SA, SB, SI, SL, W, idx, inB } from '../world/map.js';
 import { GROW122 } from '../data/decor122.js';
-import { addPond, addWater, genWorld } from '../world/gen.js';
-import { delObj, fpFree, fpOf, fpTiles, setParts } from '../world/tiles.js';
+import { addPond, addSnow132, addWater, genWorld, placeSnow132 } from '../world/gen.js';
+import { delObj, fpFree, fpOf, fpTiles, noDigZone, setParts } from '../world/tiles.js';
 import { OLD_AUTO } from '../data/automation.js';
 import { josa } from '../engine/util.js';
 import { emit } from '../sim/events.js';
@@ -241,3 +241,14 @@ export function migrateGbench124() { if (G.stats.gb124) return; G.stats.gb124 = 
 export function migrateNaru110() { if (G.stats.naru110) return; G.stats.naru110 = 1; G.stats.naruMet = 1; G.qclaim = G.qclaim || {}; G.qclaim.naru = 1; }
 // v130: 이미 큰 어둠을 물리친 옛 세이브는 첫 처치 보상(새벽돌 6 + 큰 어둠의 무기 하나)을 나루에게서 한 번 받아요 (sim/npc.js talkTo → sim/bosses.js darkOweGive). 처음 한 번만 확인(stats.dark130)
 export function migrateDark130() { const S = G.stats; if (S.dark130) return; S.dark130 = 1; if ((S.beaten || {}).dark && !(S.uniq || {}).dark) S.darkOwe = 1; }
+
+// v132: 옛 세계에도 불러올 때 한 번 — 얼음 동굴 얼음 바닥에 눈 무더기(35)를 깔고 그 위에 겨울 자연물·얼음 결정 A~C, 용암 동굴 재 바닥에 해골·뼈
+// (data/winter132.js · world/gen.js). 자연 바닥에만: 깐 바닥(G.under)·쌓은 벽 곁·지은 물건(자연물이 아닌 것) 둘레 3칸·등불나무와 보스방 곁은 빼요.
+// 이미 있는 얼음 결정·나무는 그대로(얼음 결정은 새 그림으로 보여요).
+export function snow132() { if (G.stats.snow132) return; const built = new Uint8Array(W * H);
+  for (const [i, o] of G.objs) { const d = OBJ[o.t]; if (!o || o.t === '_part' || !d || d.nat) continue; const x = i % W, y = (i / W) | 0;
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (inB(x + dx, y + dy)) built[idx(x + dx, y + dy)] = 1; }
+  for (const i of G.bwall || []) built[i] = 1;
+  const ok = i => !built[i] && !G.under.has(i), safe = (x, y) => !!noDigZone(x, y), w = { wall: G.wall, floor: G.floor, biome: G.biome, objs: G.objs };
+  const snow = addSnow132(w, G.seed, safe, ok), objs = placeSnow132(w, G.seed, safe, ok);
+  G.stats.snow132 = { snow, objs }; }

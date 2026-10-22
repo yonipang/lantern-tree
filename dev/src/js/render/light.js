@@ -17,6 +17,10 @@ import { bval } from '../sim/cooking.js';
 import { CX, CY, idx, inB, LAVA } from '../world/map.js';
 import { fpOf } from '../world/tiles.js';
 export let LX0 = 0, LY0 = 0, LW = 0, LH = 0, LR = null, LG = null, LB = null, lightCv = null, lightCtx = null, lightImg = null, LIGHTS = [];
+// v132: 얼음 동굴(지역 4)에 서 있으면 화면에 보이는 빛만 살짝 차갑고 푸르게 (사용자 선택 B, 2026-10-23).
+// 몬스터가 생기는 밝기(lightAt)·빛 피하기는 그대로 — LR·LG·LB는 바꾸지 않고 그릴 때만 물들여요(예전 빛 lightCv · 새 빛 render/glight.js).
+export const ICE_LIGHT = { amb: .06, ambMul: [.68, .92, 1.6], mul: [.82, 1.04, 1.45], player: [.82, .94, 1.12], pr: 1.15 };
+export const iceView = () => !!G && G.biome[idx(Math.floor(G.p.x), Math.floor(G.p.y))] === 4;
 export function initLight() { lightCv = document.createElement('canvas'); lightCtx = lightCv.getContext('2d'); }
 export function lightAt(x, y) { const i = (y - LY0) * LW + (x - LX0); if (x < LX0 || y < LY0 || x >= LX0 + LW || y >= LY0 + LH) return 0; return (LR[i] + LG[i] + LB[i]) / 3; }
 export function computeLight() {
@@ -50,9 +54,9 @@ export function computeLight() {
       const i = (ty - y0) * w + (tx - x0); LR[i] += f * L.c[0]; LG[i] += f * L.c[1]; LB[i] += f * L.c[2];
     }
   }
-  const D = lightImg.data;
+  const D = lightImg.data, IL = ICE_LIGHT, ice = iceView(), mr = ice ? IL.mul[0] : 1, mg = ice ? IL.mul[1] : 1, mb = ice ? IL.mul[2] : 1, ar = ice ? IL.amb * IL.ambMul[0] : 0, ag = ice ? IL.amb * IL.ambMul[1] : 0, ab = ice ? IL.amb * IL.ambMul[2] : 0;
   for (let i = 0; i < w * h; i++) {
-    const r = Math.min(1, LR[i]), g = Math.min(1, LG[i]), b = Math.min(1, LB[i]);
+    const r = Math.min(1, LR[i] * mr + ar), g = Math.min(1, LG[i] * mg + ag), b = Math.min(1, LB[i] * mb + ab);
     D[i * 4] = r * 255; D[i * 4 + 1] = g * 255; D[i * 4 + 2] = b * 255; D[i * 4 + 3] = 255;
     if (r + g + b > 0.95) { const tx = x0 + i % w, ty = y0 + (i / w | 0); if (inB(tx, ty)) { const j = idx(tx, ty); if (!G.explored[j] && !archHidden(tx, ty) && !deepHidden(tx, ty)) { G.explored[j] = 1; mapPixel(tx, ty); } /* v106: 깨기 전 기록관 안은 지도에 안 남아요 */ } }
   }
