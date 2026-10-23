@@ -16,7 +16,7 @@ import { cancelJob } from './crafting.js';
 import { rollDrops, spawnDrop } from './drops.js';
 import { emit } from './events.js';
 import { rollStar } from './farming.js';
-import { wear } from './inventory.js';
+import { toolPow, wear } from './inventory.js';
 import { afterCut, isYoung, youngDrops } from './nature.js';
 import { gainXp, mineMul } from './player.js';
 import { SHADOW_WALL_XP } from '../data/shadow.js';
@@ -55,7 +55,7 @@ export function natFx(d, o) { const n = d.n || '';
   if (/큰버섯/.test(n) || o.t === 'bigShroom') return { c1: '#e07b5f', c2: '#f3d1b8' }; if (/마른|통나무|그루터기/.test(n)) return { c1: '#a07a52', c2: '#c9a06e' }; if (d.nat === 'pick') return { c1: '#9be3ff', c2: '#e6f7ff' };
   return { c1: '#7fbf6a', c2: '#a8d978' }; }
 // v139 다음 치기까지 간격 (sim/actions.js 'chop')
-export function chopCd(o) { const d = o && OBJ[o.t]; if (!d) return CHOP_CD[0]; const tl = natTool(d), tier = tl ? ITEMS[tl.id].tier || 0 : 0; return Math.max(.14, CHOP_CD[Math.min(CHOP_CD.length - 1, tier)] / Math.sqrt(Math.max(1, mineMul()))); }
+export function chopCd(o) { const d = o && OBJ[o.t]; if (!d) return CHOP_CD.base; const tl = natTool(d), pw = d.nat === 'pick' || !tl ? 1 : Math.max(1, toolPow(tl)); return Math.max(CHOP_CD.min, CHOP_CD.base / Math.pow(pw * Math.max(1, mineMul()), CHOP_CD.exp)); }
 export function harvest(t, o) {
   const d = OBJ[o.t];
   const sk = hasItem('sickle'); // a copper sickle in the bag gives one more of the main crop
