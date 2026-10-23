@@ -76,11 +76,11 @@ export function checkUnlocks() {
   if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => emit('toast', '이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
 }
 export function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 재료(흙·이끼 흙·얼음 덩이 …)를 얻어요. 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
-export function digGround(t) {
+export function digGround(t, quiet) { // v137 quiet: 여러 칸을 한 번에 팔 때 둘째 칸부터 소리 없이
   if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
-  if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
+  if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); if (!quiet) emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
   else { const id = DIG_YIELD[f]; G.floor[i] = PIT; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 || f === 35 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+    if (!quiet) emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 || f === 35 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
   flowNear(t.x, t.y); // 새 구덩이(또는 걷어서 드러난 구덩이) 옆에 물·용암이 있으면 흘러 들어와요
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }

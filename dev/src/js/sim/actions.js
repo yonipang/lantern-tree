@@ -38,6 +38,7 @@ import { openTreasure } from '../world/gen.js';
 import { idx, inB, LAVA, PIT, W } from '../world/map.js';
 import { anchorAt, canPlace, delObj, digGround, digWhy, fpOf, isPlacedFloor, occupied, placeable } from '../world/tiles.js';
 import { markLight } from './loop.js';
+import { cycleDsz, digArea, placeArea, sizeable, sizeAlt, withSz } from './digsize.js';
 import { nearWarpPt, portalWhy, warpDecide, warpTurnOn } from './warp.js';
 onFrame('act', dt => { // 상호작용 버튼 (매 프레임 순서표 sim/systems.js)
   const p = G.p, ctl = ctlOf(p);
@@ -105,6 +106,7 @@ export function decide() {
   const auto = autoOptions(t, i, o), quiet = (auto[0] && auto[0].k === 'info') || (md === 'build' && !h);
   for (const a of auto) if (a.k !== 'info') push(quiet && (a.k === 'pickup' || a.k === 'dig') ? { ...a, onlyAlt: 1 } : a);
   if (h && NOTGT.includes(h.k)) push(h); // food, clothes …: after a real action in front, or first when there is nothing to do
+  if (sizeable(md, it)) { const k = alt.findIndex(a => a.gr); alt.splice(k >= 0 ? k + 1 : 0, 0, sizeAlt(s)); } // v137: 크기 고르기 — 작은 버튼 맨 앞 (흙·얼음 덩이는 「바닥 바꾸기」 다음)
   { const nb = bagNear(); if (nb) push({ k: 'lost', lbl: '되찾기', icon: 'hand', t: nb.t, o: nb.o, onlyAlt: 1 }); } // v68 (BF-01): my bundle under my feet or beside me → the small button
   // a held watering can, rod, fertiliser … explains itself first ("가득 참", "물 없음"); a pickaxe or axe with nothing to do lets the thing in front speak
   const info = (hInfo && !['pick', 'axe', 'sickle', 'shovel'].includes(md) && hInfo) || auto.find(a => a.k === 'info') || hInfo;
@@ -121,10 +123,11 @@ export function heldDecide(md, s, it, t, i, o) {
     case 'build': {
       if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) return no('놓을 수 없음', why); } // v89 포탈
       { const gi = groundOf(it); // v93: 흙·얼음 덩이 — 구덩이는 메우기, 그 밖은 벽 쌓기 + 작은 버튼에 바닥 쌓기·바꾸기
-        if (gi && i >= 0) { const f = G.floor[i], gOk = canPlace(t.x, t.y, gi), gA = gOk ? { k: 'place', lbl: groundFill(f) ? '바닥 쌓기' : '바닥 바꾸기', icon: s.id, t, gr: 1 } : null;
-          if (!G.wall[i] && f === PIT) return gOk ? { ...gA, lbl: '메우기' } : no('메울 수 없음', '물건이 있는 구덩이는 메울 수 없어요');
+        if (gi && i >= 0) { const f = G.floor[i], gOk = canPlace(t.x, t.y, gi), gA = gOk ? { k: 'place', lbl: withSz(groundFill(f) ? '바닥 쌓기' : '바닥 바꾸기'), icon: s.id, t, gr: 1, area: 1 } : null; // v137 area: 고른 크기만큼
+          if (!G.wall[i] && f === PIT) return gOk ? { ...gA, lbl: withSz('메우기') } : no('메울 수 없음', '물건이 있는 구덩이는 메울 수 없어요');
           if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t, alt2: gA && { ...gA, onlyAlt: 1 } };
           if (gA) return gA; } }
+      if (it.kind === 'ground' && it.ground !== WATER && placeable(t.x, t.y, it)) return { k: 'place', lbl: withSz(placeLbl(it)), icon: s.id, t, area: 1 }; // v137: 이끼 흙·버섯흙 … 고른 크기만큼
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '빛뿌리 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
@@ -135,7 +138,7 @@ export function heldDecide(md, s, it, t, i, o) {
       if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
       if (i < 0 || o) return no('팔 수 없음', '삽으로는 바닥만 파요 · 빈 바닥을 바라보고 눌러요'); // v87: 덤불·묘목 퍼내기는 없어요
       { const why = digWhy(t.x, t.y); if (why) return no(G.floor[i] === PIT ? '구덩이' : '팔 수 없음', why); }
-      return { k: 'dig', lbl: isPlacedFloor(G.floor[i]) ? '걷기' : '파기', icon: 'shovel', t }; }
+      return { k: 'dig', lbl: withSz(isPlacedFloor(G.floor[i]) ? '걷기' : '파기'), icon: 'shovel', t, area: 1 }; } // v137 area: 고른 크기만큼
     case 'bucket': // v87: 빈 양동이 — 물 칸에서 물 한 동이 (닳지 않아요)
       if (water) return { k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t };
       if (i >= 0 && !G.wall[i] && G.floor[i] === LAVA) return no('뜰 수 없음', '용암은 뜰 수 없어요');
@@ -244,8 +247,9 @@ export function perform(a) {
     case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
-    case 'place': placeItem(a.t, a.gr); G.actCd = 0.14; break;
-    case 'dig': digGround(a.t); G.actCd = 0.22; break;
+    case 'place': if (!(a.area && placeArea(a))) placeItem(a.t, a.gr); G.actCd = 0.14; break; // v137: 고른 크기만큼 메우기·바꾸기
+    case 'dig': if (a.area) digArea(a); else digGround(a.t); G.actCd = 0.22; break;
+    case 'dsize': cycleDsz(); G.actCd = 0.1; break; // v137: 작은 버튼 「1×1」
     case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
     case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
@@ -326,10 +330,11 @@ export function useObj(a) {
 }
 // ---- the small button: the other things that fit ----
 export let altI = 0, altKey = '';
-export function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
+const altSig = x => x.k + (x.k === 'dsize' ? '' : x.lbl.replace(/ \d×\d$/, '')); // v137: 크기를 바꿔도 작은 버튼이 첫 칸으로 돌아가지 않게
+export function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(altSig).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
 // 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
 defineCmd('tap', c => { const t = G.p.cine ? 0 : c.t == null ? .3 : c.t; /* v127: 연출 장면 동안은 누르기 없음 */ if (c.b === 'atk') G.atkQ = t; else G.actQ = t; });
 defineCmd('alt', () => { if (!G.p.cine) doAlt(); });
-export function doAlt() { const a = curAlt(); if (!a || G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
+export function doAlt() { const a = curAlt(); if (!a) return; if (a.k === 'dsize') { cycleDsz(); return; } /* v137: 크기는 쉬는 시간 없이 */ if (G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
 export function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }

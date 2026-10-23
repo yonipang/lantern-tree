@@ -108,6 +108,7 @@ export function setupInput() {
     if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
+    if (e.code === 'KeyX') { command({ k: 'dsize' }); return; } // v137: 파기·바꾸기 크기 (삽·바닥 재료를 들었을 때)
     if (e.code === 'KeyQ') { cycleAlt(); return; } // v65: Q = next option on the small button (eat with E)
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     if (['Space', 'KeyE'].includes(e.code)) command({ k: 'tap', b: 'act' }); if (e.code === 'KeyJ') command({ k: 'tap', b: 'atk' });
