@@ -53,6 +53,9 @@ export function hitstopTick(dt) { if (hitstop <= 0) return false; hitstop -= dt;
 onEvent('kill', (x, y, col, k, flip, z) => { addGhost(k, x, y, flip, z); puff(x, y, col, 10, 3.4, .4); puff(x, y, '#fff6e0', 5, 2.6, .5);
   for (let n = 0; n < 12; n++) { const a = n / 12 * 6.283; G.parts.push({ x: x + Math.cos(a) * .25, y: y + Math.sin(a) * .18, z: .35, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 2.6, vz: .4, life: .28, max: .28, col: n % 2 ? col : '#fff1d6', sz: 1 }); }
   onlyMe(() => SFX.kill())(); });
+// v139 잎: 나무를 칠 때 천천히 흔들리며 떨어지는 잎
+onEvent('leaves', (x, y, c1, c2, n) => { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = .9 + fxRand() * 1.3;
+  G.parts.push({ x: x + (fxRand() - .5) * .8, y: y + (fxRand() - .5) * .3, z: .9 + fxRand() * .7, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .4, vz: .6 + fxRand(), life: .8 + fxRand() * .5, max: 1.2, col: k % 3 ? c1 : c2, sz: 1 + (fxRand() * 2 | 0), leaf: 1, ph: fxRand() * 6.283 }); } });
 // 캐기 조각: 칸에서 튀어 떨어져 통통 튐 (big = 부서질 때 굵은 덩어리)
 onEvent('chips', (x, y, c1, c2, n, big) => { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = (big ? 2.2 : 1.6) * (.4 + fxRand() * .9);
   G.parts.push({ x: x + (fxRand() - .5) * (big ? .5 : .2), y, z: .35 + fxRand() * .3, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .5, vz: (big ? 3 : 2.2) + fxRand() * 2, life: (big ? .7 : .45) + fxRand() * .3, max: big ? 1 : .7, col: k % 3 ? c1 : c2, sz: big ? 2 + (fxRand() * 2 | 0) : 1 + (fxRand() * 2 | 0), bnc: 1 }); } });

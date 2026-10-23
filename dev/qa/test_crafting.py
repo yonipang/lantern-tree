@@ -364,7 +364,7 @@ def test_ore_net_v115():
 def test_equipment_weapons():
     import asyncio, sys
     # 장비 메뉴·무기 (v42): 장비 칸, 주먹·도끼, 광물 화살 + 돌 채굴기 (v48: 무기 칸 없음 · 장비는 가방 안)
-    H2=HOOK.replace("computeLight}","computeLight,RECIPES,SPR,circuitTick,swingAttack,updatePShots,mkEnemy,curWeapon,wearItem,unwear,wearing,hitObj,hotClick,freshEquip,WTYPE,rarOf}")
+    H2=HOOK.replace("computeLight}","computeLight,RECIPES,SPR,circuitTick,swingAttack,updatePShots,mkEnemy,curWeapon,wearItem,unwear,wearing,hitObj,chopCd,hotClick,freshEquip,WTYPE,rarOf}")
     CLEAR="""window.__clear=()=>{const T=__T,G=T.G;for(let y=T.CY+4;y<T.CY+16;y++)for(let x=T.CX+4;x<T.CX+16;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=1;G.objs.delete(i);G.wire.delete(i)}
   G.enemies.length=0;G.pshots.length=0;G.p.x=T.CX+8.5;G.p.y=T.CY+8.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.mp=999;G.fish=null;G.inv.fill(null);G.sel=0;return [T.CX+8,T.CY+8]};"""
     async def main():
@@ -408,9 +408,9 @@ def test_equipment_weapons():
             # ---- axes ----
             r=await ev(pg,"()=>{const T=__T;return ['axeStone','axeCopper','axeIron'].map(id=>{const it=T.ITEMS[id],rc=T.RECIPES.find(r=>r.out===id);return [it.kind,it.wt,rc&&rc.at,rc&&rc.cat]})}")
             rec('도끼','돌·구리·철 도끼 (v65: 도구 탭, 장비제작대)', r==[['axe',None,'smelter','tool']]*3, str(r))
-            r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();const t={x:x+1,y};const chop=w=>{G.inv[0]=w?{id:w,c:1}:null;G.sel=0;const o={t:'root'};G.objs.set(T.idx(t.x,t.y),o);T.hitObj(t,o);const d=o.dmg;G.objs.delete(T.idx(t.x,t.y));return d};
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const [x,y]=__clear();const t={x:x+1,y};const chop=w=>{G.inv[0]=w?{id:w,c:1}:null;G.sel=0;const o={t:'root'};G.objs.set(T.idx(t.x,t.y),o);T.hitObj(t,o);const d=[o.dmg,T.chopCd(o)];G.objs.delete(T.idx(t.x,t.y));return d}; /* v139: 몇 번 치는지는 같고, 도끼는 더 빨리 쳐요 */
           G.inv[9]={id:'pickWood',c:1};const a=chop('swordWood'),b2=chop('axeStone');G.inv[0]={id:'axeCopper',c:1};const e=T.mkEnemy('slimeG',G.p.x+1.1,G.p.y);e.hp=999;G.enemies.push(e);T.swingAttack();return [a,b2,999-e.hp,G.swing.icon]}""")
-            rec('도끼','도끼를 들면 나무를 1.6배 빨리 베요', abs(r[1]-r[0]*1.6)<1e-6 and r[0]>0, str(r))
+            rec('도끼','v139: 도끼든 곡괭이든 한 번에 1번씩 · 도끼를 들면 더 빨리 쳐요(간격이 짧음)', r[0][0]==1 and r[1][0]==1 and r[1][1]<r[0][1]-.02, str(r))
             rec('도끼','도끼는 도구라 공격에 쓰지 않음 (v65, 주먹으로 침)', r[2]<=7 and r[3]!='axeCopper', str(r))
             # ---- arrows ----
             r=await ev(pg,"()=>{const T=__T;return ['arrowStone','arrowCopper','arrowIron','arrowCrystal','arrowGold'].map(id=>{const rc=T.RECIPES.find(r=>r.out===id);return [T.ITEMS[id].kind,rc&&rc.n,rc&&rc.at]})}")
