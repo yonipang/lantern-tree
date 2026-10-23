@@ -3754,6 +3754,12 @@ for (const id in AXE_TOOL) { const it = ITEMS[id]; if (!it) continue; it.kind = 
 for (const r of RECIPES) if (AXE_TOOL[r.out]) r.cat = 'tool';
 // ---- hit a placed piece three times and it falls on the floor ----
 const RECOVER_HITS = 3, RECOVER_GAP = 2; // hits · seconds (game time) the hits may be apart
+
+// v139 자연물 치는 횟수 (나무·바위·결정 = 3번, 덤불·선인장·작은 바위·뼈 = 2번, 풀·꽃·빛버섯 = 1번 — 도구와 상관없이, 어린 나무는 1번 적게)
+const natHits = hp => hp >= 3 ? 3 : hp >= 2 ? 2 : 1;
+// v139 자연물을 칠 때 다음 치기까지 간격(초) = 0.28 ÷ (도구 힘 × 캐는 배율)^0.25, 0.14초 아래로는 안 가요 (예전 모두 0.28)
+// 도구 힘(나무 곡괭이 1 · 돌 도끼 1.6 · 구리 곡괭이 2 · 구리 도끼 3.2 · 철 도끼 4.8 · 별빛 곡괭이 7) → 0.28 · 0.25 · 0.24 · 0.21 · 0.19 · 0.17초
+const CHOP_CD = { base: .28, exp: .25, min: .14 };
 // ================= v87 바닥 파기 데이터: 빈 양동이, 물·용암 흐름 빠르기, 하루 하나 자연물 =================
 // 기획: dev/design/바닥파기.md (2026-10-17 확정). 동작은 sim/digging.js(구덩이·흐름·양동이)와 sim/nature.js(자연물)에 있어요.
 // 이 파일은 data/controls.js 다음에 와요 (「지형 재료 2배」·작업대 단계 나누기 data/automation-tiers.js 뒤). 양동이는 구리괴를 써서, 다른 구리 레시피처럼 구리 작업대(1단계)예요.
@@ -5440,11 +5446,21 @@ function hitObj(t, o) {
   faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y);
   G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' || !tl ? null : tl.id };
   if ((d.tier || 0) > tier) { emit('sfx', 'clink'); emit('toast', `${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
-  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, tl ? toolPow(tl) : 0.5) * mineMul()); if (d.nat !== 'pick' && tl) wear(tl);
-  emit('sfx', 'mine'); emit('puff', t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
-  const yg = isYoung(o);
-  if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o); if (d.nat === 'pick') emit('chips', t.x + .5, t.y + .6, o.t === 'cluster' ? C.cry : '#9a8f86', '#e8d8c0', 10, 1); emit('sfx', 'brk'); /* v138 */ markLight(); gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
+  // v139: 치는 횟수로 (예전: 도구 힘 × 캐는 배율을 체력에 쌓음). 도구 내구도는 부술 때 한 번만 닳아요 (예전: 칠 때마다)
+  o.dmg = (o.dmg || 0) + 1; const yg = isYoung(o), need = d.nat === 'pick' ? 1 : Math.max(1, natHits(d.hp) - (yg ? 1 : 0)), last = o.dmg >= need;
+  const fx = natFx(d, o); emit('sfx', 'mine'); if (fx.chip) emit('chips', t.x + .5, t.y + .7, fx.c1, fx.c2, last ? 4 : 5, 0); else emit('leaves', t.x + .5, t.y + .35, fx.c1, fx.c2, last ? 5 : 4); emit('shake', last ? .1 : .05);
+  if (last) { delObj(i); if (d.nat !== 'pick' && tl) wear(tl); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o);
+    if (need > 1) { if (fx.chip) emit('chips', t.x + .5, t.y + .6, fx.c1, fx.c2, 12, 1); else { emit('leaves', t.x + .5, t.y + .2, fx.c1, fx.c2, 12); emit('chips', t.x + .5, t.y + .7, '#9b6b43', '#c79a64', 6, 1); } emit('hitstop', HITSTOP.wall); } // v138·v139 부서질 때 더 크게
+    emit('sfx', 'brk'); markLight(); gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.32; // v139 기울며 흔들림 (예전 0.15)
 }
+// v139 칠 때 나오는 것: 캐는 것(바위·결정·뼈)은 돌 조각, 베는 것(나무·덤불·풀)은 잎 — 색은 이름으로 (보이기만)
+function natFx(d, o) { const n = d.n || '';
+  if (d.nat === 'mine') return o.t === 'cluster' ? { chip: 1, c1: C.cry, c2: '#e9dcff' } : /얼음|결정/.test(n) ? { chip: 1, c1: '#bfe3f5', c2: '#f2fbff' } : /해골|뼈/.test(n) ? { chip: 1, c1: '#e6dcc8', c2: '#9a8f86' } : { chip: 1, c1: '#9a8f86', c2: '#e8d8c0' };
+  if (/벚꽃|분홍/.test(n)) return { c1: '#f4b6c8', c2: '#ffe2ea' }; if (/단풍/.test(n)) return { c1: '#e0874a', c2: '#f3c26b' }; if (/눈|서리|얼음/.test(n)) return { c1: '#e6f2fb', c2: '#a9d2a0' };
+  if (/큰버섯/.test(n) || o.t === 'bigShroom') return { c1: '#e07b5f', c2: '#f3d1b8' }; if (/마른|통나무|그루터기/.test(n)) return { c1: '#a07a52', c2: '#c9a06e' }; if (d.nat === 'pick') return { c1: '#9be3ff', c2: '#e6f7ff' };
+  return { c1: '#7fbf6a', c2: '#a8d978' }; }
+// v139 다음 치기까지 간격 (sim/actions.js 'chop')
+function chopCd(o) { const d = o && OBJ[o.t]; if (!d) return CHOP_CD.base; const tl = natTool(d), pw = d.nat === 'pick' || !tl ? 1 : Math.max(1, toolPow(tl)); return Math.max(CHOP_CD.min, CHOP_CD.base / Math.pow(pw * Math.max(1, mineMul()), CHOP_CD.exp)); }
 function harvest(t, o) {
   const d = OBJ[o.t];
   const sk = hasItem('sickle'); // a copper sickle in the bag gives one more of the main crop
@@ -5895,7 +5911,7 @@ function perform(a) {
     case 'rot': rotatePlace(); G.actCd = 0.15; break;
     case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
-    case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
+    case 'chop': hitObj(a.t, a.o); G.actCd = chopCd(a.o); break; // v139 좋은 도구일수록 빨리 (예전 0.28)
     case 'place': if (!(a.area && placeArea(a))) placeItem(a.t, a.gr); G.actCd = 0.14; break; // v137: 고른 크기만큼 메우기·바꾸기
     case 'dig': if (a.area) digArea(a); else digGround(a.t); G.actCd = 0.22; break;
     case 'dsize': cycleDsz(); G.actCd = 0.1; break; // v137: 작은 버튼 「1×1」
@@ -10245,7 +10261,10 @@ function drawEntity(it, t) {
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
     let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
     const glowL = d.light && !o.off; if (glowL) drawKind('up', 'lamp'); // v79: lit light objects' flames glow in the new light
-    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
+    const lean = o.shake && d.nat ? Math.sign((wx - G.p.x) || 1) * Math.sin(o.shake * 34) * Math.min(.2, o.shake * .65) : 0; // v139 자연물은 친 반대쪽으로 기울며 흔들려요
+    if (lean) { const fx = Math.round(wx * T - camX), fy = Math.round(wy * T - camY); ctx.save(); ctx.translate(fx, fy); ctx.transform(1, 0, -lean, 1, 0, 0); ctx.translate(-fx, -fy); }
+    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : lean ? 1 : sx, flip: flipX, alpha: see });
+    if (lean) ctx.restore();
     if (glowL) drawKind('up');
     if (sieving) sieveFx(o.job, wx * T - camX, (wy - 1 + 8 / 16) * T - camY, T / 16); // v115
     if (d.dev === 'farm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / growOf(o), 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
@@ -10543,7 +10562,7 @@ function drawTreeGlow(t, T, camX, camY, cw, ch) {
 onFrame('fx', updateFx);
 onFrame('tree', updateTree);
 function updateFx(dt) {
-  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= (q.bnc ? 14 : 9) * dt; q.z = Math.max(0, q.z + q.vz * dt); if (q.bnc && q.z === 0 && q.vz < -1.2) { q.vz *= -.36; q.vx *= .5; q.vy *= .5; } /* v138 조각이 통통 */ if (!q.fly) { q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); } } // v113: fly = 상자로 날아가는 광석 조각 (느려지지 않음)
+  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; if (q.leaf) { q.vz = Math.max(-.55, q.vz - 3 * dt); q.x += Math.sin(q.life * 9 + q.ph) * .9 * dt; } else q.vz -= (q.bnc ? 14 : 9) * dt; /* v139 잎은 천천히 살랑 */ q.z = Math.max(0, q.z + q.vz * dt); if (q.bnc && q.z === 0 && q.vz < -1.2) { q.vz *= -.36; q.vx *= .5; q.vy *= .5; } /* v138 조각이 통통 */ if (!q.fly) { q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); } } // v113: fly = 상자로 날아가는 광석 조각 (느려지지 않음)
   for (let i = G.texts.length - 1; i >= 0; i--) { const t = G.texts[i]; t.life -= dt; t.y += t.vy * dt; t.vy *= Math.pow(.15, dt); if (t.life <= 0) G.texts.splice(i, 1); }
   for (const o of visibleShakers) { o.shake = Math.max(0, (o.shake || 0) - dt); }
 }
@@ -10593,6 +10612,9 @@ function hitstopTick(dt) { if (hitstop <= 0) return false; hitstop -= dt; return
 onEvent('kill', (x, y, col, k, flip, z) => { addGhost(k, x, y, flip, z); puff(x, y, col, 10, 3.4, .4); puff(x, y, '#fff6e0', 5, 2.6, .5);
   for (let n = 0; n < 12; n++) { const a = n / 12 * 6.283; G.parts.push({ x: x + Math.cos(a) * .25, y: y + Math.sin(a) * .18, z: .35, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 2.6, vz: .4, life: .28, max: .28, col: n % 2 ? col : '#fff1d6', sz: 1 }); }
   onlyMe(() => SFX.kill())(); });
+// v139 잎: 나무를 칠 때 천천히 흔들리며 떨어지는 잎
+onEvent('leaves', (x, y, c1, c2, n) => { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = .9 + fxRand() * 1.3;
+  G.parts.push({ x: x + (fxRand() - .5) * .8, y: y + (fxRand() - .5) * .3, z: .9 + fxRand() * .7, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .4, vz: .6 + fxRand(), life: .8 + fxRand() * .5, max: 1.2, col: k % 3 ? c1 : c2, sz: 1 + (fxRand() * 2 | 0), leaf: 1, ph: fxRand() * 6.283 }); } });
 // 캐기 조각: 칸에서 튀어 떨어져 통통 튐 (big = 부서질 때 굵은 덩어리)
 onEvent('chips', (x, y, c1, c2, n, big) => { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = (big ? 2.2 : 1.6) * (.4 + fxRand() * .9);
   G.parts.push({ x: x + (fxRand() - .5) * (big ? .5 : .2), y, z: .35 + fxRand() * .3, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .5, vz: (big ? 3 : 2.2) + fxRand() * 2, life: (big ? .7 : .45) + fxRand() * .3, max: big ? 1 : .7, col: k % 3 ? c1 : c2, sz: big ? 2 + (fxRand() * 2 | 0) : 1 + (fxRand() * 2 | 0), bnc: 1 }); } });
