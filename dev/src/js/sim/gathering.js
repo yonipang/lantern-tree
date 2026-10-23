@@ -4,7 +4,7 @@ import { OLD_AUTO } from '../data/automation.js';
 import { WPAL } from '../art/world.js';
 import { TIER_IT } from '../data/automation-tiers.js';
 import { DUR } from '../data/circuits-regions.js';
-import { RECOVER_GAP, RECOVER_HITS } from '../data/controls.js';
+import { CHOP_CD, natHits, RECOVER_GAP, RECOVER_HITS } from '../data/controls.js';
 import { STAR_OF } from '../data/farming-cooking.js';
 import { BUILT_WALLS, ITEMS, OBJ, TIERNAME, WALLS } from '../data/items.js';
 import { C } from '../engine/canvas.js';
@@ -16,7 +16,7 @@ import { cancelJob } from './crafting.js';
 import { rollDrops, spawnDrop } from './drops.js';
 import { emit } from './events.js';
 import { rollStar } from './farming.js';
-import { toolPow, wear } from './inventory.js';
+import { wear } from './inventory.js';
 import { afterCut, isYoung, youngDrops } from './nature.js';
 import { gainXp, mineMul } from './player.js';
 import { SHADOW_WALL_XP } from '../data/shadow.js';
@@ -41,11 +41,21 @@ export function hitObj(t, o) {
   faceTo(t.x + .5 - G.p.x, t.y + .5 - G.p.y);
   G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: d.nat === 'pick' || !tl ? null : tl.id };
   if ((d.tier || 0) > tier) { emit('sfx', 'clink'); emit('toast', `${d.n}은(는) ${TIERNAME[d.tier]}가 필요해요`, null, 'otier'); return; }
-  o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, tl ? toolPow(tl) : 0.5) * mineMul()); if (d.nat !== 'pick' && tl) wear(tl);
-  emit('sfx', 'mine'); emit('puff', t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
-  const yg = isYoung(o);
-  if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o); if (d.nat === 'pick') emit('chips', t.x + .5, t.y + .6, o.t === 'cluster' ? C.cry : '#9a8f86', '#e8d8c0', 10, 1); emit('sfx', 'brk'); /* v138 */ markLight(); gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
+  // v139: 치는 횟수로 (예전: 도구 힘 × 캐는 배율을 체력에 쌓음). 도구 내구도는 부술 때 한 번만 닳아요 (예전: 칠 때마다)
+  o.dmg = (o.dmg || 0) + 1; const yg = isYoung(o), need = d.nat === 'pick' ? 1 : Math.max(1, natHits(d.hp) - (yg ? 1 : 0)), last = o.dmg >= need;
+  const fx = natFx(d, o); emit('sfx', 'mine'); if (fx.chip) emit('chips', t.x + .5, t.y + .7, fx.c1, fx.c2, last ? 4 : 5, 0); else emit('leaves', t.x + .5, t.y + .35, fx.c1, fx.c2, last ? 5 : 4); emit('shake', last ? .1 : .05);
+  if (last) { delObj(i); if (d.nat !== 'pick' && tl) wear(tl); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o);
+    if (need > 1) { if (fx.chip) emit('chips', t.x + .5, t.y + .6, fx.c1, fx.c2, 12, 1); else { emit('leaves', t.x + .5, t.y + .2, fx.c1, fx.c2, 12); emit('chips', t.x + .5, t.y + .7, '#9b6b43', '#c79a64', 6, 1); } emit('hitstop', HITSTOP.wall); } // v138·v139 부서질 때 더 크게
+    emit('sfx', 'brk'); markLight(); gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.32; // v139 기울며 흔들림 (예전 0.15)
 }
+// v139 칠 때 나오는 것: 캐는 것(바위·결정·뼈)은 돌 조각, 베는 것(나무·덤불·풀)은 잎 — 색은 이름으로 (보이기만)
+export function natFx(d, o) { const n = d.n || '';
+  if (d.nat === 'mine') return o.t === 'cluster' ? { chip: 1, c1: C.cry, c2: '#e9dcff' } : /얼음|결정/.test(n) ? { chip: 1, c1: '#bfe3f5', c2: '#f2fbff' } : /해골|뼈/.test(n) ? { chip: 1, c1: '#e6dcc8', c2: '#9a8f86' } : { chip: 1, c1: '#9a8f86', c2: '#e8d8c0' };
+  if (/벚꽃|분홍/.test(n)) return { c1: '#f4b6c8', c2: '#ffe2ea' }; if (/단풍/.test(n)) return { c1: '#e0874a', c2: '#f3c26b' }; if (/눈|서리|얼음/.test(n)) return { c1: '#e6f2fb', c2: '#a9d2a0' };
+  if (/큰버섯/.test(n) || o.t === 'bigShroom') return { c1: '#e07b5f', c2: '#f3d1b8' }; if (/마른|통나무|그루터기/.test(n)) return { c1: '#a07a52', c2: '#c9a06e' }; if (d.nat === 'pick') return { c1: '#9be3ff', c2: '#e6f7ff' };
+  return { c1: '#7fbf6a', c2: '#a8d978' }; }
+// v139 다음 치기까지 간격 (sim/actions.js 'chop')
+export function chopCd(o) { const d = o && OBJ[o.t]; if (!d) return CHOP_CD[0]; const tl = natTool(d), tier = tl ? ITEMS[tl.id].tier || 0 : 0; return Math.max(.14, CHOP_CD[Math.min(CHOP_CD.length - 1, tier)] / Math.sqrt(Math.max(1, mineMul()))); }
 export function harvest(t, o) {
   const d = OBJ[o.t];
   const sk = hasItem('sickle'); // a copper sickle in the bag gives one more of the main crop

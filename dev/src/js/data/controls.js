@@ -11,3 +11,8 @@ for (const id in AXE_TOOL) { const it = ITEMS[id]; if (!it) continue; it.kind = 
 for (const r of RECIPES) if (AXE_TOOL[r.out]) r.cat = 'tool';
 // ---- hit a placed piece three times and it falls on the floor ----
 export const RECOVER_HITS = 3, RECOVER_GAP = 2; // hits · seconds (game time) the hits may be apart
+
+// v139 자연물 치는 횟수 (나무·바위·결정 = 3번, 덤불·선인장·작은 바위·뼈 = 2번, 풀·꽃·빛버섯 = 1번 — 도구와 상관없이, 어린 나무는 1번 적게)
+export const natHits = hp => hp >= 3 ? 3 : hp >= 2 ? 2 : 1;
+// v139 자연물을 칠 때 다음 치기까지 간격(초): 도구 단계 0·1·2·3·4·5+ (좋은 도끼·곡괭이일수록 빨라요, 예전 모두 0.28). 캐는 배율(힘·광부의 손·채굴 버프·금 반지)의 제곱근으로 더 빨라지고 0.14초 아래로는 안 가요
+export const CHOP_CD = [.28, .24, .21, .19, .17, .16];

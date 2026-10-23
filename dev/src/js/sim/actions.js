@@ -25,7 +25,7 @@ import { spawnDrop } from './drops.js';
 import { emit } from './events.js';
 import { cropMsg, farmHarvest, farmLbl, farmStage, farmT, fertCrop, fillCan, growOf, harvestGiant, ripeAround, waterCrop } from './farming.js';
 import { reel, startFish } from './fishing.js';
-import { harvest, hitObj, mineWall } from './gathering.js';
+import { chopCd, harvest, hitObj, mineWall } from './gathering.js';
 import { wearItem, wtOf } from './gear.js';
 import { addItem, bestTool, clearRefundBox, countItem, holdTool, isBroken, isStore, moveInto, refillHot, refundMine, removeItem, returnObj, selItem, storeAt, wear } from './inventory.js';
 import { isYoung, treeStep, WATER } from './nature.js';
@@ -246,7 +246,7 @@ export function perform(a) {
     case 'rot': rotatePlace(); G.actCd = 0.15; break;
     case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
-    case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
+    case 'chop': hitObj(a.t, a.o); G.actCd = chopCd(a.o); break; // v139 좋은 도구일수록 빨리 (예전 0.28)
     case 'place': if (!(a.area && placeArea(a))) placeItem(a.t, a.gr); G.actCd = 0.14; break; // v137: 고른 크기만큼 메우기·바꾸기
     case 'dig': if (a.area) digArea(a); else digGround(a.t); G.actCd = 0.22; break;
     case 'dsize': cycleDsz(); G.actCd = 0.1; break; // v137: 작은 버튼 「1×1」

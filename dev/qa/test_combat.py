@@ -459,6 +459,27 @@ def test_feel_v138():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+def test_nature_hits_v139():
+    # v139: 나무·바위·결정은 도구와 상관없이 3번, 덤불·선인장·작은 바위·뼈 2번, 풀·꽃·빛버섯 1번 · 어린 나무 1번 적게 · 좋은 도구일수록 치는 간격이 짧음 · 도구는 부술 때 한 번만 닳음 · 칠 때 기울며 흔들림
+    H2=HOOK.replace("computeLight}","computeLight,hitObj,chopCd}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=G.p;const tx=Math.floor(P.x)+2,ty=Math.floor(P.y),i=T.idx(tx,ty);G.wall[i]=0;
+              const tools=G.tools||null;const hits=(t,setup)=>{G.objs.set(i,{t});if(setup)setup(G.objs.get(i));let n=0;while(G.objs.has(i)&&n<20){T.hitObj({x:tx,y:ty},G.objs.get(i));n++}G.drops.length=0;return n};
+              const ks=Object.keys(T.OBJ),find=f=>ks.find(k=>f(T.OBJ[k])),byN=n=>find(d=>d.n===n&&d.nat);
+              const out={root:hits(byN('뿌리기둥')),roundTree:hits(byN('둥근 나무')),oldTree:hits(byN('큰 고목')),moss:hits(byN('이끼풀')),glow:hits(byN('빛버섯'))};const bush=find(d=>d.nat==='chop'&&d.hp===2),rock=find(d=>d.nat==='mine'&&d.hp===2&&!d.tier);out.bush=bush?hits(bush):-1;out.bone=rock?hits(rock):-1;
+              G.objs.set(i,{t:'root'});const o=G.objs.get(i);T.hitObj({x:tx,y:ty},o);out.shake=o.shake;G.objs.delete(i);return out}""")
+            rec('자연물','나무 3번(뿌리기둥·둥근 나무·큰 고목) · 덤불·뼈 2번 · 이끼풀·빛버섯 1번', r['root']==3 and r['roundTree']==3 and r['oldTree']==3 and r['bush']==2 and r['bone']==2 and r['moss']==1 and r['glow']==1, str(r))
+            rec('자연물','칠 때 흔들림 0.32 (기울며 흔들기)', abs(r['shake']-.32)<1e-6, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const o={t:'root'};const cd0=T.chopCd(o);const it=T.ITEMS;const axes=Object.keys(it).filter(k=>it[k].kind==='axe'||/^axe/.test(k)).map(k=>[k,it[k].tier||0]);return {cd0,axes}}""")
+            rec('자연물','도구 없을 때 간격 0.28초 (예전과 같음)', abs(r['cd0']-.28)<.03, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_enemy_sight():
     # v85: 알아채는 거리(기본 5칸·버섯도깨비 5.5칸) + 벽 너머는 못 봄 + 쫓기 시작하면 3칸 더 + 맞으면 쫓음
     H2=HOOK.replace("computeLight}","computeLight,mkEnemy,enemyStep,hitEnemy,ENEMY}")

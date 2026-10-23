@@ -358,7 +358,10 @@ export function drawEntity(it, t) {
     if (d.ranch && ranchReady(o)) drawImg(iconCanvas(d.ranch), wx, it.y - .55 + Math.sin(t * 3 + it.x) * .06, { sx: .55, sy: .55 });
     let see = null; if (d.solid && effH(img) > 34) { const p = G.p, hw = effW(img) / 32, top = wy - effH(img) / 16; if (p.y < wy - .2 && p.y > top + .35 && Math.abs(p.x - wx) < hw * .9) see = .45; }
     const glowL = d.light && !o.off; if (glowL) drawKind('up', 'lamp'); // v79: lit light objects' flames glow in the new light
-    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : sx, flip: flipX, alpha: see });
+    const lean = o.shake && d.nat ? Math.sign((wx - G.p.x) || 1) * Math.sin(o.shake * 34) * Math.min(.2, o.shake * .65) : 0; // v139 자연물은 친 반대쪽으로 기울며 흔들려요
+    if (lean) { const fx = Math.round(wx * T - camX), fy = Math.round(wy * T - camY); ctx.save(); ctx.translate(fx, fy); ctx.transform(1, 0, -lean, 1, 0, 0); ctx.translate(-fx, -fy); }
+    drawImg(img, wx, wy, { sx: d.dev === 'drill' && o.work ? 1 + Math.sin(t * 40) * .03 : d.ranch ? 1 + Math.sin(t * 2.5 + it.x * 1.7) * .03 : lean ? 1 : sx, flip: flipX, alpha: see });
+    if (lean) ctx.restore();
     if (glowL) drawKind('up');
     if (sieving) sieveFx(o.job, wx * T - camX, (wy - 1 + 8 / 16) * T - camY, T / 16); // v115
     if (d.dev === 'farm' && farmStage(o) < 3) { const f = clamp((G.time - (o.p || 0)) / growOf(o), 0, 1), bx = Math.round((it.x + 1) * T - camX) - 10, by = Math.round((it.y - .55) * T - camY); ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * f), 2); }
