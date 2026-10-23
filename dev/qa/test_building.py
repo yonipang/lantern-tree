@@ -384,6 +384,24 @@ def test_art_v134():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+def test_spirit_fx_v135():
+    import asyncio, sys
+    # v135: 서리 정령 둘레 빛 가루(받은 그림 「얼음 십자 반짝」 첫 장) — 보이기만, 그림이 들어가고 그려도 오류 없음
+    H2=HOOK.replace("computeLight}","computeLight,newGame,SPR,ART}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const T=__T,S=T.SPR.iceDust;return [!!T.ART['etc/iceDust'],!T.ART['etc/iceCross'],S instanceof HTMLCanvasElement&&S.width+'x'+S.height]}")
+            rec('그림','빛 가루 그림(2장 띠 72×26)이 들어가고 큰 얼음 십자 그림은 안 씀', r[0] and r[1] and r[2] in ('72x26','144x52'), str(r))
+            await ev(pg,"()=>{__T.newGame(777);const G=__T.G;G.stats.bIntro={spirit:1,golem:1,turtle:1,queen:1,slime:1,dark:1};const B=G.bosses.spirit;G.p.x=B.x+.5;G.p.y=B.y+4.2;G.p.inv=999}")
+            await wait_game(pg,3)
+            r=await ev(pg,"()=>{const B=__T.G.bosses.spirit;return [!__T.G.bossDead.spirit,B.st]}")
+            rec('그리기','서리 정령 곁에서 몇 초 동안 그려도 콘솔 오류 없음', r[0] and not errs, str(r)+' '+str(errs[:3]))
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_nature_v123():
     import asyncio, sys
     # v123: 새 가구 단계(구리·철·석영 금속 1~2개), 지역마다 저절로 자라는 자연물(새 세계·하루 하나 재생), 베면 나무·묘목
