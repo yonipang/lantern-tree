@@ -8,6 +8,7 @@ import { UPG_MAX } from '../data/gear-animals.js';
 import { HOT, ITEMS, OBJ, RECIPES, STN } from '../data/items.js';
 import { clamp, josa } from '../engine/util.js';
 import { G } from '../save/state.js';
+import { devOn } from '../save/storage.js';
 import { defineCmd } from './commands.js';
 import { knows } from './cooking.js';
 import { spawnDrop } from './drops.js';
@@ -19,7 +20,7 @@ import { sieveTake } from './sieve.js';
 import { checkGuide } from './quests.js';
 import { idx, inB, W } from '../world/map.js';
 export const isMulti = r => ['build', 'food', 'mat'].includes(r.cat) || ['floor', 'wall', 'ground', 'food', 'mat', 'fert'].includes(ITEMS[r.out].kind);
-export function maxCraft(r) { let m = 99; for (const [id, c] of r.req) m = Math.min(m, Math.floor(availCount(id) / c)); return Math.max(0, m); }
+export function maxCraft(r) { let m = 99; if (devOn('free')) return m; for (const [id, c] of r.req) m = Math.min(m, Math.floor(availCount(id) / c)); return Math.max(0, m); }
 export const benchNear = near => near.has('bench') || near.has('forge');
 export function repairCost(s) { const mx = durMax(s.id), frac = 1 - durOf(s) / mx; return DUR[s.id][1].map(([id, c]) => [id, Math.max(1, Math.ceil(c * frac))]); }
 export function salvageGet(id) { const r = RECIPES.find(r => r.out === id), req = r ? r.req : SALVAGE_BASE[id]; if (!req) return null; return req.map(([m, c]) => [m, Math.round(c * SALVAGE_RATE)]).filter(([, c]) => c > 0); }
@@ -29,18 +30,18 @@ export const upgSlot = i => itemAt(i);
 export function nearStations() { const p = G.p, set = new Set(); for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) set.add(OBJ[o.t].station); } return set; }
 export const atHere = (r, st) => (r.at || null) === (st || null) || (st === 'bench' && !r.at);
 // 제작 자리 c = { st: 어느 제작대 창(없으면 손 제작), i: 그 제작대 칸, tier: 칸 없이 연 창의 단계 }
-export const stationTier = c => c && TIERED[c.st] ? (c.i != null ? Math.max(0, benchLv(G.objs.get(c.i))) : c.tier || 0) : 0;
-export function craftable(r, near, c) { const st = (c && c.st) || null; return (!r.dish || knows(r.dish)) && atHere(r, st) && (!st || near.has(st)) && (!TIERED[st] || (r.tier || 0) <= stationTier(c)) && r.req.every(([id, c2]) => availCount(id) >= c2); }
+export const stationTier = c => c && TIERED[c.st] ? (c.i != null ? Math.max(0, benchLv(G.objs.get(c.i))) : c.tier || 0) : c && c.st === 'fdesk' ? stationTierNow() : 0; // v136 가구 제작대는 작업대 단계를 따라가요
+export function craftable(r, near, c) { const st = (c && c.st) || null; return (!r.dish || knows(r.dish)) && atHere(r, st) && (!st || near.has(st)) && ((!TIERED[st] && st !== 'fdesk') || (r.tier || 0) <= stationTier(c)) && (devOn('free') || r.req.every(([id, c2]) => availCount(id) >= c2)); } // v136 개발자 도구: 재료 없이
 // ---- 강화·분해·수리·작업대 올리기 (가까운 제작대와 연결된 상자의 재료를 함께 써요) ----
-defineCmd('upg', c => { const s = upgSlot(c.i); if (!s || !upgOk(s.id) || lvOf(s) >= UPG_MAX || !nearStations().has('smelter')) return false; const cost = upgCost(s.id, lvOf(s)); resetPool(); if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); emit('toast', `강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); emit('inv'); });
+defineCmd('upg', c => { const s = upgSlot(c.i); if (!s || !upgOk(s.id) || lvOf(s) >= UPG_MAX || !nearStations().has('smelter')) return false; const cost = upgCost(s.id, lvOf(s)); resetPool(); const free = devOn('free'); /* v136 개발자 도구 */ if (!free && !cost.every(([id, n]) => availCount(id) >= n)) return false;
+  if (!free) for (const [id, n] of cost) takeAvail(id, n); s.lv = lvOf(s) + 1; G.stats.upg = (G.stats.upg || 0) + 1; emit('sfx', 'craft'); emit('puff', G.p.x, G.p.y - .5, '#ffd25c', 14, 2.4, .5); emit('toast', `강화 성공! ${ITEMS[s.id].n} +${s.lv} · ${upgText(s.id, s.lv)}`, 'good'); emit('inv'); });
 defineCmd('salv', c => { const s = itemAt(c.i), got = s && (DUR[s.id] || upgOk(s.id)) && salvGet2(s); if (!got || !canSalv(nearStations())) return false;
   clearSlot(c.i); for (const [id, n] of got) { const l = addItem(id, n, false); if (l) spawnDrop(id, l, G.p.x, G.p.y); }
   emit('sfx', 'brk'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 분해했어요: ${got.map(([id, n]) => ITEMS[id].n + ' ' + n + '개').join(', ')}`, 'good'); emit('inv'); });
-defineCmd('fix', c => { const s = itemAt(c.i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return false; const cost = repairCost(s); resetPool(); if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); emit('inv'); });
-defineCmd('benchUp', c => { const o = c.o != null ? G.objs.get(c.o) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return false; resetPool(); const cost = BENCH_UP[lv + 1]; if (!cost.every(([id, n]) => availCount(id) >= n)) return false;
-  for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1; syncStations(o.lv); /* v128: 작업대·장비제작대가 같이 올라가요 */
+defineCmd('fix', c => { const s = itemAt(c.i); if (!s || !DUR[s.id] || !nearStations().has('smelter')) return false; const cost = repairCost(s); resetPool(); const free = devOn('free'); /* v136 개발자 도구 */ if (!free && !cost.every(([id, n]) => availCount(id) >= n)) return false;
+  if (!free) for (const [id, n] of cost) takeAvail(id, n); s.dur = DUR[s.id][0]; emit('sfx', 'craft'); emit('toast', `${josa(ITEMS[s.id].n, '을', '를')} 새것처럼 고쳤어요`, 'good'); emit('inv'); });
+defineCmd('benchUp', c => { const o = c.o != null ? G.objs.get(c.o) : null, lv = benchLv(o); if (lv < 0 || lv >= BENCH_MAX) return false; resetPool(); const cost = BENCH_UP[lv + 1]; const free = devOn('free'); /* v136 개발자 도구 */ if (!free && !cost.every(([id, n]) => availCount(id) >= n)) return false;
+  if (!free) for (const [id, n] of cost) takeAvail(id, n); if (o.t === 'forge') o.t = 'bench'; o.lv = lv + 1; syncStations(o.lv); /* v128: 작업대·장비제작대가 같이 올라가요 */
   const x = c.o % W, y = (c.o / W) | 0; emit('sfx', 'win'); emit('puff', x + 1, y + .3, BENCH_COL[o.lv], 22, 3, .6); emit('toast', `${BENCH_N[o.lv]}·${GEAR_N[o.lv]}로 올렸어요! 새로 만들 수 있는 것이 맨 위에 나와요`, 'good', 'benchup'); emit('inv'); checkGuide(); });
 // ---- 제작 { r: 레시피 번호, q: 몇 번, st·i·tier: 제작 자리 } → false 못 만듦 · 'reorder' 목록 순서를 새로 · 그 밖은 다시 그리기 ----
 defineCmd('craft', c => {
@@ -49,7 +50,7 @@ defineCmd('craft', c => {
   if (so && so.job) { emit('toast', `${STN[r.at]}에서 만드는 게 끝나면 넣을 수 있어요`, null, 'jobbusy'); return false; }
   const q = isMulti(r) ? clamp(c.q || 1, 1, Math.max(1, Math.min(so ? JOB_MAX : 99, maxCraft(r)))) : 1, total = r.n * q;
   const before = so ? stockMap() : null;
-  for (const [id, n] of r.req) takeAvail(id, n * q);
+  if (!devOn('free')) for (const [id, n] of r.req) takeAvail(id, n * q);
   if (so) { const after = stockMap(), used = Object.keys(before).map(id => [id, before[id] - (after[id] || 0)]).filter(([, n]) => n > 0), per = jobTime(r);
     so.job = { out: r.out, n: r.n, q, per, t0: nowS(), used }; emit('sfx', 'place'); emit('toast', `${STN[r.at]}에 넣었어요 · ${fmtT(q * per)} 뒤에 다 돼요`, 'good', 'jobput'); emit('inv'); return 'reorder'; }
   G.stats.made = G.stats.made || {}; G.stats.made[r.out] = (G.stats.made[r.out] || 0) + q;

@@ -93,7 +93,7 @@ def test_dress_up():
             await pg.tap('#sheet [data-a=close]'); await pg.wait_for_timeout(300)
             # v83 나무 옷장: 작업대 기본(나무 8 + 이끼 섬유 4), 같은 꾸미기
             r=await ev(pg,"()=>{const T=__T,G=T.G,r=T.RECIPES.find(q=>q.out==='woodWardrobe');G.objs.set(T.idx(Math.floor(G.p.x)+1,Math.floor(G.p.y)),{t:'woodWardrobe'});return [r&&r.at,r&&(r.tier||0),r&&JSON.stringify(r.req),T.decide().lbl]}")
-            rec('가구','나무 옷장: 작업대 기본 단계, 나무 8 + 이끼 섬유 4, [꾸미기]', r==['bench',0,'[["wood",8],["fiber",4]]','꾸미기'], str(r))
+            rec('가구','나무 옷장: 가구 제작대(v136, 작업대 기본 단계), 나무 8 + 이끼 섬유 4, [꾸미기]', r==['fdesk',0,'[["wood",8],["fiber",4]]','꾸미기'], str(r))
             await ev(pg,"()=>{document.getElementById('toasts').style.display='none'}"); await pg.wait_for_timeout(300); await pg.screenshot(path=SP+'game.png')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
@@ -158,7 +158,7 @@ def test_hotbar_bag():
             r=await ev(pg,"()=>{const G=__T.G;for(let x=-2;x<=2;x++)for(let y=-2;y<=2;y++){const i=__T.idx(Math.floor(G.p.x)+x,Math.floor(G.p.y)+y);G.objs.delete(i);G.wall[i]=0;G.floor[i]=1}G.inv[4]={id:'torch',c:1};G.sel=4;G.p.face={x:1,y:0};const n0=__T.countItem('torch');__T.perform(__T.decide());return [G.inv[4]&&G.inv[4].id,G.inv[4]&&G.inv[4].c,__T.countItem('torch'),n0]}")
             rec('자동 보충','단축칸 횃불을 다 쓰면 가방 횃불로 자동 보충', r[0]=='torch' and r[2]==r[3]-1, str(r))
             # craft: notice + no auto hotbar
-            r=await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)-2),{t:'bench'});__T.addItem('wood',30);__T.openPanel('craft',{st:'bench'});return __T.RECIPES.findIndex(r=>r.out==='chair')}")
+            r=await ev(pg,"()=>{const G=__T.G;G.objs.set(__T.idx(Math.floor(G.p.x),Math.floor(G.p.y)-2),{t:'bench'});G.objs.set(__T.idx(Math.floor(G.p.x)+2,Math.floor(G.p.y)-2),{t:'fdesk'});__T.addItem('wood',30);__T.openPanel('craft',{st:'fdesk'});return __T.RECIPES.findIndex(r=>r.out==='chair')}")
             await pg.wait_for_timeout(500)
             hot_before=await ev(pg,"()=>__T.G.inv.slice(0,9).map(s=>s&&s.id).join(',')")
             await ev(pg,f"()=>{{const b=document.querySelector('[data-a=craft][data-i=\"{r}\"]');b.scrollIntoView({{block:'center'}})}}"); await pg.wait_for_timeout(200)

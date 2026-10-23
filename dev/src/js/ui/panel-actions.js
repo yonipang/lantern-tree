@@ -11,7 +11,7 @@ import { $, clamp, roJosa } from '../engine/util.js';
 import { iconURL } from '../render/icons.js';
 import { resize, setZoomPref } from '../render/view.js';
 import { G, newGame, setSound, setStarted, soundOn, started } from '../save/state.js';
-import { applyImport, canDev, clearImport, CLOUD, cloudAuth, cloudKeepLocal, cloudTakePending, cloudUpload, DEV, devTap, exportSave, fbErr, pickSaveFile, pushBackup, saveLocal } from '../save/storage.js';
+import { applyImport, canDev, clearImport, CLOUD, cloudAuth, cloudKeepLocal, cloudTakePending, cloudUpload, DEV, DEVF, devTap, exportSave, exportVillage, fbErr, pickSaveFile, pushBackup, saveLocal, setDevFlag } from '../save/storage.js';
 import { catchThrow } from '../sim/animals.js';
 import { runCmd } from '../sim/commands.js';
 import { canSalv, maxCraft, nearStations, salvGet2 } from '../sim/crafting.js';
@@ -143,6 +143,9 @@ export function onSheetClick(e) {
   if (a === 'impYes') { applyImport(); return; }
   if (a === 'impNo') { clearImport(); renderPanel(); return; }
   if (a === 'devtap') { if (devTap()) { toast(DEV ? '개발자 모드를 켰어요' : '개발자 모드를 껐어요'); renderPanel(); } return; }
+  if (a === 'devf' && canDev()) { setDevFlag(i, !DEVF[i]); if (i === 'bag') runCmd({ k: 'fitBag' }); renderPanel(); return; } // v136 개발자 도구
+  if (a === 'devReveal' && canDev()) { runCmd({ k: 'devReveal' }); return; }
+  if (a === 'villageOut' && canDev()) { exportVillage(); return; }
   if (a === 'markAdd' && canDev()) { runCmd({ k: 'markAdd' }); saveLocal(true); renderPanel(); return; }
   if (a === 'markDel' && canDev()) { runCmd({ k: 'markDel', i }); saveLocal(true); renderPanel(); return; }
   if (a === 'ctrl') { setCtrlPref(i === 'pad' ? 'pad' : 'joy'); try { localStorage.setItem('lantern-tree-ctrl', ctrlPref); } catch (e) { } applyCtrl(); renderPanel(); return; }

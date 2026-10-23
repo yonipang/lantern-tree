@@ -45,13 +45,13 @@ Object.assign(SK_FN, {
     faceTo(en.x - G.p.x, en.y - G.p.y); let n = 0; for (const e of G.enemies) if (Math.hypot(e.x - en.x, e.y - en.y) < 2 + ENEMY[e.k].r) { e.slow = Math.max(e.slow || 0, 3 + l); n++; }
     for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283; emit('puff', en.x + Math.cos(a) * 1.6, en.y + Math.sin(a) * 1.1, '#e8e4f8', 2, 1.8, .3); }
     G.swing = { t: 0.18, max: 0.18, ang: Math.atan2(G.p.face.y, G.p.face.x), icon: w.id, wt: w.wt }; emit('sfx', 'swing'); emit('ftext', en.x, en.y - 1.2, '끈적!', '#e8e4f8'); },
-  fireball(l) { const ang = aimAt(7); shootP(ang, { k: 'orb', dmg: Math.round((14 + 8 * l) * magicMul()), crit: false, spd: 9, range: 8, pierce: 0, col: '#ff8a3d', kb: 6, fx: 'burn' }); emit('sfx', 'cast'); },
+  fireball(l) { const ang = aimAt(7); shootP(ang, { k: 'orb', dmg: Math.round((14 + 8 * l) * magicMul()), crit: false, spd: 9, range: 8, pierce: 0, col: '#ff8a3d', kb: 6, fx: 'burn', look: 'fire' }); /* v136 불덩이 그림 */ emit('sfx', 'cast'); },
   chain(l) { const p = G.p, dmg = Math.round((16 + 8 * l) * magicMul()); let cur = nearestEnemy(6); if (!cur) { emit('toast', '가까운 적이 없어요', null, 'noen'); return false; }
     const hitSet = new Set(); let from = { x: p.x, y: p.y - .4 };
-    for (let n = 0; n < 3 + l && cur; n++) { hitSet.add(cur); for (let k = 1; k <= 5; k++) emit('puff', from.x + (cur.x - from.x) * k / 5, from.y + (cur.y - .3 - from.y) * k / 5, '#fff1b0', 1, 1.2, .15); hitEnemy(cur, dmg, false, 4); from = { x: cur.x, y: cur.y - .3 };
+    for (let n = 0; n < 3 + l && cur; n++) { hitSet.add(cur); for (let k = 1; k <= 5; k++) emit('puff', from.x + (cur.x - from.x) * k / 5, from.y + (cur.y - .3 - from.y) * k / 5, '#fff1b0', 1, 1.2, .15); emit('fxAnim', 'ring', cur.x, cur.y - .3); /* v136 번개 고리 */ hitEnemy(cur, dmg, false, 4); from = { x: cur.x, y: cur.y - .3 };
       let best = null, bd = 3; for (const e of G.enemies) if (!hitSet.has(e)) { const d = Math.hypot(e.x - cur.x, e.y - cur.y); if (d < bd) { bd = d; best = e; } } cur = best; }
     emit('sfx', 'cast'); emit('shake', .15); },
-  lightShield(l) { const p = G.p; p.shield = 30 + 15 * l; p.shieldT = 8; emit('puff', p.x, p.y - .5, '#fff1b0', 16, 2.6, .5); emit('ftext', p.x, p.y - 1.4, `방패 ${p.shield}`, '#fff1b0'); emit('sfx', 'cast'); },
+  lightShield(l) { const p = G.p; p.shield = 30 + 15 * l; p.shieldT = 8; emit('fxAnim', 'shield', p.x, p.y); /* v136 방패 그림 */ emit('puff', p.x, p.y - .5, '#fff1b0', 16, 2.6, .5); emit('ftext', p.x, p.y - 1.4, `방패 ${p.shield}`, '#fff1b0'); emit('sfx', 'cast'); },
   orbFriend(l) { const p = G.p; p.orb = { t: 12 + 4 * l, cd: 0, dmg: 8 + 4 * l }; emit('puff', p.x - .6, p.y - .9, '#fff1b0', 10, 2, .5); emit('sfx', 'cast'); },
   sprint(l) { const p = G.p; p.sprintT = 4 + l; emit('puff', p.x, p.y, '#e8d8c0', 8, 2, .2); emit('sfx', 'swing'); },
   dawnLight(l) { const p = G.p, dmg = Math.round((40 + 20 * l) * magicMul()); emit('sfx', 'cast'); emit('shake', .3);

@@ -8,6 +8,7 @@ import { BKEYS, MAX_LV, REGEN_WAIT, SKILLS, STATN, STAT_PER, XP_NEED } from '../
 import { fxRand } from '../engine/random.js';
 import { clamp, roJosa } from '../engine/util.js';
 import { alivePlayers, cam, freshBoss, G } from '../save/state.js';
+import { devOn } from '../save/storage.js';
 import { faceTo } from './actions.js';
 import { ctlOf, defineCmd } from './commands.js';
 import { applyBuff, buffCheck, bval } from './cooking.js';
@@ -39,7 +40,7 @@ export const meleeMul = () => (1 + RS('str') * 0.05) * (1 + bval('atk')) * (1 + 
 export const rangeMul = () => (1 + RS('dex') * 0.03) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('hawk') * .08);
 export const magicMul = () => (1 + RS('int') * 0.035) * (1 + bval('atk')) * (1 + ringV('atk')) * (1 + skl('arcane') * .06);
 export const atkSpd = () => (1 - Math.min(0.2, RS('dex') * 0.01)) * (envLv('cold') >= 2 ? 1.1 : 1);
-export const moveMul = () => (G && G.p && G.p.sprintT > 0 ? 1.4 : 1) * (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move')) * [1, .9, .8, .8][envLv('cold')];
+export const moveMul = () => (devOn('fast') ? 2.2 : 1) * (G && G.p && G.p.sprintT > 0 ? 1.4 : 1) * (1 + Math.min(0.15, RS('dex') * 0.01) + skl('swift') * 0.06) * (1 + bval('move')) * [1, .9, .8, .8][envLv('cold')];
 export const mineMul = () => (1 + RS('str') * 0.03) * (1 + skl('miner') * 0.25) * (1 + bval('mine')) * (1 + ringV('mine'));
 export const hungerMul = () => Math.max(0.4, (1 - Math.min(0.3, RS('vit') * 0.02)) * (1 - skl('gourmet') * 0.15)) * (bval('hunger') || 1) * [1, 1.3, 1.6, 1.6][envLv('hot')];
 export function gainXp(n, x, y) {
@@ -76,6 +77,7 @@ export function eat(slot) {
 export const hitRecently = p => p.hitAt != null && G.time - p.hitAt < REGEN_WAIT;
 export function hurtPlayer(dmg, sx, sy, kind) {
   if (G.p.cine) return; // v127: 연출 장면을 보는 동안은 맞지 않아요 (sim/cutscene.js)
+  if (devOn('god') || devOn('peace')) return; // v136 개발자 도구
   if (kind === 'fire' && wearing('turtleCharm')) dmg *= 1 - turtleCut(eqLv('turtleCharm'));
   dmg *= 1 - ringV('def');
   dmg *= armorMul(); // v100 방어력
@@ -116,6 +118,6 @@ onFrame('player', dt => {
 });
 onFrame('hunger', dt => {
   const p = G.p;
-  G.hungerT += dt; if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
+  G.hungerT += dt; if (devOn('god')) { G.hungerT = 0; if (p.hunger < 50) p.hunger = 50; } if (G.hungerT >= 9 / hungerMul()) { G.hungerT = 0; p.hunger = Math.max(0, p.hunger - 1); if (p.hunger === 20) emit('toast', '배가 고파요. 무언가 먹어요', null, 'hungry'); }
   G.regenT += dt; if (G.regenT >= 2.5) { G.regenT = 0; if (p.hunger <= 0 && p.dead <= 0 && !p.cine) { /* v127: 연출 장면 동안 배고픔 피해 없음 */ p.hp -= 2; emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-2', '#ffb15c'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; emit('fade', 'show'); } } else if (p.hunger >= 55 && p.hp < maxHp() && p.dead <= 0 && envLv('hot') < 2 && !hitRecently(p)) p.hp = Math.min(maxHp(), p.hp + 1); }
 });

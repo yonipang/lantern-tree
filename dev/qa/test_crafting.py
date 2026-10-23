@@ -107,7 +107,7 @@ def test_workbench_tabs():
     H2=HOOK.replace("computeLight}","computeLight,RECIPES,bcat,get panel(){return panel},renderPanel}")
     SET="""window.__set=()=>{const T=__T,G=T.G;for(let y=T.CY+2;y<T.CY+14;y++)for(let x=T.CX+2;x<T.CX+14;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=2;G.objs.delete(i)}
   G.enemies.length=0;G.inv.fill(null);G.sel=3;G.p.x=T.CX+5.5;G.p.y=T.CY+5.5;G.p.face={x:1,y:0};G.p.dead=0;G.p.sit=null;
-  const bi=T.idx(T.CX+6,T.CY+5);G.objs.set(bi,{t:'bench',lv:5});G.objs.set(bi+1,{t:'_part',a:bi});return bi};
+  const bi=T.idx(T.CX+6,T.CY+5);G.objs.set(bi,{t:'bench',lv:5});G.objs.set(bi+1,{t:'_part',a:bi});const fi=T.idx(T.CX+6,T.CY+7);G.objs.set(fi,{t:'fdesk'});G.objs.set(fi+1,{t:'_part',a:fi});window.__fi=fi;G.stats.benchLv=5;return bi};
   window.__row=k=>{const r=document.querySelectorAll('#sheet .tabs')[k];return r?[...r.querySelectorAll('.tab')].map(b=>(b.dataset.i)+(b.classList.contains('on')?'*':'')).join(','):''};
   window.__lbl=()=>[...document.querySelectorAll('#sheet .itabs .tab')].map(b=>b.textContent.trim()).filter(Boolean).join(',');
   window.__ids=()=>[...document.querySelectorAll('#sheet [data-a=craft]')].map(b=>__T.RECIPES[+b.dataset.i].out);
@@ -122,19 +122,20 @@ def test_workbench_tabs():
                 r=='furn/seat furn/table furn/bed furn/store furn/light furn/deco furn/bed furn/table build/wall build/floor build/fence build/door build/door build/nature build/nature build/floor conv/circuit conv/farm conv/mine conv/mine stn/cook stn/smelt stn/make stn/make mat tool', r)
             await ev(pg,"()=>{const T=__T,bi=__set();T.openPanel('craft',{st:'bench',i:bi})}"); await pg.wait_for_timeout(600)
             r=await ev(pg,"()=>[__row(0),__lbl(),document.querySelectorAll('#sheet .itabs .tab img').length,document.querySelectorAll('#sheet .tabs').length,__ids().includes('rope'),__ids().includes('chair')]")
-            rec('1줄 탭','작업대: 아이콘 탭 7개, 고른 탭(전체)만 이름, 2줄 탭은 없음, 손 제작(이끼 끈)도 보임',
-                r==['all*,mat,tool,stn,furn,build,conv','전체',7,1,True,True], str(r))
+            rec('1줄 탭','작업대: 아이콘 탭 7개, 고른 탭(전체)만 이름, 2줄 탭은 없음, 손 제작(이끼 끈)도 보임, 의자는 가구 제작대로(v136)',
+                r==['all*,mat,tool,stn,furn,build,conv','전체',7,1,True,False], str(r))
             w=await ev(pg,"()=>{const r=document.querySelector('#sheet .itabs');return [r.scrollWidth,r.clientWidth]}")
             rec('1줄 탭','390px 화면에 1줄 탭이 다 보임', w[0]<=w[1]+2, str(w))
             await pg.screenshot(path=SP+'all.png')
-            await ev(pg,"()=>__clk('tab','furn')"); await pg.wait_for_timeout(250)
-            r=await ev(pg,"()=>[__lbl(),__row(1),__ids().every(id=>__T.bcat(__T.RECIPES.find(r=>r.out===id))[0]==='furn'),[...document.querySelectorAll('#sheet .stag')].map(e=>e.textContent).filter((v,i,a)=>a.indexOf(v)===i).sort().join(',')]")
-            rec('가구','가구: 이름 「가구」, 2줄 전체·의자·탁자·침대·수납·조명·장식, 세트는 태그로',
-                r[0]=='가구' and r[1]=='all*,seat,table,bed,store,light,deco' and r[2] and r[3]=='버섯 세트,수정 세트,이끼 세트', str(r))
+            await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'fdesk',i:__fi})}"); await pg.wait_for_timeout(400)
+            r=await ev(pg,"()=>[document.querySelector('#sheet .sh-head, #sheet h2, #sheet .head')?.textContent.includes('가구 제작대')?'가구':'',__row(0),__ids().every(id=>__T.bcat(__T.RECIPES.find(r=>r.out===id))[0]==='furn'),[...document.querySelectorAll('#sheet .stag')].map(e=>e.textContent).filter((v,i,a)=>a.indexOf(v)===i).sort().join(',')]")
+            rec('가구','가구 제작대: 창 이름 「가구 제작대」, 탭 한 줄 전체·의자·탁자·침대·수납·장식(조명은 작업대), 세트는 태그로',
+                r[0]=='가구' and r[1]=='all*,seat,table,bed,store,deco' and r[2] and r[3]=='버섯 세트,수정 세트,이끼 세트', str(r))
             await ev(pg,"()=>__clk('tab2','seat')"); await pg.wait_for_timeout(250)
-            r=await ev(pg,"()=>[__row(1),__ids().sort().join(',')]")
+            r=await ev(pg,"()=>[__row(0),__ids().sort().join(',')]")
             rec('가구','의자 탭은 의자만 (나무·이끼·버섯·수정·철제 의자, 벤치, 소파, 쿠션)', r[0].startswith('all,seat*') and 'chair' in r[1] and 'mossSofa' in r[1] and 'cryChair' in r[1] and 'bed' not in r[1] and 'table' not in r[1].split(','), str(r))
             await pg.screenshot(path=SP+'seat.png')
+            await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench',i:__T.idx(__T.CX+6,__T.CY+5)})}"); await pg.wait_for_timeout(400)
             await ev(pg,"()=>__clk('tab','build')"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>[__lbl(),__row(1)]")
             rec('건축','건축: 2줄 탭이 전체로 돌아가고 전체·벽·바닥·울타리·문·자연 (v69: 기둥·창문 삭제)', r==['건축','all*,wall,floor,fence,door,nature'], str(r))
@@ -152,7 +153,7 @@ def test_workbench_tabs():
             rec('편의','채굴기 탭: 구리·철·황금 채굴기·광석 그물 (v113: 채굴장·나무 작업장 없어짐 · v115 광석 그물)', r=='drillCu,drillFe,drillGold,oreNet', r)
             await ev(pg,"()=>__clk('tab','stn')"); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>[__lbl(),__row(1),__ids().sort().join(',')]")
-            rec('제작대','제작대: 작업대·장비제작대·용광로·요리솥', r[0]=='제작대' and r[1]=='all*,make,smelt,cook' and r[2]=='bench,furnace,pot,smelter', str(r))
+            rec('제작대','제작대: 작업대·가구 제작대(v136)·장비제작대·용광로·요리솥', r[0]=='제작대' and r[1]=='all*,make,smelt,cook' and r[2]=='bench,fdesk,furnace,pot,smelter', str(r))
             # crafting a hand recipe at the bench works
             await ev(pg,"()=>{const T=__T,G=T.G;G.inv[12]={id:'fiber',c:9};T.renderPanel()}")
             await ev(pg,"()=>__clk('tab','mat')"); await pg.wait_for_timeout(250)

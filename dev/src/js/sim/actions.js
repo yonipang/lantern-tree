@@ -27,7 +27,7 @@ import { cropMsg, farmHarvest, farmLbl, farmStage, farmT, fertCrop, fillCan, gro
 import { reel, startFish } from './fishing.js';
 import { harvest, hitObj, mineWall } from './gathering.js';
 import { wearItem, wtOf } from './gear.js';
-import { addItem, bestTool, clearRefundBox, countItem, holdTool, isBroken, moveInto, refillHot, refundMine, removeItem, returnObj, selItem, wear } from './inventory.js';
+import { addItem, bestTool, clearRefundBox, countItem, holdTool, isBroken, isStore, moveInto, refillHot, refundMine, removeItem, returnObj, selItem, storeAt, wear } from './inventory.js';
 import { isYoung, treeStep, WATER } from './nature.js';
 import { scoopWater } from './digging.js';
 import { eat, maxHp, sleepIn, standUp } from './player.js';
@@ -249,7 +249,7 @@ export function perform(a) {
     case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
     case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
-    case 'open': if (a.o.t === 'chest' || OBJ[a.o.t].refund) emit('open', 'chest', { i: idx(a.t.x, a.t.y) }); else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
+    case 'open': if (isStore(a.o) || OBJ[a.o.t].refund) { const so = storeAt(idx(a.t.x, a.t.y)); emit('open', 'chest', { i: so ? so.j : idx(a.t.x, a.t.y) }); } else emit('open', 'craft', { st: OBJ[a.o.t].station, i: idx(a.t.x, a.t.y) }); G.actCd = 0.3; break;
     case 'harvest': harvest(a.t, a.o); G.actCd = 0.3; break;
     case 'treasure': openTreasure(a.t, a.o); G.actCd = 0.4; break;
     case 'harvest3': for (const [x, y, o] of a.list) harvest({ x, y }, o); G.actCd = 0.35; break;

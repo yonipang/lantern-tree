@@ -4,6 +4,8 @@
 import { TIER_IT, TIERED } from '../data/automation-tiers.js';
 import { TIMED } from '../data/farming-cooking.js';
 import { BUILT_WALLS, ITEMS, OBJ, RECIPES, WALLS } from '../data/items.js';
+import { DECOR_ONLY } from '../data/decor136.js';
+import { canDev, devOn } from '../save/storage.js';
 import { FLOOR_ITEM, NATURE } from '../data/rpg-nature.js';
 import { rand, rint } from '../engine/random.js';
 import { G } from '../save/state.js';
@@ -14,7 +16,7 @@ import { flowNear } from './digging.js';
 import { spawnDrop } from './drops.js';
 import { emit } from './events.js';
 import { recipeOn } from './farming.js';
-import { addItem, countItem, isBroken, isRefund, removeItem, returnObj, slotIs } from './inventory.js';
+import { addItem, countItem, isBroken, isRefund, isStore, removeItem, returnObj, slotIs, storeAt } from './inventory.js';
 import { markLight } from './loop.js';
 import { nearWarpPt, portalWhy, warpsChanged } from './warp.js';
 import { idx, inB, LAVA, PIT, W } from '../world/map.js';
@@ -22,15 +24,15 @@ import { WATER } from './nature.js';
 import { anchorAt, canPlace, delObj, fpFree, fpOf, isPlacedFloor, noDigZone, occupied, pushSpot, setParts } from '../world/tiles.js';
 export const BM_REACH = 8, BM_MAX = 64, BM_CHEST_R = 16;
 // ---- 분류 탭 ----
-export const BM_CATS = [['wall', '벽'], ['floor', '바닥'], ['furn', '가구'], ['light', '조명'], ['stn', '제작대'], ['circ', '회로'], ['nat', '자연']];
+export const BM_CATS = [['wall', '벽'], ['floor', '바닥'], ['furn', '가구'], ['light', '조명'], ['stn', '제작대'], ['circ', '회로'], ['nat', '자연'], ['deco', '꾸미기']]; // v136 「꾸미기」는 개발자 모드에서만 (꾸미기 전용 물건)
 // v93: 흙·얼음 덩이는 「벽」 탭(쌓기)과 「바닥」 탭(메우기·바꾸기) 둘 다 — 바닥 탭의 것은 'dirt#g'처럼 #g를 붙인 이름으로 골라요
 export const GSUF = '#g';
 export const bmBase = id => typeof id === 'string' && id.endsWith(GSUF) ? id.slice(0, -GSUF.length) : id;
 export const bmItem = id => { const b = bmBase(id), it = ITEMS[b]; return b !== id ? groundOf(it) : it; };
-export function bmCat(id) { if (bmBase(id) !== id) return 'floor'; const it = ITEMS[id], k = it.kind;
+export function bmCat(id) { if (bmBase(id) !== id) return 'floor'; const it = ITEMS[id], k = it.kind; if (it.deco) return 'deco'; /* v136 꾸미기 전용 */
   if (k === 'wall') return 'wall'; if (k === 'floor' || k === 'ground') return 'floor'; if (k === 'wire') return 'circ'; if (k === 'seed') return 'nat';
   const d = OBJ[it.obj] || {}; if (d.tw) return 'wall'; if (d.dev || d.sw || d.src || d.gate || it.obj === 'battery' || it.obj === 'eLamp') return 'circ';
-  if (d.station || d.chest || it.obj === 'chest' || d.warp) return 'stn'; if (d.light) return 'light'; if (d.nat || d.crop || d.tree || d.ranch || natDecor().has(id)) return 'nat'; return 'furn'; }
+  if (d.station || it.obj === 'chest' || it.obj === 'chestBig' || d.warp) return 'stn'; /* v136 상자 종류 가구는 가구 탭 그대로 */ if (d.light) return 'light'; if (d.nat || d.crop || d.tree || d.ranch || natDecor().has(id)) return 'nat'; return 'furn'; }
 let NAT_D = null; // 자연 꾸미기(덤불·꽃밭·연못·바위): 자연 꾸미기 표와 제작 창 「자연」 탭의 것
 const natDecor = () => NAT_D || (NAT_D = new Set([...Object.keys(NATURE), ...RECIPES.filter(r => r.cat === 'nature').map(r => r.out)]));
 export const isBuildItem = id => { const it = ITEMS[id]; return !!it && BUILD_KINDS.includes(it.kind); };
@@ -39,7 +41,7 @@ export function bmDrag(id) { const it = bmItem(id); if (!it) return 'one'; if (i
   if (it.kind === 'wall' || it.kind === 'wire') return 'line'; const d = OBJ[it.obj]; return d && d.tw ? 'line' : 'one'; }
 // ---- 가방 + 둘레 16칸 안 보관상자 ----
 export function bmChests() { const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), out = [];
-  for (const [j, o] of G.objs) { if (!o || o.t !== 'chest' || !o.items || isRefund(o)) continue; const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > BM_CHEST_R || Math.abs(y - py) > BM_CHEST_R) continue; out.push({ o, d: Math.hypot(x - px, y - py) }); }
+  for (const [j, o] of G.objs) { if (!isStore(o) || !storeAt(j)) continue; /* v136 상자 종류 가구도 */ const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > BM_CHEST_R || Math.abs(y - py) > BM_CHEST_R) continue; out.push({ o, d: Math.hypot(x - px, y - py) }); }
   return out.sort((a, b) => a.d - b.d).map(c => c.o); }
 export function bmCount(id, ch = bmChests()) { let n = countItem(id), b = 0; for (const o of ch) for (const s of o.items) if (slotIs(s, id)) b += s.c; return { bag: n, box: b, all: n + b }; }
 // 한 개를 가방(뒤 칸부터) → 가까운 상자 순으로 꺼내요. 돌려주는 칸은 배터리 남은 양을 그대로 가져요
@@ -53,9 +55,11 @@ export function bmStations() { const set = new Set(); for (const o of G.objs.val
 export function stationReached(r, st) { if (!r.at) return true; if (TIMED[r.at]) return false;
   if (r.at === 'bench') return !!G.stats.bench && (r.tier || 0) <= (G.stats.benchLv || 0);
   if (TIERED[r.at]) return st.has(r.at) && (r.tier || 0) <= (G.stats.gearLv || 0);
+  if (r.at === 'fdesk') return st.has('fdesk') && (r.tier || 0) <= (G.stats.benchLv || 0); // v136 가구 제작대
   return st.has(r.at); }
-export function bmRecipe(id, st = bmStations()) { return RECIPES.find(r => r.out === id && recipeOn(r) && (!r.dish || knows(r.dish)) && stationReached(r, st)) || null; }
-export const bmCanMake = (r, ch) => !!r && r.req.every(([m, c]) => bmCount(m, ch).all >= c);
+const DEV_R = {}; // v136 개발자 모드: 꾸미기 전용·재료 없이 놓기 (재료 없는 레시피)
+export function bmRecipe(id, st = bmStations()) { if (canDev() && (DECOR_ONLY[id] || devOn('free')) && ITEMS[id]) return DEV_R[id] || (DEV_R[id] = { out: id, n: 1, req: [], at: 'dev' }); return RECIPES.find(r => r.out === id && recipeOn(r) && (!r.dish || knows(r.dish)) && stationReached(r, st)) || null; }
+export const bmCanMake = (r, ch) => !!r && (r.at === 'dev' || r.req.every(([m, c]) => bmCount(m, ch).all >= c));
 // ---- 건축 목록: 가진 것 + 만들 수 있는 레시피 ----
 export function bmList() { const ch = bmChests(), st = bmStations(), seen = new Set(), out = [];
   const add = id => { if (seen.has(id) || !isBuildItem(id)) return; seen.add(id); const c = bmCount(id, ch), r = c.all ? null : bmRecipe(id, st); if (!c.all && !r) return;
@@ -63,6 +67,7 @@ export function bmList() { const ch = bmChests(), st = bmStations(), seen = new 
     if (groundOf(ITEMS[id])) out.push({ ...e, id: id + GSUF, cat: 'floor' }); };
   for (const s of G.inv) if (s) add(s.id); for (const o of ch) for (const s of o.items) if (s) add(s.id);
   for (const r of RECIPES) add(r.out);
+  if (canDev()) for (const id in DECOR_ONLY) add(id); // v136 개발자 모드 「꾸미기」 탭
   return out; }
 // ---- 놓을 수 있는지 ----
 export function pickTier() { let t = 0; for (const s of G.inv.concat(G.tools || [])) { if (!s || !ITEMS[s.id] || ITEMS[s.id].kind !== 'pick' || isBroken(s)) continue; t = Math.max(t, ITEMS[s.id].tier || 0); } return t; }
@@ -98,7 +103,7 @@ defineCmd('bplace', c => {
     const ch = bmChests(); let s;
     if (bmCount(id, ch).all > 0) s = bmTake(id, 1, ch);
     else { const r = bmRecipe(id, st); if (!r || !bmCanMake(r, ch)) { why = r ? '재료가 모자라요' : '가진 것이 없어요'; break; }
-      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id, c: 1 }; made++;
+      for (const [m, k] of r.req) bmTake(m, k, ch); s = { id, c: 1 }; if (r.at !== 'dev') made++;
       if (r.n > 1) { const l = addItem(id, r.n - 1, false); if (l) spawnDrop(id, l, p.x, p.y); }
       G.stats.made = G.stats.made || {}; G.stats.made[id] = (G.stats.made[id] || 0) + 1; }
     if (it.kind === 'wall' && G.wall[idx(x, y)]) { wallBack(x, y); G.wdmg.delete(idx(x, y)); }

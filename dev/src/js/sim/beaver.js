@@ -13,7 +13,7 @@ import { G } from '../save/state.js';
 import { D4 } from './circuits.js';
 import { defineCmd } from './commands.js';
 import { emit } from './events.js';
-import { addItem, countItem, moveInto, removeItem } from './inventory.js';
+import { addItem, countItem, moveInto, removeItem, storeAt } from './inventory.js';
 import { markLight } from './loop.js';
 import { isYoung, WATER } from './nature.js';
 import { onFrame } from './systems.js';
@@ -32,7 +32,7 @@ export const treesNear = i => around(i, grownTree);
 export const feedersNear = i => around(i, o => o.t === 'feeder' && !!o.feed);
 // 둘레 먹이통에서 먹이 하나 먹기 → 그 먹이로 일하는 초 (없으면 0)
 function eatOne(i) { for (const { o } of feedersNear(i)) for (let k = 0; k < o.feed.length; k++) { const s = o.feed[k]; if (!s || !FEED[s.id]) continue; const sec = FEED[s.id]; s.c--; if (!s.c) o.feed[k] = null; return sec; } return 0; }
-function chestsBy(i) { const x = i % W, y = (i / W) | 0, out = []; for (const [dx, dy] of D4) { if (!inB(x + dx, y + dy)) continue; const c = G.objs.get(idx(x + dx, y + dy)); if (c && c.t === 'chest' && c.items) out.push({ c, x: x + dx, y: y + dy }); } return out; }
+function chestsBy(i) { const x = i % W, y = (i / W) | 0, out = []; for (const [dx, dy] of D4) { if (!inB(x + dx, y + dy)) continue; const sc = storeAt(idx(x + dx, y + dy)); if (sc) out.push({ c: sc.o, x: x + dx, y: y + dy }); } return out; }
 const roomy = i => chestsBy(i).some(({ c }) => c.items.some(z => !z));
 // 벤 나무에서 나오는 것: 손으로 벨 때의 나무 개수·송진 확률 그대로 (이끼 섬유·버섯·꽃잎·묘목은 안 나옴)
 export function beaverYield(t) { const out = []; for (const [id, a, b, ch] of OBJ[t].drops || []) { if (id !== 'wood' && id !== 'resin') continue; if (rand() < (ch == null ? 1 : ch)) { const c = rint(a, b); if (c > 0) out.push([id, c]); } } return out; }

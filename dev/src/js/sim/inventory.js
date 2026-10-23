@@ -9,15 +9,21 @@ import { UPG_POW } from '../data/gear-animals.js';
 import { BAG0, BAG_STEP, HOT, ITEMS, OBJ } from '../data/items.js';
 import { josa } from '../engine/util.js';
 import { curPl, G, ME } from '../save/state.js';
+import { canDev, devOn } from '../save/storage.js';
 import { defineCmd } from './commands.js';
 import { learnRecipe } from './cooking.js';
 import { cancelJob } from './crafting.js';
 import { spawnDrop } from './drops.js';
 import { emit } from './events.js';
 import { autoHotWeapon, lvOf, rarOf, unwear, wearItem } from './gear.js';
-import { eat } from './player.js';
+import { eat, fitBag } from './player.js';
 import { idx, inB, W } from '../world/map.js';
 import { delObj, fpTiles } from '../world/tiles.js';
+// v136: 보관함 = 보관상자 + 상자 종류 가구(나무 상자·통·자루·바구니·궤짝·수납장·큰 보관함 …). OBJ[t].chest = 칸 수(1이면 예전 보관상자 18칸)
+export const storeSlots = t => { const c = OBJ[t] && OBJ[t].chest; return !c ? 0 : c === 1 ? 18 : c; };
+export const isStore = o => !!o && o.t !== 'refundBox' && storeSlots(o.t) > 0;
+// 그 칸의 보관함(여러 칸이면 몸통 칸으로) — 옛 세이브에 놓여 있던 상자 종류 가구는 처음 쓸 때 빈 칸을 만들어요
+export function storeAt(j) { let o = G.objs.get(j); if (o && o.t === '_part') { j = o.a; o = G.objs.get(j); } if (!isStore(o)) return null; if (!Array.isArray(o.items)) o.items = Array(storeSlots(o.t)).fill(null); return { o, j }; }
 import { markLight } from './loop.js';
 import { onFrame } from './systems.js';
 import { nestContents } from './beaver.js';
@@ -45,7 +51,7 @@ export function returnObj(o, x, y) {
   emit('inv');
 }
 // ================= inventory =================
-export const invSize = () => HOT + BAG0 + BAG_STEP * ((G && G.bagLv) || 0) + 3 * ((G && G.rpg && G.rpg.sk && G.rpg.sk.porter) || 0); // v102 짐꾼 +3칸/단계
+export const invSize = () => HOT + BAG0 + BAG_STEP * ((G && G.bagLv) || 0) + 3 * ((G && G.rpg && G.rpg.sk && G.rpg.sk.porter) || 0) + (devOn('bag') ? 60 : 0); // v136 개발자 도구: 가방 +60칸 // v102 짐꾼 +3칸/단계
 export const isMat = it => !it.kind || it.kind === 'ground' || it === ITEMS.dirt || !!it.mat;
 export const stackMax = id => ITEMS[id].stack || (isMat(ITEMS[id]) ? 999 : 99);
 // bag kinds for the tabs and for sorting
@@ -102,7 +108,7 @@ export function linkedChests() {
   const p = G.p, seen = new Set(), out = [], q = [];
   for (let y = Math.floor(p.y) - 4; y <= p.y + 4; y++) for (let x = Math.floor(p.x) - 4; x <= p.x + 4; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (o && OBJ[o.t].station) for (const j of fpTiles(idx(x, y), o)) q.push([j % W, (j / W) | 0]); }
   while (q.length && out.length < 80) { const [x, y] = q.shift();
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const o = G.objs.get(j); if (o && o.t === 'chest' && o.items) { seen.add(j); out.push(o); q.push([nx, ny]); } } }
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const nx = x + dx, ny = y + dy; if (!inB(nx, ny)) continue; const j = idx(nx, ny); if (seen.has(j)) continue; const so = storeAt(j); if (so && !seen.has(so.j)) { seen.add(j); seen.add(so.j); out.push(so.o); q.push([nx, ny]); } else if (so) seen.add(j); } }
   return out;
 }
 export const slotIs = (s, id) => !!s && idIs(s.id, id);
@@ -158,7 +164,7 @@ defineCmd('stash', c => { const o = G.objs.get(c.o); if (!o || !o.items || isRef
 export const STASH_R = 16;
 export function stashNear() {
   const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y), list = [];
-  for (const [j, o] of G.objs) { if (!o || o.t !== 'chest' || !o.items) continue; const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > STASH_R || Math.abs(y - py) > STASH_R) continue; list.push({ j, o, x, y, d: Math.hypot(x + .5 - p.x, y + .5 - p.y), n: 0 }); }
+  for (const [j, o] of G.objs) { if (!isStore(o) || !storeAt(j)) continue; const x = j % W, y = (j / W) | 0; if (Math.abs(x - px) > STASH_R || Math.abs(y - py) > STASH_R) continue; list.push({ j, o, x, y, d: Math.hypot(x + .5 - p.x, y + .5 - p.y), n: 0 }); }
   list.sort((a, b) => a.d - b.d); let n = 0, left = 0;
   for (let i = HOT; i < G.inv.length; i++) { const s = G.inv[i]; if (!s) continue; const to = list.filter(c => c.o.items.some(x => x && x.id === s.id)); if (!to.length) continue;
     for (const c of to) { const l = moveInto(c.o.items, s), k = s.c - l; c.n += k; n += k; s.c = l; if (!l) break; }
@@ -173,6 +179,9 @@ defineCmd('chest', c => { const o = G.objs.get(c.o); if (!o || (isRefund(o) && (
 defineCmd('retrieve', c => { const o = G.objs.get(c.o); if (isRefund(o)) { clearRefundBox(c.o); return; } if (o) { delObj(c.o); returnObj(o, G.p.x, G.p.y); emit('sfx', 'pick'); markLight(); } }); // 제작대 회수
 defineCmd('markAdd', () => { G.marks = G.marks || []; G.marks.push({ x: Math.floor(G.p.x), y: Math.floor(G.p.y) }); });
 defineCmd('markDel', c => { G.marks.splice(c.i, 1); });
+// v136 개발자 도구: 지도 전부 밝히기 · 가방 칸 다시 맞추기(가방 넉넉히 스위치)
+defineCmd('devReveal', () => { if (!canDev()) return false; G.explored.fill(1); emit('remap'); emit('toast', '지도를 모두 밝혔어요', 'good'); });
+defineCmd('fitBag', () => { fitBag(); emit('inv'); });
 export const isTool = id => !!ITEMS[id] && TOOL_KINDS.includes(ITEMS[id].kind);
 export const toolPow = s => ((ITEMS[s.id] && ITEMS[s.id].power) || 1) * (1 + UPG_POW * lvOf(s));
 export const heldTool = () => (G && G.sel < 0 && G.tools && G.tools[G.tsel]) || null;

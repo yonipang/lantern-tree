@@ -13,6 +13,7 @@ import { eventWho, onEvent } from '../sim/events.js';
 import { onFrame } from '../sim/systems.js';
 import { CHARS, buildPlayer, lookDef } from '../art/characters.js';
 import { mapPixel, rebuildMap } from '../render/map.js';
+import { addFxAnim } from '../render/world.js';
 import { BM } from './build.js';
 import { closePanel, craftNote, openPanel, panel, renderPanel, UIS } from './panels.js';
 import { bellClear, bellPush } from './talk.js';
@@ -41,6 +42,7 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 
 // ---- 화면 흔들림: emit('shake', 세기) = 지금보다 세면 그만큼, emit('shake', 세기, true) = 그 세기로 ----
 export let shake = 0;
+onEvent('fxAnim', (k, x, y) => addFxAnim(k, x, y)); // v136 스킬 효과 그림 (render/world.js)
 onEvent('shake', onlyMe((v, set) => { shake = set ? v : Math.max(shake, v); }));
 onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 

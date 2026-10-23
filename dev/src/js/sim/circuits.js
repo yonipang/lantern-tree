@@ -10,7 +10,7 @@ import { alivePlayers, G } from '../save/state.js';
 import { doorGroup, SLIDE_NEAR, SLIDE_PW } from './building.js';
 import { emit } from './events.js';
 import { farmDevStep, farmHarvest, farmStage } from './farming.js';
-import { moveInto } from './inventory.js';
+import { moveInto, storeAt } from './inventory.js';
 import { onFrame } from './systems.js';
 import { idx, inB, W } from '../world/map.js';
 import { fpTiles, occupied } from '../world/tiles.js';
@@ -58,7 +58,7 @@ export function deviceStep(i, o, d, on, dt) {
     if (!can) return; o.prog = (o.prog || 0) + dt;
     if (Math.hypot(tx + .5 - G.p.x, ty + .5 - G.p.y) < 14 && fxRand() < dt * 3) emit('puff', tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, WPAL[w][1], 2, 1.4, .1);
     if (o.prog >= d.every) { o.prog = 0; const dr0 = WALLS[w].drop[0]; if (rand() > (dr0[3] == null ? 1 : dr0[3])) return; const id = dr0[0]; G.stats.drilled = (G.stats.drilled || 0) + 1;
-      let put = null; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const c = G.objs.get(idx(cx, cy)); if (c && c.t === 'chest' && c.items && !moveInto(c.items, { id, c: 1 })) { put = [cx, cy]; break; } }
+      let put = null; for (const [dx, dy] of [[-dir.x, -dir.y], ...D4]) { const cx = x + dx, cy = y + dy; if (!inB(cx, cy)) continue; const sc = storeAt(idx(cx, cy)); if (sc && !moveInto(sc.o.items, { id, c: 1 })) { put = [cx, cy]; break; } }
       if (Math.hypot(x + .5 - G.p.x, y + .5 - G.p.y) < 14) { const to = put || [x, y]; emit('oreFly', tx + .5 - dir.x * .45, ty + .7 - dir.y * .45, to[0] + .5, to[1] + .6, WPAL[w][1]); emit('sfx', 'pick'); } // v113: 광석이 톡 튀어 상자로
       if (!put) { o.store = o.store || []; const s2 = o.store.find(z => z.id === id); if (s2) s2.c++; else o.store.push({ id, c: 1 }); } } }
 }

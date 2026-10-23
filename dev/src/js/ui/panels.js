@@ -21,12 +21,13 @@ import { MAX_LV, SK_CAT, SKILLS, STATN, XP_NEED } from '../data/rpg-nature.js';
 import { C } from '../engine/canvas.js';
 import { $, clamp, josa } from '../engine/util.js';
 import { G, setPaused, soundOn, started } from '../save/state.js';
-import { canDev, clearImport, cloudMenuHTML, cloudPendingHTML, escHTML, importFrom, pendingImp, playRecordHTML } from '../save/storage.js';
+import { CHEST136, DECO136 } from '../data/decor136.js';
+import { canDev, clearImport, cloudMenuHTML, cloudPendingHTML, DEVF, DEVF_KEYS, devOn, escHTML, importFrom, pendingImp, playRecordHTML } from '../save/storage.js';
 import { bestArrow } from '../sim/combat.js';
 import { runCmd } from '../sim/commands.js';
 import { nextStory } from '../sim/naru.js';
 import { buffText, knows, noteHint } from '../sim/cooking.js';
-import { atHere, canSalv, craftable, fmtT, isMulti, jobTime, maxCraft, nearStations, repairCost, salvGet2, stationTier } from '../sim/crafting.js';
+import { atHere, canSalv, craftable, fmtT, isMulti, jobTime, maxCraft, nearStations, repairCost, salvGet2, stationTier, stationTierNow } from '../sim/crafting.js';
 import { recipeOn } from '../sim/farming.js';
 import { lvOf, rarOf, upgOk, upgText, wtOf } from '../sim/gear.js';
 import { availCount, BAG_TABS, bagCat, countItem, durOf, isBroken, linkedChests, resetPool, slotList } from '../sim/inventory.js';
@@ -74,6 +75,7 @@ export const FURN2 = { seat: 'chair sofa2 logBench stoneBench cushion ironChair 
 export const FURN2_OF = {}; for (const k in FURN2) for (const id of FURN2[k].split(' ')) FURN2_OF[id] = k;
 for (const id in DECO122) if (DECO122[id][7]) FURN2_OF[id] = DECO122[id][7]; // v122 받은 그림 가구
 for (const id in DECO132) if (DECO132[id][5]) FURN2_OF[id] = DECO132[id][5]; // v132 눈사람·트리·토템
+for (const id in DECO136) FURN2_OF[id] = DECO136[id][5]; for (const id in CHEST136) if (!FURN2_OF[id] || FURN2_OF[id] === 'deco') FURN2_OF[id] = 'store'; FURN2_OF.chestBig = 'store'; // v136
 export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[id] || {}, o = OBJ[it.obj] || {}, c = r.cat; let t;
   if (o.station) t = ['stn', o.station === 'furnace' ? 'smelt' : o.station === 'pot' ? 'cook' : 'make'];
   else if (c === 'mat') t = ['mat'];
@@ -85,6 +87,7 @@ export function bcat(r) { if (r._bc) return r._bc; const id = r.out, it = ITEMS[
   else t = ['furn', FURN2_OF[id] || 'deco'];
   return (r._bc = t); }
 const EQ_SLOTS_FIX = () => Object.keys(G.equip || {}).map(sl => ({ s: G.equip[sl], i: 'e:' + sl }));
+const DEVF_N = { free: '재료 없이', god: '체력 안 줆', peace: '몬스터 공격 없음', bag: '가방 +60칸', fast: '빨리 걷기' }; // v136
 export function renderPanel() {
   const sh = $('#sheet'); if (!panel) return; const k = panel.kind; let h = '';
   const key = k + '|' + (k === 'craft' ? UIS.tab + '|' + (UIS.tab2 || 'all') + '|' + (panel.st || '') : ''), same = sh.dataset.key === key, sameKind = (sh.dataset.key || '').split('|')[0] === k;
@@ -93,7 +96,7 @@ export function renderPanel() {
   } else if (k === 'catch') { h += catchHTML();
   } else if (k === 'craft') {
     const near = nearStations(); const st = panel.st; resetPool(); const nCh = linkedChests().length;
-    const ctier = craftTier(), bo = TIERED[st] && panel.i != null ? G.objs.get(panel.i) : null, inTier = r => !TIERED[r.at] || (r.tier || 0) <= ctier;
+    const ctier = craftTier(), bo = TIERED[st] && panel.i != null ? G.objs.get(panel.i) : null, inTier = r => r.at === 'fdesk' ? (r.tier || 0) <= stationTierNow() : !TIERED[r.at] || (r.tier || 0) <= ctier; // v136 가구 제작대는 작업대 단계
     h += st ? head(TIERED[st] ? TIERED[st][ctier] : STN[st], null, `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>`) : otabsHTML(BAG_NAV, 'craft', 'bagNav') + sheetTop('', '제작'); // v77: 손제작은 가방 안 제작 탭 · v83: 탭은 창 위 바깥
     if (bo) h += benchUpHTML(bo); // v60: upgrade the workbench at the top of its window
     const hereR = RECIPES.filter(r => atHere(r, st) && recipeOn(r) && inTier(r)), benchy = st === 'bench' || st === 'forge', smel = st === 'smelter';
@@ -110,6 +113,10 @@ export function renderPanel() {
       if (!T2.some(([id]) => id === UIS.tab2)) UIS.tab2 = 'all';
       h += `<div class="tabs itabs">${T1.map(([id, n, ic]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}" aria-label="${n}" title="${n}"><img class="px" src="${iconURL(ic)}" alt="">${UIS.tab === id ? `<span>${n}</span>` : ''}</button>`).join('')}</div>`;
       if (T2.length > 2) h += `<div class="tabs t2">${T2.map(([id, n]) => `<button type="button" class="tab ${UIS.tab2 === id ? 'on' : ''}" data-a="tab2" data-i="${id}">${n}</button>`).join('')}</div>`;
+    } else if (st === 'fdesk') { // v136 가구 제작대: 가구 칸 탭 한 줄 (전체·의자·탁자·침대·수납·장식)
+      UIS.tab = 'furn'; const T2 = (BT2.furn || []).filter(([id]) => id === 'all' || hereR.some(r => bcat(r)[1] === id));
+      if (!T2.some(([id]) => id === UIS.tab2)) UIS.tab2 = 'all';
+      h += `<div class="tabs t2">${T2.map(([id, n]) => `<button type="button" class="tab ${UIS.tab2 === id ? 'on' : ''}" data-a="tab2" data-i="${id}">${n}</button>`).join('')}</div>`;
     } else {
     if (!tabs.some(([id]) => id === UIS.tab)) UIS.tab = 'all';
     h += `<div class="tabs">${tabs.map(([id, n]) => `<button type="button" class="tab ${UIS.tab === id ? 'on' : ''}" data-a="tab" data-i="${id}">${n}</button>`).join('')}</div>`; }
@@ -130,13 +137,13 @@ export function renderPanel() {
       const nb = smel && near.has('smelter'), list = [...EQ_SLOTS_FIX(), ...otherSetSlots(), ...slotList()].filter(({ s }) => s && DUR[s.id] && durOf(s) < DUR[s.id][0]); // v83: 입은 장비·다른 세트 장비도
       h += `<div class="sh-body">${nb ? '' : '<p class="hint">장비제작대 근처에서 고칠 수 있어요.</p>'}<div class="list">`;
       if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">고칠 도구가 없어요</p>`;
-      for (const { s, i } of list) { const cost = repairCost(s), ok = nb && cost.every(([id, c]) => availCount(id) >= c), mx = DUR[s.id][0];
+      for (const { s, i } of list) { const cost = repairCost(s), ok = nb && (devOn('free') || cost.every(([id, c]) => availCount(id) >= c)), mx = DUR[s.id][0];
         h += `<div class="rc ${ok ? 'ok' : 'no'}"><div class="ri" style="position:relative"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${isBroken(s) ? '<small style="color:#ff8a96">망가짐</small>' : ''}<div class="fixbar"><i style="width:${Math.round(durOf(s) / mx * 100)}%"></i></div><div class="ings"><span class="ing">내구도 ${durOf(s)}/${mx}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="fix" data-i="${i}" ${ok ? '' : 'disabled'}>수리</button></div>`; }
       h += `</div></div>`;
     } else {
     // order is fixed while the panel stays on this tab, so the list does not jump after crafting
     const okey = UIS.tab + '|' + (UIS.tab2 || 'all') + '|' + (st || '') + '|' + ctier;
-    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => recipeOn(r) && atHere(r, st) && inTier(r) && (UIS.tab === 'all' || (st === 'bench' ? bcat(r)[0] === UIS.tab && (UIS.tab2 === 'all' || bcat(r)[1] === UIS.tab2) : r.cat === UIS.tab))); const tv = r => st === 'bench' && !r.at ? -1 : (r.tier || 0); l.sort((a, b) => (tv(b.r) - tv(a.r)) || (canCraft(b.r, near) - canCraft(a.r, near))); /* v60: this tier's things first */ UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
+    if (!UIS.craftOrder || UIS.craftOrder.key !== okey) { const l = RECIPES.map((r, i) => ({ r, i })).filter(({ r }) => recipeOn(r) && atHere(r, st) && inTier(r) && (UIS.tab === 'all' || (st === 'bench' || st === 'fdesk' ? bcat(r)[0] === UIS.tab && (UIS.tab2 === 'all' || bcat(r)[1] === UIS.tab2) : r.cat === UIS.tab))); const tv = r => st === 'bench' && !r.at ? -1 : (r.tier || 0); l.sort((a, b) => (tv(b.r) - tv(a.r)) || (canCraft(b.r, near) - canCraft(a.r, near))); /* v60: this tier's things first */ UIS.craftOrder = { key: okey, ids: l.map(x => x.i) }; }
     const list = UIS.craftOrder.ids.map(i => ({ r: RECIPES[i], i }));
     const so = TIMED[st] && panel.i != null ? G.objs.get(panel.i) : null, busy = !!(so && so.job);
     h += `<div class="sh-body">${busy ? `<div class="list" style="margin-bottom:8px">${jobHTML(so)}</div>` : ''}<div class="list">`;
@@ -156,9 +163,9 @@ export function renderPanel() {
     const o = G.objs.get(panel.i); if (!o || o.t !== 'oreNet') { closePanel(); return; }
     h += head('광석 그물', 'oreNet', `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">회수</button>`) + `<div class="sh-body">${sieveHTML(o)}</div>`;
   } else if (k === 'chest') {
-    const o = G.objs.get(panel.i); if (!o) { closePanel(); return; }
+    const o = G.objs.get(panel.i); if (!o || !Array.isArray(o.items)) { closePanel(); return; }
     const empty = o.items.every(x => !x), rf = o.t === 'refundBox'; // v69 (BF-05): the refund box — take-only
-    h += head(rf ? '환급 상자' : '보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${rf ? '치우기' : '회수'}</button>` : '');
+    h += head(rf ? '환급 상자' : (OBJ[o.t] && OBJ[o.t].n) || '보관상자', 'chest', empty ? `<button class="btn ghost" data-a="retrieve" type="button" style="min-height:36px;padding:0 10px;font-size:16px">${rf ? '치우기' : '회수'}</button>` : '');
     if (rf) h += `<div class="sh-body"><div class="lbl">환급 상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'inv', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'inv', i + HOT)).join('')}</div></div>`;
     else
     h += `<div class="sh-body"><div class="menu-two stash"><button class="btn" data-a="stash" data-i="all" type="button">가방 → 모두 넣기</button><button class="btn ghost" data-a="stash" data-i="same" type="button">같은 것만 넣기</button></div><div class="lbl">상자</div><div class="grid">${o.items.map((s, i) => slotHTML(s, 'cout', i)).join('')}</div><div class="lbl">단축칸</div><div class="grid">${G.inv.slice(0, HOT).map((s, i) => slotHTML(s, 'cin', i)).join('')}</div><div class="lbl">가방</div><div class="grid">${G.inv.slice(HOT).map((s, i) => slotHTML(s, 'cin', i + HOT)).join('')}</div></div>`;
@@ -175,7 +182,7 @@ export function renderPanel() {
   } else if (k === 'menu') {
     const imp = pendingImp && importFrom === 'menu' ? `<div class="impbox"><p>「${escHTML(pendingImp.name)}」 세이브로 바꿀까요?<br><span style="color:var(--muted);font-size:16px">지금 진행 중인 세계는 이 파일로 바뀌어요.</span></p><div class="menu-two"><button class="btn warn" data-a="impYes" type="button">바꾸기</button><button class="btn ghost" data-a="impNo" type="button">취소</button></div></div>` : '';
     const marks = G.marks || [];
-    const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:6px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}</div>` : '';
+    const dev = canDev() ? `<div class="devbox"><div class="lbl" style="color:#ff8fa3">개발자 도구 · 마을 표시</div><p class="hint">마을 영역의 두 모서리에 차례로 표시해요 (왼쪽 위 → 오른쪽 아래). 표시는 개발자 모드에서만 보여요.</p><div class="menu-list"><button class="btn ghost" data-a="markAdd" type="button">지금 서 있는 곳에 표시</button></div>${marks.map((m, k) => `<div class="markrow"><span>마을 ${Math.floor(k / 2) + 1} · ${k % 2 ? '끝' : '시작'} (${m.x}, ${m.y})</span><button class="btn ghost" data-a="markDel" data-i="${k}" type="button">지우기</button></div>`).join('')}${marks.length % 2 ? '<p class="hint" style="margin-top:6px">반대쪽 모서리에도 하나 더 표시해 주세요.</p>' : ''}<div class="lbl" style="color:#ff8fa3;margin-top:12px">개발자 도구 · 시험용 스위치</div><p class="hint">이 기기에만 기억돼요.</p><div class="menu-two">${DEVF_KEYS.map(k => `<button class="btn ${DEVF[k] ? 'warn' : 'ghost'}" data-a="devf" data-i="${k}" type="button">${DEVF_N[k]} ${DEVF[k] ? '켜짐' : '꺼짐'}</button>`).join('')}<button class="btn ghost" data-a="devReveal" type="button">지도 모두 밝히기</button></div><div class="lbl" style="color:#ff8fa3;margin-top:12px">개발자 도구 · 마을 꾸미기</div><p class="hint">건축 모드의 「꾸미기」 탭에서 꾸미기 전용 물건을 재료 없이 놓아요. 다 꾸몄으면 파일로 내보내 보내 주세요. (마을 표시 안 · 표시가 없으면 등불나무 둘레 30칸)</p><div class="menu-list"><button class="btn ghost" data-a="villageOut" type="button">꾸민 마을 파일로 내보내기</button></div></div>` : '';
     h += head('<span data-a="devtap">설정</span>', 'gear') + `<div class="sh-body">${imp}<div class="menu-list"><button class="btn" data-a="save" type="button">지금 저장하기</button><button class="btn ghost" data-a="sound" type="button">소리 ${soundOn ? '끄기' : '켜기'}</button><button class="btn ghost" data-a="help" type="button">가이드</button></div>
       ${canDev() ? `<div class="lbl" style="margin-top:12px">세이브 파일 (개발자 모드)</div><div class="menu-two"><button class="btn ghost" data-a="export" type="button">파일로 내보내기</button><button class="btn ghost" data-a="import" type="button">파일 불러오기</button></div>${cloudMenuHTML()}` : cloudPendingHTML()}
       <div class="lbl" style="margin-top:12px">조작 방식 (터치 화면)</div><div class="tabs">${[['joy', '조이스틱'], ['pad', '방향키']].map(([k, n]) => `<button type="button" class="tab ${ctrlPref === k ? 'on' : ''}" data-a="ctrl" data-i="${k}">${n}</button>`).join('')}</div>

@@ -598,7 +598,7 @@
 "n": "나무 상자",
 "kind": "place",
 "obj": "woodCrate",
-"d": "차곡차곡 쌓아 두는 장식용 상자."
+"d": "차곡차곡 쌓아 두는 장식용 상자. 물건을 12칸 보관해요."
 },
 "logBench": {
 "n": "통나무 벤치",
@@ -628,7 +628,7 @@
 "n": "짚 바구니",
 "kind": "place",
 "obj": "strawBasket",
-"d": "이끼 섬유로 엮은 바구니."
+"d": "이끼 섬유로 엮은 바구니. 물건을 9칸 보관해요."
 },
 "pictureFrame": {
 "n": "이젤 액자",
@@ -4066,13 +4066,13 @@
 "n": "열매 상자",
 "kind": "place",
 "obj": "crateFruit",
-"d": "빨간 열매를 담은 나무 상자 (2×1)."
+"d": "빨간 열매를 담은 나무 상자 (2×1). 물건을 12칸 보관해요."
 },
 "crateGreens": {
 "n": "채소 상자",
 "kind": "place",
 "obj": "crateGreens",
-"d": "초록 채소를 담은 나무 상자 (2×1)."
+"d": "초록 채소를 담은 나무 상자 (2×1). 물건을 12칸 보관해요."
 },
 "cropSign": {
 "n": "작물 팻말",
@@ -4084,7 +4084,7 @@
 "n": "큰 보물상자",
 "kind": "place",
 "obj": "bigChest",
-"d": "쇠테를 두른 커다란 보물상자 (2×1). 장식이에요."
+"d": "쇠테를 두른 커다란 보물상자 (2×1). 물건을 24칸 보관해요."
 },
 "floorPlank": {
 "n": "판자 바닥",
@@ -5139,6 +5139,1042 @@
 "boss": "frostKeeper",
 "d": "얼어붙은 기록관장을 물리친 뒤 얼음 동굴 기록관의 마지막 방에서 쓰면 얼어붙은 기록관장이 다시 나타나요. 다시 잡으면 재료와 함께 가끔 얼어붙은 기록관장의 무기가 떨어져요."
 },
+"fdesk": {
+"n": "가구 제작대",
+"kind": "place",
+"obj": "fdesk",
+"d": "의자·탁자·침대·책장·러그 같은 집 가구를 만들어요 (2×1). 단계는 작업대를 따라가요."
+},
+"guildShelf": {
+"n": "책 가득한 큰 책장",
+"kind": "place",
+"obj": "guildShelf",
+"d": "책이 빼곡히 꽂힌 큰 책장. (3×1)"
+},
+"guildShelfE": {
+"n": "큰 빈 책장",
+"kind": "place",
+"obj": "guildShelfE",
+"d": "아무것도 없는 큰 책장. 물건을 올려 꾸며 봐요. (3×1)"
+},
+"cabinet": {
+"n": "나무 수납장",
+"kind": "place",
+"obj": "cabinet",
+"d": "문이 달린 낮은 수납장. (3×1) 물건을 18칸 보관해요."
+},
+"guildChair": {
+"n": "나무 의자 (길드)",
+"kind": "place",
+"obj": "guildChair",
+"d": "등받이가 곧은 작은 나무 의자. 앉을 수 있어요."
+},
+"mageDesk": {
+"n": "책상과 의자",
+"kind": "place",
+"obj": "mageDesk",
+"d": "책과 안경이 놓인 책상과 의자 둘. (2×1)"
+},
+"vase2": {
+"n": "보라 꽃병",
+"kind": "place",
+"obj": "vase2",
+"d": "보라 꽃을 꽂은 검은 꽃병."
+},
+"mageRug": {
+"n": "주황 러그",
+"kind": "place",
+"obj": "mageRug",
+"d": "둘레에 테를 두른 주황 러그. 위로 걸어 다닐 수 있어요. (3×2)"
+},
+"ladder": {
+"n": "나무 사다리",
+"kind": "place",
+"obj": "ladder",
+"d": "벽에 기대 세우는 나무 사다리."
+},
+"crateF": {
+"n": "나무 궤짝",
+"kind": "place",
+"obj": "crateF",
+"d": "널빤지로 짠 나무 궤짝. 물건을 12칸 보관해요."
+},
+"barrelF": {
+"n": "나무 통",
+"kind": "place",
+"obj": "barrelF",
+"d": "쇠테를 두른 나무 통. 물건을 12칸 보관해요."
+},
+"sack": {
+"n": "곡식 자루",
+"kind": "place",
+"obj": "sack",
+"d": "묶은 곡식 자루. 물건을 9칸 보관해요."
+},
+"shelfF": {
+"n": "물건 놓인 큰 선반",
+"kind": "place",
+"obj": "shelfF",
+"d": "통·자루·상자가 놓인 큰 선반. (3×1)"
+},
+"questBoard": {
+"n": "퀘스트 게시판",
+"kind": "place",
+"obj": "questBoard",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"questBoard2": {
+"n": "게시판",
+"kind": "place",
+"obj": "questBoard2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"tchest2": {
+"n": "길드 보물상자",
+"kind": "place",
+"obj": "tchest2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요. 물건을 12칸 보관해요.",
+"deco": 1
+},
+"guildBanner": {
+"n": "길드 깃발",
+"kind": "place",
+"obj": "guildBanner",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"weaponRack": {
+"n": "무기 거치대",
+"kind": "place",
+"obj": "weaponRack",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"armorShelf": {
+"n": "갑옷 선반",
+"kind": "place",
+"obj": "armorShelf",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"dragonSkull": {
+"n": "용 머리뼈",
+"kind": "place",
+"obj": "dragonSkull",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"skullS": {
+"n": "작은 해골",
+"kind": "place",
+"obj": "skullS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crystalBall": {
+"n": "수정 구슬",
+"kind": "place",
+"obj": "crystalBall",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"standCrystal": {
+"n": "수정 받침대",
+"kind": "place",
+"obj": "standCrystal",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"standHourglass": {
+"n": "모래시계 받침대",
+"kind": "place",
+"obj": "standHourglass",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fishRack": {
+"n": "생선 건조대",
+"kind": "place",
+"obj": "fishRack",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"netFrame": {
+"n": "그물 틀",
+"kind": "place",
+"obj": "netFrame",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fishCrate": {
+"n": "생선 상자",
+"kind": "place",
+"obj": "fishCrate",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요. 물건을 12칸 보관해요.",
+"deco": 1
+},
+"shark": {
+"n": "상어 장식",
+"kind": "place",
+"obj": "shark",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fishSign": {
+"n": "생선 간판",
+"kind": "place",
+"obj": "fishSign",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"shroomWhiteL": {
+"n": "흰 버섯 무리",
+"kind": "place",
+"obj": "shroomWhiteL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"shroomWhite": {
+"n": "흰 버섯",
+"kind": "place",
+"obj": "shroomWhite",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"shroomWhiteS": {
+"n": "작은 흰 버섯",
+"kind": "place",
+"obj": "shroomWhiteS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crateS": {
+"n": "낡은 나무 상자",
+"kind": "place",
+"obj": "crateS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요. 물건을 12칸 보관해요.",
+"deco": 1
+},
+"barrelS": {
+"n": "낡은 나무 통",
+"kind": "place",
+"obj": "barrelS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요. 물건을 12칸 보관해요.",
+"deco": 1
+},
+"planks": {
+"n": "쌓인 판자",
+"kind": "place",
+"obj": "planks",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysPinkL": {
+"n": "큰 분홍 수정",
+"kind": "place",
+"obj": "crysPinkL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysPinkM": {
+"n": "중간 분홍 수정",
+"kind": "place",
+"obj": "crysPinkM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysPinkS": {
+"n": "작은 분홍 수정",
+"kind": "place",
+"obj": "crysPinkS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysVioletL": {
+"n": "큰 보라 수정",
+"kind": "place",
+"obj": "crysVioletL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysVioletM": {
+"n": "중간 보라 수정",
+"kind": "place",
+"obj": "crysVioletM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysVioletS": {
+"n": "작은 보라 수정",
+"kind": "place",
+"obj": "crysVioletS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysBlueL": {
+"n": "큰 파랑 수정",
+"kind": "place",
+"obj": "crysBlueL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysBlueM": {
+"n": "중간 파랑 수정",
+"kind": "place",
+"obj": "crysBlueM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysBlueS": {
+"n": "작은 파랑 수정",
+"kind": "place",
+"obj": "crysBlueS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysGreenL": {
+"n": "큰 초록 수정",
+"kind": "place",
+"obj": "crysGreenL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysGreenM": {
+"n": "중간 초록 수정",
+"kind": "place",
+"obj": "crysGreenM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysGreenS": {
+"n": "작은 초록 수정",
+"kind": "place",
+"obj": "crysGreenS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysWhiteL": {
+"n": "큰 하얀 수정",
+"kind": "place",
+"obj": "crysWhiteL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysWhiteM": {
+"n": "중간 하얀 수정",
+"kind": "place",
+"obj": "crysWhiteM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysWhiteS": {
+"n": "작은 하얀 수정",
+"kind": "place",
+"obj": "crysWhiteS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysYellowL": {
+"n": "큰 노랑 수정",
+"kind": "place",
+"obj": "crysYellowL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysYellowM": {
+"n": "중간 노랑 수정",
+"kind": "place",
+"obj": "crysYellowM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysYellowS": {
+"n": "작은 노랑 수정",
+"kind": "place",
+"obj": "crysYellowS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysYGreenL": {
+"n": "큰 연두 수정",
+"kind": "place",
+"obj": "crysYGreenL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysYGreenM": {
+"n": "중간 연두 수정",
+"kind": "place",
+"obj": "crysYGreenM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysYGreenS": {
+"n": "작은 연두 수정",
+"kind": "place",
+"obj": "crysYGreenS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysBlackL": {
+"n": "큰 검은 수정",
+"kind": "place",
+"obj": "crysBlackL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysBlackM": {
+"n": "중간 검은 수정",
+"kind": "place",
+"obj": "crysBlackM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysBlackS": {
+"n": "작은 검은 수정",
+"kind": "place",
+"obj": "crysBlackS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysRedL": {
+"n": "큰 빨강 수정",
+"kind": "place",
+"obj": "crysRedL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysRedM": {
+"n": "중간 빨강 수정",
+"kind": "place",
+"obj": "crysRedM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysRedS": {
+"n": "작은 빨강 수정",
+"kind": "place",
+"obj": "crysRedS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysDRedL": {
+"n": "큰 검붉은 수정",
+"kind": "place",
+"obj": "crysDRedL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysDRedM": {
+"n": "중간 검붉은 수정",
+"kind": "place",
+"obj": "crysDRedM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"crysDRedS": {
+"n": "작은 검붉은 수정",
+"kind": "place",
+"obj": "crysDRedS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockSand": {
+"n": "하얀 모래 바위",
+"kind": "place",
+"obj": "rockSand",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockRedCry": {
+"n": "붉은 결정 바위",
+"kind": "place",
+"obj": "rockRedCry",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockSnowCry": {
+"n": "눈 덮인 수정 바위",
+"kind": "place",
+"obj": "rockSnowCry",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockMoss": {
+"n": "이끼 바위 무더기",
+"kind": "place",
+"obj": "rockMoss",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockWhite": {
+"n": "흰 바위",
+"kind": "place",
+"obj": "rockWhite",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockTan": {
+"n": "갈라진 모래 바위",
+"kind": "place",
+"obj": "rockTan",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockShroom": {
+"n": "층층 버섯 바위",
+"kind": "place",
+"obj": "rockShroom",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockLava": {
+"n": "용암 바위",
+"kind": "place",
+"obj": "rockLava",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockRedCryS": {
+"n": "작은 붉은 결정 바위",
+"kind": "place",
+"obj": "rockRedCryS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockSnowCryS": {
+"n": "작은 눈 덮인 수정 바위",
+"kind": "place",
+"obj": "rockSnowCryS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockMossS": {
+"n": "작은 이끼 바위",
+"kind": "place",
+"obj": "rockMossS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockTanS": {
+"n": "작은 모래 바위",
+"kind": "place",
+"obj": "rockTanS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockLavaS": {
+"n": "작은 용암 바위",
+"kind": "place",
+"obj": "rockLavaS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockTanL": {
+"n": "큰 모래 바위",
+"kind": "place",
+"obj": "rockTanL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockTanP": {
+"n": "모래 바위 무더기",
+"kind": "place",
+"obj": "rockTanP",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"rockTanL2": {
+"n": "큰 모래 바위 2",
+"kind": "place",
+"obj": "rockTanL2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"toadTreeL": {
+"n": "큰 흰빨강 버섯 나무",
+"kind": "place",
+"obj": "toadTreeL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"toadTreeM": {
+"n": "흰빨강 버섯 나무",
+"kind": "place",
+"obj": "toadTreeM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"toadTreeS": {
+"n": "작은 흰빨강 버섯",
+"kind": "place",
+"obj": "toadTreeS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"greenCapL": {
+"n": "큰 초록 점 버섯 나무",
+"kind": "place",
+"obj": "greenCapL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"greenCapM": {
+"n": "초록 점 버섯 나무",
+"kind": "place",
+"obj": "greenCapM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"greenCapS": {
+"n": "작은 초록 점 버섯",
+"kind": "place",
+"obj": "greenCapS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"chantL": {
+"n": "꾀꼬리버섯 무리",
+"kind": "place",
+"obj": "chantL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"chantM": {
+"n": "꾀꼬리버섯",
+"kind": "place",
+"obj": "chantM",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"chantS": {
+"n": "작은 꾀꼬리버섯",
+"kind": "place",
+"obj": "chantS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"redDotShrooms": {
+"n": "빨간 점 버섯 무리",
+"kind": "place",
+"obj": "redDotShrooms",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"redDotShroomS": {
+"n": "작은 빨간 점 버섯",
+"kind": "place",
+"obj": "redDotShroomS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"shroomHouse": {
+"n": "버섯집",
+"kind": "place",
+"obj": "shroomHouse",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"vineTower": {
+"n": "덩굴 감긴 유적 탑",
+"kind": "place",
+"obj": "vineTower",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stairWall": {
+"n": "계단 벽 유적",
+"kind": "place",
+"obj": "stairWall",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"vinePillar": {
+"n": "덩굴 기둥 유적",
+"kind": "place",
+"obj": "vinePillar",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"pillarS": {
+"n": "작은 기둥 유적",
+"kind": "place",
+"obj": "pillarS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stoneRing": {
+"n": "회갈 돌 고리",
+"kind": "place",
+"obj": "stoneRing",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stoneArch": {
+"n": "회갈 돌 굴",
+"kind": "place",
+"obj": "stoneArch",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"whitePillars": {
+"n": "흰 돌 기둥 유적",
+"kind": "place",
+"obj": "whitePillars",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"whiteArch": {
+"n": "흰 돌 아치",
+"kind": "place",
+"obj": "whiteArch",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"whiteRubble": {
+"n": "흰 돌 무더기",
+"kind": "place",
+"obj": "whiteRubble",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"snowTower": {
+"n": "눈 덮인 돌탑",
+"kind": "place",
+"obj": "snowTower",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"roundTower": {
+"n": "부서진 원탑",
+"kind": "place",
+"obj": "roundTower",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"roundTowerS": {
+"n": "작은 부서진 원탑",
+"kind": "place",
+"obj": "roundTowerS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"sandArch": {
+"n": "모래 아치",
+"kind": "place",
+"obj": "sandArch",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"vineTowerL": {
+"n": "큰 덩굴 유적 탑",
+"kind": "place",
+"obj": "vineTowerL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stairWallS": {
+"n": "작은 계단 벽 유적",
+"kind": "place",
+"obj": "stairWallS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"vinePillar2": {
+"n": "덩굴 기둥 유적 (흙)",
+"kind": "place",
+"obj": "vinePillar2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"vineTower2": {
+"n": "덩굴 유적 탑 (풀)",
+"kind": "place",
+"obj": "vineTower2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stairWall2": {
+"n": "계단 벽 유적 (풀)",
+"kind": "place",
+"obj": "stairWall2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"vinePillar3": {
+"n": "덩굴 기둥 유적 (풀)",
+"kind": "place",
+"obj": "vinePillar3",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"pillarS2": {
+"n": "작은 기둥 유적 (흙)",
+"kind": "place",
+"obj": "pillarS2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"totemPole": {
+"n": "나무 토템 기둥",
+"kind": "place",
+"obj": "totemPole",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"totemPole2": {
+"n": "나무 토템 기둥 2",
+"kind": "place",
+"obj": "totemPole2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"woodIdol": {
+"n": "덩굴 나무 신상",
+"kind": "place",
+"obj": "woodIdol",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"roundTreeY": {
+"n": "연두 둥근 나무",
+"kind": "place",
+"obj": "roundTreeY",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"roundTreeG": {
+"n": "초록 둥근 나무",
+"kind": "place",
+"obj": "roundTreeG",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"berryTreeS": {
+"n": "작은 열매 나무",
+"kind": "place",
+"obj": "berryTreeS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"berryTree": {
+"n": "빨간 열매 나무",
+"kind": "place",
+"obj": "berryTree",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"grassMound": {
+"n": "풀 덮인 흙더미",
+"kind": "place",
+"obj": "grassMound",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"redLeafBush": {
+"n": "빨간 잎 덤불",
+"kind": "place",
+"obj": "redLeafBush",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"blueFlowerBush": {
+"n": "파란 꽃 덤불",
+"kind": "place",
+"obj": "blueFlowerBush",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"grassMound2": {
+"n": "풀 흙더미",
+"kind": "place",
+"obj": "grassMound2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"brokenStump": {
+"n": "부러진 그루터기",
+"kind": "place",
+"obj": "brokenStump",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"yellowFlowerBush": {
+"n": "노란 꽃 덤불",
+"kind": "place",
+"obj": "yellowFlowerBush",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stump2": {
+"n": "낮은 그루터기",
+"kind": "place",
+"obj": "stump2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"yellowFlowerBushS": {
+"n": "작은 노란 꽃 덤불",
+"kind": "place",
+"obj": "yellowFlowerBushS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"yellowFlowerS": {
+"n": "작은 노란 꽃",
+"kind": "place",
+"obj": "yellowFlowerS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"redLeafS": {
+"n": "작은 빨간 잎",
+"kind": "place",
+"obj": "redLeafS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"redLeafBushS": {
+"n": "작은 빨간 잎 덤불",
+"kind": "place",
+"obj": "redLeafBushS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"bushS2": {
+"n": "작은 둥근 덤불",
+"kind": "place",
+"obj": "bushS2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"grassMoundS": {
+"n": "작은 풀 흙더미",
+"kind": "place",
+"obj": "grassMoundS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"stumpS2": {
+"n": "작은 그루터기",
+"kind": "place",
+"obj": "stumpS2",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"blueFlowerBushL": {
+"n": "큰 파란 꽃 덤불",
+"kind": "place",
+"obj": "blueFlowerBushL",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"pinkBud": {
+"n": "분홍 봉오리 풀",
+"kind": "place",
+"obj": "pinkBud",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"pinkBudS": {
+"n": "작은 분홍 봉오리",
+"kind": "place",
+"obj": "pinkBudS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"bushXS": {
+"n": "아주 작은 덤불",
+"kind": "place",
+"obj": "bushXS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"mixFlowerBush": {
+"n": "파랑·노랑 꽃 덤불",
+"kind": "place",
+"obj": "mixFlowerBush",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"pinkFlowerBush": {
+"n": "분홍 꽃 덤불",
+"kind": "place",
+"obj": "pinkFlowerBush",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"lavender": {
+"n": "라벤더",
+"kind": "place",
+"obj": "lavender",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"violetFlower": {
+"n": "보라 꽃",
+"kind": "place",
+"obj": "violetFlower",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"sunflowers": {
+"n": "해바라기 무리",
+"kind": "place",
+"obj": "sunflowers",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"whiteBlueFlower": {
+"n": "하얀 파랑 꽃",
+"kind": "place",
+"obj": "whiteBlueFlower",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"wheat": {
+"n": "밀",
+"kind": "place",
+"obj": "wheat",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fruitBushR": {
+"n": "빨간 열매 덤불 나무",
+"kind": "place",
+"obj": "fruitBushR",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fruitTreeRS": {
+"n": "작은 빨간 열매 나무",
+"kind": "place",
+"obj": "fruitTreeRS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fruitTreeY": {
+"n": "노란 열매 나무",
+"kind": "place",
+"obj": "fruitTreeY",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"fruitTreeYS": {
+"n": "작은 노란 열매 나무",
+"kind": "place",
+"obj": "fruitTreeYS",
+"d": "마을을 꾸미는 장식이에요. 만들 수는 없어요.",
+"deco": 1
+},
+"chestBig": {
+"n": "큰 보관함",
+"kind": "place",
+"obj": "chestBig",
+"d": "통과 상자를 쌓아 만든 큰 보관함. 물건을 36칸 보관해요 (2×1)."
+},
 "brazier": {
 "n": "횃대",
 "d": "등불지기들이 세운 큰 횃대. 불을 붙이면 둘레가 환해져요."
@@ -5619,7 +6655,8 @@
 "woodCrate": {
 "n": "나무 상자",
 "solid": 1,
-"item": "woodCrate"
+"item": "woodCrate",
+"chest": 12
 },
 "logBench": {
 "n": "통나무 벤치",
@@ -5659,7 +6696,8 @@
 "strawBasket": {
 "n": "짚 바구니",
 "solid": 1,
-"item": "strawBasket"
+"item": "strawBasket",
+"chest": 9
 },
 "pictureFrame": {
 "n": "이젤 액자",
@@ -7034,7 +8072,8 @@
 2,
 1
 ],
-"solid": 1
+"solid": 1,
+"chest": 12
 },
 "crateGreens": {
 "n": "채소 상자",
@@ -7043,7 +8082,8 @@
 2,
 1
 ],
-"solid": 1
+"solid": 1,
+"chest": 12
 },
 "cropSign": {
 "n": "작물 팻말",
@@ -7057,7 +8097,8 @@
 2,
 1
 ],
-"solid": 1
+"solid": 1,
+"chest": 24
 },
 "greenTree": {
 "n": "초록 나무",
@@ -8256,6 +9297,1416 @@
 2
 ]
 },
+"fdesk": {
+"n": "가구 제작대",
+"item": "fdesk",
+"station": "fdesk",
+"solid": 1,
+"sz": [
+2,
+1
+]
+},
+"guildShelf": {
+"n": "책 가득한 큰 책장",
+"item": "guildShelf",
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"guildShelfE": {
+"n": "큰 빈 책장",
+"item": "guildShelfE",
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"cabinet": {
+"n": "나무 수납장",
+"item": "cabinet",
+"sz": [
+3,
+1
+],
+"solid": 1,
+"chest": 18
+},
+"guildChair": {
+"n": "나무 의자 (길드)",
+"item": "guildChair",
+"solid": 1
+},
+"mageDesk": {
+"n": "책상과 의자",
+"item": "mageDesk",
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"vase2": {
+"n": "보라 꽃병",
+"item": "vase2",
+"solid": 1
+},
+"mageRug": {
+"n": "주황 러그",
+"item": "mageRug",
+"sz": [
+3,
+2
+],
+"flat": 1
+},
+"ladder": {
+"n": "나무 사다리",
+"item": "ladder",
+"solid": 1
+},
+"crateF": {
+"n": "나무 궤짝",
+"item": "crateF",
+"solid": 1,
+"chest": 12
+},
+"barrelF": {
+"n": "나무 통",
+"item": "barrelF",
+"solid": 1,
+"chest": 12
+},
+"sack": {
+"n": "곡식 자루",
+"item": "sack",
+"solid": 1,
+"chest": 9
+},
+"shelfF": {
+"n": "물건 놓인 큰 선반",
+"item": "shelfF",
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"questBoard": {
+"n": "퀘스트 게시판",
+"item": "questBoard",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"questBoard2": {
+"n": "게시판",
+"item": "questBoard2",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"tchest2": {
+"n": "길드 보물상자",
+"item": "tchest2",
+"deco": 1,
+"solid": 1,
+"chest": 12
+},
+"guildBanner": {
+"n": "길드 깃발",
+"item": "guildBanner",
+"deco": 1,
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"weaponRack": {
+"n": "무기 거치대",
+"item": "weaponRack",
+"deco": 1,
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"armorShelf": {
+"n": "갑옷 선반",
+"item": "armorShelf",
+"deco": 1,
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"dragonSkull": {
+"n": "용 머리뼈",
+"item": "dragonSkull",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"skullS": {
+"n": "작은 해골",
+"item": "skullS",
+"deco": 1,
+"solid": 1
+},
+"crystalBall": {
+"n": "수정 구슬",
+"item": "crystalBall",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"standCrystal": {
+"n": "수정 받침대",
+"item": "standCrystal",
+"deco": 1,
+"solid": 1
+},
+"standHourglass": {
+"n": "모래시계 받침대",
+"item": "standHourglass",
+"deco": 1,
+"solid": 1
+},
+"fishRack": {
+"n": "생선 건조대",
+"item": "fishRack",
+"deco": 1,
+"sz": [
+4,
+1
+],
+"solid": 1
+},
+"netFrame": {
+"n": "그물 틀",
+"item": "netFrame",
+"deco": 1,
+"sz": [
+3,
+1
+],
+"solid": 1
+},
+"fishCrate": {
+"n": "생선 상자",
+"item": "fishCrate",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"chest": 12
+},
+"shark": {
+"n": "상어 장식",
+"item": "shark",
+"deco": 1,
+"sz": [
+4,
+1
+],
+"solid": 1
+},
+"fishSign": {
+"n": "생선 간판",
+"item": "fishSign",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"shroomWhiteL": {
+"n": "흰 버섯 무리",
+"item": "shroomWhiteL",
+"deco": 1,
+"solid": 1
+},
+"shroomWhite": {
+"n": "흰 버섯",
+"item": "shroomWhite",
+"deco": 1,
+"solid": 1
+},
+"shroomWhiteS": {
+"n": "작은 흰 버섯",
+"item": "shroomWhiteS",
+"deco": 1
+},
+"crateS": {
+"n": "낡은 나무 상자",
+"item": "crateS",
+"deco": 1,
+"solid": 1,
+"chest": 12
+},
+"barrelS": {
+"n": "낡은 나무 통",
+"item": "barrelS",
+"deco": 1,
+"solid": 1,
+"chest": 12
+},
+"planks": {
+"n": "쌓인 판자",
+"item": "planks",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1
+},
+"crysPinkL": {
+"n": "큰 분홍 수정",
+"item": "crysPinkL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysPinkM": {
+"n": "중간 분홍 수정",
+"item": "crysPinkM",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysPinkS": {
+"n": "작은 분홍 수정",
+"item": "crysPinkS",
+"deco": 1,
+"noShadow": 1
+},
+"crysVioletL": {
+"n": "큰 보라 수정",
+"item": "crysVioletL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysVioletM": {
+"n": "중간 보라 수정",
+"item": "crysVioletM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysVioletS": {
+"n": "작은 보라 수정",
+"item": "crysVioletS",
+"deco": 1,
+"noShadow": 1
+},
+"crysBlueL": {
+"n": "큰 파랑 수정",
+"item": "crysBlueL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysBlueM": {
+"n": "중간 파랑 수정",
+"item": "crysBlueM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysBlueS": {
+"n": "작은 파랑 수정",
+"item": "crysBlueS",
+"deco": 1,
+"noShadow": 1
+},
+"crysGreenL": {
+"n": "큰 초록 수정",
+"item": "crysGreenL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysGreenM": {
+"n": "중간 초록 수정",
+"item": "crysGreenM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysGreenS": {
+"n": "작은 초록 수정",
+"item": "crysGreenS",
+"deco": 1,
+"noShadow": 1
+},
+"crysWhiteL": {
+"n": "큰 하얀 수정",
+"item": "crysWhiteL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysWhiteM": {
+"n": "중간 하얀 수정",
+"item": "crysWhiteM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysWhiteS": {
+"n": "작은 하얀 수정",
+"item": "crysWhiteS",
+"deco": 1,
+"noShadow": 1
+},
+"crysYellowL": {
+"n": "큰 노랑 수정",
+"item": "crysYellowL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysYellowM": {
+"n": "중간 노랑 수정",
+"item": "crysYellowM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysYellowS": {
+"n": "작은 노랑 수정",
+"item": "crysYellowS",
+"deco": 1,
+"noShadow": 1
+},
+"crysYGreenL": {
+"n": "큰 연두 수정",
+"item": "crysYGreenL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysYGreenM": {
+"n": "중간 연두 수정",
+"item": "crysYGreenM",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysYGreenS": {
+"n": "작은 연두 수정",
+"item": "crysYGreenS",
+"deco": 1,
+"noShadow": 1
+},
+"crysBlackL": {
+"n": "큰 검은 수정",
+"item": "crysBlackL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysBlackM": {
+"n": "중간 검은 수정",
+"item": "crysBlackM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysBlackS": {
+"n": "작은 검은 수정",
+"item": "crysBlackS",
+"deco": 1,
+"noShadow": 1
+},
+"crysRedL": {
+"n": "큰 빨강 수정",
+"item": "crysRedL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysRedM": {
+"n": "중간 빨강 수정",
+"item": "crysRedM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysRedS": {
+"n": "작은 빨강 수정",
+"item": "crysRedS",
+"deco": 1,
+"noShadow": 1
+},
+"crysDRedL": {
+"n": "큰 검붉은 수정",
+"item": "crysDRedL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"crysDRedM": {
+"n": "중간 검붉은 수정",
+"item": "crysDRedM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"crysDRedS": {
+"n": "작은 검붉은 수정",
+"item": "crysDRedS",
+"deco": 1,
+"noShadow": 1
+},
+"rockSand": {
+"n": "하얀 모래 바위",
+"item": "rockSand",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockRedCry": {
+"n": "붉은 결정 바위",
+"item": "rockRedCry",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockSnowCry": {
+"n": "눈 덮인 수정 바위",
+"item": "rockSnowCry",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockMoss": {
+"n": "이끼 바위 무더기",
+"item": "rockMoss",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockWhite": {
+"n": "흰 바위",
+"item": "rockWhite",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockTan": {
+"n": "갈라진 모래 바위",
+"item": "rockTan",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockShroom": {
+"n": "층층 버섯 바위",
+"item": "rockShroom",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockLava": {
+"n": "용암 바위",
+"item": "rockLava",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockRedCryS": {
+"n": "작은 붉은 결정 바위",
+"item": "rockRedCryS",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockSnowCryS": {
+"n": "작은 눈 덮인 수정 바위",
+"item": "rockSnowCryS",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockMossS": {
+"n": "작은 이끼 바위",
+"item": "rockMossS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockTanS": {
+"n": "작은 모래 바위",
+"item": "rockTanS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockLavaS": {
+"n": "작은 용암 바위",
+"item": "rockLavaS",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockTanL": {
+"n": "큰 모래 바위",
+"item": "rockTanL",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockTanP": {
+"n": "모래 바위 무더기",
+"item": "rockTanP",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"rockTanL2": {
+"n": "큰 모래 바위 2",
+"item": "rockTanL2",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"toadTreeL": {
+"n": "큰 흰빨강 버섯 나무",
+"item": "toadTreeL",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"toadTreeM": {
+"n": "흰빨강 버섯 나무",
+"item": "toadTreeM",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"toadTreeS": {
+"n": "작은 흰빨강 버섯",
+"item": "toadTreeS",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"greenCapL": {
+"n": "큰 초록 점 버섯 나무",
+"item": "greenCapL",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"greenCapM": {
+"n": "초록 점 버섯 나무",
+"item": "greenCapM",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"greenCapS": {
+"n": "작은 초록 점 버섯",
+"item": "greenCapS",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"chantL": {
+"n": "꾀꼬리버섯 무리",
+"item": "chantL",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"chantM": {
+"n": "꾀꼬리버섯",
+"item": "chantM",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"chantS": {
+"n": "작은 꾀꼬리버섯",
+"item": "chantS",
+"deco": 1,
+"noShadow": 1
+},
+"redDotShrooms": {
+"n": "빨간 점 버섯 무리",
+"item": "redDotShrooms",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"redDotShroomS": {
+"n": "작은 빨간 점 버섯",
+"item": "redDotShroomS",
+"deco": 1,
+"noShadow": 1
+},
+"shroomHouse": {
+"n": "버섯집",
+"item": "shroomHouse",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"vineTower": {
+"n": "덩굴 감긴 유적 탑",
+"item": "vineTower",
+"deco": 1,
+"sz": [
+6,
+3
+],
+"solid": 1,
+"noShadow": 1
+},
+"stairWall": {
+"n": "계단 벽 유적",
+"item": "stairWall",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"vinePillar": {
+"n": "덩굴 기둥 유적",
+"item": "vinePillar",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"pillarS": {
+"n": "작은 기둥 유적",
+"item": "pillarS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"stoneRing": {
+"n": "회갈 돌 고리",
+"item": "stoneRing",
+"deco": 1,
+"sz": [
+6,
+3
+],
+"solid": 1,
+"noShadow": 1
+},
+"stoneArch": {
+"n": "회갈 돌 굴",
+"item": "stoneArch",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"whitePillars": {
+"n": "흰 돌 기둥 유적",
+"item": "whitePillars",
+"deco": 1,
+"sz": [
+5,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"whiteArch": {
+"n": "흰 돌 아치",
+"item": "whiteArch",
+"deco": 1,
+"sz": [
+5,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"whiteRubble": {
+"n": "흰 돌 무더기",
+"item": "whiteRubble",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"snowTower": {
+"n": "눈 덮인 돌탑",
+"item": "snowTower",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"roundTower": {
+"n": "부서진 원탑",
+"item": "roundTower",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"roundTowerS": {
+"n": "작은 부서진 원탑",
+"item": "roundTowerS",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"sandArch": {
+"n": "모래 아치",
+"item": "sandArch",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"vineTowerL": {
+"n": "큰 덩굴 유적 탑",
+"item": "vineTowerL",
+"deco": 1,
+"sz": [
+6,
+3
+],
+"solid": 1,
+"noShadow": 1
+},
+"stairWallS": {
+"n": "작은 계단 벽 유적",
+"item": "stairWallS",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"vinePillar2": {
+"n": "덩굴 기둥 유적 (흙)",
+"item": "vinePillar2",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"vineTower2": {
+"n": "덩굴 유적 탑 (풀)",
+"item": "vineTower2",
+"deco": 1,
+"sz": [
+6,
+3
+],
+"solid": 1,
+"noShadow": 1
+},
+"stairWall2": {
+"n": "계단 벽 유적 (풀)",
+"item": "stairWall2",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"vinePillar3": {
+"n": "덩굴 기둥 유적 (풀)",
+"item": "vinePillar3",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"pillarS2": {
+"n": "작은 기둥 유적 (흙)",
+"item": "pillarS2",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"totemPole": {
+"n": "나무 토템 기둥",
+"item": "totemPole",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"totemPole2": {
+"n": "나무 토템 기둥 2",
+"item": "totemPole2",
+"deco": 1,
+"solid": 1,
+"noShadow": 1
+},
+"woodIdol": {
+"n": "덩굴 나무 신상",
+"item": "woodIdol",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"roundTreeY": {
+"n": "연두 둥근 나무",
+"item": "roundTreeY",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"roundTreeG": {
+"n": "초록 둥근 나무",
+"item": "roundTreeG",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"berryTreeS": {
+"n": "작은 열매 나무",
+"item": "berryTreeS",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"berryTree": {
+"n": "빨간 열매 나무",
+"item": "berryTree",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"grassMound": {
+"n": "풀 덮인 흙더미",
+"item": "grassMound",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"redLeafBush": {
+"n": "빨간 잎 덤불",
+"item": "redLeafBush",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"blueFlowerBush": {
+"n": "파란 꽃 덤불",
+"item": "blueFlowerBush",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"grassMound2": {
+"n": "풀 흙더미",
+"item": "grassMound2",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"brokenStump": {
+"n": "부러진 그루터기",
+"item": "brokenStump",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"yellowFlowerBush": {
+"n": "노란 꽃 덤불",
+"item": "yellowFlowerBush",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"stump2": {
+"n": "낮은 그루터기",
+"item": "stump2",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"yellowFlowerBushS": {
+"n": "작은 노란 꽃 덤불",
+"item": "yellowFlowerBushS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"yellowFlowerS": {
+"n": "작은 노란 꽃",
+"item": "yellowFlowerS",
+"deco": 1,
+"noShadow": 1
+},
+"redLeafS": {
+"n": "작은 빨간 잎",
+"item": "redLeafS",
+"deco": 1,
+"noShadow": 1
+},
+"redLeafBushS": {
+"n": "작은 빨간 잎 덤불",
+"item": "redLeafBushS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"bushS2": {
+"n": "작은 둥근 덤불",
+"item": "bushS2",
+"deco": 1,
+"noShadow": 1
+},
+"grassMoundS": {
+"n": "작은 풀 흙더미",
+"item": "grassMoundS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"noShadow": 1
+},
+"stumpS2": {
+"n": "작은 그루터기",
+"item": "stumpS2",
+"deco": 1,
+"noShadow": 1
+},
+"blueFlowerBushL": {
+"n": "큰 파란 꽃 덤불",
+"item": "blueFlowerBushL",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"pinkBud": {
+"n": "분홍 봉오리 풀",
+"item": "pinkBud",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"pinkBudS": {
+"n": "작은 분홍 봉오리",
+"item": "pinkBudS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"noShadow": 1
+},
+"bushXS": {
+"n": "아주 작은 덤불",
+"item": "bushXS",
+"deco": 1,
+"noShadow": 1
+},
+"mixFlowerBush": {
+"n": "파랑·노랑 꽃 덤불",
+"item": "mixFlowerBush",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"pinkFlowerBush": {
+"n": "분홍 꽃 덤불",
+"item": "pinkFlowerBush",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"lavender": {
+"n": "라벤더",
+"item": "lavender",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"violetFlower": {
+"n": "보라 꽃",
+"item": "violetFlower",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"sunflowers": {
+"n": "해바라기 무리",
+"item": "sunflowers",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"whiteBlueFlower": {
+"n": "하얀 파랑 꽃",
+"item": "whiteBlueFlower",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"wheat": {
+"n": "밀",
+"item": "wheat",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"fruitBushR": {
+"n": "빨간 열매 덤불 나무",
+"item": "fruitBushR",
+"deco": 1,
+"sz": [
+5,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"fruitTreeRS": {
+"n": "작은 빨간 열매 나무",
+"item": "fruitTreeRS",
+"deco": 1,
+"sz": [
+3,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"fruitTreeY": {
+"n": "노란 열매 나무",
+"item": "fruitTreeY",
+"deco": 1,
+"sz": [
+4,
+2
+],
+"solid": 1,
+"noShadow": 1
+},
+"fruitTreeYS": {
+"n": "작은 노란 열매 나무",
+"item": "fruitTreeYS",
+"deco": 1,
+"sz": [
+2,
+1
+],
+"solid": 1,
+"noShadow": 1
+},
+"chestBig": {
+"n": "큰 보관함",
+"item": "chestBig",
+"solid": 1,
+"sz": [
+2,
+1
+],
+"chest": 36
+},
 "diary": {
 "n": "등불지기의 일기",
 "solid": 1,
@@ -8497,7 +10948,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8518,7 +10969,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8539,7 +10990,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8556,7 +11007,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8569,7 +11020,7 @@
 6
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8628,7 +11079,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8645,7 +11096,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8662,7 +11113,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8868,7 +11319,7 @@
 3
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8881,7 +11332,7 @@
 5
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8894,7 +11345,7 @@
 12
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8945,7 +11396,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8962,7 +11413,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -8996,7 +11447,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -9017,7 +11468,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -9055,7 +11506,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 2
 },
@@ -9072,7 +11523,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -9148,7 +11599,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -9193,7 +11644,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "moss",
 "tier": 0
 },
@@ -9214,7 +11665,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "moss",
 "tier": 0
 },
@@ -9248,7 +11699,7 @@
 8
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "moss",
 "tier": 0
 },
@@ -9269,7 +11720,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "moss",
 "tier": 0
 },
@@ -9303,7 +11754,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "shroom",
 "tier": 0
 },
@@ -9324,7 +11775,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "shroom",
 "tier": 0
 },
@@ -9362,7 +11813,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "shroom",
 "tier": 0
 },
@@ -9379,7 +11830,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "shroom",
 "tier": 0
 },
@@ -9413,7 +11864,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "crystal",
 "tier": 3
 },
@@ -9430,7 +11881,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "crystal",
 "tier": 3
 },
@@ -9472,7 +11923,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "crystal",
 "tier": 3
 },
@@ -9489,7 +11940,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "crystal",
 "tier": 3
 },
@@ -10897,7 +13348,7 @@
 3
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -10914,7 +13365,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -10935,7 +13386,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -10952,7 +13403,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -11011,7 +13462,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -11028,7 +13479,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -11049,7 +13500,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -12546,7 +14997,7 @@
 3
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -13926,7 +16377,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -13955,7 +16406,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -13988,7 +16439,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14017,7 +16468,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14046,7 +16497,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14079,7 +16530,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14108,7 +16559,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14125,7 +16576,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14142,7 +16593,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14159,7 +16610,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14180,7 +16631,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14197,7 +16648,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14214,7 +16665,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14227,7 +16678,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14244,7 +16695,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14257,7 +16708,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14278,7 +16729,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14291,7 +16742,7 @@
 4
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14312,7 +16763,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14329,7 +16780,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14350,7 +16801,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 3
 },
@@ -14371,7 +16822,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 2
 },
@@ -14392,7 +16843,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 2
 },
@@ -14417,7 +16868,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 3
 },
@@ -14438,7 +16889,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 2
 },
@@ -14463,7 +16914,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14484,7 +16935,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14505,7 +16956,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14526,7 +16977,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14543,7 +16994,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14560,7 +17011,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14581,7 +17032,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 2
 },
@@ -14602,7 +17053,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 2
 },
@@ -14623,7 +17074,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14644,7 +17095,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14665,7 +17116,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14686,7 +17137,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14703,7 +17154,7 @@
 2
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14724,7 +17175,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14749,7 +17200,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14770,7 +17221,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14791,7 +17242,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14816,7 +17267,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14841,7 +17292,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14858,7 +17309,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14875,7 +17326,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14892,7 +17343,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -14917,7 +17368,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 1
 },
@@ -14934,7 +17385,7 @@
 1
 ]
 ],
-"at": "bench",
+"at": "fdesk",
 "cat": "furn",
 "tier": 0
 },
@@ -17275,6 +19726,260 @@
 "at": "bench",
 "cat": "tool",
 "tier": 5
+},
+{
+"out": "fdesk",
+"n": 1,
+"req": [
+[
+"wood",
+10
+],
+[
+"fiber",
+6
+],
+[
+"resin",
+1
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "guildShelf",
+"n": 1,
+"req": [
+[
+"wood",
+16
+],
+[
+"resin",
+2
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "guildShelfE",
+"n": 1,
+"req": [
+[
+"wood",
+14
+],
+[
+"resin",
+1
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "cabinet",
+"n": 1,
+"req": [
+[
+"wood",
+14
+],
+[
+"resin",
+1
+],
+[
+"copperBar",
+1
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 1
+},
+{
+"out": "guildChair",
+"n": 1,
+"req": [
+[
+"wood",
+4
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "mageDesk",
+"n": 1,
+"req": [
+[
+"wood",
+12
+],
+[
+"resin",
+1
+],
+[
+"fiber",
+2
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "vase2",
+"n": 1,
+"req": [
+[
+"dirt",
+2
+],
+[
+"petalR",
+1
+],
+[
+"petalB",
+1
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "mageRug",
+"n": 1,
+"req": [
+[
+"fiber",
+14
+],
+[
+"petalR",
+1
+],
+[
+"petalY",
+1
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "ladder",
+"n": 1,
+"req": [
+[
+"wood",
+4
+],
+[
+"rope",
+1
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "crateF",
+"n": 1,
+"req": [
+[
+"wood",
+5
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "barrelF",
+"n": 1,
+"req": [
+[
+"wood",
+6
+],
+[
+"rope",
+1
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "sack",
+"n": 1,
+"req": [
+[
+"fiber",
+6
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "shelfF",
+"n": 1,
+"req": [
+[
+"wood",
+12
+],
+[
+"rope",
+2
+],
+[
+"fiber",
+2
+]
+],
+"at": "fdesk",
+"cat": "furn",
+"tier": 0
+},
+{
+"out": "chestBig",
+"n": 1,
+"req": [
+[
+"wood",
+24
+],
+[
+"copperBar",
+2
+],
+[
+"rope",
+2
+]
+],
+"at": "bench",
+"cat": "furn",
+"tier": 1
 }
 ],
 "ENEMY": {
@@ -20350,7 +23055,8 @@
 "furnace": "용광로",
 "pot": "요리솥",
 "forge": "구리 작업대",
-"smelter": "장비제작대"
+"smelter": "장비제작대",
+"fdesk": "가구 제작대"
 },
 "RARITY": [
 [
@@ -26623,6 +29329,7 @@ null,
 "streetLamp": "lamp",
 "hangLamp": "lamp",
 "flowerBoxFv": "water",
+"guildChair": "sit",
 "diary": "read2",
 "brazier": "brazier"
 },
@@ -27200,7 +29907,7 @@ null,
 "lampCrystal": "[그림 16x24 d1b53afe]",
 "shelf": "[그림 16x24 9b120898]",
 "cushion": "[그림 16x16 57970ebf]",
-"vase": "[그림 9x11 da267da7]",
+"vase": "[그림 18x32 673ad1b8]",
 "root": "[그림 24x28 f40c27ea]",
 "bigShroom": "[그림 28x46 67774e5b]",
 "grass": "[그림 22x18 2e32d5ca]",
@@ -27255,8 +29962,8 @@ null,
 "battery": "[그림 16x16 ef19e69f]",
 "generator": "[그림 16x22 fe229dc0]",
 "crystalGen": "[그림 16x24 28d1c6b9]",
-"lever": "[그림 16x16 e3733f50]",
-"leverOn": "[그림 16x16 da7f4f9f]",
+"lever": "[그림 20x18 a1f8ceb9]",
+"leverOn": "[그림 20x18 c52bce5e]",
 "plate": "[그림 16x16 b24e3427]",
 "plateOn": "[그림 16x14 d729186b]",
 "timer": "[그림 16x16 27567cb3]",
@@ -27290,7 +29997,7 @@ null,
 "longTableV": "[그림 32x50 676820ec]",
 "sofa2": "[그림 32x24 da9d7267]",
 "sofa2V": "[그림 14x38 ff7272a0]",
-"bookcase2": "[그림 30x36 bd69515e]",
+"bookcase2": "[그림 34x52 345e292]",
 "kitchenSet": "[그림 48x36 e542d3f3]",
 "fountainBig": "[그림 32x34 881cc7bb]",
 "rugBig": "[그림 32x32 68b7b5f3]",
@@ -27331,8 +30038,8 @@ null,
 "cryVase": "[그림 16x18 a8d9e67b]",
 "emberBowl": "[그림 16x16 93f4f99d]",
 "iceSwan": "[그림 16x16 e9a4ead]",
-"tchest": "[그림 20x16 48c04971]",
-"tchestOpen": "[그림 20x20 5a596e7a]",
+"tchest": "[그림 22x20 2f029ff6]",
+"tchestOpen": "[그림 22x24 af1d399]",
 "smelter": "[그림 32x26 9862eb39]",
 "cow": "[그림 16x16 8b4a5c6a]",
 "chicken": "[그림 16x16 680afed2]",
@@ -27360,6 +30067,7 @@ null,
 "bFenceStone": "[그림 16x42 7dd1a0e0]",
 "bDoorStone": "[그림 16x42 51929e7c]",
 "slideDoor": "[그림 16x42 486c5abc]",
+"armorShelf": "[그림 46x52 d626b53b]",
 "ashDragon": "[그림 108x90 7c79e122]",
 "ashJaw": "[그림 42x26 40853ebf]",
 "ashRibs": "[그림 48x42 8cfa123]",
@@ -27371,14 +30079,24 @@ null,
 "bannerPurple": "[그림 10x32 12fda532]",
 "bannerRed": "[그림 10x32 b13a48d1]",
 "bannerWhite": "[그림 10x32 b89f0e39]",
+"barrelF": "[그림 18x26 e6b50892]",
+"barrelS": "[그림 18x26 56932419]",
 "bedGreen": "[그림 32x48 cbf45dfa]",
 "bedPurple": "[그림 32x48 b6f8e33c]",
 "bedRed": "[그림 32x48 ff66d443]",
 "benchLow": "[그림 30x16 4a09582d]",
+"berryTree": "[그림 52x66 4f079037]",
+"berryTreeS": "[그림 62x76 6fc07a0a]",
 "bigChest": "[그림 30x24 da03a635]",
 "blossomTree": "[그림 54x60 4d9dc6b0]",
 "blossomTreeS": "[그림 34x38 5b557c62]",
+"blueFlowerBush": "[그림 48x38 3ce853cf]",
+"blueFlowerBushL": "[그림 48x38 de690616]",
+"brokenStump": "[그림 28x30 da6a2697]",
 "bushPot": "[그림 14x26 17d8976b]",
+"bushS2": "[그림 26x24 f8244259]",
+"bushXS": "[그림 16x16 35474b99]",
+"cabinet": "[그림 46x42 f55001c9]",
 "cactus": "[그림 32x32 ab94f96c]",
 "cactusS": "[그림 26x26 321b5147]",
 "carpetGreen": "[그림 34x34 70a8839d]",
@@ -27397,16 +30115,58 @@ null,
 "chairWood": "[그림 14x20 daf0cf4e]",
 "chairYellow": "[그림 14x22 d4365a5e]",
 "chairYellowS": "[그림 16x20 5ee866f3]",
+"chantL": "[그림 28x28 19fd0c8b]",
+"chantM": "[그림 24x26 c5bd0d80]",
+"chantS": "[그림 18x18 1038e904]",
+"chestBig": "[그림 38x38 1d219c17]",
+"crateF": "[그림 20x28 ad1048ed]",
 "crateFruit": "[그림 18x24 9726aaf2]",
 "crateGreens": "[그림 18x26 8f8341ff]",
+"crateS": "[그림 24x34 ff3ce27a]",
 "cropSign": "[그림 16x16 cead9a1b]",
+"crysBlackL": "[그림 30x38 f9d2896d]",
+"crysBlackM": "[그림 18x26 20eed6cb]",
+"crysBlackS": "[그림 10x14 3c5630fb]",
+"crysBlueL": "[그림 34x30 181f61c6]",
+"crysBlueM": "[그림 24x22 889a7585]",
+"crysBlueS": "[그림 14x12 6e157dcc]",
+"crysDRedL": "[그림 38x36 3378e889]",
+"crysDRedM": "[그림 26x24 a4ac31f4]",
+"crysDRedS": "[그림 12x14 85240a1c]",
+"crysGreenL": "[그림 30x32 e7c271c6]",
+"crysGreenM": "[그림 18x20 efe7e21a]",
+"crysGreenS": "[그림 12x12 c645b32c]",
+"crysPinkL": "[그림 38x38 d8d12f46]",
+"crysPinkM": "[그림 28x22 78cba53b]",
+"crysPinkS": "[그림 12x14 f75191d9]",
+"crysRedL": "[그림 34x40 e273e712]",
+"crysRedM": "[그림 22x28 6ef06712]",
+"crysRedS": "[그림 14x14 dbb11d26]",
+"crysVioletL": "[그림 38x38 e7a59825]",
+"crysVioletM": "[그림 24x24 73807b84]",
+"crysVioletS": "[그림 10x14 d445c4c0]",
+"crysWhiteL": "[그림 40x34 5f74daf1]",
+"crysWhiteM": "[그림 22x22 6623718f]",
+"crysWhiteS": "[그림 12x12 7cfa57ac]",
+"crysYGreenL": "[그림 40x38 1ce358b8]",
+"crysYGreenM": "[그림 28x28 5fdc4d47]",
+"crysYGreenS": "[그림 14x14 225c7d87]",
+"crysYellowL": "[그림 34x40 de9d3b51]",
+"crysYellowM": "[그림 24x30 cdffc792]",
+"crysYellowS": "[그림 10x14 70fa93fa]",
+"crystalBall": "[그림 28x30 b2fca017]",
 "darkBush": "[그림 34x28 fb4d1e32]",
 "deadTree": "[그림 50x60 12383ef7]",
 "desk": "[그림 30x28 30af2472]",
+"dragonSkull": "[그림 34x34 4c40bee1]",
 "drawers": "[그림 28x34 38b25a55]",
 "dresserLong": "[그림 48x22 b75dd955]",
 "fallenLog": "[그림 78x36 2b0d0413]",
+"fdesk": "[그림 32x26 546b8355]",
 "fern": "[그림 40x34 8020535d]",
+"fishCrate": "[그림 36x26 26fecf8f]",
+"fishRack": "[그림 64x40 2d24c7f3]",
+"fishSign": "[그림 28x16 fbb6b765]",
 "flowerBasket": "[그림 14x18 1f179165]",
 "flowerBoxFv": "[그림 30x28 161d32b9]",
 "flowerPotPurple": "[그림 16x38 3712aff6]",
@@ -27420,8 +30180,22 @@ null,
 "frostWeed": "[그림 44x52 35076b53]",
 "frostWeedL": "[그림 44x72 32b20a8b]",
 "frostWeedS": "[그림 28x50 402e7c14]",
+"fruitBushR": "[그림 82x80 34ad84ec]",
+"fruitTreeRS": "[그림 46x46 e583afdc]",
+"fruitTreeY": "[그림 70x82 3ad39293]",
+"fruitTreeYS": "[그림 36x44 f1a8a5f5]",
 "glowVineTree": "[그림 48x58 7ae247e]",
+"grassMound": "[그림 48x38 7abf2a4e]",
+"grassMound2": "[그림 46x30 73009964]",
+"grassMoundS": "[그림 30x22 89718dfe]",
+"greenCapL": "[그림 48x66 8eb6d171]",
+"greenCapM": "[그림 32x46 9acd93fc]",
+"greenCapS": "[그림 24x26 f7ff8ed0]",
 "greenTree": "[그림 40x42 35fe30dd]",
+"guildBanner": "[그림 46x42 70279bb2]",
+"guildChair": "[그림 12x22 488e48f4]",
+"guildShelf": "[그림 44x56 51fb913c]",
+"guildShelfE": "[그림 44x56 60381e36]",
 "hangLamp": "[그림 24x42 d5176c7]",
 "iceClusterB": "[그림 30x26 be5bb5c]",
 "iceClusterC": "[그림 34x40 6523db11]",
@@ -27433,38 +30207,86 @@ null,
 "jarBlue": "[그림 14x16 1b95c0e3]",
 "jarOrange": "[그림 14x16 5397d8c2]",
 "jarRed": "[그림 14x16 a40fb14]",
+"ladder": "[그림 12x40 b56b8133]",
+"lavender": "[그림 34x44 1f407c8]",
 "lilyPad": "[그림 16x16 8bffdc64]",
 "lotus": "[그림 16x16 18f509ff]",
 "lotus2": "[그림 16x16 fc0a14ef]",
+"mageDesk": "[그림 40x32 6e38454]",
+"mageRug": "[그림 54x32 935e0a51]",
 "mapleBush": "[그림 32x28 dfe27e52]",
 "mapleTree": "[그림 60x62 e6ab8178]",
 "mapleTreeS": "[그림 40x42 40cd4219]",
 "matBlue": "[그림 32x16 7c261519]",
 "matBrown": "[그림 32x16 1adf1c6c]",
 "matGreen": "[그림 32x16 d7afff99]",
+"mixFlowerBush": "[그림 48x42 d29af723]",
 "mossStone": "[그림 18x18 6025c30e]",
+"netFrame": "[그림 52x50 c6b1d27e]",
 "nightstand": "[그림 14x22 45c253a6]",
 "orangeBush": "[그림 36x34 21fdd13e]",
 "palmBig": "[그림 24x30 590b83e]",
 "palmPot": "[그림 16x30 1fcb35e7]",
 "palmTree": "[그림 54x54 d08d81ff]",
 "palmTreeS": "[그림 34x32 665513b5]",
+"pillarS": "[그림 38x42 b7740f6e]",
+"pillarS2": "[그림 42x44 ddab930]",
+"pinkBud": "[그림 40x34 e82e092b]",
+"pinkBudS": "[그림 28x24 c1bcc534]",
 "pinkFlower": "[그림 16x16 fffbebe7]",
+"pinkFlowerBush": "[그림 48x40 8b2a9a05]",
 "pinkTree": "[그림 48x58 cd40530a]",
 "pinkTreeS": "[그림 28x32 44c7746a]",
+"planks": "[그림 30x24 1f457319]",
 "plantBig": "[그림 18x30 aca225fd]",
 "pondRock": "[그림 32x32 d03b8e86]",
 "pondRockS": "[그림 16x30 29802bb2]",
+"questBoard": "[그림 40x48 3f4984e9]",
+"questBoard2": "[그림 40x48 cf530cc9]",
 "redBud": "[그림 18x16 27764e5c]",
+"redDotShroomS": "[그림 18x22 1fd9f46f]",
+"redDotShrooms": "[그림 30x36 172b225]",
+"redLeafBush": "[그림 44x42 135d72aa]",
+"redLeafBushS": "[그림 30x28 da31b5d9]",
 "redLeafPlant": "[그림 40x38 a2a94a9c]",
+"redLeafS": "[그림 26x20 10dee467]",
 "redMushrooms": "[그림 22x24 b8426ef4]",
+"rockLava": "[그림 62x56 f6545271]",
+"rockLavaS": "[그림 50x48 ef40fdfe]",
+"rockMoss": "[그림 52x50 a21f507c]",
+"rockMossS": "[그림 42x38 47f96e46]",
+"rockRedCry": "[그림 54x56 c41be574]",
+"rockRedCryS": "[그림 44x42 69e6f77f]",
+"rockSand": "[그림 46x58 8b16e0dc]",
+"rockShroom": "[그림 52x52 99885a9b]",
+"rockSnowCry": "[그림 50x58 7b0f1525]",
+"rockSnowCryS": "[그림 44x46 7a757aac]",
+"rockTan": "[그림 54x54 95992030]",
+"rockTanL": "[그림 58x58 e87217ca]",
+"rockTanL2": "[그림 62x60 af5487f3]",
+"rockTanP": "[그림 48x46 220dc525]",
+"rockTanS": "[그림 42x42 8a84d269]",
+"rockWhite": "[그림 54x62 23ed124f]",
+"roundTower": "[그림 68x92 18f32fef]",
+"roundTowerS": "[그림 52x64 260dea9b]",
+"roundTreeG": "[그림 54x70 d5228384]",
+"roundTreeY": "[그림 62x80 6c50969]",
 "rugOval": "[그림 32x16 da135ac8]",
 "rugPattern": "[그림 48x32 a482e807]",
 "rugPatternV": "[그림 32x48 dfae715b]",
 "rugRetro": "[그림 64x48 47886b7b]",
 "rugRetroTall": "[그림 48x64 cb22d784]",
+"sack": "[그림 18x20 3340db98]",
+"sandArch": "[그림 54x58 6e6fd75f]",
+"shark": "[그림 72x30 4f9d9c6a]",
 "shelfEmpty": "[그림 30x36 5c4e9c0e]",
+"shelfF": "[그림 44x50 3b7f626f]",
 "shelfGoods": "[그림 32x32 4739d39a]",
+"shroomHouse": "[그림 58x66 b83f8988]",
+"shroomWhite": "[그림 22x20 3944bc46]",
+"shroomWhiteL": "[그림 26x30 1d90a03d]",
+"shroomWhiteS": "[그림 10x10 9e9588a3]",
+"skullS": "[그림 14x14 88d59a2e]",
 "snowArch": "[그림 58x60 b19d0d94]",
 "snowBush": "[그림 32x30 dcabf9ca]",
 "snowPebble": "[그림 26x24 b760a157]",
@@ -27485,6 +30307,7 @@ null,
 "snowShroomS": "[그림 36x48 f45a11bf]",
 "snowTotem": "[그림 54x74 90a0d38e]",
 "snowTotemS": "[그림 30x64 ea7ac070]",
+"snowTower": "[그림 66x64 8563a134]",
 "snowTree": "[그림 50x54 6db5cbbb]",
 "snowTwig": "[그림 54x66 38c5f14e]",
 "snowTwigL": "[그림 66x78 2cb9846d]",
@@ -27502,12 +30325,36 @@ null,
 "sofaRedV": "[그림 14x38 1dfef780]",
 "sofaYellow": "[그림 32x24 31c1beb8]",
 "sofaYellowV": "[그림 14x38 203102c6]",
+"stairWall": "[그림 54x68 18bec9e0]",
+"stairWall2": "[그림 68x74 8e5a828d]",
+"stairWallS": "[그림 62x72 9aa23c25]",
 "stalagmite": "[그림 14x28 9d03bf31]",
+"standCrystal": "[그림 22x30 ee812ff5]",
+"standHourglass": "[그림 22x32 a29b5091]",
+"stoneArch": "[그림 74x68 1a6fdefa]",
+"stoneRing": "[그림 100x96 fa47ba9b]",
 "streetLamp": "[그림 26x40 eb340d45]",
+"stump2": "[그림 30x26 e1d99248]",
+"stumpS2": "[그림 24x18 4c8a5877]",
+"sunflowers": "[그림 44x54 60f327f6]",
+"tchest2": "[그림 22x20 2f029ff6]",
+"toadTreeL": "[그림 56x70 a6300c79]",
+"toadTreeM": "[그림 44x58 b36bf9a3]",
+"toadTreeS": "[그림 26x34 8907d7d5]",
+"totemPole": "[그림 16x50 7d93c8ba]",
+"totemPole2": "[그림 16x48 68d1900a]",
 "treeStump": "[그림 22x22 57a783ef]",
 "treeStumpL": "[그림 32x26 5563f149]",
 "treeStumpS": "[그림 24x18 7b72e5cd]",
+"vase2": "[그림 18x32 388b9d45]",
+"vinePillar": "[그림 54x54 608105ef]",
+"vinePillar2": "[그림 60x56 3c801e9d]",
+"vinePillar3": "[그림 64x58 8462ed44]",
+"vineTower": "[그림 98x104 8b2c27df]",
+"vineTower2": "[그림 104x108 a66b3a54]",
+"vineTowerL": "[그림 100x106 d916523a]",
 "vineTree": "[그림 38x40 a22b6882]",
+"violetFlower": "[그림 36x48 74b673f1]",
 "wardrobeBig": "[그림 28x40 11b1d330]",
 "wardrobeGlass": "[그림 28x38 3d3c3ecb]",
 "wardrobeOak": "[그림 28x40 7b6569b4]",
@@ -27515,8 +30362,18 @@ null,
 "waterReedS": "[그림 10x16 ead8e4a6]",
 "waterRock": "[그림 30x24 32f27515]",
 "waterRockS": "[그림 18x16 2ef3d0b1]",
+"weaponRack": "[그림 48x42 89cb546]",
 "well": "[그림 32x60 56ed8145]",
+"wheat": "[그림 50x60 59961407]",
+"whiteArch": "[그림 76x62 5d4c757f]",
+"whiteBlueFlower": "[그림 46x88 b148ff17]",
+"whitePillars": "[그림 80x94 e7f02e26]",
+"whiteRubble": "[그림 54x54 65e58b35]",
+"woodIdol": "[그림 40x82 ec728219]",
 "xmasTree": "[그림 90x114 b4ca7b9d]",
+"yellowFlowerBush": "[그림 40x36 45c440c8]",
+"yellowFlowerBushS": "[그림 28x28 dad71916]",
+"yellowFlowerS": "[그림 20x18 9454ae6a]",
 "logBenchV": "[그림 16x32 1a6dafd3]",
 "stoneBenchV": "[그림 16x32 c8400e2e]",
 "rugLongV": "[그림 32x48 f2670be5]",
@@ -28312,6 +31169,9 @@ null,
 "[그림 16x16 565c8f29]",
 "[그림 16x16 8a3b20db]"
 ],
+"fxFire": "[그림 132x18 bd0fd685]",
+"fxRing": "[그림 138x50 a76bd5a5]",
+"fxShield": "[그림 552x62 3dc3eff9]",
 "iceDust": "[그림 72x26 a6d596e5]",
 "portalGlow": "[그림 384x16 4a0678db]",
 "portalStrip": "[그림 384x16 bccb4634]",
@@ -29542,7 +32402,7 @@ null
 "lampCrystal": "7eb96419",
 "shelf": "b66d6a3",
 "cushion": "57970ebf",
-"vase": "54b05879",
+"vase": "559e669a",
 "wallWood": "6ab4292f",
 "wallBrick": "4ffada5c",
 "floorWood": "c272b54",
@@ -29657,7 +32517,7 @@ null
 "battery": "ef19e69f",
 "generator": "cfdce9d2",
 "crystalGen": "2111995a",
-"lever": "e3733f50",
+"lever": "36f67b50",
 "plate": "b24e3427",
 "timer": "27567cb3",
 "eLamp": "fb98aff2",
@@ -29699,7 +32559,7 @@ null
 "bedDouble": "94c72061",
 "longTable": "59d6ab4c",
 "sofa2": "42e69e1d",
-"bookcase2": "58b3abbe",
+"bookcase2": "ecd31317",
 "kitchenSet": "1215243f",
 "fountainBig": "1c0041ef",
 "rugBig": "68b7b5f3",
@@ -30160,6 +33020,156 @@ null
 "mirrorIdol": "a0666426",
 "inkIdol": "7f0ff27f",
 "keeperIdol": "12563ea0",
+"fdesk": "8e7c7b5c",
+"guildShelf": "e84e9747",
+"guildShelfE": "2ea543e6",
+"cabinet": "33338d39",
+"guildChair": "7b993450",
+"mageDesk": "e978f620",
+"vase2": "546ea536",
+"mageRug": "8db761d3",
+"ladder": "e73e6581",
+"crateF": "394b224e",
+"barrelF": "afb8ca16",
+"sack": "d42e89d1",
+"shelfF": "bc590d7f",
+"questBoard": "c32ac4f2",
+"questBoard2": "5dcfb0f7",
+"tchest2": "cd7e7553",
+"guildBanner": "a0df73f2",
+"weaponRack": "8e7e6ba8",
+"armorShelf": "c20fc6b8",
+"dragonSkull": "4c40bee1",
+"skullS": "88d59a2e",
+"crystalBall": "2a1fb782",
+"standCrystal": "bd671430",
+"standHourglass": "186aff70",
+"fishRack": "b99c2d80",
+"netFrame": "cd074f47",
+"fishCrate": "92fc47ae",
+"shark": "120d3584",
+"fishSign": "f45829cf",
+"shroomWhiteL": "23bfcef0",
+"shroomWhite": "1aea3c19",
+"shroomWhiteS": "9e9588a3",
+"crateS": "6eafec4e",
+"barrelS": "58bbd2ac",
+"planks": "9db9cf45",
+"crysPinkL": "d8d12f46",
+"crysPinkM": "95302608",
+"crysPinkS": "9d031fc",
+"crysVioletL": "e7a59825",
+"crysVioletM": "73807b84",
+"crysVioletS": "5b946a3b",
+"crysBlueL": "a131abce",
+"crysBlueM": "dc842527",
+"crysBlueS": "23d706f3",
+"crysGreenL": "d57b5430",
+"crysGreenM": "be784354",
+"crysGreenS": "c645b32c",
+"crysWhiteL": "e81843cd",
+"crysWhiteM": "6623718f",
+"crysWhiteS": "7cfa57ac",
+"crysYellowL": "e265bff7",
+"crysYellowM": "c36f929d",
+"crysYellowS": "f1366ec6",
+"crysYGreenL": "cb669044",
+"crysYGreenM": "5fdc4d47",
+"crysYGreenS": "225c7d87",
+"crysBlackL": "baa78d7d",
+"crysBlackM": "e5af52f6",
+"crysBlackS": "12c82ea2",
+"crysRedL": "e5761243",
+"crysRedM": "7bafcaaf",
+"crysRedS": "dbb11d26",
+"crysDRedL": "3036650d",
+"crysDRedM": "96cbbb2",
+"crysDRedS": "beca15bf",
+"rockSand": "6ab0874c",
+"rockRedCry": "f791aec7",
+"rockSnowCry": "608a8eaa",
+"rockMoss": "382e6c6c",
+"rockWhite": "fc0ee162",
+"rockTan": "95992030",
+"rockShroom": "99885a9b",
+"rockLava": "31a214a4",
+"rockRedCryS": "764e32a1",
+"rockSnowCryS": "830d503",
+"rockMossS": "ec2a9a0a",
+"rockTanS": "8a84d269",
+"rockLavaS": "f38fbfe7",
+"rockTanL": "e87217ca",
+"rockTanP": "b770a48e",
+"rockTanL2": "735796e2",
+"toadTreeL": "f1de9ada",
+"toadTreeM": "a4cc7cf2",
+"toadTreeS": "199a4a69",
+"greenCapL": "135ddd36",
+"greenCapM": "36b28199",
+"greenCapS": "5836c637",
+"chantL": "19fd0c8b",
+"chantM": "78eae134",
+"chantS": "1038e904",
+"redDotShrooms": "3646a892",
+"redDotShroomS": "bd7c11d0",
+"shroomHouse": "c336470a",
+"vineTower": "97ebc608",
+"stairWall": "1ede6058",
+"vinePillar": "608105ef",
+"pillarS": "7ed4a495",
+"stoneRing": "b5411bf0",
+"stoneArch": "81a840ae",
+"whitePillars": "9d8f9b4a",
+"whiteArch": "ce889f95",
+"whiteRubble": "65e58b35",
+"snowTower": "22e9527b",
+"roundTower": "5c6a9957",
+"roundTowerS": "19d0e519",
+"sandArch": "a22900a6",
+"vineTowerL": "d9c1effa",
+"stairWallS": "618677f7",
+"vinePillar2": "efe1ce26",
+"vineTower2": "51721171",
+"stairWall2": "19ae6d71",
+"vinePillar3": "e24dcab1",
+"pillarS2": "719df70b",
+"totemPole": "715f182d",
+"totemPole2": "6eee6c15",
+"woodIdol": "f76fefb6",
+"roundTreeY": "b741bed0",
+"roundTreeG": "726f996f",
+"berryTreeS": "ba4b534e",
+"berryTree": "419dc13b",
+"grassMound": "9a22f31a",
+"redLeafBush": "6fcb9c7e",
+"blueFlowerBush": "f3d3de5c",
+"grassMound2": "a7201d2c",
+"brokenStump": "4cb38f3e",
+"yellowFlowerBush": "368f4b04",
+"stump2": "38e488dd",
+"yellowFlowerBushS": "dad71916",
+"yellowFlowerS": "e7b86289",
+"redLeafS": "1e7e91e",
+"redLeafBushS": "f5ddbece",
+"bushS2": "5f253871",
+"grassMoundS": "586e69fe",
+"stumpS2": "bbc2f286",
+"blueFlowerBushL": "2e1987f7",
+"pinkBud": "acc176a9",
+"pinkBudS": "e6379de3",
+"bushXS": "35474b99",
+"mixFlowerBush": "d91d0207",
+"pinkFlowerBush": "7ec9bafa",
+"lavender": "5f81a3be",
+"violetFlower": "cb3ee1c3",
+"sunflowers": "7f7208d1",
+"whiteBlueFlower": "5f12d4bc",
+"wheat": "f972828c",
+"fruitBushR": "58efdbfb",
+"fruitTreeRS": "e583afdc",
+"fruitTreeY": "134551c8",
+"fruitTreeYS": "4dc7dd22",
+"chestBig": "1d219c17",
 "brazier": "7dc590a9"
 }
 }

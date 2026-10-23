@@ -137,7 +137,7 @@ export function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.index
 // v130 어둠 번개: 맞은 적(또는 보스)에서 CHAIN_R칸 안의 가장 가까운 적에게 차례로 CHAIN_N마리까지, 그 피해의 CHAIN_MUL만큼 (번개는 다시 튀지 않아요)
 export function chainFx(src, dmg) { const hit = new Set([src]), d = Math.max(1, Math.round(dmg * CHAIN_MUL)); let cur = src, from = { x: src.x, y: src.y - .3 };
   for (let n = 0; n < CHAIN_N; n++) { let best = null, bd = CHAIN_R; for (const e of G.enemies) if (!hit.has(e) && e.hp > 0) { const dd = Math.hypot(e.x - cur.x, e.y - cur.y); if (dd < bd) { bd = dd; best = e; } }
-    if (!best) break; hit.add(best); for (let k = 1; k <= 4; k++) emit('puff', from.x + (best.x - from.x) * k / 4, from.y + (best.y - .3 - from.y) * k / 4, '#c9a8ff', 1, 1.2, .15);
+    if (!best) break; hit.add(best); for (let k = 1; k <= 4; k++) emit('puff', from.x + (best.x - from.x) * k / 4, from.y + (best.y - .3 - from.y) * k / 4, '#c9a8ff', 1, 1.2, .15); emit('fxAnim', 'ringDark', best.x, best.y - .3); /* v136 어둠 번개 고리 */
     hitEnemy(best, d, false, 3); from = { x: best.x, y: best.y - .3 }; cur = best; } }
 // v131 거울: 맞힌 적(또는 보스)에서 MIRROR_R칸 안의 가장 가까운 다른 적 하나에게 그 피해의 MIRROR_MUL (다시 튀지 않아요)
 export function mirrorFx(src, dmg) { let best = null, bd = MIRROR_R; for (const e of G.enemies) if (e !== src && e.hp > 0) { const dd = Math.hypot(e.x - src.x, e.y - src.y); if (dd < bd) { bd = dd; best = e; } }
