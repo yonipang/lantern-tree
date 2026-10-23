@@ -11,6 +11,9 @@ import { recipeTier } from './automation-tiers.js';
 // ---- 칸이 커지는 것 (새 그림 크기) ----
 export const GROW122 = { bed: [2, 3], bedDouble: [2, 3], table: [2, 2], longTable: [3, 2] };
 for (const id in GROW122) OBJ[id].sz = GROW122[id];
+// v134 (dev/design/그림에셋.md 「v134에 넣은 것」): 받은 제작대 그림에 맞춰 장비제작대(보석·세공대)·용광로(큰 화로)도 2×1로 커져요. 옛 세계는 save/migrations.js grow134
+export const GROW134 = { smelter: [2, 1], furnace: [2, 1] };
+for (const id in GROW134) OBJ[id].sz = GROW134[id];
 ITEMS.bed.d = '기절하면 침대에서 깨어나요. (2×3)';
 ITEMS.table.d = '차를 마실 수 있는 둥근 탁자 (2×2).';
 ITEMS.bedDouble.d = MULTI.bedDouble[1] = '둘이 누워도 넉넉한 커다란 침대 (2×3).';

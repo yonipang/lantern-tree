@@ -253,12 +253,12 @@ def test_furniture_size():
         async with async_playwright() as p:
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             r=await ev(pg,"()=>{const O=__T.OBJ;return ['bench','logBench','stoneBench'].map(k=>O[k].sz.join('x')+(O[k].rotV?'r':'')).concat([!!O.forge.sz,!!O.furnace.sz,!!O.smelter.sz,!!O.bed.sz,!!O.mossBed.sz])}")
-            rec('칸 크기','작업대 2×1, 벤치 2×1(돌림), 구리 제작대·화로·용광로는 1칸 (v55), 침대는 v122부터 2×3', r==['2x1','2x1r','2x1r',False,False,False,True,False], str(r))
+            rec('칸 크기','작업대 2×1, 벤치 2×1(돌림), 구리 제작대 1칸 (v55), 침대는 v122부터 2×3, 용광로·장비제작대는 v134부터 2×1(받은 그림)', r==['2x1','2x1r','2x1r',False,True,True,True,False], str(r))
             r=await ev(pg,"""async()=>{const T=__T,f=T.SPR.fp,sz=u=>new Promise(res=>{const i=new Image();i.onload=()=>res(i.width+'x'+i.height);i.src=u});
           return [await sz(T.iconURL('logBench')),await sz(T.iconURL('smelter')),await sz(T.iconURL('plant')),await sz(T.iconURL('chair')),f.logBench.small.width,f.logBench.big.width]}""")
-            rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','22x22','20x20','16x16',16,32], str(r))
+            rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','30x30','20x20','16x16',16,32], str(r))
             r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
-            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림)', r==['32x27','16x20','32x16','32x48',False,'32x48','24x28',25], str(r))
+            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림, v134 작업대 = 도구 작업대 24×30·용광로 = 큰 화로 26×48)', r==['24x30','26x48','32x16','32x48',False,'32x48','24x28',25], str(r))
             # v56: saves from before v50 get the 2×1 workbench too — it grows into the free tile next to it, or comes back to the bag
             r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const fpNew=JSON.parse(JSON.stringify(T.serialize())).fpV;
           const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y;yy<=y+2;yy+=2)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
@@ -274,13 +274,13 @@ def test_furniture_size():
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)-3;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
           G.objs.set(T.idx(x,y),{t:'forge'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'furnace'});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y+1)});
           const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x+1,y)),o2=T.G.objs.get(T.idx(x+1,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-',T.G.objs.get(T.idx(x,y+1)).t,o2?o2.t:'-']}""")
-            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 1칸으로(v55), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','-'], str(r))
+            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 v134부터 다시 2칸 그대로(v55~v133은 1칸), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','_part'], str(r))
             r=await ev(pg,"""async()=>{const T=__T,bad=[];for(const id in T.ITEMS){const u=T.iconURL(id);const d=await new Promise(res=>{const i=new Image();i.onload=()=>res([i.width,i.height]);i.src=u});if(d[0]!==d[1])bad.push(id+' '+d.join('x'))}return bad}""")
             rec('아이콘','모든 아이템 아이콘이 정사각형 (가방에서 1칸, 횃불·화분 포함, v55)', r==[], str(r[:6]))
             r=await ev(pg,"""()=>{const T=__T,G=T.G;const x=Math.floor(G.p.x)+3,y=Math.floor(G.p.y)-3;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+2;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
           G.objs.set(T.idx(x,y),{t:'forge'});G.objs.set(T.idx(x+1,y),{t:'_part',a:T.idx(x,y)});G.objs.set(T.idx(x,y+1),{t:'furnace'});G.objs.set(T.idx(x+1,y+1),{t:'_part',a:T.idx(x,y+1)});
           const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const o=T.G.objs.get(T.idx(x+1,y)),o2=T.G.objs.get(T.idx(x+1,y+1));return [T.G.objs.get(T.idx(x,y)).t,o?o.t:'-',T.G.objs.get(T.idx(x,y+1)).t,o2?o2.t:'-']}""")
-            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 1칸으로(v55), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','-'], str(r))
+            rec('구리 제작대','v50~v54 때 2칸으로 놓은 화로는 v134부터 다시 2칸 그대로(v55~v133은 1칸), 구리 제작대는 v60부터 2칸 「구리 작업대」로', r==['bench','_part','furnace','_part'], str(r))
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.wall[T.idx(G.spawnPt.x,G.spawnPt.y+2)]=0;const h=T.homePt();return [h.x-G.spawnPt.x,Math.round((h.y-G.spawnPt.y)*10)/10]}")
             rec('침대','기절·잠에서 깨면 침대 바로 아래에 섬 (v122: 2×3 침대)', r==[0.5,3.6], str(r))
             # a chest touching only the right tile of a 2×1 workbench is still linked
@@ -347,6 +347,42 @@ def test_decor_v122():
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main
 
+
+def test_art_v134():
+    import asyncio, sys
+    # v134: 받은 그림으로 무기·방어구·재료 아이콘·제작대·토끼를 바꿈, 장비제작대·용광로 2×1(옛 세이브는 자리 찾아 커짐), 서리 정령 반짝이(보이기만)
+    H2=HOOK.replace("computeLight}","computeLight,decide,perform,refreshHotbar,fpOf,animalImg,GEAR_IT,SPR,ART}")
+    ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
+    GIVE="(id,c)=>{const G=__T.G;G.inv[0]={id,c:c||1};G.sel=0;__T.refreshHotbar()}"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,f"()=>{{window.GIVE={GIVE}}}")
+            r=await ev(pg,"""()=>{const T=__T,keys=['item/swordCopper','item/staffFrost','item/daggerObsidian','item/swordShadow','item/helmMoss','item/armorObsidian','item/legsDawnstone','item/copperOre','item/goldBar','item/cryGem','item/shadowCry','item/dawnstone','item/wood','obj/bench','obj/smelter','obj/furnace','obj/pot','animal/rabbit','mon/spirit'];
+          const miss=keys.filter(k=>!T.ART[k]);const keep=['item/swordIron','item/swordDawnstone','item/swordWood'].filter(k=>T.ART[k]&&k!=='item/swordIron');
+          const s=T.SPR.obj.furnace,r=T.animalImg('rabbit');return [miss,keep,Math.round(s.height/s.width*10),!!r&&r.width<r.height*1.2]}""")
+            rec('그림','받은 그림이 들어감(무기·방어구·재료·제작대·토끼), 나무·새벽돌 무기는 그대로, 용광로는 키 큰 큰 화로', r[0]==[] and r[1]==[] and r[2]>=17 and r[3], str(r))
+            r=await ev(pg,"()=>{const O=__T.OBJ;return ['bench','smelter','furnace','pot'].map(k=>k+':'+(O[k].sz?O[k].sz.join('x'):'1'))}")
+            rec('칸 크기','작업대·장비제작대·용광로 2×1, 요리솥 1칸', r==['bench:2x1','smelter:2x1','furnace:2x1','pot:1'], str(r))
+            await ev(pg,ARENA)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;GIVE('furnace');const a=T.decide();T.perform(a);let ai=null;for(const[i,o]of G.objs)if(o.t==='furnace')ai=i;
+          return [a.k,ai!=null&&[...G.objs.values()].filter(o=>o.t==='_part'&&o.a===ai).length,T.countItem('furnace')]}""")
+            rec('놓기','용광로를 놓으면 2칸을 차지', r==['place',1,0], str(r))
+            # 옛 세이브: 1칸 장비제작대·용광로는 자리 찾아 커지고(같은 물건 그대로), 좁은 곳의 것은 가방으로(단계 물건)
+            await ev(pg,ARENA)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,I=T.idx;G.objs.set(I(110,104),{t:'smelter',mark:7});G.objs.set(I(104,104),{t:'furnace',mark:9});G.objs.set(I(105,104),{t:'chest',items:Array(18).fill(null)});
+          for(let x=97;x<=106;x++){G.wall[I(x,112)]=1;G.wall[I(x,114)]=1}G.objs.set(I(101,113),{t:'smelter',lv:2});G.objs.set(I(100,113),{t:'chest',items:Array(18).fill(null)});G.objs.set(I(102,113),{t:'chest',items:Array(18).fill(null)});delete G.stats.grow134;
+          const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const G2=T.G,o=(x,y)=>G2.objs.get(I(x,y)),pc=a=>[...G2.objs.values()].filter(q=>q.t==='_part'&&q.a===a).length;
+          const gear=T.GEAR_IT.reduce((n,id)=>n+T.countItem(id),0);
+          const out=[o(110,104)&&o(110,104).t,o(110,104)&&o(110,104).mark,pc(I(110,104)),o(103,104)&&o(103,104).t,o(103,104)&&o(103,104).mark,pc(I(103,104)),o(101,113)?o(101,113).t:'-',gear,G2.stats.grow134.moved,G2.stats.grow134.back];
+          const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return out.concat([T.G.stats.grow134.moved,[...T.G.objs.values()].filter(q=>q.t==='smelter').length])}""")
+            rec('옛 세이브','v134 전 1칸 장비제작대는 오른쪽으로, 오른쪽이 막힌 용광로는 왼쪽으로 커지고(같은 물건), 양옆이 막힌 장비제작대는 가방으로, 다시 불러도 그대로',
+                r==['smelter',7,1,'furnace',9,1,'-',1,2,1,2,1], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
 
 def test_nature_v123():
     import asyncio, sys
