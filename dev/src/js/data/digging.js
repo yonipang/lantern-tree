@@ -23,3 +23,6 @@ export const NAT_DAY_KINDS = {
 };
 // 그 자연물이 생길 수 있는 바닥
 export const NAT_DAY_FLOORS = new Set([1, 2, 3, 4, 18, 19]);
+
+// v137: 삽 파기·바닥 메우기·바꾸기 크기 — 1칸 · 2×2 · 3×3 · 4×4 (기획 dev/design/바닥파기.md 7장). 동작은 sim/digsize.js
+export const DIG_SIZE_MAX = 4;

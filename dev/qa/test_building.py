@@ -61,7 +61,7 @@ def test_terrain_shovel():
             # v93: 흙은 벽 재료이자 바닥 재료 — 큰 버튼은 벽 쌓기, 작은 버튼은 바닥 바꾸기
             await setup("__T.addItem('dirt',2);"+sel.format('dirt'))
             r=await ev(pg,"()=>{const d=__T.decide();return [d.k,d.lbl,!!d.gr,(__T.G.alts||[]).map(a=>a.lbl).join(',')]}")
-            rec('흙','v93: 흙 들고 이끼 바닥 → 큰 버튼 쌓기, 작은 버튼 바닥 바꾸기', r==['place','쌓기',False,'바닥 바꾸기'], str(r))
+            rec('흙','v93: 흙 들고 이끼 바닥 → 큰 버튼 쌓기, 작은 버튼 바닥 바꾸기 (v137: 다음 칸은 크기 1×1)', r==['place','쌓기',False,'바닥 바꾸기,1×1'], str(r))
             r=await ev(pg,f"()=>{{const G=__T.G;__T.decide();__T.perform(G.alts.find(a=>a.lbl==='바닥 바꾸기'));return [{F(111,110)}, G.wall[__T.idx(111,110)], __T.countItem('gMoss'), __T.countItem('dirt')]}}")
             rec('바꾸기','작은 버튼: 이끼 위에 흙 → 흙 바닥이 되고 이끼 흙 돌려받음', r==[2,0,1,1], str(r))
             r=await ev(pg,f"()=>{{const G=__T.G;__T.perform(__T.decide());return [{F(111,110)}, G.wall[__T.idx(111,110)], __T.countItem('dirt')]}}")
@@ -87,7 +87,7 @@ def test_terrain_shovel():
             await setup("__T.addItem('dirt',2);G.floor[__T.idx(111,110)]=__T.WATER;"+sel.format('dirt'))
             r=await ev(pg,"()=>{const d=__T.decide();return [d.lbl,(__T.G.alts||[]).map(a=>a.lbl).join(',')]}")
             r2=await ev(pg,f"()=>{{const G=__T.G;__T.perform(G.alts.find(a=>a.lbl==='바닥 쌓기'));return [{F(111,110)}, G.wall[__T.idx(111,110)], __T.countItem('gWater')]}}")
-            rec('지형 배치','흙 들고 물 → 큰 버튼 쌓기, 작은 버튼 바닥 쌓기로 물 메우기 (물은 돌려받지 않음)', r==['쌓기','바닥 쌓기'] and r2==[2,0,0], f'{r} {r2}')
+            rec('지형 배치','흙 들고 물 → 큰 버튼 쌓기, 작은 버튼 바닥 쌓기로 물 메우기 (물은 돌려받지 않음, v137: 다음 칸은 크기 1×1)', r==['쌓기','바닥 쌓기,1×1'] and r2==[2,0,0], f'{r} {r2}')
             # v87: 물 한 동이는 구덩이에만, 삽으로는 물을 못 떠요
             await setup("__T.addItem('gWater',2);"+sel.format('gWater'))
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().msg||'']")
@@ -838,6 +838,73 @@ def test_dig_flow_v87():
             rec('자연 재생','처음엔 오늘부터 셈(0개), 10일 밀리면 7개까지, 같은 날 다시는 0개, 2일이면 2개', r==[True,0,7,True,0,2], str(r))
             r=await ev(pg,"()=>{const T=__T,G=T.G;G.natDay=T.dayNo()-1;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);return T.G.natDay===T.dayNo()-1}")
             rec('저장','마지막으로 센 날이 저장됨', r is True, str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:3])
+            await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+
+def test_dig_size_v137():
+    import asyncio, sys
+    # v137 파기·바꾸기 크기 (dev/design/바닥파기.md 7장): 삽·바닥 재료를 들면 작은 버튼 「1×1」 → 2×2 → 3×3 → 4×4 → 1×1, 캐릭터마다 저장,
+    # 바라보는 칸부터 앞으로 N줄(짝수는 오른쪽·아래로 한 칸 더), 발밑·옆은 그대로, 못 하는 칸은 건너뜀, 삽은 판 칸 수만큼 닳음,
+    # 재료가 모자라면 가까운 칸부터 가진 만큼, 흙으로 벽 쌓기·물 한 동이는 1칸
+    H2=HOOK.replace("computeLight}","computeLight,perform,doAlt,curAlt,cycleAlt,areaTiles,areaPlan,dszOf,runCmd,PIT,DUR,durOf,selItem,drawDigArea}")
+    CLR="""window.CLR=(fl)=>{const T=__T,G=T.G,X=T.CX+20,Y=T.CY+20;for(let y=Y-7;y<=Y+7;y++)for(let x=X-7;x<=X+7;x++){const i=T.idx(x,y);G.wall[i]=0;G.floor[i]=fl||1;G.objs.delete(i);G.biome[i]=0;G.under.delete(i)}
+  G.enemies.length=0;G.drops.length=0;G.inv.fill(null);G.tools=[];G.p.x=X+.5;G.p.y=Y+.5;G.p.face={x:1,y:0};G.dsz=1;return [X,Y]};
+window.HOLD=(id)=>{const T=__T,G=T.G;T.addItem(id,1);if(T.ITEMS[id].kind==='shovel'){G.tsel=G.tools.findIndex(s=>s.id===id);G.sel=-1;G.tHand=true}else{G.sel=G.inv.findIndex(s=>s&&s.id===id);G.tHand=false}G.act=T.decide();return G.act};
+window.FL=(X,Y,pts)=>pts.map(([x,y])=>__T.G.floor[__T.idx(X+x,Y+y)])"""
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,f"()=>{{{CLR}}}")
+            # 1. 삽을 들면 작은 버튼 맨 앞이 「1×1」, 누를 때마다 1 → 2 → 3 → 4 → 1, 큰 버튼 이름에 크기
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;CLR();const a=HOLD('shovel'),out=[a.k,a.lbl,G.alts[0].k,G.alts[0].lbl];
+              for(let k=0;k<4;k++){T.doAlt();G.act=T.decide();out.push(G.dsz+':'+G.act.lbl+':'+T.curAlt().lbl)}return out}""")
+            rec('크기','삽: 작은 버튼 1×1, 누를 때마다 2·3·4·1, 큰 버튼 「파기 3×3」', r==['dig','파기','dsize','1×1','2:파기 2×2:2×2','3:파기 3×3:3×3','4:파기 4×4:4×4','1:파기:1×1'], str(r))
+            # 2. 3×3 파기: 앞으로 3줄 · 가운데 맞춤, 발밑·옆은 그대로, 이끼 흙 9개, 삽 9 닳음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();HOLD('shovel');G.dsz=3;G.act=T.decide();const s=T.selItem(),d0=T.durOf(s);T.perform(G.act);
+              const pit=[];for(let y=-2;y<=2;y++)for(let x=-1;x<=4;x++)if(G.floor[T.idx(X+x,Y+y)]===T.PIT)pit.push(x+','+y);return [pit.sort().join(' '),T.countItem('gMoss'),d0-T.durOf(s),FL(X,Y,[[0,0],[0,1],[0,-1]]).join(',')]}""")
+            rec('3×3 파기','바라보는 칸부터 앞으로 3줄(1~3) · 위아래 한 칸씩, 이끼 흙 9 · 삽 9 닳음 · 발밑·옆 그대로', r==['1,-1 1,0 1,1 2,-1 2,0 2,1 3,-1 3,0 3,1',9,9,'1,1,1'], str(r))
+            # 3. 2×2·4×4는 오른쪽·아래로 한 칸 더 (아래를 보면 오른쪽, 오른쪽을 보면 아래)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();HOLD('shovel');G.p.face={x:0,y:1};const a=T.areaTiles({x:X,y:Y+1},2).map(c=>(c.x-X)+','+(c.y-Y)).sort().join(' ');
+              G.p.face={x:1,y:0};const b=T.areaTiles({x:X+1,y:Y},4).map(c=>(c.x-X)+','+(c.y-Y)),xs=[...new Set(b.map(q=>+q.split(',')[0]))].sort(),ys=[...new Set(b.map(q=>+q.split(',')[1]))].sort();
+              const c=T.areaTiles({x:X-1,y:Y},3).map(q=>(q.x-X)+','+(q.y-Y));return [a,xs.join(','),ys.join(','),b[0],c[0],c.some(q=>q==='0,0')]}""")
+            rec('자리','2×2 아래 보기: 앞 2줄·오른쪽으로 한 칸 / 4×4 오른쪽 보기: 앞 4줄·위 1·아래 2 / 가까운 칸부터 / 내 칸은 없음', r==['0,1 0,2 1,1 1,2','1,2,3,4','-1,0,1,2','1,0','-1,0',False], str(r))
+            # 4. 못 파는 칸은 건너뜀 (벽·물건·깐 바닥은 파기에서 안 걷음), 삽은 판 칸만큼
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();HOLD('shovel');G.dsz=3;G.wall[T.idx(X+2,Y)]=1;G.objs.set(T.idx(X+1,Y+1),{t:'chair'});G.floor[T.idx(X+3,Y-1)]=5;G.act=T.decide();
+              const s=T.selItem(),d0=T.durOf(s),pl=T.areaPlan(G.act);T.perform(G.act);return [pl.ok.length,pl.skip.length,d0-T.durOf(s),G.floor[T.idx(X+3,Y-1)],G.floor[T.idx(X+1,Y+1)],G.floor[T.idx(X+1,Y)]]}""")
+            rec('건너뛰기','벽·의자·깐 나무 바닥 칸은 건너뛰고 6칸만 · 삽 6 닳음 · 깐 바닥 그대로', r==[6,3,6,5,1,22], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();for(const [x,y] of [[1,0],[1,1],[2,0],[2,1]])G.floor[T.idx(X+x,Y+y)]=5;HOLD('shovel');G.dsz=2;G.act=T.decide();const lb=G.act.lbl;T.perform(G.act);
+              return [lb,FL(X,Y,[[1,0],[1,1],[2,0],[2,1]]).join(','),T.countItem('floorWood')]}""")
+            rec('걷기','깐 바닥을 누르면 2×2 걷기 → 아래 바닥(이끼)이 드러나고 바닥 4개', r==['걷기 2×2','2,2,2,2',4] or r==['걷기 2×2','1,1,1,1',4], str(r))
+            # 5. 삽이 거의 망가졌으면 남은 만큼만
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();HOLD('shovel');G.dsz=4;const s=T.selItem();s.dur=5;G.act=T.decide();T.perform(G.act);let n=0;for(let y=-2;y<=3;y++)for(let x=1;x<=4;x++)if(G.floor[T.idx(X+x,Y+y)]===T.PIT)n++;return [n,T.durOf(s)]}""")
+            rec('내구도','내구도 5 남은 삽으로 4×4 → 5칸만 파고 멈춤', r==[5,0], str(r))
+            # 6. 바닥 재료로 메우기: 누른 칸과 같은 것(구덩이)만, 모자라면 가까운 칸부터
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();for(let y=-1;y<=1;y++)for(let x=1;x<=3;x++)G.floor[T.idx(X+x,Y+y)]=T.PIT;G.floor[T.idx(X+3,Y+1)]=T.WATER;
+              T.addItem('gMoss',4);HOLD('gMoss');G.dsz=3;G.act=T.decide();const lb=G.act.lbl;T.perform(G.act);return [lb,T.countItem('gMoss'),FL(X,Y,[[1,0],[1,-1],[1,1],[2,0],[3,1]]).join(','),FL(X,Y,[[2,-1],[2,1],[3,0],[3,-1]]).filter(f=>f===T.PIT).length]}""")
+            rec('메우기','이끼 흙 5개로 3×3 메우기 → 가까운 5칸만(물 칸은 안 메움)', r==['덮기 3×3',0,'1,1,1,1,10',3] , str(r))
+            # 7. 흙(벽·바닥 재료): 큰 버튼 쌓기는 1칸, 작은 버튼 「바닥 바꾸기 3×3」 다음이 「3×3」, 크기를 눌러도 작은 버튼은 그 자리
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();T.addItem('dirt',20);HOLD('dirt');G.dsz=3;G.act=T.decide();const out=[G.act.lbl,G.alts.map(a=>a.lbl).join('|')];
+              T.cycleAlt();out.push(T.curAlt().k);T.doAlt();G.act=T.decide();out.push(G.dsz,T.curAlt().k,T.curAlt().lbl);
+              T.perform(G.act);let w=0;for(let y=-2;y<=2;y++)for(let x=1;x<=4;x++)if(G.wall[T.idx(X+x,Y+y)])w++;out.push(w);return out}""")
+            rec('흙','큰 버튼 쌓기 · 작은 버튼 [바닥 바꾸기 3×3, 3×3] · 크기를 눌러도 작은 버튼은 크기 칸에 그대로 · 벽은 1칸만', r==['쌓기','바닥 바꾸기 3×3|3×3','dsize',4,'dsize','4×4',1], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();T.addItem('dirt',20);HOLD('dirt');G.dsz=3;G.act=T.decide();const n0=T.countItem('dirt');T.perform(G.alts[0]);
+              let d=0;for(let y=-1;y<=1;y++)for(let x=1;x<=3;x++)if(G.floor[T.idx(X+x,Y+y)]===2)d++;return [d,n0-T.countItem('dirt'),T.countItem('gMoss'),G.wall[T.idx(X+1,Y)]]}""")
+            rec('바닥 바꾸기','흙으로 3×3 바닥 바꾸기 → 이끼 9칸이 흙, 흙 9 씀, 이끼 흙 9 돌려받음, 벽 없음', r==[9,9,9,0], str(r))
+            # 8. 물 한 동이·다른 물건은 크기 없음, PC X 키는 들었을 때만
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,[X,Y]=CLR();G.floor[T.idx(X+1,Y)]=T.PIT;const a=HOLD('gWater');const w=[a.lbl,G.alts.some(q=>q.k==='dsize')];T.runCmd({k:'dsize'});w.push(G.dsz);
+              HOLD('chair');w.push(G.alts.some(q=>q.k==='dsize'));HOLD('shovel');T.runCmd({k:'dsize'});w.push(G.dsz);return w}""")
+            rec('그 밖','물 한 동이는 크기 없음(붓기 1칸) · X 키는 삽을 들었을 때만', r==['붓기',False,1,False,2], str(r))
+            # 9. 저장: 캐릭터에 저장, 1칸이면 칸 없음, 옛 세이브는 1칸
+            r=await ev(pg,"""()=>{const T=__T;T.G.dsz=3;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const a=T.G.dsz;T.G.dsz=1;const s1=T.serialize();delete s.dsz;T.deserialize(s);return [a,'dsz' in s1,T.G.dsz]}""")
+            rec('저장','고른 크기 3 → 불러와도 3 · 1칸이면 세이브에 안 씀 · 옛 세이브는 1칸', r==[3,False,1], str(r))
+            # 10. 미리 보기 그리기 오류 없음
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;CLR();HOLD('shovel');G.dsz=4;G.act=T.decide();return T.areaPlan(G.act).ok.length}""")
+            await pg.wait_for_timeout(400)
+            rec('미리 보기','4×4 미리 보기 16칸, 그리는 중 오류 없음', r==16 and not errs, f'{r} {errs[:2]}')
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

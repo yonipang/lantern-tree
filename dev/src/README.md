@@ -82,6 +82,7 @@ v62 다음 리팩터링(파일 나누기)부터 게임 원본은 한 파일(`dev
 | `js/sim/quests.js` | 퀘스트: 길잡이·곁가지 진행과 보상(`checkGuide`·`claimQuest`), 목표 글·화살표, 지역 알림 |
 | `js/sim/tree.js` | 등불나무: 자라는 단계(`treeStage`), 빛씨앗 넣기(`insertSeeds`) |
 | `js/sim/loop.js` | 매 프레임 진행 `update()` → 순서표(`sim/systems.js`), 빛 계산·퀘스트 확인, 떨어진 물건 줍기 |
+| `js/sim/digsize.js` | v137 파기·바꾸기 크기(1칸·2×2·3×3·4×4): 고른 크기 `G.dsz`(캐릭터 저장)·작은 버튼 「1×1」(`sizeAlt`·`cycleDsz`, PC X 키 명령 `dsize`), 앞으로 뻗는 칸(`areaTiles`), 바뀔 칸·건너뛸 칸(`areaPlan` — 미리 보기 `render/world.js` `drawDigArea`와 같은 계산), 여러 칸 파기·걷기(`digArea`)·메우기·바닥 바꾸기(`placeArea`) — `sim/digging.js` 다음 |
 | `js/sim/warp.js` | v89 워프포인트·포탈: 놓기(`placeWarps`, 새·옛 세계)·켜기·목적지(`warpDests`)·이동(`startWarp`·`warpTick`)·포탈 제한(`portalWhy`)·둘레 규칙(`nearWarpPt`·`warpSafe`) — `sim/digging.js` 다음 |
 | `js/sim/buildmode.js` | v91 건축 모드 규칙: 건축 목록(`bmList`, 가방 + 16칸 안 상자 `bmCount`·`bmTake`), 분류(`bmCat`), 만들어서 놓기(`bmRecipe`, 제작대 단계), 놓을 수 있는지(`bmWhy`, 8칸·벽 바꾸기 `wallSwapOk`), 놓기 명령 `bplace` — `sim/warp.js` 다음 |
 | `js/sim/shadow.js` | v129 그림자 지대: 깨우기 `shadowWake`(빛씨앗 5개째 — `sim/tree.js`, 옛 세이브는 불러올 때 `shadowOnLoad`, `stats.shadowV`·`stats.shadow`), 안인지 `inShadow`(유적 안 빼고)·깊은 몬스터 고르기 `pickShadow`(`sim/enemies.js` trySpawn), 들어가면 알림 `onFrame('shadow')`. 움직임은 `sim/monsters.js` grab·ghost·knight·keeper — `sim/deep.js` 다음 |

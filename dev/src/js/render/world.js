@@ -39,6 +39,7 @@ import { onFrame } from '../sim/systems.js';
 import { treeStage } from '../sim/tree.js';
 import { aimMouse } from '../ui/input.js';
 import { drawBuild } from '../ui/build.js';
+import { areaPlan } from '../sim/digsize.js';
 import { NAV_ARRIVE, NAV_COL, navPt } from '../ui/map.js';
 import { DOORS } from '../world/gen.js';
 import { CX, CY, H, idx, inB, LAVA, W } from '../world/map.js';
@@ -282,6 +283,7 @@ export function renderOverlay(cw, ch) {
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = pxFont(5.4); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const fh = parseFloat(ctx.font), tw = Math.round(ctx.measureText(lb).width + 6 * Z), lx = Math.round(hx + T / 2), ly = Math.round(hy - 5 * Z), bh = Math.round(Math.max(9 * Z, fh + 2 * Z)); ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.fillRect(lx - Math.round(tw / 2), ly - Math.round(bh / 2), tw, bh); pxText(lb, lx, ly, `rgb(${col})`); /* v78: 도트 글꼴, 네모 상자 */
   }
   drawBuild(T, camX, camY); // v91: 건축 모드 미리보기
+  if (p.dead <= 0 && !paused && !p.sit && !cin) drawDigArea(T, camX, camY, L); // v137: 고른 크기만큼 바뀔 칸 테두리
   drawHitBars(T, camX, camY); // v65: hit to recover
   if (!cin) drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)
@@ -476,3 +478,11 @@ export function drawFxAnims(camX, camY) { const now = performance.now() / 1000;
     ctx.drawImage(f, Math.round(a.x * TP - camX - f.width / 2), Math.round(a.y * TP - camY - f.height / 2)); } }
 let FIREF = null;
 export function fireFrame(t) { if (!FIREF) FIREF = fxFrames('fxFire', 3, false); return FIREF ? FIREF[Math.floor(t * 12) % 3] : null; }
+
+// v137: 파기·메우기·바닥 바꾸기 크기 미리 보기 — 바뀔 칸은 테두리(파기 노랑 · 바닥 초록), 범위 안에서 건너뛸 칸은 옅은 점선. 2×2부터만 그려요
+export function drawDigArea(T, camX, camY, L) { const a = G.act && G.act.area ? G.act : (G.alts || []).find(x => x.area); const pl = areaPlan(a); if (!pl) return;
+  const zz = T / 16, col = pl.k === 'dig' ? '255,200,97' : '127,224,181', Y = c => c.y * T - camY - (G.wall[idx(c.x, c.y)] ? L : 0);
+  ctx.save(); ctx.lineWidth = zz;
+  ctx.setLineDash([2 * zz, 2 * zz]); ctx.strokeStyle = 'rgba(255,241,214,.35)'; for (const c of pl.skip) ctx.strokeRect(c.x * T - camX + zz * 1.5, Y(c) + zz * 1.5, T - zz * 3, T - zz * 3);
+  ctx.setLineDash([]); for (const c of pl.ok) { const X = c.x * T - camX, YY = Y(c); ctx.fillStyle = `rgba(${col},.16)`; ctx.fillRect(X, YY, T, T); ctx.strokeStyle = `rgba(${col},.85)`; ctx.strokeRect(X + zz / 2, YY + zz / 2, T - zz, T - zz); }
+  ctx.restore(); }
