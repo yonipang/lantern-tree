@@ -115,7 +115,7 @@ Object.assign(ENEMY, {
 });
 // 지역별 나오는 몬스터와 비율 (지금 몬스터 비율은 조금 줄어요)
 export const MON_TABLE = [
-  [['slimeG', .5], ['moleMoss', .2], ['fireflyMoss', .15], ['vineRoot', .15]],
+  [['slimeG', .55], ['moleMoss', .25], ['vineRoot', .2]], // v135: 반딧벌레(fireflyMoss)는 안 나와요(사용자 요청) — 그 몫 15%를 셋에 나눔. 몬스터 정의는 남겨 둠
   [['slimeO', .35], ['shroomy', .25], ['sporeShroom', .15], ['shroomTurtle', .12], ['toadPoison', .13]],
   [['slimeP', .45], ['shroomy', .15], ['crySpider', .15], ['mirrorCry', .12], ['crySnail', .13]],
   [['magmaSlime', .35], ['cinder', .25], ['lavaSala', .15], ['bombSlime', .13], ['obsGolem', .12]],

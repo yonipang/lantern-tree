@@ -256,9 +256,9 @@ def test_furniture_size():
             rec('칸 크기','작업대 2×1, 벤치 2×1(돌림), 구리 제작대 1칸 (v55), 침대는 v122부터 2×3, 용광로·장비제작대는 v134부터 2×1(받은 그림)', r==['2x1','2x1r','2x1r',False,True,True,True,False], str(r))
             r=await ev(pg,"""async()=>{const T=__T,f=T.SPR.fp,sz=u=>new Promise(res=>{const i=new Image();i.onload=()=>res(i.width+'x'+i.height);i.src=u});
           return [await sz(T.iconURL('logBench')),await sz(T.iconURL('smelter')),await sz(T.iconURL('plant')),await sz(T.iconURL('chair')),f.logBench.small.width,f.logBench.big.width]}""")
-            rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','30x30','20x20','16x16',16,32], str(r))
+            rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','32x32','20x20','16x16',16,32], str(r))
             r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
-            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림, v134 작업대 = 도구 작업대 24×30·용광로 = 큰 화로 26×48)', r==['24x30','26x48','32x16','32x48',False,'32x48','24x28',25], str(r))
+            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림, v135 작업대·용광로를 이어 그려 2칸에 꼭 맞게 32×30·32×48)', r==['32x30','32x48','32x16','32x48',False,'32x48','24x28',25], str(r))
             # v56: saves from before v50 get the 2×1 workbench too — it grows into the free tile next to it, or comes back to the bag
             r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const fpNew=JSON.parse(JSON.stringify(T.serialize())).fpV;
           const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y;yy<=y+2;yy+=2)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
@@ -362,7 +362,7 @@ def test_art_v134():
             r=await ev(pg,"""()=>{const T=__T,keys=['item/swordCopper','item/staffFrost','item/daggerObsidian','item/swordShadow','item/helmMoss','item/armorObsidian','item/legsDawnstone','item/copperOre','item/goldBar','item/cryGem','item/shadowCry','item/dawnstone','item/wood','obj/bench','obj/smelter','obj/furnace','obj/pot','animal/rabbit','mon/spirit'];
           const miss=keys.filter(k=>!T.ART[k]);const keep=['item/swordIron','item/swordDawnstone','item/swordWood'].filter(k=>T.ART[k]&&k!=='item/swordIron');
           const s=T.SPR.obj.furnace,r=T.animalImg('rabbit');return [miss,keep,Math.round(s.height/s.width*10),!!r&&r.width<r.height*1.2]}""")
-            rec('그림','받은 그림이 들어감(무기·방어구·재료·제작대·토끼), 나무·새벽돌 무기는 그대로, 용광로는 키 큰 큰 화로', r[0]==[] and r[1]==[] and r[2]>=17 and r[3], str(r))
+            rec('그림','받은 그림이 들어감(무기·방어구·재료·제작대·토끼), 나무·새벽돌 무기는 그대로, 용광로는 키 큰 큰 화로', r[0]==[] and r[1]==[] and r[2]>=15 and r[3], str(r))
             r=await ev(pg,"()=>{const O=__T.OBJ;return ['bench','smelter','furnace','pot'].map(k=>k+':'+(O[k].sz?O[k].sz.join('x'):'1'))}")
             rec('칸 크기','작업대·장비제작대·용광로 2×1, 요리솥 1칸', r==['bench:2x1','smelter:2x1','furnace:2x1','pot:1'], str(r))
             await ev(pg,ARENA)
@@ -380,6 +380,24 @@ def test_art_v134():
             rec('옛 세이브','v134 전 1칸 장비제작대는 오른쪽으로, 오른쪽이 막힌 용광로는 왼쪽으로 커지고(같은 물건), 양옆이 막힌 장비제작대는 가방으로, 다시 불러도 그대로',
                 r==['smelter',7,1,'furnace',9,1,'-',1,2,1,2,1], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+def test_spirit_fx_v135():
+    import asyncio, sys
+    # v135: 서리 정령 둘레 빛 가루(받은 그림 「얼음 십자 반짝」 첫 장) — 보이기만, 그림이 들어가고 그려도 오류 없음
+    H2=HOOK.replace("computeLight}","computeLight,newGame,SPR,ART}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"()=>{const T=__T,S=T.SPR.iceDust;return [!!T.ART['etc/iceDust'],!T.ART['etc/iceCross'],S instanceof HTMLCanvasElement&&S.width+'x'+S.height]}")
+            rec('그림','빛 가루 그림(2장 띠 72×26)이 들어가고 큰 얼음 십자 그림은 안 씀', r[0] and r[1] and r[2] in ('72x26','144x52'), str(r))
+            await ev(pg,"()=>{__T.newGame(777);const G=__T.G;G.stats.bIntro={spirit:1,golem:1,turtle:1,queen:1,slime:1,dark:1};const B=G.bosses.spirit;G.p.x=B.x+.5;G.p.y=B.y+4.2;G.p.inv=999}")
+            await wait_game(pg,3)
+            r=await ev(pg,"()=>{const B=__T.G.bosses.spirit;return [!__T.G.bossDead.spirit,B.st]}")
+            rec('그리기','서리 정령 곁에서 몇 초 동안 그려도 콘솔 오류 없음', r[0] and not errs, str(r)+' '+str(errs[:3]))
             await ctx.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main

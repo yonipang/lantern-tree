@@ -203,6 +203,7 @@ export function renderWorld(cw, ch, glOn = false) {
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
   }
   drawTreeGlow(t, T, camX, camY, cw, ch);
+  { const sb = G.bosses && G.bosses.spirit; if (sb && !G.bossDead.spirit && !bossAway('spirit')) spiritFx(sb, .45 + Math.sin(t * 2) * .12, sb.ph === 'fade' ? Math.max(.1, sb.t / .6) : null, t, T, camX, camY, 'glow'); } // v135: 서리 정령 빛(스스로 빛남)
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false; setCtx(lowG);
 }
 // v73: drawn after the light (also after the new light pass): boss shots, marks, reach area, target highlight
@@ -418,12 +419,8 @@ export function drawEntity(it, t) {
     if (b.k === 'turtle' && b.ph === 'open') { const pr = .5 + Math.sin(t * 8) * .3; ctx.strokeStyle = `rgba(255,210,92,${pr})`; ctx.lineWidth = 1.5 * Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .25) * T - camY, 1.4 * T, .6 * T, 0, 0, 6.283); ctx.stroke(); }
     const sk = b.k === 'turtle' ? (b.ph === 'shell' ? 'turtleS' : 'turtle') + ((b.stage || 1) >= 2 ? 'C' : '') : def.spr, bz = b.k === 'spirit' ? .45 + Math.sin(t * 2) * .12 : (b.z || 0), ba = b.k === 'spirit' && b.ph === 'fade' ? Math.max(.1, b.t / .6) : null;
     if (b.k === 'spirit' && b.st === 'fight' && b.ph === 'ring') { const pr = 1 - Math.max(0, b.t) / .7; ctx.strokeStyle = `rgba(191,230,255,${.3 + pr * .5})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.5 + pr * 1.5) * T, (.3 + pr * .8) * T, 0, 0, 6.283); ctx.stroke(); }
+    if (b.k === 'spirit') spiritFx(b, bz, ba, t, T, camX, camY, 'back'); // v135: 서리 정령 둘레 빛 가루(몸 뒤)
     drawImg(b.hurt > 0 ? SPR[sk + 'W'] : SPR[sk], b.x, b.y + .3, { sx: sx * def.scale, sy: sy * def.scale, z: bz, alpha: ba }); ctx.globalAlpha = 1;
-    if (b.k === 'spirit') { // v134: 서리 정령 둘레에 눈송이·반짝이가 천천히 돌며 떠올라요(보이기만)
-      const cy = b.y + .3 - bz - 1.3, fa = ba == null ? 1 : ba; for (let k = 0; k < 10; k++) { const a = k * .628 + t * (.45 + (k % 3) * .08), up = ((t * .3 + k * .37) % 1), rx = 1.55 + .25 * Math.sin(t * 1.1 + k), ry = 1 + .2 * Math.cos(t * .9 + k),
-        px = Math.round((b.x + Math.cos(a) * rx) * T - camX), py = Math.round((cy + Math.sin(a) * ry - up * .8) * T - camY), tw = Math.sin(t * 3.2 + k * 1.7); ctx.globalAlpha = fa * Math.min(1, 1.8 * (1 - up));
-        const L = tw > .6 ? 2 : 1; ctx.fillStyle = '#3d78c2'; ctx.fillRect(px - L * Z - Z, py - Z, (2 * L + 3) * Z, 3 * Z); ctx.fillRect(px - Z, py - L * Z - Z, 3 * Z, (2 * L + 3) * Z); // 진한 파랑 테두리(밝은 얼음 바닥에서도 보이게)
-        ctx.fillStyle = '#c8f4ff'; ctx.fillRect(px - L * Z, py, (2 * L + 1) * Z, Z); ctx.fillRect(px, py - L * Z, Z, (2 * L + 1) * Z); ctx.fillStyle = '#ffffff'; ctx.fillRect(px, py, Z, Z); } ctx.globalAlpha = 1; }
     if (b.st === 'sleep') { ctx.font = pxFont(7); ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
     if ((b.k === 'golem' || b.k === 'bookGolem') && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
     return;
@@ -436,3 +433,28 @@ export function drawWarp(it, o, d, t) { const F = SPR.warpF && SPR.warpF[d.warp]
   const k = on ? Math.floor(t / WARP_FRAME + hash2(it.x, it.y, 3) * F.base.length) % F.base.length : 0;
   drawKind('up'); drawImg(on ? F.base[k] : F.off, wx, wy, { sx: o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1 });
   if (on && F.glow[k]) { drawKind('fglow'); drawImg(F.glow[k], wx, wy); drawKind('up'); } }
+
+// v135: 서리 정령 둘레 빛 가루(보이기만 — 공격·부딪힘·몬스터가 생기는 밝기와 상관없음, `dev/design/그림에셋.md` 「v135」)
+// 받은 그림 「얼음 십자 반짝」 첫 장(1~2px 빛 가루, dev/art/etc/iceDust)이 정령 몸 바깥 둘레 7군데에서 번갈아 살짝 나타났다 사라지고,
+// 열 중 일곱쯤은 가장 밝을 때 작은 십자 반짝(3~5px)이 한 번. 몸 뒤에 그려서 몸 위로는 안 올라와요.
+// phase: 'back' = 세계 그림(정령 그림 앞에 먼저), 'glow' = 빛 층(스스로 살짝 빛남 — 어두운 곳에서도 보이게)
+const fxH = (n, k) => { const x = Math.sin(n * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+function fxStar(px, py, L, a, arm, tip, glow) { if (L <= 0 || a <= 0) return;
+  if (glow) { const r = (3 + L * 2.2) * Z; ctx.globalAlpha = a * .8; ctx.drawImage(glowSprite(arm), px - r, py - r, r * 2, r * 2); }
+  else { ctx.globalAlpha = a * .6; ctx.fillStyle = '#2c4f9e'; ctx.fillRect(px - (L + 1) * Z, py - Z, (2 * L + 3) * Z, 3 * Z); ctx.fillRect(px - Z, py - (L + 1) * Z, 3 * Z, (2 * L + 3) * Z); }
+  ctx.globalAlpha = a; ctx.fillStyle = tip; ctx.fillRect(px - L * Z, py, (2 * L + 1) * Z, Z); ctx.fillRect(px, py - L * Z, Z, (2 * L + 1) * Z);
+  if (L > 1) { ctx.fillStyle = arm; ctx.fillRect(px - (L - 1) * Z, py, (2 * L - 1) * Z, Z); ctx.fillRect(px, py - (L - 1) * Z, Z, (2 * L - 1) * Z); }
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(px, py, Z, Z); }
+export function spiritFx(b, bz, ba, t, T, camX, camY, phase) {
+  if (phase === 'front') return; const F = dustFrames(); if (!F.length) return;
+  const fa = ba == null ? 1 : ba, G2 = phase === 'glow', cx = b.x * T - camX, cy = (b.y + .3 - bz - 1.3) * T - camY;
+  ctx.save(); if (G2) ctx.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 7; k++) { const per = 2.2 + fxH(k, 9) * 1.2, ph = t / per + k * .29, n = Math.floor(ph), s = ph - n, a = fxH(n, k) * 6.283, rr = 1.55 + fxH(n, k + 50) * .45;
+    const wx = b.x + Math.cos(a) * rr, wy = (cy + camY) / T + Math.sin(a) * rr * .85 + .8, al = fa * Math.sin(Math.PI * s);
+    drawImg(F[0], wx, wy, { alpha: al * (G2 ? .35 : .9), flip: (n + k) % 2 === 1 }); ctx.globalAlpha = 1;
+    if (fxH(n, k + 7) < .7 && s > .3 && s < .7) { const q = Math.sin(Math.PI * (s - .3) / .4), px = Math.round(cx + (Math.cos(a) * rr + (fxH(n, k + 8) - .5) * .6) * T), py = Math.round(cy + (Math.sin(a) * rr * .85 + (fxH(n, k + 9) - .5) * .5) * T);
+      fxStar(px, py, q > .7 ? 2 : 1, fa * q, '#dffaff', '#9fe0ff', G2); ctx.globalAlpha = 1; } }
+  ctx.restore(); }
+let IDF = null; // 빛 가루 그림(dev/art/etc/iceDust 2장 중 첫 장을 씀)
+function dustFrames() { if (IDF) return IDF; const S = SPR.iceDust; if (!(S instanceof HTMLCanvasElement)) return IDF = [];
+  const w = S.width / 2; IDF = []; for (let k = 0; k < 2; k++) { const c = document.createElement('canvas'); c.width = w; c.height = S.height; c.getContext('2d').drawImage(S, k * w, 0, w, S.height, 0, 0, w, S.height); c.hd = S.hd; c.ol = S.ol; IDF.push(c); } return IDF; }
