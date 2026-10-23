@@ -131,12 +131,16 @@ def test_workbench_tabs():
             r=await ev(pg,"()=>[document.querySelector('#sheet .sh-head, #sheet h2, #sheet .head')?.textContent.includes('가구 제작대')?'가구':'',__row(0),__ids().every(id=>__T.bcat(__T.RECIPES.find(r=>r.out===id))[0]==='furn'),[...document.querySelectorAll('#sheet .stag')].map(e=>e.textContent).filter((v,i,a)=>a.indexOf(v)===i).sort().join(',')]")
             rec('가구','가구 제작대: 창 이름 「가구 제작대」, 탭 한 줄 전체·의자·탁자·침대·수납·장식(조명은 작업대), 세트는 태그로',
                 r[0]=='가구' and r[1]=='all*,seat,table,bed,store,deco' and r[2] and r[3]=='버섯 세트,수정 세트,이끼 세트', str(r))
-            await ev(pg,"()=>__clk('tab2','seat')"); await pg.wait_for_timeout(250)
+            for _ in range(6): # v136: 창을 바꿔 연 뒤라 누르기가 늦게 먹을 때가 있어요 — 고른 탭이 될 때까지
+                await ev(pg,"()=>__clk('tab2','seat')"); await pg.wait_for_timeout(250)
+                if (await ev(pg,"()=>__row(0)")).startswith('all,seat*'): break
             r=await ev(pg,"()=>[__row(0),__ids().sort().join(',')]")
             rec('가구','의자 탭은 의자만 (나무·이끼·버섯·수정·철제 의자, 벤치, 소파, 쿠션)', r[0].startswith('all,seat*') and 'chair' in r[1] and 'mossSofa' in r[1] and 'cryChair' in r[1] and 'bed' not in r[1] and 'table' not in r[1].split(','), str(r))
             await pg.screenshot(path=SP+'seat.png')
             await ev(pg,"()=>{__T.closePanel();__T.openPanel('craft',{st:'bench',i:__T.idx(__T.CX+6,__T.CY+5)})}"); await pg.wait_for_timeout(400)
-            await ev(pg,"()=>__clk('tab','build')"); await pg.wait_for_timeout(250)
+            for _ in range(6):
+                await ev(pg,"()=>{const b=document.querySelector('#sheet [data-a=tab][data-i=build]');if(b)b.click()}"); await pg.wait_for_timeout(250)
+                if await ev(pg,"()=>__lbl()==='건축'"): break
             r=await ev(pg,"()=>[__lbl(),__row(1)]")
             rec('건축','건축: 2줄 탭이 전체로 돌아가고 전체·벽·바닥·울타리·문·자연 (v69: 기둥·창문 삭제)', r==['건축','all*,wall,floor,fence,door,nature'], str(r))
             await ev(pg,"()=>__clk('tab2','nature')"); await pg.wait_for_timeout(250)
