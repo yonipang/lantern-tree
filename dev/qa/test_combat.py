@@ -431,6 +431,34 @@ def test_natural_regen():
     return main
 
 
+def test_feel_v138():
+    # v138 손맛: 맞힐 때 멈칫(혼자일 때 세계가 잠깐 멈춤) · 쓰러짐 연출 · 벽 금 4단계와 튀는 조각 · 떨어진 물건이 점점 빨라져 쏙 (수치·줍는 거리는 그대로)
+    H2=HOOK.replace("computeLight}","computeLight,mkEnemy,hitEnemy,breakWall,dropStep,SPR,get hs(){return hitstop},get gh(){return GHOSTS.length}}")
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=G.p;G.enemies.length=0;P.hp=999;P.inv=99;const mr=Math.random;Math.random=()=>.5;try{
+              const e=T.mkEnemy('slimeG',P.x+1.5,P.y);e.hp=999;G.enemies.push(e);T.hitEnemy(e,3,false,0);const hit=T.hs;
+              const e2=T.mkEnemy('slimeG',P.x+1.5,P.y);e2.hp=2;G.enemies.push(e2);const p0=G.parts.length;T.hitEnemy(e2,5,false,0);const kill=T.hs,parts=G.parts.length-p0,gh=T.gh,gone=!G.enemies.includes(e2);G.enemies.length=0;
+              return {hit,kill,parts,gh,gone}}finally{Math.random=mr}}""")
+            rec('손맛','맞히면 멈칫 0.035초 · 쓰러뜨리면 0.07초', abs(r['hit']-.035)<1e-6 and abs(r['kill']-.07)<1e-6, str(r))
+            rec('손맛','쓰러지면 하얀 그림 + 조각·고리 (20개 넘게)', r['gone'] and r['gh']>=1 and r['parts']>20, str(r))
+            r=await ev(pg,"""()=>new Promise(res=>{const T=__T,G=T.G,P=G.p;G.enemies.length=0;const e=T.mkEnemy('slimeG',P.x+1.5,P.y);e.hp=2;G.enemies.push(e);T.hitEnemy(e,5,false,0);const t0=G.time;
+              requestAnimationFrame(()=>{const t1=G.time;const w=()=>{if(T.hs>0)return requestAnimationFrame(w);requestAnimationFrame(()=>requestAnimationFrame(()=>res({still:t1===t0,moved:G.time>t1})))};w()})})""")
+            rec('손맛','혼자일 때 멈칫하는 동안 세계 시간이 멈추고, 끝나면 다시 흐름', r['still'] and r['moved'], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=G.p;const tx=Math.floor(P.x)+2,ty=Math.floor(P.y),i=T.idx(tx,ty);G.wall[i]=1;G.objs.delete(i);const p0=G.parts.length;T.breakWall(tx,ty);
+              const chips=G.parts.slice(p0).filter(q=>q.bnc).length;return {crack:T.SPR.crack.length,chips}}""")
+            rec('손맛','벽 금 4단계 · 부서지면 통통 튀는 덩어리 14개', r['crack']==4 and r['chips']==14, str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,P=G.p;P.dead=0;G.drops.length=0;const mk=dx=>{const d={id:'stone',c:1,x:P.x+dx,y:P.y-.3,vx:0,vy:0,z:0,vz:0,t:1,hold:0};G.drops.push(d);return d};
+              const near=mk(1.8);let n=0,pv=0;for(;n<60&&G.drops.includes(near);n++){T.dropStep(near,1/60);if(n===0)pv=near.pv||0}
+              const far=mk(2.6);for(let k=0;k<30;k++)T.dropStep(far,1/60);const stay=Math.abs(far.x-(P.x+2.6))<1e-6;G.drops.length=0;return {frames:n,pv,stay}}""")
+            rec('손맛','1.8칸 떨어진 물건은 점점 빨라져 0.5초 안에 쏙 · 2.6칸은 안 끌려옴(줍는 거리 그대로)', r['frames']<30 and r['pv']>3 and r['stay'], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close(); await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
 def test_enemy_sight():
     # v85: 알아채는 거리(기본 5칸·버섯도깨비 5.5칸) + 벽 너머는 못 봄 + 쫓기 시작하면 3칸 더 + 맞으면 쫓음
     H2=HOOK.replace("computeLight}","computeLight,mkEnemy,enemyStep,hitEnemy,ENEMY}")

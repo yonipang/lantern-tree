@@ -130,7 +130,7 @@ export function renderWorld(cw, ch, glOn = false) {
         drawKind('itop', ia.ore); ctx.drawImage(AT, ia.u, ia.v, 16, 16, sx, sy - L, 16, 16); drawKind('shade'); ctx.drawImage(AT, ia.u, ia.v + 16, 16, 16, sx, sy - L, 16, 16); // v81: one shared atlas (fast)
         if (ia.front) { drawKind('front', ia.ore); ctx.drawImage(AT, ia.u, ia.v + 32, 16, 28, sx, sy - ia.frontUp, 16, 28); }
         if (ia.shadow) { drawKind('floor'); ctx.drawImage(AT, ia.u, ia.v + 60, 16, 31, sx, sy - ia.frontUp, 16, 31); } drawKind('up'); // v81: soft shadow on the floor under a rock wall
-        const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+        const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(3, Math.floor(dm / WALLS[w].hp * 4))]); /* v138 금 4단계 */
         if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (ia.front) { const a = .35 + .35 * Math.sin(t * 2.2 + x), fy = sy + T - WALL_H; ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
         continue; }
       const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
@@ -147,7 +147,7 @@ export function renderWorld(cw, ch, glOn = false) {
       if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, th);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
       const ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); // cracks: the middle rows on the 12px top
-      const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+      const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(3, Math.floor(dm / WALLS[w].hp * 4))]); /* v138 금 4단계 */
       if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
     }
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
@@ -171,6 +171,7 @@ export function renderWorld(cw, ch, glOn = false) {
     if (q.k === 'arrow') { ctx.save(); ctx.translate(X, Y); ctx.rotate(q.ang); ctx.fillStyle = '#7d4d2a'; ctx.fillRect(-5, 0, 8, 1); ctx.fillStyle = q.tip || '#eef2f7'; ctx.fillRect(3, -1, 2, 3); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(-6, -1, 2, 3); ctx.restore(); }
     else if (q.look === 'fire' && fireFrame(t)) { const f = fireFrame(t); ctx.save(); ctx.translate(X, Y); ctx.rotate(Math.atan2(q.vy, q.vx)); ctx.drawImage(f, -f.width + 8, -f.height / 2); ctx.restore(); } // v136 불덩이 (머리가 앞)
     else { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(q.col), X - 7, Y - 7, 14, 14); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = q.col; ctx.fillRect(X - 2, Y - 2, 4, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(X - 1, Y - 1, 2, 2); } }
+  drawGhosts(); // v138
   drawFxAnims(camX, camY); // v136
   for (const q of G.parts) { ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life / q.max * 1.6); const s = q.sz; ctx.fillRect(Math.round(q.x * T - camX - s / 2), Math.round((q.y - q.z) * T - camY - s / 2), s, s); }
   ctx.globalAlpha = 1; drawTreeLeaves(T, camX, camY);
@@ -466,6 +467,12 @@ function dustFrames() { if (IDF) return IDF; const S = SPR.iceDust; if (!(S inst
 
 // ---- v136 스킬 효과 그림 (받은 마법 효과 묶음: 얼음 방패 → 빛 방패 · 번개 고리 → 번개 사슬·어둠 번개 · 불덩이 → 불꽃 구슬). 보이기만 ----
 const FXA = [], FXA_DEF = { shield: ['fxShield', 12, .9], ring: ['fxRing', 3, .3], ringDark: ['fxRing', 3, .3] };
+// v138 쓰러진 몬스터: 하얀 그림이 0.22초 동안 부풀며 사라져요 (보이기만)
+const GHOSTS = []; const GHOST_T = .22;
+export function addGhost(k, x, y, flip, z) { if (GHOSTS.length < 24) GHOSTS.push({ k, x, y, flip, z: z || 0, t0: performance.now() / 1000 }); }
+export function drawGhosts() { const now = performance.now() / 1000;
+  for (let i = GHOSTS.length - 1; i >= 0; i--) { const g = GHOSTS[i], a = (now - g.t0) / GHOST_T; if (a >= 1 || a < 0) { GHOSTS.splice(i, 1); continue; } const img = SPR[g.k + 'W'] || SPR[g.k]; if (!img) continue;
+    const s = 1 + a * .45; drawImg(img, g.x, g.y + .12, { sx: s, sy: s * (1 - a * .25), z: g.z, flip: g.flip, alpha: .9 * (1 - a) * (1 - a) }); } }
 export function addFxAnim(k, x, y) { if (FXA_DEF[k] && FXA.length < 40) FXA.push({ k, x, y, t0: performance.now() / 1000 }); }
 const FXA_FR = {}; function fxFrames(key, n, dark) { const id = key + (dark ? 'D' : ''); if (FXA_FR[id]) return FXA_FR[id]; const S = SPR[key]; if (!S) return null; const w = S.width / n, out = [];
   for (let k = 0; k < n; k++) { const c = document.createElement('canvas'); c.width = w; c.height = S.height; const g = c.getContext('2d'); g.drawImage(S, k * w, 0, w, S.height, 0, 0, w, S.height);

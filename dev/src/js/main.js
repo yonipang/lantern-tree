@@ -5,10 +5,11 @@ import { $ } from './engine/util.js';
 import { iconURL } from './render/icons.js';
 import { computeLight, initLight } from './render/light.js';
 import { render, resize } from './render/view.js';
-import { cam, deserialize, G, lastInputAt, newGame, noteInput, paused, serialize, setSound, started } from './save/state.js';
+import { cam, deserialize, G, lastInputAt, newGame, noteInput, paused, playerList, serialize, setSound, started } from './save/state.js';
 import { cloudInit, cloudUpload, loadBackups, loadLocal, pushBackup, saveLocal, storageWorks } from './save/storage.js';
 import { pausedTick, update } from './sim/loop.js';
 import { onFrame } from './sim/systems.js';
+import { hitstopTick } from './ui/feedback.js';
 import { jobPanelTick, updateHud } from './ui/hud.js';
 import { placeJoyIdle, sendCtl, setupInput } from './ui/input.js';
 import { beginPlay } from './ui/picker.js';
@@ -25,7 +26,7 @@ onFrame('cloud', dt => {
 export let lastT = 0;
 export function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
-  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) update(dt); else pausedTick(dt); }
+  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) { if (!(hitstopTick(dt) && playerList().length <= 1)) update(dt); } else pausedTick(dt); /* v138 맞힐 때 멈칫 (혼자일 때만 세계를 잠깐 멈춤) */ }
   if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);
