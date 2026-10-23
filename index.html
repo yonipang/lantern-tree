@@ -2606,11 +2606,11 @@ function checkUnlocks() {
   if (started && !G.stats.starTip && beat('golem')) { G.stats.starTip = 1; setTimeout(() => emit('toast', '이제 맞는 흙에 심은 작물이 가끔 별 작물로 자라요 (베리=이끼, 버섯·빛버섯=버섯흙, 수정 콩=수정 모래)', 'good', 'startip'), 1500); }
 }
 function shovelDesc() { return '삽을 들고(도구 칸) 바닥을 바라보며 누르면 파서 구덩이를 만들고, 그 바닥 재료(흙·이끼 흙·얼음 덩이 …)를 얻어요. 깔아 둔 바닥은 걷어서 돌려받아요. 구덩이는 사람·몬스터가 못 지나가고, 바닥 재료로 메워요. 등불나무 둘레·보스방은 못 파요.'; }
-function digGround(t) {
+function digGround(t, quiet) { // v137 quiet: 여러 칸을 한 번에 팔 때 둘째 칸부터 소리 없이
   if (digWhy(t.x, t.y)) return; const i = idx(t.x, t.y), f = G.floor[i];
-  if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
+  if (isPlacedFloor(f)) { G.floor[i] = G.under.has(i) ? G.under.get(i) : 2; G.under.delete(i); const l = addItem(FLOOR_ITEM[f], 1, false); if (l) spawnDrop(FLOOR_ITEM[f], 1, t.x + .5, t.y + .5); if (!quiet) emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, '#e8d8c0', 6, 2); }
   else { const id = DIG_YIELD[f]; G.floor[i] = PIT; const l = addItem(id, 1, false); if (l) spawnDrop(id, 1, t.x + .5, t.y + .5);
-    emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 || f === 35 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
+    if (!quiet) emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .7, f === 1 ? '#7fd06a' : f === 3 ? '#c49ae0' : f === 4 ? '#b9a8ff' : f === 20 || f === 19 || f === 35 ? '#cfeaff' : '#a07a5a', 7, 2.2); G.stats.dug = (G.stats.dug || 0) + 1; }
   flowNear(t.x, t.y); // 새 구덩이(또는 걷어서 드러난 구덩이) 옆에 물·용암이 있으면 흘러 들어와요
   emit('tile', t.x, t.y); emit('inv'); const sv = selItem(); if (sv && sv.id === 'shovel') wear(sv);
 }
@@ -2684,7 +2684,7 @@ function newGame(seed) {
     enemies: [], drops: [], parts: [], texts: [], bosses: freshBosses(), bossDead: freshDead(), shots: [], fish: null, fishFx: null, stats: freshStats(), time: 0, spawnPt: null, treeSeeds: 0, won: false, guide: 0, wdmg: new Map(), swing: null, biomeNow: 0 };
   bindPlayers(G);
   G.inv[0] = { id: 'berry', c: 4 }; G.inv[1] = { id: 'berrySeed', c: 2 }; [['pickWood', 1], ['swordWood', 1]].forEach(([id, c]) => addItem(id, c, false)); G.seen = {}; seenAll(); // v77: 처음 가진 물건은 본 것
-  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; G.stats.grow134 = { moved: 0, back: 0, boxes: 0 }; /* v134 */ G.stats.fdesk136 = 1; /* v136 */ G.stats.snow132 = 1; /* v132: 새 세계는 만들 때 이미 깔려요 */ /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; G.stats.dark130 = 1; /* v119 · v124 · v128 · v130 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); archBossOnLoad(); /* v104·v106·v108 · v131 기록관 마지막 방 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
+  G.stats.nm58 = 1; G.stats.nm61 = 1; G.stats.nm65 = 1; G.stats.grow122 = { moved: 0, back: 0, boxes: 0 }; G.stats.grow134 = { moved: 0, back: 0, boxes: 0 }; /* v134 */ G.stats.fdesk136 = 1; /* v136 */ G.stats.snow132 = 1; /* v132: 새 세계는 만들 때 이미 깔려요 */ /* v122: 새 판은 커진 가구 옮기기를 하지 않아요 */ G.sel = -1; G.tsel = 0; G.lastW = 'swordWood'; /* v65: start holding the wooden pickaxe in the tool slot (berries · seeds · wooden sword in hotbar slots 1–3) */ G.outfit = 0; G.char = 'sprout'; G.pname = null; G.dsz = 1; G.look = cleanLook(); G.marks = []; G.under = new Map(); G.terrain = {}; G.rpg = freshRpg(); G.qclaim = {}; G.wire = new Map(); G.bwall = new Set(); G.hz = []; G.pshots = []; G.skcd = {}; G.p.mp = maxMp(); G.fzones = genFlowerZones(); G.regen = []; G.run = newRunId(); G.playT = 0; G.playTEst = false; G.qt = {}; G.stats.naru110 = 1; G.stats.naru119 = 1; G.stats.gb124 = 1; G.stats.tier128 = 1; G.stats.dark130 = 1; /* v119 · v124 · v128 · v130 */ /* v110: 새 게임은 나루 첫 장면부터 */ G.rooms = placeRooms(w); refreshDoors(); placeWarps(); placeArchives(); placeCocoons(); deepOnLoad(); archBossOnLoad(); /* v104·v106·v108 · v131 기록관 마지막 방 */ /* v89 워프포인트 */ G.recipes = {}; G.buffs = []; G.equip = freshEquip(); G.eqSets = freshSets(); G.eqSet = 0; G.stats.qv = 1; G.qAct = 'main'; G.pets = {}; G.petOn = null; G.wild = []; G.petE = null; G.env = { k: null, v: 0, lv: 0, t: 0 }; emit('look');
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
 }
 const rle = a => { const o = []; let p = a[0], n = 1; for (let i = 1; i < a.length; i++) { if (a[i] === p && n < 65535) n++; else { o.push(p, n); p = a[i]; n = 1; } } o.push(p, n); return o; };
@@ -2695,9 +2695,9 @@ const unrle = (r, len) => { const a = new Uint8Array(len); let k = 0; for (let i
 // 정한 것 (2026-10-12): 퀘스트 진행·보상·기록(stats)은 세계별 · 지도에서 밝힌 곳은 플레이어마다 따로 · 펫은 캐릭터가 데리고 다님
 const SAVE_ORDER = ['v', 'seed', 'wall', 'floor', 'biome', 'explored', 'objs', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look',
   'p', 'rpg', 'qclaim', 'wire', 'fzones', 'regen', 'stats', 'time', 'spawnPt', 'treeSeeds', 'won', 'won2', 'bossDead', 'guide', 'at', 'marks', 'under', 'terrain', 'run',
-  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'qAct', 'natDay', 'bwall', 'pname'];
+  'playT', 'playTEst', 'qt', 'rooms', 'recipes', 'buffs', 'mapV', 'mapA', 'fpV', 'equip', 'pets', 'petOn', 'backPt', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'qAct', 'natDay', 'bwall', 'pname', 'dsz'];
 // 캐릭터: 가방·도구·장비·옷·생김새·레벨과 스킬·배운 요리·버프·더위추위·귀환석 쉬는 시간·펫 (+ p의 체력·배고픔·기력)
-const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'pname']); // v117 pname: 첫 장면에서 지은 이름
+const CHAR_KEYS = new Set(['inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'pname', 'dsz']); // v117 pname: 첫 장면에서 지은 이름 · v137 dsz: 파기·바꾸기 크기
 // 세계 안에서 플레이어마다: 지도에서 밝힌 곳·침대·귀환 표지 (+ p의 위치 x·y). 나머지는 모두 세계 (지형·물체·시간·보스·퀘스트 …)
 const PLAYER_KEYS = new Set(['explored', 'spawnPt', 'backPt', 'qAct']); // v84: 활성 퀘스트는 사람마다
 const ME = 'me'; // 내 플레이어 (13단계에서 캐릭터마다 이름표)
@@ -2707,7 +2707,7 @@ const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 // 옛 코드의 G.inv·G.p·G.actCd … (PER_PLAYER)는 「지금 플레이어」(curPl)의 것을 가리켜요:
 //   명령은 보낸 플레이어(sim/commands.js), 매 프레임 플레이어별 일은 한 명씩(sim/systems.js), 그 밖(화면·저장)은 내 플레이어(ME).
 // 다른 플레이어의 것을 보려면 withPlayer(pl, () => …) 또는 pl.inv처럼 직접.
-const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'pname',
+const PER_PLAYER = ['p', 'inv', 'invV', 'tools', 'tsel', 'tHand', 'lastW', 'bagLv', 'sel', 'outfit', 'char', 'look', 'rpg', 'recipes', 'buffs', 'equip', 'pets', 'petOn', 'recallCd', 'env', 'seen', 'eqSets', 'eqSet', 'pname', 'dsz',
   'explored', 'spawnPt', 'backPt', 'qAct', // 세계 안 플레이어별 (PLAYER_KEYS)
   'fish', 'fishFx', 'swing', 'act', 'alts', 'skcd', 'recall', 'warpGo', 'petE', 'pshots', 'biomeNow', 'escCd', 'luck', 'tipN', // 지금 하는 일 (저장 안 함)
   'actCd', 'holdGroup', 'actQ', 'holdT', 'holdK', 'atkQ', 'atkT', 'hungerT', 'regenT', 'spawnT']; // 행동·공격 버튼 타이머, 배고픔·회복 시간, 주변 몬스터 생기기
@@ -2733,7 +2733,7 @@ function bindPlayers(g, id = ME) {
 function addPlayer(id, x, y) {
   const me = G.players[ME], pl = { id, ...freshTimers(), p: { x, y, hp: 100, hunger: 100, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, inv: 0, hurt: 0, kx: 0, ky: 0, dead: 0 },
     inv: Array(HOT + BAG0).fill(null), invV: 2, tools: [], tsel: 0, tHand: false, lastW: null, bagLv: 0, sel: 0, outfit: 0, char: me.char, look: me.look, rpg: freshRpg(), recipes: {}, buffs: [], equip: freshEquip(), eqSets: freshSets(), eqSet: 0,
-    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, seen: {}, pname: null, explored: new Uint8Array(W * H), spawnPt: null, backPt: null, qAct: 'main',
+    pets: {}, petOn: null, recallCd: 0, env: { k: null, v: 0, lv: 0, t: 0 }, seen: {}, pname: null, dsz: 1, explored: new Uint8Array(W * H), spawnPt: null, backPt: null, qAct: 'main',
     fish: null, fishFx: null, swing: null, act: null, alts: [], skcd: {}, recall: null, warpGo: null, petE: null, pshots: [], biomeNow: 0, escCd: 0 };
   G.players[id] = pl; withPlayer(pl, () => { pl.p.mp = maxMp(); }); return pl;
 }
@@ -2765,7 +2765,7 @@ function serialize() {
 }
 function saveAll(p) {
   return { v: 3, seed: G.seed, wall: rle(G.wall), floor: rle(G.floor), biome: rle(G.biome), explored: rle(G.explored), objs: [...G.objs], inv: G.inv, invV: 2, tools: G.tools || [], tsel: G.tsel || 0, tHand: !!G.tHand, lastW: G.lastW || null, bagLv: G.bagLv || 0, sel: G.sel, outfit: G.outfit || 0, char: G.char || 'sprout', look: G.look || LOOK_DEF,
-    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, qAct: G.qAct || 'main', natDay: Number.isFinite(G.natDay) ? G.natDay : null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {}, ...(G.bwall && G.bwall.size ? { bwall: [...G.bwall] } : {}), ...(G.pname ? { pname: G.pname } : {}) }; // v117: 지은 이름 (지었을 때만) // v92: 직접 쌓은 자연 재료 벽 (건축 모드 뜯기)
+    p: { x: p.x, y: p.y, hp: p.hp, hunger: p.hunger, mp: p.mp }, rpg: G.rpg, qclaim: G.qclaim || {}, wire: [...(G.wire || new Map())], fzones: G.fzones || [], regen: G.regen || [], stats: G.stats, time: G.time, spawnPt: G.spawnPt, treeSeeds: G.treeSeeds, won: G.won, won2: !!G.won2, bossDead: G.bossDead, guide: G.guide, at: Date.now(), marks: G.marks || [], under: [...G.under], terrain: G.terrain || {}, run: G.run || newRunId(), playT: Math.round(G.playT || 0), playTEst: !!G.playTEst, qt: G.qt || {}, rooms: G.rooms || [], recipes: G.recipes || {}, buffs: activeBuffs(), mapV: MAPV, ...(ANCH ? { mapA: ANCH } : {}), fpV: FPV, equip: G.equip || freshEquip(), eqSets: (G.eqSets || freshSets()).map((x, k) => k === (G.eqSet || 0) ? { e: null, pet: null } : { e: x.e && Object.values(x.e).some(Boolean) ? x.e : null, pet: x.pet || null }), eqSet: G.eqSet || 0, pets: G.pets || {}, petOn: G.petOn || null, backPt: G.backPt || null, qAct: G.qAct || 'main', natDay: Number.isFinite(G.natDay) ? G.natDay : null, recallCd: G.recallCd || 0, env: G.env ? { k: G.env.k, v: Math.round(G.env.v) } : null, seen: G.seen || {}, ...(G.bwall && G.bwall.size ? { bwall: [...G.bwall] } : {}), ...(G.pname ? { pname: G.pname } : {}), ...(G.dsz > 1 ? { dsz: G.dsz } : {}) }; // v117: 지은 이름 (지었을 때만) // v92: 직접 쌓은 자연 재료 벽 (건축 모드 뜯기)
 }
 function deserialize(s) {
   setLayout(s.mapV === 3 ? 3 : s.mapV === 2 ? 2 : 1, s.mapA); // saves from before v47 keep the original 200×200 map; v70 worlds keep their own boss places (mapA)
@@ -2821,6 +2821,7 @@ function deserialize(s) {
   G.recipes = {}; if (s.recipes && typeof s.recipes === 'object') { for (const k in s.recipes) if (DISH[k]) G.recipes[k] = 1; } else migrateRecipes(); syncNotes(); grantAccs(); emit('buffs');
   unstick(G.p, '사방이 막혀 있어서 바로 바깥으로 옮겨 드렸어요'); // a save left stuck inside a closed fence
   if (Number.isFinite(s.at) && s.at > 1.6e12) advanceOffline((Date.now() - s.at) / 1000); // v59: time passed while the game was closed
+  G.dsz = s.dsz >= 2 && s.dsz <= 4 ? s.dsz | 0 : 1; // v137 파기·바꾸기 크기 (옛 세이브는 1칸)
   G.pname = typeof s.pname === 'string' && s.pname.trim() ? Array.from(s.pname).slice(0, 8).join('') : null; // v117 지은 이름 (옛 세이브는 없음 = 고른 캐릭터 이름)
   G.seen = {}; if (s.seen && typeof s.seen === 'object') { for (const k in s.seen) if (ITEMS[k] && [1, 2, 3].includes(s.seen[k])) G.seen[k] = s.seen[k]; } else migrateSeen77(); // v77: 본 적 있는 물건 (빨간 점)
   emit('loaded'); // 화면: 지도 그림 다시 만들기·카메라 옮기기 (ui/feedback.js)
@@ -3773,6 +3774,9 @@ const NAT_DAY_KINDS = {
 };
 // 그 자연물이 생길 수 있는 바닥
 const NAT_DAY_FLOORS = new Set([1, 2, 3, 4, 18, 19]);
+
+// v137: 삽 파기·바닥 메우기·바꾸기 크기 — 1칸 · 2×2 · 3×3 · 4×4 (기획 dev/design/바닥파기.md 7장). 동작은 sim/digsize.js
+const DIG_SIZE_MAX = 4;
 // ================= v89 워프포인트·포탈 데이터 =================
 // 기획: dev/design/워프포탈.md (2026-10-18 확정). 동작은 sim/warp.js(놓기·켜기·이동·몬스터 안 생기는 곳), 그림은 render/world.js·art/world.js.
 // 이 파일은 data/digging.js 다음에 와요 (「지형 재료 2배」·작업대 단계 나누기 data/automation-tiers.js 뒤라서 단계를 직접 적어요).
@@ -5749,6 +5753,7 @@ function decide() {
   const auto = autoOptions(t, i, o), quiet = (auto[0] && auto[0].k === 'info') || (md === 'build' && !h);
   for (const a of auto) if (a.k !== 'info') push(quiet && (a.k === 'pickup' || a.k === 'dig') ? { ...a, onlyAlt: 1 } : a);
   if (h && NOTGT.includes(h.k)) push(h); // food, clothes …: after a real action in front, or first when there is nothing to do
+  if (sizeable(md, it)) { const k = alt.findIndex(a => a.gr); alt.splice(k >= 0 ? k + 1 : 0, 0, sizeAlt(s)); } // v137: 크기 고르기 — 작은 버튼 맨 앞 (흙·얼음 덩이는 「바닥 바꾸기」 다음)
   { const nb = bagNear(); if (nb) push({ k: 'lost', lbl: '되찾기', icon: 'hand', t: nb.t, o: nb.o, onlyAlt: 1 }); } // v68 (BF-01): my bundle under my feet or beside me → the small button
   // a held watering can, rod, fertiliser … explains itself first ("가득 참", "물 없음"); a pickaxe or axe with nothing to do lets the thing in front speak
   const info = (hInfo && !['pick', 'axe', 'sickle', 'shovel'].includes(md) && hInfo) || auto.find(a => a.k === 'info') || hInfo;
@@ -5765,10 +5770,11 @@ function heldDecide(md, s, it, t, i, o) {
     case 'build': {
       if (it.kind === 'place' && OBJ[it.obj] && OBJ[it.obj].warp) { const why = portalWhy(t.x, t.y); if (why) return no('놓을 수 없음', why); } // v89 포탈
       { const gi = groundOf(it); // v93: 흙·얼음 덩이 — 구덩이는 메우기, 그 밖은 벽 쌓기 + 작은 버튼에 바닥 쌓기·바꾸기
-        if (gi && i >= 0) { const f = G.floor[i], gOk = canPlace(t.x, t.y, gi), gA = gOk ? { k: 'place', lbl: groundFill(f) ? '바닥 쌓기' : '바닥 바꾸기', icon: s.id, t, gr: 1 } : null;
-          if (!G.wall[i] && f === PIT) return gOk ? { ...gA, lbl: '메우기' } : no('메울 수 없음', '물건이 있는 구덩이는 메울 수 없어요');
+        if (gi && i >= 0) { const f = G.floor[i], gOk = canPlace(t.x, t.y, gi), gA = gOk ? { k: 'place', lbl: withSz(groundFill(f) ? '바닥 쌓기' : '바닥 바꾸기'), icon: s.id, t, gr: 1, area: 1 } : null; // v137 area: 고른 크기만큼
+          if (!G.wall[i] && f === PIT) return gOk ? { ...gA, lbl: withSz('메우기') } : no('메울 수 없음', '물건이 있는 구덩이는 메울 수 없어요');
           if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t, alt2: gA && { ...gA, onlyAlt: 1 } };
           if (gA) return gA; } }
+      if (it.kind === 'ground' && it.ground !== WATER && placeable(t.x, t.y, it)) return { k: 'place', lbl: withSz(placeLbl(it)), icon: s.id, t, area: 1 }; // v137: 이끼 흙·버섯흙 … 고른 크기만큼
       if (placeable(t.x, t.y, it)) return { k: 'place', lbl: placeLbl(it), icon: s.id, t }; // v67 (BF-09): also when the placing player only has to step aside
       if (it.kind === 'wire' && i >= 0 && G.wire.has(i)) return { k: 'unwire', lbl: '빛뿌리 걷기', icon: s.id, t };
       if (it.kind === 'seed' && crop >= 3) return { k: 'harvest', lbl: o.star ? '별 수확!' : '수확', icon: d.yield[0][0], t, o }; // harvest, then plant again
@@ -5779,7 +5785,7 @@ function heldDecide(md, s, it, t, i, o) {
       if (isBroken(s)) return no('삽 고장', '삽이 망가졌어요. 장비제작대에서 고칠 수 있어요');
       if (i < 0 || o) return no('팔 수 없음', '삽으로는 바닥만 파요 · 빈 바닥을 바라보고 눌러요'); // v87: 덤불·묘목 퍼내기는 없어요
       { const why = digWhy(t.x, t.y); if (why) return no(G.floor[i] === PIT ? '구덩이' : '팔 수 없음', why); }
-      return { k: 'dig', lbl: isPlacedFloor(G.floor[i]) ? '걷기' : '파기', icon: 'shovel', t }; }
+      return { k: 'dig', lbl: withSz(isPlacedFloor(G.floor[i]) ? '걷기' : '파기'), icon: 'shovel', t, area: 1 }; } // v137 area: 고른 크기만큼
     case 'bucket': // v87: 빈 양동이 — 물 칸에서 물 한 동이 (닳지 않아요)
       if (water) return { k: 'scoop', lbl: '물 뜨기', icon: 'bucket', t };
       if (i >= 0 && !G.wall[i] && G.floor[i] === LAVA) return no('뜰 수 없음', '용암은 뜰 수 없어요');
@@ -5888,8 +5894,9 @@ function perform(a) {
     case 'swing': G.actCd = swingAttack() === false ? 0.3 : atkCd(); break;
     case 'mine': mineWall(a.t); G.actCd = 0.27; break;
     case 'chop': hitObj(a.t, a.o); G.actCd = 0.28; break;
-    case 'place': placeItem(a.t, a.gr); G.actCd = 0.14; break;
-    case 'dig': digGround(a.t); G.actCd = 0.22; break;
+    case 'place': if (!(a.area && placeArea(a))) placeItem(a.t, a.gr); G.actCd = 0.14; break; // v137: 고른 크기만큼 메우기·바꾸기
+    case 'dig': if (a.area) digArea(a); else digGround(a.t); G.actCd = 0.22; break;
+    case 'dsize': cycleDsz(); G.actCd = 0.1; break; // v137: 작은 버튼 「1×1」
     case 'scoop': scoopWater(a.t); G.actCd = 0.35; break; // v87: 빈 양동이
     case 'unwire': { G.wire.delete(idx(a.t.x, a.t.y)); const l = addItem('wire', 1, false); if (l) spawnDrop('wire', 1, a.t.x + .5, a.t.y + .5); emit('sfx', 'pick'); G.actCd = 0.15; break; }
     case 'refundClear': clearRefundBox(idx(a.t.x, a.t.y)); G.actCd = 0.3; break; // v69: an emptied refund box goes away (nothing to get back)
@@ -5970,12 +5977,13 @@ function useObj(a) {
 }
 // ---- the small button: the other things that fit ----
 let altI = 0, altKey = '';
-function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(x => x.k + x.lbl).join(',');
+const altSig = x => x.k + (x.k === 'dsize' ? '' : x.lbl.replace(/ \d×\d$/, '')); // v137: 크기를 바꿔도 작은 버튼이 첫 칸으로 돌아가지 않게
+function curAlt() { const L = (G && G.alts) || []; if (!L.length) return null; const a = G.act || {}, key = a.k + '|' + (a.t ? a.t.x + ',' + a.t.y : '') + '|' + L.map(altSig).join(',');
   if (key !== altKey) { altKey = key; altI = 0; } return L[altI % L.length]; }
 // 명령: 누름(상호작용 act·공격 atk을 잠깐 기억, t: 0이면 지우기) · 작은 버튼 · 도구 들기
 defineCmd('tap', c => { const t = G.p.cine ? 0 : c.t == null ? .3 : c.t; /* v127: 연출 장면 동안은 누르기 없음 */ if (c.b === 'atk') G.atkQ = t; else G.actQ = t; });
 defineCmd('alt', () => { if (!G.p.cine) doAlt(); });
-function doAlt() { const a = curAlt(); if (!a || G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
+function doAlt() { const a = curAlt(); if (!a) return; if (a.k === 'dsize') { cycleDsz(); return; } /* v137: 크기는 쉬는 시간 없이 */ if (G.actCd > 0) return; if (a.k === 'rot') { rotatePlace(); return; } perform(a); }
 function cycleAlt() { const L = (G && G.alts) || []; if (L.length < 2) return; curAlt(); altI = (altI + 1) % L.length; emit('sfx', 'click'); }
 // ================= 전투: 무기·휘두르기·쏘기, 스킬, 피해·상태 이상·몬스터 처치, 화살, 공격 버튼 =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
@@ -6884,6 +6892,59 @@ function scoopWater(t) {
   if (!inB(t.x, t.y)) return false; const i = idx(t.x, t.y); if (G.wall[i] || G.floor[i] !== WATER) return false;
   const l = addItem('gWater', 1, false); if (l) spawnDrop('gWater', 1, t.x + .5, t.y + .5);
   emit('sfx', 'pick'); emit('puff', t.x + .5, t.y + .6, '#8fd0ff', 7, 2, .2); emit('inv'); return true; }
+// ================= v137 파기·바꾸기 크기 고르기 =================
+// 기획 dev/design/바닥파기.md 7장 (2026-10-23 확정): 1칸 · 2×2 · 3×3 · 4×4
+// - 삽이나 바닥 재료(흙·얼음 덩이·이끼 흙 …)를 들면 작은 버튼에 「1×1」 — 누를 때마다 1 → 2 → 3 → 4 → 1 (PC X 키). 캐릭터마다 기억(G.dsz)
+// - 삽으로 파기·걷기, 바닥 재료로 메우기·바닥 바꾸기가 같은 크기 (흙·얼음 덩이로 벽 쌓기, 물 한 동이 붓기는 1칸 그대로)
+// - 자리: 바라보는 칸부터 앞으로 N줄, 가로는 바라보는 칸이 가운데 (2×2·4×4는 오른쪽·아래쪽으로 한 칸 더). 내 발밑·옆은 안 건드려요
+// - 누른 칸과 같은 일만: 파기는 자연 바닥만 · 걷기는 깐 바닥만 · 메우기는 누른 칸과 같은 것(구덩이·물·용암)만 · 바꾸기는 바꿀 수 있는 자연 바닥만
+// - 못 하는 칸은 건너뛰고, 바닥 재료가 모자라면 가진 만큼 바라보는 칸에 가까운 칸부터. 삽은 판 칸 수만큼 닳아요
+
+const dszOf = () => { const n = G && G.dsz; return n >= 2 && n <= DIG_SIZE_MAX ? n : 1; };
+const dszLbl = (n = dszOf()) => `${n}×${n}`;
+const withSz = lbl => dszOf() > 1 ? `${lbl} ${dszLbl()}` : lbl; // 「파기 3×3」 (1칸이면 그대로)
+function cycleDsz() { G.dsz = dszOf() % DIG_SIZE_MAX + 1; emit('sfx', 'click'); emit('toast', `파기·바꾸기 크기 ${dszLbl()}`, null, 'dsize'); }
+defineCmd('dsize', () => { if (!G.p.cine && (G.alts || []).some(a => a.k === 'dsize')) cycleDsz(); }); // PC X 키 — 삽·바닥 재료를 들었을 때만
+
+// 크기를 고를 수 있는 손: 삽을 일부러 들었을 때, 바닥 재료(흙·얼음 덩이 포함, 물 한 동이 빼고)를 들었을 때
+function sizeable(md, it) { if (md === 'shovel') return true; if (md !== 'build' || !it) return false;
+  return !!groundOf(it) || (it.kind === 'ground' && it.ground !== WATER); }
+const sizeAlt = s => ({ k: 'dsize', lbl: dszLbl(), icon: s ? s.id : 'shovel', onlyAlt: 1 });
+
+// 바라보는 칸 t에서 앞으로 n×n — 가까운 칸부터
+function areaTiles(t, n) {
+  const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y); let dx = t.x - px, dy = t.y - py;
+  if (!dx && !dy) { const f = p.face || { x: 0, y: 1 }; if (Math.abs(f.x) > Math.abs(f.y)) dx = Math.sign(f.x); else dy = f.y < 0 ? -1 : 1; }
+  const ax = Math.abs(dx) >= Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)], lt = ax[0] ? [0, 1] : [1, 0];
+  const lo = -Math.floor((n - 1) / 2), out = [];
+  for (let k = 0; k < n; k++) for (let l = lo; l < lo + n; l++) { const x = t.x + ax[0] * k + lt[0] * l, y = t.y + ax[1] * k + lt[1] * l; if (inB(x, y)) out.push({ x, y, d: Math.hypot(k, l) }); }
+  return out.sort((a, b) => a.d - b.d);
+}
+// 이 행동이 크기를 따르면 바뀔 칸·건너뛸 칸 (미리 보기와 실제 일이 같은 계산) — 아니면 null
+function areaPlan(a) {
+  const n = dszOf(); if (!a || !a.area || !a.t || n < 2 || !inB(a.t.x, a.t.y)) return null;
+  const s = selItem(); if (!s) return null; const t = a.t, f0 = G.floor[idx(t.x, t.y)], all = areaTiles(t, n), ok = [], skip = [];
+  if (a.k === 'dig') { if (s.id !== 'shovel') return null; const placed = isPlacedFloor(f0); let left = durOf(s);
+    let short = false; for (const c of all) { const j = idx(c.x, c.y), can = !digWhy(c.x, c.y) && isPlacedFloor(G.floor[j]) === placed; if (can && left > 0) { ok.push(c); left--; } else { if (can) short = true; skip.push(c); } }
+    return { ok, skip, n, k: 'dig', short }; }
+  if (a.k === 'place') { const it = a.gr ? groundOf(ITEMS[s.id]) : ITEMS[s.id]; if (!it || it.kind !== 'ground' || it.ground === WATER) return null;
+    const fill = groundFill(f0); let left = s.c; for (let j = HOT; j < G.inv.length; j++) { const b = G.inv[j]; if (b && b.id === s.id) left += b.c; } // 단축칸이 비면 가방에서 채워요 (refillHot)
+    let short = false; for (const c of all) { const f = G.floor[idx(c.x, c.y)], can = canPlace(c.x, c.y, it) && (fill ? f === f0 : !groundFill(f)); if (can && left > 0) { ok.push(c); left--; } else { if (can) short = true; skip.push(c); } }
+    return { ok, skip, n, k: 'place', it, id: s.id, short }; }
+  return null;
+}
+// 크기만큼 파기·걷기 (삽이 망가지면 거기서 멈춰요)
+function digArea(a) { const pl = areaPlan(a); if (!pl) { digGround(a.t); return; }
+  let k = 0; for (const c of pl.ok) { const s = selItem(); if (!s || s.id !== 'shovel' || durOf(s) <= 0) break; digGround(c, k++ > 0); }
+}
+// 크기만큼 메우기·바닥 바꾸기 (재료가 모자라면 가진 만큼)
+function placeArea(a) { const pl = areaPlan(a); if (!pl) return false; let k = 0;
+  for (const c of pl.ok) { const s = selItem(); if (!s || s.id !== pl.id) break; putItem(pl.it, s, c); k++;
+    s.c--; if (!s.c) { G.inv[G.sel] = null; refillHot(G.sel, s.id); } }
+  if (!k) return true; emit('inv'); emit('sfx', 'place');
+  if (pl.short) emit('toast', `${josa(ITEMS[pl.id].n, '이', '가')} 모자라서 ${k}칸만 했어요`, null, 'dszshort');
+  return true;
+}
 // ================= v89 워프포인트·포탈: 놓기·켜기·이동, 몬스터 안 생기는 곳 =================
 // 기획 dev/design/워프포탈.md (2026-10-18 확정). 수치는 data/warp.js, 그림은 render/world.js(drawWarp)·art/world.js(그림 자르기), 지도 창은 ui/map.js.
 // - 워프포인트(warpPt): 지역마다 2개 + 등불나무 곁 1개(처음부터 켜짐). 새 세계는 만들 때, 옛 세계는 불러올 때 한 번(G.stats.warpV) 빈 자리를 찾아 놓아요 — 지형은 안 바꿔요.
@@ -10104,6 +10165,7 @@ function renderOverlay(cw, ch) {
     const alt = curAlt(), lb = 'E ' + G.act.lbl + (alt ? ' · R ' + alt.lbl + (G.alts.length > 1 ? ' (Q)' : '') : ''); /* v65 */ ctx.font = pxFont(5.4); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const fh = parseFloat(ctx.font), tw = Math.round(ctx.measureText(lb).width + 6 * Z), lx = Math.round(hx + T / 2), ly = Math.round(hy - 5 * Z), bh = Math.round(Math.max(9 * Z, fh + 2 * Z)); ctx.fillStyle = 'rgba(27,20,38,0.85)'; ctx.fillRect(lx - Math.round(tw / 2), ly - Math.round(bh / 2), tw, bh); pxText(lb, lx, ly, `rgb(${col})`); /* v78: 도트 글꼴, 네모 상자 */
   }
   drawBuild(T, camX, camY); // v91: 건축 모드 미리보기
+  if (p.dead <= 0 && !paused && !p.sit && !cin) drawDigArea(T, camX, camY, L); // v137: 고른 크기만큼 바뀔 칸 테두리
   drawHitBars(T, camX, camY); // v65: hit to recover
   if (!cin) drawHeadBars(T, camX, camY); // v77: 머리 위 체력·기력
   // goal arrow (drawn at screen resolution so it stays crisp)
@@ -10298,6 +10360,14 @@ function drawFxAnims(camX, camY) { const now = performance.now() / 1000;
     ctx.drawImage(f, Math.round(a.x * TP - camX - f.width / 2), Math.round(a.y * TP - camY - f.height / 2)); } }
 let FIREF = null;
 function fireFrame(t) { if (!FIREF) FIREF = fxFrames('fxFire', 3, false); return FIREF ? FIREF[Math.floor(t * 12) % 3] : null; }
+
+// v137: 파기·메우기·바닥 바꾸기 크기 미리 보기 — 바뀔 칸은 테두리(파기 노랑 · 바닥 초록), 범위 안에서 건너뛸 칸은 옅은 점선. 2×2부터만 그려요
+function drawDigArea(T, camX, camY, L) { const a = G.act && G.act.area ? G.act : (G.alts || []).find(x => x.area); const pl = areaPlan(a); if (!pl) return;
+  const zz = T / 16, col = pl.k === 'dig' ? '255,200,97' : '127,224,181', Y = c => c.y * T - camY - (G.wall[idx(c.x, c.y)] ? L : 0);
+  ctx.save(); ctx.lineWidth = zz;
+  ctx.setLineDash([2 * zz, 2 * zz]); ctx.strokeStyle = 'rgba(255,241,214,.35)'; for (const c of pl.skip) ctx.strokeRect(c.x * T - camX + zz * 1.5, Y(c) + zz * 1.5, T - zz * 3, T - zz * 3);
+  ctx.setLineDash([]); for (const c of pl.ok) { const X = c.x * T - camX, YY = Y(c); ctx.fillStyle = `rgba(${col},.16)`; ctx.fillRect(X, YY, T, T); ctx.strokeStyle = `rgba(${col},.85)`; ctx.strokeRect(X + zz / 2, YY + zz / 2, T - zz, T - zz); }
+  ctx.restore(); }
 // ================= 아이콘: 아이템 아이콘 그림·주소(iconURL) =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
 // tall or wide pictures sit in a square canvas so bag and hotbar slots keep their square shape (v55)
@@ -10954,12 +11024,13 @@ const HELP_TABS = [
     ['작은 버튼', '같은 곳에서 할 수 있는 다른 일(회수·물 주기·낚시 …). ▸로 다음 것 (PC는 R · Q)'],
     ['도구 칸', '단축칸 맨 앞. 누르면 가진 도구가 펼쳐져요 (PC는 Tab)'],
     ['계속 누르기', '꾹 누르고 있으면 계속 캐거나 공격해요'],
+    ['파기 크기', '삽이나 바닥 재료(흙·이끼 흙 …)를 들면 작은 버튼에 [1×1]. 누를 때마다 2×2 · 3×3 · 4×4로 바뀌고, 바라보는 칸부터 앞으로 그만큼 파거나 메우거나 바꿔요 (PC는 X)'],
     ['놓기', '단축칸에서 물건을 고르고 빈 땅을 바라보며 눌러요. 작은 [방향] 버튼으로 놓기 전에 돌려요'],
     ['먹기', '음식을 고르고 손 버튼, 또는 골라 둔 음식을 한 번 더 눌러요'],
     ['단축칸', '폰은 다섯 칸씩 보여요. 옆의 [6–9] 버튼으로 넘겨요 (안 보이는 쪽에 새 물건이 들어오면 빨간 점)'],
     ['스킬', '캐릭터 창 스킬 탭에서 사용 스킬을 스킬 칸 두 곳에 넣어요. 폰은 칼 버튼 왼쪽 파란 버튼, PC는 F · G 키(오른쪽 클릭은 첫째 칸)로 써요. 기력은 가만히 있어도 천천히 차요'],
     ['건축', '가방 창 「건축」 · Z. 아래 목록에서 고르고 화면을 누르거나 끌어서 놓아요. 맨 위 줄에서 놓기·옮기기·뜯기·되돌리기 (PC는 1·2·3 · Ctrl+Z)'],
-    ['단축키', '1–9 단축칸 · Tab 도구 · F·G 스킬 · C 캐릭터 · I 가방(제작은 가방 안 제작 탭) · M 지도 · L 퀘스트 · Z 건축 · Esc 설정'],
+    ['단축키', '1–9 단축칸 · Tab 도구 · F·G 스킬 · C 캐릭터 · I 가방(제작은 가방 안 제작 탭) · M 지도 · L 퀘스트 · Z 건축 · X 파기 크기 · Esc 설정'],
   ]],
   ['craft', '제작', () => [
     ['손 제작', '가방 창 「제작」 탭에는 손으로 만들 수 있는 것만 보여요. 작업대·용광로·요리솥·장비제작대를 바라보고 [열기]를 누르면 그곳에서 만드는 것들이 나와요'],
@@ -11812,6 +11883,7 @@ function setupInput() {
     if (e.code === 'KeyF') { command({ k: 'skill', n: 0 }); return; } if (e.code === 'KeyG') { command({ k: 'skill', n: 1 }); return; }
     if (/^Digit[1-9]$/.test(e.code)) { hotClick(+e.code.slice(5) - 1); return; }
     if (e.code === 'KeyR') { subAction(); return; }
+    if (e.code === 'KeyX') { command({ k: 'dsize' }); return; } // v137: 파기·바꾸기 크기 (삽·바닥 재료를 들었을 때)
     if (e.code === 'KeyQ') { cycleAlt(); return; } // v65: Q = next option on the small button (eat with E)
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     if (['Space', 'KeyE'].includes(e.code)) command({ k: 'tap', b: 'act' }); if (e.code === 'KeyJ') command({ k: 'tap', b: 'atk' });
