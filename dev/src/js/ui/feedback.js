@@ -13,7 +13,7 @@ import { eventWho, onEvent } from '../sim/events.js';
 import { onFrame } from '../sim/systems.js';
 import { CHARS, buildPlayer, lookDef } from '../art/characters.js';
 import { mapPixel, rebuildMap } from '../render/map.js';
-import { addFxAnim } from '../render/world.js';
+import { addFxAnim, addGhost } from '../render/world.js';
 import { BM } from './build.js';
 import { closePanel, craftNote, openPanel, panel, renderPanel, UIS } from './panels.js';
 import { bellClear, bellPush } from './talk.js';
@@ -44,6 +44,19 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 export let shake = 0;
 onEvent('fxAnim', (k, x, y) => addFxAnim(k, x, y)); // v136 스킬 효과 그림 (render/world.js)
 onEvent('shake', onlyMe((v, set) => { shake = set ? v : Math.max(shake, v); }));
+// ---- v138 손맛 ----
+// 맞힐 때 멈칫: emit('hitstop', 초) — 지금보다 길면 그만큼. 혼자 할 때만 main.js가 그동안 세계를 멈춰요 (멀티에서는 멈추지 않아요)
+export let hitstop = 0;
+onEvent('hitstop', onlyMe(v => { hitstop = Math.max(hitstop, Math.min(.2, v)); }));
+export function hitstopTick(dt) { if (hitstop <= 0) return false; hitstop -= dt; return true; }
+// 몬스터 쓰러짐: 하얀 그림이 부풀며 사라지고, 두 가지 색 조각 + 둥근 고리
+onEvent('kill', (x, y, col, k, flip, z) => { addGhost(k, x, y, flip, z); puff(x, y, col, 10, 3.4, .4); puff(x, y, '#fff6e0', 5, 2.6, .5);
+  for (let n = 0; n < 12; n++) { const a = n / 12 * 6.283; G.parts.push({ x: x + Math.cos(a) * .25, y: y + Math.sin(a) * .18, z: .35, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 2.6, vz: .4, life: .28, max: .28, col: n % 2 ? col : '#fff1d6', sz: 1 }); }
+  onlyMe(() => SFX.kill())(); });
+// 캐기 조각: 칸에서 튀어 떨어져 통통 튐 (big = 부서질 때 굵은 덩어리)
+onEvent('chips', (x, y, c1, c2, n, big) => { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = (big ? 2.2 : 1.6) * (.4 + fxRand() * .9);
+  G.parts.push({ x: x + (fxRand() - .5) * (big ? .5 : .2), y, z: .35 + fxRand() * .3, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .5, vz: (big ? 3 : 2.2) + fxRand() * 2, life: (big ? .7 : .45) + fxRand() * .3, max: big ? 1 : .7, col: k % 3 ? c1 : c2, sz: big ? 2 + (fxRand() * 2 | 0) : 1 + (fxRand() * 2 | 0), bnc: 1 }); } });
+
 onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 
 // ---- 지도·창 ----

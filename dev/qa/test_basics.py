@@ -469,8 +469,8 @@ def test_attack_button():
             await ev(pg,"()=>{__clear();const G=__T.G;G.inv[0]={id:'swordCopper',c:1};G.sel=0;window.__e=__en(.9,0)}")
             await pg.keyboard.press('KeyJ'); await pg.wait_for_timeout(250)
             r=await ev(pg,"()=>999-__e.hp>0"); rec('PC','J 키로 공격', r, r)
-            await pg.wait_for_timeout(400); await ev(pg,"()=>{const G=__T.G;__e.hp=999;__e.x=G.p.x+.9;__e.y=G.p.y;__e.vx=__e.vy=__e.kx=__e.ky=0}"); await pg.mouse.click(700,400); await pg.wait_for_timeout(250)
-            r=await ev(pg,"()=>999-__e.hp>0"); rec('PC','왼쪽 클릭으로 공격', r, r)
+            await wait_game(pg,.6); await ev(pg,"()=>{const G=__T.G;__e.hp=999;__e.x=G.p.x+.9;__e.y=G.p.y;__e.vx=__e.vy=__e.kx=__e.ky=0}"); await pg.mouse.click(700,400)  # v138: 맞힐 때 멈칫(게임 시간이 잠깐 멈춤) — 실제 시계 대신 게임 시간으로 기다려요
+            r=await wait_until(pg,"()=>999-__e.hp>0",2000); rec('PC','왼쪽 클릭으로 공격', r, r)
             r=await ev(pg,"()=>getComputedStyle(document.querySelector('#atkBtn')).display"); rec('PC','PC에는 공격 버튼이 화면에 없음', r=='none', r)
             rec('기능','콘솔 오류 없음 (PC)', not errs, errs[:3]); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))

@@ -11,7 +11,7 @@ import { C } from '../engine/canvas.js';
 import { fxRand, rand } from '../engine/random.js';
 import { alivePlayers, beat, deepSeedDrop, freshBoss, G, nearestPlayer, withPlayer } from '../save/state.js';
 import { targetTile } from './actions.js';
-import { applyFx, dotTick } from './combat.js';
+import { applyFx, dotTick, HITSTOP } from './combat.js';
 import { bossNoteIds, knows } from './cooking.js';
 import { spawnDrop } from './drops.js';
 import { mkEnemy } from './enemies.js';
@@ -47,10 +47,10 @@ export function hitBoss(b, dmg, crit, fx) {
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
   if (b.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); // v131 잉크 불꽃의 무기: 받는 피해 +20%
-  if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
+  if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); emit('hitstop', HITSTOP.boss); /* v138 */ if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
     const again0 = !!(G.stats.beaten && G.stats.beaten[b.k]); // v130: 큰 어둠은 다시 물리치면 경험치 1,000 (다른 보스는 예전처럼 같은 경험치)
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */, ...ABOSS_XP /* v131 기록관 보스 */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    G.bossDead[b.k] = true; emit('hitstop', HITSTOP.bossDie); /* v138 */ bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */, ...ABOSS_XP /* v131 기록관 보스 */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k] || BOSS_W[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { /* v130 큰 어둠도 특별 무기 6종 (UNIQ_OF 없이) */ const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }

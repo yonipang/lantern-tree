@@ -38,8 +38,9 @@ export function dropStep(d, dt) {
     d.hold = Math.max(0, d.hold - dt);
     const dx = p.x - d.x, dy = p.y - .3 - d.y, l = Math.hypot(dx, dy);
     const mag = petIs('dog') ? 1.6 * (1 + skl('animalFriend') * .25) : 1; // v102 동물 친구 // v45: the dog pulls drops in from further away
-    if (d.t > 0.4 && l < 2.2 * mag && d.hold <= 0 && p.dead <= 0) { const s = 9 * Math.max(.15, 1 - l / (2.6 * mag)) + 2; d.x += dx / l * s * dt; d.y += dy / l * s * dt;
+    if (d.t > 0.4 && l < 2.2 * mag && d.hold <= 0 && p.dead <= 0) { d.pv = Math.min(22, (d.pv || 3) + 45 * dt); const st = Math.min(l, (d.pv + 4 * Math.max(0, 1 - l / (2.6 * mag))) * dt); d.x += dx / l * st; d.y += dy / l * st; /* v138 손맛: 끌려올수록 빨라져서 쏙 (예전: 거리에 따라 2~11칸/초) — 줍는 거리 2.2·기다림 0.4초는 그대로 */
       if (l < 0.45) { const left = d.dur != null || d.lv ? moveInto(G.inv, { id: d.id, c: d.c, dur: d.dur, lv: d.lv }) : addItem(d.id, d.c); if (ITEMS[d.id] && /^petal/.test(d.id)) { G.stats.petals = G.stats.petals || {}; G.stats.petals[d.id.slice(5)] = 1; } const got = d.c - left; if (got) { emit('sfx', 'pick'); emit('ftext', p.x, p.y - 1.4, `+${got} ${ITEMS[d.id].n}`, rarCol(d.id) || '#fff1d6'); if (rarOf(d.id) >= 3) emit('toast', `${RARITY[rarOf(d.id)][0]} 장비 ${josa(ITEMS[d.id].n, '을', '를')} 얻었어요!`, 'good'); } if (left) { d.c = left; d.hold = 1.5; emit('toast', '가방이 가득 찼어요', null, 'full-inv'); } else G.drops.splice(G.drops.indexOf(d), 1); } }
+    else d.pv = 0;
     if (d.t > 400) G.drops.splice(G.drops.indexOf(d), 1);
   }
 }

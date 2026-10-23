@@ -17,6 +17,7 @@ function tone(f, dur, type = 'square', vol = 0.05, slide = 0) { if (!AC || !soun
 function nz(dur, vol, freq) { if (!AC || !soundOn) return; const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02); }
 let lastPickSfx = 0;
 export const SFX = {
+  kill: () => { tone(540, .1, 'square', .04, -360); nz(.09, .07, 1400); setTimeout(() => tone(980, .05, 'triangle', .03, 200), 40); }, // v138 쓰러짐
   hit: () => { tone(260, .09, 'square', .045, -140); nz(.05, .06, 1800); }, mine: () => { nz(.07, .09, 900); tone(180, .05, 'triangle', .03); }, brk: () => { nz(.16, .11, 500); tone(150, .14, 'triangle', .05, -70); },
   pick: () => { const n = performance.now(); if (n - lastPickSfx < 60) return; lastPickSfx = n; tone(880, .07, 'triangle', .045, 380); }, place: () => tone(330, .07, 'triangle', .06, -90),
   hurt: () => tone(170, .2, 'sawtooth', .05, -100), craft: () => { tone(660, .08, 'triangle', .05); setTimeout(() => tone(990, .1, 'triangle', .05), 70); }, eat: () => { tone(520, .09, 'sine', .07, -200); setTimeout(() => tone(620, .08, 'sine', .06, -200), 90); },

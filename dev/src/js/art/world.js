@@ -250,7 +250,8 @@ export function wallFront(t) {
   return mk(16, 5, A => { const c = WFRONT_COL[t]; A.r(0, 0, 16, 5, c); for (let x = 1; x < 16; x += 3) A.r(x, 1, 1, 3, 'rgba(255,255,255,0.07)'); A.r(0, 4, 16, 1, '#1d1424'); A.r(0, 0, 16, 1, 'rgba(255,255,255,0.06)');
     if (t === 4) A.p(6, 2, C.copper); if (t === 5) A.p(9, 2, C.iron); if (t === 10) A.p(7, 2, '#ffd25c'); if (t === 12) A.p(10, 2, '#7ff0ff'); if (t === 9) A.p(4, 3, '#c4441a'); if (t === 3) { A.p(4, 2, '#8a7ab0'); A.p(11, 1, '#8a7ab0'); } if (t === 13) { A.p(4, 2, '#e8e0ff'); A.p(11, 1, '#e8e0ff'); } if (t === 7) { A.r(0, 2, 16, 1, '#5e5a74'); A.r(7, 0, 1, 2, '#5e5a74'); } }, null);
 }
-export function crackSpr(n) { return mk(16, 16, A => { const c = 'rgba(30,18,34,0.75)'; A.line(8, 8, 4, 4, c); A.line(8, 8, 12, 6, c); if (n > 0) { A.line(8, 8, 6, 13, c); A.line(4, 4, 2, 6, c); } if (n > 1) { A.line(8, 8, 13, 12, c); A.line(12, 6, 14, 2, c); A.line(6, 13, 3, 14, c); } }, null); }
+export function crackSpr(n) { return mk(16, 16, A => { const d = 'rgba(24,14,30,0.85)', h = 'rgba(255,244,226,0.3)'; const L = [[8, 8, 4, 4], [8, 8, 12, 6], [8, 8, 6, 13], [4, 4, 2, 6], [8, 8, 13, 12], [12, 6, 14, 2], [6, 13, 3, 14], [4, 4, 5, 1], [13, 12, 14, 14], [2, 6, 1, 9], [12, 6, 14, 7]], k = [2, 4, 7, 11][n]; // v138 금 4단계 · 밝은 가장자리 (예전 3단계)
+  for (let j = 0; j < k; j++) { const [a, b, c, e] = L[j]; A.line(Math.min(15, a + 1), Math.min(15, b + 1), Math.min(15, c + 1), Math.min(15, e + 1), h); } for (let j = 0; j < k; j++) { const [a, b, c, e] = L[j]; A.line(a, b, c, e, d); } }, null); }
 
 export const PRI = { 1: 4, 3: 3, 4: 2, 2: 1, 18: .5, 19: .6, 35: 5 }; // v132 눈 무더기는 얼음 바닥 위에 (경계의 어두운 선이 얼음 쪽에)
 export function rotCanvas(c, q) { if (!q) return c; const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; const g = k.getContext('2d'); g.translate(8, 8); g.rotate(q * Math.PI / 2); g.drawImage(c, -8, -8); return k; }
@@ -323,7 +324,7 @@ export function buildSprites() {
   SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
   SPR.wtop = {}; SPR.wfront = {}; for (const t in WPAL) { SPR.wtop[t] = [0, 1, 2, 3].map(v => wallTop(+t, v)); SPR.wfront[t] = wallFront(+t); }
-  SPR.crack = [0, 1, 2].map(crackSpr);
+  SPR.crack = [0, 1, 2, 3].map(crackSpr);
   // hand-drawn art replaces the base sprites, then everything made from them is rebuilt; a second pass lets art replace those too
   applyArt();
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
