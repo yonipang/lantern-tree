@@ -4,6 +4,8 @@ import { GUIDE } from '../data/quests.js';
 import { toast } from '../engine/effects.js';
 import { closePanel, panel, renderPanel, UIS } from '../ui/panels.js';
 import { beginPlay } from '../ui/picker.js';
+import { BUILT_WALLS, OBJ } from '../data/items.js';
+import { CX, CY, H, idx, inB, W } from '../world/map.js';
 export let saveFailWarned = false;
 export function saveLocal(silent) {
   try { const txt = JSON.stringify(serialize()); localStorage.setItem(SAVE_KEY, txt); if (localStorage.getItem(SAVE_KEY) !== txt) throw new Error('verify'); if (!silent) toast('저장했어요', 'good'); return true; }
@@ -158,6 +160,21 @@ export function exportSave() {
     navigator.share({ files: [file], title: '등불나무 세이브' }).then(() => toast('세이브 파일을 보냈어요', 'good')).catch(e => { if (e && e.name !== 'AbortError') plainDownload(txt, name); }); return; }
   plainDownload(txt, name);
 }
+// v136 개발자 도구: 꾸민 마을을 파일로 — 등불나무 가운데(CX, CY)에서의 거리로 적어요. 놓은 물건(여러 칸은 몸통 칸만)·깐 바닥·쌓은 벽
+// 범위 = 마을 표시(두 모서리씩) 안, 표시가 없으면 등불나무 둘레 30칸. 받은 파일은 다음 버전에서 새 세계 마을에 넣어요
+export function exportVillage() {
+  if (!G || !DEV) return; const M = G.marks || [], boxes = [];
+  for (let k = 0; k + 1 < M.length; k += 2) boxes.push([Math.min(M[k].x, M[k + 1].x), Math.min(M[k].y, M[k + 1].y), Math.max(M[k].x, M[k + 1].x), Math.max(M[k].y, M[k + 1].y)]);
+  if (!boxes.length) boxes.push([CX - 30, CY - 30, CX + 30, CY + 30]);
+  const objs = [], floors = [], walls = [], seen = new Set();
+  for (const [x0, y0, x1, y1] of boxes) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { if (!inB(x, y)) continue; const i = idx(x, y); if (seen.has(i)) continue; seen.add(i);
+    const o = G.objs.get(i); if (o && o.t !== '_part' && o.t !== 'treeP' && OBJ[o.t]) { const e = [x - CX, y - CY, o.t]; if (o.dir) e.push(o.dir); if (o.rot) e[4] = o.rot; objs.push(e); }
+    if (G.under && G.under.has(i)) floors.push([x - CX, y - CY, G.floor[i]]);
+    const w = G.wall[i]; if (w && (BUILT_WALLS.has(w) || (G.bwall && G.bwall.has(i)))) walls.push([x - CX, y - CY, w]); }
+  const txt = JSON.stringify({ app: 'lantern-tree', kind: 'village', ver: 1, at: new Date().toISOString(), map: { w: W, h: H }, area: boxes.map(b => [b[0] - CX, b[1] - CY, b[2] - CX, b[3] - CY]), objs, floors, walls });
+  const name = 'lantern-village-' + new Date().toISOString().slice(0, 10) + '.json', msg = `마을을 내보냈어요 · 물건 ${objs.length}개`;
+  if (DL) { DL.save({ filename: name, data: txt }).then(() => toast(msg, 'good')).catch(e => { if (!e || e.code !== 'declined') toast('여기서는 파일을 저장할 수 없어요'); }); return; }
+  plainDownload(txt, name); toast(msg, 'good'); }
 export function plainDownload(txt, name) {
   try { const url = URL.createObjectURL(new Blob([txt], { type: 'application/json' })), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); toast('세이브 파일을 내려받았어요', 'good'); }
   catch (e) { toast('여기서는 파일을 저장할 수 없어요'); }
@@ -188,6 +205,11 @@ export function applyImport() {
 // ---- developer tools (village marks). Later, with multiplayer, canDev() should ask the server for a developer role. ----
 export let DEV = false; try { if (/[?&]dev(=1)?(&|$)/.test(location.search)) localStorage.setItem('lantern-tree-dev', '1'); DEV = localStorage.getItem('lantern-tree-dev') === '1'; } catch (e) { }
 export function canDev() { return DEV; }
+// v136 개발자 도구 스위치 (이 기기에만 기억): free 재료 없이 · god 체력·배고픔·더위추위 안 줆 · peace 몬스터가 공격 안 함 · bag 가방 넉넉히(+60칸) · fast 빨리 걷기
+export const DEVF_KEYS = ['free', 'god', 'peace', 'bag', 'fast'];
+export const DEVF = {}; try { Object.assign(DEVF, JSON.parse(localStorage.getItem('lantern-tree-devf') || '{}')); } catch (e) { }
+export const devOn = k => DEV && !!DEVF[k];
+export function setDevFlag(k, v) { if (!DEVF_KEYS.includes(k)) return; DEVF[k] = !!v; try { localStorage.setItem('lantern-tree-devf', JSON.stringify(DEVF)); } catch (e) { } }
 export let devTaps = 0, devTapT = 0;
 export function devTap() { const now = performance.now(); devTaps = now - devTapT < 1500 ? devTaps + 1 : 1; devTapT = now; if (devTaps >= 7) { devTaps = 0; DEV = !DEV; try { localStorage.setItem('lantern-tree-dev', DEV ? '1' : '0'); } catch (e) { } return true; } return false; } // 판 번호를 7번 누르면 개발자 모드
 export function loadLocal() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }

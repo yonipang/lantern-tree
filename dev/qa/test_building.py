@@ -314,9 +314,9 @@ def test_decor_v122():
             b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
             await ev(pg,f"()=>{{window.GIVE={GIVE}}}")
             r=await ev(pg,"""()=>{const T=__T,bad=[];const ids=Object.keys(T.DECO122).concat(Object.keys(T.FLOOR122),Object.keys(T.WALL122));
-          for(const id of ids){const R=T.RECIPES.find(r=>r.out===id),it=T.ITEMS[id];if(!it||!R||R.at!=='bench'||typeof R.tier!=='number'||(it.kind==='place'&&(!T.OBJ[id]||!T.SPR.obj[id])))bad.push(id)}
+          for(const id of ids){const R=T.RECIPES.find(r=>r.out===id),it=T.ITEMS[id];if(!it||!R||(R.at!=='bench'&&R.at!=='fdesk')||typeof R.tier!=='number'||(it.kind==='place'&&(!T.OBJ[id]||!T.SPR.obj[id])))bad.push(id)}
           return [ids.length,bad,Object.keys(T.FLOOR122).map(k=>T.ITEMS[k].floor).join(','),Object.keys(T.WALL122).map(k=>T.ITEMS[k].wall).join(','),T.BUILT_WALLS.has(14)&&T.BUILT_WALLS.has(15)&&T.BUILT_WALLS.has(6)]}""")
-            rec('새 아이템','새 꾸미기·바닥·벽 모두 작업대 레시피·단계·그림이 있음, 바닥 30~34, 벽 14·15는 「지은 벽」', r[0]>=80 and r[1]==[] and r[2]=='30,31,32,33,34' and r[3]=='14,15' and r[4], str(r))
+            rec('새 아이템','새 꾸미기·바닥·벽 모두 작업대(집 가구는 v136부터 가구 제작대) 레시피·단계·그림이 있음, 바닥 30~34, 벽 14·15는 「지은 벽」', r[0]>=80 and r[1]==[] and r[2]=='30,31,32,33,34' and r[3]=='14,15' and r[4], str(r))
             r=await ev(pg,"()=>{const T=__T,O=T.OBJ;return ['bed','bedDouble','table','longTable','woodWardrobe','bedRed','sofaRed','carpetRed','rugPattern','glowVineTree','well'].map(k=>k+':'+(O[k].sz?O[k].sz.join('x'):'1'))}")
             rec('칸 크기','침대·2인 침대 2×3, 둥근 탁자 2×2, 긴 식탁 3×2 (새 그림 크기), 나무 옷장은 그대로 1칸', r==['bed:2x3','bedDouble:2x3','table:2x2','longTable:3x2','woodWardrobe:1','bedRed:2x3','sofaRed:2x1','carpetRed:2x2','rugPattern:3x2','glowVineTree:2x2','well:2x2'], str(r))
             # 물 위 소품: 땅에는 못 놓고 물 칸에만
@@ -1027,5 +1027,62 @@ def test_build_mode_v92():
             rec('화면','폰: 놓기·옮기기·뜯기·되돌리기 줄이 화면 안에 들어가고 글자가 넘치지 않음', r==[True,False,True], str(r))
             rec('기능','콘솔 오류 없음', not errs, errs[:3])
             await b.close()
+        print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
+    return main
+
+def test_decor_fdesk_v136():
+    import asyncio, sys
+    # v136: 받은 그림(농장 동물·보물상자·꽃병·큰 책장·레버·스킬 효과) · 새 꾸미기(만드는 12가지 + 꾸미기 전용) · 가구 제작대(집 가구 레시피가 옮겨 감, 작업대 단계를 따라감)
+    #       · 상자 종류 가구는 보관함 · 큰 보관함 · 개발자 도구(꾸미기 탭·재료 없이·체력·몬스터·가방) · 옛 세이브는 가구 제작대 하나
+    H2=HOOK.replace("computeLight}","computeLight,decide,perform,refreshHotbar,RECIPES,ITEMS,OBJ,ART,craftable,nearStations,storeAt,invSize,bmList,runCmd,mkEnemy}")
+    ARENA="()=>{const G=__T.G;for(let y=100;y<118;y++)for(let x=100;x<120;x++){const i=__T.idx(x,y);G.wall[i]=0;G.objs.delete(i);G.floor[i]=1}G.enemies.length=0;G.p.x=104.5;G.p.y=108.5;G.p.face={x:1,y:0};for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.sel=0}"
+    GIVE="(id,c)=>{const G=__T.G;G.inv[0]={id,c:c||1};G.sel=0;__T.refreshHotbar()}"
+    async def main():
+        mkpage(SRC,'qa.html',H2)
+        async with async_playwright() as p:
+            b=await p.chromium.launch(); ctx,pg,errs=await new_ctx(b,390,844,True)
+            await ev(pg,f"()=>{{window.GIVE={GIVE}}}")
+            r=await ev(pg,"""()=>{const keys=['obj/fdesk','obj/chestBig','obj/guildShelf','obj/mageDesk','obj/crysPinkL','obj/shroomHouse','obj/vineTower','animal/cow','animal/chicken','animal/sheep','obj/tchest','obj/tchestOpen','obj/lever','obj/leverOn','obj/vase','obj/bookcase2','etc/fxShield','etc/fxRing','etc/fxFire'];return keys.filter(k=>!__T.ART[k])}""")
+            rec('그림','받은 그림이 들어감(동물·보물상자·레버·꾸미기·가구 제작대·스킬 효과)', r==[], str(r))
+            r=await ev(pg,"""()=>{const R=__T.RECIPES,at=id=>{const r=R.find(r=>r.out===id);return r?r.at:'-'},I=__T.ITEMS;
+              const deco=Object.keys(I).filter(k=>I[k].deco);return [at('chair'),at('bedRed'),at('rug'),at('guildShelf'),at('mageDesk'),at('chest'),at('lampShroom'),at('well'),at('fdesk'),at('chestBig'),deco.length>=130,deco.some(k=>R.some(r=>r.out===k))]}""")
+            rec('레시피','집 가구·새 가구는 가구 제작대, 상자·버섯 램프·우물·가구 제작대·큰 보관함은 작업대, 꾸미기 전용은 레시피 없음',
+                r==['fdesk','fdesk','fdesk','fdesk','fdesk','bench','bench','bench','bench','bench',True,False], str(r))
+            await ev(pg,ARENA)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,I=T.idx;G.objs.set(I(106,107),{t:'fdesk'});const R=T.RECIPES,c={st:'fdesk',i:I(106,107)},near=T.nearStations();
+              for(let k=0;k<G.inv.length;k++)G.inv[k]=null;G.inv[1]={id:'wood',c:99};G.inv[2]={id:'fiber',c:99};G.inv[3]={id:'rope',c:99};G.inv[4]={id:'copperBar',c:99};G.inv[5]={id:'resin',c:99};G.inv[6]={id:'petalR',c:99};
+              const chair=R.find(r=>r.out==='chair'),bed=R.find(r=>r.out==='bedRed');G.stats.benchLv=0;const a=[near.has('fdesk'),T.craftable(chair,near,c),T.craftable(bed,near,c),T.craftable(chair,near,{st:'bench'})];
+              G.stats.benchLv=1;a.push(T.craftable(bed,near,c));return a}""")
+            rec('가구 제작대','곁에 있으면 의자를 만들고, 구리 가구는 작업대가 구리일 때부터, 작업대 창에서는 의자를 못 만듦', r==[True,True,False,False,True], str(r))
+            await ev(pg,ARENA)
+            r=await ev(pg,"""()=>{const T=__T,G=T.G,I=T.idx;GIVE('woodCrate');const a=T.decide();T.perform(a);let at=null;for(const[i,o]of G.objs)if(o.t==='woodCrate')at=i;
+              G.objs.set(I(110,104),{t:'barrelF'});const old=T.storeAt(I(110,104));G.objs.set(I(112,104),{t:'chestBig'});
+              return [a.k,at!=null&&G.objs.get(at).items.length,old&&old.o.items.length,T.storeAt(I(112,104)).o.items.length,T.storeAt(I(104,104))]}""")
+            rec('보관함','상자 종류 가구를 놓으면 보관 칸(나무 상자 12), 옛 세이브의 통도 처음 쓸 때 칸이 생김, 큰 보관함 36칸', r==['place',12,12,36,None], str(r))
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;const l=T.bmList().map(e=>e.id);return [l.includes('shroomHouse'),T.invSize()]}""")
+            rec('개발자 도구 꺼짐','개발자 모드가 아니면 꾸미기 전용이 건축 목록에 없고 가방 칸 그대로', r[0]==False and r[1]<60, str(r))
+            # 옛 세이브: 작업대를 놓은 적이 있으면 가구 제작대 하나
+            r=await ev(pg,"""()=>{const T=__T,G=T.G;for(let i=0;i<G.inv.length;i++)G.inv[i]=null;G.stats.bench=1;delete G.stats.fdesk136;const s=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s);const n=T.countItem('fdesk');
+              const s2=JSON.parse(JSON.stringify(T.serialize()));T.deserialize(s2);return [n,T.countItem('fdesk'),!!T.G.stats.fdesk136]}""")
+            rec('옛 세이브','작업대를 놓은 옛 세이브는 가구 제작대 하나를 받음(한 번만)', r==[1,1,True], str(r))
+            rec('기능','콘솔 오류 없음', not errs, errs[:4])
+            await ctx.close()
+            # 개발자 모드 (기기에 켜 둠): 꾸미기 탭 · 재료 없이 놓기 · 체력 · 가방
+            ctx2=await b.new_context(viewport={'width':390,'height':844},device_scale_factor=2,has_touch=True,is_mobile=True)
+            await ctx2.add_init_script("try{localStorage.setItem('lantern-tree-dev','1');localStorage.setItem('lantern-tree-devf',JSON.stringify({free:1,god:1,peace:0,bag:1,fast:0}))}catch(e){}")
+            pg2=await ctx2.new_page(); errs2=[]; pg2.on('pageerror',lambda e: errs2.append(str(e)))
+            await pg2.goto(URL+'qa.html'); await pg2.wait_for_timeout(400)
+            await pg2.click("#btnNew"); await pg2.evaluate("()=>{const g=document.getElementById('charGo');if(g&&!g.closest('[hidden]'))g.click()}"); await pg2.wait_for_timeout(500)
+            await ev(pg2,ARENA)
+            r=await ev(pg2,"""()=>{const T=__T,G=T.G,I=T.idx;T.runCmd({k:'fitBag'});const l=T.bmList();const e=l.find(x=>x.id==='shroomHouse');
+              const a=T.runCmd({k:'bplace',id:'crysPinkL',cells:[[108,106]]}),b2=T.runCmd({k:'bplace',id:'bedRed',cells:[[112,110]]});
+              return [!!e&&e.cat,!!a,!!b2,!!G.objs.get(I(108,106)),G.inv.length>=90]}""")
+            rec('개발자 도구','꾸미기 탭에 꾸미기 전용, 재료 없이 놓기(꾸미기·침대), 가방 +60칸', r==['deco',True,True,True,True], str(r))
+            r=await ev(pg2,"()=>{const T=__T,G=T.G;G.p.hp=50;const e=T.mkEnemy('slimeG',G.p.x+.2,G.p.y);G.enemies.push(e);return 1}")
+            await wait_game(pg2,3)
+            r=await ev(pg2,"()=>__T.G.p.hp")
+            rec('체력 안 줆','개발자 도구 「체력 안 줆」이면 몬스터에게 맞아도 줄지 않음', r>=50, str(r))
+            rec('기능','개발자 모드 콘솔 오류 없음', not errs2, errs2[:4])
+            await ctx2.close(); await b.close()
         print('TOTAL',sum(1 for r in RES if r[2]),'/',len(RES))
     return main

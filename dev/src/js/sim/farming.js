@@ -12,7 +12,7 @@ import { cropStage } from './actions.js';
 import { D4 } from './circuits.js';
 import { spawnDrop } from './drops.js';
 import { emit } from './events.js';
-import { moveInto, refillHot, selItem } from './inventory.js';
+import { moveInto, refillHot, selItem, storeAt } from './inventory.js';
 import { gainXp } from './player.js';
 import { idx, inB, W } from '../world/map.js';
 import { delObj, fpTiles, setParts } from '../world/tiles.js';
@@ -26,7 +26,7 @@ export function farmYield(o) { const py = o && PIT_Y[o.t]; if (py) return [[py[0
   const out = [['wood', 5 + (rand() * 3 | 0)]]; if (rand() < .35) out.push(['resin', 1]); if (rand() < .12) out.push(['sapling', 1]); if (rand() < .5) out.push(['fiber', 1 + (rand() * 2 | 0)]); return out; }
 export function farmHarvest(i, o, auto) { const x = i % W, y = (i / W) | 0;
   if (!auto) { const got = farmYield(o); o.p = G.time; if (PIT_Y[o.t]) pitStat(o, got[0][1]); else G.stats.farmed = (G.stats.farmed || 0) + got[0][1]; for (const [id, c] of got) spawnDrop(id, c, x + 1, y + 1.2); emit('sfx', 'brk'); emit('puff', x + 1, y + 1, farmT(o)[3], 10, 2.5); gainXp(2); return true; }
-  const chests = []; for (const j of fpTiles(i, o)) { const jx = j % W, jy = (j / W) | 0; for (const [dx, dy] of D4) { if (!inB(jx + dx, jy + dy)) continue; const c = G.objs.get(idx(jx + dx, jy + dy)); if (c && c.t === 'chest' && c.items && !chests.includes(c)) chests.push(c); } }
+  const chests = []; for (const j of fpTiles(i, o)) { const jx = j % W, jy = (j / W) | 0; for (const [dx, dy] of D4) { if (!inB(jx + dx, jy + dy)) continue; const sc = storeAt(idx(jx + dx, jy + dy)), c = sc && sc.o; if (c && !chests.includes(c)) chests.push(c); } }
   const stN = (o.store || []).reduce((a, s2) => a + s2.c, 0); if (stN >= FARM_CAP && !chests.some(c => c.items.some(z => !z))) { o.why = 'full'; return false; }
   const got = farmYield(o); o.p = G.time; o.why = ''; if (PIT_Y[o.t]) pitStat(o, got[0][1]); else G.stats.farmed = (G.stats.farmed || 0) + got[0][1];
   for (const [id, c] of got) { let left = c; for (const ch of chests) { if (!left) break; left = moveInto(ch.items, { id, c: left }); } if (left) { o.store = o.store || []; const n = o.store.reduce((a, s2) => a + s2.c, 0), add = Math.min(left, FARM_CAP - n); if (add > 0) { const s2 = o.store.find(z => z.id === id); if (s2) s2.c += add; else o.store.push({ id, c: add }); } } }
@@ -50,7 +50,7 @@ export function rollStar(i, o) { o.star = beat('golem') && CROP_SOIL[o.t] != nul
 export function cropYield(i, o) { const d = OBJ[o.t]; if (o.star == null) rollStar(i, o); const out = [];
   for (const [id, a, b, ch] of d.yield.map(([id, a, b, ch], k) => [!k && o.star && STAR_OF[id] ? STAR_OF[id] : id, a, b, id === 'glowcap' && o.f === 2 ? .6 : ch])) if (rand() < ch) { const c = rint(a, b); if (c > 0) out.push([id, c]); }
   const S = G.stats; S.cropH = (S.cropH || 0) + 1; if (o.t === 'cropBerry') S.berryH = (S.berryH || 0) + 1; if (o.w) S.wetH = (S.wetH || 0) + 1; if (o.star) S.starH = (S.starH || 0) + 1; return out; }
-export function devStore(i, o, got) { const x = i % W, y = (i / W) | 0; for (const [id, c] of got) { let left = c; for (const [dx, dy] of D4) { if (!left) break; const ch = inB(x + dx, y + dy) && G.objs.get(idx(x + dx, y + dy)); if (ch && ch.t === 'chest' && ch.items) left = moveInto(ch.items, { id, c: left }); }
+export function devStore(i, o, got) { const x = i % W, y = (i / W) | 0; for (const [id, c] of got) { let left = c; for (const [dx, dy] of D4) { if (!left) break; const sc = inB(x + dx, y + dy) && storeAt(idx(x + dx, y + dy)); if (sc) left = moveInto(sc.o.items, { id, c: left }); }
     if (left) { o.store = o.store || []; const n = o.store.reduce((a, s2) => a + s2.c, 0), add = Math.min(left, HARV_CAP - n); if (add > 0) { const s2 = o.store.find(z => z.id === id); if (s2) s2.c += add; else o.store.push({ id, c: add }); } } } }
 export function farmDevStep(i, o, d, on, dt) { const x = i % W, y = (i / W) | 0; o.work = on; if (!on) return; o.prog = (o.prog || 0) + dt;
   if (d.dev === 'sprk') { if (o.prog < SPRK_EVERY) return; o.prog = 0; let n = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const c = inB(x + dx, y + dy) && G.objs.get(idx(x + dx, y + dy)); if (c && OBJ[c.t] && OBJ[c.t].crop && !c.w && cropStage(c) < 3) { c.w = 1; if (c.p0 == null) c.p0 = c.p; n++; } }

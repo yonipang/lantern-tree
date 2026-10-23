@@ -98,7 +98,7 @@ export function renderWorld(cw, ch, glOn = false) {
     const o = G.objs.get(i); if (o && OBJ[o.t].flat && !OBJ[o.t].sz) { const [im, fl] = rotImg(o.t, rotOf(o), o.t === 'plate' && o.lit ? SPR.obj.plateOn : SPR.obj[o.t]); if (fl) { ctx.save(); ctx.translate(sx + 16, sy); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0); ctx.restore(); } else ctx.drawImage(im, sx, sy); }
   }
   for (let y = y0 - 3; y <= y1; y++) for (let x = x0 - 3; x <= x1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o || o.t === '_part') continue; const d = OBJ[o.t]; if (!d || !d.sz || !d.flat) continue; const [img] = rotImg(o.t, rotOf(o), SPR.obj[o.t]); if (img) ctx.drawImage(img, x * T - camX, y * T - camY); }
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y); if (G.wall[i]) continue; const o = G.objs.get(i); if (o && isGround(o)) drawEntity({ k: 'o', x, y, o }, t); }
+  // v136: 풀·꽃·작물(땅에 붙은 자연물)도 아래 줄 순서로 그려요 — 예전엔 맨 먼저 깔아서 바로 위 칸의 작업대 같은 물건 밑에 깔린 것처럼 보였어요 (아래 rows, it.g)
   drawKind('up');
   // rows: walls interleaved with everything that stands
   const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
@@ -107,7 +107,8 @@ export function renderWorld(cw, ch, glOn = false) {
   const seenA = new Set();
   for (let y = y0; y <= y1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { if (!inB(x, y)) continue; let ii = idx(x, y), o = G.objs.get(ii); if (o && o.t === '_part') { ii = o.a; o = G.objs.get(ii); if (!o || o.t === '_part') continue; }
     if (o && OBJ[o.t] && OBJ[o.t].sz) { if (seenA.has(ii)) continue; seenA.add(ii); if (OBJ[o.t].flat) continue; const ax = ii % W, ay = (ii / W) | 0, by = ay + fpOf(o)[1] - 1; push(Math.min(by, y1), { k: 'o', x: ax, y: ay, o, s: OBJ[o.t].solid ? by + 1 : by + .01 }); if (o.shake) visibleShakers.add(o); continue; }
-    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); }
+    if (o && o.t !== 'treeP' && !OBJ[o.t].flat && isGround(o) && !G.wall[ii]) { push(y, { k: 'o', x, y, o, s: y - .5, g: 1 }); if (o.shake) visibleShakers.add(o); } // v136: 그 줄에서 가장 먼저 (빛 계산은 예전처럼 바닥으로)
+    else if (o && o.t !== 'treeP' && !OBJ[o.t].flat && !isGround(o)) { push(y, { k: 'o', x, y, o, s: OBJ[o.t].solid && !(OBJ[o.t].door && o.open) ? y + 1 : y + 0.01 }); if (o.shake) visibleShakers.add(o); }
     if (o && o.t === 'beaverNest' && o.bv) { const b = beaverPose(ii, o); push(Math.min(Math.max(b.y, y0), y1), { k: 'bv', b, s: b.y }); } } // v114 둥지의 비버
   if (CY >= y0 && CY <= y1 + 5) push(Math.min(CY, y1), { k: 'tree', s: CY + 1 });
   const p = G.p; if (p.sit) push(p.sit.y, { k: 'p', s: p.sit.y + 1.01 }); else push(p.y, { k: 'p', s: p.y });
@@ -149,7 +150,7 @@ export function renderWorld(cw, ch, glOn = false) {
       if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
     }
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
-    for (const it of list) drawEntity(it, t);
+    for (const it of list) { if (it.g) { drawKind('floor'); drawEntity(it, t); drawKind('up'); } else drawEntity(it, t); }
   }
   // swing arc
   if (G.swing) {
@@ -167,7 +168,9 @@ export function renderWorld(cw, ch, glOn = false) {
   }
   for (const q of G.pshots) { const X = Math.round(q.x * T - camX), Y = Math.round((q.y - .45) * T - camY);
     if (q.k === 'arrow') { ctx.save(); ctx.translate(X, Y); ctx.rotate(q.ang); ctx.fillStyle = '#7d4d2a'; ctx.fillRect(-5, 0, 8, 1); ctx.fillStyle = q.tip || '#eef2f7'; ctx.fillRect(3, -1, 2, 3); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(-6, -1, 2, 3); ctx.restore(); }
+    else if (q.look === 'fire' && fireFrame(t)) { const f = fireFrame(t); ctx.save(); ctx.translate(X, Y); ctx.rotate(Math.atan2(q.vy, q.vx)); ctx.drawImage(f, -f.width + 8, -f.height / 2); ctx.restore(); } // v136 불덩이 (머리가 앞)
     else { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(q.col), X - 7, Y - 7, 14, 14); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = q.col; ctx.fillRect(X - 2, Y - 2, 4, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(X - 1, Y - 1, 2, 2); } }
+  drawFxAnims(camX, camY); // v136
   for (const q of G.parts) { ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life / q.max * 1.6); const s = q.sz; ctx.fillRect(Math.round(q.x * T - camX - s / 2), Math.round((q.y - q.z) * T - camY - s / 2), s, s); }
   ctx.globalAlpha = 1; drawTreeLeaves(T, camX, camY);
   // fishing line
@@ -344,7 +347,7 @@ export function drawEntity(it, t) {
     if (o.yg && isYoung(o) && SPR.young[o.t]) img = SPR.young[o.t];
     if (o.t === 'root' && SPR.rootS && SPR.rootS.length === 4 && Math.hypot(it.x - CX, it.y - CY) > 9.5) { const k = ROOT_PICK[Math.floor(hash2(it.x, it.y, 122) * ROOT_PICK.length)]; img = (o.yg && isYoung(o) ? SPR.rootSY : SPR.rootS)[k] || img; } // v122: 뿌리기둥 크기 여러 가지(같은 나무가 자라는 단계 그림, 칸마다 정해져요, 그림만), 등불나무 둘레 처음 것은 기본 크기
     const sx = o.shake ? 1 + Math.sin(o.shake * 60) * 0.06 : 1;
-    if (d.solid && effH(img) > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25);
+    if (d.solid && !d.noShadow && effH(img) > 17) shadow(wx, wy - .08, .38 * (fpD ? fpD[0] : 1), .25); // v136 noShadow: 땅이 그려진 꾸미기
     if (TIERED[o.t] && o.lv) { const px = Math.round(wx * T - camX), py = Math.round((wy - effH(img) / 16) * T - camY) + 2; ctx.fillStyle = INK; ctx.fillRect(px - 4, py, 8, 5); ctx.fillStyle = BENCH_COL[o.lv]; ctx.fillRect(px - 3, py + 1, 6, 3); } // v60 tier plate
     if (o.job) { const j = o.job, prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1), top = wy - effH(img) / 16 - .2, bx = Math.round(wx * T - camX) - 10, by = Math.round(top * T - camY);
       ctx.fillStyle = INK; ctx.fillRect(bx, by, 20, 4); ctx.fillStyle = prog >= 1 ? '#ffd25c' : '#7fe0b5'; ctx.fillRect(bx + 1, by + 1, Math.round(18 * prog), 2);
@@ -458,3 +461,18 @@ export function spiritFx(b, bz, ba, t, T, camX, camY, phase) {
 let IDF = null; // 빛 가루 그림(dev/art/etc/iceDust 2장 중 첫 장을 씀)
 function dustFrames() { if (IDF) return IDF; const S = SPR.iceDust; if (!(S instanceof HTMLCanvasElement)) return IDF = [];
   const w = S.width / 2; IDF = []; for (let k = 0; k < 2; k++) { const c = document.createElement('canvas'); c.width = w; c.height = S.height; c.getContext('2d').drawImage(S, k * w, 0, w, S.height, 0, 0, w, S.height); c.hd = S.hd; c.ol = S.ol; IDF.push(c); } return IDF; }
+
+// ---- v136 스킬 효과 그림 (받은 마법 효과 묶음: 얼음 방패 → 빛 방패 · 번개 고리 → 번개 사슬·어둠 번개 · 불덩이 → 불꽃 구슬). 보이기만 ----
+const FXA = [], FXA_DEF = { shield: ['fxShield', 12, .9], ring: ['fxRing', 3, .3], ringDark: ['fxRing', 3, .3] };
+export function addFxAnim(k, x, y) { if (FXA_DEF[k] && FXA.length < 40) FXA.push({ k, x, y, t0: performance.now() / 1000 }); }
+const FXA_FR = {}; function fxFrames(key, n, dark) { const id = key + (dark ? 'D' : ''); if (FXA_FR[id]) return FXA_FR[id]; const S = SPR[key]; if (!S) return null; const w = S.width / n, out = [];
+  for (let k = 0; k < n; k++) { const c = document.createElement('canvas'); c.width = w; c.height = S.height; const g = c.getContext('2d'); g.drawImage(S, k * w, 0, w, S.height, 0, 0, w, S.height);
+    if (dark) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(150,90,230,.55)'; g.fillRect(0, 0, w, S.height); } out.push(c); } return FXA_FR[id] = out; }
+export function drawFxAnims(camX, camY) { const now = performance.now() / 1000;
+  for (let i = FXA.length - 1; i >= 0; i--) { const a = FXA[i], [key, n, dur] = FXA_DEF[a.k], age = now - a.t0; if (age >= dur) { FXA.splice(i, 1); continue; }
+    const F = fxFrames(key, n, a.k === 'ringDark'); if (!F) continue; const f = F[Math.min(n - 1, Math.floor(age / dur * n))];
+    if (a.k === 'shield') { const p = G.p, fx = p.face && p.face.x < -.1 ? -1 : 1, X = Math.round((p.x + fx * .75) * TP - camX), Y = Math.round((p.y - .6) * TP - camY); // 바라보는 쪽 옆에 (몸을 가리지 않게)
+      ctx.save(); ctx.globalAlpha = .85; ctx.translate(X, Y); ctx.scale(fx, 1); ctx.drawImage(f, -f.width / 2, -f.height / 2); ctx.restore(); continue; }
+    ctx.drawImage(f, Math.round(a.x * TP - camX - f.width / 2), Math.round(a.y * TP - camY - f.height / 2)); } }
+let FIREF = null;
+export function fireFrame(t) { if (!FIREF) FIREF = fxFrames('fxFire', 3, false); return FIREF ? FIREF[Math.floor(t * 12) % 3] : null; }

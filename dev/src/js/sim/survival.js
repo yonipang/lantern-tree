@@ -8,6 +8,7 @@ import { BUILT_WALLS, ITEMS, OBJ } from '../data/items.js';
 import { fxRand } from '../engine/random.js';
 import { $, clamp } from '../engine/util.js';
 import { cam, curPl, G, ME, started } from '../save/state.js';
+import { devOn } from '../save/storage.js';
 import { D4 } from './circuits.js';
 import { defineCmd } from './commands.js';
 import { emit } from './events.js';
@@ -38,7 +39,7 @@ export function envTick(dt) {
   E.v = clamp(E.v + rate * dt, 0, 100); if (!zone && E.v <= 0) E.k = null;
   const lv = !E.k ? 0 : E.v >= 100 ? 3 : E.v >= 70 ? 2 : E.v >= 40 ? 1 : 0;
   if (E.k && started && (lv > E.lv)) { if (lv || E.lv < 0) emit('toast', ENV_TXT[E.k][lv], lv >= 2 ? 'warn' : null, 'env'); } if (E.k) E.lv = lv;
-  if (lv === 3 && p.dead <= 0 && !p.cine) { /* v127: 연출 장면 동안 더위·추위 피해 없음 */ E.t += dt; if (E.t >= 5) { E.t = 0; p.hp -= 2; emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-2', E.k === 'hot' ? '#ff9b4a' : '#9fd8f0'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; emit('fade', 'faint'); } } } else E.t = 0;
+  if (lv === 3 && p.dead <= 0 && !p.cine && !devOn('god')) { /* v127: 연출 장면 동안 더위·추위 피해 없음 */ E.t += dt; if (E.t >= 5) { E.t = 0; p.hp -= 2; emit('hurt'); emit('ftext', p.x, p.y - 1.2, '-2', E.k === 'hot' ? '#ff9b4a' : '#9fd8f0'); if (p.hp <= 0) { p.hp = 0; p.dead = 1.8; G.fish = null; emit('fade', 'faint'); } } } else E.t = 0;
   // the screen edge: fades in and out over a second or two, never stronger than 30% during a boss fight
   let tgt = [0, .15, .30, .375 + Math.sin(performance.now() / 420) * .075][lv]; if (!$('#bossbar').hidden) tgt = Math.min(tgt, .30);
   envFxV += (tgt - envFxV) * Math.min(1, dt / (tgt > envFxV ? 1.2 : 1.6));

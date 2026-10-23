@@ -8,6 +8,7 @@ import { BIOME, ITEMS } from '../data/items.js';
 import { $, clamp } from '../engine/util.js';
 import { animalImg } from '../render/parts.js';
 import { G } from '../save/state.js';
+import { devOn } from '../save/storage.js';
 import { catchAng, inZone } from '../sim/animals.js';
 import { benchLv, fmtT, jobDone, jobLeft, nowS, tierNames } from '../sim/crafting.js';
 import { eqEffect, lvOf, rarCol, SET_N, upgCost, upgOk, upgText } from '../sim/gear.js';
@@ -22,7 +23,7 @@ export function upgListHTML(ok) {
   const list = [...EQ_SLOTS.map(([sl, n]) => ({ s: G.equip[sl], i: 'e:' + sl, tag: n + ' 칸' })), ...otherSetSlots(), ...slotList().map(x => ({ ...x, tag: typeof x.i === 'string' ? '도구' : '' }))].filter(({ s }) => s && upgOk(s.id));
   let h = `<div class="sh-body">${ok ? '' : '<p class="hint">장비제작대 근처에서 강화할 수 있어요.</p>'}<div class="list">`;
   if (!list.length) h += `<p class="prose" style="color:var(--muted);text-align:center;margin-top:14px">강화할 장비가 없어요</p>`;
-  for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && cost.every(([id, c]) => availCount(id) >= c);
+  for (const { s, i, tag } of list) { const lv = lvOf(s), max = lv >= UPG_MAX, cost = max ? [] : upgCost(s.id, lv), can = ok && !max && (devOn('free') || cost.every(([id, c]) => availCount(id) >= c));
     h += `<div class="rc ${can ? 'ok' : 'no'}"><div class="ri"><img class="px" src="${iconURL(s.id)}" alt=""></div><div class="rn">${rarName(s.id)}${lv ? ` +${lv}` : ''}${tag ? `<small>${tag}</small>` : ''}<div class="ings"><span class="ing">${upgText(s.id, lv)}${max ? ' · 최고 단계' : ` → ${upgText(s.id, lv + 1)}`}</span>${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="upg" data-i="${i}" ${can ? '' : 'disabled'}>${max ? '최고' : `+${lv + 1}`}</button></div>`; }
   return h + `</div></div>`; }
 export function jobHTML(o) { const j = o.job; if (!j) return ''; const d = jobDone(j), it = ITEMS[j.out], prog = clamp((nowS() - j.t0) / (j.q * j.per), 0, 1);
@@ -59,7 +60,7 @@ export function eqRowHTML() {
   return h + `</div>`; }
 export function benchUpHTML(o) { const lv = benchLv(o); if (lv < 0) return ''; const st = o.t === 'smelter' ? 'smelter' : 'bench', NM = tierNames(st), IT = TIER_IT[st];
   if (lv >= BENCH_MAX) return `<p class="hint">가장 높은 단계 ${st === 'smelter' ? '장비제작대' : '작업대'}예요 · 모든 ${st === 'smelter' ? '장비' : '작업대 물건'}를 만들 수 있어요</p>`;
-  const cost = BENCH_UP[lv + 1], ok = cost.every(([id, c]) => availCount(id) >= c);
+  const cost = BENCH_UP[lv + 1], ok = devOn('free') || cost.every(([id, c]) => availCount(id) >= c);
   return `<div class="rc ${ok ? 'ok' : 'no'} benchup" style="margin-bottom:8px"><div class="ri"><img class="px" src="${iconURL(IT[lv + 1])}" alt=""></div><div class="rn">${NM[lv + 1]}로 올리기<small>작업대·장비제작대가 같이 올라가요</small><div class="ings">${cost.map(([id, c]) => { const have = availCount(id); return `<span class="ing ${have < c ? 'short' : ''}"><img class="px" src="${iconURL(id)}" alt="">${ITEMS[id].n} ${have}/${c}</span>`; }).join('')}</div></div><button type="button" class="btn mk" data-a="benchUp" ${ok ? '' : 'disabled'}>올리기</button></div>`; }
 // ---- the tool pouch in the bag window ----
 export function pouchHTML() { const T = G.tools || []; let h = `<div class="lbl">도구 주머니 · ${T.length}개 <span style="color:var(--muted)">(가방 칸을 차지하지 않아요 · 단축칸 맨 앞 도구 칸에서 골라 들어요)</span></div><div class="grid">`;

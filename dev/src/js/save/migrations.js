@@ -107,6 +107,12 @@ export function growFootprints() {
 export function grow122() { return growPlaced(GROW122, 'grow122', (back, boxes) => `새 그림에 맞춰 침대·탁자·긴 식탁이 커졌어요${back ? ` · 자리가 좁은 ${back}개는 ${boxes ? '가방·등불나무 옆 환급 상자' : '가방'}로 돌려받았어요` : ''}`); }
 // v134: 장비제작대·용광로가 새 그림에 맞춰 2×1로 커져요(GROW134) — v122와 같은 방법, 한 번만(G.stats.grow134). 굽는 중인 용광로·올린 단계도 그대로 옮겨요(같은 물건)
 export function grow134() { return growPlaced(GROW134, 'grow134', (back, boxes) => `새 그림에 맞춰 장비제작대·용광로가 2칸으로 커졌어요${back ? ` · 자리가 좁은 ${back}개는 ${boxes ? '가방·등불나무 옆 환급 상자' : '가방'}로 돌려받았어요` : ''}`); }
+// v136: 집 가구 레시피가 새 「가구 제작대」로 옮겨 갔어요 — 이미 작업대를 놓은 옛 세이브는 가구 제작대 하나를 가방에(가득이면 등불나무 옆 환급 상자), 한 번만
+export function giftFdesk136() {
+  if (G.stats.fdesk136) return; G.stats.fdesk136 = 1; if (!G.stats.bench && ![...G.objs.values()].some(o => o && (o.t === 'bench' || o.t === 'forge'))) return;
+  const left = moveInto(G.inv, { id: 'fdesk', c: 1 }); let box = false;
+  if (left) { const at = freeTileNear(CX, CY + 7); if (at >= 0) { const items = Array(18).fill(null); items[0] = { id: 'fdesk', c: 1 }; G.objs.set(at, { t: 'refundBox', items, own: ME }); box = true; } }
+  setTimeout(() => { try { emit('toast', `가구는 이제 「가구 제작대」에서 만들어요 · ${box ? '등불나무 옆 환급 상자' : '가방'}에 하나 넣어 드렸어요`, 'good', 'fdesk136'); } catch (e) { } }, 2600); }
 export function growPlaced(TABLE, key, msg) {
   if (G.stats[key]) return null; let moved = 0, back = 0; const own = [];
   const free = (ax, ay, fp) => { if (!fpFree(ax, ay, fp, false, null)) return false; for (let dy = 0; dy < fp[1]; dy++) for (let dx = 0; dx < fp[0]; dx++) if (G.floor[idx(ax + dx, ay + dy)] === PIT) return false; return true; };

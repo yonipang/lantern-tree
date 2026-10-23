@@ -10,7 +10,7 @@ import { ICONURL } from '../render/icons.js';
 import { G, paused, started } from '../save/state.js';
 import { spawnDrop } from './drops.js';
 import { emit } from './events.js';
-import { addItem, refillHot, returnObj, selItem } from './inventory.js';
+import { addItem, refillHot, returnObj, selItem, storeSlots } from './inventory.js';
 import { WATER } from './nature.js';
 import { idx, inB, LAVA, PIT } from '../world/map.js';
 import { canPlace, delObj, floorItem, fpOf, isPlacedFloor, placeAnchor, pushSpot, setParts } from '../world/tiles.js';
@@ -83,7 +83,7 @@ export function putItem(it, s, t, op = {}) { const i = idx(t.x, t.y), give = op.
     if (back) { const l = addItem(back, 1, false); if (l) spawnDrop(back, 1, t.x + .5, t.y + .5); } if (it.ground === WATER || it.ground === LAVA) flowNear(t.x, t.y); }
   else if (it.kind === 'wire') G.wire.set(i, 1);
   else if (it.kind === 'seed') G.objs.set(i, OBJ[it.crop].growTo ? { t: it.crop, at: G.time + GROW_TIME } : { t: it.crop, p: G.time, p0: G.time });
-  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bench' || it.obj === 'smelter') { const sl = Math.max(it.blv || 0, stationTierNow()); if (sl) o.lv = sl; } /* v128: 놓으면 지금 제작대 등급으로 */ if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (it.obj === 'chest') o.items = Array(18).fill(null); if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
+  else { const o = { t: it.obj }; if (it.blv) o.lv = it.blv; if (it.obj === 'bench' || it.obj === 'smelter') { const sl = Math.max(it.blv || 0, stationTierNow()); if (sl) o.lv = sl; } /* v128: 놓으면 지금 제작대 등급으로 */ if (it.obj === 'bush') o.r = G.time + 150; if (OBJ[it.obj].ranch) o.p = G.time + OBJ[it.obj].every; if (it.obj === 'battery') o.e = s.dur != null ? s.dur : BATT_MAX; if (it.obj === 'eLamp') o.off = true; if (OBJ[it.obj].dev === 'drill') { const f = G.p.face; o.dir = Math.abs(f.x) > Math.abs(f.y) ? { x: Math.sign(f.x), y: 0 } : { x: 0, y: f.y < 0 ? -1 : 1 }; } if (storeSlots(it.obj)) o.items = Array(storeSlots(it.obj)).fill(null); /* v136 상자 종류 가구도 보관함 */ if (it.obj === 'feeder') o.feed = Array(FEED_SLOTS).fill(null); /* v114 */ if (OBJ[it.obj].warp) { o.own = meId(); o.at = G.time; } /* v89 포탈: 놓은 사람·차례 */ if (OBJ[it.obj].dev === 'farm') o.p = G.time; const dd = OBJ[it.obj];
     const pr = op.rot != null ? op.rot : pRot(), rn = rotN(it.obj); if (rn > 1 && pr % rn) { o.dir = pr % rn; if (rotSwaps(dd) && o.dir % 2) o.rot = 1; } // v65: 2 or 4 directions, chosen before placing
     if (dd.sz) { const a = op.anchor || placeAnchor(t, fpOf(o)); t = { x: a.x, y: a.y }; G.objs.set(idx(a.x, a.y), o); setParts(idx(a.x, a.y), o); }
     else G.objs.set(i, o);

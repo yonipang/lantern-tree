@@ -269,6 +269,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {
 "queen": 1,
 "slime": 1,
@@ -827,6 +828,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -1355,6 +1357,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -1973,6 +1976,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -2496,6 +2500,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -3014,6 +3019,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -3622,6 +3628,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "abV": 1,
@@ -4056,6 +4063,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -4693,6 +4701,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "abV": 1,
@@ -5148,6 +5157,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -5483,7 +5493,10 @@ null,
 "id": "forge",
 "c": 2
 },
-null,
+{
+"id": "fdesk",
+"c": 1
+},
 null,
 null,
 null,
@@ -5695,6 +5708,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -5957,6 +5971,7 @@ null
 "swordWood": 1,
 "smelterCu": 1,
 "forge": 1,
+"fdesk": 1,
 "pickWood": 1,
 "bed": 1,
 "chair": 1,
@@ -6255,6 +6270,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -6877,6 +6893,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -7491,6 +7508,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -8105,6 +8123,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -8637,6 +8656,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
@@ -9179,6 +9199,7 @@ null
 "back": 0,
 "boxes": 0
 },
+"fdesk136": 1,
 "uniq": {},
 "deepSeed": {},
 "naru110": 1,
