@@ -61,7 +61,7 @@ def test_terrain_shovel():
             # v93: 흙은 벽 재료이자 바닥 재료 — 큰 버튼은 벽 쌓기, 작은 버튼은 바닥 바꾸기
             await setup("__T.addItem('dirt',2);"+sel.format('dirt'))
             r=await ev(pg,"()=>{const d=__T.decide();return [d.k,d.lbl,!!d.gr,(__T.G.alts||[]).map(a=>a.lbl).join(',')]}")
-            rec('흙','v93: 흙 들고 이끼 바닥 → 큰 버튼 쌓기, 작은 버튼 바닥 바꾸기', r==['place','쌓기',False,'바닥 바꾸기'], str(r))
+            rec('흙','v93: 흙 들고 이끼 바닥 → 큰 버튼 쌓기, 작은 버튼 바닥 바꾸기 (v137: 다음 칸은 크기 1×1)', r==['place','쌓기',False,'바닥 바꾸기,1×1'], str(r))
             r=await ev(pg,f"()=>{{const G=__T.G;__T.decide();__T.perform(G.alts.find(a=>a.lbl==='바닥 바꾸기'));return [{F(111,110)}, G.wall[__T.idx(111,110)], __T.countItem('gMoss'), __T.countItem('dirt')]}}")
             rec('바꾸기','작은 버튼: 이끼 위에 흙 → 흙 바닥이 되고 이끼 흙 돌려받음', r==[2,0,1,1], str(r))
             r=await ev(pg,f"()=>{{const G=__T.G;__T.perform(__T.decide());return [{F(111,110)}, G.wall[__T.idx(111,110)], __T.countItem('dirt')]}}")
@@ -87,7 +87,7 @@ def test_terrain_shovel():
             await setup("__T.addItem('dirt',2);G.floor[__T.idx(111,110)]=__T.WATER;"+sel.format('dirt'))
             r=await ev(pg,"()=>{const d=__T.decide();return [d.lbl,(__T.G.alts||[]).map(a=>a.lbl).join(',')]}")
             r2=await ev(pg,f"()=>{{const G=__T.G;__T.perform(G.alts.find(a=>a.lbl==='바닥 쌓기'));return [{F(111,110)}, G.wall[__T.idx(111,110)], __T.countItem('gWater')]}}")
-            rec('지형 배치','흙 들고 물 → 큰 버튼 쌓기, 작은 버튼 바닥 쌓기로 물 메우기 (물은 돌려받지 않음)', r==['쌓기','바닥 쌓기'] and r2==[2,0,0], f'{r} {r2}')
+            rec('지형 배치','흙 들고 물 → 큰 버튼 쌓기, 작은 버튼 바닥 쌓기로 물 메우기 (물은 돌려받지 않음, v137: 다음 칸은 크기 1×1)', r==['쌓기','바닥 쌓기,1×1'] and r2==[2,0,0], f'{r} {r2}')
             # v87: 물 한 동이는 구덩이에만, 삽으로는 물을 못 떠요
             await setup("__T.addItem('gWater',2);"+sel.format('gWater'))
             r=await ev(pg,"()=>[__T.decide().k,__T.decide().msg||'']")
