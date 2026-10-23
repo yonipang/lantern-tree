@@ -562,7 +562,7 @@ def test_monsters_v101():
             r=await ev(pg,"""(NEW)=>{const T=__T;const bad=NEW.filter(k=>!T.ENEMY[k]||!T.SPR[k]||!T.SPR[k+'W']||(T.ENEMY[k].ai&&!T.MON_AI[T.ENEMY[k].ai]));
               const sums=T.MON_TABLE.map(row=>Math.round(row.reduce((a,[,w])=>a+w,0)*100)/100),cnt=T.MON_TABLE.map(row=>row.filter(([k])=>NEW.includes(k)).length);
               const picks=new Set();for(let i=0;i<400;i++)picks.add(T.pickMon(2));return [bad.join(','),sums.join(','),cnt.join(','),[...picks].sort().join(',')]}""",NEW)
-            rec('몬스터','새 몬스터 15종 모두 데이터·그림·움직임 있음, 지역별 표 합계 1, 지역마다 새 몬스터 3종, 수정 동굴에서 5종 다 나옴', r==['','1,1,1,1,1','3,3,3,3,3','crySnail,crySpider,mirrorCry,shroomy,slimeP'], str(r))
+            rec('몬스터','새 몬스터 15종 모두 데이터·그림·움직임 있음, 지역별 표 합계 1, 지역마다 새 몬스터 3종(v135부터 이끼 동굴은 반딧벌레를 빼서 2종), 수정 동굴에서 5종 다 나옴', r==['','1,1,1,1,1','2,3,3,3,3','crySnail,crySpider,mirrorCry,shroomy,slimeP'], str(r))
             # 두더지: 쫓으면 땅속(안 맞음) → 가까이 오면 튀어나옴
             r=await ev(pg,"""()=>{"""+ARENA+"""const e=T.mkEnemy('moleMoss',114.5,110.5);e.sees=true;e.chasing=true;e.alertAt=G.time;G.enemies.push(e);
               let under=false,blocked=0;for(let i=0;i<40;i++){T.enemyStep(e,1/30);if(e.under){under=true;const h=e.hp;T.hitEnemy(e,10,false,0);if(e.hp===h)blocked++;}}

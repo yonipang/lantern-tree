@@ -258,7 +258,7 @@ def test_furniture_size():
           return [await sz(T.iconURL('logBench')),await sz(T.iconURL('smelter')),await sz(T.iconURL('plant')),await sz(T.iconURL('chair')),f.logBench.small.width,f.logBench.big.width]}""")
             rec('아이콘','가방·제작 화면 아이콘은 늘린 임시 그림이 아니라 원래 1칸 모양, 세로·가로로 긴 그림도 정사각형 칸 (v55)', r==['16x16','30x30','20x20','16x16',16,32], str(r))
             r=await ev(pg,"()=>{const T=__T,S=T.SPR.obj,z=c=>T.effW(c)+'x'+T.effH(c);return [z(S.bench),z(S.furnace),z(S.logBench),z(S.bed),!!S.bedV,z(S.roundTree),z(S.root),Math.round(T.effW(T.SPR.young.roundTree))]}")
-            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림, v134 작업대 = 도구 작업대 24×30·용광로 = 큰 화로 26×48)', r==['24x30','26x48','32x16','32x48',False,'32x48','24x28',25], str(r))
+            rec('그림','커진 가구·나무는 새 크기 (손그림이 없으면 옛 그림을 늘림, 어린 나무도 같이; v54부터 작업대·둥근 나무는 Fantasyville 그림, v55 작업대 2칸 너비로, 화로 1칸, 뿌리기둥은 캐릭터 키의 2배 → v122 자라는 나무 그림 24×28, v122 침대 2×3 그림, v134 용광로 = 큰 화로 26×48, v135 작업대 = 도구 작업대를 이어 그려 32×30)', r==['32x30','26x48','32x16','32x48',False,'32x48','24x28',25], str(r))
             # v56: saves from before v50 get the 2×1 workbench too — it grows into the free tile next to it, or comes back to the bag
             r=await ev(pg,"""()=>{const T=__T;T.newGame(31);const G=T.G;const fpNew=JSON.parse(JSON.stringify(T.serialize())).fpV;
           const x=Math.floor(G.p.x)+2,y=Math.floor(G.p.y)+2;for(let yy=y;yy<=y+2;yy+=2)for(let xx=x-1;xx<=x+3;xx++){const i=T.idx(xx,yy);G.wall[i]=0;G.objs.delete(i)}
