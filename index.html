@@ -765,6 +765,7 @@ function tone(f, dur, type = 'square', vol = 0.05, slide = 0) { if (!AC || !soun
 function nz(dur, vol, freq) { if (!AC || !soundOn) return; const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02); }
 let lastPickSfx = 0;
 const SFX = {
+  kill: () => { tone(540, .1, 'square', .04, -360); nz(.09, .07, 1400); setTimeout(() => tone(980, .05, 'triangle', .03, 200), 40); }, // v138 쓰러짐
   hit: () => { tone(260, .09, 'square', .045, -140); nz(.05, .06, 1800); }, mine: () => { nz(.07, .09, 900); tone(180, .05, 'triangle', .03); }, brk: () => { nz(.16, .11, 500); tone(150, .14, 'triangle', .05, -70); },
   pick: () => { const n = performance.now(); if (n - lastPickSfx < 60) return; lastPickSfx = n; tone(880, .07, 'triangle', .045, 380); }, place: () => tone(330, .07, 'triangle', .06, -90),
   hurt: () => tone(170, .2, 'sawtooth', .05, -100), craft: () => { tone(660, .08, 'triangle', .05); setTimeout(() => tone(990, .1, 'triangle', .05), 70); }, eat: () => { tone(520, .09, 'sine', .07, -200); setTimeout(() => tone(620, .08, 'sine', .06, -200), 90); },
@@ -906,7 +907,7 @@ const idx = (x, y) => y * W + x;
 const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
 // ================= 떨어진 아이템 (게임 규칙: 세계에 남는 물건이라 결과용 난수 rand) =================
 
-function spawnDrop(id, c, x, y) { const a = rand() * 6.283; G.drops.push({ id, c, x, y, vx: Math.cos(a) * 1.4, vy: Math.sin(a) * 1.1, z: 0.3, vz: 2.6, t: 0, hold: 0 }); }
+function spawnDrop(id, c, x, y) { const a = rand() * 6.283; G.drops.push({ id, c, x, y, vx: Math.cos(a) * 1.8, vy: Math.sin(a) * 1.4, z: 0.3, vz: 3.4, t: 0, hold: 0 }); /* v138 손맛: 조금 더 높이·멀리 톡 (예전 1.4·1.1·2.6) */ }
 function rollDrops(list, x, y) { for (const [id, a, b, ch] of list) if (rand() < (ch < 1 && petIs('rabbit') && rarOf(id) >= 2 ? Math.min(1, ch * (1.25 + .1 * ((G && G.rpg && G.rpg.sk && G.rpg.sk.animalFriend) || 0))) : ch)) { const c = rint(a, b); if (c > 0) spawnDrop(id, c + (rand() < skl('lucky') * 0.12 ? 1 : 0), x, y); } }
 // hand-drawn art: dev/art/<path>.png is packed here by dev/art_pack.py as { path: [dataURL, outline] } (outline 0 = keep as drawn).
 // The path is where the sprite lives in SPR (obj/roundTree, item/berry, crop/berry/3, slimeG …) or animal/<kind>.
@@ -1452,7 +1453,8 @@ function wallFront(t) {
   return mk(16, 5, A => { const c = WFRONT_COL[t]; A.r(0, 0, 16, 5, c); for (let x = 1; x < 16; x += 3) A.r(x, 1, 1, 3, 'rgba(255,255,255,0.07)'); A.r(0, 4, 16, 1, '#1d1424'); A.r(0, 0, 16, 1, 'rgba(255,255,255,0.06)');
     if (t === 4) A.p(6, 2, C.copper); if (t === 5) A.p(9, 2, C.iron); if (t === 10) A.p(7, 2, '#ffd25c'); if (t === 12) A.p(10, 2, '#7ff0ff'); if (t === 9) A.p(4, 3, '#c4441a'); if (t === 3) { A.p(4, 2, '#8a7ab0'); A.p(11, 1, '#8a7ab0'); } if (t === 13) { A.p(4, 2, '#e8e0ff'); A.p(11, 1, '#e8e0ff'); } if (t === 7) { A.r(0, 2, 16, 1, '#5e5a74'); A.r(7, 0, 1, 2, '#5e5a74'); } }, null);
 }
-function crackSpr(n) { return mk(16, 16, A => { const c = 'rgba(30,18,34,0.75)'; A.line(8, 8, 4, 4, c); A.line(8, 8, 12, 6, c); if (n > 0) { A.line(8, 8, 6, 13, c); A.line(4, 4, 2, 6, c); } if (n > 1) { A.line(8, 8, 13, 12, c); A.line(12, 6, 14, 2, c); A.line(6, 13, 3, 14, c); } }, null); }
+function crackSpr(n) { return mk(16, 16, A => { const d = 'rgba(24,14,30,0.85)', h = 'rgba(255,244,226,0.3)'; const L = [[8, 8, 4, 4], [8, 8, 12, 6], [8, 8, 6, 13], [4, 4, 2, 6], [8, 8, 13, 12], [12, 6, 14, 2], [6, 13, 3, 14], [4, 4, 5, 1], [13, 12, 14, 14], [2, 6, 1, 9], [12, 6, 14, 7]], k = [2, 4, 7, 11][n]; // v138 금 4단계 · 밝은 가장자리 (예전 3단계)
+  for (let j = 0; j < k; j++) { const [a, b, c, e] = L[j]; A.line(Math.min(15, a + 1), Math.min(15, b + 1), Math.min(15, c + 1), Math.min(15, e + 1), h); } for (let j = 0; j < k; j++) { const [a, b, c, e] = L[j]; A.line(a, b, c, e, d); } }, null); }
 
 const PRI = { 1: 4, 3: 3, 4: 2, 2: 1, 18: .5, 19: .6, 35: 5 }; // v132 눈 무더기는 얼음 바닥 위에 (경계의 어두운 선이 얼음 쪽에)
 function rotCanvas(c, q) { if (!q) return c; const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; const g = k.getContext('2d'); g.translate(8, 8); g.rotate(q * Math.PI / 2); g.drawImage(c, -8, -8); return k; }
@@ -1525,7 +1527,7 @@ function buildSprites() {
   SPR.treeSt = [0, 1, 2, 3, 4, 5].map(treeSprs); SPR.lantern = [lanternSpr(false), lanternSpr(true)]; SPR.lanternS = lanternSmallSpr(); spreadSprs();
   SPR.floor = {}; for (const t in FPAL) SPR.floor[t] = [0, 1, 2, 3].map(v => floorTex(+t, v));
   SPR.wtop = {}; SPR.wfront = {}; for (const t in WPAL) { SPR.wtop[t] = [0, 1, 2, 3].map(v => wallTop(+t, v)); SPR.wfront[t] = wallFront(+t); }
-  SPR.crack = [0, 1, 2].map(crackSpr);
+  SPR.crack = [0, 1, 2, 3].map(crackSpr);
   // hand-drawn art replaces the base sprites, then everything made from them is rebuilt; a second pass lets art replace those too
   applyArt();
   for (const c in FLOWERS) SPR['bloom' + c + 'W'] = whiten(SPR['bloom' + c]);
@@ -5422,13 +5424,13 @@ function setFootprints(v) { FPV = v === 2 ? 2 : 1;
 setFootprints(2);
 // ================= 모으기: 벽 캐기·나무 베기·수확, 쳐서 회수(공격 버튼으로 가구 떼기) =================
 // (구조 변경 9단계: 버전마다 덧붙인 content/·game/·features/ 파일에서 기능별로 모음 — 덩어리 순서는 예전 그대로)
-function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('puff', tx + .5, ty + .6, WPAL[w][0], 10, 3); emit('sfx', 'brk'); markLight(); emit('tile', tx, ty); gainXp(SHADOW_WALL_XP[w] || (w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0)); } // v129 그림자 바위 4 · 결정 광맥 10
+function breakWall(tx, ty) { const i = idx(tx, ty), w = G.wall[i], def = WALLS[w]; G.wall[i] = 0; G.wdmg.delete(i); if (G.bwall) G.bwall.delete(i); rollDrops(def.drop, tx + .5, ty + .5); emit('chips', tx + .5, ty + .6, WPAL[w][0], WPAL[w][1], 14, 1); emit('puff', tx + .5, ty + .6, WPAL[w][0], 6, 2.4); emit('hitstop', HITSTOP.wall); emit('sfx', 'brk'); /* v138 부서질 때 덩어리가 튐 */ markLight(); emit('tile', tx, ty); gainXp(SHADOW_WALL_XP[w] || (w >= 9 && w <= 12 ? (w === 10 || w === 12 ? 6 : 3) : w === 3 || w === 4 || w === 5 ? 3 : w === 2 ? 1 : 0)); } // v129 그림자 바위 4 · 결정 광맥 10
 function mineWall(t) {
   const p = G.p, i = idx(t.x, t.y), w = G.wall[i], def = WALLS[w], pk = bestPick();
   faceTo(t.x + .5 - p.x, t.y + .5 - p.y);
   G.swing = { t: 0.2, max: 0.2, ang: Math.atan2(p.face.y, p.face.x), icon: pk.id === 'hand' ? null : pk.id };
   if (def.tier > pk.tier) { emit('sfx', 'clink'); emit('puff', t.x + .5, t.y + .9, '#ffffff', 3, 1.5); emit('toast', `${def.n}은(는) ${TIERNAME[def.tier] || '더 좋은 곡괭이'}가 필요해요`, null, 'tier' + w); return; }
-  const dm = (G.wdmg.get(i) || 0) + pk.power * mineMul(); wear(pk.slot); emit('sfx', 'mine'); emit('puff', t.x + .5, t.y + .95, WPAL[w][1], 4, 2, 0.2); emit('shake', 0.06);
+  const dm = (G.wdmg.get(i) || 0) + pk.power * mineMul(); wear(pk.slot); emit('sfx', 'mine'); emit('chips', t.x + .5, t.y + .95, WPAL[w][1], WPAL[w][0], 5, 0); emit('shake', 0.06); /* v138 돌 조각 (예전 먼지 4개) */
   if (dm >= def.hp) {
     breakWall(t.x, t.y);
   } else G.wdmg.set(i, dm);
@@ -5441,7 +5443,7 @@ function hitObj(t, o) {
   o.dmg = (o.dmg || 0) + (d.nat === 'pick' ? 9 : Math.max(1, tl ? toolPow(tl) : 0.5) * mineMul()); if (d.nat !== 'pick' && tl) wear(tl);
   emit('sfx', 'mine'); emit('puff', t.x + .5, t.y + .7, o.t === 'cluster' ? C.cry : o.t === 'bigShroom' ? '#e07b5f' : '#7fbf6a', 4, 2);
   const yg = isYoung(o);
-  if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o); emit('sfx', 'brk'); markLight(); gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
+  if (o.dmg >= (yg ? Math.max(1, Math.ceil(d.hp / 2)) : d.hp)) { delObj(i); const fpc = d.sz ? fpOf(o) : [1, 1]; rollDrops(yg ? youngDrops(d.drops) : d.drops, t.x + fpc[0] / 2, t.y + fpc[1] / 2); if (d.dropFn) d.dropFn(t.x + fpc[0] / 2, t.y + fpc[1] / 2); if ((d.nat === 'cut' && !d.ntree) || d.nat === 'pick') maybeNote('gather', t.x + .5, t.y + .5); afterCut(t, o); if (d.nat === 'pick') emit('chips', t.x + .5, t.y + .6, o.t === 'cluster' ? C.cry : '#9a8f86', '#e8d8c0', 10, 1); emit('sfx', 'brk'); /* v138 */ markLight(); gainXp(o.t === 'cluster' ? 3 : o.t === 'root' || o.t === 'bigShroom' || d.ntree ? 1 : 0); } else o.shake = 0.15;
 }
 function harvest(t, o) {
   const d = OBJ[o.t];
@@ -6097,7 +6099,7 @@ function dotTick(e, dt, boss) {
   if (e.slow > 0) { e.slow -= dt; if (fxRand() < dt * 4) emit('puff', e.x, e.y - .2, e.chill ? '#d4f1ff' : '#b8f0a0', 1, .6, .3); if (e.slow <= 0) e.chill = 0; }
 }
 function dotHit(e, n, col) { if (!G.enemies.includes(e)) return; e.hp -= n; emit('ftext', e.x, e.y - 0.8, n, col); if (e.hp <= 0) enemyDie(e); }
-function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('puff', e.x, e.y, def.col, 12, 3.2); rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); { const xp = def.xp != null ? def.xp : Math.max(2, Math.round(def.hp / 2)); if (xp > 0) gainXp(xp, e.x, e.y); } } // v131 xp: 0 = 경험치 없음(파수 돌인형·거울 분신)
+function enemyDie(e) { const def = ENEMY[e.k]; const at = G.enemies.indexOf(e); if (at < 0) return; G.enemies.splice(at, 1); onEnemyDie(e); /* v101 */ emit('kill', e.x, e.y, def.col, e.k, !!e.flip, e.z || 0); emit('hitstop', HITSTOP.kill); emit('shake', .16); /* v138 쓰러짐 연출 (예전 먼지 12개) */ rollDrops(def.drops, e.x, e.y); if (G.biome[idx(Math.floor(e.x), Math.floor(e.y))] <= 1) maybeNote('mon', e.x, e.y); G.stats.kills = (G.stats.kills || 0) + 1; if (skl('leech') && G.p.dead <= 0) { const v = Math.round(maxHp() * (skl('leech') * .02 + .01)); G.p.hp = Math.min(maxHp(), G.p.hp + v); emit('ftext', G.p.x, G.p.y - 1.3, '♥ +' + v, '#ff8fa3'); } /* v102 생명 흡수 */ if (e.zone != null && G.fzones && G.fzones[e.zone]) G.fzones[e.zone].dead.push(G.time + 45); { const xp = def.xp != null ? def.xp : Math.max(2, Math.round(def.hp / 2)); if (xp > 0) gainXp(xp, e.x, e.y); } } // v131 xp: 0 = 경험치 없음(파수 돌인형·거울 분신)
 // v130 어둠 번개: 맞은 적(또는 보스)에서 CHAIN_R칸 안의 가장 가까운 적에게 차례로 CHAIN_N마리까지, 그 피해의 CHAIN_MUL만큼 (번개는 다시 튀지 않아요)
 function chainFx(src, dmg) { const hit = new Set([src]), d = Math.max(1, Math.round(dmg * CHAIN_MUL)); let cur = src, from = { x: src.x, y: src.y - .3 };
   for (let n = 0; n < CHAIN_N; n++) { let best = null, bd = CHAIN_R; for (const e of G.enemies) if (!hit.has(e) && e.hp > 0) { const dd = Math.hypot(e.x - cur.x, e.y - cur.y); if (dd < bd) { bd = dd; best = e; } }
@@ -6108,9 +6110,11 @@ function mirrorFx(src, dmg) { let best = null, bd = MIRROR_R; for (const e of G.
   if (!best) return; for (let k = 1; k <= 4; k++) emit('puff', src.x + (best.x - src.x) * k / 4, src.y - .3 + (best.y - src.y) * k / 4, '#efe6ff', 1, 1.2, .15); hitEnemy(best, Math.max(1, Math.round(dmg * MIRROR_MUL)), false, 3); }
 // v131 얼음: 쓰러진 적 둘레 FROST_R칸의 적이 얼어붙어요
 function frostFx(src) { emit('puff', src.x, src.y - .3, '#d4f6ff', 14, 2.6, .4); for (const e of G.enemies) if (e !== src && e.hp > 0 && Math.hypot(e.x - src.x, e.y - src.y) < FROST_R) { e.slow = 3.5; e.chill = 1; emit('ftext', e.x, e.y - 1.2, '꽁꽁!', '#bfe6ff'); } }
+// v138 손맛: 맞힐 때 화면이 아주 잠깐 멈칫 (초, 혼자일 때만 — main.js). 수치·밸런스와는 상관없어요
+const HITSTOP = { hit: .035, crit: .06, kill: .07, boss: .045, bossDie: .14, wall: .03 };
 function hitEnemy(e, dmg, crit, kb = 8, fx) {
   const p = G.p, def = ENEMY[e.k]; p.fightAt = G.time; /* v77: 싸우는 중 → 머리 위 체력 막대 */ dmg = monDmg(e, dmg); /* v101 땅속·거북 등딱지 */ if (def.shadow && isLit(e.x, e.y)) dmg *= 2; /* v104 그림자는 빛 안에서 2배 */ if (e.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); /* v131 잉크 표식 */ if (dmg <= 0) { emit('ftext', e.x, e.y - 0.8, '막힘', '#bfe6ff'); return; } e.hp -= dmg; e.hurt = 0.14; e.alertAt = G.time; /* v85: 맞으면 4초 동안 더 멀리서도 쫓아요 */ if (e.hp > 0 && fx !== 'split' && fx !== 'chain' && fx !== 'mirror') applyFx(e, fx, dmg); if (def.calm) e.angry = 10; const dx = e.x - p.x, dy = e.y - p.y, l = Math.hypot(dx, dy) || 1;
-  e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12);
+  e.kx = dx / l * kb; e.ky = dy / l * kb; emit('ftext', e.x, e.y - 0.8, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', e.x, e.y, def.col, 4, 2); emit('sfx', 'hit'); emit('shake', 0.12); emit('hitstop', crit ? HITSTOP.crit : HITSTOP.hit); /* v138 맞힐 때 멈칫 */
   if (fx === 'split' || fx === 'chain' || fx === 'mirror') applyFx(e, fx, dmg); // 쓰러져도 파편·번개·거울은 튀어요
   if (e.hp <= 0 && fx === 'frost') frostFx(e); // v131 얼어붙은 기록관장의 무기: 쓰러뜨리면 둘레가 얼어요
   if (e.hp <= 0) enemyDie(e);
@@ -6249,10 +6253,10 @@ function hitBoss(b, dmg, crit, fx) {
   const def = BOSSES[b.k]; if (b.k === 'golem' && b.ph === 'stun') { dmg = Math.round(dmg * 1.5); crit = true; }
   if (b.k === 'turtle' && b.ph === 'shell' && dmg > 0) { dmg = Math.max(1, Math.round(dmg * .4)); crit = false; }
   if (b.ink > 0 && dmg > 0) dmg = Math.round(dmg * INK_MUL); // v131 잉크 불꽃의 무기: 받는 피해 +20%
-  if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); if (fx) applyFx(b, fx, dmg, true); }
+  if (dmg > 0) { b.hp -= dmg; b.hurt = 0.14; emit('ftext', b.x, b.y - 2.3, dmg + (crit ? '!' : ''), crit ? '#ffc861' : '#fff1d6'); emit('puff', b.x, b.y - .3, def.col, 6, 3); emit('sfx', 'hit'); emit('shake', 0.18); emit('hitstop', HITSTOP.boss); /* v138 */ if (fx) applyFx(b, fx, dmg, true); }
   if (b.hp <= 0) {
     const again0 = !!(G.stats.beaten && G.stats.beaten[b.k]); // v130: 큰 어둠은 다시 물리치면 경험치 1,000 (다른 보스는 예전처럼 같은 경험치)
-    G.bossDead[b.k] = true; bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */, ...ABOSS_XP /* v131 기록관 보스 */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
+    G.bossDead[b.k] = true; emit('hitstop', HITSTOP.bossDie); /* v138 */ bossCleanup(b); gainXp(b.k === 'dark' && again0 ? DARK_XP_AGAIN : { queen: 120, slime: 200, golem: 320, turtle: 450, spirit: 500, dark: 4000 /* v129 경험치 맞추기 (예전 100) */, ...ABOSS_XP /* v131 기록관 보스 */ }[b.k] || 100, b.x, b.y); G.hz = []; emit('bossbar', false); G.shots.length = 0; emit('puff', b.x, b.y, def.col, 40, 5, 0.6); emit('puff', b.x, b.y, '#ffc861', 16, 4, 1); emit('sfx', 'win'); emit('shake', 0.5, true);
     G.stats.beaten = G.stats.beaten || {}; const again = !!G.stats.beaten[b.k]; G.stats.beaten[b.k] = 1; for (const id of bossNoteIds(b.k)) if (!knows(id)) spawnDrop('rn_' + id, 1, b.x, b.y);
     if (ACC_OF[b.k] && (!again || rand() < .35)) { G.stats.accGot = G.stats.accGot || {}; G.stats.accGot[b.k] = 1; spawnDrop(ACC_OF[b.k], 1, b.x, b.y); } if (again) { rematchLoot(b); return; }
     if (UNIQ_OF[b.k] || BOSS_W[b.k]) { G.stats.uniq = G.stats.uniq || {}; if (!G.stats.uniq[b.k]) { /* v130 큰 어둠도 특별 무기 6종 (UNIQ_OF 없이) */ const sp = pickSp(b.k); G.stats.uniq[b.k] = 1; spawnDrop(sp, 1, b.x, b.y); } }
@@ -6847,8 +6851,9 @@ function dropStep(d, dt) {
     d.hold = Math.max(0, d.hold - dt);
     const dx = p.x - d.x, dy = p.y - .3 - d.y, l = Math.hypot(dx, dy);
     const mag = petIs('dog') ? 1.6 * (1 + skl('animalFriend') * .25) : 1; // v102 동물 친구 // v45: the dog pulls drops in from further away
-    if (d.t > 0.4 && l < 2.2 * mag && d.hold <= 0 && p.dead <= 0) { const s = 9 * Math.max(.15, 1 - l / (2.6 * mag)) + 2; d.x += dx / l * s * dt; d.y += dy / l * s * dt;
+    if (d.t > 0.4 && l < 2.2 * mag && d.hold <= 0 && p.dead <= 0) { d.pv = Math.min(22, (d.pv || 3) + 45 * dt); const st = Math.min(l, (d.pv + 4 * Math.max(0, 1 - l / (2.6 * mag))) * dt); d.x += dx / l * st; d.y += dy / l * st; /* v138 손맛: 끌려올수록 빨라져서 쏙 (예전: 거리에 따라 2~11칸/초) — 줍는 거리 2.2·기다림 0.4초는 그대로 */
       if (l < 0.45) { const left = d.dur != null || d.lv ? moveInto(G.inv, { id: d.id, c: d.c, dur: d.dur, lv: d.lv }) : addItem(d.id, d.c); if (ITEMS[d.id] && /^petal/.test(d.id)) { G.stats.petals = G.stats.petals || {}; G.stats.petals[d.id.slice(5)] = 1; } const got = d.c - left; if (got) { emit('sfx', 'pick'); emit('ftext', p.x, p.y - 1.4, `+${got} ${ITEMS[d.id].n}`, rarCol(d.id) || '#fff1d6'); if (rarOf(d.id) >= 3) emit('toast', `${RARITY[rarOf(d.id)][0]} 장비 ${josa(ITEMS[d.id].n, '을', '를')} 얻었어요!`, 'good'); } if (left) { d.c = left; d.hold = 1.5; emit('toast', '가방이 가득 찼어요', null, 'full-inv'); } else G.drops.splice(G.drops.indexOf(d), 1); } }
+    else d.pv = 0;
     if (d.t > 400) G.drops.splice(G.drops.indexOf(d), 1);
   }
 }
@@ -10012,7 +10017,7 @@ function renderWorld(cw, ch, glOn = false) {
         drawKind('itop', ia.ore); ctx.drawImage(AT, ia.u, ia.v, 16, 16, sx, sy - L, 16, 16); drawKind('shade'); ctx.drawImage(AT, ia.u, ia.v + 16, 16, 16, sx, sy - L, 16, 16); // v81: one shared atlas (fast)
         if (ia.front) { drawKind('front', ia.ore); ctx.drawImage(AT, ia.u, ia.v + 32, 16, 28, sx, sy - ia.frontUp, 16, 28); }
         if (ia.shadow) { drawKind('floor'); ctx.drawImage(AT, ia.u, ia.v + 60, 16, 31, sx, sy - ia.frontUp, 16, 31); } drawKind('up'); // v81: soft shadow on the floor under a rock wall
-        const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+        const dm = G.wdmg.get(i), ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); if (dm) ck(SPR.crack[Math.min(3, Math.floor(dm / WALLS[w].hp * 4))]); /* v138 금 4단계 */
         if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (ia.front) { const a = .35 + .35 * Math.sin(t * 2.2 + x), fy = sy + T - WALL_H; ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
         continue; }
       const wa = wallArt(x, y, w); // v73: new rock art, ore inside the rock around it (render/terrain.js)
@@ -10029,7 +10034,7 @@ function renderWorld(cw, ch, glOn = false) {
       if (x < W - 1 && !G.wall[i + 1]) ctx.fillRect(sx + T - 1, sy - L, 1, th);
       if (y > 0 && !G.wall[i - W]) { ctx.fillRect(sx, sy - L, T, 1); ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(sx, sy - L + 1, T, 1); }
       const ck = c => ctx.drawImage(c, 0, (16 - WALL_TOP) >> 1, 16, WALL_TOP, sx, sy - L, 16, WALL_TOP); // cracks: the middle rows on the 12px top
-      const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(2, Math.floor(dm / WALLS[w].hp * 3))]);
+      const dm = G.wdmg.get(i); if (dm) ck(SPR.crack[Math.min(3, Math.floor(dm / WALLS[w].hp * 4))]); /* v138 금 4단계 */
       if (DOORS.has(i)) { if (!dm) ck(SPR.crack[0]); if (!below) { const a = .35 + .35 * Math.sin(t * 2.2 + x); ctx.fillStyle = '#1b1426'; ctx.fillRect(sx + 7, fy, 1, 2); ctx.fillRect(sx + 8, fy + 2, 1, 2); ctx.fillStyle = `rgba(255,233,168,${a})`; ctx.fillRect(sx + 7, fy + 2, 1, 2); ctx.fillRect(sx + 6, fy + 1, 1, 1); } }
     }
     const list = rows[r]; if (!list.length) continue; list.sort((a, b) => a.s - b.s);
@@ -10053,6 +10058,7 @@ function renderWorld(cw, ch, glOn = false) {
     if (q.k === 'arrow') { ctx.save(); ctx.translate(X, Y); ctx.rotate(q.ang); ctx.fillStyle = '#7d4d2a'; ctx.fillRect(-5, 0, 8, 1); ctx.fillStyle = q.tip || '#eef2f7'; ctx.fillRect(3, -1, 2, 3); ctx.fillStyle = '#ff8fa3'; ctx.fillRect(-6, -1, 2, 3); ctx.restore(); }
     else if (q.look === 'fire' && fireFrame(t)) { const f = fireFrame(t); ctx.save(); ctx.translate(X, Y); ctx.rotate(Math.atan2(q.vy, q.vx)); ctx.drawImage(f, -f.width + 8, -f.height / 2); ctx.restore(); } // v136 불덩이 (머리가 앞)
     else { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(q.col), X - 7, Y - 7, 14, 14); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = q.col; ctx.fillRect(X - 2, Y - 2, 4, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(X - 1, Y - 1, 2, 2); } }
+  drawGhosts(); // v138
   drawFxAnims(camX, camY); // v136
   for (const q of G.parts) { ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life / q.max * 1.6); const s = q.sz; ctx.fillRect(Math.round(q.x * T - camX - s / 2), Math.round((q.y - q.z) * T - camY - s / 2), s, s); }
   ctx.globalAlpha = 1; drawTreeLeaves(T, camX, camY);
@@ -10348,6 +10354,12 @@ function dustFrames() { if (IDF) return IDF; const S = SPR.iceDust; if (!(S inst
 
 // ---- v136 스킬 효과 그림 (받은 마법 효과 묶음: 얼음 방패 → 빛 방패 · 번개 고리 → 번개 사슬·어둠 번개 · 불덩이 → 불꽃 구슬). 보이기만 ----
 const FXA = [], FXA_DEF = { shield: ['fxShield', 12, .9], ring: ['fxRing', 3, .3], ringDark: ['fxRing', 3, .3] };
+// v138 쓰러진 몬스터: 하얀 그림이 0.22초 동안 부풀며 사라져요 (보이기만)
+const GHOSTS = []; const GHOST_T = .22;
+function addGhost(k, x, y, flip, z) { if (GHOSTS.length < 24) GHOSTS.push({ k, x, y, flip, z: z || 0, t0: performance.now() / 1000 }); }
+function drawGhosts() { const now = performance.now() / 1000;
+  for (let i = GHOSTS.length - 1; i >= 0; i--) { const g = GHOSTS[i], a = (now - g.t0) / GHOST_T; if (a >= 1 || a < 0) { GHOSTS.splice(i, 1); continue; } const img = SPR[g.k + 'W'] || SPR[g.k]; if (!img) continue;
+    const s = 1 + a * .45; drawImg(img, g.x, g.y + .12, { sx: s, sy: s * (1 - a * .25), z: g.z, flip: g.flip, alpha: .9 * (1 - a) * (1 - a) }); } }
 function addFxAnim(k, x, y) { if (FXA_DEF[k] && FXA.length < 40) FXA.push({ k, x, y, t0: performance.now() / 1000 }); }
 const FXA_FR = {}; function fxFrames(key, n, dark) { const id = key + (dark ? 'D' : ''); if (FXA_FR[id]) return FXA_FR[id]; const S = SPR[key]; if (!S) return null; const w = S.width / n, out = [];
   for (let k = 0; k < n; k++) { const c = document.createElement('canvas'); c.width = w; c.height = S.height; const g = c.getContext('2d'); g.drawImage(S, k * w, 0, w, S.height, 0, 0, w, S.height);
@@ -10531,7 +10543,7 @@ function drawTreeGlow(t, T, camX, camY, cw, ch) {
 onFrame('fx', updateFx);
 onFrame('tree', updateTree);
 function updateFx(dt) {
-  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= 9 * dt; q.z = Math.max(0, q.z + q.vz * dt); if (!q.fly) { q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); } } // v113: fly = 상자로 날아가는 광석 조각 (느려지지 않음)
+  for (let i = G.parts.length - 1; i >= 0; i--) { const q = G.parts[i]; q.life -= dt; if (q.life <= 0) { G.parts.splice(i, 1); continue; } q.x += q.vx * dt; q.y += q.vy * dt; q.vz -= (q.bnc ? 14 : 9) * dt; q.z = Math.max(0, q.z + q.vz * dt); if (q.bnc && q.z === 0 && q.vz < -1.2) { q.vz *= -.36; q.vx *= .5; q.vy *= .5; } /* v138 조각이 통통 */ if (!q.fly) { q.vx *= Math.pow(.2, dt); q.vy *= Math.pow(.2, dt); } } // v113: fly = 상자로 날아가는 광석 조각 (느려지지 않음)
   for (let i = G.texts.length - 1; i >= 0; i--) { const t = G.texts[i]; t.life -= dt; t.y += t.vy * dt; t.vy *= Math.pow(.15, dt); if (t.life <= 0) G.texts.splice(i, 1); }
   for (const o of visibleShakers) { o.shake = Math.max(0, (o.shake || 0) - dt); }
 }
@@ -10572,6 +10584,19 @@ onEvent('slamRing', (x, y) => { for (let k = 0; k < 18; k++) { const a = k / 18 
 let shake = 0;
 onEvent('fxAnim', (k, x, y) => addFxAnim(k, x, y)); // v136 스킬 효과 그림 (render/world.js)
 onEvent('shake', onlyMe((v, set) => { shake = set ? v : Math.max(shake, v); }));
+// ---- v138 손맛 ----
+// 맞힐 때 멈칫: emit('hitstop', 초) — 지금보다 길면 그만큼. 혼자 할 때만 main.js가 그동안 세계를 멈춰요 (멀티에서는 멈추지 않아요)
+let hitstop = 0;
+onEvent('hitstop', onlyMe(v => { hitstop = Math.max(hitstop, Math.min(.2, v)); }));
+function hitstopTick(dt) { if (hitstop <= 0) return false; hitstop -= dt; return true; }
+// 몬스터 쓰러짐: 하얀 그림이 부풀며 사라지고, 두 가지 색 조각 + 둥근 고리
+onEvent('kill', (x, y, col, k, flip, z) => { addGhost(k, x, y, flip, z); puff(x, y, col, 10, 3.4, .4); puff(x, y, '#fff6e0', 5, 2.6, .5);
+  for (let n = 0; n < 12; n++) { const a = n / 12 * 6.283; G.parts.push({ x: x + Math.cos(a) * .25, y: y + Math.sin(a) * .18, z: .35, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 2.6, vz: .4, life: .28, max: .28, col: n % 2 ? col : '#fff1d6', sz: 1 }); }
+  onlyMe(() => SFX.kill())(); });
+// 캐기 조각: 칸에서 튀어 떨어져 통통 튐 (big = 부서질 때 굵은 덩어리)
+onEvent('chips', (x, y, c1, c2, n, big) => { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = (big ? 2.2 : 1.6) * (.4 + fxRand() * .9);
+  G.parts.push({ x: x + (fxRand() - .5) * (big ? .5 : .2), y, z: .35 + fxRand() * .3, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .5, vz: (big ? 3 : 2.2) + fxRand() * 2, life: (big ? .7 : .45) + fxRand() * .3, max: big ? 1 : .7, col: k % 3 ? c1 : c2, sz: big ? 2 + (fxRand() * 2 | 0) : 1 + (fxRand() * 2 | 0), bnc: 1 }); } });
+
 onFrame('shake', dt => { shake = Math.max(0, shake - dt); }); // 매 프레임 줄어요 (sim/systems.js)
 
 // ---- 지도·창 ----
@@ -11987,7 +12012,7 @@ onFrame('cloud', dt => {
 let lastT = 0;
 function loop(ts) {
   const dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
-  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) update(dt); else pausedTick(dt); }
+  if (G) { sendCtl(); jobPanelTick(dt); if (!paused) { if (!(hitstopTick(dt) && playerList().length <= 1)) update(dt); } else pausedTick(dt); /* v138 맞힐 때 멈칫 (혼자일 때만 세계를 잠깐 멈춤) */ }
   if (G && started && !document.hidden && ts - lastInputAt < IDLE_LIMIT * 1000) G.playT = (G.playT || 0) + dt;
   render(); if (G && started) updateHud();
   requestAnimationFrame(loop);
