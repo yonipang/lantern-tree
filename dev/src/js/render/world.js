@@ -419,6 +419,11 @@ export function drawEntity(it, t) {
     const sk = b.k === 'turtle' ? (b.ph === 'shell' ? 'turtleS' : 'turtle') + ((b.stage || 1) >= 2 ? 'C' : '') : def.spr, bz = b.k === 'spirit' ? .45 + Math.sin(t * 2) * .12 : (b.z || 0), ba = b.k === 'spirit' && b.ph === 'fade' ? Math.max(.1, b.t / .6) : null;
     if (b.k === 'spirit' && b.st === 'fight' && b.ph === 'ring') { const pr = 1 - Math.max(0, b.t) / .7; ctx.strokeStyle = `rgba(191,230,255,${.3 + pr * .5})`; ctx.lineWidth = Z; ctx.beginPath(); ctx.ellipse(b.x * T - camX, (b.y + .2) * T - camY, (.5 + pr * 1.5) * T, (.3 + pr * .8) * T, 0, 0, 6.283); ctx.stroke(); }
     drawImg(b.hurt > 0 ? SPR[sk + 'W'] : SPR[sk], b.x, b.y + .3, { sx: sx * def.scale, sy: sy * def.scale, z: bz, alpha: ba }); ctx.globalAlpha = 1;
+    if (b.k === 'spirit') { // v134: 서리 정령 둘레에 눈송이·반짝이가 천천히 돌며 떠올라요(보이기만)
+      const cy = b.y + .3 - bz - 1.3, fa = ba == null ? 1 : ba; for (let k = 0; k < 10; k++) { const a = k * .628 + t * (.45 + (k % 3) * .08), up = ((t * .3 + k * .37) % 1), rx = 1.55 + .25 * Math.sin(t * 1.1 + k), ry = 1 + .2 * Math.cos(t * .9 + k),
+        px = Math.round((b.x + Math.cos(a) * rx) * T - camX), py = Math.round((cy + Math.sin(a) * ry - up * .8) * T - camY), tw = Math.sin(t * 3.2 + k * 1.7); ctx.globalAlpha = fa * Math.min(1, 1.8 * (1 - up));
+        const L = tw > .6 ? 2 : 1; ctx.fillStyle = '#3d78c2'; ctx.fillRect(px - L * Z - Z, py - Z, (2 * L + 3) * Z, 3 * Z); ctx.fillRect(px - Z, py - L * Z - Z, 3 * Z, (2 * L + 3) * Z); // 진한 파랑 테두리(밝은 얼음 바닥에서도 보이게)
+        ctx.fillStyle = '#c8f4ff'; ctx.fillRect(px - L * Z, py, (2 * L + 1) * Z, Z); ctx.fillRect(px, py - L * Z, Z, (2 * L + 1) * Z); ctx.fillStyle = '#ffffff'; ctx.fillRect(px, py, Z, Z); } ctx.globalAlpha = 1; }
     if (b.st === 'sleep') { ctx.font = pxFont(7); ctx.fillStyle = '#d2f7b8'; ctx.textAlign = 'center'; const zz = (t * .6) % 1; ctx.globalAlpha = 1 - zz; ctx.fillText('z', (b.x + .9 + zz * .4) * T - camX, (b.y - 2 - zz * .6) * T - camY); ctx.globalAlpha = 1; }
     if ((b.k === 'golem' || b.k === 'bookGolem') && b.ph === 'stun') { ctx.fillStyle = '#ffe9a8'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.09; ctx.fillRect(Math.round((b.x + Math.cos(a) * .7) * T - camX), Math.round((b.y - 2.2 + Math.sin(a) * .2) * T - camY), 2 * Z, 2 * Z); } }
     return;
