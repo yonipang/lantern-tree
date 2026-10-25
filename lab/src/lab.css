@@ -1,0 +1,10 @@
+/* 실험판만의 모양 (본 게임 style.css 뒤에 와서 덮어써요) */
+body:not(.touch) #actBtn{display:none}
+#torchBtn{position:absolute;right:calc(env(safe-area-inset-right,0px) + 108px);bottom:calc(env(safe-area-inset-bottom,0px) + 40px);width:64px;height:64px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;touch-action:manipulation}
+#torchBtn b{font-weight:normal;color:var(--amber)}
+#torchBtn.dim{opacity:.5}
+body.touch #actBtn{bottom:calc(env(safe-area-inset-bottom,0px) + 32px);width:84px;height:84px}
+body:not(.touch) #torchBtn{right:16px;bottom:16px}
+body.intro #torchBtn,body.intro #pcHint{display:none}
+body.touch #pcHint{display:none}
+#pcHint{position:absolute;left:12px;bottom:10px;font-size:16px;color:var(--muted)}

@@ -1,0 +1,102 @@
+<title>등불나무 실험판</title>
+<style>
+/* @include font.css */
+/* @include style.css */
+/* @include lab.css */
+</style>
+
+<div id="game">
+  <canvas id="cv" aria-label="실험판 화면"></canvas>
+  <div id="toasts" aria-live="polite"></div>
+  <div class="joy" id="joy"><i id="joyKnob"></i></div>
+  <button id="actBtn" type="button" aria-label="캐기"><span id="actLbl">캐기</span></button>
+  <button id="torchBtn" type="button" aria-label="횃불 놓기"><span>횃불</span><b id="torchN">6</b></button>
+  <div id="pcHint">WASD 이동 · E(스페이스) 캐기 · T 횃불</div>
+  <div id="title">
+    <div class="sub">등불나무 실험판 <span id="labVer"></span></div>
+    <div class="logo">빈 이끼 동굴</div>
+    <div class="story">걷고, 벽을 캐고, 횃불로 밝혀 보는 바탕이에요. 본 게임과 따로라 세이브는 그대로예요.</div>
+    <div class="tb"><button class="btn" id="btnNew" type="button">시작</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(() => {
+// @include js/engine/util.js
+// @include js/engine/random.js
+// @include js/engine/canvas.js
+// @include js/engine/audio.js
+// @include js/engine/effects.js
+// @include js/save/state.js
+// @include js/sim/events.js
+// @include js/sim/commands.js
+// @include js/sim/systems.js
+// @include js/world/map.js
+// --- 실험판에 아직 없는 규칙 (공용 파일이 이름만 가져감) ---
+// @include js/sim/loop.js
+// @include js/sim/cooking.js
+// @include js/sim/crafting.js
+// @include js/sim/digging.js
+// @include js/sim/drops.js
+// @include js/sim/gathering.js
+// @include js/sim/gear.js
+// @include js/sim/inventory.js
+// @include js/sim/npc.js
+// @include js/sim/player.js
+// @include js/sim/quests.js
+// @include js/sim/survival.js
+// @include js/sim/tree.js
+// @include js/sim/warp.js
+// @include js/ui/panels.js
+// @include js/art/hand-art.js
+// @include js/art/characters.js
+// @include js/art/world.js
+// @include js/art/tilemap.js
+// @include js/data/items.js
+// @include js/data/rpg-nature.js
+// @include js/data/circuits-regions.js
+// @include js/data/quests.js
+// @include js/data/farming-cooking.js
+// @include js/data/gear-animals.js
+// @include js/data/deep-survival.js
+// @include js/data/automation-tiers.js
+// @include js/data/automation.js
+// @include js/data/controls.js
+// @include js/data/digging.js
+// @include js/data/warp.js
+// @include js/data/growth.js
+// @include js/data/story.js
+// @include js/data/npc.js
+// @include js/data/cutscene.js
+// @include js/data/beaver.js
+// @include js/data/sieve.js
+// @include js/data/decor122.js
+// @include js/data/nature123.js
+// @include js/data/winter132.js
+// @include js/data/shadow.js
+// @include js/data/tier78.js
+// @include js/data/archboss.js
+// @include js/data/decor136.js
+// @include js/sim/nature.js
+// @include js/world/tiles.js
+// @include js/sim/building.js
+// @include js/lab/world.js
+// @include js/lab/player.js
+// @include js/lab/dig.js
+// @include js/lab/fx.js
+// @include js/art/content.js
+// @include js/render/light.js
+// @include js/render/icecave.js
+// @include js/render/terrain.js
+// @include js/render/glight.js
+// @include js/render/view.js
+// @include js/render/chunks.js
+// @include js/render/parts.js
+// @include js/render/icons.js
+// @include js/lab/draw.js
+// @include js/lab/feedback.js
+// @include js/lab/input.js
+// @include js/lab/main.js
+})();
+</script>
