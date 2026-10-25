@@ -4347,7 +4347,7 @@ onFrame('act', dt => {
 // 횃불: 발밑 칸에 하나 놓아요 (L1은 6개 — 빛도 아껴 쓰는 자원)
 defineCmd('torch', () => { const p = G.p, x = Math.floor(p.x), y = Math.floor(p.y - .1), i = idx(x, y);
   if (G.torches <= 0) { emit('toast', '횃불이 없어요', '', 'notorch'); return; }
-  if (G.objs.has(i)) return; G.objs.set(i, { t: 'torch' }); G.torches--; emit('sfx', 'place'); emit('lit'); emit('torches', G.torches); });
+  if (G.objs.has(i)) { emit('toast', '여기엔 이미 놓았어요 — 한 칸 옮겨서 놓아요', '', 'torchhere'); return; } G.objs.set(i, { t: 'torch' }); G.torches--; emit('sfx', 'place'); emit('lit'); emit('torches', G.torches); });
 // ================= 실험판 보이기 효과: 조각·흔들림 (보이기만 — 게임 결과는 안 바꿔요) =================
 // 조각 움직이기는 본 게임 render/parts.js(updateFx, 매 프레임 'fx')가 해요 — 조각 모양도 본 게임 ui/feedback.js 'chips'와 같게.
 let shake = 0;
@@ -6212,7 +6212,8 @@ function setupInput() {
   const act = $('#actBtn');
   act.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); setAct(true); });
   for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) act.addEventListener(ev, () => setAct(false));
-  $('#torchBtn').addEventListener('click', () => { ensureAudio(); if (started) runCmd({ k: 'torch' }); });
+  // 손가락이 닿는 순간 놓아요 (캐기 버튼과 같게) — 「클릭」은 폰(특히 아이폰)에서 빠질 때가 있어서 안 써요 (L1.1)
+  $('#torchBtn').addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (started) runCmd({ k: 'torch' }); });
   window.addEventListener('keydown', e => { keys[e.code] = true; ensureAudio(); if (!started) return; if (e.code === 'KeyT' && !e.repeat) runCmd({ k: 'torch' }); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; setAct(false); });
@@ -6229,7 +6230,7 @@ function sendCtl() {
   runCmd({ k: 'ctl', mx, my, stick: stick ? { x: joy.vx, y: joy.vy } : null, act: actHeld || !!keys.KeyE || !!keys.Space });
 }
 // ================= 실험판 시작·매 프레임 =================
-const LAB_VER = 'L1';
+const LAB_VER = 'L1.1';
 let lastT = 0, testHold = false; // testHold: 테스트가 게임 시간을 직접 진행하는 동안 (아래 __lab.step)
 function loop(ts) {
   const dt = Math.min(.05, (ts - lastT) / 1000 || 0); lastT = ts;

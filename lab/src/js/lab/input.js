@@ -26,7 +26,8 @@ export function setupInput() {
   const act = $('#actBtn');
   act.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); setAct(true); });
   for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) act.addEventListener(ev, () => setAct(false));
-  $('#torchBtn').addEventListener('click', () => { ensureAudio(); if (started) runCmd({ k: 'torch' }); });
+  // 손가락이 닿는 순간 놓아요 (캐기 버튼과 같게) — 「클릭」은 폰(특히 아이폰)에서 빠질 때가 있어서 안 써요 (L1.1)
+  $('#torchBtn').addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (started) runCmd({ k: 'torch' }); });
   window.addEventListener('keydown', e => { keys[e.code] = true; ensureAudio(); if (!started) return; if (e.code === 'KeyT' && !e.repeat) runCmd({ k: 'torch' }); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; setAct(false); });
