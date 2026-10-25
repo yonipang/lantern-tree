@@ -32,4 +32,4 @@ onFrame('act', dt => {
 // 횃불: 발밑 칸에 하나 놓아요 (L1은 6개 — 빛도 아껴 쓰는 자원)
 defineCmd('torch', () => { const p = G.p, x = Math.floor(p.x), y = Math.floor(p.y - .1), i = idx(x, y);
   if (G.torches <= 0) { emit('toast', '횃불이 없어요', '', 'notorch'); return; }
-  if (G.objs.has(i)) return; G.objs.set(i, { t: 'torch' }); G.torches--; emit('sfx', 'place'); emit('lit'); emit('torches', G.torches); });
+  if (G.objs.has(i)) { emit('toast', '여기엔 이미 놓았어요 — 한 칸 옮겨서 놓아요', '', 'torchhere'); return; } G.objs.set(i, { t: 'torch' }); G.torches--; emit('sfx', 'place'); emit('lit'); emit('torches', G.torches); });

@@ -10,7 +10,7 @@ import { sendCtl, setupInput } from './input.js';
 import { showTorches } from './feedback.js';
 import { newLabWorld } from './world.js';
 import { runCmd } from '../sim/commands.js';
-export const LAB_VER = 'L1';
+export const LAB_VER = 'L1.1';
 let lastT = 0, testHold = false; // testHold: 테스트가 게임 시간을 직접 진행하는 동안 (아래 __lab.step)
 export function loop(ts) {
   const dt = Math.min(.05, (ts - lastT) / 1000 || 0); lastT = ts;

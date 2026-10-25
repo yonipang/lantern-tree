@@ -68,8 +68,12 @@ async def main():
                 tl = await ev("""()=>{const G=__lab.G;G.p.x=100.5;G.p.y=100.6;const before=G.torches;__lab.runCmd({k:'torch'});__lab.step(.2);
                   return {before,after:G.torches,obj:(G.objs.get(100*200+100)||{}).t}}""")
                 rec('torch_place', tl['before'] - tl['after'] == 1 and tl['obj'] == 'torch', str(tl))
-                st = await ev("()=>{const s=document.getElementById('torchN').textContent;return s}")
-                rec('torch_count_shown', st == str(tl['after']), f'버튼 숫자 {st}')
+                # 횃불 버튼: 손가락이 닿는 순간(pointerdown)만으로 놓여야 해요 — 폰에서 「클릭」이 안 올 때도 (L1.1 버그 수정)
+                pd = await ev("""()=>{const G=__lab.G;G.p.x=100.5;G.p.y=101.6;__lab.step(.1);const before=G.torches,b=document.getElementById('torchBtn');
+                  b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:5,pointerType:'touch',isPrimary:true,bubbles:true,cancelable:true}));return {before,after:G.torches}}""")
+                rec('torch_button_touch', pd['before'] - pd['after'] == 1, str(pd))
+                st = await ev("()=>document.getElementById('torchN').textContent")
+                rec('torch_count_shown', st == str(tl['after'] - 1), f'버튼 숫자 {st}')
             # 화면이 그려지는지 (검은 화면이 아닌지): 세계 캔버스 가운데 밝기
             await ev("()=>{const G=__lab.G;G.p.x=100.5;G.p.y=100.6;__lab.step(.5);__lab.release()}"); await pg.wait_for_timeout(700)
             lum = await ev("""()=>{const c=document.getElementById('wcv'),g=c.getContext('2d'),d=g.getImageData(c.width/2-20,c.height/2-20,40,40).data;let s=0;for(let i=0;i<d.length;i+=4)s+=d[i]+d[i+1]+d[i+2];return s/(d.length/4)/3}""")
