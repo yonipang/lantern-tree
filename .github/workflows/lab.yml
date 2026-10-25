@@ -1,0 +1,65 @@
+# 실험판(lab) 자동 배포: main에 실험판(lab/)이나 실험판이 같이 쓰는 본 게임 파일(dev/src·dev/art)이 바뀌어 올라오면
+# 실험판만 묶어서 실험판 테스트(lab/qa/run.py, 1~2분)를 돌리고, 통과하면 lab/index.html을 커밋해요 → https://yonipang.github.io/lantern-tree/lab/
+# - 실험판만 바뀌었을 때 본 게임 전체 테스트(deploy.yml)는 안 돌아요 (deploy.yml은 lab/을 보지 않아요)
+# - 본 게임 파일이 바뀌면 deploy.yml(본 게임)과 이것(실험판)이 둘 다 돌아요 — 실험판이 그 변경으로 깨지지 않았는지 확인
+# - 같은 concurrency 그룹(deploy)이라 본 게임 배포와 겹치지 않고 차례로 돌아요
+name: 실험판 배포
+on:
+  push:
+    branches: [main]
+    paths: ['lab/**', 'dev/src/**', 'dev/art/**', 'dev/build.py', 'dev/art_pack.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 테스트 도구 설치 (Playwright·Chromium)
+        run: |
+          pip install playwright==1.56.0 pillow
+          python -m playwright install --with-deps chromium
+      - name: 그림 넣기 (본 게임 배포가 커밋하기 전이라도 최신 그림으로 — hand-art.js는 커밋하지 않아요)
+        run: python3 dev/art_pack.py
+      - name: 실험판 묶기·테스트
+        run: python3 lab/qa/run.py
+      - name: 실패한 점검을 알림으로
+        if: failure()
+        run: |
+          if [ -f lab/qa/out/summary.txt ]; then grep -E '실험판 QA|FAIL' lab/qa/out/summary.txt | head -20 | cut -c1-400 | while IFS= read -r l; do echo "::error title=실험판 테스트::$l"; done; fi
+      - name: 테스트 결과 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-qa-결과
+          path: |
+            lab/qa/out/summary.txt
+            lab/qa/out/*.png
+          if-no-files-found: ignore
+      - name: 커밋·푸시 (lab/index.html만)
+        run: |
+          git config user.name "Juyeon"
+          git config user.email "yon2pang@gmail.com"
+          git checkout -- dev/src/js/art/hand-art.js 2>/dev/null || true
+          git add lab/index.html
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git commit -m "실험판 자동 배포: 테스트 통과 후 lab/index.html 갱신" -m "$(head -1 lab/qa/out/summary.txt)"
+          for n in 1 2 3; do
+            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            echo "올리기 실패 ($n번째) — 잠깐 뒤 다시"; sleep $((n * 15))
+          done
+          exit 1
+      - name: GitHub Pages 다시 빌드 요청
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || true

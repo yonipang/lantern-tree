@@ -2,3 +2,5 @@ dev/qa/out/
 __pycache__/
 # dev/build.py가 dev/src/에서 만드는 결과물 (원본은 dev/src/)
 dev/index.html
+# 실험판 테스트 결과 (lab/qa/run.py)
+lab/qa/out/
