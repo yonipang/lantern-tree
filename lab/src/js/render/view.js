@@ -8,7 +8,7 @@ import { beginGB, endGB, glActive, GLST, shadeGL } from './glight.js';
 import { cam, G } from '../save/state.js';
 import { onFrame } from '../sim/systems.js';
 import { WALL_LIFT } from '../art/tilemap.js';
-import { drawLab, drawLabPost } from '../lab/draw.js';
+import { drawLab, drawLabPost, drawLabTop } from '../lab/draw.js';
 import { shake } from '../lab/fx.js';
 import { markLight } from '../sim/loop.js';
 onFrame('camera', dt => { const p = G.p, k = 1 - Math.pow(0.0005, dt); cam.x += (p.x - cam.x) * k; cam.y += (p.y - .3 - cam.y) * k; });
@@ -63,4 +63,5 @@ export function render() {
   const ox = Math.round((ix - gx) * RZ), oy = Math.round((iy - gy) * RZ), css = `${bw * RZ / DPR}|${bh * RZ / DPR}|${ox / DPR}|${oy / DPR}`;
   if (css !== wcvCss) { wcvCss = css; const st = lowCv.style; st.width = bw * RZ / DPR + 'px'; st.height = bh * RZ / DPR + 'px'; st.transform = `translate(${ox / DPR}px,${oy / DPR}px)`; }
   VIEW = { camX: gx * RZ, camY: gy * RZ, baseX: bx0 * RZ, baseY: by0 * RZ };
+  drawLabTop(mainCtx, TP, VIEW.camX, VIEW.camY, DPR);
 }

@@ -3,7 +3,9 @@
 import { playerList, withPlayer } from '../save/state.js';
 export const FRAME_ORDER = [
   'player',   // 걷기·바라보기 (js/lab/player.js)
-  'act',      // 캐기 버튼: 바라보는 벽 캐기 (js/lab/dig.js)
+  'act',      // 캐기 버튼: 바라보는 벽 캐기·베기·만지기 (js/lab/dig.js)
+  'shop',     // 손님 오가기·사고팔기 (js/lab/shop.js)
+  'clues',    // 발견 공간 단서(포자·망치 소리)와 처음 들어감 (js/lab/shop.js)
   'fx',       // 조각 움직이기 (본 게임 render/parts.js updateFx)
   'tree',     // 본 게임 render/parts.js가 등록 (등불나무 잎 — 실험판엔 나무가 없어 하는 일 없음)
   'light',    // 빛 계산 (render/light.js)

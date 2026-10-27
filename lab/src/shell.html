@@ -11,11 +11,13 @@
   <div class="joy" id="joy"><i id="joyKnob"></i></div>
   <button id="actBtn" type="button" aria-label="캐기"><span id="actLbl">캐기</span></button>
   <button id="torchBtn" type="button" aria-label="횃불 놓기"><span>횃불</span><b id="torchN">6</b></button>
-  <div id="pcHint">WASD 이동 · E(스페이스) 캐기 · T 횃불</div>
+  <div id="labHud"><div id="gold"><span class="coin"></span><b id="goldN">0</b></div><button id="bagBtn" type="button" aria-label="가방">가방</button></div>
+  <div id="pcHint">WASD 이동 · E(스페이스) 캐기·만지기 · T 횃불 · B 가방</div>
+  <div id="sheetWrap" hidden><div class="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="title">
     <div class="sub">등불나무 실험판 <span id="labVer"></span></div>
-    <div class="logo">빈 이끼 동굴</div>
-    <div class="story">걷고, 벽을 캐고, 횃불로 밝혀 보는 바탕이에요. 본 게임과 따로라 세이브는 그대로예요.</div>
+    <div class="logo">이끼 동굴 가게</div>
+    <div class="story">캐고, 만들고, 내 가게에서 팔아 봐요. 동굴 어딘가에서 망치 소리가 들린대요. 본 게임과 따로라 세이브는 그대로예요 (실험판은 저장하지 않아요).</div>
     <div class="tb"><button class="btn" id="btnNew" type="button">시작</button></div>
   </div>
 </div>
@@ -83,6 +85,9 @@
 // @include js/sim/building.js
 // @include js/lab/world.js
 // @include js/lab/player.js
+// @include js/lab/bag.js
+// @include js/lab/shopdata.js
+// @include js/lab/shop.js
 // @include js/lab/dig.js
 // @include js/lab/fx.js
 // @include js/art/content.js
@@ -95,6 +100,7 @@
 // @include js/render/parts.js
 // @include js/render/icons.js
 // @include js/lab/draw.js
+// @include js/lab/ui.js
 // @include js/lab/feedback.js
 // @include js/lab/input.js
 // @include js/lab/main.js

@@ -8,3 +8,29 @@ body:not(.touch) #torchBtn{right:16px;bottom:16px}
 body.intro #torchBtn,body.intro #pcHint{display:none}
 body.touch #pcHint{display:none}
 #pcHint{position:absolute;left:12px;bottom:10px;font-size:16px;color:var(--muted)}
+/* L2: 돈·가방 버튼·창 */
+#labHud{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:4}
+#labHud>*{pointer-events:auto}
+#gold{display:flex;align-items:center;gap:6px;background:rgba(27,20,38,.82);border:2px solid var(--line);padding:4px 10px;font-size:16px;color:#ffe9a8;line-height:24px}
+.coin{display:inline-block;width:12px;height:12px;background:#ffd25c;box-shadow:inset -2px -2px 0 #d9902f,0 0 0 2px #7a4a12;border-radius:50%;margin:0 2px;vertical-align:-1px}
+#bagBtn{min-width:64px;height:44px;padding:0 12px;background:rgba(42,33,57,.92);border:2px solid var(--line);color:var(--text);font-size:16px;touch-action:manipulation}
+body.intro #labHud{display:none}
+#sheet .lab-body{overflow:auto;min-height:0}
+.lab-list{display:grid;gap:6px;margin:4px 0 8px}
+.lab-list .li{display:flex;align-items:center;gap:10px;padding:6px 8px;background:rgba(255,255,255,.04);border:2px solid var(--line)}
+.lab-list .li>div{flex:1;min-width:0}
+.li img{width:32px;height:32px;image-rendering:pixelated;flex:none}
+.li b{display:block;font-weight:400;font-size:16px}
+.li small{display:block;color:var(--muted);font-size:16px;line-height:22px}
+.li.big{border:2px solid var(--line);padding:8px;background:rgba(255,255,255,.04)}
+.req{display:flex!important;flex-wrap:wrap;gap:2px 10px}.req span{display:inline-flex;align-items:center;gap:2px}.req img{width:16px;height:16px}
+.lack{color:#ff8a96!important}
+.mut{color:var(--muted);font-size:16px;line-height:22px;margin:4px 0}
+.price{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px 0}
+.price b{font-weight:400;font-size:32px;min-width:72px;text-align:center;color:#ffe9a8}
+.price .btn{width:56px;min-height:48px;font-size:32px;padding:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row .btn{flex:1}.row.end{justify-content:flex-end}.row.end .btn{flex:none}
+.stat{display:flex;gap:14px;flex-wrap:wrap;margin:2px 0 6px;font-size:16px}.stat b{font-weight:400;color:#ffe9a8}
+.talk p{margin:0 0 8px;font-size:16px;line-height:24px}
+.btn:disabled{opacity:.45}
+.btn.sm{min-height:40px;padding:0 10px;flex:none}
