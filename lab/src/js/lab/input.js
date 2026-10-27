@@ -1,4 +1,4 @@
-// ================= 실험판 조작 (L1): 폰 조이스틱·캐기 버튼·횃불 버튼 / PC WASD·방향키·E(스페이스)·T =================
+// ================= 실험판 조작 (L2): 폰 조이스틱·캐기(만지기) 버튼·횃불 버튼·가방 버튼 / PC WASD·방향키·E(스페이스)·T·B =================
 // 본 게임처럼 규칙에 바로 손대지 않고 명령을 보내요: 매 프레임 runCmd({ k: 'ctl', … }), 횃불은 runCmd({ k: 'torch' }).
 // 조이스틱은 본 게임 v75처럼 화면 왼쪽 누른 곳에 생기고 끌어도 받침이 따라오지 않아요.
 import { $ } from '../engine/util.js';
@@ -6,6 +6,7 @@ import { ensureAudio } from '../engine/audio.js';
 import { runCmd } from '../sim/commands.js';
 import { G, started } from '../save/state.js';
 import { cv, resize } from '../render/view.js';
+import { sheetOpen } from './ui.js';
 export const keys = {};
 export const joy = { id: null, x: 0, y: 0, vx: 0, vy: 0 };
 let actHeld = false;
@@ -38,7 +39,8 @@ export function setupInput() {
 function setAct(v) { actHeld = v; $('#actBtn').classList.toggle('on', v); }
 // 매 프레임: 지금 조작 의도를 명령으로 보내요
 export function sendCtl() {
-  if (!G) return; const k = c => keys[c] ? 1 : 0;
+  if (!G) return; if (sheetOpen()) { runCmd({ k: 'ctl', mx: 0, my: 0, stick: null, act: false }); return; } // 창이 열린 동안 내 캐릭터는 제자리 (본 게임 v76)
+  const k = c => keys[c] ? 1 : 0;
   let mx = k('KeyD') + k('ArrowRight') - k('KeyA') - k('ArrowLeft'), my = k('KeyS') + k('ArrowDown') - k('KeyW') - k('ArrowUp'); const stick = joy.id != null && Math.hypot(joy.vx, joy.vy) > .15;
   if (stick) { mx += joy.vx; my += joy.vy; }
   runCmd({ k: 'ctl', mx, my, stick: stick ? { x: joy.vx, y: joy.vy } : null, act: actHeld || !!keys.KeyE || !!keys.Space });
