@@ -609,6 +609,32 @@ body:not(.touch) #torchBtn{right:16px;bottom:16px}
 body.intro #torchBtn,body.intro #pcHint{display:none}
 body.touch #pcHint{display:none}
 #pcHint{position:absolute;left:12px;bottom:10px;font-size:16px;color:var(--muted)}
+/* L2: 돈·가방 버튼·창 */
+#labHud{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:4}
+#labHud>*{pointer-events:auto}
+#gold{display:flex;align-items:center;gap:6px;background:rgba(27,20,38,.82);border:2px solid var(--line);padding:4px 10px;font-size:16px;color:#ffe9a8;line-height:24px}
+.coin{display:inline-block;width:12px;height:12px;background:#ffd25c;box-shadow:inset -2px -2px 0 #d9902f,0 0 0 2px #7a4a12;border-radius:50%;margin:0 2px;vertical-align:-1px}
+#bagBtn{min-width:64px;height:44px;padding:0 12px;background:rgba(42,33,57,.92);border:2px solid var(--line);color:var(--text);font-size:16px;touch-action:manipulation}
+body.intro #labHud{display:none}
+#sheet .lab-body{overflow:auto;min-height:0}
+.lab-list{display:grid;gap:6px;margin:4px 0 8px}
+.lab-list .li{display:flex;align-items:center;gap:10px;padding:6px 8px;background:rgba(255,255,255,.04);border:2px solid var(--line)}
+.lab-list .li>div{flex:1;min-width:0}
+.li img{width:32px;height:32px;image-rendering:pixelated;flex:none}
+.li b{display:block;font-weight:400;font-size:16px}
+.li small{display:block;color:var(--muted);font-size:16px;line-height:22px}
+.li.big{border:2px solid var(--line);padding:8px;background:rgba(255,255,255,.04)}
+.req{display:flex!important;flex-wrap:wrap;gap:2px 10px}.req span{display:inline-flex;align-items:center;gap:2px}.req img{width:16px;height:16px}
+.lack{color:#ff8a96!important}
+.mut{color:var(--muted);font-size:16px;line-height:22px;margin:4px 0}
+.price{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px 0}
+.price b{font-weight:400;font-size:32px;min-width:72px;text-align:center;color:#ffe9a8}
+.price .btn{width:56px;min-height:48px;font-size:32px;padding:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row .btn{flex:1}.row.end{justify-content:flex-end}.row.end .btn{flex:none}
+.stat{display:flex;gap:14px;flex-wrap:wrap;margin:2px 0 6px;font-size:16px}.stat b{font-weight:400;color:#ffe9a8}
+.talk p{margin:0 0 8px;font-size:16px;line-height:24px}
+.btn:disabled{opacity:.45}
+.btn.sm{min-height:40px;padding:0 10px;flex:none}
 </style>
 
 <div id="game">
@@ -617,11 +643,13 @@ body.touch #pcHint{display:none}
   <div class="joy" id="joy"><i id="joyKnob"></i></div>
   <button id="actBtn" type="button" aria-label="캐기"><span id="actLbl">캐기</span></button>
   <button id="torchBtn" type="button" aria-label="횃불 놓기"><span>횃불</span><b id="torchN">6</b></button>
-  <div id="pcHint">WASD 이동 · E(스페이스) 캐기 · T 횃불</div>
+  <div id="labHud"><div id="gold"><span class="coin"></span><b id="goldN">0</b></div><button id="bagBtn" type="button" aria-label="가방">가방</button></div>
+  <div id="pcHint">WASD 이동 · E(스페이스) 캐기·만지기 · T 횃불 · B 가방</div>
+  <div id="sheetWrap" hidden><div class="backdrop"></div><div class="sheet" id="sheet" role="dialog"></div></div>
   <div id="title">
     <div class="sub">등불나무 실험판 <span id="labVer"></span></div>
-    <div class="logo">빈 이끼 동굴</div>
-    <div class="story">걷고, 벽을 캐고, 횃불로 밝혀 보는 바탕이에요. 본 게임과 따로라 세이브는 그대로예요.</div>
+    <div class="logo">이끼 동굴 가게</div>
+    <div class="story">캐고, 만들고, 내 가게에서 팔아 봐요. 동굴 어딘가에서 망치 소리가 들린대요. 본 게임과 따로라 세이브는 그대로예요 (실험판은 저장하지 않아요).</div>
     <div class="tb"><button class="btn" id="btnNew" type="button">시작</button></div>
   </div>
 </div>
@@ -824,7 +852,9 @@ const ctlOf = p => (!p.cine && p.ctl) || IDLE; // v127: 연출 장면을 보는 
 // 기능 파일은 onFrame('이름', dt => …)으로 등록해요. 표에 없는 이름·표에 있는데 등록 없는 이름은 묶을 때 멈춰요 (lab/build.py → dev/build.py 확인).
 const FRAME_ORDER = [
   'player',   // 걷기·바라보기 (js/lab/player.js)
-  'act',      // 캐기 버튼: 바라보는 벽 캐기 (js/lab/dig.js)
+  'act',      // 캐기 버튼: 바라보는 벽 캐기·베기·만지기 (js/lab/dig.js)
+  'shop',     // 손님 오가기·사고팔기 (js/lab/shop.js)
+  'clues',    // 발견 공간 단서(포자·망치 소리)와 처음 들어감 (js/lab/shop.js)
   'fx',       // 조각 움직이기 (본 게임 render/parts.js updateFx)
   'tree',     // 본 게임 render/parts.js가 등록 (등불나무 잎 — 실험판엔 나무가 없어 하는 일 없음)
   'light',    // 빛 계산 (render/light.js)
@@ -4270,12 +4300,32 @@ function setFootprints(v) { FPV = v === 2 ? 2 : 1;
     if (FPV === 2) { d.sz = [w, h]; if (rv) d.rotV = 1; } else { delete d.sz; delete d.rotV; }
     const f = SPR.fp && SPR.fp[id]; if (f) { SPR.obj[id] = FPV === 2 ? f.big : f.small; if (FPV === 2 && f.bigV) SPR.obj[id + 'V'] = f.bigV; else delete SPR.obj[id + 'V']; delete ICONURL[id]; } } }
 setFootprints(2);
-// ================= 실험판 세계: 작은 이끼 동굴 하나 (L1) =================
+// ================= 실험판 세계: 작은 이끼 동굴 + 거점 가게 (L2) =================
 // 본 게임 지도 틀(world/map.js)의 200×200 크기를 쓰고, 가운데 약 90×90칸만 동굴로 만들어요. 그 밖은 단단한 암반(8).
 // 바닥·벽 번호는 본 게임과 같아요(그림을 같이 쓰려고): 바닥 1 이끼 잔디 · 2 흙길 · 10 물 / 벽 1 흙벽 · 2 돌벽 · 4 구리 광맥 · 8 단단한 암반, 지역 0 = 이끼 동굴.
-// 단서·둥지·작은 유적은 L2에서 (재미중심.md 이끼 동굴 실험).
+// L2 (재미중심.md 12·13장): 가운데 거점(작업대·계산대·진열대 2·손님 길 팻말) + 발견 공간 4곳(버섯 군락·묻힌 광맥·대장장이 쉼터·돌벽 보상 방)
+// 발견 공간은 손으로 정한 자리예요(고정 배치). 거점에서 그 앞까지는 늘 굴이 이어지고, 숨은 방은 두꺼운 벽(입구만 2칸) 뒤에 있어요.
 const CAVE_R = 44; // 동굴 반지름 (칸)
 const BEDROCK = 8, DIRT_W = 1, STONE_W = 2, COPPER_W = 4;
+// 거점 (가운데 네모, 늘 열려 있음)
+const BASE = { x0: 93, y0: 95, x1: 107, y1: 105 };
+const inBase = (x, y) => x >= BASE.x0 && x <= BASE.x1 && y >= BASE.y0 && y <= BASE.y1;
+const GATE = { x: 106.5, y: 103.6 }; // 손님이 오가는 길 (팻말 옆)
+const SMITH_HOME = { x: 96.5, y: 99.6 }; // 대장장이가 마을에 오면 서는 자리 (작업대 아래)
+// 발견 공간: 안쪽 네모 · 입구(plug: 막는 벽 2칸, 없으면 열린 입구) · 거점에서 오는 굴의 끝(end)과 굴 길(path)
+const ROOMS = {
+  grove: { n: '버섯 군락', x0: 83, y0: 85, x1: 87, y1: 89, ring: DIRT_W, plug: [[85, 90], [85, 91]], end: [85, 92], path: [[93, 97], [85, 97], [85, 92]], clue: 'spore' },
+  vein: { n: '묻힌 광맥', x0: 114, y0: 88, x1: 120, y1: 92, ring: DIRT_W, plug: null, end: [117, 93], path: [[107, 97], [117, 97], [117, 93]] },
+  shelter: { n: '버려진 채굴 쉼터', x0: 77, y0: 108, x1: 83, y1: 112, ring: DIRT_W, plug: [[85, 110], [84, 110]], end: [86, 110], path: [[93, 103], [86, 103], [86, 110]], clue: 'hammer' },
+  vault: { n: '돌벽 너머 작은 방', x0: 125, y0: 103, x1: 129, y1: 106, ring: STONE_W, plug: [[123, 105], [124, 105]], end: [122, 105], path: [[107, 103], [122, 103], [122, 105]] },
+};
+// 여러 칸 물체: 왼쪽 위 칸에 물체, 나머지 칸엔 '_part'(본 게임과 같은 방식 — world/tiles.js isSolid가 봐요)
+function placeObj(g, t, x, y, extra = {}) {
+  const o = { t, ...extra }, [w, h] = (OBJ[t] && OBJ[t].sz) || [1, 1], a = idx(x, y);
+  for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) { const i = idx(xx, yy); g.wall[i] = 0; if (g.floor[i] === WATER) g.floor[i] = 2; g.objs.set(i, i === a ? o : { t: '_part', a }); }
+  return o;
+}
+function removeObj(a) { const o = G.objs.get(a); if (!o) return; const [w, h] = fpOf(o), x = a % W, y = (a / W) | 0; for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) G.objs.delete(idx(xx, yy)); }
 function newLabWorld(seed) {
   setLayout(1); // 200×200
   const N = W * H, wall = new Uint8Array(N), floor = new Uint8Array(N), biome = new Uint8Array(N);
@@ -4296,18 +4346,50 @@ function newLabWorld(seed) {
   // 벽 종류: 대부분 흙벽, 군데군데 돌벽 덩어리, 흙벽 속 작은 구리 광맥 / 물웅덩이는 열린 곳에 드문드문
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = idx(x, y); if (wall[i] === 1) wall[i] = vn(x * .22, y * .22, seed + 21) > .8 ? COPPER_W : vn(x * .07, y * .07, seed + 33) > .66 ? STONE_W : DIRT_W;
     else if (!wall[i] && vn(x * .12, y * .12, seed + 41) > .8 && distOf(x, y) > 8) floor[i] = WATER; }
-  // 섬처럼 떨어진 굴은 그대로 둬요 — 캐서 찾아가는 맛 (L2에서 단서를 여기 둬요)
-  const p = { x: cx + .5, y: cy + .5, face: { x: 0, y: 1 }, dir: 'down', flip: false, anim: 0, moving: false, hurt: 0, inv: 0, dead: 0, kx: 0, ky: 0, hp: 100 };
-  const g = { seed, wall, floor, biome, objs: new Map(), wdmg: new Map(), drops: [], parts: [], texts: [], time: 0,
+  const g = { seed, wall, floor, biome, objs: new Map(), wdmg: new Map(), whit: new Map(), drops: [], parts: [], texts: [], time: 0,
     treeSeeds: AMB_SEEDS, // 새 빛 바탕 밝기 B (render/light.js) — 실험판엔 등불나무가 없어요
-    torches: 6 };
-  const pl = { id: ME, p, inv: [], char: 'sprout', look: null, equip: freshEquip(), act: null, swing: null, digCd: 0, explored: new Uint8Array(N) };
-  return setWorld(g, pl);
+    gold: 0, bag: { torch: 6 }, pick: 'pickWood', recipes: ['torch', 'stew', 'chair'], cats: ['raw', 'basic'],
+    shelves: [], customers: [], ledger: {}, smith: { at: 'shelter', x: 79.5, y: 110.6 }, opened: {}, custCd: 6, custN: 0, sold: 0, log: [] };
+  const open = (x, y) => { if (!inB(x, y) || wall[idx(x, y)] === BEDROCK) return; const i = idx(x, y); wall[i] = 0; if (floor[i] === WATER) floor[i] = 2; };
+  // 거점: 네모 전체를 열고 물은 흙길로
+  for (let y = BASE.y0; y <= BASE.y1; y++) for (let x = BASE.x0; x <= BASE.x1; x++) open(x, y);
+  // 거점에서 발견 공간 앞까지 2칸 너비 굴 (꺾인 선)
+  for (const R of Object.values(ROOMS)) for (let k = 0; k + 1 < R.path.length; k++) { const [ax, ay] = R.path[k], [bx, by] = R.path[k + 1];
+    for (let x = Math.min(ax, bx); x <= Math.max(ax, bx); x++) for (let y = Math.min(ay, by); y <= Math.max(ay, by); y++) { open(x, y); if (ay === by) open(x, y + 1); else open(x + 1, y); } }
+  // 발견 공간: 둘레 벽(숨은 방은 2칸 두께) → 안쪽 열기 → 입구 막는 벽
+  for (const [key, R] of Object.entries(ROOMS)) { const th = R.plug ? 2 : 1;
+    for (let y = R.y0 - th; y <= R.y1 + th; y++) for (let x = R.x0 - th; x <= R.x1 + th; x++) { const i = idx(x, y); wall[i] = R.ring; floor[i] = floor[i] === WATER ? 2 : floor[i]; }
+    for (let y = R.y0; y <= R.y1; y++) for (let x = R.x0; x <= R.x1; x++) open(x, y);
+    if (R.plug) for (const [x, y] of R.plug) { const i = idx(x, y); wall[i] = R.ring; } else { const [ex, ey] = R.end; open(ex, ey - 1); open(ex + 1, ey - 1); }
+    if (key === 'vein') for (const [x, y] of [[115, 89], [119, 89], [117, 90], [115, 91], [119, 91]]) wall[idx(x, y)] = COPPER_W; // 구리 노드 5개 (12장)
+    open(R.end[0], R.end[1]); }
+  setWorld(g, { id: ME, p: null, inv: [], char: 'sprout', look: null, equip: freshEquip(), act: null, swing: null, digCd: 0, explored: new Uint8Array(N) });
+  // 거점 물건 (작업대·계산대·진열대 2·손님 길 팻말)
+  placeObj(g, 'bench', 94, 97);
+  placeObj(g, 'desk', 102, 97, { counter: 1 });
+  for (const [x, y] of [[99, 100], [102, 100]]) { placeObj(g, 'crateF', x, y, { shelf: g.shelves.length }); g.shelves.push({ x, y, id: null, n: 0, price: 0 }); }
+  placeObj(g, 'cropSign', 107, 102, { gate: 1 });
+  for (const [x, y] of [[93, 100], [107, 99], [97, 105], [104, 105]]) placeObj(g, 'torch', x, y); // 거점을 밝히는 횃불 (가져갈 수 없음)
+  // 쉼터 안: 낡은 상자·통·횃불 (대장장이는 G.smith로 따로 그려요)
+  placeObj(g, 'crateS', 78, 109); placeObj(g, 'barrelS', 82, 109); placeObj(g, 'torch', 80, 112);
+  // 돌벽 너머 방: 보물상자 (횃불 4 · 버섯 3 · 버섯 램프 1 — 12장)
+  placeObj(g, 'chest', 127, 104, { loot: [['torch', 4], ['mushroom', 3], ['lampShroom', 1]] });
+  // 버섯 군락: 큰버섯 5 · 빛버섯 3 (12장: 버섯 6 + 나무 2 안팎)
+  for (const [x, y] of [[83, 85], [86, 86], [84, 88], [87, 89], [85, 87]]) placeObj(g, 'bigShroom', x, y, { hp: 3 });
+  for (const [x, y] of [[84, 86], [86, 88], [83, 89]]) placeObj(g, 'glow', x, y, { hp: 1 });
+  // 뿌리기둥(나무)·큰버섯: 거점 둘레 굴에 흩어 둠 + 거점 안 두 그루 (나무 2개 이상 보장 — 12장)
+  placeObj(g, 'root', 94, 104, { hp: 3 }); placeObj(g, 'root', 106, 96, { hp: 3 });
+  let nRoot = 0, nShroom = 0;
+  for (let r = 7; r < 34 && (nRoot < 12 || nShroom < 5); r += .5) for (let a = 0; a < 6.283; a += .35) { const x = Math.round(cx + Math.cos(a + r) * r), y = Math.round(cy + Math.sin(a + r) * r); if (!inB(x, y)) continue; const i = idx(x, y);
+    if (wall[i] || floor[i] === WATER || g.objs.has(i) || inBase(x, y) || inAnyRoom(x, y, 2) || hash2(x, y, seed + 51) > .05) continue;
+    if (wall[i - W] && wall[i + W] && wall[i - 1] && wall[i + 1]) continue;
+    if (nRoot < 12) { placeObj(g, 'root', x, y, { hp: 3 }); nRoot++; } else if (nShroom < 5) { placeObj(g, 'bigShroom', x, y, { hp: 3 }); nShroom++; } }
+  g.p = { x: 100.5, y: 103.6, face: { x: 0, y: -1 }, dir: 'up', flip: false, anim: 0, moving: false, hurt: 0, inv: 0, dead: 0, kx: 0, ky: 0, hp: 100 };
+  return g;
 }
+function inAnyRoom(x, y, pad = 0) { for (const R of Object.values(ROOMS)) if (x >= R.x0 - pad && x <= R.x1 + pad && y >= R.y0 - pad && y <= R.y1 + pad) return R; return null; }
 const tileAt = (x, y) => (inB(x, y) ? idx(x, y) : -1);
 const isOpen = (x, y) => inB(x, y) && !G.wall[idx(x, y)] && G.floor[idx(x, y)] !== WATER;
-// 바닥에 얹은 물건이 길을 막는지 (횃불은 안 막음)
-const solidAt = (x, y) => { if (!inB(x, y)) return true; const i = idx(x, y); if (G.wall[i] || G.floor[i] === WATER) return true; const o = G.objs.get(i); return !!(o && o.solid); };
 const rnd01 = (x, y, k) => hash2(x, y, k);
 // ================= 실험판 플레이어: 걷기·바라보기 (L1) =================
 // 조작은 본 게임처럼 명령으로 받아요: 화면 쪽이 매 프레임 runCmd({ k: 'ctl', … }) → 여기서 G.p.ctl에 담고 ctlOf(G.p)로 읽어요.
@@ -4321,41 +4403,227 @@ onFrame('player', dt => {
   const f = p.face; if (Math.abs(f.x) > Math.abs(f.y) * 1.05) { p.dir = 'side'; p.flip = f.x < 0; } else p.dir = f.y < 0 ? 'up' : 'down';
   p.hurt = Math.max(0, p.hurt - dt);
 });
-// ================= 실험판 캐기·횃불 (L1) =================
-// 캐기 버튼을 누르고 있으면 바라보는 벽을 0.28초마다 한 번씩 쳐요(본 게임 나무 곡괭이 빠르기). 벽 체력은 본 게임 표(WALLS) 그대로:
-// 흙벽 3번 · 구리 광맥 4번 · 돌벽 5번, 단단한 암반은 못 캐요. 금 4단계 그림은 본 게임 것(G.wdmg)을 그대로 씀.
-// 보이기·소리는 사건으로만 남겨요(emit) — 받는 곳은 js/lab/feedback.js (본 게임 규칙과 같게, 멀티를 다시 붙일 수 있게).
+// ================= 실험판 가방 (L2) — 물건 id → 개수. 칸 수 제한 없음 (실험판은 단순하게) =================
+// 바뀌면 emit('bag') — 화면(단축 표시·열린 창)이 다시 그려요.
+const countBag = id => (G && G.bag[id]) || 0;
+function addBag(id, n = 1) { if (n <= 0) return; G.bag[id] = countBag(id) + n; emit('bag'); }
+function takeBag(id, n = 1) { const c = countBag(id); if (c < n) return false; if (c === n) delete G.bag[id]; else G.bag[id] = c - n; emit('bag'); return true; }
+const hasAll = req => req.every(([id, n]) => countBag(id) >= n);
+const bagList = () => Object.keys(G.bag).filter(id => G.bag[id] > 0);
+// ================= 실험판 L2 상점 수치 (재미중심.md 13장 — Claude가 정한 첫 값, 플레이해 보고 고쳐요) =================
+// 이름·아이콘은 본 게임 ITEMS를 그대로 써요. 값(v)은 손님이 마음속으로 생각하는 「알맞은 값」 — 화면엔 안 보이고 손님 표정으로 알아내요.
+// 종류(cat): raw 원재료 · basic 기본 아이템 → 처음부터 팔림(마을 손님) / metal 금속 물건 → 대장장이가 마을에 와야 손님이 생김.
+const GOODS = {
+  dirt: { v: 2, cat: 'raw' }, stone: { v: 3, cat: 'raw' }, wood: { v: 4, cat: 'raw' }, fiber: { v: 2, cat: 'raw' }, mushroom: { v: 5, cat: 'raw' }, glowcap: { v: 6, cat: 'raw' }, spore: { v: 3, cat: 'raw' }, copperOre: { v: 8, cat: 'raw' },
+  torch: { v: 5, cat: 'basic' }, stew: { v: 24, cat: 'basic' }, chair: { v: 20, cat: 'basic' }, lampShroom: { v: 36, cat: 'basic' },
+  swordCopper: { v: 70, cat: 'metal' }, copperLamp: { v: 45, cat: 'metal' },
+};
+const CAT_NAME = { raw: '원재료', basic: '기본 아이템', metal: '금속 물건' };
+// 손님 종류: 바라는 물건 종류 · 생김새 (본 게임 캐릭터 조립 — art/characters.js lookDef)
+const CUSTOMERS = {
+  village: { n: '마을 손님', wants: ['raw', 'basic'], looks: [{ hair: 'short', hc: 2, eye: 1, outfit: 'apron', oc: 2, hat: 'none' }, { hair: 'buns', hc: 4, eye: 0, outfit: 'vest', oc: 6, hat: 'none' }, { hair: 'spiky', hc: 0, eye: 2, outfit: 'apron', oc: 3, hat: 'none' }] },
+  metal: { n: '연장 찾는 손님', wants: ['metal'], need: 'metal', looks: [{ hair: 'short', hc: 1, eye: 3, outfit: 'vest', oc: 5, hat: 'none' }, { hair: 'braid', hc: 3, eye: 2, outfit: 'vest', oc: 1, hat: 'none' }] },
+};
+// 작업대 레시피 (처음 3개는 처음부터 앎, 나머지는 대장장이에게 삼). out: [물건, 개수]
+const RECIPES_L = {
+  torch: { out: ['torch', 2], req: [['wood', 1]] },
+  stew: { out: ['stew', 1], req: [['mushroom', 3]] },
+  chair: { out: ['chair', 1], req: [['wood', 4]] },
+  pickCopper: { out: ['pickCopper', 1], req: [['copperOre', 6], ['wood', 2]], tool: 1 },
+  swordCopper: { out: ['swordCopper', 1], req: [['copperOre', 5], ['wood', 1]] },
+  copperLamp: { out: ['copperLamp', 1], req: [['copperOre', 3], ['wood', 1]] },
+};
+// 대장장이가 파는 레시피 (돈으로 삼 — 실험판은 살 때만 돈, 만들 때는 재료만: 13장)
+const SMITH_SHOP = [['pickCopper', 100, '돌벽을 캘 수 있는 곡괭이'], ['copperLamp', 50, '금속 손님이 좋아하는 조명 (놓으면 가게 꾸미기도 돼요)'], ['swordCopper', 80, '금속 손님에게 비싸게 팔리는 검']];
+// 손님 규칙
+const SHOP = {
+  gapHere: 12, gapAway: 36,   // 손님이 오는 간격(초): 내가 거점 안에 있을 때 · 비웠을 때 (4번 「비워도 천천히 팔림」)
+  maxCust: 2,                 // 한 번에 가게 안 손님 수
+  decorStep: .06, decorMax: .3, // 꾸미기 하나마다 손님 간격 6% 줄임, 최대 30% (5번 「꾸민 만큼 손님 조금」)
+  goodBase: .05, goodStep: .02, goodMax: .15, goodTol: 1.25, // 좋은 손님 확률·후하게 쳐 주는 정도
+  love: 1.0, ok: 1.3,         // 값 ÷ 알맞은 값: 이하면 좋아함 · 이하면 괜찮음(삼) · 넘으면 비싸다(안 삼)
+  shelfMax: 10,               // 진열대 한 칸에 올리는 개수
+  speed: 2.4,                 // 손님 걷는 빠르기(칸/초)
+  think: 1.4,                 // 진열대 앞에서 생각하는 시간(초)
+};
+// 꾸미기로 치는 물건 (거점 안에 놓인 것)
+const SHOP_DECOR = new Set(['chair', 'lampShroom', 'copperLamp']);
+// 값 올리고 내리는 한 번의 폭
+const priceStep = p => p < 20 ? 1 : p < 100 ? 5 : 10;
+// ================= 실험판 L2 가게·대장장이·발견 (재미중심.md 13장, 세계관-NPC.md 「플레이어 상점」) =================
+// 가게 주인은 플레이어: 진열대에 물건과 값을 올려 두면 손님이 길(팻말)로 들어와 → 진열대 앞에서 값을 보고 표정(좋아함·괜찮음·비싸다)
+// → 사면 물건을 들고 계산대에서 돈을 내고 나가요. 비싸다면 그냥 나가요. 결과는 장부(G.ledger)에 남아요.
+// 거점 안에 있으면 손님이 자주(12초), 비웠으면 드물게(36초) 와요. 거점에 꾸민 물건이 있으면 조금 더 자주 + 가끔 좋은 손님.
+// 판매 종류는 상인을 따라 늘어나요: 처음엔 원재료·기본 아이템(마을 손님), 대장장이가 오면 금속 물건(연장 찾는 손님).
+// 대장장이는 이끼 동굴 버려진 채굴 쉼터에서 만나면 마을로 와요. 마을에서 말을 걸면 돈으로 레시피를 사요(실험판은 살 때만 돈).
+// 규칙은 화면을 직접 건드리지 않고 사건만 남겨요: emit('open', 창 이름, …) → js/lab/ui.js가 창을 열어요.
+const shopNm = id => (ITEMS[id] && ITEMS[id].n) || id;
+// ---------- 만지기 ----------
+function smithNear(p) { const s = G.smith; if (!s) return false; const dx = s.x - p.x, dy = s.y - p.y, d = Math.hypot(dx, dy); return d < 1.6 && (dx * p.face.x + dy * p.face.y) > -.2; }
+function touchObj(t) {
+  const o = t.o;
+  if (o.shelf != null) return emit('open', 'shelf', o.shelf);
+  if (o.counter) return emit('open', 'ledger');
+  if (o.t === 'bench') return emit('open', 'craft');
+  if (o.loot) { for (const [id, n] of o.loot) { addBag(id, n); emit('got', id, n); } o.loot = null; o.t = 'chest'; o.opened = 1; emit('sfx', 'pick'); emit('toast', '상자 안에 쓸 만한 게 들어 있었어요', 'good', 'loot'); return; }
+  if (o.mine) { removeObj(t.a); addBag(o.t, 1); emit('sfx', 'pick'); emit('lit'); emit('got', o.t, 1); return; }
+  if (o.gate) return emit('toast', '마을로 이어지는 길이에요. 손님들이 여기로 와요', '', 'gate');
+  if (o.t === 'crateS' || o.t === 'barrelS') return emit('toast', G.smith.at === 'shelter' ? '오래 쓴 연장 자국이 남아 있어요' : '대장장이가 쓰던 낡은 상자예요', '', 'old');
+  if (o.opened) return emit('toast', '빈 상자예요', '', 'empty');
+}
+function touchSmith() {
+  const s = G.smith;
+  if (s.at === 'shelter') { s.at = 'village'; s.x = SMITH_HOME.x; s.y = SMITH_HOME.y; if (!G.cats.includes('metal')) G.cats.push('metal'); G.log.push(['smith', G.time]);
+    emit('open', 'talk', ['…! 사람이다. 망치 소리를 듣고 온 거야?', '길을 잃고 여기서 연장만 두드리고 있었어. 마을이 있다고? 같이 가자!', '마을에 가면 내가 레시피를 팔게. 구리 곡괭이가 있으면 돌벽도 뚫을 수 있지.']);
+    emit('toast', '대장장이 하람이 마을로 왔어요 — 이제 금속 물건을 찾는 손님도 와요', 'good', 'smith'); emit('sfx', 'win'); return; }
+  emit('open', 'smith');
+}
+// ---------- 만들기 (작업대) ----------
+defineCmd('craft', c => { const r = RECIPES_L[c.id]; if (!r || !G.recipes.includes(c.id)) return; if (!hasAll(r.req)) { emit('toast', '재료가 모자라요', '', 'noreq'); return; }
+  if (r.tool && G.pick === r.out[0]) { emit('toast', '이미 가지고 있어요', '', 'have'); return; }
+  for (const [id, n] of r.req) takeBag(id, n);
+  if (r.tool) { G.pick = r.out[0]; emit('toast', `${shopNm(r.out[0])}을 만들었어요 — 이제 돌벽도 캘 수 있어요`, 'good', 'tool'); emit('bag'); }
+  else { addBag(r.out[0], r.out[1]); emit('toast', `${shopNm(r.out[0])} ${r.out[1]}개를 만들었어요`, 'good', 'craft'); }
+  emit('sfx', 'craft'); G.log.push(['craft', c.id, G.time]); });
+// ---------- 대장장이 레시피 사기 ----------
+defineCmd('buyRecipe', c => { const row = SMITH_SHOP.find(r => r[0] === c.id); if (!row || G.smith.at !== 'village' || G.recipes.includes(c.id)) return;
+  if (G.gold < row[1]) { emit('toast', `돈이 ${row[1] - G.gold} 모자라요`, '', 'nogold'); return; }
+  G.gold -= row[1]; G.recipes.push(c.id); emit('gold', G.gold); emit('sfx', 'blip'); emit('toast', `${shopNm(c.id)} 레시피를 샀어요 — 작업대에서 만들어요`, 'good', 'recipe'); G.log.push(['recipe', c.id, G.time]); });
+// ---------- 진열대 ----------
+const wantedNow = cat => Object.values(CUSTOMERS).some(t => t.wants.includes(cat) && (!t.need || G.cats.includes(t.need)));
+const sellable = id => !!GOODS[id];
+const ledgerPrice = id => { const L = G.ledger[id]; return L && L.ok ? L.ok : 0; };
+defineCmd('shelfPut', c => { const s = G.shelves[c.s], id = c.id; if (!s || !sellable(id)) return; if (s.id && s.id !== id) { emit('toast', '먼저 올려 둔 물건을 내려요', '', 'shelfbusy'); return; }
+  const n = Math.min(c.n || 1, countBag(id), SHOP.shelfMax - s.n); if (n <= 0) return; takeBag(id, n);
+  if (!s.id) { s.id = id; s.price = ledgerPrice(id) || Math.max(1, Math.round(GOODS[id].v * 1.2)); }
+  s.n += n; emit('shelf', c.s); emit('sfx', 'place');
+  if (!wantedNow(GOODS[id].cat)) emit('toast', '사 갈 손님이 아직 없어요', '', 'nobuyer'); });
+defineCmd('shelfTake', c => { const s = G.shelves[c.s]; if (!s || !s.id) return; if (s.n) addBag(s.id, s.n); s.id = null; s.n = 0; emit('shelf', c.s); });
+defineCmd('shelfPrice', c => { const s = G.shelves[c.s]; if (!s || !s.id) return; const st = priceStep(s.price); s.price = Math.max(1, Math.min(9999, s.price + (c.d > 0 ? st : -priceStep(Math.max(1, s.price - 1))))); emit('shelf', c.s); });
+// ---------- 손님 ----------
+const decorCount = () => { let n = 0; for (const [i, o] of G.objs) if (o.t !== '_part' && SHOP_DECOR.has(o.t) && inBase(i % W, (i / W) | 0)) n++; return n; };
+const present = () => inBase(Math.floor(G.p.x), Math.floor(G.p.y));
+const custGap = () => (present() ? SHOP.gapHere : SHOP.gapAway) * (1 - Math.min(SHOP.decorMax, decorCount() * SHOP.decorStep));
+const shelfFront = s => ({ x: s.x + .5, y: s.y + 1.7 });
+const counterOf = () => { for (const [i, o] of G.objs) if (o.counter) return { x: (i % W) + 1, y: ((i / W) | 0) + 1.7 }; return { x: 103, y: 98.7 }; };
+function wantedShelves(type) { const T = CUSTOMERS[type]; return G.shelves.map((s, k) => k).filter(k => { const s = G.shelves[k]; return s.id && s.n > 0 && T.wants.includes(GOODS[s.id].cat) && !G.customers.some(c => c.s === k && c.st !== 'out'); }); }
+function spawnCustomer() {
+  const types = Object.keys(CUSTOMERS).filter(t => (!CUSTOMERS[t].need || G.cats.includes(CUSTOMERS[t].need)) && wantedShelves(t).length);
+  if (!types.length) return false;
+  const type = types[Math.floor(rand() * types.length)], ks = wantedShelves(type), k = ks[Math.floor(rand() * ks.length)];
+  const dec = decorCount(), good = rand() < Math.min(SHOP.goodMax, SHOP.goodBase + dec * SHOP.goodStep);
+  G.custN++; G.customers.push({ id: G.custN, type, look: Math.floor(rand() * CUSTOMERS[type].looks.length), good, s: k, st: 'in', x: GATE.x, y: GATE.y, tx: 0, ty: 0, t: 0, mood: null, moodT: 0, carry: null, pay: 0, face: 'side', flip: true, anim: 0 });
+  emit('sfx', 'click'); return true;
+}
+function walk(c, tx, ty, dt) { const dx = tx - c.x, dy = ty - c.y, d = Math.hypot(dx, dy), st = SHOP.speed * dt; c.anim += dt;
+  if (Math.abs(dx) > Math.abs(dy)) { c.face = 'side'; c.flip = dx < 0; } else c.face = dy < 0 ? 'up' : 'down';
+  if (d <= st) { c.x = tx; c.y = ty; return true; } c.x += dx / d * st; c.y += dy / d * st; return false; }
+function decide(c) { const s = G.shelves[c.s];
+  if (!s.id || s.n <= 0) { c.mood = 'huh'; c.moodT = 1.4; c.st = 'out'; return; }
+  const v = GOODS[s.id].v, tol = c.good ? SHOP.goodTol : 1, r = s.price / v, L = G.ledger[s.id] = G.ledger[s.id] || { ok: 0, no: 0 };
+  if (r <= SHOP.love * tol || r <= SHOP.ok * tol) { c.mood = r <= SHOP.love * tol ? 'love' : 'ok'; c.carry = s.id; c.pay = s.price; s.n--; if (!s.n) s.id = null;
+    L.ok = Math.max(L.ok, s.price);
+    c.st = 'pay'; emit('shelf', c.s); }
+  else { c.mood = 'no'; L.no = L.no ? Math.min(L.no, s.price) : s.price; c.st = 'out'; }
+  c.moodT = 1.8; emit('mood', c.mood, c.x, c.y); }
+onFrame('shop', dt => {
+  // 손님 오기
+  G.custCd -= dt;
+  if (G.custCd <= 0) { if (G.customers.length < SHOP.maxCust && spawnCustomer()) G.custCd = custGap() * (.8 + rand() * .4); else G.custCd = 2; }
+  for (const c of G.customers) { c.moodT = Math.max(0, c.moodT - dt);
+    if (c.st === 'in') { const f = shelfFront(G.shelves[c.s]); if (walk(c, f.x, f.y, dt)) { c.st = 'think'; c.t = SHOP.think; c.face = 'up'; } }
+    else if (c.st === 'think') { c.t -= dt; if (c.t <= 0) decide(c); }
+    else if (c.st === 'pay') { const k = counterOf(); if (walk(c, k.x, k.y, dt)) { G.gold += c.pay; G.sold++; emit('gold', G.gold); emit('coin', c.x, c.y - 1.2, c.pay); emit('sfx', 'blip'); G.log.push(['sale', c.carry, c.pay, c.good ? 1 : 0, present() ? 1 : 0, G.time]); c.carry = null; c.st = 'out'; } }
+    else if (c.st === 'out') { if (c.moodT > 1.2) continue; if (walk(c, GATE.x, GATE.y, dt)) c.st = 'gone'; } }
+  G.customers = G.customers.filter(c => c.st !== 'gone');
+});
+// ---------- 발견 공간: 단서와 처음 들어감 ----------
+let clueT = 0;
+onFrame('clues', dt => { clueT += dt; const p = G.p, px = Math.floor(p.x), py = Math.floor(p.y);
+  for (const [key, R] of Object.entries(ROOMS)) {
+    if (!G.opened[key] && px >= R.x0 && px <= R.x1 && py >= R.y0 && py <= R.y1) { G.opened[key] = G.time; G.log.push(['room', key, G.time]); emit('toast', `${R.n}을(를) 찾았어요!`, 'good', 'room' + key); emit('sfx', 'win'); }
+    if (!R.plug) continue; const shut = R.plug.some(([x, y]) => G.wall[idx(x, y)]); if (!shut) continue; const [ax, ay] = R.plug[0], d = Math.hypot(ax + .5 - p.x, ay + .5 - p.y);
+    if (R.clue === 'spore' && d < 14 && Math.floor(clueT / 1.5) !== Math.floor((clueT - dt) / 1.5)) for (const [x, y] of R.plug) if (G.wall[idx(x, y)]) emit('spore', x + .5, y + .9);
+    if (R.clue === 'hammer' && G.smith.at === 'shelter' && d < 11 && Math.floor(clueT / 2.4) !== Math.floor((clueT - dt) / 2.4)) { emit('sparks', ax + .5, ay + .7); emit('sfx', 'clink'); } }
+});
+const catName = id => CAT_NAME[GOODS[id] && GOODS[id].cat] || '';
+const isPlaceable = id => !!(OBJ[id] && !OBJ[id].sz && ITEMS[id] && ITEMS[id].kind === 'place');
+// ================= 실험판 캐기·베기·만지기 (L2) =================
+// 캐기 버튼(PC E·스페이스)을 누르고 있으면 바라보는 것을 0.28초마다 한 번씩 쳐요(본 게임 나무 곡괭이 빠르기):
+//  벽 → 캐기 (벽 체력·나오는 것은 본 게임 표 WALLS) · 뿌리기둥·큰버섯·빛버섯 → 베기 (본 게임 OBJ drops)
+//  작업대·진열대·계산대·상자·대장장이 → 누르는 순간 한 번 「만지기」(창 열기·말 걸기 — sim은 사건만 남기고 창은 js/lab/ui.js)
+// 곡괭이 (재미중심 12장): 기본 곡괭이 흙벽 3번 · 구리 광맥 4번 · 돌벽 못 캠 / 구리 곡괭이 흙벽 2번 · 구리 광맥 3번 · 돌벽 4번.
+// 보이기·소리는 사건으로만 남겨요(emit) — 받는 곳은 js/lab/feedback.js·ui.js.
 const DIG_GAP = .28;
-// 바라보는 칸: 발 칸에서 바라보는 쪽 한 칸. 대각선이면 그 칸이 벽이 아닐 때 가로·세로 칸을 봐요
-function frontTile(p = G.p) {
+const PICK_HITS = { pickWood: { [DIRT_W]: 3, [COPPER_W]: 4 }, pickCopper: { [DIRT_W]: 2, [COPPER_W]: 3, [STONE_W]: 4 } };
+const hitsFor = w => (PICK_HITS[G.pick] || PICK_HITS.pickWood)[w] || 0;
+// 바라보는 칸 후보: 발 칸에서 바라보는 쪽 한 칸. 대각선이면 그 칸이 비었을 때 가로·세로 칸도 봐요
+function frontCands(p) {
   const px = Math.floor(p.x), py = Math.floor(p.y - .1), f = p.face, fx = Math.abs(f.x) > .38 ? Math.sign(f.x) : 0, fy = Math.abs(f.y) > .38 ? Math.sign(f.y) : 0;
   const c = [[px + fx, py + fy]]; if (fx && fy) c.push(Math.abs(f.x) >= Math.abs(f.y) ? [px + fx, py] : [px, py + fy], Math.abs(f.x) >= Math.abs(f.y) ? [px, py + fy] : [px + fx, py]);
-  for (const [x, y] of c) if (inB(x, y) && G.wall[idx(x, y)]) return { x, y };
+  return c.filter(([x, y]) => inB(x, y));
+}
+// 바라보는 것: { k: 'npc' } · { k: 'obj', a, o, x, y } · { k: 'wall', x, y } · null
+function frontThing(p = G.p) {
+  if (smithNear(p)) return { k: 'npc' };
+  for (const [x, y] of frontCands(p)) { const i = idx(x, y), a = anchorAt(i); if (a >= 0) return { k: 'obj', a, o: G.objs.get(a), x: a % W, y: (a / W) | 0 }; if (G.wall[i]) return { k: 'wall', x, y }; }
   return null;
 }
+function frontTile(p = G.p) { const t = frontThing(p); return t && t.k !== 'npc' ? { x: t.x, y: t.y, a: t.a } : null; }
+// 버튼 이름 (화면 쪽이 매 순간 읽어요)
+function actLabel() {
+  const t = frontThing(); if (!t) return '캐기'; if (t.k === 'npc') return '말 걸기'; if (t.k === 'wall') return '캐기';
+  const d = OBJ[t.o.t] || {}; if (d.nat === 'chop') return '베기'; if (d.nat === 'pick') return '줍기';
+  if (t.o.shelf != null) return '진열'; if (t.o.counter) return '장부'; if (t.o.t === 'bench') return '만들기'; if (t.o.loot) return '열기'; if (t.o.mine) return '줍기'; return '보기';
+}
+function drop(id, n) { if (n > 0) { addBag(id, n); emit('got', id, n); } }
+const roll = tbl => { for (const [id, a, b, ch] of tbl || []) if (rand() < ch) drop(id, a + Math.floor(rand() * (b - a + 1))); };
 onFrame('act', dt => {
-  const p = G.p; G.digCd = Math.max(0, G.digCd - dt); if (!ctlOf(p).act) return;
-  const t = frontTile(p); G.act = t; if (!t || G.digCd > 0) return; G.digCd = DIG_GAP;
+  const p = G.p, act = ctlOf(p).act, edge = act && !p.actWas; p.actWas = act; G.digCd = Math.max(0, G.digCd - dt); if (!act) { G.act = null; return; }
+  const t = frontThing(p); G.act = t && t.k !== 'npc' ? { x: t.x, y: t.y, a: t.a } : null; if (!t) return;
+  if (t.k === 'npc') { if (edge) touchSmith(); return; }
+  if (t.k === 'obj') { const d = OBJ[t.o.t] || {};
+    if (d.nat === 'chop' || d.nat === 'pick') { if (G.digCd > 0) return; G.digCd = DIG_GAP; hitNature(t); return; }
+    if (edge) touchObj(t); return; }
+  if (G.digCd > 0) return; G.digCd = DIG_GAP;
   const i = idx(t.x, t.y), w = G.wall[i];
   if (w === BEDROCK) { emit('toast', '너무 단단해서 캘 수 없어요', '', 'bedrock'); emit('sfx', 'clink'); return; }
-  const hp = (WALLS[w] && WALLS[w].hp) || 3, dmg = (G.wdmg.get(i) || 0) + 1;
-  const pal = WPAL[w] || WPAL[1]; // 튀는 조각 색 = 본 게임 벽 색표
-  if (dmg < hp) { G.wdmg.set(i, dmg); emit('sfx', 'mine'); emit('chips', t.x + .5, t.y + .95, pal[1], pal[0], 5, 0); emit('shake', .06); return; }
-  G.wdmg.delete(i); G.wall[i] = 0; emit('sfx', 'brk'); emit('chips', t.x + .5, t.y + .6, pal[0], pal[1], 14, 1); emit('shake', .12); emit('lit');
-  if (w === COPPER_W) { G.found = (G.found || 0) + 1; emit('sfx', 'pick'); emit('toast', `구리광석 ${G.found}`, 'good', 'ore'); }
+  const hp = hitsFor(w);
+  if (!hp) { emit('toast', '돌벽은 구리 곡괭이가 있어야 캘 수 있어요', '', 'needpick'); emit('sfx', 'clink'); emit('chips', t.x + .5, t.y + .95, '#8d8a9c', '#5c5a6c', 3, 0); return; }
+  const dmg = (G.whit.get(i) || 0) + 1, pal = WPAL[w] || WPAL[1]; // 튀는 조각 색 = 본 게임 벽 색표
+  // 금 그림은 본 게임 WALLS 체력 기준이라, 곡괭이마다 다른 횟수를 그 칸 수에 맞춰 저장해요
+  const full = (WALLS[w] && WALLS[w].hp) || 3, shown = Math.min(full - 1, Math.ceil(dmg / hp * full));
+  if (dmg < hp) { G.wdmg.set(i, shown); G.whit.set(i, dmg); emit('sfx', 'mine'); emit('chips', t.x + .5, t.y + .95, pal[1], pal[0], 5, 0); emit('shake', .06); return; }
+  G.wdmg.delete(i); G.whit.delete(i); G.wall[i] = 0; emit('sfx', 'brk'); emit('chips', t.x + .5, t.y + .6, pal[0], pal[1], 14, 1); emit('shake', .12); emit('lit');
+  roll(WALLS[w] && WALLS[w].drop); emit('wallBroke', t.x, t.y);
 });
-// 횃불: 발밑 칸에 하나 놓아요 (L1은 6개 — 빛도 아껴 쓰는 자원)
+function hitNature(t) { const d = OBJ[t.o.t], left = (t.o.hp || d.hp || 1) - 1; emit('sfx', 'mine'); emit('chips', t.x + .5, t.y + .8, '#6f9b4a', '#4a3524', 4, 0);
+  if (left > 0) { t.o.hp = left; t.o.shk = .2; return; }
+  removeObj(t.a); emit('chips', t.x + .5, t.y + .6, '#7ab35a', '#5e391f', 10, 1); emit('lit'); roll(d.drops); }
+// 횃불: 발밑 칸에 하나 놓아요 (가방의 횃불을 씀)
 defineCmd('torch', () => { const p = G.p, x = Math.floor(p.x), y = Math.floor(p.y - .1), i = idx(x, y);
-  if (G.torches <= 0) { emit('toast', '횃불이 없어요', '', 'notorch'); return; }
-  if (G.objs.has(i)) { emit('toast', '여기엔 이미 놓았어요 — 한 칸 옮겨서 놓아요', '', 'torchhere'); return; } G.objs.set(i, { t: 'torch' }); G.torches--; emit('sfx', 'place'); emit('lit'); emit('torches', G.torches); });
-// ================= 실험판 보이기 효과: 조각·흔들림 (보이기만 — 게임 결과는 안 바꿔요) =================
+  if (countBag('torch') <= 0) { emit('toast', '횃불이 없어요 — 작업대에서 나무 1개로 2개 만들어요', '', 'notorch'); return; }
+  if (G.objs.has(i)) { emit('toast', '여기엔 이미 놓았어요 — 한 칸 옮겨서 놓아요', '', 'torchhere'); return; }
+  takeBag('torch', 1); G.objs.set(i, { t: 'torch', mine: 1 }); emit('sfx', 'place'); emit('lit'); });
+// 가방의 가구·조명을 바라보는 칸에 놓기 (1칸짜리만)
+defineCmd('place', c => { const id = c.id, d = OBJ[id]; if (!d || countBag(id) <= 0 || fpOf({ t: id })[0] * fpOf({ t: id })[1] !== 1) return;
+  const p = G.p, cand = frontCands(p).find(([x, y]) => { const i = idx(x, y); return !G.wall[i] && G.floor[i] !== WATER && !G.objs.has(i); });
+  if (!cand) { emit('toast', '바라보는 곳이 비어 있어야 놓을 수 있어요', '', 'noplace'); return; }
+  takeBag(id, 1); placeObj(G, id, cand[0], cand[1], { mine: 1 }); emit('sfx', 'place'); emit('lit'); emit('placed', id); });
+// ================= 실험판 보이기 효과: 조각·흔들림·떠오르는 글자·포자·불티 (보이기만 — 게임 결과는 안 바꿔요) =================
 // 조각 움직이기는 본 게임 render/parts.js(updateFx, 매 프레임 'fx')가 해요 — 조각 모양도 본 게임 ui/feedback.js 'chips'와 같게.
 let shake = 0;
 const addShake = v => { shake = Math.max(shake, v); };
 // 캐기 조각: 칸에서 튀어 떨어져 통통 튐 (big = 부서질 때 굵은 덩어리) — 본 게임 ui/feedback.js 'chips'와 같은 값
 function chips(x, y, c1, c2, n, big) { for (let k = 0; k < n; k++) { const a = fxRand() * 6.283, s = (big ? 2.2 : 1.6) * (.4 + fxRand() * .9);
   G.parts.push({ x: x + (fxRand() - .5) * (big ? .5 : .2), y, z: .35 + fxRand() * .3, vx: Math.cos(a) * s, vy: Math.sin(a) * s * .5, vz: (big ? 3 : 2.2) + fxRand() * 2, life: (big ? .7 : .45) + fxRand() * .3, max: big ? 1 : .7, col: k % 3 ? c1 : c2, sz: big ? 2 + (fxRand() * 2 | 0) : 1 + (fxRand() * 2 | 0), bnc: 1 }); } }
-onFrame('shake', dt => { shake = Math.max(0, shake - dt); });
+// L2 단서: 벽 틈에서 피어오르는 초록 포자 · 망치 소리와 함께 튀는 불티
+function spores(x, y) { for (let k = 0; k < 5; k++) G.parts.push({ x: x + (fxRand() - .5) * .8, y: y - fxRand() * .3, z: .2 + fxRand() * .5, vx: (fxRand() - .5) * .4, vy: -.2 - fxRand() * .3, vz: 1.4 + fxRand(), life: 1 + fxRand() * .6, max: 1.6, col: k % 2 ? '#9ff07a' : '#d9ffb8', sz: 1, bnc: 0 }); }
+function sparks(x, y) { for (let k = 0; k < 6; k++) { const a = fxRand() * 6.283; G.parts.push({ x, y, z: .5, vx: Math.cos(a) * 2, vy: Math.sin(a), vz: 2 + fxRand() * 2, life: .35 + fxRand() * .25, max: .6, col: k % 2 ? '#ffd27a' : '#ff9a4d', sz: 1, bnc: 0 }); } }
+// 떠오르는 글자 (+12 · +흙 1 …)
+const floats = [];
+const addFloat = (x, y, txt, col) => { floats.push({ x, y, txt, col, t: 0 }); if (floats.length > 12) floats.shift(); };
+onFrame('shake', dt => { shake = Math.max(0, shake - dt); for (const f of floats) f.t += dt; while (floats.length && floats[0].t > 1.3) floats.shift(); });
 // ================= 기능별 아이콘(ICON)·물체 그림(OSPR)·몬스터 그림 (구조 변경 3단계: 규칙 파일들에서 그림만 모음) =================
 // 위에서부터 예전 파일 순서대로예요. 그림은 게임을 시작할 때(buildSprites) 한꺼번에 만들어져서, 이 파일이 규칙 파일들 뒤에 와도 괜찮아요.
 // 새 아이템의 아이콘·새 물체의 그림은 여기에 (밸런스 데이터는 js/data/, 동작은 규칙 파일).
@@ -5743,6 +6011,7 @@ function render() {
   const ox = Math.round((ix - gx) * RZ), oy = Math.round((iy - gy) * RZ), css = `${bw * RZ / DPR}|${bh * RZ / DPR}|${ox / DPR}|${oy / DPR}`;
   if (css !== wcvCss) { wcvCss = css; const st = lowCv.style; st.width = bw * RZ / DPR + 'px'; st.height = bh * RZ / DPR + 'px'; st.transform = `translate(${ox / DPR}px,${oy / DPR}px)`; }
   VIEW = { camX: gx * RZ, camY: gy * RZ, baseX: bx0 * RZ, baseY: by0 * RZ };
+  drawLabTop(mainCtx, TP, VIEW.camX, VIEW.camY, DPR);
 }
 // ================= 바닥 조각: 바닥·벽 타일을 큰 조각으로 미리 그려 두기(drawChunk·getChunk) =================
 // (구조 변경 10단계: render.js·ui/panels.js·ui/input.js에서 나눔 — 덩어리 순서는 예전 그대로)
@@ -6144,8 +6413,10 @@ function drawLab(cw, ch, glOn) {
   drawKind('up');
   const rows = []; for (let y = y0; y <= y1; y++) rows.push([]);
   const push = (y, it) => { const r = Math.floor(y) - y0; if (r >= 0 && r < rows.length) rows[r].push(it); };
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const o = G.objs.get(idx(x, y)); if (o) push(y, { k: 'o', x, y, o, s: y + .01 }); }
+  for (let y = y0 - 3; y <= y1; y++) for (let x = x0 - 2; x <= x1; x++) { if (!inB(x, y)) continue; const o = G.objs.get(idx(x, y)); if (!o || o.t === '_part') continue; const [, h] = fpOf(o), by = y + h - 1; push(Math.min(by, y1), { k: 'o', x, y, o, s: by + (OBJ[o.t] && OBJ[o.t].solid ? .9 : .01) }); }
   push(G.p.y, { k: 'p', s: G.p.y });
+  if (G.smith) push(G.smith.y, { k: 'smith', s: G.smith.y });
+  for (const c of G.customers) push(c.y, { k: 'c', c, s: c.y });
   wallBudget(28); const SW = new Map();
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = idx(x, y), w = G.wall[i]; if (w && SLANT.has(w)) { const wa = wallArt(x, y, w); if (w === ICE_W || wa) { const a = slantWallArt(x, y, w, w === ICE_W ? null : wa, wa ? GLOW_RULE[wa.ore] : null); if (a) SW.set(i, a); } } }
   flushWallAtlas();
@@ -6163,7 +6434,13 @@ function drawLab(cw, ch, glOn) {
       drawKind('up'); if (dm) ck(crackOf(dm, w), sx, sy); }
     const list = rows[r]; list.sort((a, b) => a.s - b.s);
     for (const it of list) {
-      if (it.k === 'o') { const img = SPR.obj[it.o.t]; if (img) drawImg(img, it.x + .5, it.y + 1 - 1 / 16); }
+      if (it.k === 'o') { const o = it.o, [w, h] = fpOf(o), img = SPR.obj[o.t] || SPR.obj.chest, wob = o.shk > 0 ? Math.sin(t * 60) * o.shk * .6 : 0; if (o.shk > 0) o.shk = Math.max(0, o.shk - 1 / 60);
+        if (OBJ[o.t] && OBJ[o.t].solid) shadow(it.x + w / 2, it.y + h - .1, .32 * w, .22);
+        if (img) drawImg(img, it.x + w / 2 + wob / 16, it.y + h - 1 / 16);
+        if (o.shelf != null) { const s = G.shelves[o.shelf]; if (s && s.id) { const ic = iconCanvas(s.id); if (ic) drawImg(ic, it.x + .5, it.y + .45, { sx: .75, sy: .75 }); } } }
+      else if (it.k === 'smith') { const s = G.smith, im = SPR.npc_smith; shadow(s.x, s.y + .1, .3); if (im) drawImg(im, s.x, s.y + .15); }
+      else if (it.k === 'c') { const c = it.c, im = custFrame(c); shadow(c.x, c.y + .1, .3); if (im) drawImg(im, c.x, c.y + .15 - ((Math.floor(c.anim * 7) % 2) && c.st !== 'think' ? 1 / 16 : 0), { flip: c.face === 'side' && c.flip });
+        if (c.carry) { const ic = iconCanvas(c.carry); if (ic) drawImg(ic, c.x, c.y - .55, { sx: .6, sy: .6 }); } }
       else { const p = G.p; shadow(p.x, p.y + .1, .3); const fr = p.moving ? Math.floor(p.anim * 7) % 2 : 0, bob = p.moving ? (fr ? 1 / 16 : 0) : Math.sin(t * 2) > .7 ? 1 / 16 : 0;
         drawImg(SPR.player[p.dir][fr], p.x, p.y + .15 - bob, { flip: p.flip }); } } }
   for (const q of G.parts) { ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life / q.max * 1.6); ctx.fillRect(Math.round(q.x * T - camX - q.sz / 2), Math.round((q.y - q.z) * T - camY - q.sz / 2), q.sz, q.sz); }
@@ -6173,23 +6450,107 @@ function drawLab(cw, ch, glOn) {
 }
 // 빛 뒤에 그려서 어두운 곳에서도 보이는 것: 캘 칸 표시
 function drawLabPost() {
-  const t = G.act || frontTile(); if (!t) return; const T = TP, hx = t.x * T - VIEW.camX, hy = t.y * T - VIEW.camY - LIFT, pulse = .6 + Math.sin(performance.now() / 160) * .25;
-  ctx.fillStyle = `rgba(255,241,214,${pulse * .16})`; ctx.fillRect(hx, hy, T, T); ctx.fillStyle = `rgba(255,241,214,${pulse})`;
-  for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + T, hy, -1, 1], [hx, hy + T, 1, -1], [hx + T, hy + T, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
+  for (const c of G.customers) if (c.mood && c.moodT > 0) mood(c.mood, c.x * TP - VIEW.camX, (c.y - 1.55) * TP - VIEW.camY);
+  const t = G.act || frontTile(); if (!t) return; const T = TP, o = t.a != null && t.a >= 0 ? G.objs.get(t.a) : null, [fw, fh] = o ? fpOf(o) : [1, 1], lift = o ? 0 : LIFT;
+  const hx = t.x * T - VIEW.camX, hy = t.y * T - VIEW.camY - lift, bw = fw * T, bh = fh * T, pulse = .6 + Math.sin(performance.now() / 160) * .25;
+  ctx.fillStyle = `rgba(255,241,214,${pulse * .16})`; ctx.fillRect(hx, hy, bw, bh); ctx.fillStyle = `rgba(255,241,214,${pulse})`;
+  for (const [ax, ay, sx, sy] of [[hx, hy, 1, 1], [hx + bw, hy, -1, 1], [hx, hy + bh, 1, -1], [hx + bw, hy + bh, -1, -1]]) { ctx.fillRect(sx > 0 ? ax : ax - 4, sy > 0 ? ay : ay - 1, 4, 1); ctx.fillRect(sx > 0 ? ax : ax - 1, sy > 0 ? ay : ay - 4, 1, 4); }
 }
-// ================= 실험판 사건 받기: 소리·알림·흔들림·조각 (본 게임 ui/feedback.js처럼) =================
+// 손님 표정 말풍선 (도트로 직접): love 하트 · ok 웃음 · no 찡그림 · huh 물음표
+const MOOD = { love: ['#ff7aa8', ['.x.x.', 'xxxxx', 'xxxxx', '.xxx.', '..x..']], ok: ['#7fe0b5', ['.....', 'x...x', '.....', 'x...x', '.xxx.']], no: ['#ff6b5e', ['x...x', '.x.x.', '.....', '.xxx.', 'x...x']], huh: ['#bfaed3', ['.xxx.', '...x.', '..x..', '.....', '..x..']] };
+function mood(k, sx, sy) { const [col, rows] = MOOD[k] || MOOD.huh, x = Math.round(sx - 5), y = Math.round(sy - 9);
+  ctx.fillStyle = '#fbefd9'; ctx.fillRect(x, y + 1, 11, 7); ctx.fillRect(x + 1, y, 9, 9); ctx.fillRect(x + 4, y + 9, 2, 1); ctx.fillStyle = col;
+  rows.forEach((r, j) => { for (let i = 0; i < 5; i++) if (r[i] === 'x') ctx.fillRect(x + 3 + i, y + 2 + j, 1, 1); }); }
+// 손님 그림 (본 게임 캐릭터 조립을 그대로 — 생김새만 다르게)
+const CUST = {};
+function custFrame(c) { const L = CUSTOMERS[c.type].looks[c.look], st = c.st === 'think' ? 0 : Math.floor(c.anim * 7) % 2, key = 'cust_' + c.type + c.look + c.face + st;
+  if (!CUST[key]) { CHARS[key] = lookDef(L); CUST[key] = charFrame(key, c.face, st, CHARS[key].pal); delete CHARS[key]; } return CUST[key]; }
+// 떠오르는 글자 (+12 · +흙 1) — 화면 크기 캔버스에 도트 글꼴로 (render/view.js가 그 위에 불러요)
+function drawLabTop(g, TPx, camX, camY, dpr) { if (!floats.length) return; g.font = `${16 * dpr}px "NeoDunggeunmo Pro", sans-serif`; g.textAlign = 'center';
+  for (const f of floats) { const a = Math.max(0, 1 - f.t / 1.3), x = Math.round(f.x * TPx - camX), y = Math.round((f.y - f.t * .6) * TPx - camY); g.globalAlpha = a; g.fillStyle = '#120f1c';
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) g.fillText(f.txt, x + dx * dpr, y + dy * dpr); g.fillStyle = f.col; g.fillText(f.txt, x, y); }
+  g.globalAlpha = 1; }
+// ================= 실험판 L2 화면: 돈·가방 버튼·창(가방·만들기·진열대·장부·대장장이·대화) =================
+// 규칙에 바로 손대지 않고 명령을 보내요(runCmd). 규칙이 남긴 사건(open·bag·gold·shelf)을 받아 창을 그려요.
+// 창이 열린 동안에도 세계는 계속 움직여요(손님이 오가요) — 내 캐릭터만 제자리(본 게임 v76과 같음).
+const uiNm = id => (ITEMS[id] && ITEMS[id].n) || id;
+const iconTag = id => `<img src="${iconURL(id)}" alt="">`;
+let cur = null; // 지금 열린 창 [이름, 값]
+const sheetOpen = () => !!cur;
+function closeSheet() { cur = null; $('#sheetWrap').hidden = true; }
+function showSheet(title, body) { $('#sheet').innerHTML = `<div class="sh-head"><h2>${title}</h2><button class="xbtn" type="button" data-x="1" aria-label="닫기">✕</button></div><div class="lab-body">${body}</div>`; $('#sheetWrap').hidden = false; }
+function openSheet(kind, arg) { cur = [kind, arg]; drawSheet(); }
+function drawSheet() { if (!cur || !G) return; const [k, a] = cur;
+  if (k === 'bag') return showSheet('가방', bagBody());
+  if (k === 'craft') return showSheet(`${iconTag('bench')} 작업대`, craftBody());
+  if (k === 'shelf') return showSheet(`${iconTag('crateF')} 진열대 ${a + 1}`, shelfBody(a));
+  if (k === 'ledger') return showSheet(`${iconTag('desk')} 계산대 · 장부`, ledgerBody());
+  if (k === 'smith') return showSheet('대장장이 하람', smithBody());
+  if (k === 'talk') return showSheet('대장장이 하람', `<div class="talk">${a.map(l => `<p>${l}</p>`).join('')}</div><div class="row end"><button class="btn" data-x="1" type="button">같이 가요</button></div>`);
+}
+function bagBody() { const ids = bagList(); if (!ids.length) return '<p class="mut">아직 아무것도 없어요. 벽을 캐거나 뿌리기둥을 베어 봐요.</p>';
+  return `<div class="lab-list">${ids.map(id => `<div class="li">${iconTag(id)}<div><b>${uiNm(id)} × ${countBag(id)}</b><small>${sellable(id) ? catName(id) : ''}</small></div>${isPlaceable(id) ? `<button class="btn ghost sm" data-place="${id}" type="button">놓기</button>` : ''}</div>`).join('')}</div>
+  <p class="mut">곡괭이: ${uiNm(G.pick)}</p>`; }
+function reqHtml(req) { return req.map(([id, n]) => `<span class="${countBag(id) >= n ? '' : 'lack'}">${iconTag(id)}${uiNm(id)} ${countBag(id)}/${n}</span>`).join(''); }
+function craftBody() { return `<div class="lab-list">${G.recipes.map(id => { const r = RECIPES_L[id], ok = hasAll(r.req), have = r.tool && G.pick === r.out[0];
+  return `<div class="li">${iconTag(r.out[0])}<div><b>${uiNm(r.out[0])}${r.out[1] > 1 ? ' × ' + r.out[1] : ''}</b><small class="req">${reqHtml(r.req)}</small></div><button class="btn sm" data-craft="${id}" type="button" ${ok && !have ? '' : 'disabled'}>${have ? '있음' : '만들기'}</button></div>`; }).join('')}</div>
+  ${G.smith.at === 'village' ? '' : '<p class="mut">더 좋은 물건의 레시피는 어딘가의 대장장이가 알고 있을지도…</p>'}`; }
+function ledLine(id) { const L = G.ledger[id]; if (!L) return '아직 판 적 없어요'; return [L.ok ? `${L.ok}에 팔림` : '', L.no ? `${L.no}은 비싸대요` : ''].filter(Boolean).join(' · ') || '아직 판 적 없어요'; }
+function shelfBody(k) { const s = G.shelves[k];
+  if (s.id) { const want = wantedNow(GOODS[s.id].cat);
+    return `<div class="li big">${iconTag(s.id)}<div><b>${uiNm(s.id)} × ${s.n}</b><small>${catName(s.id)} · 장부: ${ledLine(s.id)}</small>${want ? '' : '<small class="lack">사 갈 손님이 아직 없어요</small>'}</div></div>
+    <div class="price"><button class="btn ghost" data-pd="-1" type="button">−</button><b>${s.price}</b><span class="coin"></span><button class="btn ghost" data-pd="1" type="button">+</button></div>
+    <div class="row"><button class="btn ghost" data-take="1" type="button">내리기</button>${countBag(s.id) && s.n < SHOP.shelfMax ? `<button class="btn" data-put="${s.id}" type="button">더 올리기 (+${Math.min(countBag(s.id), SHOP.shelfMax - s.n)})</button>` : ''}</div>`; }
+  const ids = bagList().filter(sellable);
+  if (!ids.length) return '<p class="mut">팔 물건이 없어요. 캐거나 만든 것을 올려요.</p>';
+  return `<p class="mut">올릴 물건을 골라요 (한 칸에 ${SHOP.shelfMax}개까지)</p><div class="lab-list">${ids.map(id => `<div class="li">${iconTag(id)}<div><b>${uiNm(id)} × ${countBag(id)}</b><small>${catName(id)}${wantedNow(GOODS[id].cat) ? '' : ' · <span class="lack">사 갈 손님이 아직 없어요</span>'}${ledgerPrice(id) ? ` · 장부 ${ledgerPrice(id)}` : ''}</small></div><button class="btn sm" data-put="${id}" type="button">올리기</button></div>`).join('')}</div>`; }
+function ledgerBody() { const ids = Object.keys(G.ledger);
+  const custs = Object.values(CUSTOMERS).filter(t => !t.need || G.cats.includes(t.need)).map(t => t.n).join(' · ');
+  return `<div class="stat"><span>번 돈 <b>${G.gold}</b></span><span>판 개수 <b>${G.sold}</b></span><span>꾸미기 <b>${decorCount()}</b></span></div>
+  <p class="mut">${present() ? '가게에 있어서 손님이 자주 와요' : '가게를 비워서 손님이 드물게 와요'} (약 ${Math.round(custGap())}초에 한 명) · 오는 손님: ${custs}</p>
+  ${ids.length ? `<div class="lab-list">${ids.map(id => `<div class="li">${iconTag(id)}<div><b>${uiNm(id)}</b><small>${ledLine(id)}</small></div></div>`).join('')}</div>` : '<p class="mut">아직 장부가 비어 있어요. 진열대에 물건과 값을 올려 봐요.</p>'}`; }
+function smithBody() { return `<p class="mut">「돈만 있으면 내 레시피를 나눠 주지. 만드는 건 작업대에서 해.」</p><div class="lab-list">${SMITH_SHOP.map(([id, price, d]) => { const own = G.recipes.includes(id);
+  return `<div class="li">${iconTag(id)}<div><b>${uiNm(id)} 레시피</b><small>${d}</small><small class="req">${reqHtml(RECIPES_L[id].req)}</small></div><button class="btn sm" data-buy="${id}" type="button" ${own || G.gold < price ? 'disabled' : ''}>${own ? '있음' : `${price}<span class="coin"></span>`}</button></div>`; }).join('')}</div>`; }
+// ---------- 사건 받기 ----------
+onEvent('open', (k, a) => openSheet(k, a));
+const refresh = () => { if (cur) drawSheet(); showHud(); };
+onEvent('bag', refresh);
+onEvent('gold', refresh);
+onEvent('shelf', refresh);
+function showHud() { if (!G) return; $('#goldN').textContent = G.gold; $('#torchN').textContent = countBag('torch'); $('#torchBtn').classList.toggle('dim', countBag('torch') <= 0); }
+function setupUi() {
+  $('#sheetWrap').addEventListener('click', e => { const b = e.target.closest('[data-x],[data-craft],[data-buy],[data-put],[data-take],[data-pd],[data-place]'); if (!b && e.target.classList.contains('backdrop')) return; if (!b) return; const d = b.dataset;
+    if (d.x) return closeSheet();
+    if (d.craft) runCmd({ k: 'craft', id: d.craft });
+    if (d.buy) runCmd({ k: 'buyRecipe', id: d.buy });
+    if (d.put) runCmd({ k: 'shelfPut', s: cur[1], id: d.put, n: SHOP.shelfMax });
+    if (d.take) runCmd({ k: 'shelfTake', s: cur[1] });
+    if (d.pd) runCmd({ k: 'shelfPrice', s: cur[1], d: +d.pd });
+    if (d.place) { runCmd({ k: 'place', id: d.place }); closeSheet(); }
+    drawSheet(); });
+  $('#bagBtn').addEventListener('pointerdown', e => { e.preventDefault(); if (cur && cur[0] === 'bag') closeSheet(); else openSheet('bag'); });
+  window.addEventListener('keydown', e => { if (e.code === 'Escape' && cur) closeSheet(); else if ((e.code === 'KeyB' || e.code === 'KeyI') && !e.repeat && G) { if (cur && cur[0] === 'bag') closeSheet(); else openSheet('bag'); } });
+  setInterval(() => { if (!G) return; const l = actLabel(); if ($('#actLbl').textContent !== l) $('#actLbl').textContent = l; }, 150);
+}
+// ================= 실험판 사건 받기: 소리·알림·흔들림·조각·떠오르는 글자 (본 게임 ui/feedback.js처럼) =================
 onEvent('sfx', k => { if (SFX[k]) SFX[k](); });
 onEvent('toast', (msg, cls, key) => toast(msg, cls, key));
 onEvent('shake', v => addShake(v));
 onEvent('chips', (x, y, c1, c2, n, big) => chips(x, y, c1, c2, n, big));
 onEvent('lit', () => markLight());
-const showTorches = n => { $('#torchN').textContent = n; $('#torchBtn').classList.toggle('dim', n <= 0); };
-onEvent('torches', n => showTorches(n));
+// L2
+onEvent('got', (id, n) => addFloat(G.p.x, G.p.y - 1.3, `+${(ITEMS[id] && ITEMS[id].n) || id} ${n}`, '#fff1d6'));
+onEvent('coin', (x, y, n) => addFloat(x, y, `+${n}`, '#ffd25c'));
+onEvent('spore', (x, y) => spores(x, y));
+onEvent('sparks', (x, y) => sparks(x, y));
+onEvent('mood', () => { });      // 손님 표정은 js/lab/draw.js가 손님 상태를 보고 그려요
+onEvent('wallBroke', () => { }); // 테스트·기록용
+onEvent('placed', () => { });
 // 본 게임 공용 규칙 파일(world/tiles.js·sim/building.js)이 남기는 사건 — 실험판에선 아직 그 규칙을 안 써서 받기만 해요
 onEvent('puff', (x, y, col, n, spd, z) => puff(x, y, col, n, spd, z));
 onEvent('tile', () => markLight());
 onEvent('inv', () => { });
-// ================= 실험판 조작 (L1): 폰 조이스틱·캐기 버튼·횃불 버튼 / PC WASD·방향키·E(스페이스)·T =================
+// ================= 실험판 조작 (L2): 폰 조이스틱·캐기(만지기) 버튼·횃불 버튼·가방 버튼 / PC WASD·방향키·E(스페이스)·T·B =================
 // 본 게임처럼 규칙에 바로 손대지 않고 명령을 보내요: 매 프레임 runCmd({ k: 'ctl', … }), 횃불은 runCmd({ k: 'torch' }).
 // 조이스틱은 본 게임 v75처럼 화면 왼쪽 누른 곳에 생기고 끌어도 받침이 따라오지 않아요.
 const keys = {};
@@ -6224,13 +6585,14 @@ function setupInput() {
 function setAct(v) { actHeld = v; $('#actBtn').classList.toggle('on', v); }
 // 매 프레임: 지금 조작 의도를 명령으로 보내요
 function sendCtl() {
-  if (!G) return; const k = c => keys[c] ? 1 : 0;
+  if (!G) return; if (sheetOpen()) { runCmd({ k: 'ctl', mx: 0, my: 0, stick: null, act: false }); return; } // 창이 열린 동안 내 캐릭터는 제자리 (본 게임 v76)
+  const k = c => keys[c] ? 1 : 0;
   let mx = k('KeyD') + k('ArrowRight') - k('KeyA') - k('ArrowLeft'), my = k('KeyS') + k('ArrowDown') - k('KeyW') - k('ArrowUp'); const stick = joy.id != null && Math.hypot(joy.vx, joy.vy) > .15;
   if (stick) { mx += joy.vx; my += joy.vy; }
   runCmd({ k: 'ctl', mx, my, stick: stick ? { x: joy.vx, y: joy.vy } : null, act: actHeld || !!keys.KeyE || !!keys.Space });
 }
 // ================= 실험판 시작·매 프레임 =================
-const LAB_VER = 'L1.1';
+const LAB_VER = 'L2';
 let lastT = 0, testHold = false; // testHold: 테스트가 게임 시간을 직접 진행하는 동안 (아래 __lab.step)
 function loop(ts) {
   const dt = Math.min(.05, (ts - lastT) / 1000 || 0); lastT = ts;
@@ -6238,13 +6600,13 @@ function loop(ts) {
   render(); requestAnimationFrame(loop);
 }
 function beginLab(seed) {
-  newLabWorld(seed); cam.x = G.p.x; cam.y = G.p.y - .3; computeLight(); showTorches(G.torches);
+  newLabWorld(seed); closeSheet(); cam.x = G.p.x; cam.y = G.p.y - .3; computeLight(); showHud();
   $('#title').hidden = true; document.body.classList.remove('intro'); setPaused(false); setStarted(true);
 }
 async function start() {
   document.body.classList.add('intro');
   try { await Promise.race([document.fonts.load('16px "NeoDunggeunmo Pro"', '등불나무 0'), new Promise(r => setTimeout(r, 1500))]); } catch (e) { }
-  await loadArt(); buildSprites(); setupInput(); resize();
+  await loadArt(); buildSprites(); setupInput(); setupUi(); resize();
   const q = new URLSearchParams(location.search), seed = +q.get('seed') || 20261025;
   $('#btnNew').addEventListener('click', () => beginLab(seed));
   $('#labVer').textContent = LAB_VER;
@@ -6253,7 +6615,7 @@ async function start() {
 start();
 // 테스트·확인용 손잡이 (lab/qa가 씀) — 게임 결과에는 영향 없어요
 // step(초, 조작): 실제 시계 대신 게임 시간을 1/60초씩 정해진 만큼 진행 (테스트가 컴퓨터 빠르기에 흔들리지 않게). 그동안 화면 쪽 조작은 안 읽어요
-window.__lab = { get G() { return G; }, beginLab, newLabWorld, runCmd: c => runCmd(c),
+window.__lab = { get G() { return G; }, beginLab, newLabWorld, runCmd: c => runCmd(c), shop: { custGap, decorCount, wantedNow },
   step(sec, ctl = {}) { testHold = true; const n = Math.round(sec * 60); for (let k = 0; k < n; k++) { runCmd({ k: 'ctl', mx: 0, my: 0, act: false, ...ctl }); G.time += 1 / 60; runFrame(1 / 60); } },
   release() { testHold = false; } };
 })();
